@@ -1567,7 +1567,8 @@ function courtZoneSpec(courtId) {
   const ct = COURTS[courtId];
   return { id: 'court_' + courtId, court: courtId, gu: COURT_GU[courtId], name: ct.name, w: 90, h: 56, seed: 900 + courtId.length * 7,
     dongLabel: [ct.short.split('').join(' '), ct.name], noAlleys: true,
-    roads: [{ name: '', en: '', lanes: 4, width: 10, pts: [[0, 66], [135, 66]] }],
+    // 큰길은 격자 안(y 48)에 둔다. 예전 y 66은 56타일 격자 밖이라 차가 화면 아래 바깥에서 시작했다.
+    roads: [{ name: '법원로', en: 'Beobwon-ro', lanes: 4, width: 10, pts: [[0, 48], [90, 48]] }],
     parking: [{ x: 8, y: 30, w: 22, h: 8 }, { x: 60, y: 30, w: 22, h: 8 }],
     fixed: [{ x: 30, y: 6, w: 30, h: 18, floors: 14, color: '#c9c2b2', detail: 'plain', place: { id: 'court', kind: 'court', name: ct.name } }],
     places: [] };

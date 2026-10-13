@@ -60,6 +60,14 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .touchOn #chatLog { bottom:240px; } .touchOn #chatBar { bottom:150px; }
 #tChat { position:absolute; right:24px; bottom:140px; width:60px; height:44px; border-radius:22px; background:rgba(255,255,255,.18); color:#fff; font-weight:700; border:1px solid rgba(255,255,255,.3); pointer-events:auto; font-size:12px; }
 .mpInfo { background:#e8dcc0; border:1px solid #c9b98f; border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:13px; line-height:1.5; } .mpInfo code { background:#fffaf0; padding:1px 6px; border-radius:4px; letter-spacing:2px; }
+/* 채널 순위판 */
+.lvHead { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; } .lvCh { font:700 16px var(--serif); color:var(--navy); } .lvPill { font-size:11px; padding:2px 8px; border-radius:10px; background:#d9cfb3; color:#5a4a2a; } .lvPill.on { background:#1f7a3a; color:#fff; } .lvSub { font-size:11px; opacity:.6; margin-left:auto; }
+.lvRank { width:100%; border-collapse:collapse; background:#fffaf0; border-radius:8px; overflow:hidden; } .lvRank td { padding:5px 8px; border-top:1px solid #efe6d2; font-size:13px; } .lvRank tr:first-child td { border-top:none; }
+.lvRank .rk { width:30px; text-align:center; } .lvRank .md { display:inline-block; min-width:20px; height:20px; line-height:20px; border-radius:50%; font-weight:700; color:#8b8f99; font-size:12px; } .lvRank .md.r1, .lvRank .md.r2, .lvRank .md.r3 { color:#fff; } .lvRank .md.r1 { background:#d4a62a; } .lvRank .md.r2 { background:#9aa3ad; } .lvRank .md.r3 { background:#b0733d; }
+.lvRank .nm small { font-size:10px; color:#8b8f99; margin-left:4px; } .lvRank tr.me td { background:#fff3cc; font-weight:700; } .lvRank tr.away td { opacity:.55; }
+.lvRank .pn { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; } .lvRank .pn.up, .lvRecent b.up { color:#1f7a3a; } .lvRank .pn.down, .lvRecent b.down { color:#c0392b; } .lvRecent b.dim { color:#8b8f99; font-weight:400; }
+.lvChips, .lvRecent { margin-top:8px; font-size:12px; } .lvChips small, .lvRecent small { display:block; color:#8b8f99; margin-bottom:3px; font-size:11px; } .chip { display:inline-block; background:#fffaf0; border:1px solid #d9cfb3; border-radius:12px; padding:2px 8px; margin:2px 4px 2px 0; }
+.lvRecent div { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-top:1px dashed #d9cfb3; } .lvRecent div:first-of-type { border-top:none; } .lvFoot { margin-top:8px; font-size:11px; opacity:.6; }
 #mpWait { left:50%; top:50%; width:min(460px, calc(100% - 24px)); transform:translate(-50%, -44%); background:#fffdf6; color:#111; border-radius:6px; padding:16px 18px; box-shadow:0 14px 40px rgba(0,0,0,.6); }
 #mpWait.in { transform:translate(-50%, -50%); } #mpWait ul { margin:8px 0 0 18px; padding:0; }
 #title a { color:var(--gold); }
@@ -526,8 +534,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>자고 넘기기</th><td colspan="2">건대 구역 '내 집' 문에서 E</td></tr>
       <tr><th>채팅(같이 하기)</th><td>T</td><td class="tc">채팅 버튼</td></tr>
       <tr><th>게임장</th><td colspan="2">건대 구역 '게임장' (미니게임 기계 준비 중)</td></tr>
-      <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작)</td></tr>
-      <tr><th>실시간 채널</th><td colspan="2">1주 = 실제 20분, 물건 3개가 어긋나게 돌아감 · 입찰은 매각기일 당일(마지막 날 약 3분) 그 법원에서 · 개찰은 자동 · 하루 조사 2번 · 돈은 채널별로 이어짐</td></tr>
+      <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작 · 실시간 채널에선 실제 30초 입원)</td></tr>
+      <tr><th>실시간 채널</th><td colspan="2">1주 = 실제 20분, 물건 7개가 어긋나게 돌아감 · 입찰은 매각기일 당일(마지막 날 약 3분) 그 법원에서 · 개찰은 자동 · 하루 조사 2번 · 돈은 채널별로 이어짐</td></tr>
       <tr><th>버튼 위치</th><td colspan="2">메뉴 → 버튼 위치 조정 (조이스틱·버튼을 끌어서 옮김)</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
@@ -1298,9 +1306,10 @@ const FEEL = {
   dayCardIn: 0.4, dayCardHold: 1.0, dayCardOut: 0.4,
   clockMinPerSec: 1.2,    // 걸어 다니는 동안 시계가 흐르는 속도(분/초, 연출용)
   liveWeekMin: 20,        // 실시간 채널: 1주(D-7→개찰)가 실제 몇 분인지 (사용자 요청 20분)
-  liveListings: 3,        // 실시간 채널: 동시에 돌아가는 물건 수 (서로 어긋나게 → 약 7분마다 개찰)
+  liveListings: 7,        // 실시간 채널: 동시에 돌아가는 물건 수 (서로 어긋나게 → 약 3분마다 매각기일; 사용자 요청 6~7개)
   liveSlots: 2,           // 실시간 채널: 게임 하루(실제 20/7분)에 조사할 수 있는 횟수
   liveBidDdayOnly: true,  // 실시간 채널: 입찰표는 매각기일(마지막 날)에만 받는다 (현실대로; false면 개찰 전 아무 때나)
+  liveHospitalSec: 30,    // 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
   // 카메라
   zoom: 2,                // 기본 확대 (16px 픽셀아트 ×2)
   camLerp: 10,
@@ -3553,7 +3562,7 @@ const Net = {
   info() {
     if (!this.on) return '';
     const st = { open: '연결됨', connecting: '연결 중', lost: '끊김(재연결 중)', error: '오류', off: '' }[this.status] || this.status;
-    if (Live.on) return `<b>채널 ${this.ch}</b> · ${st} · 1주 = 실제 ${FEEL.liveWeekMin}분<br>${Live.board()}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
+    if (Live.on) return Live.board() + '<div class="lvFoot">채팅: T 키 또는 채팅 버튼</div>';
     const fr = Object.values(this.players).map(p => `${esc(p.name)}${p.gone ? '(나감)' : ''}${p.day !== undefined ? ` · ${dLabel(p.day)}` : ''}`).join(', ');
     return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
   },
@@ -3582,7 +3591,7 @@ const ChatBar = {
  * 물건·경쟁자는 (채널, 물건 자리, 회차)로 정해지는 시드에서 나오므로 누가 언제 들어와도 같다.
  */
 const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
-const LIVE_TIERS = [0.8, 2.5, 6]; // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배
+const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3]; // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
 const Live = {
   on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0,
   capOf(ch) { return ch * 1e8; }, // 채널 N = 자본 N억 (사용자 요청)
@@ -3764,16 +3773,33 @@ const Live = {
     await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table><p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">채널에서는 대출·잔금·명도 절차를 생략하고 정산 손익을 바로 반영합니다. 누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
   },
 
-  /* ---- 메뉴: 순위표 ---- */
+  /* ---- 입원: 실제 시간으로 병원에 묶인다 (그 사이 매각기일을 놓칠 수 있다) ---- */
+  bedRest(fee, h) {
+    return new Promise(res => {
+      const el = $('mpWait'); let left = FEEL.liveHospitalSec; el.classList.add('in'); Game.formOpen = true;
+      const render = () => {
+        if (left <= 0) { clearInterval(iv); el.classList.remove('in'); Game.formOpen = false; Sound.play('chime'); return res(); }
+        const nx = this.nextOpen();
+        el.innerHTML = `<div class="doc"><div class="docHead">${h ? h.name : '병원'}</div><h2>입 원 중</h2><p>입원비 ${fmtWon(fee)}. 퇴원까지 <b>${left}초</b>.</p><p class="small">채널에서는 시간이 실제로 흘러서, 입원해 있는 동안 매각기일을 놓칠 수 있어요.${nx.c ? ` 다음 개찰 ${this.mmss(nx.ms)} (${esc(nx.c.name.split(' ')[0])}).` : ''}</p><div class="gauge"><div style="width:${Math.round((1 - left / FEEL.liveHospitalSec) * 100)}%;height:100%;background:#e0405a;transition:width .9s linear"></div></div></div>`;
+        left--;
+      };
+      render(); const iv = setInterval(render, 1000);
+    });
+  },
+
+  /* ---- 메뉴: 순위판 ---- */
   board() {
     const here = Object.values(Net.players).filter(p => !p.gone && p.pnl !== undefined).map(p => ({ name: p.name, pnl: p.pnl }));
     const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, pnl: v.pnl, away: true })); // 전에 만난 사람(마지막으로 본 손익)
     const rows = [{ name: Net.me, pnl: this.pnl(), me: true }, ...here, ...away].sort((a, b) => b.pnl - a.pnl).slice(0, 10);
     const f = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
-    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done).map(k => `${my[k].name} ${fmtWon(my[k].bid)} (개찰 ${this.mmss(this.left(this.caseFor(k)))} 뒤)`);
-    return `<b>채널 ${this.ch} 순위</b> <span class="small">(누적 손익)</span><br>${rows.map((r, i) => `${i + 1}. ${r.me ? '<b>' : ''}${esc(r.name)}${r.me ? ' (나)</b>' : ''} ${f(r.pnl)}${r.away ? ' <span class="small">(자리 비움)</span>' : ''}`).join('<br>')}` +
-      (pend.length ? `<br><span class="small">낸 입찰표: ${esc(pend.join(' · '))}</span>` : '') +
-      (this.results.length ? `<br><span class="small">최근: ${this.results.slice(0, 3).map(r => `${esc(r.name)} ${r.won ? '낙찰 ' + f(r.profit) : '패찰'}`).join(' · ')}</span>` : '');
+    const cls = v => (v > 0 ? 'up' : v < 0 ? 'down' : ''); // .plus는 현금 팝업 애니메이션 클래스라 피한다
+    const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
+    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done).map(k => { const c = this.caseFor(k); return `<span class="chip">${esc(my[k].name.split(' ').slice(0, 2).join(' '))} · ${fmtWon(my[k].bid)} · 개찰 ${this.mmss(this.left(c))}</span>`; });
+    return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">자본 ${fmtWon(State.capital)} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
+      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : ''}</td><td class="pn ${cls(r.pnl)}">${f(r.pnl)}</td></tr>`).join('')}</table>
+      ${pend.length ? `<div class="lvChips"><small>낸 입찰표</small>${pend.join('')}</div>` : ''}
+      ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won ? cls(r.profit) : 'dim'}">${r.won ? '낙찰 ' + f(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
   },
 };
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
@@ -4084,8 +4110,9 @@ async function hospitalize() {
     if (h) { p.x = h.door.tx * TILE + 8; p.y = h.door.ty * TILE + 8; p.dir = 0; Cam.x = p.x; Cam.y = p.y; }
     p.hurt = 0; Game.prompt = { target: null, t: 0 }; $('edgeSign').classList.remove('in');
     await iris(false); Game.trans = null;
+    if (Live.on) await Live.bedRest(fee, h); // 채널: 시간을 건너뛸 수 없으니 실제 시간으로 입원
     await Dialog.say([
-      { name: h ? h.name : '병원', text: `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
+      { name: h ? h.name : '병원', text: Live.on ? `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${FEEL.liveHospitalSec}초 입원 뒤 퇴원했다.` : `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
       { name: castName('hospital'), sprite: 'banker', voice: 'banker', text: '합의금 욕심내다 큰일 나요. 길 건널 때 좌우 좀 보세요.' }]);
     Toast.show(`입원비 ${fmtWon(fee)}`, 2600);
   } finally { p.hurtCd = 2; Game.busy = false; }

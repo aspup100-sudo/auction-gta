@@ -1156,6 +1156,7 @@ const FEEL = {
   dustEvery: 0.07,        // 달릴 때 먼지 간격
   // 상호작용
   promptPop: 0.15,        // E 말풍선 튀어나오는 시간
+  promptScale: 1.7,       // E 말풍선 크기 배수 (1.0→1.7: 사용자 요청으로 키움)
   promptFloatPeriod: 1.0,
   npcLookRadius: 3,       // 타일
   npcBreathPeriod: 2.0,
@@ -3398,7 +3399,7 @@ function drawPrompt(t) {
   const p = Game.player; const k = Math.min(1, Game.prompt.t / FEEL.promptPop); const lift = Game.driving ? 6 : 0;
   const sc = k < 0.6 ? k / 0.6 * 1.15 : 1.15 - (k - 0.6) / 0.4 * 0.15;
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
-  ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl)); ctx.scale(sc, sc);
+  const ps = FEEL.promptScale || 1; ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
   ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#14161c'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-6, -6, 12, 11, 2) : ctx.rect(-6, -6, 12, 11); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(-2, 5); ctx.lineTo(0, 8); ctx.lineTo(2, 5); ctx.fill();

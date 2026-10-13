@@ -35,6 +35,12 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 #title .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; }
 #title input { font:inherit; width:150px; background:#1d2029; color:var(--paper); border:1px solid #3c4252; border-radius:8px; padding:8px 10px; }
 #title .foot { position:absolute; bottom:12px; font-size:12px; opacity:.5; }
+/* 폰 세로: 가로로 돌리라는 안내 */
+#rotate { display:none; position:fixed; inset:0; z-index:70; background:#14161c; color:var(--paper); flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:24px; }
+#rotate .ph { width:34px; height:60px; border:3px solid var(--gold); border-radius:8px; animation:rotPh 1.8s ease-in-out infinite alternate; margin-bottom:12px; }
+#rotate b { font-size:20px; } #rotate small { opacity:.7; }
+@keyframes rotPh { 0%, 30% { transform:rotate(0); } 70%, 100% { transform:rotate(90deg); } }
+@media (orientation: portrait) and (max-width: 700px) { .touchOn #rotate { display:flex; } }
 #title .mp { background:rgba(255,255,255,.04); border:1px solid #3c4252; border-radius:10px; padding:8px 14px; max-width:min(560px, 92vw); font-size:14px; }
 #title .mp summary { cursor:pointer; color:var(--gold); } #title .mp summary small { color:var(--paper); opacity:.7; }
 #title .mp .row { margin-top:8px; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
@@ -372,6 +378,29 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .keys .ksub { margin-top:6px; font-size:11px; color:#8b8f99; }
 #castList label { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; } #castList label span { width:38%; color:#c9c2a8; } #castList input { flex:1; min-width:0; padding:5px 8px; border-radius:6px; border:1px solid #6b6a62; background:#fffdf7; color:#1a1408; font:inherit; }
 #iosHint { margin-top:8px; font-size:12px; color:#c9c2a8; }
+/* 폰 가로(높이가 낮은 화면): HUD를 작게, 조작 버튼을 모서리로 */
+@media (max-height: 520px) {
+  .touchOn #pager { width:min(300px, 36vw); font-size:11.5px; padding:4px 8px; }
+  .touchOn #minimap { width:120px; height:87px; top:10px; right:12px; }
+  .touchOn #hudCash { top:102px; right:12px; font-size:22px; }
+  .touchOn #hudTime { top:128px; right:12px; font-size:13px; }
+  .touchOn #hudSlots { top:148px; right:12px; }
+  .touchOn .hudBtns { top:10px !important; right:142px; } .touchOn .hudBtns .btn { padding:5px 8px; font-size:12px; }
+  .touchOn #radar { top:60px; left:12px; width:80px; height:80px; }
+  .touchOn #quest { top:60px; left:100px; max-width:220px; } .touchOn #balanceDue { top:112px !important; left:100px; }
+  .touchOn #stick { width:100px; height:100px; left:20px; bottom:20px; } .touchOn #knob { left:28px; top:28px; width:44px; height:44px; }
+  .touchOn #tAct { width:72px; height:72px; right:20px; bottom:24px; font-size:13px; }
+  .touchOn #tCar { right:104px; bottom:30px; width:54px; height:54px; } .touchOn.driving #tCar { right:124px; bottom:30px; }
+  .touchOn #pedals { right:16px; bottom:16px; gap:6px; } .touchOn #pedals button { width:82px; height:44px; } .touchOn #tHb { height:34px !important; }
+  .touchOn #hudSpeed { right:124px; bottom:92px; font-size:18px; }
+  .touchOn #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
+  .touchOn #nav { left:56%; bottom:10px; padding:4px 12px; font-size:12px; max-width:min(60vw, 380px); }
+  .touchOn #toasts { bottom:auto; top:56px; }
+  .touchOn #chatLog { bottom:130px; left:126px; } .touchOn #chatBar { bottom:100px; }
+  .touchOn #tChat { right:104px; bottom:92px; width:54px; height:36px; } .touchOn.driving #tChat { right:16px; bottom:170px; }
+  .touchOn #placeBanner { padding:4px 16px; } .touchOn #placeBanner b { font-size:16px; }
+  .touchOn #edgeSign { padding:4px 12px; } .touchOn #edgeSign b { font-size:15px; }
+}
 </style>
 </head>
 <body>
@@ -401,6 +430,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
 </div>
 
+<div id="rotate"><div class="ph"></div><b>폰을 가로로 돌려 주세요</b><small>이 게임은 가로 화면에 맞춰져 있어요</small></div>
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
   <div id="chatLog"></div>
@@ -2621,7 +2651,7 @@ const Nav = {
     const sub = `${g.label} · ${fmtDist(m)} · 약 ${eta}분`;
     if (!this.started) { this.started = true; Toast.show(`안내를 시작합니다. ${g.kind === 'gu' ? DISTRICT[g.gu].name + ' 방면' : g.label}까지 ${fmtDist(m)}, 약 ${eta}분.`, 3200); Sound.play('tick'); }
     if (g.kind === 'place' && remain <= 8) {
-      if (!this.arrived) { this.arrived = true; Toast.show('목적지 주변입니다. 안내를 종료합니다. F로 내려서 걸어가세요.', 3200); Sound.play('tick'); }
+      if (!this.arrived) { this.arrived = true; Toast.show(`목적지 주변입니다. 안내를 종료합니다. ${exitWord()} 걸어가세요.`, 3200); Sound.play('tick'); }
       this.show(NAV_ARROW.arrive, '목적지 주변', g.label); return;
     }
     if (g.kind === 'gu' && remain <= 12) { this.show(NAV_ARROW.straight, `구역 끝까지 직진 · ${DISTRICT[g.gu].name} 진입`, sub); return; }
@@ -3865,7 +3895,7 @@ function update(dt) {
       if (was > 120 && c.speed < 40 && inp.down) Sound.play('brake');
       p.x = c.x; p.y = c.y;
       const tg = !frozen && c.speed < 25 ? zoneInteractTarget(true) : null; Game.promptFor(tg);
-      if (interact && tg) { if (tg.kind === 'site') PropertyCard.open(tg.caseId); else Toast.show('F로 내려서 걸어 들어가세요.'); }
+      if (interact && tg) { if (tg.kind === 'site') PropertyCard.open(tg.caseId); else Toast.show(`${exitWord()} 걸어 들어가세요.`); }
       if (fKey && !frozen) { if (c.speed > 40) Toast.show('차를 세우고 내리세요.'); else exitCar(); }
     } else {
       Nav.update(dt);
@@ -4079,16 +4109,29 @@ function drawKeyIcon(t) {
   if (Math.floor(t * 5) % 2) { ctx.fillStyle = '#fff'; ctx.fillRect(-7, -5, 2, 2); }
   ctx.restore();
 }
+// 폰(터치)에서는 E/F 대신 하는 일을 말로 보여 준다
+function exitWord() { return document.body.classList.contains('touchOn') ? "'내리기'를 눌러 내린 뒤" : 'F로 내려서'; }
+function promptWord(tg) {
+  if (!tg) return '';
+  if (tg.kind === 'car') return '타기';
+  if (tg.kind === 'exit') return '나가기';
+  if (tg.kind === 'npc' || tg.kind === 'guest') return '대화';
+  if (tg.kind === 'obj') return tg.label || (tg.obj && tg.obj.label) || '사용';
+  if (tg.kind === 'site') return Game.driving ? '물건 보기' : '들어가기';
+  return '들어가기';
+}
 function drawPrompt(t) {
   const tg = Game.prompt.target; if (!tg || Game.busy || Dialog.open) return;
+  const touch = document.body.classList.contains('touchOn'); const word = touch ? promptWord(tg) : (tg.kind === 'car' ? 'F' : 'E');
   const p = Game.player; const k = Math.min(1, Game.prompt.t / FEEL.promptPop); const lift = Game.driving ? 6 : 0;
   const sc = k < 0.6 ? k / 0.6 * 1.15 : 1.15 - (k - 0.6) / 0.4 * 0.15;
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
   const ps = FEEL.promptScale || 1; ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
   ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#14161c'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-6, -6, 12, 11, 2) : ctx.rect(-6, -6, 12, 11); ctx.fill(); ctx.stroke();
+  ctx.font = touch ? 'bold 7px "IBM Plex Sans KR", sans-serif' : 'bold 8px sans-serif'; const bw = touch ? Math.max(12, Math.ceil(ctx.measureText(word).width) + 8) : 12;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-bw / 2, -6, bw, 11, 2) : ctx.rect(-bw / 2, -6, bw, 11); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(-2, 5); ctx.lineTo(0, 8); ctx.lineTo(2, 5); ctx.fill();
-  ctx.fillStyle = '#14161c'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(tg.kind === 'car' ? 'F' : 'E', 0, 0); ctx.restore();
+  ctx.fillStyle = '#14161c'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(word, 0, 0); ctx.restore();
 }
 function drawTimeTint(t) {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -4127,6 +4170,11 @@ function draw() {
   drawIris();
   drawMinimap(Game.t); SeoulMap.draw(1 / 60);
   document.body.classList.toggle('driving', Game.scene === 'zone' && Game.driving);
+  if (document.body.classList.contains('touchOn')) {
+    const tg = Game.prompt.target; const act = tg && !Game.busy && !Dialog.open && tg.kind !== 'car' ? promptWord(tg) : '조사';
+    const ta = $('tAct'); if (ta.textContent !== act) ta.textContent = act;
+    const car = Game.driving ? '내리기' : (tg && tg.kind === 'car' ? '타기' : '승하차'); const tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
+  }
   $('hudSpeed').textContent = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '';
   $('hudTime').textContent = `${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
   drawHudExtras();
@@ -4984,8 +5032,13 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
     Sound.init(); Sound.play('click');
     document.querySelectorAll('#caps .btn').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); cap = Number(b.dataset.v); $('capInput').value = '';
   });
+  // 폰: 시작 버튼(사용자 터치) 직후 전체화면 + 가로 고정을 시도한다 (안드로이드 크롬만 됨, 아이폰은 조용히 넘어감)
+  const tryLandscape = () => {
+    if (!document.body.classList.contains('touchOn')) return;
+    try { const el = document.documentElement; const p = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : Promise.reject(); p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {}); } catch (e) {}
+  };
   $('btnStart').onclick = () => {
-    Sound.init(); Sound.play('stamp');
+    Sound.init(); Sound.play('stamp'); tryLandscape();
     const v = Number($('capInput').value); if (v) { if (v < 1e7) { Toast.show('자본은 1천만 원 이상으로 넣어 주세요.'); return; } cap = Math.round(v); }
     if (Net.on && !Net.host) { Toast.show('방장이 시작하면 같이 시작해요.'); return; }
     if (Net.on && Net.host) { Net.seed = (Date.now() & 0x7fffffff); Net.cap = cap; Net.started = true; Net.send({ t: 'init', seed: Net.seed, cap }); startGame(cap, { seed: Net.seed }); return; }

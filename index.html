@@ -439,6 +439,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>서류 같이 보기</th><td colspan="2">사무실 PC → 물건 카드 → 두 서류 같이 보기</td></tr>
       <tr><th>목적지 설정</th><td colspan="2">구역 지도(N)에서 장소 탭 · 서울 지도(M)에서 구 선택 → 목적지로 설정 · 패널 ✕로 끄기</td></tr>
       <tr><th>자고 넘기기</th><td colspan="2">건대 구역 '내 집' 문에서 E</td></tr>
+      <tr><th>게임장</th><td colspan="2">건대 구역 '게임장' (미니게임 기계 준비 중)</td></tr>
+      <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작)</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
       <tr><th>대화 선택</th><td>1 2 3 4</td><td class="tc">탭</td></tr>
@@ -455,7 +457,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="zoneMap">
   <div class="zh"><span id="zoneMapName"></span><small>장소나 가장자리 구 이름을 누르면 목적지 · 닫기: 바깥 탭 / Esc / N</small></div>
   <canvas id="zoneCanvas"></canvas>
-  <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#d08a3a"></i>내 집</span><span><i style="background:#2bb673"></i>지하철</span></div>
+  <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#d08a3a"></i>내 집</span><span><i style="background:#8a3ac0"></i>게임장</span><span><i style="background:#e0405a"></i>병원</span><span><i style="background:#2bb673"></i>지하철</span></div>
 </div>
 <div id="bidForm" class="ovl"></div>
 <div id="openBoard" class="ovl"></div>
@@ -1220,7 +1222,7 @@ const Store = {
 const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal' }, Store.get('settings', {}));
 function saveSettings() { Store.set('settings', Settings); }
 /* 등장인물 이름: 메뉴에서 바꿀 수 있고 이 기기에 저장된다. 비우면 기본 이름 */
-const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '등기소 직원', ''], ['center', '주민센터 직원', ''], ['bank', '은행원', ''], ['savings', '저축은행 직원', ''], ['agent', '중개사', ''], ['court', '집행관', '법원'], ['guest', '대기 손님', '실내에서 기다리는 사람들']];
+const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '등기소 직원', ''], ['center', '주민센터 직원', ''], ['bank', '은행원', ''], ['savings', '저축은행 직원', ''], ['agent', '중개사', ''], ['court', '집행관', '법원'], ['arcade', '게임장 사장', '게임장'], ['hospital', '간호사', '병원'], ['guest', '대기 손님', '실내에서 기다리는 사람들']];
 const CAST_DEFAULT = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[1]]));
 const Cast = Object.assign({}, Store.get('cast', {}));
 function castName(k) { return (Cast[k] || '').trim() || CAST_DEFAULT[k] || k; }
@@ -1252,7 +1254,9 @@ Object.assign(FEEL, {
   npcShoveDecay: 4,       // 튕긴 NPC 차가 제자리로 돌아오는 속도
   npcYieldWait: 4,        // NPC끼리 교차로에서 서로 양보하다 막히면 이 시간(초) 뒤 그냥 지나감
   bumpSpeed: 25,          // 이 속도 이상이면 '툭' 접촉음, 70 이상이면 쾅(수리비)
-  hitMin: 30000, hitMax: 100000, // 걷다가 차에 치였을 때 치료비(원)
+  settleMin: 300000, settleMax: 1000000, // 걷다가 차에 치였을 때 내가 받는 합의금(원)
+  hospitalHits: 3,        // 이 횟수째 치이면 입원 (합의금 대신 입원비를 내고 병원 앞에서 다시 시작)
+  hospitalMin: 3000000, hospitalMax: 5000000, // 입원비(원) · 시간도 1칸 지나간다
   hitKnock: 22,           // 치였을 때 튕겨 나가는 거리(px)
   hitSpeed: 15,           // 이 속도 미만으로 닿으면 치인 것으로 치지 않음
   pedMin: 300000, pedMax: 1000000, // 내 차로 보행자를 쳤을 때 합의금(원)
@@ -1538,6 +1542,8 @@ const ZONE_SPECS = {
       { id: 'center', kind: 'center', name: '화양동 주민센터', near: [90, 147] },
       { id: 'agent', kind: 'agent', name: '건대 공인중개사', near: [210, 129] },
       { id: 'home', kind: 'home', name: '내 집', near: [48, 100] }, // 자고 일어나면 다음 날(또는 매각기일) 아침
+      { id: 'arcade', kind: 'arcade', name: '건대 게임장', near: [66, 132] }, // 미니게임 기계 자리(추후)
+      { id: 'hospital', kind: 'hospital', name: '건대병원', near: [232, 150] }, // 차에 여러 번 치이면 여기서 다시 시작
     ],
   },
   gangnam: {
@@ -1553,6 +1559,7 @@ const ZONE_SPECS = {
       { id: 'center', kind: 'center', name: '역삼1동 주민센터', near: [210, 60] },
       { id: 'agent', kind: 'agent', name: '강남역 공인중개사', near: [120, 144] },
       { id: 'bank', kind: 'bank', name: '한빛은행 강남역지점', near: [177, 78] },
+      { id: 'hospital', kind: 'hospital', name: '강남병원', near: [240, 150] },
     ],
   },
   mapo: {
@@ -1568,6 +1575,7 @@ const ZONE_SPECS = {
       { id: 'center', kind: 'center', name: '서교동 주민센터', near: [165, 105] },
       { id: 'agent', kind: 'agent', name: '홍대 공인중개사', near: [90, 135] },
       { id: 'bank', kind: 'bank', name: '한빛은행 합정지점', near: [60, 180] },
+      { id: 'hospital', kind: 'hospital', name: '홍대병원', near: [195, 60] },
     ],
   },
   gwanak: {
@@ -1582,6 +1590,7 @@ const ZONE_SPECS = {
       { id: 'center', kind: 'center', name: '신림동 주민센터', near: [105, 135] },
       { id: 'agent', kind: 'agent', name: '신림 공인중개사', near: [180, 120] },
       { id: 'bank', kind: 'bank', name: '한빛은행 신림지점', near: [165, 66] },
+      { id: 'hospital', kind: 'hospital', name: '신림병원', near: [75, 60] },
     ],
   },
 };
@@ -1619,6 +1628,7 @@ function genericZoneSpec(gu) {
       { id: 'center', kind: 'center', name: `${main} 주민센터`, near: [xs[0] + 24, ys[1] - 22] },
       { id: 'agent', kind: 'agent', name: `${d.short} 공인중개사`, near: [xs[1] - 26, ys[0] + 22] },
       { id: 'bank', kind: 'bank', name: `한빛은행 ${d.short}지점`, near: [xs[0] - 28, ys[0] - 22] },
+      { id: 'hospital', kind: 'hospital', name: `${d.short}병원`, near: [xs[1] + 26, ys[1] + 22] },
     ] };
 }
 function applyOsm(spec) {
@@ -2118,9 +2128,13 @@ function hitPlayer(car, q) {
   const L = Math.hypot(nx, ny) || 1; p.x += nx / L * FEEL.hitKnock; p.y += ny / L * FEEL.hitKnock; p.vx = p.vy = 0; p.push = 0.35;
   shake(7, 0.35); Sound.play('crash'); Game.hitstop = 0.06;
   if (!REDUCED_MOTION) for (let i = 0; i < 6; i++) Particles.push({ x: p.x, y: p.y - 8, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 70, g: 220, life: 0.5, max: 0.5, col: 'rgba(255,230,120,', r: 1.5 });
-  const fee = Math.round((FEEL.hitMin + Math.random() * (FEEL.hitMax - FEEL.hitMin)) / 10000) * 10000;
-  State.cash -= fee; HUD.setCash(State.cash); Toast.show(`차에 치였다! 치료비 ${fmtWon(fee)}`);
   car.v = Math.min(car.v, 20); car.angryCd = 3; setTimeout(() => Sound.play('horn'), 300);
+  State.hits = (State.hits || 0) + 1;
+  if (State.hits >= FEEL.hospitalHits) { hospitalize(); return; } // 너무 많이 치이면 합의금 없이 입원
+  const fee = Math.round((FEEL.settleMin + Math.random() * (FEEL.settleMax - FEEL.settleMin)) / 10000) * 10000;
+  State.cash += fee; HUD.setCash(State.cash); setTimeout(() => Sound.play('coins'), 500);
+  const left = FEEL.hospitalHits - State.hits;
+  Toast.show(`차에 치였다! 합의금 ${fmtWon(fee)} 받음` + (left === 1 ? ' · 한 번만 더 치이면 입원이다' : ''), left === 1 ? 3200 : 2200);
 }
 function updateTraffic(dt, z) {
   const p0 = Game.player; if (p0) { p0.hurtCd = Math.max(0, (p0.hurtCd || 0) - dt); p0.hurt = Math.max(0, (p0.hurt || 0) - dt); }
@@ -2601,7 +2615,7 @@ const Nav = {
 
 /* ===================== 건물 실내 =====================
  * 범례: # 벽  . 바닥  D 출구  C 카운터  S 의자  P PC책상  T 탁자  B 책장  M 화분
- *       K 창구 직원 자리  N 선배 자리  Q 번호표 기계  L 우편함  R 초인종  H 현수막자리  F 소파
+ *       K 창구 직원 자리  N 선배 자리  Q 번호표 기계  L 우편함  R 초인종  H 현수막자리  F 소파  A 게임기
  */
 const INTERIOR_DEFS = {
   office: { title: '경매 사무실', floor: 'wood', bgm: 'office', tone: 'warm', map: [
@@ -2664,6 +2678,24 @@ const INTERIOR_DEFS = {
     '#........#',
     '#.SS..SS.#',
     '####D#####' ], npc: { K: 'banker' } },
+  arcade: { title: '게임장', floor: 'carpet', bgm: 'town', tone: 'neon', map: [
+    '##############',
+    '#K.......A.A.#',
+    '#CC..........#',
+    '#..A.A.A.A...#',
+    '#............#',
+    '#..A.A.A.A...#',
+    '#M.F.......M.#',
+    '######D#######' ], npc: { K: 'occ_young' } },
+  hospital: { title: '병원', floor: 'marble', bgm: 'office', tone: 'bright', map: [
+    '##############',
+    '#..K....K....#',
+    '#CCCCCCCCCCCC#',
+    '#............#',
+    '#.SS..SS..SS.#',
+    '#............#',
+    '#M..........M#',
+    '######D#######' ], npc: { K: 'banker' } },
   site: { title: '물건 현장', floor: 'stone', bgm: 'town', tone: 'dim', map: [
     '###########',
     '#G...R...U#',
@@ -2679,7 +2711,7 @@ const INTERIOR_DEFS = {
     '#.......W..#',
     '#####D######' ], npc: {} },
 };
-const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집' };
+const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집', arcade: '게임장', hospital: '병원' };
 // 평일 낮에만 여는 곳
 const WEEKDAY_ONLY = ['registry', 'center', 'bank', 'savings'];
 
@@ -2692,7 +2724,7 @@ function buildInterior(place) {
   let exit = null;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ch = map[y][x];
-    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGX'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
+    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGXA'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
     if (ch === 'D') exit = { tx: x, ty: y };
     if (ch === 'S') objs.push({ type: 'chair', tx: x, ty: y });
     if (ch === 'P') objs.push({ type: 'pc', tx: x, ty: y, label: 'PC' });
@@ -2701,6 +2733,7 @@ function buildInterior(place) {
     if (ch === 'R') objs.push({ type: 'bell', tx: x, ty: y, label: '초인종' });
     if (ch === 'G') objs.push({ type: 'board', tx: x, ty: y, label: '게시판' });
     if (ch === 'W') objs.push({ type: 'memo', tx: x, ty: y, label: '메모장' });
+    if (ch === 'A') objs.push({ type: 'arcade', tx: x, ty: y, label: '게임기', no: objs.filter(o => o.type === 'arcade').length + 1 });
     if (ch === 'U') objs.push({ type: 'roof', tx: x, ty: y, label: cs && cs.type === '토지' ? '둘러보기' : '옥상 계단' });
     if (ch === 'H' && cs && cs.lien) objs.push({ type: 'banner', tx: x, ty: y, label: '현수막' });
     if (def.npc[ch]) npcs.push({ sprite: def.npc[ch], tx: x, ty: y, x: x * TILE + 8, y: y * TILE + 14, dir: 0, role: ch === 'N' ? 'danye' : 'clerk', breath: Math.random() * 2 });
@@ -2712,7 +2745,7 @@ function buildInterior(place) {
   // 대기 손님(장식)
   const chairs = objs.filter(o => o.type === 'chair');
   const guests = [];
-  if (place.kind !== 'office' && place.kind !== 'site') for (let i = 0; i < Math.min(chairs.length, 2 + Math.floor(Math.random() * 2)); i++) {
+  if (place.kind !== 'office' && place.kind !== 'site' && place.kind !== 'arcade') for (let i = 0; i < Math.min(chairs.length, 2 + Math.floor(Math.random() * 2)); i++) {
     const c = chairs[Math.floor(Math.random() * chairs.length)]; if (c.taken) continue; c.taken = true;
     guests.push({ sprite: ['occ_oldman', 'occ_auntie', 'occ_young', 'walker3'][i % 4], x: c.tx * TILE + 8, y: c.ty * TILE + 14, sit: true, dir: 3 });
   }
@@ -2722,8 +2755,8 @@ function buildInterior(place) {
 
 function drawInterior(ctx, room, t) {
   const { def, W, H, cs } = room;
-  const FLOOR = { wood: ['#7a5536', '#6e4b2f'], marble: ['#d9d6cf', '#cfcbc2'], stone: ['#8d8a84', '#827f79'], grass: ['#7a9a5a', '#729254'] }[def.floor];
-  const WALL = { warm: '#3b2c27', admin: '#2c3a4d', bright: '#e6ebf0', dim: '#3a3a3e', fence: '#6a5a44' }[def.tone];
+  const FLOOR = { wood: ['#7a5536', '#6e4b2f'], marble: ['#d9d6cf', '#cfcbc2'], stone: ['#8d8a84', '#827f79'], grass: ['#7a9a5a', '#729254'], carpet: ['#2b2446', '#272040'] }[def.floor];
+  const WALL = { warm: '#3b2c27', admin: '#2c3a4d', bright: '#e6ebf0', dim: '#3a3a3e', fence: '#6a5a44', neon: '#15122a' }[def.tone];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ch = def.map[y][x], X = x * TILE, Y = y * TILE;
     ctx.fillStyle = FLOOR[(x + y) % 2]; ctx.fillRect(X, Y, TILE, TILE);
@@ -2754,6 +2787,15 @@ function drawInterior(ctx, room, t) {
     else if (ch === 'U') { for (let i = 0; i < 4; i++) { ctx.fillStyle = i % 2 ? '#6a6a70' : '#7a7a80'; ctx.fillRect(X, Y + i * 4, TILE, 4); } if (cs && cs.type === '토지') { ctx.fillStyle = FLOOR[0]; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#c9b37a'; ctx.fillRect(X + 6, Y + 2, 3, 12); ctx.fillStyle = '#efe6d2'; ctx.fillRect(X + 2, Y + 2, 12, 6); } }
     else if (ch === 'H' && cs && cs.lien) { ctx.fillStyle = '#fff'; ctx.fillRect(X - 6, Y + 2, TILE + 6, 11); ctx.fillStyle = '#c0302a'; ctx.fillRect(X - 4, Y + 4, TILE + 2, 2); ctx.fillRect(X - 4, Y + 8, TILE - 2, 2); }
     else if (ch === 'X') { if (cs && cs.super) { ctx.fillStyle = '#8a5a3a'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#a06a44'; ctx.fillRect(X, Y, TILE, 3); if ((x + y) % 3 === 0) { ctx.fillStyle = '#3f5670'; ctx.fillRect(X + 4, Y + 6, 6, 5); } } else { ctx.fillStyle = '#9a8460'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.fillRect(X + 3, Y + 5, 4, 3); } }
+    else if (ch === 'A') { // 게임기: 몸통·화면(색이 천천히 바뀜)·조이스틱·버튼
+      const hue = ((x * 53 + y * 17) + t * 40) % 360;
+      ctx.fillStyle = '#1c1a2e'; ctx.fillRect(X + 1, Y - 2, 14, 18); ctx.fillStyle = '#3a3560'; ctx.fillRect(X + 1, Y - 2, 14, 2);
+      ctx.fillStyle = `hsl(${hue},80%,55%)`; ctx.fillRect(X + 3, Y + 1, 10, 7);
+      ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(X + 4 + Math.floor(t * 6 + x) % 6, Y + 2 + Math.floor(t * 3 + y) % 4, 2, 2);
+      ctx.fillStyle = '#6a6480'; ctx.fillRect(X + 2, Y + 10, 12, 4);
+      ctx.fillStyle = '#e8e8f0'; ctx.fillRect(X + 4, Y + 11, 1, 3); ctx.fillStyle = '#ff5a5a'; ctx.fillRect(X + 3, Y + 9, 3, 3);
+      ctx.fillStyle = '#ffd84a'; ctx.fillRect(X + 9, Y + 11, 2, 2); ctx.fillStyle = '#4ad0ff'; ctx.fillRect(X + 12, Y + 11, 2, 2);
+    }
     else if (ch === 'R') { ctx.fillStyle = '#5a3a28'; ctx.fillRect(X, Y - 4, TILE, 6); ctx.fillStyle = '#ddd'; ctx.fillRect(X + 6, Y + 3, 4, 4); }
   }
 }
@@ -3425,6 +3467,28 @@ async function homeDoor() {
   } finally { Game.busy = false; }
 }
 
+/* ---- 입원: 차에 FEEL.hospitalHits번째 치이면 구급차 → 입원비 → 시간 1칸 → 병원 앞에서 다시 시작 ---- */
+async function hospitalize() {
+  if (Game.busy) return; Game.busy = true;
+  const p = Game.player; p.hurtCd = 99; p.vx = p.vy = 0; p.push = 0; p.sit = false;
+  try {
+    shake(9, 0.4); Game.hitstop = 0.1;
+    await sleep(600); Sound.play('horn'); await sleep(320); Sound.play('horn'); await sleep(320); Sound.play('horn'); // 구급차
+    await iris(true);
+    const fee = Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000;
+    State.cash -= fee; HUD.setCash(State.cash); State.hits = 0; State.hospital = (State.hospital || 0) + 1;
+    const timePassed = !(State.day >= 7 && State.evening); if (timePassed) await advanceSlot(); // 매각기일 저녁엔 더 넘길 시간이 없다
+    const h = Game.zone.places.find(x => x.kind === 'hospital');
+    if (h) { p.x = h.door.tx * TILE + 8; p.y = h.door.ty * TILE + 8; p.dir = 0; Cam.x = p.x; Cam.y = p.y; }
+    p.hurt = 0; Game.prompt = { target: null, t: 0 }; $('edgeSign').classList.remove('in');
+    await iris(false); Game.trans = null;
+    await Dialog.say([
+      { name: h ? h.name : '병원', text: `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
+      { name: castName('hospital'), sprite: 'banker', voice: 'banker', text: '합의금 욕심내다 큰일 나요. 길 건널 때 좌우 좀 보세요.' }]);
+    Toast.show(`입원비 ${fmtWon(fee)}`, 2600);
+  } finally { p.hurtCd = 2; Game.busy = false; }
+}
+
 /* ---- 문 진입 · 아이리스 ---- */
 async function iris(close) {
   const dur = FEEL.irisTime * 1000, t0 = performance.now();
@@ -3741,7 +3805,7 @@ function drawFlag(c, X, Y, t, pl) {
   if (State.visited[pl.id]) { c.strokeStyle = '#7fe08a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(X + 3, Y - 13); c.lineTo(X + 5, Y - 11); c.lineTo(X + 9, Y - 16); c.stroke(); }
 }
 function drawPlaceIcon(c, X, Y, kind) {
-  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'] }[kind]; if (!ICON) return;
+  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'], arcade: ['#8a3ac0', '겜'], hospital: ['#e0405a', '+'] }[kind]; if (!ICON) return;
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(X + 1, Y + 1, 8, 0, 7); c.fill();
   c.fillStyle = ICON[0]; c.beginPath(); c.arc(X, Y, 8, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
   c.fillStyle = '#fff'; c.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ICON[1], X, Y + 0.5); c.textBaseline = 'alphabetic';
@@ -3920,9 +3984,11 @@ async function issueDoc(caseId, kind, title, html, { fee = 0 } = {}) {
 }
 
 const STAFF = { registry: ['등기소 직원', 'clerk', 'clerk'], center: ['주민센터 직원', 'clerk', 'clerk'], bank: ['은행원', 'banker', 'banker'], agent: ['중개사', 'agent', 'agent'], court: ['집행관', 'clerk', 'clerk'], savings: ['저축은행 직원', 'banker', 'banker'] };
+STAFF.arcade = ['게임장 사장', 'occ_young', 'occ']; STAFF.hospital = ['간호사', 'banker', 'banker'];
 const say = (kind, text, extra = {}) => ({ name: castName(kind), sprite: STAFF[kind][1], voice: STAFF[kind][2], text, ...extra });
 /* 실내에서 기다리는 손님들: 말을 걸면 그 장소다운 잡담을 한다 (사건 정보는 절대 없음) */
 const GUEST_LINES = {
+  hospital: ['횡단보도에서 치였어요. 합의금은 받았는데 다리가 아파요.', '여기 응급실은 24시간이에요.', '세 번째 치인 사람은 바로 입원이래요. 조심하세요.'],
   registry: ['등기부 떼러 왔는데 번호표가 영 안 줄어요.', '요즘은 인터넷으로도 떼는데, 저는 직접 와서 보는 게 마음이 편해요.', '등기부는 갑구 을구 순서로 읽는 거래요. 저도 오늘 처음 알았어요.'],
   center: ['전입신고 하러 왔어요. 이사 온 지 일주일 됐거든요.', '여긴 은행보다 줄이 빨리 줄어서 좋아요.', '전입세대 열람은 이해관계인만 된다던데, 경매 입찰자도 되나 봐요?'],
   bank: ['대출 상담 기다리는 중이에요. 금리가 또 올랐대요.', '경매로 집 사시려고요? 잔금 대출은 미리 알아봐야 한다던데.', '번호표 뽑고 30분째예요. 커피라도 마실걸.'],
@@ -3962,6 +4028,8 @@ async function danyeTalk() {
 
 async function staffTalk(kind) {
   if (kind === 'court') return courtClerk();
+  if (kind === 'arcade') { await Dialog.say([say('arcade', '어서 와. 기계는 아직 세팅 중이야.'), say('arcade', '미니게임 들어오면 제일 먼저 알려 줄게. 구경은 마음껏 해.')]); return; }
+  if (kind === 'hospital') { await Dialog.say([say('hospital', State.hospital ? `또 오셨네요. 이번 주 입원만 ${State.hospital}번째예요.` : '다친 데는 없으시죠?'), say('hospital', `차에 ${FEEL.hospitalHits}번 치이면 바로 입원이에요. 횡단보도 신호 지키세요.`)]); return; }
   if (kind === 'savings') { if (State.phase === 'savings') return loanReview(true); await Dialog.say([say('savings', '저희 대출 상품은 금리가 좀 높아요. 1금융권 먼저 알아보세요.')]); return; }
   if (kind === 'bank' && !(State.ticket && State.ticket.called)) {
     await Dialog.say([say('bank', State.ticket ? `번호표 ${State.ticket.no}번이시죠? 차례가 되면 불러 드릴게요.` : '번호표 먼저 뽑아 주시겠어요? 입구 왼쪽 기계에 있어요.')]); return;
@@ -4000,6 +4068,7 @@ async function objectUse(o, kind) {
   if (o.type === 'ticket') return takeTicket();
   if (o.type === 'chair') { const p = Game.player; p.x = o.tx * TILE + 8; p.y = o.ty * TILE + 14; p.dir = 0; p.vx = p.vy = 0; p.sit = true; Sound.play('click'); return; }
   if (o.type === 'memo' && Game.room.cs) { MemoPad.open(Game.room.cs); return; } // 메모는 시간이 들지 않는다
+  if (o.type === 'arcade') { Sound.play('blip', 0.8); await Dialog.say([{ name: `게임기 ${o.no}번`, text: '화면에 "COMING SOON"만 떠 있다. 미니게임은 아직 준비 중이다.' }]); return; }
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
   if ((o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell')) && State.phase === 'evict' && State.bidResult && c.id === State.bidResult.caseId) return evictAtSite(c);

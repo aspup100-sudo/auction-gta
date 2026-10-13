@@ -62,6 +62,9 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 #zoneMap .zl i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:-1px; }
 #roadSign { position:absolute; right:16px; bottom:18px; background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:6px 14px; color:#fff; box-shadow:0 3px 0 #000; transform:translateY(120%); opacity:0; transition:transform .25s ease-out, opacity .25s; }
 #roadSign.in { transform:none; opacity:1; }
+#edgeSign { position:absolute; left:50%; top:14px; transform:translate(-50%,-160%); background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:5px 16px; color:#fff; text-align:center; box-shadow:0 3px 0 #000; opacity:0; transition:transform .25s ease-out, opacity .25s; }
+#edgeSign.in { transform:translate(-50%,0); opacity:1; }
+#edgeSign b { display:block; font-size:18px; } #edgeSign small { font-size:11px; opacity:.85; }
 #roadSign b { display:block; font-size:18px; } #roadSign small { font-size:11px; opacity:.85; }
 .hudBtns { position:absolute; top:214px; right:16px; display:flex; gap:6px; pointer-events:auto; }
 .hudBtns .btn { padding:6px 10px; font-size:13px; position:relative; }
@@ -380,8 +383,9 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="toasts"></div>
 <div id="propCard" class="propCard"></div>
 <div id="dropSign"></div>
+<div id="edgeSign"></div>
 <div id="docView"><div class="docBar"><span id="docTitle"></span><button class="btn" onclick="DocViewer.close()">닫기 (E)</button></div><div id="docBody"></div></div>
-<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 금테 = 운전 구역 · M/Esc 닫기</small></div><div id="mapConfirm"></div></div>
+<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 큰길로 구역 끝까지 달려도 옆 구로 넘어가요 · M/Esc 닫기</small></div><div id="mapConfirm"></div></div>
 <div id="mapHover"></div>
 <div id="caseList"></div>
 <div id="dialog">
@@ -410,6 +414,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>핸드브레이크</th><td>Space</td><td class="tc">HB 버튼</td></tr>
       <tr><th>서울 지도</th><td>M (차 근처에서 이동 확정)</td><td class="tc">우상단 미니맵</td></tr>
       <tr><th>구역 지도(장소 위치)</th><td>N</td><td class="tc">왼쪽 레이더 탭</td></tr>
+      <tr><th>옆 구로 이동</th><td colspan="2">큰길 따라 구역 끝까지 운전 (지도 M도 가능)</td></tr>
+      <tr><th>자고 넘기기</th><td colspan="2">건대 구역 '내 집' 문에서 E</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
       <tr><th>대화 선택</th><td>1 2 3 4</td><td class="tc">탭</td></tr>
@@ -426,7 +432,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="zoneMap">
   <div class="zh"><span id="zoneMapName"></span><small>닫기: 바깥 탭 또는 Esc / N</small></div>
   <canvas id="zoneCanvas"></canvas>
-  <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#2bb673"></i>지하철</span></div>
+  <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#d08a3a"></i>내 집</span><span><i style="background:#2bb673"></i>지하철</span></div>
 </div>
 <div id="bidForm" class="ovl"></div>
 <div id="openBoard" class="ovl"></div>
@@ -1209,6 +1215,8 @@ Object.assign(FEEL, {
   carRoadAssist: 1.6,     // 핸들을 안 잡으면 도로 방향으로 저절로 맞춰 주는 세기(rad/s). 0이면 끔
   carGrip: 14,            // 높을수록 미끄러짐 적음 (9→14)
   carGripHandbrake: 1.4,
+  edgeSignDist: 36,       // 구역 가장자리에서 이 거리(타일) 안으로 바깥을 향해 달리면 '→ 옆 구' 표지판
+  edgeBounce: 70,         // 길이 없는 가장자리(서울 끝)에 닿았을 때 되튕기는 속도(px/s)
   carBounce: 0.35,
   camZoomAtMax: 0.75,     // 최고속일 때 줌 배수 (정지 1.0)
   repairMin: 10000, repairMax: 50000,
@@ -1506,6 +1514,7 @@ const ZONE_SPECS = {
       { id: 'bank', kind: 'bank', name: '한빛은행 건대지점', near: [177, 138] },
       { id: 'center', kind: 'center', name: '화양동 주민센터', near: [90, 147] },
       { id: 'agent', kind: 'agent', name: '건대 공인중개사', near: [210, 129] },
+      { id: 'home', kind: 'home', name: '내 집', near: [48, 100] }, // 자고 일어나면 다음 날(또는 매각기일) 아침
     ],
   },
   gangnam: {
@@ -1562,6 +1571,31 @@ function courtZoneSpec(courtId) {
     parking: [{ x: 8, y: 30, w: 22, h: 8 }, { x: 60, y: 30, w: 22, h: 8 }],
     fixed: [{ x: 30, y: 6, w: 30, h: 18, floors: 14, color: '#c9c2b2', detail: 'plain', place: { id: 'court', kind: 'court', name: ct.name } }],
     places: [] };
+}
+// 손으로 만든 구역이 없는 구: 동 이름으로 큰길을 짜고 나머지(골목·건물·공원)는 buildZone이 절차 생성한다.
+// 큰길이 네 변 모두에 닿아 있어, 운전해서 구역 끝까지 가면 옆 구로 넘어갈 수 있다.
+function genericZoneSpec(gu) {
+  const d = DISTRICT[gu]; let seed = 7; for (const ch of gu) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  const R = makeRng(seed); const W = 300, H = 204; const dongs = d.dongs;
+  const stem = n => { const s = n.replace(/\d가$/, '').replace(/동$/, ''); return /로$/.test(s) ? s + '동' : s; };
+  const main = dongs[0].replace(/\d가$/, '');
+  const ys = [R.RI(62, 86), R.RI(124, 148)], xs = [R.RI(88, 118), R.RI(178, 212)];
+  const jit = () => R.RI(-10, 10);
+  const roads = [
+    { name: `${d.short}대로`, en: '', lanes: 6, width: 13, pts: [[0, ys[0] + jit()], [xs[0], ys[0]], [xs[1], ys[0] + jit() / 2], [W, ys[0] + jit()]] },
+    { name: `${stem(dongs[0])}로`, en: '', lanes: 4, width: 9, pts: [[0, ys[1] + jit()], [xs[0], ys[1] + jit() / 2], [xs[1], ys[1]], [W, ys[1] + jit()]] },
+    { name: `${stem(dongs[1 % dongs.length])}로`, en: '', lanes: 6, width: 12, pts: [[xs[0] + jit(), 0], [xs[0], ys[0]], [xs[0] + jit() / 2, ys[1]], [xs[0] + jit(), H]] },
+    { name: `${stem(dongs[2 % dongs.length])}로`, en: '', lanes: 4, width: 8, pts: [[xs[1] + jit(), 0], [xs[1], ys[0]], [xs[1] + jit() / 2, ys[1]], [xs[1] + jit(), H]] },
+  ];
+  if (dongs.length > 3) roads.push({ name: `${stem(dongs[3])}길`, en: '', lanes: 2, width: 6, pts: [[0, ys[1] + 34 + jit()], [W, ys[1] + 30 + jit()]] });
+  return { id: 'gu_' + gu, gu, name: main, w: W, h: H, seed: seed % 100000,
+    dongLabel: [main.split('').join(' '), `${gu.toUpperCase()}-GU · ${d.name}`],
+    roads, subway: [{ x: xs[0] - 9, y: ys[0] + 11, line: 2 }],
+    places: [
+      { id: 'center', kind: 'center', name: `${main} 주민센터`, near: [xs[0] + 24, ys[1] - 22] },
+      { id: 'agent', kind: 'agent', name: `${d.short} 공인중개사`, near: [xs[1] - 26, ys[0] + 22] },
+      { id: 'bank', kind: 'bank', name: `한빛은행 ${d.short}지점`, near: [xs[0] - 28, ys[0] - 22] },
+    ] };
 }
 function applyOsm(spec) {
   const O = typeof OSM_ZONES !== 'undefined' && OSM_ZONES[spec.id];
@@ -2126,7 +2160,9 @@ function drawSignals(c, z, t) {
 }
 
 /* ===================== 서울 지도(월드맵) · 미니맵 · 빠른 이동 ===================== */
-const ZONE_OF_GU = { gangnam: 'gangnam', seocho: 'gangnam', mapo: 'mapo', gwangjin: 'gwangjin', gwanak: 'gwanak' };
+// 구 → 운전 구역 id. 손으로 만든(또는 OSM) 구역이 있으면 그것, 없으면 절차 생성 구역('gu_구id')이라 모든 구를 운전할 수 있다.
+const ZONE_OF_GU = {};
+for (const d of DISTRICTS) { let id = 'gu_' + d.id; for (const s of Object.values(ZONE_SPECS)) if (s.gu === d.id || (s.guAlso || []).includes(d.id)) id = s.id; ZONE_OF_GU[d.id] = id; }
 const BRIDGES = [{ col: 0.5, name: '가양대교' }, { col: 1.3, name: '양화대교' }, { col: 2.1, name: '마포대교' }, { col: 3, name: '동작대교' }, { col: 3.8, name: '한남대교' }, { col: 4.6, name: '성수대교' }, { col: 5.5, name: '잠실대교' }, { col: 6.6, name: '천호대교' }];
 const TIER_COL = { 1: '#3a3f4d', 2: '#4d4f5c', 3: '#6a5f55', 4: '#8a6d4c', 5: '#b08646' };
 
@@ -2163,14 +2199,13 @@ const SeoulMap = {
     if (!h) { hc.classList.remove('in'); return; }
     const from = currentGu(); const to = h.gu || COURT_GU[h.court]; const { d, slot } = travelCost(from, to);
     const cnt = this.counts()[h.gu] || 0;
-    hc.innerHTML = h.gu ? `<b>${DISTRICT[h.gu].name}</b><div>관할: ${COURTS[DISTRICT[h.gu].court].name}</div><div>진행 물건 ${cnt}건</div><div>시세 수준 ${'★'.repeat(DISTRICT[h.gu].tier)}${'☆'.repeat(5 - DISTRICT[h.gu].tier)}</div><div>이동: ${h.gu === from ? '현재 위치' : slot ? '시간 1칸' : '시간 소모 없음'} (거리 ${d})</div>${ZONE_OF_GU[h.gu] ? '' : '<div class="dim">운전 구역 준비 중: 물건 목록만 볼 수 있어요</div>'}`
+    hc.innerHTML = h.gu ? `<b>${DISTRICT[h.gu].name}</b><div>관할: ${COURTS[DISTRICT[h.gu].court].name}</div><div>진행 물건 ${cnt}건</div><div>시세 수준 ${'★'.repeat(DISTRICT[h.gu].tier)}${'☆'.repeat(5 - DISTRICT[h.gu].tier)}</div><div>이동: ${h.gu === from ? '현재 위치' : slot ? '시간 1칸' : '시간 소모 없음'} (거리 ${d})</div>`
       : `<b>${COURTS[h.court].name}</b><div>입찰은 관할 법원에서</div><div>이동: ${slot ? '시간 1칸' : '시간 소모 없음'}</div>`;
     hc.style.left = Math.min(e.clientX + 14, innerWidth - 230) + 'px'; hc.style.top = Math.min(e.clientY + 14, innerHeight - 150) + 'px'; hc.classList.add('in');
   },
   onClick(e) {
     if (this.anim) return; const r = e.target.getBoundingClientRect(); const h = this.hit(e.clientX - r.left, e.clientY - r.top);
     if (!h) return; Sound.play('click');
-    if (h.gu && !ZONE_OF_GU[h.gu]) { CaseList.open(h.gu); return; }
     const zoneId = h.court ? 'court_' + h.court : ZONE_OF_GU[h.gu];
     if (Game.zone && zoneId === Game.zone.id) { Toast.show('지금 있는 곳이에요.'); return; }
     this.sel = { ...h, zoneId };
@@ -2238,7 +2273,6 @@ const SeoulMap = {
       const lift = hov ? 4 : 0; const s = ts * 0.9;
       x.fillStyle = `rgba(0,0,0,${hov ? 0.35 : 0.22})`; rr(x, cx - s / 2 + 3, cy - s / 2 + 4 + (hov ? 3 : 0), s, s, 10); x.fill();
       x.fillStyle = TIER_COL[d.tier]; rr(x, cx - s / 2, cy - s / 2 - lift, s, s, 10); x.fill();
-      if (ZONE_OF_GU[d.id]) { x.strokeStyle = '#cdae70'; x.lineWidth = 2; rr(x, cx - s / 2 + 3, cy - s / 2 - lift + 3, s - 6, s - 6, 8); x.stroke(); }
       x.fillStyle = '#efe6d2'; x.textAlign = 'center'; x.font = `700 ${Math.max(11, ts * 0.17)}px "IBM Plex Sans KR"`; x.fillText(d.short, cx, cy + 4 - lift);
       if (cnt[d.id]) {
         const bounce = hov ? Math.abs(Math.sin(this.t * 8)) * 4 : 0; const px = cx + s * 0.3, py = cy - s * 0.3 - lift - bounce;
@@ -2290,7 +2324,7 @@ function drawMinimap(t) {
   x.fillStyle = '#14161c'; x.font = '600 9px "IBM Plex Sans KR"'; x.textAlign = 'right'; x.fillText('M 지도', W - 5, H - 4);
 }
 
-/* 운전 구역이 없는 구: 물건 목록 카드 */
+/* 물건 목록 카드 */
 const CaseList = {
   openAll() {
     const el = $('caseList'); const cases = [...State.week.cases].sort((a, b) => (DISTRICT[a.gu].row - DISTRICT[b.gu].row) || (DISTRICT[a.gu].col - DISTRICT[b.gu].col));
@@ -2304,7 +2338,7 @@ const CaseList = {
   open(gu) {
     const list = State.week.cases.filter(c => c.gu === gu);
     const el = $('caseList');
-    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><h3>${DISTRICT[gu].name} 이번 주 물건 ${list.length}건</h3><div class="dim">이 구는 운전 구역이 아직 없어서 목록만 볼 수 있어요.</div>` +
+    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><h3>${DISTRICT[gu].name} 이번 주 물건 ${list.length}건</h3>` +
       (list.length ? list.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.name}</b><span>${c.caseNo} · ${c.type} · 최저가 ${fmtWon(c.minPrice)}</span></div>`).join('') : '<div class="dim">진행 중인 물건이 없어요.</div>') +
       `<button class="btn" id="clClose">닫기</button>`;
     el.classList.add('in'); Sound.play('paper');
@@ -2363,6 +2397,12 @@ const ZoneMap = {
     // 내 차(걸을 때)
     if (!Game.driving) { x.save(); x.translate(Game.car.x / TILE * P, Game.car.y / TILE * P); x.rotate(Game.car.a); x.fillStyle = '#fff'; x.fillRect(-5, -3, 10, 6); x.restore(); }
     // 나
+    // 가장자리: 그쪽으로 달리면 나오는 옆 구
+    if (!z.spec.court) { x.font = 'bold 11px "IBM Plex Sans KR", sans-serif';
+      for (const [dx, dy, X, Y, al] of [[-1, 0, 6, z.H * P / 2, 'left'], [1, 0, z.W * P - 6, z.H * P / 2, 'right'], [0, -1, z.W * P / 2, 12, 'center'], [0, 1, z.W * P / 2, z.H * P - 6, 'center']]) {
+        const g = neighborGu(z.gu, dx, dy); const txt = g ? `${EDGE_ARROW[dx + ',' + dy]} ${DISTRICT[g].name}` : '서울 끝'; x.textAlign = al;
+        const w = x.measureText(txt).width + 8; x.fillStyle = 'rgba(10,12,14,.7)'; x.fillRect(al === 'left' ? X - 4 : al === 'right' ? X - w + 4 : X - w / 2, Y - 11, w, 15); x.fillStyle = g ? '#cfe8d2' : '#999'; x.fillText(txt, X, Y);
+      } }
     const X = p.x / TILE * P, Y = p.y / TILE * P; x.fillStyle = 'rgba(255,216,74,.25)'; x.beginPath(); x.arc(X, Y, 10 + Math.sin(t * 4) * 3, 0, 7); x.fill();
     x.fillStyle = '#ffd84a'; x.beginPath(); x.arc(X, Y, 5, 0, 7); x.fill(); x.strokeStyle = '#1a1a1a'; x.lineWidth = 1.5; x.stroke();
     x.fillStyle = '#ffd84a'; x.font = 'bold 11px "IBM Plex Sans KR", sans-serif'; x.fillText('나', X, Y - 13);
@@ -2449,7 +2489,7 @@ const INTERIOR_DEFS = {
     '#..........#',
     '#####D######' ], npc: {} },
 };
-const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장' };
+const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집' };
 // 평일 낮에만 여는 곳
 const WEEKDAY_ONLY = ['registry', 'center', 'bank', 'savings'];
 
@@ -2999,6 +3039,7 @@ function getZone(id) {
   if (Game.zones[id]) return Game.zones[id];
   let spec, cases = [];
   if (id.startsWith('court_')) spec = courtZoneSpec(id.slice(6));
+  else if (id.startsWith('gu_')) { spec = genericZoneSpec(id.slice(3)); cases = State.week.cases.filter(c => c.gu === spec.gu); }
   else { spec = ZONE_SPECS[id]; const gus = [spec.gu, ...(spec.guAlso || [])]; cases = State.week.cases.filter(c => gus.includes(c.gu)); }
   return (Game.zones[id] = buildZone(spec, cases));
 }
@@ -3014,7 +3055,7 @@ async function arriveZone(id, fromGu) {
   const [ex, ey] = best.r.pts[best.i], [nx, ny] = best.r.pts[best.j]; const L = Math.hypot(nx - ex, ny - ey); const ux = (nx - ex) / L, uy = (ny - ey) / L;
   const laneOff = best.r.oneway ? 0 : best.r.width / best.r.lanes * 0.5 * TILE * (best.r.lanes > 2 ? 1.5 : 1);
   Game.car = makeCar((ex + ux * 4) * TILE - uy * laneOff, (ey + uy * 4) * TILE + ux * laneOff, Math.atan2(uy, ux));
-  Game.car.vx = ux * 120; Game.car.vy = uy * 120; Game.car.fineCd = 5; // 진입 직후 신호 과태료 유예
+  Game.car.vx = ux * 120; Game.car.vy = uy * 120; Game.car.fineCd = 5; Game.car.hitCd = 1.5; // 진입 직후 신호 과태료·수리비 유예
   Game.driving = true; Game.player = makeWalker('player', Game.car.x, Game.car.y);
   Skids.length = 0; spawnDecor(); Game.traffic = spawnTraffic(z);
   Cam.x = Game.car.x; Cam.y = Game.car.y; Cam.zoom = FEEL.zoom * 1.4;
@@ -3062,6 +3103,82 @@ function roomInteractTarget() {
   if (r.place.kind === 'bank' && !p.sit) for (const o of r.objs) if (o.type === 'chair' && !o.taken) consider({ kind: 'obj', obj: o, label: '앉기' }, o.tx * TILE + 8, o.ty * TILE + 12, 15);
   if (r.exit) consider({ kind: 'exit' }, r.exit.tx * TILE + 8, r.exit.ty * TILE + 4);
   return best;
+}
+
+
+/* ---- 구역 가장자리로 운전해 나가면 옆 구 (카토그램 기준, 행 3 = 한강) ---- */
+const EDGE_ARROW = { '-1,0': '←', '1,0': '→', '0,-1': '↑', '0,1': '↓' };
+function neighborGu(gu, dx, dy) {
+  const A = DISTRICT[gu]; let best = null, bd = 1e9;
+  for (const d of DISTRICTS) {
+    if (d.id === gu) continue; let ok, cost;
+    if (dx) { ok = d.row === A.row && Math.sign(d.col - A.col) === dx; cost = Math.abs(d.col - A.col); }
+    else { const want = A.row + dy === 3 ? A.row + 2 * dy : A.row + dy; ok = d.row === want; cost = Math.abs(d.col - A.col) + (d.col < A.col ? 0.01 : 0); }
+    if (ok && cost < bd) { bd = cost; best = d.id; }
+  }
+  return best;
+}
+// 바깥을 향해 달리는 중이고 가장자리가 가까우면 그 변을 돌려준다
+function edgeDir(z, c) {
+  const W = z.W * TILE, H = z.H * TILE, M = FEEL.edgeSignDist * TILE;
+  const hx = Math.cos(c.a), hy = Math.sin(c.a); if (c.vx * hx + c.vy * hy < 20) return null;
+  let best = null;
+  for (const e of [{ dx: -1, dy: 0, d: c.x }, { dx: 1, dy: 0, d: W - c.x }, { dx: 0, dy: -1, d: c.y }, { dx: 0, dy: 1, d: H - c.y }]) {
+    if (e.d > M || hx * e.dx + hy * e.dy < 0.5) continue; if (!best || e.d < best.d) best = e;
+  }
+  return best;
+}
+function checkEdgeExit(dt, z, c) {
+  if (Game.edgeBounceCd > 0) Game.edgeBounceCd -= dt;
+  const el = $('edgeSign'); const e = !z.spec.court && !Game.edgeGoing ? edgeDir(z, c) : null;
+  if (!e) { if (el.dataset.k) { el.classList.remove('in'); el.dataset.k = ''; } return; }
+  const to = neighborGu(z.gu, e.dx, e.dy); const key = e.dx + ',' + e.dy + (to || '');
+  if (el.dataset.k !== key) {
+    el.dataset.k = key; const arrow = EDGE_ARROW[e.dx + ',' + e.dy];
+    el.innerHTML = to ? `<b>${arrow} ${DISTRICT[to].name}</b><small>${travelCost(z.gu, to).slot ? '시간 1칸' : '시간 그대로'} · 큰길로 구역 끝까지</small>` : `<b>${arrow} 서울 끝</b><small>이쪽으로는 길이 없어요</small>`;
+    el.classList.add('in');
+  }
+  const atEdge = c.x <= 13 || c.x >= z.W * TILE - 13 || c.y <= 13 || c.y >= z.H * TILE - 13;
+  if (!atEdge) return;
+  const onRoad = z.at(Math.floor(c.x / TILE), Math.floor(c.y / TILE)) === T.ROAD;
+  if (!to || !onRoad) {
+    if (!(Game.edgeBounceCd > 0)) { Game.edgeBounceCd = 2; Toast.show(to ? '큰길을 타고 나가야 옆 구로 넘어가요.' : '여기는 서울 끝이에요.'); Sound.play('deny'); }
+    if (e.dx) c.vx = -e.dx * FEEL.edgeBounce; else c.vy = -e.dy * FEEL.edgeBounce; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1;
+    return;
+  }
+  driveAcross(to);
+}
+async function driveAcross(toGu) {
+  if (Game.busy || Game.edgeGoing) return; Game.edgeGoing = true; Game.busy = true;
+  const el = $('edgeSign'); el.classList.remove('in'); el.dataset.k = '';
+  const from = currentGu(); const { slot } = travelCost(from, toGu);
+  const fuel = Math.round((10000 + Math.random() * 20000) / 1000) * 1000;
+  await iris(true);
+  State.cash -= fuel; HUD.setCash(State.cash);
+  if (slot && !State.evening) await advanceSlot();
+  await arriveZone(ZONE_OF_GU[toGu], from);
+  await iris(false); Game.trans = null;
+  Toast.show(`${DISTRICT[toGu].name} 진입 · 주유비 ${fmtWon(fuel)}`);
+  Game.busy = false; Game.edgeGoing = false;
+}
+
+/* ---- 내 집: 자고 일어나면 다음 날 아침, 또는 매각기일 아침까지 건너뛰기 ---- */
+async function homeDoor() {
+  if (Game.busy) return; Game.busy = true;
+  try {
+    const left = 7 - State.day;
+    if (left <= 0) { await Dialog.say([{ name: '내 집', text: State.phase === 'dday' ? '오늘이 매각기일이다. 지금 자면 입찰은 못 한다. 법원부터 가자.' : '낙찰 뒤 절차(대출·잔금·명도)가 남았다. 잘 때가 아니다.' }]); return; }
+    const pick = await Dialog.say([{ name: '내 집', text: `집이다. 지금은 ${dLabel()} ${halfLabel()}. 자고 일어날까?` }], [
+      { label: `하룻밤 자기 → ${dLabel(State.day + 1)} 오전`, value: 1 },
+      { label: left > 1 ? `매각기일(D-day) 아침까지 쭉 자기 · ${left}일` : '매각기일(D-day) 아침까지 자기', value: left },
+      { label: '그냥 나가기', value: 0 }]);
+    if (!pick) return;
+    Sound.play('door'); await iris(true);
+    State.day += pick - 1; State.evening = false; // 마지막 밤은 endDay가 넘기며 D-day 안내까지 한다
+    await endDay();
+    await iris(false); Game.trans = null;
+    Toast.show(pick > 1 ? `${pick}일을 내리 잤다.` : '푹 잤다.');
+  } finally { Game.busy = false; }
 }
 
 /* ---- 문 진입 · 아이리스 ---- */
@@ -3117,6 +3234,7 @@ function exitCar() {
     if (z.at(Math.floor(px / TILE), Math.floor(py / TILE)) !== T.BLD) { Game.player.x = px; Game.player.y = py; break; }
   }
   Game.driving = false; Game.player.vx = Game.player.vy = 0; Sound.play('carDoor');
+  const es = $('edgeSign'); es.classList.remove('in'); es.dataset.k = '';
 }
 
 /* ---- 시간: 조사하기 1칸 소모 ---- */
@@ -3193,6 +3311,7 @@ function update(dt) {
       const c = Game.car;
       const inp = frozen ? {} : { up: Keys.w || Keys.ArrowUp || Touch.gas || (Touch.active && Touch.y < -0.3), down: Keys.s || Keys.ArrowDown || Touch.brake || (Touch.active && Touch.y > 0.5), left: Keys.a || Keys.ArrowLeft || (Touch.active && Touch.x < -0.3), right: Keys.d || Keys.ArrowRight || (Touch.active && Touch.x > 0.3), hb: Keys[' '] || Touch.hb };
       const was = c.speed; updateMyCar(dt, z, inp);
+      if (!frozen) checkEdgeExit(dt, z, c);
       if (was > 120 && c.speed < 40 && inp.down) Sound.play('brake');
       p.x = c.x; p.y = c.y;
       const tg = !frozen && c.speed < 25 ? zoneInteractTarget(true) : null; Game.promptFor(tg);
@@ -3202,7 +3321,7 @@ function update(dt) {
       stepWalker(p, dt, ix, iy, run, solid, 'asphalt');
       const nearCar = Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
-      if (interact && tg && tg.kind !== 'car') enterPlace(tg);
+      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else enterPlace(tg); }
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
       else if (fKey) Toast.show('차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
     }
@@ -3374,7 +3493,7 @@ function drawFlag(c, X, Y, t, pl) {
   if (State.visited[pl.id]) { c.strokeStyle = '#7fe08a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(X + 3, Y - 13); c.lineTo(X + 5, Y - 11); c.lineTo(X + 9, Y - 16); c.stroke(); }
 }
 function drawPlaceIcon(c, X, Y, kind) {
-  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'] }[kind]; if (!ICON) return;
+  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'] }[kind]; if (!ICON) return;
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(X + 1, Y + 1, 8, 0, 7); c.fill();
   c.fillStyle = ICON[0]; c.beginPath(); c.arc(X, Y, 8, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
   c.fillStyle = '#fff'; c.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ICON[1], X, Y + 0.5); c.textBaseline = 'alphabetic';

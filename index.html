@@ -326,6 +326,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #devPage .note { font-size:12px; opacity:.6; }
 
 #btnInstall { margin-top:10px; }
+.xClose { position:sticky; top:0; display:block; margin:-4px -6px -28px auto; width:30px; height:30px; border-radius:50%; border:2px solid #fff; background:#14213a; color:#fff; font-size:20px; line-height:26px; text-align:center; padding:0; cursor:pointer; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,.35); font-family:sans-serif; }
+.xClose:hover { background:#b3392a; }
 .keys { margin:8px 0 10px; font-size:13px; }
 .keys summary { cursor:pointer; color:#f2c233; font-weight:700; padding:4px 0; }
 .keys table { width:100%; border-collapse:collapse; margin-top:6px; }
@@ -2280,22 +2282,22 @@ function drawMinimap(t) {
 const CaseList = {
   openAll() {
     const el = $('caseList'); const cases = [...State.week.cases].sort((a, b) => (DISTRICT[a.gu].row - DISTRICT[b.gu].row) || (DISTRICT[a.gu].col - DISTRICT[b.gu].col));
-    el.innerHTML = `<div class="pcHead">법원경매정보 · 서울 매각기일 ${State.week.saleDate}</div><h3>이번 주 서울 경매 물건 ${cases.length}건</h3><div class="dim">물건을 누르면 기본 정보를 볼 수 있어요. 금테 구는 직접 차로 둘러볼 수 있어요.</div>` +
+    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><div class="pcHead">법원경매정보 · 서울 매각기일 ${State.week.saleDate}</div><h3>이번 주 서울 경매 물건 ${cases.length}건</h3><div class="dim">물건을 누르면 기본 정보를 볼 수 있어요. 금테 구는 직접 차로 둘러볼 수 있어요.</div>` +
       cases.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.name}</b><span>${c.caseNo} · ${DISTRICT[c.gu].name} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)} · 유찰 ${c.failCount}회${State.capital + c.minPrice * 0.8 < c.minPrice ? ' · <em>자본 초과</em>' : ''}</span></div>`).join('') +
       `<button class="btn" id="clClose">닫기</button>`;
     el.classList.add('in'); Sound.play('paper');
     el.querySelectorAll('.clItem').forEach(it => it.onclick = () => { el.classList.remove('in'); PropertyCard.open(it.dataset.id); });
-    $('clClose').onclick = () => el.classList.remove('in');
+    $('clClose').onclick = () => el.classList.remove('in'); el.querySelector('.xClose').onclick = () => el.classList.remove('in');
   },
   open(gu) {
     const list = State.week.cases.filter(c => c.gu === gu);
     const el = $('caseList');
-    el.innerHTML = `<h3>${DISTRICT[gu].name} 이번 주 물건 ${list.length}건</h3><div class="dim">이 구는 운전 구역이 아직 없어서 목록만 볼 수 있어요.</div>` +
+    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><h3>${DISTRICT[gu].name} 이번 주 물건 ${list.length}건</h3><div class="dim">이 구는 운전 구역이 아직 없어서 목록만 볼 수 있어요.</div>` +
       (list.length ? list.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.name}</b><span>${c.caseNo} · ${c.type} · 최저가 ${fmtWon(c.minPrice)}</span></div>`).join('') : '<div class="dim">진행 중인 물건이 없어요.</div>') +
       `<button class="btn" id="clClose">닫기</button>`;
     el.classList.add('in'); Sound.play('paper');
     el.querySelectorAll('.clItem').forEach(it => it.onclick = () => { el.classList.remove('in'); SeoulMap.toggle(false); PropertyCard.open(it.dataset.id); });
-    $('clClose').onclick = () => el.classList.remove('in');
+    $('clClose').onclick = () => el.classList.remove('in'); el.querySelector('.xClose').onclick = () => el.classList.remove('in');
   },
 };
 
@@ -2636,7 +2638,7 @@ const PropertyCard = {
     const c = State.week.cases.find(x => x.id === caseId); if (!c) return; this.cur = c; this.open_ = true;
     const over = State.capital + c.minPrice * 0.8 < c.minPrice;
     const el = $('propCard');
-    el.innerHTML = `<canvas id="pcThumb" width="96" height="64"></canvas>
+    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><canvas id="pcThumb" width="96" height="64"></canvas>
       ${over ? '<div class="over">자본 초과</div>' : ''}
       <div class="pcNo">${c.caseNo.replace('타경', '타경 ')}</div>
       <h3>${c.name}</h3>
@@ -2659,7 +2661,7 @@ const PropertyCard = {
     drawThumb($('pcThumb').getContext('2d'), c);
     $('pcTarget').onclick = () => { State.targetPlace = 'case:' + c.id; Toast.show('노란 화살표로 표시했어요.'); this.close(); };
     $('pcBid').onclick = () => { State.target = c.id; Sound.play('stamp'); Toast.show(`입찰 대상: ${c.name}. D-day에 ${COURTS[c.court].name}으로 가세요.`, 3000); this.close(); };
-    $('pcClose').onclick = () => this.close();
+    $('pcClose').onclick = () => this.close(); el.querySelector('.xClose').onclick = () => this.close();
     if ($('pcSpec')) {
       const open = async (kind, title, html) => { this.close(); if (!State.docs.some(d => d.caseId === c.id && d.kind === kind)) addDoc(c.id, kind, title, html); else markSeen(c.id, kind, { day: State.day }); await DocViewer.show(html, { title }); };
       $('pcSpec').onclick = () => open('spec', `매각물건명세서 · ${c.name}`, docSpec(c));
@@ -3519,14 +3521,14 @@ function pickCase(title, filter = () => true) {
   return new Promise(res => {
     const el = $('caseList');
     const list = State.week.cases.filter(filter).sort((a, b) => (b.id === State.target) - (a.id === State.target) || (State.seen[b.id] ? 1 : 0) - (State.seen[a.id] ? 1 : 0));
-    el.innerHTML = `<h3>${title}</h3><div class="dim">어느 물건을 볼까요?</div>` +
+    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><h3>${title}</h3><div class="dim">어느 물건을 볼까요?</div>` +
       (list.length ? list.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.id === State.target ? '★ ' : ''}${c.name}</b><span>${c.caseNo} · ${DISTRICT[c.gu].name} · ${c.type}</span></div>`).join('') : '<div class="dim">여기서 볼 수 있는 물건이 없어요.</div>') +
       `<button class="btn" id="clClose">그만두기</button>`;
     el.classList.add('in'); Sound.play('paper');
     const done = v => { el.classList.remove('in'); Game.pickerOpen = false; res(v); };
     Game.pickerOpen = done;
     el.querySelectorAll('.clItem').forEach(it => it.onclick = () => { Sound.play('click'); done(it.dataset.id); });
-    $('clClose').onclick = () => done(null);
+    $('clClose').onclick = () => done(null); el.querySelector('.xClose').onclick = () => done(null);
   });
 }
 async function issueDoc(caseId, kind, title, html, { fee = 0 } = {}) {

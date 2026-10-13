@@ -525,7 +525,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>채팅(같이 하기)</th><td>T</td><td class="tc">채팅 버튼</td></tr>
       <tr><th>게임장</th><td colspan="2">건대 구역 '게임장' (미니게임 기계 준비 중)</td></tr>
       <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작)</td></tr>
-      <tr><th>실시간 채널</th><td colspan="2">1주 = 실제 20분, 물건 3개가 어긋나게 돌아감 · 법원에서 아무 때나 입찰표 · 개찰은 자동 · 하루 조사 2번 · 돈은 채널별로 이어짐</td></tr>
+      <tr><th>실시간 채널</th><td colspan="2">1주 = 실제 20분, 물건 3개가 어긋나게 돌아감 · 입찰은 매각기일 당일(마지막 날 약 3분) 그 법원에서 · 개찰은 자동 · 하루 조사 2번 · 돈은 채널별로 이어짐</td></tr>
       <tr><th>버튼 위치</th><td colspan="2">메뉴 → 버튼 위치 조정 (조이스틱·버튼을 끌어서 옮김)</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
@@ -1298,6 +1298,7 @@ const FEEL = {
   liveWeekMin: 20,        // 실시간 채널: 1주(D-7→개찰)가 실제 몇 분인지 (사용자 요청 20분)
   liveListings: 3,        // 실시간 채널: 동시에 돌아가는 물건 수 (서로 어긋나게 → 약 7분마다 개찰)
   liveSlots: 2,           // 실시간 채널: 게임 하루(실제 20/7분)에 조사할 수 있는 횟수
+  liveBidDdayOnly: true,  // 실시간 채널: 입찰표는 매각기일(마지막 날)에만 받는다 (현실대로; false면 개찰 전 아무 때나)
   // 카메라
   zoom: 2,                // 기본 확대 (16px 픽셀아트 ×2)
   camLerp: 10,
@@ -3601,13 +3602,23 @@ const Live = {
     return c;
   },
   caseFor(key) { const [, k, n] = key.split(':').map(Number); const cur = State.week.cases.find(c => c.live && c.live.key === key); return cur || Object.values(this.closed).find(c => c.live && c.live.key === key) || this.makeCase(k, n); },
-  dayLabel(c) { const d = Math.min(7, Math.floor((this.now() - c.live.t0) / this.dayMs())); return dLabel(d); },
+  dayIdxOf(c) { return Math.min(6, Math.floor((this.now() - c.live.t0) / this.dayMs())); }, // 0..6, 6 = 매각기일(D-day)
+  dayLabel(c) { return dLabel(Math.min(7, this.dayIdxOf(c) + 1)); }, // D-6 … D-1, D-day
+  isDday(c) { return !c.closed && this.dayIdxOf(c) >= 6; },
+  bidOpen(c) { return !FEEL.liveBidDdayOnly || this.isDday(c); },
+  untilDday(c) { return Math.max(0, c.live.tEnd - this.dayMs() - this.now()); },
   left(c) { return Math.max(0, c.live.tEnd - this.now()); },
   mmss(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; },
   nextOpen() { let best = Infinity, bc = null; for (const c of State.week.cases) { if (c.live && c.live.tEnd - this.now() < best) { best = c.live.tEnd - this.now(); bc = c; } } return { ms: Math.max(0, best), c: bc }; },
   // 하루 안의 시계: 9:00 → 18:00
   clock() { const f = (this.now() % this.dayMs()) / this.dayMs(); const m = 9 * 60 + Math.floor(f * 9 * 60); const h = Math.floor(m / 60) % 12 || 12; return `${h}:${String(m % 60).padStart(2, '0')}`; },
-  hudText() { const { ms, c } = this.nextOpen(); return `${this.clock()} · 다음 개찰 ${this.mmss(ms)}${c ? ` (${c.name.split(' ')[0]})` : ''}`; },
+  hudText() {
+    const live = State.week.cases.filter(c => c.live && !c.closed);
+    const open = live.filter(c => this.isDday(c)).sort((a, b) => a.live.tEnd - b.live.tEnd)[0];
+    if (open) return `${this.clock()} · ${open.name.split(' ')[0]} 입찰 중 · 개찰 ${this.mmss(this.left(open))}`;
+    const nx = live.sort((a, b) => this.untilDday(a) - this.untilDday(b))[0];
+    return `${this.clock()} · 다음 매각기일 ${nx ? this.mmss(this.untilDday(nx)) + ' (' + nx.name.split(' ')[0] + ')' : '-'}`;
+  },
   untilDay() { return this.mmss(this.dayMs() - (this.now() % this.dayMs())); },
   pnl() { return State.cash - State.capital; },
 
@@ -3629,11 +3640,11 @@ const Live = {
     State.week = { seed: Net.seed, capital: State.capital, saleDate: '2025-11-11', cases };
     for (const key in this.mine) this.book[key] = this.book[key] || {};
     this.save();
-    setTimeout(() => HUD.page(sv ? `채널 ${this.ch} 이어서 한다. 누적 손익 ${(sv.cash - sv.capital >= 0 ? '+' : '−') + fmtWon(Math.abs(sv.cash - sv.capital))}. 물건은 사무실 PC.` : `채널 ${this.ch}다. 1주가 실제 ${FEEL.liveWeekMin}분이고 물건 ${FEEL.liveListings}개가 돌아간다. 입찰표는 법원에서 아무 때나.`), 2500);
+    setTimeout(() => HUD.page(sv ? `채널 ${this.ch} 이어서 한다. 누적 손익 ${(sv.cash - sv.capital >= 0 ? '+' : '−') + fmtWon(Math.abs(sv.cash - sv.capital))}. 물건은 사무실 PC.` : `채널 ${this.ch}다. 1주가 실제 ${FEEL.liveWeekMin}분이고 물건 ${FEEL.liveListings}개가 돌아간다. 입찰은 매각기일 당일 법원에서.`), 2500);
   },
   titleHint(ch) {
     const sv = this.saved(ch); const p = sv ? sv.cash - sv.capital : 0;
-    return `<br><span class="small">채널 ${ch}은 자본 <b>${fmtWon(this.capOf(ch))}</b>으로 시작합니다 · 1주 = 실제 ${FEEL.liveWeekMin}분 · 물건 ${FEEL.liveListings}개가 돌아갑니다 · 입찰표는 법원에서 아무 때나, 개찰은 자동 · 돈은 채널별로 이어집니다.</span>` + (sv ? `<br><span class="small">이 채널 기록: 자본 ${fmtWon(sv.capital)} · 누적 손익 ${(p >= 0 ? '+' : '−') + fmtWon(Math.abs(p))} <button class="btn" id="liveReset">기록 지우고 새로</button></span>` : '');
+    return `<br><span class="small">채널 ${ch}은 자본 <b>${fmtWon(this.capOf(ch))}</b>으로 시작합니다 · 1주 = 실제 ${FEEL.liveWeekMin}분 · 물건 ${FEEL.liveListings}개가 돌아갑니다 · 입찰은 매각기일 당일(마지막 날 약 ${Math.round(FEEL.liveWeekMin / 7 * 10) / 10}분) 그 법원에서, 개찰은 자동 · 돈은 채널별로 이어집니다.</span>` + (sv ? `<br><span class="small">이 채널 기록: 자본 ${fmtWon(sv.capital)} · 누적 손익 ${(p >= 0 ? '+' : '−') + fmtWon(Math.abs(p))} <button class="btn" id="liveReset">기록 지우고 새로</button></span>` : '');
   },
 
   /* ---- 시간 흐름 ---- */
@@ -3645,6 +3656,7 @@ const Live = {
     for (let k = 0; k < FEEL.liveListings; k++) {
       const c = State.week.cases[k]; if (!c || !c.live) continue;
       if (this.now() >= c.live.tEnd) this.roll(k);
+      else if (this.isDday(c) && !c.live.told && Game.player) { c.live.told = true; HUD.page(`${c.name} 오늘이 매각기일이다. ${COURTS[c.court].name}에서 ${this.mmss(this.left(c))} 안에 입찰표 내.`); Sound.play('chime'); }
     }
     if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) this.openResult(this.queue.shift());
     this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && p.pnl !== undefined) this.seen[p.name] = { pnl: p.pnl, at: this.now() }; this.save(); }
@@ -3676,8 +3688,9 @@ const Live = {
       c = caseById(id);
     }
     const key = c.live.key, m = this.mine[key];
+    if (!this.bidOpen(c)) { await Dialog.say([say('court', `${c.caseNo} ${c.name}의 매각기일은 ${this.mmss(this.untilDday(c))} 뒤(${this.dayLabel(c)})입니다. 입찰표는 그날 이 법정에서 받습니다. 그때 오세요.`)]); return; }
     if (m) { await Dialog.say([say('court', `${c.caseNo}은(는) 이미 입찰표를 내셨어요 (${fmtWon(m.bid)}). 개찰은 ${this.mmss(this.left(c))} 뒤에 자동으로 열립니다. 결과는 어디 계시든 알려 드려요.`)]); return; }
-    const pick = await Dialog.say([say('court', `${c.caseNo} ${c.name}, 개찰까지 ${this.mmss(this.left(c))} 남았습니다. 입찰표를 내시면 그때 자동으로 개찰합니다. 한 번 내면 바꿀 수 없어요.`)], [{ label: '입찰표 쓰기', value: 'y' }, { label: '그만두기', value: 'n' }]);
+    const pick = await Dialog.say([say('court', `${c.caseNo} ${c.name}, 오늘이 매각기일입니다. 입찰 마감(개찰)까지 ${this.mmss(this.left(c))}. 한 번 낸 입찰표는 바꿀 수 없어요.`)], [{ label: '입찰표 쓰기', value: 'y' }, { label: '그만두기', value: 'n' }]);
     if (pick !== 'y') return;
     if (this.now() >= c.live.tEnd) { Toast.show('방금 개찰이 끝났어요.'); return; }
     const r = await bidForm(c, false); if (!r) return;
@@ -4516,7 +4529,7 @@ function drawHudExtras() {
   const q = $('quest');
   if (!c) { q.classList.remove('in'); return; }
   const prevDone = (prevKey.split('|')[2] || '');
-  q.innerHTML = `<b>★ ${c.name}</b><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>${Live.on && c.live ? `<div style="font-size:11px;opacity:.9">${c.closed ? '개찰 끝' : `개찰까지 ${Live.mmss(Live.left(c))} · ${COURTS[c.court].name}`}${Live.mine[c.live.key] ? ' · 입찰표 냈음' : ''}</div>` : ''}`;
+  q.innerHTML = `<b>★ ${c.name}</b><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>${Live.on && c.live ? `<div style="font-size:11px;opacity:.9">${c.closed ? '개찰 끝' : Live.isDday(c) ? `오늘 매각기일 · 개찰까지 ${Live.mmss(Live.left(c))} · ${COURTS[c.court].name}` : `매각기일까지 ${Live.mmss(Live.untilDday(c))} (${Live.dayLabel(c)}) · ${COURTS[c.court].name}`}${Live.mine[c.live.key] ? ' · 입찰표 냈음' : ''}</div>` : ''}`;
   q.classList.add('in');
 }
 

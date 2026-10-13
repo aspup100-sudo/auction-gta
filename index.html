@@ -1201,6 +1201,7 @@ Object.assign(FEEL, {
   fineSignal: 60000,      // 신호위반 과태료(연출)
   fineSpeed: 40000,       // 보행자 근처 과속
   carEnterDist: 26,
+  promptSound: false,     // 상호작용 표시(E)가 뜰 때 소리 (사용자 요청으로 끔)
   hornDelay: 1.4,         // NPC 차가 내 차에 막히면 경적까지 걸리는 시간(초)
   npcShove: 7,            // 내 차에 받힌 NPC 차가 옆으로 튕기는 거리(px)
   npcShoveDecay: 4,       // 튕긴 NPC 차가 제자리로 돌아오는 속도
@@ -2954,7 +2955,7 @@ function dirToward(from, to) { const dx = to.x - from.x, dy = to.y - from.y; ret
 const Game = {
   scene: 'title', zone: null, room: null, player: null, zonePos: null, t: 0,
   prompt: { target: null, t: 0 }, trans: null, busy: false, decor: [], lastRoad: '',
-  promptFor(target) { if (this.prompt.target !== target) { this.prompt = { target, t: 0 }; if (target) Sound.play('pop'); } },
+  promptFor(target) { if (this.prompt.target !== target) { this.prompt = { target, t: 0 }; if (target && FEEL.promptSound) Sound.play('pop'); } },
 };
 
 function startGame(capital) {

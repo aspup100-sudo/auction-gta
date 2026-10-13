@@ -47,7 +47,9 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .rot #caseList { max-height:calc(100% - 40px); }
 #title .mp { background:rgba(255,255,255,.04); border:1px solid #3c4252; border-radius:10px; padding:8px 14px; max-width:min(560px, 92vw); font-size:14px; }
 #title .mp summary { cursor:pointer; color:var(--gold); } #title .mp summary small { color:var(--paper); opacity:.7; }
-#title .mp .row { margin-top:8px; } #title .mp .ch { min-width:38px; padding:6px 8px; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
+#title .mp .row { margin-top:8px; } #title .mp .chHead { margin-top:12px; color:var(--paper); font-weight:700; } #title .mp .chHead small { font-weight:400; opacity:.6; margin-left:6px; }
+#title .mp .chRow { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:6px; } #title .mp .ch { display:inline-flex; flex-direction:column; align-items:center; min-width:72px; padding:7px 10px; line-height:1.15; gap:2px; } #title .mp .ch b { font-size:14px; } #title .mp .ch small { font-size:11px; opacity:.7; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .ch.sel small { opacity:1; }
+#title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput, #title.chOn #mpCreate, #title.chOn #mpCode, #title.chOn #mpJoin, #title.chOn .row .or { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
 #title .mp .mpHint { margin-top:6px; font-size:12px; opacity:.6; }
 #chatLog { position:absolute; left:12px; bottom:170px; max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; }
@@ -150,7 +152,6 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .panel .tabs .btn.on { background:var(--navy); color:#fff; }
 .panel li.empty { opacity:.6; list-style:none; }
 .panel textarea { width:100%; min-height:200px; font:inherit; background:#fffaf0; border:1px solid #c9b98f; border-radius:6px; padding:8px; }
-#caps.dim { opacity:.35; pointer-events:none; }
 #menu { left:50%; top:50%; right:auto; height:auto; max-height:calc(100% - 24px); width:min(380px, calc(100% - 32px)); transform:translate(-50%, -40%) scale(.96); opacity:0; pointer-events:none; transition:transform .2s ease-out, opacity .2s; border-radius:12px; }
 #menu.in { transform:translate(-50%, -50%); opacity:1; pointer-events:auto; }
 #menu label { display:flex; justify-content:space-between; align-items:center; margin:10px 0; gap:10px; }
@@ -439,7 +440,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div class="troad"><div class="tcar"></div><div class="tcar t2"></div></div>
   <h1>경매 GTA</h1>
   <div class="tag">걸어서 모으는 정보, 손으로 하는 권리분석</div>
-  <div>시작 자본을 고르세요</div>
+  <div id="capLabel">시작 자본을 고르세요</div>
   <div class="caps" id="caps">
     <button class="btn" data-v="50000000">5천만 원</button>
     <button class="btn" data-v="100000000">1억 원</button>
@@ -450,9 +451,10 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <details class="mp" id="mpBox" open><summary>같이 하기 · 실시간 채널 <small>(친구 방 또는 채널 · 같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
     <div class="row"><input id="mpName" placeholder="내 이름" maxlength="8"></div>
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
-    <div class="row"><span class="or">실시간 채널</span><button class="btn ch" data-ch="1">1 <small>1억</small></button><button class="btn ch" data-ch="2">2 <small>2억</small></button><button class="btn ch" data-ch="3">3 <small>3억</small></button><button class="btn ch" data-ch="4">4 <small>4억</small></button><button class="btn ch" data-ch="5">5 <small>5억</small></button><span class="or small">코드 없이 아무나 · 채널 번호 = 시작 자본(억)</span></div>
+    <div class="chHead">실시간 채널 <small>코드 없이 아무나 · 1주 = 실제 20분 · 돈과 순위가 채널별로 이어짐</small></div>
+    <div class="row chRow"><button class="btn ch" data-ch="1"><b>채널 1</b><small>자본 1억</small></button><button class="btn ch" data-ch="2"><b>채널 2</b><small>자본 2억</small></button><button class="btn ch" data-ch="3"><b>채널 3</b><small>자본 3억</small></button><button class="btn ch" data-ch="4"><b>채널 4</b><small>자본 4억</small></button><button class="btn ch" data-ch="5"><b>채널 5</b><small>자본 5억</small></button></div>
     <div id="mpStatus"></div>
-    <div class="mpHint">친구 방: 방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작. 채널: 들어온 사람끼리 그날의 같은 물건으로 각자 시작, 법원에서 같이 개찰. 모두 인터넷이 필요해요(폰 데이터도 됨).</div>
+    <div class="mpHint">친구 방: 방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작. 채널: 실제 시간으로 계속 돌아가는 세계. 매각기일 당일 법원에서 입찰하면 자동 개찰, 돈과 순위는 채널별로 이어짐. 모두 인터넷이 필요해요(폰 데이터도 됨).</div>
   </details>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button>
@@ -5446,8 +5448,8 @@ const Layout = {
   document.querySelectorAll('#mpBox .ch').forEach(b => b.onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
     Store.set('mpName', name); document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = true); b.classList.add('sel'); $('mpStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
-    $('caps').classList.add('dim'); $('capInput').disabled = true; $('capInput').placeholder = `채널 ${b.dataset.ch} 자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))}`;
-    const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { $('caps').classList.remove('dim'); $('capInput').disabled = false; $('capInput').placeholder = '직접 입력(원)'; document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = false); b.classList.remove('sel'); }
+    $('title').classList.add('chOn'); $('btnStart').textContent = `채널 ${b.dataset.ch} 시작하기 (자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))})`; // 채널은 자본이 정해져 있어 자본 선택을 숨긴다
+    const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { $('title').classList.remove('chOn'); $('btnStart').textContent = '시작하기'; document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = false); b.classList.remove('sel'); }
     else { $('mpStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); const rs = $('liveReset'); if (rs) rs.onclick = () => { Live.reset(Number(b.dataset.ch)); rs.parentElement.textContent = '기록을 지웠어요. 고른 자본으로 새로 시작합니다.'; }; }
   });
   $('mpCreate').onclick = async () => {

@@ -35,6 +35,12 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 #title .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; }
 #title input { font:inherit; width:150px; background:#1d2029; color:var(--paper); border:1px solid #3c4252; border-radius:8px; padding:8px 10px; }
 #title .foot { position:absolute; bottom:12px; font-size:12px; opacity:.5; }
+/* 폰 세로: 가로로 돌리라는 안내 */
+#rotate { display:none; position:fixed; inset:0; z-index:70; background:#14161c; color:var(--paper); flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:24px; }
+#rotate .ph { width:34px; height:60px; border:3px solid var(--gold); border-radius:8px; animation:rotPh 1.8s ease-in-out infinite alternate; margin-bottom:12px; }
+#rotate b { font-size:20px; } #rotate small { opacity:.7; }
+@keyframes rotPh { 0%, 30% { transform:rotate(0); } 70%, 100% { transform:rotate(90deg); } }
+@media (orientation: portrait) and (max-width: 700px) { .touchOn #rotate { display:flex; } }
 /* 폰을 세로로 들어도 가로로: body를 90도 눕힌다 (JS resize()가 body.rot를 붙임) */
 body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:rotate(90deg) translateY(-100%); transform-origin:top left; overflow:hidden; }
 .rot .propCard { top:12px; max-height:calc(100% - 36px); }
@@ -428,6 +434,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
 </div>
 
+<div id="rotate"><div class="ph"></div><b>폰을 가로로 돌려 주세요</b><small>이 게임은 가로 화면에 맞춰져 있어요</small></div>
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
   <div id="chatLog"></div>
@@ -3498,7 +3505,7 @@ let ROT = false;
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
   const touch = document.body.classList.contains('touchOn');
-  ROT = touch && innerHeight > innerWidth && Math.min(innerWidth, innerHeight) <= 760;
+  ROT = false; // 화면 눕히기는 사용자가 어색하다고 해서 끔(2026-10-13); 세로면 #rotate 안내가 뜬다
   document.body.classList.toggle('rot', ROT);
   VW = ROT ? innerHeight : innerWidth; VH = ROT ? innerWidth : innerHeight;
   document.body.classList.toggle('short', touch && VH <= 520);

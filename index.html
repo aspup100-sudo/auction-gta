@@ -47,7 +47,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .rot #caseList { max-height:calc(100% - 40px); }
 #title .mp { background:rgba(255,255,255,.04); border:1px solid #3c4252; border-radius:10px; padding:8px 14px; max-width:min(560px, 92vw); font-size:14px; }
 #title .mp summary { cursor:pointer; color:var(--gold); } #title .mp summary small { color:var(--paper); opacity:.7; }
-#title .mp .row { margin-top:8px; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
+#title .mp .row { margin-top:8px; } #title .mp .ch { min-width:38px; padding:6px 8px; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
 #title .mp .mpHint { margin-top:6px; font-size:12px; opacity:.6; }
 #chatLog { position:absolute; left:12px; bottom:170px; max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; }
@@ -423,11 +423,12 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <details class="mp" id="mpBox"><summary>친구와 같이 하기 <small>(같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
+  <details class="mp" id="mpBox"><summary>같이 하기 <small>(친구 방 또는 실시간 채널 · 같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
     <div class="row"><input id="mpName" placeholder="내 이름" maxlength="8"></div>
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
+    <div class="row"><span class="or">실시간 채널</span><button class="btn ch" data-ch="1">1</button><button class="btn ch" data-ch="2">2</button><button class="btn ch" data-ch="3">3</button><button class="btn ch" data-ch="4">4</button><button class="btn ch" data-ch="5">5</button><span class="or small">코드 없이 아무나</span></div>
     <div id="mpStatus"></div>
-    <div class="mpHint">방장이 자본을 고르고 시작하면 친구도 같은 주(같은 물건·경쟁자)로 같이 시작해요. 둘 다 인터넷에 붙어 있어야 해요(폰 데이터도 됨).</div>
+    <div class="mpHint">친구 방: 방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작. 채널: 들어온 사람끼리 그날의 같은 물건으로 각자 시작, 법원에서 같이 개찰. 모두 인터넷이 필요해요(폰 데이터도 됨).</div>
   </details>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button>
@@ -484,7 +485,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <details class="keys"><summary>조작키 보기</summary>
     <table>
       <tr><th>걷기</th><td>W A S D 또는 방향키</td><td class="tc">왼쪽 조이스틱</td></tr>
-      <tr><th>달리기</th><td>Shift</td><td class="tc">조이스틱 끝까지</td></tr>
+      <tr><th>달리기</th><td>Shift (실시간 채널에선 없음)</td><td class="tc">조이스틱 끝까지</td></tr>
       <tr><th>조사·대화·문</th><td>E (또는 Space, Enter)</td><td class="tc">E 버튼</td></tr>
       <tr><th>차 타기·내리기</th><td>F (차 옆에서 / 속도 40 이하)</td><td class="tc">F 버튼</td></tr>
       <tr><th>운전</th><td>W 가속 · S 브레이크/후진 · A D 핸들</td><td class="tc">페달 + 조이스틱</td></tr>
@@ -1314,6 +1315,7 @@ Object.assign(FEEL, {
   npcShoveDecay: 4,       // 튕긴 NPC 차가 제자리로 돌아오는 속도
   npcYieldWait: 4,        // NPC끼리 교차로에서 서로 양보하다 막히면 이 시간(초) 뒤 그냥 지나감
   bumpSpeed: 25,          // 이 속도 이상이면 '툭' 접촉음, 70 이상이면 쾅(수리비)
+  channelWaitSec: 20,     // 공개 채널 개찰 대기 최대 시간(초)
   chatBubbleTime: 6,      // 말풍선이 머리 위에 떠 있는 시간(초)
   chatLogTime: 12,        // 채팅 기록이 화면 왼쪽에 남는 시간(초)
   settleMin: 300000, settleMax: 1000000, // 걷다가 차에 치였을 때 내가 받는 합의금(원)
@@ -3265,7 +3267,7 @@ const DocViewer = {
 const PEER_URLS = ['https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js', 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js'];
 const FRIEND_SPRITES = ['walker2', 'walker1', 'walker3', 'occ_young'];
 const Net = {
-  on: false, host: false, started: false, room: '', me: '', myId: '', status: 'off', transport: 'peer',
+  on: false, host: false, started: false, room: '', me: '', myId: '', status: 'off', transport: 'peer', mode: 'room', ch: 0, // mode: 'room' 친구 방(코드) | 'channel' 공개 채널
   players: {}, conns: {}, peer: null, bc: null, hostConn: null, myBubble: null, log: [], posT: 0, retryT: 0, seed: 0, cap: 0,
   onStatus: null, // 타이틀 화면이 상태를 그릴 때 쓰는 콜백
 
@@ -3278,7 +3280,52 @@ const Net = {
     });
   },
   setStatus(st, text) { this.status = st; if (this.onStatus) this.onStatus(st, text || ''); },
-  names() { return Object.values(this.players).map(p => p.name); },
+  names() { return Object.values(this.players).filter(p => !p.gone).map(p => p.name); },
+  // 공개 채널: 같은 날·같은 채널이면 누가 언제 들어와도 같은 주(물건·경쟁자)
+  channelSeed(n) { const day = Math.floor((Date.now() + 9 * 3600e3) / 86400000); return ((n * 7919 + day * 104729) ^ 0x5a5a) & 0x7fffffff; },
+  chText() { return `채널 ${this.ch} · 지금 ${1 + this.names().length}명${this.names().length ? ' (' + this.names().join(', ') + ')' : ''}`; },
+  async channel(n, name) {
+    this.me = (name || '').trim() || '플레이어'; this.mode = 'channel'; this.ch = n; this.on = true; this.room = 'CH' + n; this.players = {}; this.seed = this.channelSeed(n);
+    this.myId = 'g' + Math.random().toString(36).slice(2, 8); this.host = false;
+    if (this.transport === 'local') {
+      this.openLocal(); this.gotPlayers = false; this.setStatus('connecting', '채널에 들어가는 중…'); this.send({ t: 'hello', name: this.me });
+      await new Promise(r => setTimeout(r, 900));
+      if (!this.gotPlayers) { this.host = true; this.myId = 'host'; }
+      this.setStatus('open', this.chText()); return true;
+    }
+    if (!(await this.loadPeer())) { this.on = false; this.setStatus('error', '연결 모듈을 못 불러왔어요. 인터넷을 확인해 주세요.'); return false; }
+    return this.claimChannel();
+  },
+  // 채널의 방장 자리('agta-chN')가 비어 있으면 내가 방장, 아니면 손님으로 들어간다. 방장이 나가면 남은 사람끼리 다시 이 과정을 거친다.
+  claimChannel() {
+    return new Promise(res => {
+      if (this.peer) { try { this.peer.destroy(); } catch (e) {} this.peer = null; }
+      const peer = new Peer('agta-ch' + this.ch, { debug: 0 }); this.peer = peer; let settled = false;
+      peer.on('open', () => { settled = true; this.host = true; this.myId = 'host'; this.hostConn = null; this.conns = {}; this.setStatus('open', this.chText()); res(true); });
+      peer.on('connection', conn => this.wire(conn));
+      peer.on('error', e => {
+        if (e.type === 'unavailable-id') { if (!settled) { settled = true; try { peer.destroy(); } catch (err) {} this.peer = null; this.joinChannel().then(res); } return; }
+        if (!settled) { settled = true; this.setStatus(this.started ? 'lost' : 'error', '중계 서버에 연결하지 못했어요.'); if (this.started) this.retryT = 6; res(false); }
+      });
+    });
+  },
+  joinChannel() {
+    return new Promise(res => {
+      const peer = new Peer(undefined, { debug: 0 }); this.peer = peer; this.host = false; if (this.myId === 'host') this.myId = 'g' + Math.random().toString(36).slice(2, 8);
+      let settled = false;
+      peer.on('open', () => {
+        this.setStatus('connecting', '채널에 들어가는 중…');
+        const conn = peer.connect('agta-ch' + this.ch, { reliable: true }); this.hostConn = conn;
+        conn.on('open', () => { settled = true; this.wire(conn, true); this.setStatus('open', this.chText()); this.send({ t: 'hello', name: this.me }); res(true); });
+        conn.on('error', () => { if (!settled) { settled = true; this.setStatus('lost', '연결 실패, 다시 시도 중…'); this.retryT = 3; res(false); } });
+      });
+      peer.on('error', e => {
+        if (settled) return; settled = true;
+        if (e.type === 'peer-unavailable') { try { peer.destroy(); } catch (err) {} this.peer = null; setTimeout(() => this.claimChannel().then(res), 300 + Math.random() * 1200); } // 방장이 막 나갔다: 내가 맡아 본다
+        else { this.setStatus(this.started ? 'lost' : 'error', '중계 서버에 연결하지 못했어요.'); if (this.started) this.retryT = 6; res(false); }
+      });
+    });
+  },
 
   /* ---- 방 만들기 / 들어가기 ---- */
   async create(name) {
@@ -3326,10 +3373,10 @@ const Net = {
   wire(conn, isHost) {
     conn.on('data', m => this.handle(m, conn));
     conn.on('close', () => {
-      if (isHost) { this.setStatus('lost', '방장과 연결이 끊겼어요. 다시 연결 중…'); this.retryT = 3; }
+      if (isHost) { this.setStatus('lost', this.mode === 'channel' ? '방장이 나갔어요. 채널을 다시 잇는 중…' : '방장과 연결이 끊겼어요. 다시 연결 중…'); this.retryT = this.mode === 'channel' ? 0.5 + Math.random() * 2 : 3; }
       else { for (const id in this.conns) if (this.conns[id] === conn) { delete this.conns[id]; const p = this.players[id]; if (p) { p.gone = true; Toast.show(`${p.name} 연결 끊김`); } } this.send({ t: 'players', list: this.playerList() }); }
     });
-    if (!isHost) conn.on('open', () => { if (this.started) conn.send({ t: 'init', seed: this.seed, cap: this.cap, from: this.myId, name: this.me }); });
+    if (!isHost) conn.on('open', () => { if (this.started && this.mode === 'room') conn.send({ t: 'init', seed: this.seed, cap: this.cap, from: this.myId, name: this.me }); });
   },
   playerList() { const l = [{ id: this.myId, name: this.me }]; for (const id in this.players) if (!this.players[id].gone) l.push({ id, name: this.players[id].name }); return l; },
 
@@ -3352,13 +3399,13 @@ const Net = {
       this.players[m.from] = Object.assign(this.players[m.from] || {}, { name: m.name, gone: false }); if (conn) this.conns[m.from] = conn;
       Toast.show(`${m.name} 들어옴`); Sound.play('chime');
       this.send({ t: 'players', list: this.playerList() });
-      if (this.started) this.send({ t: 'init', seed: this.seed, cap: this.cap });
-      if (this.onStatus) this.onStatus(this.status, `들어온 친구: ${this.names().join(', ')}`);
+      if (this.started && this.mode === 'room') this.send({ t: 'init', seed: this.seed, cap: this.cap });
+      if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `들어온 친구: ${this.names().join(', ')}`);
       return;
     }
-    if (m.t === 'players') { for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); return; }
+    if (m.t === 'players') { this.gotPlayers = true; for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); return; }
     const p = this.players[m.from] || (this.players[m.from] = { name: m.name || '친구' }); p.name = m.name || p.name; p.gone = false;
-    if (m.t === 'init') { if (!this.host && !this.started) { this.seed = m.seed; this.cap = m.cap; this.started = true; if (typeof startGame === 'function') startGame(m.cap, { seed: m.seed }); } return; }
+    if (m.t === 'init') { if (!this.host && !this.started && this.mode === 'room') { this.seed = m.seed; this.cap = m.cap; this.started = true; if (typeof startGame === 'function') startGame(m.cap, { seed: m.seed }); } return; }
     this.relay(m, conn);
     if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
@@ -3370,7 +3417,7 @@ const Net = {
   /* ---- 게임 안 ---- */
   tick(dt) {
     if (!this.on) return;
-    if (this.retryT > 0) { this.retryT -= dt; if (this.retryT <= 0 && !this.host && this.transport === 'peer' && this.status === 'lost') { this.retryT = 5; this.join(this.room, this.me); } }
+    if (this.retryT > 0) { this.retryT -= dt; if (this.retryT <= 0 && this.transport === 'peer' && this.status === 'lost') { this.retryT = 6; if (this.mode === 'channel') this.claimChannel(); else if (!this.host) this.join(this.room, this.me); } }
     for (const id in this.players) { const p = this.players[id]; if (p.bubble) { p.bubble.t -= dt; if (p.bubble.t <= 0) p.bubble = null; } if (p.x !== undefined && p.tx !== undefined) { const k = 1 - Math.exp(-12 * dt); p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k; } }
     if (this.myBubble) { this.myBubble.t -= dt; if (this.myBubble.t <= 0) this.myBubble = null; }
     if (!this.started || !Game.player) return;
@@ -3392,15 +3439,17 @@ const Net = {
   sendNoBid() { this.send({ t: 'nobid' }); },
   // 개찰에 넣을 친구 입찰(같은 사건만)
   friendBids(c) { return Object.values(this.players).filter(p => p.bid && p.bid.caseId === c.id).map(p => ({ name: p.name, bid: p.bid.bid, me: false, friend: true })); },
-  pending(c) { return Object.values(this.players).filter(p => !p.gone && !p.nobid && !p.bid); },
+  // 채널에서는 매각기일(D-day)에 와 있고 최근까지 움직인 사람만 기다린다 (모르는 사람을 하염없이 기다리지 않도록 20초 뒤 자동 개찰)
+  pending(c) { return Object.values(this.players).filter(p => !p.gone && !p.nobid && !p.bid && (this.mode !== 'channel' || (p.day === 7 && performance.now() - (p.last || 0) < 15000))); },
   // 친구 입찰을 기다린다 (친구 없이 개찰 버튼으로 건너뛸 수 있음)
   waitBids(c) {
     return new Promise(res => {
-      const el = $('mpWait'); let done = false;
+      const el = $('mpWait'); let done = false; let left = this.mode === 'channel' ? FEEL.channelWaitSec : -1;
       const finish = () => { if (done) return; done = true; el.classList.remove('in'); Game.formOpen = false; clearInterval(iv); res(); };
       const render = () => {
+        if (left === 0) return finish(); if (left > 0) left--;
         const rows = Object.values(this.players).filter(p => !p.gone).map(p => `<li>${esc(p.name)} · ${p.bid ? (p.bid.caseId === c.id ? '입찰표 제출' : '다른 사건에 입찰') : p.nobid ? '입찰 안 함' : '아직 (' + (p.day !== undefined ? `${dLabel(p.day)} ${p.half ? '오후' : '오전'}` : '…') + ')'}</li>`).join('');
-        el.innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>개 찰 대 기</h2><p>${c.caseNo} · 친구 입찰표가 모이면 개찰합니다.</p><ul>${rows || '<li>친구 없음</li>'}</ul><div class="pcBtns"><button class="btn gold" id="mpWaitGo">친구 없이 개찰</button></div></div>`;
+        el.innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>개 찰 대 기</h2><p>${c.caseNo} · ${this.mode === 'channel' ? `같은 채널 사람들의 입찰표를 기다립니다. ${left + 1}초 뒤 자동 개찰.` : '친구 입찰표가 모이면 개찰합니다.'}</p><ul>${rows || '<li>친구 없음</li>'}</ul><div class="pcBtns"><button class="btn gold" id="mpWaitGo">친구 없이 개찰</button></div></div>`;
         $('mpWaitGo').onclick = finish;
         if (!this.pending(c).length) setTimeout(finish, 600);
       };
@@ -3445,7 +3494,7 @@ const Net = {
     if (!this.on) return '';
     const st = { open: '연결됨', connecting: '연결 중', lost: '끊김(재연결 중)', error: '오류', off: '' }[this.status] || this.status;
     const fr = Object.values(this.players).map(p => `${esc(p.name)}${p.gone ? '(나감)' : ''}${p.day !== undefined ? ` · ${dLabel(p.day)}` : ''}`).join(', ');
-    return `<b>같이 하는 중</b> · 방 코드 <code>${this.room}</code> · ${st}<br>친구: ${fr || '(아직 없음)'}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
+    return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
   },
 };
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -3897,7 +3946,7 @@ function update(dt) {
   const p = Game.player;
   const frozen = Game.busy || Game.trans;
   const [ix, iy] = frozen ? [0, 0] : readMove();
-  const run = Keys.Shift;
+  const run = (Keys.Shift || !!Touch.run) && !(Net.on && Net.mode === 'channel'); // 채널에서는 달리기 없음(차를 타게)
   if (Game.scene === 'zone') {
     const z = Game.zone;
     const solid = (tx, ty) => z.at(tx, ty) === T.BLD;
@@ -5056,6 +5105,7 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   $('btnStart').onclick = () => {
     Sound.init(); Sound.play('stamp'); tryLandscape();
     const v = Number($('capInput').value); if (v) { if (v < 1e7) { Toast.show('자본은 1천만 원 이상으로 넣어 주세요.'); return; } cap = Math.round(v); }
+    if (Net.on && Net.mode === 'channel') { Net.cap = cap; Net.started = true; startGame(cap, { seed: Net.seed }); return; } // 채널은 각자 시작, 주는 채널·날짜로 정해진다
     if (Net.on && !Net.host) { Toast.show('방장이 시작하면 같이 시작해요.'); return; }
     if (Net.on && Net.host) { Net.seed = (Date.now() & 0x7fffffff); Net.cap = cap; Net.started = true; Net.send({ t: 'init', seed: Net.seed, cap }); startGame(cap, { seed: Net.seed }); return; }
     startGame(cap);
@@ -5065,11 +5115,17 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   Net.onStatus = (st, text) => {
     const el = $('mpStatus');
     if (st === 'error') { el.innerHTML = `<span style="color:#ff8a7a">${esc(text)}</span>`; return; }
-    const code = Net.host ? `방 코드 <code>${Net.room}</code> <button class="btn" id="mpCopy">복사</button> 친구에게 보내고, 자본을 골라 시작하세요.<br>` : '';
+    const code = Net.host && Net.mode === 'room' ? `방 코드 <code>${Net.room}</code> <button class="btn" id="mpCopy">복사</button> 친구에게 보내고, 자본을 골라 시작하세요.<br>` : '';
     el.innerHTML = code + esc(text);
     const cp = $('mpCopy'); if (cp) cp.onclick = () => { try { navigator.clipboard.writeText(Net.room); Toast.show('방 코드를 복사했어요.'); } catch (e) { Toast.show('코드: ' + Net.room); } };
-    if (!Net.host && Net.on) { $('btnStart').textContent = '방장을 기다리는 중'; $('btnStart').disabled = true; }
+    if (!Net.host && Net.on && Net.mode === 'room') { $('btnStart').textContent = '방장을 기다리는 중'; $('btnStart').disabled = true; }
   };
+  document.querySelectorAll('#mpBox .ch').forEach(b => b.onclick = async () => {
+    Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
+    Store.set('mpName', name); document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = true); b.classList.add('sel'); $('mpStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
+    const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = false); b.classList.remove('sel'); }
+    else $('mpStatus').insertAdjacentHTML('beforeend', '<br><span class="small">자본을 고르고 시작하세요. 같은 채널 사람들과 같은 물건으로 플레이하고, 법원에서 같이 개찰합니다.</span>');
+  });
   $('mpCreate').onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
     Store.set('mpName', name); $('mpStatus').textContent = '방을 만드는 중…'; $('mpCreate').disabled = true; $('mpJoin').disabled = true;

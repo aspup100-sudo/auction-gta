@@ -335,6 +335,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .keys th { color:#c9c2a8; font-weight:600; white-space:nowrap; width:34%; }
 .keys td.tc { color:#9fb3c8; width:30%; }
 .keys .ksub { margin-top:6px; font-size:11px; color:#8b8f99; }
+#castList label { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; } #castList label span { width:38%; color:#c9c2a8; } #castList input { flex:1; min-width:0; padding:5px 8px; border-radius:6px; border:1px solid #6b6a62; background:#fffdf7; color:#1a1408; font:inherit; }
 #iosHint { margin-top:8px; font-size:12px; color:#c9c2a8; }
 </style>
 </head>
@@ -414,6 +415,10 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>대화 선택</th><td>1 2 3 4</td><td class="tc">탭</td></tr>
     </table>
     <div class="ksub">오른쪽 열은 휴대폰 터치 조작이에요.</div>
+  </details>
+  <details class="keys"><summary>등장인물 이름 바꾸기</summary>
+    <div id="castList"></div>
+    <div class="ksub">비우면 기본 이름으로 돌아가요. 이 기기에만 저장됩니다.</div>
   </details>
   <button class="btn" id="btnEndDay">오늘 일정 끝내기</button>
   <button class="btn" onclick="Menu.toggle(false)">닫기 (Esc)</button>
@@ -1185,6 +1190,12 @@ const Store = {
 };
 const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal' }, Store.get('settings', {}));
 function saveSettings() { Store.set('settings', Settings); }
+/* 등장인물 이름: 메뉴에서 바꿀 수 있고 이 기기에 저장된다. 비우면 기본 이름 */
+const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '등기소 직원', ''], ['center', '주민센터 직원', ''], ['bank', '은행원', ''], ['savings', '저축은행 직원', ''], ['agent', '중개사', ''], ['court', '집행관', '법원'], ['guest', '대기 손님', '실내에서 기다리는 사람들']];
+const CAST_DEFAULT = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[1]]));
+const Cast = Object.assign({}, Store.get('cast', {}));
+function castName(k) { return (Cast[k] || '').trim() || CAST_DEFAULT[k] || k; }
+function saveCast() { Store.set('cast', Cast); }
 Object.assign(FEEL, {
   // 운전 (GTA 초기작 느낌)
   carMaxSpeed: 230,       // px/s → HUD에는 80km/h로 표시 (270→230: 키보드로 다루기 쉽게)
@@ -2614,7 +2625,7 @@ const HUD = {
     $('hudCash').textContent = '₩ ' + fmtNum(this._shown);
   },
   pagerLines: [],
-  page(text, from = '단예') {
+  page(text, from = castName('danye').replace(/ 선배$/, '')) {
     const el = $('pagerText'); const line = document.createElement('div'); line.className = 'pl';
     line.textContent = (from ? from + '> ' : '') + text; el.appendChild(line);
     while (el.children.length > 3) el.removeChild(el.firstChild);
@@ -3045,6 +3056,7 @@ function roomInteractTarget() {
   const p = Game.player, r = Game.room; let best = null, bd = 24;
   const consider = (o, x, y, lim = 24) => { const d = Math.hypot(x - p.x, y - p.y); if (d < bd && d < lim) { bd = d; best = o; } };
   for (const n of r.npcs) if (n.talk) consider({ kind: 'npc', npc: n }, n.x, n.y + (n.role === 'clerk' ? 28 : 0));
+  for (const g of r.guests) if (!g.gone && !g.walkTo) consider({ kind: 'guest', guest: g }, g.x, g.y + 8, 20);
   for (const o of r.objs) if (o.type !== 'chair') consider({ kind: 'obj', obj: o }, o.tx * TILE + 8, o.ty * TILE + 22);
   // 은행 빈 의자: 바로 옆에 섰을 때만
   if (r.place.kind === 'bank' && !p.sit) for (const o of r.objs) if (o.type === 'chair' && !o.taken) consider({ kind: 'obj', obj: o, label: '앉기' }, o.tx * TILE + 8, o.ty * TILE + 12, 15);
@@ -3540,7 +3552,21 @@ async function issueDoc(caseId, kind, title, html, { fee = 0 } = {}) {
 }
 
 const STAFF = { registry: ['등기소 직원', 'clerk', 'clerk'], center: ['주민센터 직원', 'clerk', 'clerk'], bank: ['은행원', 'banker', 'banker'], agent: ['중개사', 'agent', 'agent'], court: ['집행관', 'clerk', 'clerk'], savings: ['저축은행 직원', 'banker', 'banker'] };
-const say = (kind, text, extra = {}) => ({ name: STAFF[kind][0], sprite: STAFF[kind][1], voice: STAFF[kind][2], text, ...extra });
+const say = (kind, text, extra = {}) => ({ name: castName(kind), sprite: STAFF[kind][1], voice: STAFF[kind][2], text, ...extra });
+/* 실내에서 기다리는 손님들: 말을 걸면 그 장소다운 잡담을 한다 (사건 정보는 절대 없음) */
+const GUEST_LINES = {
+  registry: ['등기부 떼러 왔는데 번호표가 영 안 줄어요.', '요즘은 인터넷으로도 떼는데, 저는 직접 와서 보는 게 마음이 편해요.', '등기부는 갑구 을구 순서로 읽는 거래요. 저도 오늘 처음 알았어요.'],
+  center: ['전입신고 하러 왔어요. 이사 온 지 일주일 됐거든요.', '여긴 은행보다 줄이 빨리 줄어서 좋아요.', '전입세대 열람은 이해관계인만 된다던데, 경매 입찰자도 되나 봐요?'],
+  bank: ['대출 상담 기다리는 중이에요. 금리가 또 올랐대요.', '경매로 집 사시려고요? 잔금 대출은 미리 알아봐야 한다던데.', '번호표 뽑고 30분째예요. 커피라도 마실걸.'],
+  savings: ['여기는 승인이 빠른 대신 이자가 세요.', '1금융권에서 거절당하고 왔어요. 한도는 나오겠죠?'],
+  agent: ['전세 구하러 왔는데 매물이 없네요.', '이 동네 시세는 사장님이 제일 잘 알죠.', '경매 나온 집은 중개사한테 물어보면 분위기를 안다던데요.'],
+  court: ['오늘 입찰 처음이에요. 손이 떨리네요.', '보증금 봉투 잘 챙기세요. 최저가의 10%예요.', '저번 주엔 2등으로 떨어졌어요. 아깝게.', '입찰표 숫자 한 칸 밀려 쓰면 큰일 나요. 두 번 확인하세요.'],
+};
+async function guestTalk(kind, g) {
+  const lines = GUEST_LINES[kind] || ['...'];
+  if (g.line === undefined) g.line = Math.floor(Math.random() * lines.length);
+  await Dialog.say([{ name: castName('guest'), sprite: g.sprite, voice: 'occ', text: lines[g.line] }]);
+}
 
 async function interactRoom(tg) {
   if (Game.busy || Dialog.open) return;
@@ -3550,19 +3576,20 @@ async function interactRoom(tg) {
     if (tg.kind === 'exit') { Game.busy = false; return exitPlace(); }
     if (tg.kind === 'npc' && tg.npc.role === 'danye') return await danyeTalk();
     if (tg.kind === 'npc') return await staffTalk(kind);
+    if (tg.kind === 'guest') return await guestTalk(kind, tg.guest);
     if (tg.kind === 'obj') return await objectUse(tg.obj, kind);
   } finally { Game.busy = false; }
 }
 
 async function danyeTalk() {
-  const pick = await Dialog.say([{ name: '단예 선배', sprite: 'danye', voice: 'danye', text: '왔어? 뭐가 궁금한데.' }], [
+  const pick = await Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: '왔어? 뭐가 궁금한데.' }], [
     { label: '뭐부터 봐야 해요?' }, { label: '임차인은 어디서 확인해요?' }, { label: '대출은 얼마나 나와요?' }, { label: '아니에요' }]);
   const A = [
     '저기 PC로 사건부터 골라. 명세서랑 현황조사서 읽고, 등기소 가서 등기부 떼. 그다음은 발로 뛰는 거야.',
     '명세서에 나온 게 다가 아니야. 주민센터 가서 전입세대열람 떼 봐. 현장도 가 보고.',
     '그건 나한테 묻지 말고 은행 가서 물어봐. 물건마다 달라.',
   ];
-  if (pick < 3) await Dialog.say([{ name: '단예 선배', sprite: 'danye', voice: 'danye', text: A[pick] }]);
+  if (pick < 3) await Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: A[pick] }]);
 }
 
 async function staffTalk(kind) {
@@ -3847,7 +3874,7 @@ async function forfeit(c) {
   $('envelope').innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>재 매 각 결 정</h2><p>${c.caseNo} 사건의 매수인이 대금지급기한까지 그 의무를 이행하지 아니하였으므로 재매각을 명한다. 매수인이 낸 매수신청보증금 ${fmtWon(State.bidResult.deposit)}은(는) 반환하지 아니한다.</p></div>`;
   $('balanceDue').classList.add('in', 'over'); Sound.play('coins'); await sleep(2200);
   $('envelope').classList.remove('in'); $('envelope').innerHTML = '';
-  await Dialog.say([{ name: '단예 선배', sprite: 'danye', voice: 'danye', text: '그래서 입찰 전에 은행부터 가 보라고 했잖아.', emote: 'silence' }]);
+  await Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: '그래서 입찰 전에 은행부터 가 보라고 했잖아.', emote: 'silence' }]);
   finishGame();
 }
 
@@ -4127,7 +4154,7 @@ function renderMore(S, c, a, G, missed) {
     h += `<div class="rSec"><h3>놓친 정보</h3>${missed.length ? `<ul class="missed">${missed.map(m => `<li><b>${m.place}</b>에 가지 않아 ${escapeHtml(m.text)}</li>`).join('')}</ul>` : '<p>핵심 장소는 다 다녀왔어요.</p>'}</div>`;
   }
   // 단예 한마디
-  h += `<div class="rSec danyeBox"><canvas id="rDanye" width="48" height="48"></canvas><div><b>단예 선배</b><p>${escapeHtml(danyeLine(S, c, G, missed))}</p></div></div>`;
+  h += `<div class="rSec danyeBox"><canvas id="rDanye" width="48" height="48"></canvas><div><b>${escapeHtml(castName('danye'))}</b><p>${escapeHtml(danyeLine(S, c, G, missed))}</p></div></div>`;
   // 입찰하지 않은 물건들의 정답
   const others = State.week.cases.filter(x => !c || x.id !== c.id);
   h += `<details class="rSec"><summary>입찰하지 않은 물건들의 정답 (${others.length}건)</summary><ul class="others">${others.map(x => { const ax = Engine.analyze(x.data, x.minPrice); return `<li><b>${x.name}</b> <small>${x.caseNo}</small><div class="small">${'★'.repeat(x.stars)} · ${x.risks.length ? x.risks.map(r => RISK_NAME(r)).join(', ') : '깨끗한 물건이었다'} · 인수액 ${fmtWon(ax.assumeTotal)} · 적정가 ${fmtWon(fairBid(x))} 안팎 · 최저가 ${fmtWon(x.minPrice)}</div></li>`; }).join('')}</ul></details>`;
@@ -4282,6 +4309,9 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   addEventListener('resize', () => SeoulMap.open && SeoulMap.resize());
   $('btnEndDay').onclick = async () => { Menu.toggle(false); await endDay(); };
   $('btnMenu').onclick = () => Menu.toggle();
+  // 등장인물 이름 편집
+  $('castList').innerHTML = CAST_ROLES.map(([k, def, hint]) => `<label><span>${def}${hint ? ` <small>(${hint})</small>` : ''}</span><input data-cast="${k}" placeholder="${def}" maxlength="12" value="${(Cast[k] || '').replace(/"/g, '&quot;')}"></label>`).join('');
+  $('castList').querySelectorAll('input').forEach(inp => inp.oninput = () => { Cast[inp.dataset.cast] = inp.value; saveCast(); });
   const muteLabel = () => ($('btnMute').textContent = Settings.muted ? '소리 꺼짐' : '소리');
   $('btnMute').onclick = () => { Settings.muted = !Settings.muted; saveSettings(); Sound.applyVolumes(); muteLabel(); }; muteLabel();
   $('setSfx').value = Settings.sfx; $('setBgm').value = Settings.bgm; $('setShake').checked = Settings.shake; $('setText').value = Settings.textSpeed;

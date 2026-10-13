@@ -46,7 +46,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .rot .propCard { top:12px; max-height:calc(100% - 36px); }
 .rot #caseList { max-height:calc(100% - 40px); }
 #title .mp { background:rgba(255,255,255,.04); border:1px solid #3c4252; border-radius:10px; padding:8px 14px; max-width:min(560px, 92vw); font-size:14px; }
-#title .mp summary { cursor:pointer; color:var(--gold); } #title .mp summary small { color:var(--paper); opacity:.7; }
+#title .mp summary, #title .mp .mph { cursor:default; color:var(--gold); font-weight:700; } #title .mp summary small, #title .mp .mph small { color:var(--paper); opacity:.7; font-weight:400; margin-left:6px; }
 #title .mp .row { margin-top:8px; } #title .mp .chHead { margin-top:12px; color:var(--paper); font-weight:700; } #title .mp .chHead small { font-weight:400; opacity:.6; margin-left:6px; }
 #title .mp .chRow { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:6px; } #title .mp .ch { display:inline-flex; flex-direction:column; align-items:center; min-width:72px; padding:7px 10px; line-height:1.15; gap:2px; } #title .mp .ch b { font-size:14px; } #title .mp .ch small { font-size:11px; opacity:.7; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .ch.sel small { opacity:1; }
 #title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title.chOn .mp .ch.sel { cursor:pointer; } #title.chOn .mp .ch.sel::after { content:'다시 누르면 나가기'; font-size:10px; opacity:.7; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
@@ -105,13 +105,20 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #roadSign.in { transform:none; opacity:1; }
 #edgeSign { position:absolute; left:50%; top:14px; transform:translate(-50%,-160%); background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:5px 16px; color:#fff; text-align:center; box-shadow:0 3px 0 #000; opacity:0; transition:transform .25s ease-out, opacity .25s; }
 #edgeSign.in { transform:translate(-50%,0); opacity:1; }
-#nav { position:absolute; left:50%; bottom:18px; transform:translate(-50%,140%); display:flex; gap:12px; align-items:center; background:rgba(12,16,26,.88); border:2px solid #7a5cf0; border-radius:12px; padding:6px 16px 6px 12px; color:#fff; box-shadow:0 4px 0 rgba(0,0,0,.5); opacity:0; transition:transform .25s ease-out, opacity .25s; max-width:min(92vw, 520px); }
+#nav { position:absolute; left:50%; bottom:18px; transform:translate(-50%,140%); display:flex; gap:10px; align-items:center; background:#0d1626; border:2px solid #2f4d7f; border-radius:12px; padding:6px 12px 6px 6px; color:#fff; box-shadow:0 6px 18px rgba(0,0,0,.5); opacity:0; transition:transform .25s ease-out, opacity .25s; max-width:min(94vw, 560px); pointer-events:auto; }
 #nav.in { transform:translate(-50%,0); opacity:1; }
-#nav { pointer-events:auto; }
-#nav .nx { background:none; border:1px solid rgba(255,255,255,.35); color:#ddd; border-radius:6px; width:26px; height:26px; font-size:13px; cursor:pointer; margin-left:4px; }
+#navMap { width:132px; height:96px; flex:none; border-radius:8px; background:#101a2c; border:1px solid #223a60; }
+#navBody { display:flex; gap:10px; align-items:center; min-width:0; }
+#nav .nx { background:none; border:1px solid rgba(255,255,255,.35); color:#ddd; border-radius:6px; width:26px; height:26px; font-size:13px; cursor:pointer; margin-left:4px; flex:none; }
 #nav .nx:hover { background:rgba(255,255,255,.15); }
-#nav .arrow { font-size:34px; line-height:1; color:#c9b6ff; min-width:36px; text-align:center; }
-#nav .txt b { display:block; font-size:17px; } #nav .txt small { display:block; font-size:11px; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:420px; }
+#nav .turn { display:flex; flex-direction:column; align-items:center; min-width:54px; flex:none; } #nav .turn .arrow { font-size:34px; line-height:1; color:#fff; } #nav .turn b { font-size:13px; color:#8fd0ff; margin-top:2px; white-space:nowrap; }
+#nav .txt { min-width:0; } #nav .txt b { display:block; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } #nav .txt small { display:block; font-size:11px; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:300px; }
+/* 차에 타면 뜨는 목적지 고르기 */
+#navPick { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:26; width:min(540px, 94vw); max-height:84vh; overflow:auto; background:#0d1626; border:2px solid #2f4d7f; border-radius:14px; padding:12px 14px; color:#fff; box-shadow:0 10px 30px rgba(0,0,0,.6); display:none; pointer-events:auto; }
+#navPick.in { display:block; } #navPick h3 { margin:0; font-size:16px; display:flex; justify-content:space-between; align-items:center; } #navPick h3 small { font-weight:400; opacity:.6; font-size:12px; margin-left:8px; }
+#navPick .sec { font-size:11px; opacity:.6; margin:10px 0 4px; } #navPick .grid { display:flex; flex-wrap:wrap; gap:6px; }
+#navPick .grid button { background:#17233a; border:1px solid #2f4d7f; color:#fff; border-radius:8px; padding:7px 10px; font:inherit; font-size:13px; cursor:pointer; } #navPick .grid button.sel { border-color:#8fd0ff; background:#1f3458; } #navPick .grid button.rec { border-color:var(--gold); color:#ffe9b0; }
+#navPick .nx { background:none; border:1px solid rgba(255,255,255,.35); color:#ddd; border-radius:6px; width:26px; height:26px; font-size:13px; cursor:pointer; }
 .touchOn #nav { bottom:150px; }
 #edgeSign b { display:block; font-size:18px; } #edgeSign small { font-size:11px; opacity:.85; }
 #roadSign b { display:block; font-size:18px; } #roadSign small { font-size:11px; opacity:.85; }
@@ -197,6 +204,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #mapCanvas.zoomIn { transform:translate(-50%, -50%) scale(1.6) !important; opacity:.0; transition:transform .5s ease-in, opacity .5s ease-in; }
 .mapTitle { position:absolute; top:14px; left:0; right:0; text-align:center; font:700 18px var(--serif); color:var(--paper); text-shadow:0 2px 0 #000; }
 .mapTitle small { display:block; font:400 12px var(--ui); opacity:.75; }
+#mapX { position:absolute; top:10px; right:calc(12px + env(safe-area-inset-right, 0px)); z-index:3; background:rgba(12,16,26,.9); color:#fff; border:2px solid var(--gold); border-radius:10px; padding:8px 14px; font:700 14px var(--ui); cursor:pointer; box-shadow:0 3px 0 #000; } #mapX:hover { background:#1b2232; }
 #mapConfirm { position:absolute; left:50%; bottom:18px; transform:translate(-50%, 140%); background:#14161c; border:2px solid var(--gold); border-radius:10px; padding:10px 14px; display:flex; gap:10px; align-items:center; transition:transform .2s ease-out; max-width:calc(100% - 32px); flex-wrap:wrap; justify-content:center; }
 #mapConfirm.in { transform:translate(-50%, 0); }
 #mapHover { position:fixed; z-index:29; background:#fff; color:#14213a; border-radius:8px; padding:8px 12px; font-size:13px; line-height:1.55; pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity .12s, transform .12s; box-shadow:0 6px 16px rgba(0,0,0,.4); }
@@ -421,7 +429,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #pedals { right:16px; bottom:16px; gap:6px; } .short #pedals button { width:82px; height:44px; } .short #tHb { height:34px !important; }
   .short #hudSpeed { right:124px; bottom:92px; font-size:18px; }
   .short #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
-  .short #nav { left:56%; bottom:10px; padding:4px 12px; font-size:12px; max-width:380px; }
+  .short #nav { left:56%; bottom:10px; padding:4px 10px 4px 4px; font-size:12px; max-width:400px; gap:8px; } .short #navMap { width:96px; height:70px; } .short #nav .turn .arrow { font-size:26px; } .short #nav .txt b { font-size:14px; } .short #navPick { padding:8px 10px; max-height:90vh; } .short #navPick h3 { font-size:14px; } .short #navPick .grid button { padding:5px 8px; font-size:12px; } .short #navPick .sec { margin:6px 0 3px; }
   .short #toasts { bottom:auto; top:56px; }
   .short #chatLog { bottom:130px; left:126px; max-width:300px; } .short #chatBar { width:min(380px, 70vw); }
   .short #tChat { right:104px; bottom:92px; width:54px; height:36px; } .short.driving #tChat { right:16px; bottom:170px; }
@@ -441,7 +449,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #pedals { right:calc(16px + env(safe-area-inset-right, 0px)); } .short #tChat { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tChat { right:calc(16px + env(safe-area-inset-right, 0px)); }
   /* 폰 가로: 서울 지도를 화면에 꽉 차게 */
   .short #mapCanvas { width:calc(100% - 16px); height:calc(100% - 44px); top:calc(50% + 18px); }
-  .short .mapTitle { top:4px; font-size:15px; } .short .mapTitle small { display:inline; margin-left:8px; font-size:11px; }
+  .short #mapX { top:6px; padding:6px 12px; font-size:13px; } .short .mapTitle { top:4px; font-size:15px; padding-right:90px; padding-left:90px; } .short .mapTitle small { display:inline; margin-left:8px; font-size:11px; }
   .short #mapConfirm { bottom:8px; padding:6px 10px; gap:6px; }
   .short #menu { width:min(640px, calc(100% - 24px)); padding:12px 16px; } .short #menu h2 { font-size:18px; margin-bottom:8px; } .short .keys { font-size:12px; }
 </style>
@@ -464,16 +472,16 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
   <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"></div>
   <div class="mpWrap">
-  <details class="mp" id="mpBox" open><summary>친구와 같이 하기 <small>(방 코드로 · 같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
+  <div class="mp" id="mpBox"><div class="mph">친구와 같이 하기 <small>방 만들기</small></div>
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
     <div id="mpStatus"></div>
     <div class="mpHint">방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작해요. 인터넷이 필요해요(폰 데이터도 됨).</div>
-  </details>
-  <details class="mp" id="chBox" open><summary>실시간 채널 <small>(코드 없이 아무나 · 1주 = 실제 20분 · 돈과 순위가 채널별로 이어짐)</small></summary>
+  </div>
+  <div class="mp" id="chBox"><div class="mph">실시간 채널 <small>코드 없이 아무나</small></div>
     <div class="row chRow"><button class="btn ch" data-ch="1"><b>채널 1</b><small>자본 1억</small></button><button class="btn ch" data-ch="2"><b>채널 2</b><small>자본 2억</small></button><button class="btn ch" data-ch="3"><b>채널 3</b><small>자본 3억</small></button><button class="btn ch" data-ch="4"><b>채널 4</b><small>자본 4억</small></button><button class="btn ch" data-ch="5"><b>채널 5</b><small>자본 5억</small></button></div>
     <div id="chStatus"></div>
     <div class="mpHint">실제 시간으로 계속 돌아가는 세계예요. 매각기일 당일 법원에서 입찰하면 자동 개찰되고, 돈과 순위는 채널별로 이어져요.</div>
-  </details>
+  </div>
   </div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button>
@@ -504,10 +512,11 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="propCard" class="propCard"></div>
 <div id="dropSign"></div>
 <div id="edgeSign"></div>
-<div id="nav"></div>
+<div id="nav"><canvas id="navMap" width="132" height="96"></canvas><div id="navBody"></div></div>
+<div id="navPick"></div>
 <div id="memoPad"><div class="docBar"><span id="memoTitle"></span><button class="btn" onclick="MemoPad.close()">닫기 (Esc)</button></div><textarea id="memoText" placeholder="이 건물(물건)에 대해 적어 두세요. 수첩 '메모' 탭에도 같이 보여요."></textarea><div class="ksub">메모는 시간을 쓰지 않아요. 결과 화면 전까지 언제든 고칠 수 있어요.</div></div>
 <div id="docView"><div class="docBar"><span id="docTitle"></span><button class="btn" onclick="DocViewer.close()">닫기 (E)</button></div><div id="docBody"></div></div>
-<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 법원은 그 구 안에 있어요(차 타면 내비 안내) · M/Esc 닫기</small></div><div id="mapConfirm"></div></div>
+<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 법원은 그 구 안에 있어요(차 타면 내비 안내) · M/Esc 닫기</small></div><div id="mapConfirm"></div><button id="mapX" title="닫기">✕ 닫기</button></div>
 <div id="mapHover"></div>
 <div id="caseList"></div>
 <div id="dialog">
@@ -1367,10 +1376,15 @@ Object.assign(FEEL, {
   fineSpeed: 40000,       // 보행자 근처 과속
   carEnterDist: 26,
   promptSound: false,     // 상호작용 표시(E)가 뜰 때 소리 (사용자 요청으로 끔)
+  fuelDrive: 5000,        // 직접 운전해서 옆 구로 넘어갈 때 주유비(원, ±20%)
+  fuelMapBase: 15000,     // 지도에서 눌러 이동할 때 기본 주유비(원)
+  fuelMapPerDist: 8000,   // 지도 이동: 구 거리 1칸마다 더 드는 주유비(원)
   hornDelay: 1.4,         // NPC 차가 내 차에 막히면 경적까지 걸리는 시간(초)
   npcShove: 7,            // 내 차에 받힌 NPC 차가 옆으로 튕기는 거리(px)
   npcShoveDecay: 4,       // 튕긴 NPC 차가 제자리로 돌아오는 속도
-  npcYieldWait: 4,        // NPC끼리 교차로에서 서로 양보하다 막히면 이 시간(초) 뒤 그냥 지나감
+  npcYieldWait: 4,        // NPC끼리 교차로에서 서로 양보하다 막히면 이 시간(초) 뒤 천천히 지나감
+  npcLaneChangeWait: 3,   // 앞이 막힌 채 이 시간(초)이 지나면 옆 차선으로 빠져나간다
+  npcJamReset: 12,        // 그래도 이 시간(초) 넘게 막혀 있으면 화면 밖 차는 다른 자리로 보낸다 (교통 정리)
   bumpSpeed: 25,          // 이 속도 이상이면 '툭' 접촉음, 70 이상이면 쾅(수리비)
   channelWaitSec: 20,     // 공개 채널 개찰 대기 최대 시간(초)
   chatBubbleTime: 6,      // 말풍선이 머리 위에 떠 있는 시간(초)
@@ -2265,23 +2279,29 @@ function updateTraffic(dt, z) {
     // 밀린 만큼 제자리로
     if (car.jx || car.jy) { const k = Math.max(0, 1 - FEEL.npcShoveDecay * dt); car.jx *= k; car.jy *= k; if (Math.abs(car.jx) + Math.abs(car.jy) < 0.3) car.jx = car.jy = 0; }
     car.angryCd = Math.max(0, (car.angryCd || 0) - dt);
-    // 앞 정지선
+    // 앞 정지선 (빨간불이거나, 파란불이어도 교차로 건너편이 막혀 있으면 — 꼬리물기 금지 — 정지선에 선다)
+    const me = P[ci];
+    const lead = (() => { let best = null, bg = 1e9; for (const o of Game.traffic) { if (o === car || o.road !== r || o.dirn !== car.dirn || o.lane !== car.lane) continue; const gap = (o.s - car.s) * car.dirn; if (gap > 0 && gap < bg) { bg = gap; best = o; } } return best ? { o: best, gap: bg } : null; })();
     for (const st of r.stops) {
       const stopAt = st.s - st.half * car.dirn; const ahead = (stopAt - car.s) * car.dirn;
-      if (ahead > 0 && ahead < 70 && signalState(st.c, r, Game.t) !== 'g') target = Math.min(target, Math.max(0, (ahead - 6) * 2));
+      if (ahead > 0 && ahead < 70) {
+        const red = signalState(st.c, r, Game.t) !== 'g';
+        const boxed = lead && lead.o.v < 8 && lead.gap > ahead && lead.gap < ahead + st.half * 2 + lead.o.len + 10; // 앞차가 교차로 안이나 바로 건너편에 서 있다
+        if (red || boxed) target = Math.min(target, Math.max(0, (ahead - 6) * 2));
+      }
     }
     // 앞차 / 내 차
-    const me = P[ci];
-    let waiting = false;
+    let waiting = false, stuckAhead = false;
+    if (lead && lead.gap < car.len + 30) { target = Math.min(target, Math.max(0, (lead.gap - car.len - 8) * 3)); if (lead.o.v < 5) stuckAhead = true; }
     Game.traffic.forEach((o, oi) => {
-      if (o === car) return;
-      if (o.road === r && o.dirn === car.dirn && o.lane === car.lane) { const gap = (o.s - car.s) * car.dirn; if (gap > 0 && gap < car.len + 30) target = Math.min(target, Math.max(0, (gap - car.len - 8) * 3)); return; }
-      // 다른 도로·차선의 차가 바로 앞에 있으면(교차로) 멈춰서 양보. 서로 마주 서서 영영 막히면 잠시 뒤 지나감
+      if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane)) return;
+      // 다른 도로·차선의 차가 바로 앞에 있으면(교차로) 멈춰서 양보. 서로 마주 서서 영영 막히면 잠시 뒤 천천히 지나가되, 코앞의 차 위로는 올라타지 않는다
       const q = P[oi]; const dx = q.x - me.x, dy = q.y - me.y; if (Math.abs(dx) + Math.abs(dy) > 90) return;
       const fwd = dx * Math.cos(me.a) + dy * Math.sin(me.a), side = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a));
       // 상대 차가 비스듬히(교차로) 있으면 길이가 옆으로 삐져나오므로, 상대의 앞·옆 폭을 내 축으로 투영해서 본다
       const ca = Math.abs(Math.cos(q.a - me.a)), sa = Math.abs(Math.sin(q.a - me.a)); const oAhead = ca * o.len / 2 + sa * o.wid / 2, oSide = ca * o.wid / 2 + sa * o.len / 2;
-      if (fwd > 0 && fwd < car.len / 2 + oAhead + 14 && side < car.wid / 2 + oSide + 2 && (car.waitT || 0) < FEEL.npcYieldWait) { target = 0; waiting = true; }
+      if (fwd > 0 && fwd < car.len / 2 + oAhead + 3 && side < car.wid / 2 + oSide + 1) { target = 0; waiting = true; return; } // 코앞: 무조건 정지
+      if (fwd > 0 && fwd < car.len / 2 + oAhead + 14 && side < car.wid / 2 + oSide + 2) { if ((car.waitT || 0) < FEEL.npcYieldWait) { target = 0; waiting = true; } else target = Math.min(target, 35); }
     });
     car.waitT = waiting ? (car.waitT || 0) + dt : 0;
     let blockedByMe = false;
@@ -2289,6 +2309,13 @@ function updateTraffic(dt, z) {
     // 내 차가 길을 막으면 잠시 뒤 경적
     car.blockT = blockedByMe ? (car.blockT || 0) + dt : 0; car.hornCd = Math.max(0, (car.hornCd || 0) - dt);
     if (car.blockT > FEEL.hornDelay && car.hornCd <= 0) { car.hornCd = 4 + Math.random() * 3; Sound.play('horn'); }
+    // 정체 풀기: 앞이 막힌 채 한참이면 옆 차선으로 빠져나가고, 그래도 안 풀리면(화면 밖에서) 차를 다른 자리로 돌린다
+    car.jamT = (blockedByMe || stuckAhead || waiting) ? (car.jamT || 0) + dt : 0; car.laneCd = Math.max(0, (car.laneCd || 0) - dt);
+    if (car.jamT > FEEL.npcLaneChangeWait && car.laneCd <= 0) {
+      const lanes = r.oneway ? r.lanes : r.lanes / 2;
+      if (lanes > 1) { const other = car.lane === 1 ? 2 : car.lane - 1; const clear = !Game.traffic.some(o => o !== car && o.road === r && o.dirn === car.dirn && o.lane === other && Math.abs(o.s - car.s) < car.len + 24); if (clear) { car.lane = other; car.laneCd = 3; car.jamT = 0; } }
+    }
+    if (car.jamT > FEEL.npcJamReset) { const pl = Game.player; if (Math.hypot(me.x - pl.x, me.y - pl.y) > 420) { car.s = Math.random() * r.len; car.v = 0; car.jamT = 0; car.waitT = 0; } }
     if (!Game.driving) { const p = Game.player; const dx = p.x - me.x, dy = p.y - me.y; const fwd = dx * Math.cos(me.a) + dy * Math.sin(me.a), side = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a)); if (fwd > 0 && fwd < 40 && side < 10) target = 0; }
     car.v += Math.max(-300 * dt, Math.min(120 * dt, target - car.v));
     car.s += car.v * car.dirn * dt;
@@ -2329,6 +2356,8 @@ const TIER_COL = { 1: '#3a3f4d', 2: '#4d4f5c', 3: '#6a5f55', 4: '#8a6d4c', 5: '#
 
 function currentGu() { return Game.zone ? Game.zone.gu : 'gwangjin'; }
 function travelCost(from, to) { const d = guDistance(from, to); return { d, slot: d > 2 }; }
+// 주유비: 직접 운전(옆 구) < 지도 이동(기본 + 거리 비례). 사용자 요청 2026-10-13
+function fuelCost(mode, d = 1) { const base = mode === 'drive' ? FEEL.fuelDrive : FEEL.fuelMapBase + FEEL.fuelMapPerDist * d; return Math.max(1000, Math.round(base * (0.9 + Math.random() * 0.2) / 1000) * 1000); }
 
 const SeoulMap = {
   open: false, hover: null, sel: null, anim: null, t: 0,
@@ -2373,7 +2402,8 @@ const SeoulMap = {
     if (Game.zone && zoneId === Game.zone.id) { if (h.court) { setNavDest({ gu: to, place: 'court', label: COURTS[h.court].name }); this.toggle(false); } else Toast.show('지금 있는 곳이에요.'); return; }
     this.sel = { ...h, zoneId };
     const timeTxt = State.evening ? '저녁' : slot ? `${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}` : '시간 그대로';
-    $('mapConfirm').innerHTML = `<span>${name}(으)로 이동 · ${timeTxt}</span><button class="btn gold" id="mapGo">출발</button><button class="btn" id="mapDest">목적지로 설정</button><button class="btn" id="mapCancel">취소</button>`;
+    const fuelTxt = `주유비 약 ${fmtWon(FEEL.fuelMapBase + FEEL.fuelMapPerDist * travelCost(currentGu(), to).d)}`;
+    $('mapConfirm').innerHTML = `<span>${name}(으)로 이동 · ${timeTxt} · ${fuelTxt}</span><button class="btn gold" id="mapGo">출발</button><button class="btn" id="mapDest">목적지로 설정</button><button class="btn" id="mapCancel">취소</button>`;
     $('mapConfirm').classList.add('in');
     $('mapDest').onclick = () => { setNavDest({ gu: to, place: h.court ? 'court' : null, label: name }); $('mapConfirm').classList.remove('in'); this.sel = null; this.toggle(false); };
     $('mapGo').onclick = () => this.go(); $('mapCancel').onclick = () => { $('mapConfirm').classList.remove('in'); this.sel = null; };
@@ -2399,7 +2429,7 @@ const SeoulMap = {
     pts.push([B.row, B.col]);
     const dur = Math.min(2500, 1000 + d * 220);
     Sound.play('ignition');
-    const fuel = Math.round((10000 + Math.random() * 20000) / 1000) * 1000;
+    const fuel = fuelCost('map', d);
     this.anim = { pts, bridge, t0: performance.now() + 450, dur, flipped: false, slot };
     await sleep(dur + 450);
     Sound.play('brake'); await sleep(250);
@@ -2717,13 +2747,35 @@ const Nav = {
   clear() { // 패널의 ✕: 이 목적지 안내를 끈다 (새 목적지를 고르면 다시 켜짐)
     this.mutedKey = this.key; State.navDest = null; if (State.phase !== 'dday' && State.phase !== 'pay') State.targetPlace = null; this.off(); Toast.show('목적지 안내를 껐어요.');
   },
-  show(arrow, main, sub) {
-    const h = `<div class="arrow">${arrow}</div><div class="txt"><b>${main}</b><small>${sub}</small></div><button class="nx" id="navX" title="안내 끄기">✕</button>`;
-    if (h !== this.html) { this.html = h; $('nav').innerHTML = h; }
+  show(arrow, main, sub, big = '') {
+    const h = `<div class="turn"><div class="arrow">${arrow}</div>${big ? `<b>${big}</b>` : ''}</div><div class="txt"><b>${main}</b><small>${sub}</small></div><button class="nx" id="navX" title="안내 끄기">✕</button>`;
+    if (h !== this.html) { this.html = h; $('navBody').innerHTML = h; }
     if (!this.on) { this.on = true; $('nav').classList.add('in'); }
   },
+  // 안내판 속 작은 지도: 내 차가 위를 보게 돌린 주변 도로 + 파란 경로 (진짜 내비처럼). 길 위에 선을 긋지 않는다.
+  drawMap() {
+    if (!this.on || !Game.driving || Game.scene !== 'zone') return;
+    const c = $('navMap'), x = c.getContext('2d'), W = c.width, H = c.height, z = Game.zone, car = Game.car, s = 3;
+    x.fillStyle = '#101a2c'; x.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H * 0.74, ptx = car.x / TILE, pty = car.y / TILE, bx = Math.floor(ptx), by = Math.floor(pty);
+    x.save(); x.translate(cx, cy); x.rotate(-(car.a + Math.PI / 2));
+    const R = Math.ceil(Math.hypot(W, H) / s / 2) + 1;
+    for (let ty = -R; ty <= R; ty++) for (let tx = -R; tx <= R; tx++) {
+      const v = z.at(bx + tx, by + ty); if (v !== T.ROAD && v !== T.ALLEY && v !== T.PARK) continue;
+      x.fillStyle = v === T.ROAD ? '#3b4d6e' : v === T.ALLEY ? '#2a3853' : '#1d3a2e'; x.fillRect((bx + tx - ptx) * s, (by + ty - pty) * s, s + 0.5, s + 0.5);
+    }
+    if (this.path.length > 1) {
+      x.strokeStyle = '#3fa9ff'; x.lineWidth = 3.5; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath();
+      this.path.forEach(([tx, ty], i) => { const X = (tx + 0.5 - ptx) * s, Y = (ty + 0.5 - pty) * s; i ? x.lineTo(X, Y) : x.moveTo(X, Y); }); x.stroke();
+      const g = this.goal; if (g && g.kind === 'place') { const pl = z.places.find(p => p.id === g.id); if (pl) { const X = (pl.door.tx + 0.5 - ptx) * s, Y = (pl.door.ty + 0.5 - pty) * s; x.fillStyle = '#ff5a4a'; x.beginPath(); x.arc(X, Y, 4, 0, 7); x.fill(); } }
+    }
+    x.restore();
+    x.fillStyle = '#fff'; x.beginPath(); x.moveTo(cx, cy - 8); x.lineTo(cx - 5.5, cy + 5); x.lineTo(cx, cy + 2); x.lineTo(cx + 5.5, cy + 5); x.fill();
+    // 북쪽 표시
+    const na = -(car.a + Math.PI / 2) - Math.PI / 2; x.fillStyle = '#8fd0ff'; x.font = 'bold 9px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('N', cx + Math.cos(na) * (Math.min(W, H) / 2 - 8), cy + Math.sin(na) * (Math.min(W, H) / 2 - 8));
+  },
   update(dt) {
-    if (!Game.driving || Game.scene !== 'zone') { if (this.on || this.path.length) this.off(); return; }
+    if (!Game.driving || Game.scene !== 'zone' || NavPick.on) { if (this.on || this.path.length) this.off(); return; } // 목적지 고르는 동안은 안내를 미룬다
     const z = Game.zone, c = Game.car; const g = this.goalOf();
     if (!g) { this.off(); return; }
     if (g.kind === 'gu') { g.edge = this.edgeFor(z.gu, g.gu); if (!g.edge) { this.off(); return; } }
@@ -2745,7 +2797,7 @@ const Nav = {
     if (!t) { this.show(NAV_ARROW.straight, g.kind === 'gu' ? `${EDGE_ARROW[g.edge.dx + ',' + g.edge.dy]} ${DISTRICT[g.gu].name} 방면 직진` : '직진', sub); return; }
     const tm = Math.round(t.d * 4 / 10) * 10; const word = NAV_WORD[t.kind];
     const main = t.d === 0 ? `지금 ${word}` : tm <= 30 ? `잠시 후 ${word}` : `${fmtDist(tm)} 앞에서 ${word}`;
-    this.show(NAV_ARROW[t.kind], main, sub);
+    this.show(NAV_ARROW[t.kind], main, sub, t.d > 0 ? fmtDist(tm) : '');
     const sk = Math.round(t.at[0] / 10) + ',' + Math.round(t.at[1] / 10); // 같은 회전은 한 번만 말한다
     if (t.d > 0 && tm <= 100 && !this.said[sk]) { this.said[sk] = 1; Toast.show(`${fmtDist(tm)} 앞에서 ${word}입니다.`, 2000); Sound.play('tick'); }
   },
@@ -2754,6 +2806,38 @@ const Nav = {
     ctx.save(); ctx.strokeStyle = 'rgba(150,95,255,.5)'; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath();
     this.path.forEach(([x, y], i) => { if (i % 3 && i !== this.path.length - 1) return; const X = x * TILE + 8, Y = y * TILE + 8; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
     ctx.stroke(); ctx.restore();
+  },
+};
+
+/* ---- 차에 타면 바로 뜨는 목적지 고르기 ---- */
+const NavPick = {
+  on: false,
+  open() {
+    const z = Game.zone; if (!z || Game.scene !== 'zone' || z.spec.court) return;
+    const nd = State.navDest, cur = nd ? (nd.place ? 'p:' + nd.place : 'g:' + nd.gu) : '';
+    let auto = null; { const keep = State.navDest; State.navDest = null; try { auto = Nav.goalOf(); } catch (e) {} State.navDest = keep; }
+    const ICON = { court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', site: '📍' };
+    const btn = (attr, cls, label) => `<button ${attr} class="${cls}">${label}</button>`;
+    let h = `<h3><span>어디로 갈까요?<small>누르면 바로 안내</small></span><button class="nx" id="navPickX" title="닫기">✕</button></h3>`;
+    if (auto && !cur) h += `<div class="sec">추천</div><div class="grid">${btn('data-auto="1"', 'rec', '★ ' + esc(auto.label))}</div>`;
+    const sites = z.places.filter(p => p.kind === 'site'), others = z.places.filter(p => p.kind !== 'site');
+    if (sites.length) h += `<div class="sec">이 구역 경매 물건</div><div class="grid">${sites.map(p => btn(`data-place="${p.id}"`, cur === 'p:' + p.id ? 'sel' : '', (ICON.site) + ' ' + esc(p.name))).join('')}</div>`;
+    h += `<div class="sec">${DISTRICT[z.gu].name} 장소</div><div class="grid">${others.map(p => btn(`data-place="${p.id}"`, cur === 'p:' + p.id ? 'sel' : '', (ICON[p.kind] || '📍') + ' ' + esc(p.name))).join('')}</div>`;
+    const here = [z.gu, ...(z.spec.guAlso || [])];
+    const gus = [...new Set([...(State.week && State.week.cases ? State.week.cases.map(c => c.gu) : []), ...(typeof DRIVE_GUS !== 'undefined' ? DRIVE_GUS : [])])].filter(g => DISTRICT[g] && !here.includes(g) && Nav.edgeFor(z.gu, g));
+    h += `<div class="sec">다른 구로</div><div class="grid">${gus.map(g => btn(`data-gu="${g}"`, cur === 'g:' + g ? 'sel' : '', '🚗 ' + DISTRICT[g].name)).join('')}${btn('data-map="1"', '', '🗺️ 지도에서 고르기')}</div>`;
+    $('navPick').innerHTML = h; $('navPick').classList.add('in'); this.on = true; Sound.play('paper');
+  },
+  close() { if (!this.on) return; this.on = false; $('navPick').classList.remove('in'); },
+  bind() {
+    $('navPick').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return; const z = Game.zone; const d = b.dataset;
+      if (b.id === 'navPickX') { this.close(); Sound.play('click'); return; }
+      if (d.auto) { State.navDest = null; Nav.mutedKey = ''; Nav.key = ''; this.close(); Sound.play('tick'); return; }
+      if (d.place && z) { const p = z.places.find(x => x.id === d.place); if (p) setNavDest({ gu: z.gu, place: p.id, label: p.name }); this.close(); return; }
+      if (d.gu) { setNavDest({ gu: d.gu, place: null, label: DISTRICT[d.gu].name }); this.close(); return; }
+      if (d.map) { this.close(); ZoneMap.toggle(true); $('zoneMapName').textContent = z ? z.name + ' 구역 지도' : ''; }
+    });
   },
 };
 
@@ -4072,7 +4156,26 @@ function zoneInteractTarget(fromCar = false) {
     const dx = pl.door.tx * TILE + 8 - p.x, dy = pl.door.ty * TILE + 8 - p.y, d = Math.hypot(dx, dy);
     if (d < bd) { bd = d; best = pl; }
   }
+  if (!fromCar && !best) for (const w of Game.decor) { if (w.stun > 0) continue; const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w.tg || (w.tg = { kind: 'walker', w }); } } // 지나가는 행인에게 말 걸기 (같은 객체를 유지해야 prompt가 매 프레임 초기화되지 않는다)
   return best;
+}
+/* ---- 행인과 잡담: 동네 분위기·날씨·잡담뿐, 물건의 정답(권리·시세)은 절대 말하지 않는다 ---- */
+const WALKER_NAMES = ['지나가던 주민', '동네 아주머니', '학생', '배달 기사님', '산책 나온 아저씨', '편의점 알바생', '강아지 산책 중인 분'];
+async function talkWalker(w) {
+  if (Game.busy) return; Game.busy = true;
+  const z = Game.zone, p = Game.player; const i = Game.decor.indexOf(w); const name = WALKER_NAMES[(i < 0 ? 0 : i) % WALKER_NAMES.length];
+  w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
+  const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
+  const hello = [`안녕하세요. ${dong} 처음 오셨어요?`, `네? 아, 길 물어보시려고요?`, `${gu}는 요즘 공사가 많아서 길이 좀 막혀요.`, `오늘 날씨 좋죠? 걷기 딱 좋아요.`, `경매 보러 오신 분이죠? 요즘 그런 분들 자주 보여요.`];
+    const pick = await Dialog.say([{ name, sprite: w.sprite, text: hello[(i + State.day) % hello.length] }], [
+    { label: '동네 어때요?', value: 'town' }, { label: '요즘 경매 어때요?', value: 'auction' }, { label: '그냥 인사했어요', value: 'bye' },
+  ]);
+  const town = [`${dong}은 역이 가까워서 출퇴근은 편해요. 대신 밤에 큰길은 좀 시끄럽고요.`, `오래된 집이 많아서 골목이 좁아요. 주차가 늘 전쟁이에요.`, `학교랑 마트가 가까워서 애 키우는 집이 많아요.`, `요즘 카페가 많이 생겼어요. 동네가 좀 바뀌는 중이죠.`];
+  const auction = [`글쎄요, 법원 앞에 사람 많더라고요. 서류 잘 보고 들어가야 한대요.`, `저도 잘은 몰라요. 싸다고 덥석 받으면 큰일 난다는 얘기만 들었어요.`, `등기부랑 전입 같은 건 직접 떼 보셔야죠. 남 말만 믿으면 안 돼요.`, `주민센터랑 중개사한테 물어보세요. 저는 그냥 지나가는 사람이라.`];
+  if (pick === 'town') await Dialog.say([{ name, sprite: w.sprite, text: town[(i * 3 + State.day) % town.length] }]);
+  else if (pick === 'auction') await Dialog.say([{ name, sprite: w.sprite, text: auction[(i * 5 + State.day) % auction.length] }]);
+  else await Dialog.say([{ name, sprite: w.sprite, text: ['네, 좋은 하루요.', '조심히 다니세요. 여기 차들이 험해요.', '네네, 안녕히 가세요.'][i % 3] }]);
+  w.ai.t = 0.3; Game.busy = false;
 }
 function roomInteractTarget() {
   const p = Game.player, r = Game.room; let best = null, bd = 24;
@@ -4133,7 +4236,7 @@ async function driveAcross(toGu) {
   if (Game.busy || Game.edgeGoing) return; Game.edgeGoing = true; Game.busy = true;
   const el = $('edgeSign'); el.classList.remove('in'); el.dataset.k = '';
   const from = currentGu(); const { slot } = travelCost(from, toGu);
-  const fuel = Math.round((10000 + Math.random() * 20000) / 1000) * 1000;
+  const fuel = fuelCost('drive'); // 직접 운전은 주유비가 적다
   await iris(true);
   State.cash -= fuel; HUD.setCash(State.cash);
   if (slot && !State.evening) await advanceSlot();
@@ -4247,6 +4350,7 @@ function placeClosed(kind) {
 function enterCar() {
   Game.driving = true; Sound.play('carDoor'); setTimeout(() => Sound.play('ignition'), 150);
   Game.car.rock = 1; Game.prompt = { target: null, t: 0 };
+  NavPick.open(); // 타자마자 목적지 고르기
 }
 function exitCar() {
   const c = Game.car, z = Game.zone; c.vx = c.vy = 0; c.speed = 0;
@@ -4255,7 +4359,7 @@ function exitCar() {
     const px = c.x + Math.cos(c.a + Math.PI / 2 * side) * 16 * (side ? 1 : 0) - (side ? 0 : Math.cos(c.a) * 18), py = c.y + Math.sin(c.a + Math.PI / 2 * side) * 16 * (side ? 1 : 0) - (side ? 0 : Math.sin(c.a) * 18);
     if (z.at(Math.floor(px / TILE), Math.floor(py / TILE)) !== T.BLD) { Game.player.x = px; Game.player.y = py; break; }
   }
-  Game.driving = false; Game.player.vx = Game.player.vy = 0; Sound.play('carDoor');
+  Game.driving = false; Game.player.vx = Game.player.vy = 0; Sound.play('carDoor'); NavPick.close();
   const es = $('edgeSign'); es.classList.remove('in'); es.dataset.k = '';
 }
 
@@ -4353,7 +4457,7 @@ function update(dt) {
       stepWalker(p, dt, ix, iy, run, solid, 'asphalt');
       const nearCar = Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
-      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else enterPlace(tg); }
+      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'walker') talkWalker(tg.w); else enterPlace(tg); }
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
       else if (fKey) Toast.show('차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
     }
@@ -4457,7 +4561,6 @@ function drawZone(t) {
     for (let s = 30; s < L - 10; s += 60) { ctx.save(); ctx.translate((ax + (bx - ax) * s / L) * TILE, (ay + (by - ay) * s / L) * TILE); let a = Math.atan2(by - ay, bx - ax); if (a > Math.PI / 2) a -= Math.PI; if (a < -Math.PI / 2) a += Math.PI; ctx.rotate(a); ctx.fillText(r.name.split('').join(' '), 0, 0); ctx.restore(); }
   }
   ctx.restore();
-  Nav.drawRoute(ctx);
   // 스키드 자국
   ctx.fillStyle = 'rgba(20,20,22,.45)';
   for (const m of Skids) { if (m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); }
@@ -4567,6 +4670,7 @@ function promptWord(tg) {
   if (tg.kind === 'car') return '타기';
   if (tg.kind === 'exit') return '나가기';
   if (tg.kind === 'npc' || tg.kind === 'guest') return '대화';
+  if (tg.kind === 'walker') return '말 걸기';
   if (tg.kind === 'obj') return tg.label || (tg.obj && tg.obj.label) || '사용';
   if (tg.kind === 'site') return Game.driving ? '물건 보기' : '들어가기';
   return '들어가기';
@@ -4616,7 +4720,7 @@ function draw() {
   if (Game.keyIcon > 0) drawKeyIcon(Game.t);
   drawTimeTint(Game.t);
   $('radar').style.visibility = Game.scene === 'zone' ? 'visible' : 'hidden'; $('roadSign').style.visibility = Game.scene === 'zone' ? 'visible' : 'hidden';
-  if (Game.scene === 'zone') Radar.draw();
+  if (Game.scene === 'zone') { Radar.draw(); Nav.drawMap(); }
   if (ZoneMap.open) { if (Game.scene !== 'zone') ZoneMap.toggle(false); else ZoneMap.draw(); }
   drawIris();
   drawMinimap(Game.t); SeoulMap.draw(1 / 60);
@@ -4667,7 +4771,7 @@ const Radar = {
     }
     // 내 차(걸을 때), 목표
     const edge = (wx, wy, col, r) => { let dx = (wx / TILE - ptx) * scale, dy = (wy / TILE - pty) * scale; const d = Math.hypot(dx, dy), R = S / 2 - 7; const out = d > R; if (out) { dx = dx / d * R; dy = dy / d * R; } x.fillStyle = col; if (out) { const a = Math.atan2(dy, dx); x.beginPath(); x.moveTo(S / 2 + dx + Math.cos(a) * 5, S / 2 + dy + Math.sin(a) * 5); x.lineTo(S / 2 + dx + Math.cos(a + 2.3) * 5, S / 2 + dy + Math.sin(a + 2.3) * 5); x.lineTo(S / 2 + dx + Math.cos(a - 2.3) * 5, S / 2 + dy + Math.sin(a - 2.3) * 5); x.fill(); } else { x.fillRect(S / 2 + dx - r, S / 2 + dy - r, r * 2, r * 2); } };
-    if (Game.driving) { x.fillStyle = 'rgba(170,120,255,.9)'; for (const [tx, ty] of Nav.path) { const dx = (tx + 0.5 - ptx) * scale, dy = (ty + 0.5 - pty) * scale; if (Math.hypot(dx, dy) < S / 2 - 4) x.fillRect(S / 2 + dx - 1, S / 2 + dy - 1, 2, 2); } }
+    if (Game.driving) { x.fillStyle = 'rgba(63,169,255,.95)'; for (const [tx, ty] of Nav.path) { const dx = (tx + 0.5 - ptx) * scale, dy = (ty + 0.5 - pty) * scale; if (Math.hypot(dx, dy) < S / 2 - 4) x.fillRect(S / 2 + dx - 1, S / 2 + dy - 1, 2, 2); } }
     if (!Game.driving) edge(Game.car.x, Game.car.y, '#ffffff', 3);
     const tp = targetPos(); if (tp) edge(tp.door.tx * TILE, tp.door.ty * TILE, '#ffd84a', 4);
     x.restore();
@@ -5567,7 +5671,7 @@ const Layout = {
     Store.set('mpName', name); chButtons().forEach(x => x.disabled = x !== b); b.classList.add('sel'); $('chStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
     $('title').classList.add('chOn'); $('btnStart').textContent = `채널 ${b.dataset.ch} 시작하기 (자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))})`; // 채널은 자본이 정해져 있어 자본 선택을 숨긴다
     const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { chReset(b); }
-    else if (Net.on) { $('chStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); const rs = $('liveReset'); if (rs) rs.onclick = () => { Live.reset(Number(b.dataset.ch)); rs.parentElement.textContent = '기록을 지웠어요. 고른 자본으로 새로 시작합니다.'; }; }
+    else if (Net.on) { $('chStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); }
   });
   $('mpCreate').onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
@@ -5590,10 +5694,19 @@ const Layout = {
   $('zoneCanvas').addEventListener('click', e => { if (!ZoneMap.dragged) ZoneMap.click(e); });
   ZoneMap.bindGestures();
   $('nav').addEventListener('click', e => { if (e.target.id === 'navX') Nav.clear(); });
+  NavPick.bind();
+  // 채널 기록 지우기: 한 번 더 묻는다 (confirm 대신 버튼 교체; 상태 글이 다시 그려져도 되게 위임)
+  let resetPrev = '';
+  $('chStatus').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return; const wrap = b.parentElement;
+    if (b.id === 'liveReset') { resetPrev = wrap.innerHTML; wrap.innerHTML = `<b style="color:#ff8a7a">정말 기록을 지우고 새로 시작할까요?</b> 누적 손익과 입찰 기록이 모두 사라져요. <button class="btn" id="liveResetYes">네, 새로 시작</button> <button class="btn" id="liveResetNo">아니요</button>`; }
+    else if (b.id === 'liveResetYes') { Live.reset(Net.ch); wrap.textContent = '기록을 지웠어요. 고른 자본으로 새로 시작합니다.'; Sound.play('paper'); }
+    else if (b.id === 'liveResetNo') { wrap.innerHTML = resetPrev; }
+  });
   addEventListener('resize', () => ZoneMap.open && ZoneMap.fit());
   $('mapCanvas').addEventListener('pointermove', e => SeoulMap.onMove(e));
   $('mapCanvas').addEventListener('click', e => SeoulMap.onClick(e));
-  $('seoulMap').addEventListener('click', e => { if (e.target.id === 'seoulMap') SeoulMap.toggle(false); });
+  $('seoulMap').addEventListener('click', e => { if (e.target.id === 'seoulMap' || e.target.id === 'mapX' || e.target.closest('.mapTitle')) SeoulMap.toggle(false); }); // 폰은 지도가 화면을 다 채워 빈 곳이 없으니 닫기 버튼·제목으로도 닫는다
   addEventListener('resize', () => SeoulMap.open && SeoulMap.resize());
   $('btnEndDay').onclick = async () => { Menu.toggle(false); await endDay(); };
   $('btnMenu').onclick = () => Menu.toggle();

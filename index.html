@@ -64,6 +64,11 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 #roadSign.in { transform:none; opacity:1; }
 #edgeSign { position:absolute; left:50%; top:14px; transform:translate(-50%,-160%); background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:5px 16px; color:#fff; text-align:center; box-shadow:0 3px 0 #000; opacity:0; transition:transform .25s ease-out, opacity .25s; }
 #edgeSign.in { transform:translate(-50%,0); opacity:1; }
+#nav { position:absolute; left:50%; bottom:18px; transform:translate(-50%,140%); display:flex; gap:12px; align-items:center; background:rgba(12,16,26,.88); border:2px solid #7a5cf0; border-radius:12px; padding:6px 16px 6px 12px; color:#fff; box-shadow:0 4px 0 rgba(0,0,0,.5); opacity:0; transition:transform .25s ease-out, opacity .25s; max-width:min(92vw, 520px); }
+#nav.in { transform:translate(-50%,0); opacity:1; }
+#nav .arrow { font-size:34px; line-height:1; color:#c9b6ff; min-width:36px; text-align:center; }
+#nav .txt b { display:block; font-size:17px; } #nav .txt small { display:block; font-size:11px; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:420px; }
+.touchOn #nav { bottom:150px; }
 #edgeSign b { display:block; font-size:18px; } #edgeSign small { font-size:11px; opacity:.85; }
 #roadSign b { display:block; font-size:18px; } #roadSign small { font-size:11px; opacity:.85; }
 .hudBtns { position:absolute; top:214px; right:16px; display:flex; gap:6px; pointer-events:auto; }
@@ -384,8 +389,9 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="propCard" class="propCard"></div>
 <div id="dropSign"></div>
 <div id="edgeSign"></div>
+<div id="nav"></div>
 <div id="docView"><div class="docBar"><span id="docTitle"></span><button class="btn" onclick="DocViewer.close()">닫기 (E)</button></div><div id="docBody"></div></div>
-<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 큰길로 구역 끝까지 달려도 옆 구로 넘어가요 · M/Esc 닫기</small></div><div id="mapConfirm"></div></div>
+<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 법원은 그 구 안에 있어요(차 타면 내비 안내) · M/Esc 닫기</small></div><div id="mapConfirm"></div></div>
 <div id="mapHover"></div>
 <div id="caseList"></div>
 <div id="dialog">
@@ -415,6 +421,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>서울 지도</th><td>M (차 근처에서 이동 확정)</td><td class="tc">우상단 미니맵</td></tr>
       <tr><th>구역 지도(장소 위치)</th><td>N</td><td class="tc">왼쪽 레이더 탭</td></tr>
       <tr><th>옆 구로 이동</th><td colspan="2">큰길 따라 구역 끝까지 운전 (지도 M도 가능)</td></tr>
+      <tr><th>내비게이션</th><td colspan="2">차에 타면 자동 안내 (목표: 노란 화살표 · 매각기일엔 법원)</td></tr>
       <tr><th>자고 넘기기</th><td colspan="2">건대 구역 '내 집' 문에서 E</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
@@ -1756,8 +1763,10 @@ function buildZone(spec, cases = []) {
   }
   for (const b of buildings) if (b.fixedPlace) { const door = doorOf(b); usedB.add(b.id); b.place = b.fixedPlace.id; places.push({ ...b.fixedPlace, building: b.id, door }); }
   for (const p of spec.places) {
-    const c = claim(p.near, b => b.w >= 4 && b.h >= 4);
-    if (c) { c.b.place = p.id; places.push({ ...p, building: c.b.id, door: c.door }); }
+    const big = p.kind === 'court'; // 법원은 되도록 큰길 가까운 큰 건물
+    const nearRoad = b => { for (let y = b.y - 5; y <= b.y + b.h + 5; y += 2) for (let x = b.x - 5; x <= b.x + b.w + 5; x += 2) if (at(x, y) === T.ROAD) return true; return false; };
+    const c = big ? (claim(p.near, b => b.w * b.h >= 60 && nearRoad(b)) || claim(p.near, b => b.w >= 4 && b.h >= 4 && nearRoad(b)) || claim(p.near, b => b.w >= 4 && b.h >= 4)) : claim(p.near, b => b.w >= 4 && b.h >= 4);
+    if (c) { c.b.place = p.id; if (big) { c.b.floors = Math.max(c.b.floors, 10); c.b.color = '#c9c2b2'; c.b.detail = 'plain'; } places.push({ ...p, building: c.b.id, door: c.door }); }
   }
   // 경매 물건: 구역 안에 흩뿌림
   cases.forEach((cs, i) => {
@@ -2201,17 +2210,17 @@ const SeoulMap = {
     const from = currentGu(); const to = h.gu || COURT_GU[h.court]; const { d, slot } = travelCost(from, to);
     const cnt = this.counts()[h.gu] || 0;
     hc.innerHTML = h.gu ? `<b>${DISTRICT[h.gu].name}</b><div>관할: ${COURTS[DISTRICT[h.gu].court].name}</div><div>진행 물건 ${cnt}건</div><div>시세 수준 ${'★'.repeat(DISTRICT[h.gu].tier)}${'☆'.repeat(5 - DISTRICT[h.gu].tier)}</div><div>이동: ${h.gu === from ? '현재 위치' : slot ? '시간 1칸' : '시간 소모 없음'} (거리 ${d})</div>`
-      : `<b>${COURTS[h.court].name}</b><div>입찰은 관할 법원에서</div><div>이동: ${slot ? '시간 1칸' : '시간 소모 없음'}</div>`;
+      : `<b>${COURTS[h.court].name}</b><div>${DISTRICT[to].name}에 있어요 · 입찰은 관할 법원에서</div><div>이동: ${to === from ? '현재 위치' : slot ? '시간 1칸' : '시간 소모 없음'} (거리 ${d})</div><div class="dim">차를 타면 내비가 법원까지 안내해요</div>`;
     hc.style.left = Math.min(e.clientX + 14, innerWidth - 230) + 'px'; hc.style.top = Math.min(e.clientY + 14, innerHeight - 150) + 'px'; hc.classList.add('in');
   },
   onClick(e) {
     if (this.anim) return; const r = e.target.getBoundingClientRect(); const h = this.hit(e.clientX - r.left, e.clientY - r.top);
     if (!h) return; Sound.play('click');
-    const zoneId = h.court ? 'court_' + h.court : ZONE_OF_GU[h.gu];
-    if (Game.zone && zoneId === Game.zone.id) { Toast.show('지금 있는 곳이에요.'); return; }
+    const zoneId = ZONE_OF_GU[h.gu || COURT_GU[h.court]];
+    if (Game.zone && zoneId === Game.zone.id) { Toast.show(h.court ? `${COURTS[h.court].name}은(는) 지금 있는 구에 있어요. 차를 타면 내비가 안내해요.` : '지금 있는 곳이에요.'); return; }
     this.sel = { ...h, zoneId };
     const to = h.gu || COURT_GU[h.court]; const { slot } = travelCost(currentGu(), to);
-    const name = h.gu ? DISTRICT[h.gu].name : COURTS[h.court].name;
+    const name = h.gu ? DISTRICT[h.gu].name : `${COURTS[h.court].name}(${DISTRICT[to].name})`;
     const timeTxt = State.evening ? '저녁' : slot ? `${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}` : '시간 그대로';
     $('mapConfirm').innerHTML = `<span>${name}(으)로 이동 · ${timeTxt}</span><button class="btn gold" id="mapGo">출발</button><button class="btn" id="mapCancel">취소</button>`;
     $('mapConfirm').classList.add('in');
@@ -2407,6 +2416,135 @@ const ZoneMap = {
     const X = p.x / TILE * P, Y = p.y / TILE * P; x.fillStyle = 'rgba(255,216,74,.25)'; x.beginPath(); x.arc(X, Y, 10 + Math.sin(t * 4) * 3, 0, 7); x.fill();
     x.fillStyle = '#ffd84a'; x.beginPath(); x.arc(X, Y, 5, 0, 7); x.fill(); x.strokeStyle = '#1a1a1a'; x.lineWidth = 1.5; x.stroke();
     x.fillStyle = '#ffd84a'; x.font = 'bold 11px "IBM Plex Sans KR", sans-serif'; x.fillText('나', X, Y - 13);
+  },
+};
+
+/* ===================== 차량 내비게이션 =====================
+ * 차를 타면 목적지까지 남은 거리·시간과 다음 회전(좌/우회전·유턴)을 안내한다. 경로는 도로 타일 위 거리장(다익스트라)에서 내려간다.
+ * 목적지: 매각기일·잔금 때는 법원, 그 외에는 노란 화살표 목표(targetPlace), 없으면 수첩 목표 물건이 있는 구(구역 끝까지 안내).
+ * 연출뿐이라 §6~§11 규칙과 무관하다. 1타일 ≈ 4m, 예상 시간은 시속 30km 기준.
+ */
+const NAV_ARROW = { left: '↰', right: '↱', uturn: '↶', straight: '↑', arrive: '⚑' };
+const NAV_WORD = { left: '좌회전', right: '우회전', uturn: '유턴' };
+function fmtDist(m) { return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.max(10, m) + 'm'; }
+const Nav = {
+  key: '', dist: null, goal: null, path: [], said: {}, on: false, started: false, arrived: false, tick: 0, html: '',
+  goalOf() {
+    const z = Game.zone; if (!z || z.spec.court) return null;
+    const tc = State.target && State.week.cases.find(x => x.id === State.target);
+    if (State.phase === 'dday' || State.phase === 'pay') {
+      const court = tc ? tc.court : null;
+      const cp = z.places.find(p => p.kind === 'court' && (!court || p.court === court));
+      if (cp) return { kind: 'place', id: cp.id, label: cp.name };
+      if (court) { const g = COURT_GU[court]; if (g !== z.gu) return { kind: 'gu', gu: g, label: `${COURTS[court].name} (${DISTRICT[g].name})` }; }
+      return null;
+    }
+    if (State.targetPlace) { const pl = z.places.find(p => p.id === State.targetPlace); if (pl) return { kind: 'place', id: pl.id, label: pl.name }; }
+    if (tc && tc.gu !== z.gu && State.phase === 'investigate') return { kind: 'gu', gu: tc.gu, label: `${tc.name} (${DISTRICT[tc.gu].name})` };
+    return null;
+  },
+  // 다른 구로 갈 때 어느 변으로 나갈지 (카토그램에서 더 많이 차이 나는 축 먼저, 그쪽에 구가 있어야 함)
+  edgeFor(fromGu, toGu) {
+    const A = DISTRICT[fromGu], B = DISTRICT[toGu]; const dc = B.col - A.col, dr = B.row - A.row; const c = [];
+    if (Math.abs(dc) >= Math.abs(dr)) { if (dc) c.push([Math.sign(dc), 0]); if (dr) c.push([0, Math.sign(dr)]); }
+    else { if (dr) c.push([0, Math.sign(dr)]); if (dc) c.push([Math.sign(dc), 0]); }
+    for (const [dx, dy] of c) if (neighborGu(fromGu, dx, dy)) return { dx, dy };
+    return null;
+  },
+  // 목적지에서 모든 도로 타일까지의 비용(도로 1, 골목 3, 보도 6)
+  compute(z, goal) {
+    const W = z.W, H = z.H, N = W * H; const dist = new Int32Array(N).fill(-1); const buckets = []; let maxd = 0;
+    const cost = v => (v === T.ROAD ? 1 : v === T.ALLEY ? 3 : v === T.WALK ? 6 : v === T.GROUND || v === T.PARK ? 8 : 0); // 건물만 못 지나간다
+    const seed = (x, y) => { const i = y * W + x; dist[i] = 0; (buckets[0] || (buckets[0] = [])).push(i); };
+    if (goal.kind === 'place') {
+      const d = z.places.find(p => p.id === goal.id).door; let best = null, bd = 1e9;
+      for (let y = d.ty - 8; y <= d.ty + 8; y++) for (let x = d.tx - 8; x <= d.tx + 8; x++) if (z.at(x, y) === T.ROAD) { const dd = Math.hypot(x - d.tx, y - d.ty); if (dd < bd) { bd = dd; best = [x, y]; } }
+      seed(...(best || [d.tx, d.ty]));
+    } else if (goal.edge.dx) { const x = goal.edge.dx < 0 ? 0 : W - 1; for (let y = 0; y < H; y++) if (z.at(x, y) === T.ROAD) seed(x, y); }
+    else { const y = goal.edge.dy < 0 ? 0 : H - 1; for (let x = 0; x < W; x++) if (z.at(x, y) === T.ROAD) seed(x, y); }
+    const done = new Uint8Array(N);
+    for (let d = 0; d <= maxd; d++) {
+      const b = buckets[d]; if (!b) continue;
+      for (let k = 0; k < b.length; k++) {
+        const i = b[k]; if (done[i] || dist[i] !== d) continue; done[i] = 1; const x = i % W, y = (i - x) / W;
+        for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const c = cost(z.at(nx, ny)); if (!c) continue;
+          const j = ny * W + nx, nd = d + c; if (dist[j] < 0 || nd < dist[j]) { dist[j] = nd; (buckets[nd] || (buckets[nd] = [])).push(j); if (nd > maxd) maxd = nd; }
+        }
+      }
+    }
+    this.dist = dist;
+  },
+  // 내 위치에서 비용이 줄어드는 쪽으로 내려간 경로(타일)
+  trace(z, sx, sy, maxN) {
+    const W = z.W, H = z.H, dist = this.dist; let x = sx, y = sy;
+    if (x < 0 || y < 0 || x >= W || y >= H || dist[y * W + x] < 0) {
+      let best = null, bd = 1e9;
+      for (let yy = y - 5; yy <= y + 5; yy++) for (let xx = x - 5; xx <= x + 5; xx++) { if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue; const d = dist[yy * W + xx]; if (d >= 0) { const s = Math.hypot(xx - x, yy - y) * 3 + d * 0.01; if (s < bd) { bd = s; best = [xx, yy]; } } }
+      if (!best) return []; [x, y] = best;
+    }
+    const path = [[x, y]];
+    for (let n = 0; n < maxN; n++) {
+      const d = dist[y * W + x]; if (d === 0) break; let bx = x, by = y, bd = d;
+      for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) { if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const nd = dist[ny * W + nx]; if (nd >= 0 && nd < bd) { bd = nd; bx = nx; by = ny; } }
+      if (bx === x && by === y) break; x = bx; y = by; path.push([x, y]);
+    }
+    return path;
+  },
+  // 다음 회전: 경로를 띄엄띄엄 샘플하고, 큰길 위에서는 도로 방향을 써서 사선 도로의 계단 모양을 무시한다
+  nextTurn(z, path, c) {
+    const S = 6; const pts = []; for (let i = 0; i < path.length; i += S) pts.push(path[i]); if (pts.length < 2) return null;
+    const hd = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      let hx = pts[i + 1][0] - pts[i][0], hy = pts[i + 1][1] - pts[i][1];
+      const rd = roadAt(z, pts[i][0] * TILE + 8, pts[i][1] * TILE + 8);
+      if (rd) { const s = rd.ux * hx + rd.uy * hy < 0 ? -1 : 1; hx = rd.ux * s; hy = rd.uy * s; }
+      hd.push([hx, hy]);
+    }
+    const ang = (a, b) => Math.atan2(a[0] * b[1] - a[1] * b[0], a[0] * b[0] + a[1] * b[1]); // 양수 = 화면 시계방향 = 우회전
+    const first = ang([Math.cos(c.a), Math.sin(c.a)], hd[0]);
+    if (Math.abs(first) > 2.1 && c.speed > 10) return { d: 0, kind: 'uturn', at: pts[0] };
+    if (Math.abs(first) > 0.95) return { d: 0, kind: first > 0 ? 'right' : 'left', at: pts[0] };
+    for (let i = 1; i < hd.length; i++) { const a = ang(hd[i - 1], hd[i]); if (Math.abs(a) > 0.95) return { d: i * S, kind: a > 0 ? 'right' : 'left', at: pts[i] }; }
+    return null;
+  },
+  off() { this.path = []; if (this.on) { this.on = false; $('nav').classList.remove('in'); } this.key = ''; },
+  show(arrow, main, sub) {
+    const h = `<div class="arrow">${arrow}</div><div class="txt"><b>${main}</b><small>${sub}</small></div>`;
+    if (h !== this.html) { this.html = h; $('nav').innerHTML = h; }
+    if (!this.on) { this.on = true; $('nav').classList.add('in'); }
+  },
+  update(dt) {
+    if (!Game.driving || Game.scene !== 'zone') { if (this.on || this.path.length) this.off(); return; }
+    const z = Game.zone, c = Game.car; const g = this.goalOf();
+    if (!g) { this.off(); return; }
+    if (g.kind === 'gu') { g.edge = this.edgeFor(z.gu, g.gu); if (!g.edge) { this.off(); return; } }
+    const key = z.id + '|' + (g.kind === 'place' ? g.id : 'gu:' + g.gu);
+    if (key !== this.key) { this.key = key; this.goal = g; this.compute(z, g); this.said = {}; this.started = false; this.arrived = false; this.tick = 0; }
+    this.tick -= dt; if (this.tick > 0 && this.on) return; this.tick = 0.25;
+    const path = this.trace(z, Math.floor(c.x / TILE), Math.floor(c.y / TILE), 160); this.path = path;
+    if (!path.length) { this.show('↻', '경로를 찾는 중…', g.label); return; }
+    const remain = this.dist[path[0][1] * z.W + path[0][0]]; const m = Math.round(remain * 4 / 10) * 10; const eta = Math.max(1, Math.round(m / 500));
+    const sub = `${g.label} · ${fmtDist(m)} · 약 ${eta}분`;
+    if (!this.started) { this.started = true; Toast.show(`안내를 시작합니다. ${g.kind === 'gu' ? DISTRICT[g.gu].name + ' 방면' : g.label}까지 ${fmtDist(m)}, 약 ${eta}분.`, 3200); Sound.play('tick'); }
+    if (g.kind === 'place' && remain <= 8) {
+      if (!this.arrived) { this.arrived = true; Toast.show('목적지 주변입니다. 안내를 종료합니다. F로 내려서 걸어가세요.', 3200); Sound.play('tick'); }
+      this.show(NAV_ARROW.arrive, '목적지 주변', g.label); return;
+    }
+    if (g.kind === 'gu' && remain <= 12) { this.show(NAV_ARROW.straight, `구역 끝까지 직진 · ${DISTRICT[g.gu].name} 진입`, sub); return; }
+    const t = this.nextTurn(z, path, c);
+    if (!t) { this.show(NAV_ARROW.straight, g.kind === 'gu' ? `${EDGE_ARROW[g.edge.dx + ',' + g.edge.dy]} ${DISTRICT[g.gu].name} 방면 직진` : '직진', sub); return; }
+    const tm = Math.round(t.d * 4 / 10) * 10; const word = NAV_WORD[t.kind];
+    const main = t.d === 0 ? `지금 ${word}` : tm <= 30 ? `잠시 후 ${word}` : `${fmtDist(tm)} 앞에서 ${word}`;
+    this.show(NAV_ARROW[t.kind], main, sub);
+    const sk = Math.round(t.at[0] / 10) + ',' + Math.round(t.at[1] / 10); // 같은 회전은 한 번만 말한다
+    if (t.d > 0 && tm <= 100 && !this.said[sk]) { this.said[sk] = 1; Toast.show(`${fmtDist(tm)} 앞에서 ${word}입니다.`, 2000); Sound.play('tick'); }
+  },
+  drawRoute(ctx) {
+    if (!Game.driving || this.path.length < 2) return;
+    ctx.save(); ctx.strokeStyle = 'rgba(150,95,255,.5)'; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath();
+    this.path.forEach(([x, y], i) => { if (i % 3 && i !== this.path.length - 1) return; const X = x * TILE + 8, Y = y * TILE + 8; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+    ctx.stroke(); ctx.restore();
   },
 };
 
@@ -3036,12 +3174,22 @@ function startGame(capital) {
   })();
 }
 
+// 매각기일·잔금 단계에 지금 구역 안에 (목표 물건의) 관할 법원이 있으면 그 장소
+function courtPlaceHere() {
+  const z = Game.zone; if (!z || !['dday', 'pay'].includes(State.phase)) return null;
+  const tc = State.target && State.week.cases.find(x => x.id === State.target);
+  return z.places.find(p => p.kind === 'court' && (!tc || p.court === tc.court)) || null;
+}
 function getZone(id) {
   if (Game.zones[id]) return Game.zones[id];
   let spec, cases = [];
   if (id.startsWith('court_')) spec = courtZoneSpec(id.slice(6));
   else if (id.startsWith('gu_')) { spec = genericZoneSpec(id.slice(3)); cases = State.week.cases.filter(c => c.gu === spec.gu); }
   else { spec = ZONE_SPECS[id]; const gus = [spec.gu, ...(spec.guAlso || [])]; cases = State.week.cases.filter(c => gus.includes(c.gu)); }
+  if (!id.startsWith('court_')) { // 관할 법원은 그 구 안의 건물로 (지도에서 법원을 눌러도 그 구로 운전해 간다)
+    const gus = [spec.gu, ...(spec.guAlso || [])]; const courtId = Object.keys(COURT_GU).find(k => gus.includes(COURT_GU[k]));
+    if (courtId && !spec.places.some(p => p.kind === 'court')) spec.places.push({ id: 'court', kind: 'court', court: courtId, name: COURTS[courtId].name, near: [Math.round(spec.w * 0.5), Math.round(spec.h * 0.45)] });
+  }
   return (Game.zones[id] = buildZone(spec, cases));
 }
 async function arriveZone(id, fromGu) {
@@ -3060,7 +3208,7 @@ async function arriveZone(id, fromGu) {
   Game.driving = true; Game.player = makeWalker('player', Game.car.x, Game.car.y);
   Skids.length = 0; spawnDecor(); Game.traffic = spawnTraffic(z);
   Cam.x = Game.car.x; Cam.y = Game.car.y; Cam.zoom = FEEL.zoom * 1.4;
-  State.targetPlace = State.target && z.places.some(p => p.id === 'case:' + State.target) ? 'case:' + State.target : (z.places.some(p => p.id === State.targetPlace) ? State.targetPlace : null);
+  State.targetPlace = courtPlaceHere() ? 'court' : State.target && z.places.some(p => p.id === 'case:' + State.target) ? 'case:' + State.target : (z.places.some(p => p.id === State.targetPlace) ? State.targetPlace : null);
   Sound.playBgm('town');
   const sign = $('dropSign'); sign.innerHTML = `<b>${z.spec.name}</b><small>${DISTRICT[z.gu].name}${z.spec.court ? '' : ' 일대'}</small>`; sign.classList.remove('in'); void sign.offsetWidth; sign.classList.add('in'); setTimeout(() => sign.classList.remove('in'), 2600);
   Banner.area(...z.spec.dongLabel);
@@ -3199,7 +3347,7 @@ async function enterPlace(pl) {
   await sleep(FEEL.doorOpenTime * 1000 * 2);
   await iris(true);
   Game.zonePos = { x: pl.door.tx * TILE + 8, y: pl.door.ty * TILE + 8 };
-  Game.room = buildInterior(pl);
+  Game.room = buildInterior(pl); Game.room.place = pl;
   const ex = Game.room.exit; Game.player.x = ex.tx * TILE + 8; Game.player.y = (ex.ty - 1) * TILE + 12; Game.player.dir = 3; Game.player.vx = Game.player.vy = 0;
   Game.scene = 'room'; Game.doorAnim = null;
   Sound.playBgm(Game.room.def.bgm);
@@ -3252,7 +3400,7 @@ async function endDay() {
   State.day++; State.half = 0; State.evening = false; State.clockMin = 0;
   await Banner.day(dLabel(), '오전', State.day >= 6);
   if (State.day === 7) {
-    State.phase = 'dday'; const c = State.target && State.week.cases.find(x => x.id === State.target);
+    State.phase = 'dday'; const c = State.target && State.week.cases.find(x => x.id === State.target); State.targetPlace = courtPlaceHere() ? 'court' : null;
     HUD.page(c ? `오늘이 매각기일이다. ${COURTS[c.court].name} 경매법정 가서 입찰해.` : '오늘이 매각기일이다. 입찰할 거면 해당 법원으로 가.');
     return;
   }
@@ -3313,12 +3461,14 @@ function update(dt) {
       const inp = frozen ? {} : { up: Keys.w || Keys.ArrowUp || Touch.gas || (Touch.active && Touch.y < -0.3), down: Keys.s || Keys.ArrowDown || Touch.brake || (Touch.active && Touch.y > 0.5), left: Keys.a || Keys.ArrowLeft || (Touch.active && Touch.x < -0.3), right: Keys.d || Keys.ArrowRight || (Touch.active && Touch.x > 0.3), hb: Keys[' '] || Touch.hb };
       const was = c.speed; updateMyCar(dt, z, inp);
       if (!frozen) checkEdgeExit(dt, z, c);
+      Nav.update(dt);
       if (was > 120 && c.speed < 40 && inp.down) Sound.play('brake');
       p.x = c.x; p.y = c.y;
       const tg = !frozen && c.speed < 25 ? zoneInteractTarget(true) : null; Game.promptFor(tg);
       if (interact && tg) { if (tg.kind === 'site') PropertyCard.open(tg.caseId); else Toast.show('F로 내려서 걸어 들어가세요.'); }
       if (fKey && !frozen) { if (c.speed > 40) Toast.show('차를 세우고 내리세요.'); else exitCar(); }
     } else {
+      Nav.update(dt);
       stepWalker(p, dt, ix, iy, run, solid, 'asphalt');
       const nearCar = Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
@@ -3426,6 +3576,7 @@ function drawZone(t) {
     for (let s = 30; s < L - 10; s += 60) { ctx.save(); ctx.translate((ax + (bx - ax) * s / L) * TILE, (ay + (by - ay) * s / L) * TILE); let a = Math.atan2(by - ay, bx - ax); if (a > Math.PI / 2) a -= Math.PI; if (a < -Math.PI / 2) a += Math.PI; ctx.rotate(a); ctx.fillText(r.name.split('').join(' '), 0, 0); ctx.restore(); }
   }
   ctx.restore();
+  Nav.drawRoute(ctx);
   // 스키드 자국
   ctx.fillStyle = 'rgba(20,20,22,.45)';
   for (const m of Skids) { if (m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); }
@@ -3614,6 +3765,7 @@ const Radar = {
     }
     // 내 차(걸을 때), 목표
     const edge = (wx, wy, col, r) => { let dx = (wx / TILE - ptx) * scale, dy = (wy / TILE - pty) * scale; const d = Math.hypot(dx, dy), R = S / 2 - 7; const out = d > R; if (out) { dx = dx / d * R; dy = dy / d * R; } x.fillStyle = col; if (out) { const a = Math.atan2(dy, dx); x.beginPath(); x.moveTo(S / 2 + dx + Math.cos(a) * 5, S / 2 + dy + Math.sin(a) * 5); x.lineTo(S / 2 + dx + Math.cos(a + 2.3) * 5, S / 2 + dy + Math.sin(a + 2.3) * 5); x.lineTo(S / 2 + dx + Math.cos(a - 2.3) * 5, S / 2 + dy + Math.sin(a - 2.3) * 5); x.fill(); } else { x.fillRect(S / 2 + dx - r, S / 2 + dy - r, r * 2, r * 2); } };
+    if (Game.driving) { x.fillStyle = 'rgba(170,120,255,.9)'; for (const [tx, ty] of Nav.path) { const dx = (tx + 0.5 - ptx) * scale, dy = (ty + 0.5 - pty) * scale; if (Math.hypot(dx, dy) < S / 2 - 4) x.fillRect(S / 2 + dx - 1, S / 2 + dy - 1, 2, 2); } }
     if (!Game.driving) edge(Game.car.x, Game.car.y, '#ffffff', 3);
     const tp = targetPos(); if (tp) edge(tp.door.tx * TILE, tp.door.ty * TILE, '#ffd84a', 4);
     x.restore();
@@ -3831,7 +3983,7 @@ function bidForm(c, practice) {
 }
 
 async function courtClerk() {
-  const zoneCourt = Game.zone.spec.court;
+  const zoneCourt = Game.zone.spec.court || (Game.room && Game.room.place && Game.room.place.court);
   if (State.phase === 'pay') return payBalance();
   if (State.day < 7) {
     const pick = await Dialog.say([say('court', '매각기일에 오세요. 입찰은 그날 이 법정에서 합니다. 입찰표 쓰는 연습은 해 보셔도 돼요.')], [{ label: '입찰 연습 <small>(시간 소모 없음)</small>', value: 'p' }, { label: '그만두기', value: 'n' }]);
@@ -3966,7 +4118,7 @@ async function loanReview(savings) {
   if (ok === true) {
     panel.className = 'ovl'; const why = L.steps.slice(1).map(s => s.label.split(' −')[0]).filter(x => x !== '최저 한도 적용');
     await Dialog.say([sayB(`${fmtWon(amount)} 승인됐습니다.${why.length ? ` 한도가 줄어든 건 ${why.join(', ')} 때문이에요.` : ''}${savings ? ` 금리가 높아서 추가 이자 ${fmtWon(L.extra)}이(가) 붙습니다.` : ''}`)]);
-    State.phase = 'pay'; HUD.page(`대출 나왔으면 법원 가서 잔금 내. ${courtOf(c).name}.`);
+    State.phase = 'pay'; State.targetPlace = courtPlaceHere() ? 'court' : null; HUD.page(`대출 나왔으면 법원 가서 잔금 내. ${courtOf(c).name}.`);
   } else if (ok === 'partial') {
     panel.className = 'ovl';
     const why = L.steps.slice(1).map(s => s.label.split(' −')[0]).filter(x => x !== '최저 한도 적용');

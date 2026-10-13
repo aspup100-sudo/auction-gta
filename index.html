@@ -49,15 +49,21 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title .mp summary { cursor:pointer; color:var(--gold); } #title .mp summary small { color:var(--paper); opacity:.7; }
 #title .mp .row { margin-top:8px; } #title .mp .chHead { margin-top:12px; color:var(--paper); font-weight:700; } #title .mp .chHead small { font-weight:400; opacity:.6; margin-left:6px; }
 #title .mp .chRow { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:6px; } #title .mp .ch { display:inline-flex; flex-direction:column; align-items:center; min-width:72px; padding:7px 10px; line-height:1.15; gap:2px; } #title .mp .ch b { font-size:14px; } #title .mp .ch small { font-size:11px; opacity:.7; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .ch.sel small { opacity:1; }
-#title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput, #title.chOn #mpCreate, #title.chOn #mpCode, #title.chOn #mpJoin, #title.chOn .row .or { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
+#title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title.chOn .mp .ch.sel { cursor:pointer; } #title.chOn .mp .ch.sel::after { content:'다시 누르면 나가기'; font-size:10px; opacity:.7; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
 #title .mp .mpHint { margin-top:6px; font-size:12px; opacity:.6; }
+#title .nameBox { display:flex; align-items:center; gap:10px; padding:6px 14px; } #title .nameBox label { color:var(--paper); opacity:.75; font-size:13px; white-space:nowrap; } #title .nameBox input { width:150px; }
+#title .mpWrap { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:flex-start; max-width:min(1000px, 94vw); } #title .mpWrap .mp { flex:1 1 320px; max-width:480px; } #title.chOn #mpBox, #title.chOn #nameBox, #title.roomOn #chBox { display:none; } #title .mp #chStatus { margin-top:8px; min-height:1.2em; color:#fff; }
 #chatLog { position:absolute; left:12px; bottom:170px; max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; }
 #chatLog.in { opacity:1; } #chatLog div { background:rgba(0,0,0,.45); border-radius:6px; padding:2px 8px; margin-top:3px; } #chatLog b { color:var(--gold); margin-right:4px; } #chatLog div.me b { color:#9fe3ff; }
 #chatBar { position:absolute; left:50%; bottom:64px; transform:translate(-50%, 140%); display:flex; gap:6px; width:min(92vw, 460px); opacity:0; transition:transform .2s, opacity .2s; pointer-events:auto; }
-#chatBar.in { transform:translate(-50%, 0); opacity:1; }
+#chatBar { visibility:hidden; pointer-events:none; } /* 닫혀 있을 때는 투명해도 터치를 받지 않게 (네비판 눌렀는데 키보드가 뜨던 문제) */
+#chatBar.in { transform:translate(-50%, 0); opacity:1; visibility:visible; pointer-events:auto; }
 #chatBar input { flex:1; font:inherit; background:rgba(12,16,26,.95); color:#fff; border:2px solid var(--gold); border-radius:10px; padding:8px 12px; -webkit-user-select:text; user-select:text; }
-.touchOn #chatLog { bottom:240px; } .touchOn #chatBar { bottom:150px; }
+.touchOn #chatLog { bottom:240px; }
+/* 터치 기기: 키보드가 화면 아래를 덮으므로 입력줄은 맨 위에 둔다 (iOS 가로는 키보드가 거의 전체를 가림) */
+.touchOn #chatBar { bottom:auto; top:8px; transform:translate(-50%, -140%); z-index:40; } .touchOn #chatBar.in { transform:translate(-50%, 0); } .touchOn #chatBar input { font-size:16px; } #chatBar .btn { white-space:nowrap; flex:none; } #chatBar { align-items:center; } #chatClose { display:none; } .touchOn #chatClose { display:inline-block; padding:8px 10px; }
+.touchOn.chatOpen #pager, .touchOn.chatOpen #toasts, .touchOn.chatOpen #quest, .touchOn.chatOpen #hudBtns { visibility:hidden; }
 #tChat { position:absolute; right:24px; bottom:140px; width:60px; height:44px; border-radius:22px; background:rgba(255,255,255,.18); color:#fff; font-weight:700; border:1px solid rgba(255,255,255,.3); pointer-events:auto; font-size:12px; }
 .mpInfo { background:#e8dcc0; border:1px solid #c9b98f; border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:13px; line-height:1.5; } .mpInfo code { background:#fffaf0; padding:1px 6px; border-radius:4px; letter-spacing:2px; }
 /* 채널 순위판 */
@@ -417,12 +423,12 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
   .short #nav { left:56%; bottom:10px; padding:4px 12px; font-size:12px; max-width:380px; }
   .short #toasts { bottom:auto; top:56px; }
-  .short #chatLog { bottom:130px; left:126px; max-width:300px; } .short #chatBar { bottom:100px; width:380px; }
+  .short #chatLog { bottom:130px; left:126px; max-width:300px; } .short #chatBar { width:min(380px, 70vw); }
   .short #tChat { right:104px; bottom:92px; width:54px; height:36px; } .short.driving #tChat { right:16px; bottom:170px; }
   .short #placeBanner { padding:4px 16px; } .short #placeBanner b { font-size:16px; }
   .short #edgeSign { padding:4px 12px; } .short #edgeSign b { font-size:15px; }
   .short #title { gap:8px; justify-content:flex-start; padding-top:10px; overflow:auto; } .short #title h1 { font-size:30px; letter-spacing:3px; } .short #title .tag, .short #title .foot, .short #title .troad, .short #title .tstars { display:none; }
-  .short #title .caps .btn { padding:6px 10px; font-size:13px; } .short #title .mp { padding:4px 10px; font-size:12px; } .short #title .mp .mpHint { display:none; } .short #title #iosHint { font-size:11px; }
+  .short #title .caps .btn { padding:6px 10px; font-size:13px; } .short #title .mp { padding:4px 10px; font-size:12px; } .short #title .mp .ch { min-width:58px; padding:5px 7px; } .short #title .mp .ch b { font-size:13px; } .short #title .nameBox { padding:3px 10px; } .short #title .mp .mpHint { display:none; } .short #title #iosHint { font-size:11px; }
   /* 아이폰 가로: 카메라(노치) 쪽 여백을 비운다 */
   .short #pager { left:calc(12px + env(safe-area-inset-left, 0px)); }
   .short #quest, .short #balanceDue { left:calc(100px + env(safe-area-inset-left, 0px)); }
@@ -456,14 +462,19 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <details class="mp" id="mpBox" open><summary>같이 하기 · 실시간 채널 <small>(친구 방 또는 채널 · 같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
-    <div class="row"><input id="mpName" placeholder="내 이름" maxlength="8"></div>
+  <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"></div>
+  <div class="mpWrap">
+  <details class="mp" id="mpBox" open><summary>친구와 같이 하기 <small>(방 코드로 · 같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
-    <div class="chHead">실시간 채널 <small>코드 없이 아무나 · 1주 = 실제 20분 · 돈과 순위가 채널별로 이어짐</small></div>
-    <div class="row chRow"><button class="btn ch" data-ch="1"><b>채널 1</b><small>자본 1억</small></button><button class="btn ch" data-ch="2"><b>채널 2</b><small>자본 2억</small></button><button class="btn ch" data-ch="3"><b>채널 3</b><small>자본 3억</small></button><button class="btn ch" data-ch="4"><b>채널 4</b><small>자본 4억</small></button><button class="btn ch" data-ch="5"><b>채널 5</b><small>자본 5억</small></button></div>
     <div id="mpStatus"></div>
-    <div class="mpHint">친구 방: 방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작. 채널: 실제 시간으로 계속 돌아가는 세계. 매각기일 당일 법원에서 입찰하면 자동 개찰, 돈과 순위는 채널별로 이어짐. 모두 인터넷이 필요해요(폰 데이터도 됨).</div>
+    <div class="mpHint">방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작해요. 인터넷이 필요해요(폰 데이터도 됨).</div>
   </details>
+  <details class="mp" id="chBox" open><summary>실시간 채널 <small>(코드 없이 아무나 · 1주 = 실제 20분 · 돈과 순위가 채널별로 이어짐)</small></summary>
+    <div class="row chRow"><button class="btn ch" data-ch="1"><b>채널 1</b><small>자본 1억</small></button><button class="btn ch" data-ch="2"><b>채널 2</b><small>자본 2억</small></button><button class="btn ch" data-ch="3"><b>채널 3</b><small>자본 3억</small></button><button class="btn ch" data-ch="4"><b>채널 4</b><small>자본 4억</small></button><button class="btn ch" data-ch="5"><b>채널 5</b><small>자본 5억</small></button></div>
+    <div id="chStatus"></div>
+    <div class="mpHint">실제 시간으로 계속 돌아가는 세계예요. 매각기일 당일 법원에서 입찰하면 자동 개찰되고, 돈과 순위는 채널별로 이어져요.</div>
+  </details>
+  </div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button>
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
@@ -473,7 +484,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
   <div id="chatLog"></div>
-  <div id="chatBar"><input id="chatInput" maxlength="60" placeholder="친구에게 한마디 (Enter 보내기 · Esc 닫기)"><button class="btn" id="chatSend">보내기</button></div>
+  <div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="친구에게 한마디 (Enter 보내기 · Esc 닫기)"><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div>
   <canvas id="minimap" width="180" height="130" title="서울 지도 (M)"></canvas>
   <div id="hudCash">₩ 0</div>
   <div id="hudTime"></div>
@@ -522,7 +533,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>달리기</th><td>Shift (실시간 채널에선 없음)</td><td class="tc">조이스틱 끝까지</td></tr>
       <tr><th>조사·대화·문</th><td>E (또는 Space, Enter)</td><td class="tc">E 버튼</td></tr>
       <tr><th>차 타기·내리기</th><td>F (차 옆에서 / 속도 40 이하)</td><td class="tc">F 버튼</td></tr>
-      <tr><th>운전</th><td>W 가속 · S 브레이크/후진 · A D 핸들</td><td class="tc">페달 + 조이스틱</td></tr>
+      <tr><th>운전</th><td>W 가속 · S 브레이크/후진 · A D 핸들</td><td class="tc">가속·브레이크 버튼으로 전진·후진, 조이스틱은 핸들만</td></tr>
       <tr><th>핸드브레이크</th><td>Space</td><td class="tc">HB 버튼</td></tr>
       <tr><th>서울 지도</th><td>M (차 근처에서 이동 확정)</td><td class="tc">우상단 미니맵</td></tr>
       <tr><th>구역 지도(장소 위치)</th><td>N</td><td class="tc">왼쪽 레이더 탭</td></tr>
@@ -534,6 +545,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>자고 넘기기</th><td colspan="2">건대 구역 '내 집' 문에서 E</td></tr>
       <tr><th>채팅(같이 하기)</th><td>T</td><td class="tc">채팅 버튼</td></tr>
       <tr><th>게임장</th><td colspan="2">건대 구역 '게임장' (미니게임 기계 준비 중)</td></tr>
+      <tr><th>플레이어 치면</th><td colspan="2">같이 하기에서 내 차로 다른 플레이어를 치면 합의금을 물어줌 · 3번째엔 병원비까지 물어주고 정신과 병동 입원 (채널 60초)</td></tr>
       <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작 · 실시간 채널에선 실제 30초 입원)</td></tr>
       <tr><th>실시간 채널</th><td colspan="2">1주 = 실제 20분, 물건 7개가 어긋나게 돌아감 · 입찰은 매각기일 당일(마지막 날 약 3분) 그 법원에서 · 개찰은 자동 · 하루 조사 2번 · 돈은 채널별로 이어짐</td></tr>
       <tr><th>버튼 위치</th><td colspan="2">메뉴 → 버튼 위치 조정 (조이스틱·버튼을 끌어서 옮김)</td></tr>
@@ -1310,6 +1322,8 @@ const FEEL = {
   liveSlots: 2,           // 실시간 채널: 게임 하루(실제 20/7분)에 조사할 수 있는 횟수
   liveBidDdayOnly: true,  // 실시간 채널: 입찰표는 매각기일(마지막 날)에만 받는다 (현실대로; false면 개찰 전 아무 때나)
   liveHospitalSec: 30,    // 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
+  liveAsylumSec: 60,      // 실시간 채널: 정신과 병동 입원 시간(초)
+  pvpAsylumHits: 3,       // 같이 하기: 내 차로 다른 플레이어를 이만큼 치면 병원비까지 물어주고 정신과 병동
   // 카메라
   zoom: 2,                // 기본 확대 (16px 픽셀아트 ×2)
   camLerp: 10,
@@ -3346,6 +3360,14 @@ const Net = {
     });
   },
   setStatus(st, text) { this.status = st; if (this.onStatus) this.onStatus(st, text || ''); },
+  // 시작 전에 채널/방에서 나간다 (고른 채널을 다시 누르면 선택 취소)
+  leave() {
+    if (this.started) return false;
+    try { if (this.hostConn) this.hostConn.close(); } catch (e) {} for (const id in this.conns) { try { this.conns[id].close(); } catch (e) {} }
+    try { if (this.peer) this.peer.destroy(); } catch (e) {} try { if (this.bc) this.bc.close(); } catch (e) {}
+    this.peer = null; this.bc = null; this.hostConn = null; this.conns = {}; this.players = {}; this.on = false; this.host = false; this.room = ''; this.ch = 0; this.mode = 'room'; this.retryT = 0; this.status = 'off';
+    return true;
+  },
   names() { return Object.values(this.players).filter(p => !p.gone).map(p => p.name); },
   // 공개 채널: 같은 날·같은 채널이면 누가 언제 들어와도 같은 주(물건·경쟁자)
   channelSeed(n) { const day = Math.floor((Date.now() + 9 * 3600e3) / 86400000); return ((n * 7919 + day * 104729) ^ 0x5a5a) & 0x7fffffff; },
@@ -3475,6 +3497,7 @@ const Net = {
     if (m.t === 'init') { if (!this.host && !this.started && this.mode === 'room') { this.seed = m.seed; this.cap = m.cap; this.started = true; if (typeof startGame === 'function') startGame(m.cap, { seed: m.seed }); } return; }
     this.relay(m, conn);
     if (m.t === 'lbid') { Live.onBid(m); return; }
+    if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
@@ -3569,17 +3592,61 @@ const Net = {
 };
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
+/* ---- 플레이어끼리: 내 차로 다른 플레이어를 치면 합의금을 물어주고, FEEL.pvpAsylumHits번째부터는 병원비까지 물어준 뒤 정신과 병동 ----
+ * 판정은 친 쪽(운전자) 클라이언트가 하고 'hit' 메시지로 알린다. 치인 쪽은 돈을 받고 튕겨 나가며, 심하면 입원(병원비는 친 사람이 낸 것).
+ */
+const Pvp = {
+  cd: {},
+  tick(dt) {
+    for (const id in this.cd) this.cd[id] -= dt;
+    if (!Net.on || !Game.driving || Game.busy || Game.scene !== 'zone' || !Game.player) return;
+    const c = Game.car; if (c.speed < FEEL.hitSpeed) return;
+    for (const id in Net.players) {
+      const p = Net.players[id]; if (p.gone || p.dr || p.x === undefined || p.z !== Game.zone.id || p.s !== 'zone' || performance.now() - p.last > 8000 || (this.cd[id] || 0) > 0) continue;
+      if (!pointInCar(p.x, p.y, c.x, c.y, c.a, 14, 9)) continue;
+      this.cd[id] = 4; this.hit(id, p);
+    }
+  },
+  async hit(id, p) {
+    State.pvp = (State.pvp || 0) + 1; const severe = State.pvp >= FEEL.pvpAsylumHits;
+    const fee = Math.round((FEEL.settleMin + Math.random() * (FEEL.settleMax - FEEL.settleMin)) / 10000) * 10000;
+    const hosp = severe ? Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000 : 0;
+    const c = Game.car; c.vx *= 0.6; c.vy *= 0.6; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1; shake(7, 0.35); Sound.play('crash'); Game.hitstop = 0.06;
+    if (!REDUCED_MOTION) for (let i = 0; i < 6; i++) Particles.push({ x: p.x, y: p.y - 8, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 70, g: 220, life: 0.5, max: 0.5, col: 'rgba(255,230,120,', r: 1.5 });
+    State.cash -= fee + hosp; HUD.setCash(State.cash); if (Live.on) Live.save();
+    Net.send({ t: 'hit', to: id, fee, hosp, severe, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100 });
+    Toast.show(`${p.name}을(를) 차로 쳤다! 합의금 ${fmtWon(fee)}${hosp ? ` + 병원비 ${fmtWon(hosp)}` : ''}`, 3000);
+    if (severe) { State.pvp = 0; await asylum(p.name, fee + hosp); }
+    else if (State.pvp === FEEL.pvpAsylumHits - 1) HUD.page('한 번만 더 사람 치면 정신과 병동 간다.', '알림');
+  },
+  onHit(m, p) {
+    if (m.to !== Net.myId || !Game.player || Game.scene !== 'zone' || Game.driving) return;
+    const pl = Game.player, z = Game.zone;
+    let nx = pl.x - m.cx, ny = pl.y - m.cy; const d = Math.hypot(nx, ny) || 1; nx = nx / d * 0.6 + Math.cos(m.ca) * 0.8; ny = ny / d * 0.6 + Math.sin(m.ca) * 0.8; const L = Math.hypot(nx, ny) || 1;
+    const tx = pl.x + nx / L * FEEL.hitKnock, ty = pl.y + ny / L * FEEL.hitKnock; if (z.at(Math.floor(tx / TILE), Math.floor(ty / TILE)) !== T.BLD) { pl.x = tx; pl.y = ty; }
+    pl.vx = pl.vy = 0; pl.push = 0.35; pl.hurtCd = 1.5; pl.hurt = 0.6; shake(7, 0.35); Sound.play('crash'); Game.hitstop = 0.06;
+    State.cash += m.fee + (m.hosp || 0); HUD.setCash(State.cash); setTimeout(() => Sound.play('coins'), 500); if (Live.on) Live.save();
+    Toast.show(`${p.name} 차에 치였다! 합의금 ${fmtWon(m.fee)} 받음${m.hosp ? ` · 병원비 ${fmtWon(m.hosp)}은 ${p.name}이(가) 냄` : ''}`, 3200);
+    if (m.severe) hospitalize({ fee: m.hosp, by: p.name });
+  },
+};
+
 /* ---- 채팅 입력줄 ---- */
 const ChatBar = {
   open_: false,
-  open() { if (!Net.on || this.open_) return; this.open_ = true; const el = $('chatBar'); el.classList.add('in'); const inp = $('chatInput'); inp.value = ''; setTimeout(() => inp.focus(), 30); },
-  close() { this.open_ = false; $('chatBar').classList.remove('in'); if (document.activeElement) document.activeElement.blur(); },
+  open() { if (!Net.on || this.open_) return; this.open_ = true; const el = $('chatBar'); el.classList.add('in'); document.body.classList.add('chatOpen'); const inp = $('chatInput'); inp.value = ''; if (document.body.classList.contains('touchOn')) inp.placeholder = '친구에게 한마디'; this.fit(); setTimeout(() => { inp.focus(); this.fit(); }, 30); },
+  close() { this.open_ = false; $('chatBar').classList.remove('in'); document.body.classList.remove('chatOpen'); if (document.activeElement) document.activeElement.blur(); $('chatBar').style.top = ''; this.fit(); scrollTo(0, 0); },
+  // 모바일 키보드가 열리면 보이는 영역(visualViewport)이 줄어든다 → 입력줄을 그 영역의 맨 위에 붙인다
+  fit() { if (!document.body.classList.contains('touchOn')) return; const vv = window.visualViewport; const el = $('chatBar'); if (!vv || !this.open_) { el.style.top = ''; return; } el.style.top = `${Math.round(vv.offsetTop) + 8}px`; },
   send() { Net.chat($('chatInput').value); this.close(); },
   bind() {
     const inp = $('chatInput');
     inp.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); this.send(); } else if (e.key === 'Escape') { e.preventDefault(); this.close(); } };
     $('chatSend').onclick = () => this.send();
+    $('chatClose').onclick = () => this.close();
     $('tChat').onclick = () => this.open();
+    if (window.visualViewport) { visualViewport.addEventListener('resize', () => this.fit()); visualViewport.addEventListener('scroll', () => this.fit()); }
+    inp.addEventListener('blur', () => { if (document.body.classList.contains('touchOn')) setTimeout(() => scrollTo(0, 0), 50); }); // iOS가 입력창 때문에 밀어 둔 화면을 되돌린다
   },
 };
 
@@ -3635,7 +3702,7 @@ const Live = {
 
   /* ---- 저장 (채널별, 이 기기) ---- */
   storeKey() { return 'live' + this.ch; },
-  save() { Store.set(this.storeKey(), { capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0 }); },
+  save() { Store.set(this.storeKey(), { capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0 }); },
   saved(ch) { return Store.get('live' + ch, null); },
   reset(ch) { Store.set('live' + ch, null); },
 
@@ -3643,7 +3710,7 @@ const Live = {
   start() {
     this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.closed = {}; this.queue = []; this.ready = false; this.readyT = 2.5;
     let sv = this.saved(this.ch); if (sv && sv.capital !== capital) sv = null; // 예전 규칙으로 저장된 기록은 새로
-    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.seen = sv.seen || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
+    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.seen = sv.seen || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
     else { State.capital = capital; State.cash = capital; }
     HUD.setCash(State.cash, false);
     this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;
@@ -3655,7 +3722,7 @@ const Live = {
   },
   titleHint(ch) {
     const sv = this.saved(ch); const p = sv ? sv.cash - sv.capital : 0;
-    return `<br><span class="small">채널 ${ch}은 자본 <b>${fmtWon(this.capOf(ch))}</b>으로 시작합니다 · 1주 = 실제 ${FEEL.liveWeekMin}분 · 물건 ${FEEL.liveListings}개가 돌아갑니다 · 입찰은 매각기일 당일(마지막 날 약 ${Math.round(FEEL.liveWeekMin / 7 * 10) / 10}분) 그 법원에서, 개찰은 자동 · 돈은 채널별로 이어집니다.</span>` + (sv ? `<br><span class="small">이 채널 기록: 자본 ${fmtWon(sv.capital)} · 누적 손익 ${(p >= 0 ? '+' : '−') + fmtWon(Math.abs(p))} <button class="btn" id="liveReset">기록 지우고 새로</button></span>` : '');
+    return (sv ? `<br><span class="small">이 채널 기록: 자본 ${fmtWon(sv.capital)} · 누적 손익 ${(p >= 0 ? '+' : '−') + fmtWon(Math.abs(p))} <button class="btn" id="liveReset">기록 지우고 새로</button></span>` : '');
   },
 
   /* ---- 시간 흐름 ---- */
@@ -3774,13 +3841,14 @@ const Live = {
   },
 
   /* ---- 입원: 실제 시간으로 병원에 묶인다 (그 사이 매각기일을 놓칠 수 있다) ---- */
-  bedRest(fee, h) {
+  bedRest(fee, h, o = {}) {
+    const total = o.sec || FEEL.liveHospitalSec;
     return new Promise(res => {
-      const el = $('mpWait'); let left = FEEL.liveHospitalSec; el.classList.add('in'); Game.formOpen = true;
+      const el = $('mpWait'); let left = total; el.classList.add('in'); Game.formOpen = true;
       const render = () => {
         if (left <= 0) { clearInterval(iv); el.classList.remove('in'); Game.formOpen = false; Sound.play('chime'); return res(); }
         const nx = this.nextOpen();
-        el.innerHTML = `<div class="doc"><div class="docHead">${h ? h.name : '병원'}</div><h2>입 원 중</h2><p>입원비 ${fmtWon(fee)}. 퇴원까지 <b>${left}초</b>.</p><p class="small">채널에서는 시간이 실제로 흘러서, 입원해 있는 동안 매각기일을 놓칠 수 있어요.${nx.c ? ` 다음 개찰 ${this.mmss(nx.ms)} (${esc(nx.c.name.split(' ')[0])}).` : ''}</p><div class="gauge"><div style="width:${Math.round((1 - left / FEEL.liveHospitalSec) * 100)}%;height:100%;background:#e0405a;transition:width .9s linear"></div></div></div>`;
+        el.innerHTML = `<div class="doc"><div class="docHead">${h ? h.name : '병원'}</div><h2>${o.title || '입 원 중'}</h2><p>${o.note || `입원비 ${fmtWon(fee)}.`} 퇴원까지 <b>${left}초</b>.</p><p class="small">채널에서는 시간이 실제로 흘러서, 입원해 있는 동안 매각기일을 놓칠 수 있어요.${nx.c ? ` 다음 개찰 ${this.mmss(nx.ms)} (${esc(nx.c.name.split(' ')[0])}).` : ''}</p><div class="gauge"><div style="width:${Math.round((1 - left / total) * 100)}%;height:100%;background:#e0405a;transition:width .9s linear"></div></div></div>`;
         left--;
       };
       render(); const iv = setInterval(render, 1000);
@@ -4096,14 +4164,14 @@ async function homeDoor() {
 }
 
 /* ---- 입원: 차에 FEEL.hospitalHits번째 치이면 구급차 → 입원비 → 시간 1칸 → 병원 앞에서 다시 시작 ---- */
-async function hospitalize() {
+async function hospitalize(opts = {}) {
   if (Game.busy) return; Game.busy = true;
   const p = Game.player; p.hurtCd = 99; p.vx = p.vy = 0; p.push = 0; p.sit = false;
   try {
     shake(9, 0.4); Game.hitstop = 0.1;
     await sleep(600); Sound.play('horn'); await sleep(320); Sound.play('horn'); await sleep(320); Sound.play('horn'); // 구급차
     await iris(true);
-    const fee = Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000;
+    const fee = opts.fee !== undefined ? opts.fee : Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000;
     State.cash -= fee; HUD.setCash(State.cash); State.hits = 0; State.hospital = (State.hospital || 0) + 1;
     const timePassed = !(State.day >= 7 && State.evening); if (timePassed) await advanceSlot(); // 매각기일 저녁엔 더 넘길 시간이 없다
     const h = Game.zone.places.find(x => x.kind === 'hospital');
@@ -4112,9 +4180,26 @@ async function hospitalize() {
     await iris(false); Game.trans = null;
     if (Live.on) await Live.bedRest(fee, h); // 채널: 시간을 건너뛸 수 없으니 실제 시간으로 입원
     await Dialog.say([
-      { name: h ? h.name : '병원', text: Live.on ? `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${FEEL.liveHospitalSec}초 입원 뒤 퇴원했다.` : `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
+      { name: h ? h.name : '병원', text: opts.by ? `${opts.by}의 차에 크게 치여 구급차에 실려 왔다. 병원비 ${fmtWon(fee)}은 ${opts.by}이(가) 물어줬다. ${Live.on ? `${FEEL.liveHospitalSec}초 입원 뒤 ` : timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` : Live.on ? `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${FEEL.liveHospitalSec}초 입원 뒤 퇴원했다.` : `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
       { name: castName('hospital'), sprite: 'banker', voice: 'banker', text: '합의금 욕심내다 큰일 나요. 길 건널 때 좌우 좀 보세요.' }]);
-    Toast.show(`입원비 ${fmtWon(fee)}`, 2600);
+    Toast.show(opts.by ? `입원 · 병원비 ${fmtWon(fee)}은 ${opts.by}이(가) 냄` : `입원비 ${fmtWon(fee)}`, 2600);
+  } finally { p.hurtCd = 2; Game.busy = false; }
+}
+/* ---- 정신과 병동: 같이 하기에서 다른 플레이어를 FEEL.pvpAsylumHits번 치면 (합의금·병원비는 이미 물어줌) 같은 병원 정신과 병동에 입원 ---- */
+async function asylum(victim, total) {
+  Game.busy = true; const p = Game.player;
+  try {
+    await sleep(500); Sound.play('horn'); await sleep(320); Sound.play('horn');
+    await iris(true);
+    if (Game.driving) exitCar();
+    const h = Game.zone.places.find(x => x.kind === 'hospital');
+    if (h) { p.x = h.door.tx * TILE + 8; p.y = h.door.ty * TILE + 8; p.dir = 0; Cam.x = p.x; Cam.y = p.y; }
+    p.vx = p.vy = 0; p.push = 0; Game.prompt = { target: null, t: 0 }; $('edgeSign').classList.remove('in');
+    await iris(false); Game.trans = null;
+    if (Live.on) await Live.bedRest(total, h, { title: '정신과 병동 입원 중', sec: FEEL.liveAsylumSec, note: `${victim}에게 합의금과 병원비를 물어줬습니다.` }); else await advanceSlot();
+    await Dialog.say([
+      { name: `${h ? h.name : '병원'} 정신과 병동`, text: `사람을 ${FEEL.pvpAsylumHits}번이나 차로 쳐서 정신과 병동에 입원했다. ${victim}에게 합의금과 병원비 ${fmtWon(total)}을 물어줬다.` },
+      { name: castName('hospital'), sprite: 'banker', voice: 'banker', text: '운전대 잡기 전에 마음부터 진정시키세요. 다음엔 면허도 위험해요.', emote: 'anger' }]);
   } finally { p.hurtCd = 2; Game.busy = false; }
 }
 
@@ -4225,7 +4310,7 @@ function update(dt) {
   Game.t += dt;
   HUD.tick(dt);
   if (Game.scene === 'title') return;
-  Net.tick(dt); Live.tick(dt);
+  Net.tick(dt); Live.tick(dt); Pvp.tick(dt);
   if (Layout.editing) return;
   if (ChatBar.open_) return;
   const interact = consume('e') || (!Game.driving && consume(' ')) || consume('Enter'); if (Game.driving) Pressed[' '] = false;
@@ -4254,7 +4339,7 @@ function update(dt) {
     const fKey = consume('f');
     if (Game.driving) {
       const c = Game.car;
-      const inp = frozen ? {} : { up: Keys.w || Keys.ArrowUp || Touch.gas || (Touch.active && Touch.y < -0.3), down: Keys.s || Keys.ArrowDown || Touch.brake || (Touch.active && Touch.y > 0.5), left: Keys.a || Keys.ArrowLeft || (Touch.active && Touch.x < -0.3), right: Keys.d || Keys.ArrowRight || (Touch.active && Touch.x > 0.3), hb: Keys[' '] || Touch.hb };
+      const inp = frozen ? {} : { up: Keys.w || Keys.ArrowUp || Touch.gas, down: Keys.s || Keys.ArrowDown || Touch.brake, left: Keys.a || Keys.ArrowLeft || (Touch.active && Touch.x < -0.3), right: Keys.d || Keys.ArrowRight || (Touch.active && Touch.x > 0.3), hb: Keys[' '] || Touch.hb };
       const was = c.speed; updateMyCar(dt, z, inp);
       if (!frozen) checkEdgeExit(dt, z, c);
       Nav.update(dt);
@@ -5465,19 +5550,24 @@ const Layout = {
   // 친구와 같이 하기 (방 코드)
   $('mpName').value = Store.get('mpName', '');
   Net.onStatus = (st, text) => {
-    const el = $('mpStatus');
+    const el = $(Net.mode === 'channel' ? 'chStatus' : 'mpStatus'); // 채널 소식은 채널 칸에, 방 소식은 친구 방 칸에
     if (st === 'error') { el.innerHTML = `<span style="color:#ff8a7a">${esc(text)}</span>`; return; }
     const code = Net.host && Net.mode === 'room' ? `방 코드 <code>${Net.room}</code> <button class="btn" id="mpCopy">복사</button> 친구에게 보내고, 자본을 골라 시작하세요.<br>` : '';
     el.innerHTML = code + esc(text);
+    if (Net.on && Net.mode === 'room') $('title').classList.add('roomOn'); // 친구 방에 들어가면 채널 칸은 접는다
     const cp = $('mpCopy'); if (cp) cp.onclick = () => { try { navigator.clipboard.writeText(Net.room); Toast.show('방 코드를 복사했어요.'); } catch (e) { Toast.show('코드: ' + Net.room); } };
     if (!Net.host && Net.on && Net.mode === 'room') { $('btnStart').textContent = '방장을 기다리는 중'; $('btnStart').disabled = true; }
   };
-  document.querySelectorAll('#mpBox .ch').forEach(b => b.onclick = async () => {
-    Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
-    Store.set('mpName', name); document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = true); b.classList.add('sel'); $('mpStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
+  const chButtons = () => document.querySelectorAll('#mpBox .btn, #chBox .btn');
+  const chReset = (b) => { $('title').classList.remove('chOn'); $('btnStart').textContent = '시작하기'; chButtons().forEach(x => x.disabled = false); b.classList.remove('sel'); $('chStatus').textContent = ''; };
+  document.querySelectorAll('#chBox .ch').forEach(b => b.onclick = async () => {
+    Sound.init();
+    if (Net.on) { if (b.classList.contains('sel') && Net.mode === 'channel' && Net.leave()) { chReset(b); Toast.show(`채널 ${b.dataset.ch}에서 나왔어요.`); } return; } // 고른 채널을 다시 누르면 나가기
+    const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
+    Store.set('mpName', name); chButtons().forEach(x => x.disabled = x !== b); b.classList.add('sel'); $('chStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
     $('title').classList.add('chOn'); $('btnStart').textContent = `채널 ${b.dataset.ch} 시작하기 (자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))})`; // 채널은 자본이 정해져 있어 자본 선택을 숨긴다
-    const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { $('title').classList.remove('chOn'); $('btnStart').textContent = '시작하기'; document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = false); b.classList.remove('sel'); }
-    else { $('mpStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); const rs = $('liveReset'); if (rs) rs.onclick = () => { Live.reset(Number(b.dataset.ch)); rs.parentElement.textContent = '기록을 지웠어요. 고른 자본으로 새로 시작합니다.'; }; }
+    const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { chReset(b); }
+    else if (Net.on) { $('chStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); const rs = $('liveReset'); if (rs) rs.onclick = () => { Live.reset(Number(b.dataset.ch)); rs.parentElement.textContent = '기록을 지웠어요. 고른 자본으로 새로 시작합니다.'; }; }
   });
   $('mpCreate').onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }

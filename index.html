@@ -78,11 +78,11 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #pagerText { min-height:20px; } #pagerText .pl { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; animation:lcd .3s steps(4); }
 @keyframes lcd { from{opacity:0} to{opacity:1} }
 #radar { position:absolute; left:14px; bottom:14px; width:132px; height:132px; border-radius:50%; box-shadow:0 4px 0 rgba(0,0,0,.5); pointer-events:auto; cursor:pointer; }
-#zoneMap { position:fixed; inset:0; z-index:27; background:rgba(8,9,12,.6); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; flex-direction:column; gap:8px; }
+#zoneMap { position:fixed; inset:0; z-index:27; touch-action:none; overflow:hidden; background:rgba(8,9,12,.6); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; flex-direction:column; gap:8px; }
 #zoneMap.in { display:flex; }
 #zoneMap .zh { color:#f3e9c8; font-weight:700; font-size:16px; text-shadow:0 2px 0 #000; }
 #zoneMap .zh small { color:#b9b39f; font-weight:400; margin-left:8px; }
-#zoneCanvas { border:3px solid #cdae70; border-radius:8px; box-shadow:0 8px 0 rgba(0,0,0,.5); image-rendering:pixelated; background:#2b312e; }
+#zoneCanvas { transform-origin:50% 50%; border:3px solid #cdae70; border-radius:8px; box-shadow:0 8px 0 rgba(0,0,0,.5); image-rendering:pixelated; background:#2b312e; }
 #zoneMap .zl { color:#c9c2a8; font-size:12px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
 #zoneMap .zl i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:-1px; }
 #roadSign { position:absolute; right:16px; bottom:18px; background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:6px 14px; color:#fff; box-shadow:0 3px 0 #000; transform:translateY(120%); opacity:0; transition:transform .25s ease-out, opacity .25s; }
@@ -150,7 +150,8 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .panel .tabs .btn.on { background:var(--navy); color:#fff; }
 .panel li.empty { opacity:.6; list-style:none; }
 .panel textarea { width:100%; min-height:200px; font:inherit; background:#fffaf0; border:1px solid #c9b98f; border-radius:6px; padding:8px; }
-#menu { left:50%; top:50%; right:auto; height:auto; width:min(380px, calc(100% - 32px)); transform:translate(-50%, -40%) scale(.96); opacity:0; pointer-events:none; transition:transform .2s ease-out, opacity .2s; border-radius:12px; }
+#caps.dim { opacity:.35; pointer-events:none; }
+#menu { left:50%; top:50%; right:auto; height:auto; max-height:calc(100% - 24px); width:min(380px, calc(100% - 32px)); transform:translate(-50%, -40%) scale(.96); opacity:0; pointer-events:none; transition:transform .2s ease-out, opacity .2s; border-radius:12px; }
 #menu.in { transform:translate(-50%, -50%); opacity:1; pointer-events:auto; }
 #menu label { display:flex; justify-content:space-between; align-items:center; margin:10px 0; gap:10px; }
 
@@ -228,6 +229,13 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 
 /* 모바일 조작 */
 #touch { position:fixed; inset:0; pointer-events:none; z-index:12; display:none; }
+/* 버튼 위치 조정 모드 */
+#layoutBar { position:fixed; top:8px; left:50%; transform:translate(-50%, -160%); z-index:40; background:#14161c; border:2px solid var(--gold); border-radius:10px; padding:6px 12px; color:#fff; display:flex; gap:8px; align-items:center; font-size:13px; transition:transform .2s; box-shadow:0 4px 0 rgba(0,0,0,.5); }
+#layoutBar.in { transform:translate(-50%, 0); }
+.layoutEdit #touch { display:block; } .layoutEdit * { touch-action:none; }
+.layoutEdit #pedals { display:flex !important; } .layoutEdit #tAct, .layoutEdit #tCar, .layoutEdit #tChat { display:block !important; }
+.layoutEdit #stick, .layoutEdit #tAct, .layoutEdit #tCar, .layoutEdit #tChat, .layoutEdit #pedals, .layoutEdit #hudBtns, .layoutEdit #radar, .layoutEdit #minimap { outline:2px dashed #ffd84a; outline-offset:3px; cursor:move; pointer-events:auto; }
+.layoutEdit .dragging { outline-color:#fff; filter:brightness(1.3); }
 .touchOn #touch { display:block; }
 .touchOn #radar { bottom:auto; top:110px; left:12px; width:96px; height:96px; }
 #stick { position:absolute; left:24px; bottom:24px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.2); pointer-events:auto; }
@@ -375,7 +383,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .xClose:hover { background:#b3392a; }
 .keys { margin:8px 0 10px; font-size:13px; }
 .keys summary { cursor:pointer; color:#f2c233; font-weight:700; padding:4px 0; }
-.keys table { width:100%; border-collapse:collapse; margin-top:6px; }
+.keys table { width:100%; border-collapse:collapse; margin-top:6px; table-layout:fixed; }
+.keys td { word-break:break-word; overflow-wrap:anywhere; }
 .keys th, .keys td { text-align:left; padding:3px 4px; border-bottom:1px solid rgba(255,255,255,.1); vertical-align:top; }
 .keys th { color:#c9c2a8; font-weight:600; white-space:nowrap; width:34%; }
 .keys td.tc { color:#9fb3c8; width:30%; }
@@ -405,6 +414,21 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #edgeSign { padding:4px 12px; } .short #edgeSign b { font-size:15px; }
   .short #title { gap:8px; justify-content:flex-start; padding-top:10px; overflow:auto; } .short #title h1 { font-size:30px; letter-spacing:3px; } .short #title .tag, .short #title .foot, .short #title .troad, .short #title .tstars { display:none; }
   .short #title .caps .btn { padding:6px 10px; font-size:13px; } .short #title .mp { padding:4px 10px; font-size:12px; } .short #title .mp .mpHint { display:none; } .short #title #iosHint { font-size:11px; }
+  /* 아이폰 가로: 카메라(노치) 쪽 여백을 비운다 */
+  .short #pager { left:calc(12px + env(safe-area-inset-left, 0px)); }
+  .short #quest, .short #balanceDue { left:calc(100px + env(safe-area-inset-left, 0px)); }
+  .short #radar { left:calc(12px + env(safe-area-inset-left, 0px)); }
+  .short #stick { left:calc(20px + env(safe-area-inset-left, 0px)); }
+  .short #chatLog, .short #roadSign { left:calc(126px + env(safe-area-inset-left, 0px)); }
+  .short #minimap, .short #hudCash, .short #hudTime, .short #hudSlots { right:calc(12px + env(safe-area-inset-right, 0px)); }
+  .short .hudBtns { right:calc(142px + env(safe-area-inset-right, 0px)); }
+  .short #tAct { right:calc(20px + env(safe-area-inset-right, 0px)); } .short #tCar { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tCar { right:calc(124px + env(safe-area-inset-right, 0px)); }
+  .short #pedals { right:calc(16px + env(safe-area-inset-right, 0px)); } .short #tChat { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tChat { right:calc(16px + env(safe-area-inset-right, 0px)); }
+  /* 폰 가로: 서울 지도를 화면에 꽉 차게 */
+  .short #mapCanvas { width:calc(100% - 16px); height:calc(100% - 44px); top:calc(50% + 18px); }
+  .short .mapTitle { top:4px; font-size:15px; } .short .mapTitle small { display:inline; margin-left:8px; font-size:11px; }
+  .short #mapConfirm { bottom:8px; padding:6px 10px; gap:6px; }
+  .short #menu { width:min(640px, calc(100% - 24px)); padding:12px 16px; } .short #menu h2 { font-size:18px; margin-bottom:8px; } .short .keys { font-size:12px; }
 </style>
 </head>
 <body>
@@ -423,10 +447,10 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <details class="mp" id="mpBox"><summary>같이 하기 <small>(친구 방 또는 실시간 채널 · 같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
+  <details class="mp" id="mpBox" open><summary>같이 하기 · 실시간 채널 <small>(친구 방 또는 채널 · 같은 물건에 같이 입찰 · 말풍선 채팅)</small></summary>
     <div class="row"><input id="mpName" placeholder="내 이름" maxlength="8"></div>
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
-    <div class="row"><span class="or">실시간 채널</span><button class="btn ch" data-ch="1">1</button><button class="btn ch" data-ch="2">2</button><button class="btn ch" data-ch="3">3</button><button class="btn ch" data-ch="4">4</button><button class="btn ch" data-ch="5">5</button><span class="or small">코드 없이 아무나</span></div>
+    <div class="row"><span class="or">실시간 채널</span><button class="btn ch" data-ch="1">1 <small>1억</small></button><button class="btn ch" data-ch="2">2 <small>2억</small></button><button class="btn ch" data-ch="3">3 <small>3억</small></button><button class="btn ch" data-ch="4">4 <small>4억</small></button><button class="btn ch" data-ch="5">5 <small>5억</small></button><span class="or small">코드 없이 아무나 · 채널 번호 = 시작 자본(억)</span></div>
     <div id="mpStatus"></div>
     <div class="mpHint">친구 방: 방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작. 채널: 들어온 사람끼리 그날의 같은 물건으로 각자 시작, 법원에서 같이 개찰. 모두 인터넷이 필요해요(폰 데이터도 됨).</div>
   </details>
@@ -446,7 +470,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="hudSlots"></div>
   <div id="quest"></div>
   <div id="balanceDue"></div>
-  <div class="hudBtns"><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
+  <div class="hudBtns" id="hudBtns"><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
   <canvas id="radar" width="132" height="132" title="구역 지도 (N)"></canvas>
   <div id="hudSpeed"></div>
   <div id="roadSign"></div>
@@ -501,6 +525,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>채팅(같이 하기)</th><td>T</td><td class="tc">채팅 버튼</td></tr>
       <tr><th>게임장</th><td colspan="2">건대 구역 '게임장' (미니게임 기계 준비 중)</td></tr>
       <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작)</td></tr>
+      <tr><th>실시간 채널</th><td colspan="2">1주 = 실제 20분, 물건 3개가 어긋나게 돌아감 · 법원에서 아무 때나 입찰표 · 개찰은 자동 · 하루 조사 2번 · 돈은 채널별로 이어짐</td></tr>
+      <tr><th>버튼 위치</th><td colspan="2">메뉴 → 버튼 위치 조정 (조이스틱·버튼을 끌어서 옮김)</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
       <tr><th>대화 선택</th><td>1 2 3 4</td><td class="tc">탭</td></tr>
@@ -511,11 +537,12 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
     <div id="castList"></div>
     <div class="ksub">비우면 기본 이름으로 돌아가요. 이 기기에만 저장됩니다.</div>
   </details>
+  <button class="btn" id="btnLayout">버튼 위치 조정</button>
   <button class="btn" id="btnEndDay">오늘 일정 끝내기</button>
   <button class="btn" onclick="Menu.toggle(false)">닫기 (Esc)</button>
 </div>
 <div id="zoneMap">
-  <div class="zh"><span id="zoneMapName"></span><small>장소나 가장자리 구 이름을 누르면 목적지 · 닫기: 바깥 탭 / Esc / N</small></div>
+  <div class="zh"><span id="zoneMapName"></span><small>장소나 가장자리 구 이름을 누르면 목적지 · 두 손가락/휠로 확대 · 닫기: 바깥 탭 / Esc / N</small></div>
   <canvas id="zoneCanvas"></canvas>
   <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#d08a3a"></i>내 집</span><span><i style="background:#8a3ac0"></i>게임장</span><span><i style="background:#e0405a"></i>병원</span><span><i style="background:#2bb673"></i>지하철</span></div>
 </div>
@@ -530,6 +557,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="evictPanel" class="ovl"></div>
 <div id="result"></div>
 <div id="records" class="ovl"></div>
+<div id="layoutBar"><span>버튼을 끌어서 옮기세요</span><button class="btn" id="layoutReset">기본값</button><button class="btn gold" id="layoutDone">완료</button></div>
 <div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
 
 <div id="devPage"><div class="wrap">
@@ -1267,6 +1295,9 @@ const FEEL = {
   // 시간
   dayCardIn: 0.4, dayCardHold: 1.0, dayCardOut: 0.4,
   clockMinPerSec: 1.2,    // 걸어 다니는 동안 시계가 흐르는 속도(분/초, 연출용)
+  liveWeekMin: 20,        // 실시간 채널: 1주(D-7→개찰)가 실제 몇 분인지 (사용자 요청 20분)
+  liveListings: 3,        // 실시간 채널: 동시에 돌아가는 물건 수 (서로 어긋나게 → 약 7분마다 개찰)
+  liveSlots: 2,           // 실시간 채널: 게임 하루(실제 20/7분)에 조사할 수 있는 횟수
   // 카메라
   zoom: 2,                // 기본 확대 (16px 픽셀아트 ×2)
   camLerp: 10,
@@ -2276,9 +2307,9 @@ function travelCost(from, to) { const d = guDistance(from, to); return { d, slot
 const SeoulMap = {
   open: false, hover: null, sel: null, anim: null, t: 0,
   layout(W, H) {
-    const cols = 8, rows = 6; const pad = 24;
-    const ts = Math.min((W - pad * 2) / cols, (H - pad * 2 - 40) / rows);
-    const ox = (W - ts * cols) / 2, oy = (H - ts * rows) / 2 + 10;
+    const cols = 8, rows = 6; const short = document.body.classList.contains('short'); const pad = short ? 6 : 24;
+    const ts = Math.min((W - pad * 2) / cols, (H - pad * 2 - (short ? 0 : 40)) / rows);
+    const ox = (W - ts * cols) / 2, oy = (H - ts * rows) / 2 + (short ? 0 : 10);
     return { ts, ox, oy, center: (r, c) => [ox + (c + 0.5) * ts, oy + (r + 0.5) * ts] };
   },
   counts() { const m = {}; for (const c of State.week.cases) m[c.gu] = (m[c.gu] || 0) + 1; return m; },
@@ -2454,7 +2485,7 @@ const CaseList = {
 
 /* ===================== 구역 지도: 레이더를 누르면 구역 전체와 장소 위치를 보여 준다 ===================== */
 const ZoneMap = {
-  open: false, cache: new Map(), PX: 3,
+  open: false, cache: new Map(), PX: 3, zoom: 1, px: 0, py: 0, dragged: false, ptrs: new Map(),
   toggle(v = !this.open) {
     if (v && Game.scene !== 'zone') return;
     this.open = v; $('zoneMap').classList.toggle('in', v); Sound.play(v ? 'paper' : 'click');
@@ -2465,6 +2496,29 @@ const ZoneMap = {
     c.width = w; c.height = h;
     const s = Math.min((VW - 32) / w, (VH - 110) / h, 1.6);
     c.style.width = Math.round(w * s) + 'px'; c.style.height = Math.round(h * s) + 'px';
+    this.zoom = 1; this.px = this.py = 0; this.applyT();
+  },
+  applyT() { $('zoneCanvas').style.transform = `translate(${this.px}px, ${this.py}px) scale(${this.zoom})`; },
+  // 확대·축소: 손가락 두 개(핀치) 또는 마우스 휠, 끌어서 이동. 살짝 누른 건 장소 선택(click)으로 간다
+  zoomAt(sx, sy, factor) {
+    const r = $('zoneCanvas').getBoundingClientRect(); const cx = r.left + r.width / 2 - this.px, cy = r.top + r.height / 2 - this.py; // 변환 전 중심
+    const z2 = Math.max(1, Math.min(5, this.zoom * factor)); const k = z2 / this.zoom;
+    this.px = sx - cx - (sx - cx - this.px) * k; this.py = sy - cy - (sy - cy - this.py) * k; this.zoom = z2;
+    if (this.zoom === 1) this.px = this.py = 0;
+    this.applyT();
+  },
+  bindGestures() {
+    const el = $('zoneMap');
+    el.addEventListener('wheel', e => { if (!this.open) return; e.preventDefault(); this.zoomAt(e.clientX, e.clientY, Math.pow(1.0015, -e.deltaY)); }, { passive: false });
+    el.addEventListener('pointerdown', e => { if (!this.open || e.target.closest('.zh') || e.target.closest('.zl')) return; this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (this.ptrs.size === 1) { this.dragged = false; this.moved = 0; } try { el.setPointerCapture(e.pointerId); } catch (err) {} });
+    el.addEventListener('pointermove', e => {
+      const p = this.ptrs.get(e.pointerId); if (!p) return; const q = { x: e.clientX, y: e.clientY };
+      if (this.ptrs.size === 1) { this.px += q.x - p.x; this.py += q.y - p.y; this.moved += Math.hypot(q.x - p.x, q.y - p.y); if (this.moved > 6) this.dragged = true; if (this.zoom === 1) { this.px = this.py = 0; } this.applyT(); }
+      else if (this.ptrs.size === 2) { const [a, b] = [...this.ptrs.entries()]; const o = a[0] === e.pointerId ? b[1] : a[1]; const d0 = Math.hypot(p.x - o.x, p.y - o.y), d1 = Math.hypot(q.x - o.x, q.y - o.y); this.dragged = true; if (d0 > 0) this.zoomAt((q.x + o.x) / 2, (q.y + o.y) / 2, d1 / d0); this.px += (q.x - p.x) / 2; this.py += (q.y - p.y) / 2; this.applyT(); }
+      this.ptrs.set(e.pointerId, q);
+    });
+    const up = e => { this.ptrs.delete(e.pointerId); };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   },
   base(z) {
     if (this.cache.has(z.id)) return this.cache.get(z.id);
@@ -3399,15 +3453,18 @@ const Net = {
       this.players[m.from] = Object.assign(this.players[m.from] || {}, { name: m.name, gone: false }); if (conn) this.conns[m.from] = conn;
       Toast.show(`${m.name} 들어옴`); Sound.play('chime');
       this.send({ t: 'players', list: this.playerList() });
+      if (Live.on) this.send({ t: 'lbook', book: Live.bookOut(), seen: Live.seenOut() }); // 채널: 지금까지 모인 입찰표 장부 + 순위표
       if (this.started && this.mode === 'room') this.send({ t: 'init', seed: this.seed, cap: this.cap });
       if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `들어온 친구: ${this.names().join(', ')}`);
       return;
     }
-    if (m.t === 'players') { this.gotPlayers = true; for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); return; }
+    if (m.t === 'players') { this.gotPlayers = true; if (Live.on && Live.ready) Live.announce(); for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); return; }
     const p = this.players[m.from] || (this.players[m.from] = { name: m.name || '친구' }); p.name = m.name || p.name; p.gone = false;
     if (m.t === 'init') { if (!this.host && !this.started && this.mode === 'room') { this.seed = m.seed; this.cap = m.cap; this.started = true; if (typeof startGame === 'function') startGame(m.cap, { seed: m.seed }); } return; }
     this.relay(m, conn);
-    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
+    if (m.t === 'lbid') { Live.onBid(m); return; }
+    if (m.t === 'lbook') { Live.onBook(m); return; }
+    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
@@ -3423,7 +3480,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / 8;
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half });
+    this.send({ t: 'pos', z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined });
   },
   chat(text) {
     text = (text || '').trim().slice(0, 60); if (!text) return;
@@ -3493,6 +3550,7 @@ const Net = {
   info() {
     if (!this.on) return '';
     const st = { open: '연결됨', connecting: '연결 중', lost: '끊김(재연결 중)', error: '오류', off: '' }[this.status] || this.status;
+    if (Live.on) return `<b>채널 ${this.ch}</b> · ${st} · 1주 = 실제 ${FEEL.liveWeekMin}분<br>${Live.board()}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
     const fr = Object.values(this.players).map(p => `${esc(p.name)}${p.gone ? '(나감)' : ''}${p.day !== undefined ? ` · ${dLabel(p.day)}` : ''}`).join(', ');
     return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
   },
@@ -3513,6 +3571,200 @@ const ChatBar = {
   },
 };
 
+/* ===================== 실시간 채널: 계속 돌아가는 세계 =====================
+ * 채널은 실제 시간으로 흐른다. 1주(D-7 → 개찰) = FEEL.liveWeekMin분, 물건 FEEL.liveListings개가 서로 어긋나게 돌아서
+ * 몇 분마다 어딘가에서 개찰이 열린다. 입찰표는 법원에서 개찰 전까지 아무 때나 낼 수 있고, 개찰 시각이 되면
+ * 그 물건에 입찰표를 낸 사람들(같은 채널 플레이어 + 엔진 경쟁자)끼리 자동으로 개찰한다. 어디에 있든 결과를 받는다.
+ * 돈은 채널별로 이 기기에 저장되어 다음에 들어와도 이어진다. 대출·잔금·명도 절차는 채널에서는 생략하고 §11 정산으로 바로 손익을 반영한다.
+ * 물건·경쟁자는 (채널, 물건 자리, 회차)로 정해지는 시드에서 나오므로 누가 언제 들어와도 같다.
+ */
+const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
+const LIVE_TIERS = [0.8, 2.5, 6]; // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배
+const Live = {
+  on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0,
+  capOf(ch) { return ch * 1e8; }, // 채널 N = 자본 N억 (사용자 요청)
+  weekMs() { return FEEL.liveWeekMin * 60000; },
+  dayMs() { return this.weekMs() / 7; },
+  now() { return Date.now(); },
+  key(k, n) { return `${this.ch}:${k}:${n}`; },
+  // 물건 자리 k의 지금 회차
+  cycle(k, t = this.now()) { const W = this.weekMs(), off = Math.round(k * W / FEEL.liveListings); const n = Math.floor((t - off) / W); return this.cycleAt(k, n); },
+  cycleAt(k, n) { const W = this.weekMs(), off = Math.round(k * W / FEEL.liveListings); const t0 = n * W + off; return { k, n, t0, tEnd: t0 + W, key: this.key(k, n) }; },
+  // 회차의 물건: 시드가 (채널, 자리, 회차)로 정해져 누구에게나 같다
+  makeCase(k, n) {
+    const cyc = this.cycleAt(k, n);
+    const seed = ((this.ch * 1000003 + k * 7919 + n * 104729) ^ 0x3c3c) & 0x7fffffff; const R = makeRng(seed);
+    const gu = DRIVE_GUS[(n * FEEL.liveListings + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
+    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate: '2025-11-11', year: '2025' }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
+    c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
+    c.live = cyc; this.closed[c.id] = c;
+    return c;
+  },
+  caseFor(key) { const [, k, n] = key.split(':').map(Number); const cur = State.week.cases.find(c => c.live && c.live.key === key); return cur || Object.values(this.closed).find(c => c.live && c.live.key === key) || this.makeCase(k, n); },
+  dayLabel(c) { const d = Math.min(7, Math.floor((this.now() - c.live.t0) / this.dayMs())); return dLabel(d); },
+  left(c) { return Math.max(0, c.live.tEnd - this.now()); },
+  mmss(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; },
+  nextOpen() { let best = Infinity, bc = null; for (const c of State.week.cases) { if (c.live && c.live.tEnd - this.now() < best) { best = c.live.tEnd - this.now(); bc = c; } } return { ms: Math.max(0, best), c: bc }; },
+  // 하루 안의 시계: 9:00 → 18:00
+  clock() { const f = (this.now() % this.dayMs()) / this.dayMs(); const m = 9 * 60 + Math.floor(f * 9 * 60); const h = Math.floor(m / 60) % 12 || 12; return `${h}:${String(m % 60).padStart(2, '0')}`; },
+  hudText() { const { ms, c } = this.nextOpen(); return `${this.clock()} · 다음 개찰 ${this.mmss(ms)}${c ? ` (${c.name.split(' ')[0]})` : ''}`; },
+  untilDay() { return this.mmss(this.dayMs() - (this.now() % this.dayMs())); },
+  pnl() { return State.cash - State.capital; },
+
+  /* ---- 저장 (채널별, 이 기기) ---- */
+  storeKey() { return 'live' + this.ch; },
+  save() { Store.set(this.storeKey(), { capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0 }); },
+  saved(ch) { return Store.get('live' + ch, null); },
+  reset(ch) { Store.set('live' + ch, null); },
+
+  /* ---- 시작 ---- */
+  start() {
+    this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.closed = {}; this.queue = []; this.ready = false; this.readyT = 2.5;
+    let sv = this.saved(this.ch); if (sv && sv.capital !== capital) sv = null; // 예전 규칙으로 저장된 기록은 새로
+    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.seen = sv.seen || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
+    else { State.capital = capital; State.cash = capital; }
+    HUD.setCash(State.cash, false);
+    this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;
+    const cases = []; for (let k = 0; k < FEEL.liveListings; k++) { const cyc = this.cycle(k); cases.push(this.makeCase(k, cyc.n)); }
+    State.week = { seed: Net.seed, capital: State.capital, saleDate: '2025-11-11', cases };
+    for (const key in this.mine) this.book[key] = this.book[key] || {};
+    this.save();
+    setTimeout(() => HUD.page(sv ? `채널 ${this.ch} 이어서 한다. 누적 손익 ${(sv.cash - sv.capital >= 0 ? '+' : '−') + fmtWon(Math.abs(sv.cash - sv.capital))}. 물건은 사무실 PC.` : `채널 ${this.ch}다. 1주가 실제 ${FEEL.liveWeekMin}분이고 물건 ${FEEL.liveListings}개가 돌아간다. 입찰표는 법원에서 아무 때나.`), 2500);
+  },
+  titleHint(ch) {
+    const sv = this.saved(ch); const p = sv ? sv.cash - sv.capital : 0;
+    return `<br><span class="small">채널 ${ch}은 자본 <b>${fmtWon(this.capOf(ch))}</b>으로 시작합니다 · 1주 = 실제 ${FEEL.liveWeekMin}분 · 물건 ${FEEL.liveListings}개가 돌아갑니다 · 입찰표는 법원에서 아무 때나, 개찰은 자동 · 돈은 채널별로 이어집니다.</span>` + (sv ? `<br><span class="small">이 채널 기록: 자본 ${fmtWon(sv.capital)} · 누적 손익 ${(p >= 0 ? '+' : '−') + fmtWon(Math.abs(p))} <button class="btn" id="liveReset">기록 지우고 새로</button></span>` : '');
+  },
+
+  /* ---- 시간 흐름 ---- */
+  tick(dt) {
+    if (!this.on || !State.week) return;
+    if (!this.ready) { this.readyT -= dt; if (this.readyT <= 0) { this.ready = true; this.announce(); for (const key in this.mine) if (!this.mine[key].done && this.now() >= this.caseFor(key).live.tEnd) this.queue.push(key); } }
+    const d = Math.floor(this.now() / this.dayMs());
+    if (d !== this.dayIdx) { this.dayIdx = d; this.used = 0; this.save(); if (Game.player) { flipHud(); Toast.show(`새 날이다 · 조사 ${FEEL.liveSlots}회 충전`); } }
+    for (let k = 0; k < FEEL.liveListings; k++) {
+      const c = State.week.cases[k]; if (!c || !c.live) continue;
+      if (this.now() >= c.live.tEnd) this.roll(k);
+    }
+    if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) this.openResult(this.queue.shift());
+    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && p.pnl !== undefined) this.seen[p.name] = { pnl: p.pnl, at: this.now() }; this.save(); }
+  },
+  // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
+  roll(k) {
+    const old = State.week.cases[k]; old.closed = true; this.closed[old.id] = old;
+    const key = old.live.key;
+    if (this.mine[key] && !this.mine[key].done) this.queue.push(key);
+    else if (Game.player) Toast.show(`${old.name} 개찰 끝 · 새 물건 등장`, 2600);
+    const cyc = this.cycle(k); const c = this.makeCase(k, cyc.n); State.week.cases[k] = c;
+    if (State.target === old.id) { State.target = null; State.targetPlace = null; }
+    if (!this.mine[key]) delete this.book[key]; // 내가 입찰했으면 개찰에 쓰고 나서 지운다 (openResult)
+    for (const id in Game.zones) if (Game.zones[id] !== Game.zone) delete Game.zones[id]; if (Game.zone) Game.zone.stale = true; // 다음에 들어가는 구역부터 새 현장
+    if (Game.player) HUD.page(`${DISTRICT[c.gu].name}에 새 물건 떴다. ${c.name}. 개찰까지 ${this.mmss(this.left(c))}.`, '알림');
+  },
+  spendSlot() {
+    if (this.used >= FEEL.liveSlots) { Toast.show(`오늘 조사 ${FEEL.liveSlots}번을 다 썼어요. 다음 날까지 ${this.untilDay()}`, 2600); return false; }
+    this.used++; flipHud(); this.save(); return true;
+  },
+
+  /* ---- 입찰 (법원에서 아무 때나) ---- */
+  async court(zoneCourt) {
+    const here = State.week.cases.filter(c => !c.closed && c.court === zoneCourt);
+    if (!here.length) { await Dialog.say([say('court', `지금 이 법원에서 진행 중인 사건은 없습니다. 다른 법원 사건이에요. 수첩에서 관할 법원을 확인하세요.`)]); return; }
+    let c = targetCase(); if (!c || c.closed || c.court !== zoneCourt) {
+      if (c && c.court !== zoneCourt && !c.closed) await Dialog.say([say('court', `${c.caseNo}은(는) ${courtOf(c).name} 사건입니다. 여기서는 이 법원 사건만 입찰할 수 있어요.`)]);
+      const id = here.length === 1 ? here[0].id : await pickCase(`${COURTS[zoneCourt].name} 진행 사건`, x => x.court === zoneCourt && !x.closed); if (!id) return;
+      c = caseById(id);
+    }
+    const key = c.live.key, m = this.mine[key];
+    if (m) { await Dialog.say([say('court', `${c.caseNo}은(는) 이미 입찰표를 내셨어요 (${fmtWon(m.bid)}). 개찰은 ${this.mmss(this.left(c))} 뒤에 자동으로 열립니다. 결과는 어디 계시든 알려 드려요.`)]); return; }
+    const pick = await Dialog.say([say('court', `${c.caseNo} ${c.name}, 개찰까지 ${this.mmss(this.left(c))} 남았습니다. 입찰표를 내시면 그때 자동으로 개찰합니다. 한 번 내면 바꿀 수 없어요.`)], [{ label: '입찰표 쓰기', value: 'y' }, { label: '그만두기', value: 'n' }]);
+    if (pick !== 'y') return;
+    if (this.now() >= c.live.tEnd) { Toast.show('방금 개찰이 끝났어요.'); return; }
+    const r = await bidForm(c, false); if (!r) return;
+    if (this.now() >= c.live.tEnd) { Toast.show('아쉽게도 입찰이 마감됐어요.'); return; }
+    await hitStamp(); State.cash -= r.deposit; HUD.setCash(State.cash); Toast.show(`입찰보증금 ${fmtWon(r.deposit)} 납부`);
+    this.mine[key] = { k: c.live.k, n: c.live.n, bid: r.bid, deposit: r.deposit, caseId: c.id, name: c.name, at: this.now() };
+    this.book[key] = this.book[key] || {}; this.save();
+    Net.send({ t: 'lbid', key, bid: r.bid, caseNo: c.caseNo });
+    if (!State.target) State.target = c.id;
+    await Dialog.say([say('court', `접수했습니다. ${this.mmss(this.left(c))} 뒤 개찰 결과를 알려 드리겠습니다.`)]);
+  },
+  // 같은 채널 사람들과 입찰표 장부를 맞춘다
+  onBid(m) { if (!this.on) return; const b = this.book[m.key] = this.book[m.key] || {}; const first = !b[m.from]; b[m.from] = { name: m.name, bid: m.bid }; if (first && Game.player) Toast.show(`${m.name}이(가) ${m.caseNo || '사건'}에 입찰표를 냈다`); },
+  onBook(m) {
+    if (!this.on) return;
+    for (const key in m.book || {}) { const b = this.book[key] = this.book[key] || {}; for (const id in m.book[key]) if (id !== Net.myId) b[id] = m.book[key][id]; }
+    for (const n in m.seen || {}) if (n !== Net.me && (!this.seen[n] || this.seen[n].at < m.seen[n].at)) this.seen[n] = m.seen[n]; // 순위표는 서로 나눠 가진다
+  },
+  bookOut() { const out = {}; for (const key in this.book) { out[key] = Object.assign({}, this.book[key]); if (this.mine[key]) out[key][Net.myId] = { name: Net.me, bid: this.mine[key].bid }; } return out; },
+  seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { pnl: this.pnl(), at: this.now() }; return o; },
+  announce() { if (!this.on) return; for (const key in this.mine) if (!this.mine[key].done) Net.send({ t: 'lbid', key, bid: this.mine[key].bid, caseNo: this.mine[key].caseId }); Net.send({ t: 'lbook', book: this.bookOut(), seen: this.seenOut() }); },
+
+  /* ---- 개찰: 결정적(모두 같은 결과) ---- */
+  async openResult(key) {
+    const m = this.mine[key]; if (!m || m.done) return; this.opening = true; Game.busy = true;
+    try {
+      const c = this.caseFor(key);
+      const others = Object.entries(this.book[key] || {}).filter(([id]) => id !== Net.myId).map(([id, b]) => ({ name: b.name, bid: b.bid, me: false, friend: true, id }));
+      const all = [...c.competition.bids.map(b => ({ name: b.name, bid: b.bid, me: false })), ...others, { name: Net.me, bid: m.bid, me: true }];
+      const top = Math.max(...all.map(x => x.bid)); const tops = all.filter(x => x.bid === top);
+      const winner = tops.length > 1 ? [...tops].sort((a, b) => a.name.localeCompare(b.name))[Net.tieIndex(c, tops.length)] : tops[0];
+      const sorted = [...all].sort((a, b) => a.bid - b.bid || (a === winner ? 1 : b === winner ? -1 : 0));
+      const won = winner.me; const second = all.filter(x => x !== winner).sort((a, b) => b.bid - a.bid)[0];
+      // §11 정산: 대출·명도 없이 (채널에서는 절차 생략)
+      const keep = { br: State.bidResult, ph: State.phase, loan: State.loan, ev: State.evict };
+      State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won, count: all.length, bids: sorted, winner, second, tie: tops.length > 1 }; State.phase = won ? 'won' : 'lost'; State.loan = null; State.evict = null;
+      const S = computeSettlement(); const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
+      State.bidResult = keep.br; State.phase = keep.ph; State.loan = keep.loan; State.evict = keep.ev;
+      m.done = true; m.won = won; m.profit = won ? S.profit : 0; delete this.book[key];
+      State.cash += m.deposit + m.profit; HUD.setCash(State.cash);
+      this.results.unshift({ at: new Date().toISOString().slice(0, 16).replace('T', ' '), name: c.name, caseNo: c.caseNo, won, profit: m.profit, grade: G.grade, bid: m.bid, winner: winner.me ? '본인' : winner.name, wbid: winner.bid });
+      Records.add(S, c, G); this.save();
+      await this.ceremony(c, sorted, winner, won, m, second, S, G);
+    } finally { this.opening = false; Game.busy = false; }
+  },
+  async ceremony(c, sorted, winner, won, m, second, S, G) {
+    Sound.play('chime'); HUD.page(`${c.name} 개찰 결과 나왔다.`, '법원');
+    const ob = $('openBoard'); ob.innerHTML = `<div class="obHead">${courtOf(c).name} 개찰 · ${c.caseNo} · 최저매각가격 ${fmtWon(c.minPrice)}</div><ol id="obList"></ol><div id="obResult"></div>`; ob.classList.add('in');
+    for (let i = 0; i < sorted.length; i++) {
+      await sleep(i >= sorted.length - 2 ? 900 : 450);
+      const b = sorted[i]; const li = document.createElement('li'); li.className = 'obRow' + (b.me ? ' me' : '');
+      li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(채널)</small>` : maskName(b.name)}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li);
+      Sound.play('drum'); shake(1.5, 0.1);
+    }
+    await sleep(400); const res = $('obResult');
+    if (won) {
+      await hitStamp(); shake(8, 0.3);
+      res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b>${fmtWon(m.bid - second.bid)}</b>` : '단독 입찰'}</div><div>정산 손익 <b>${(m.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(m.profit))}</b> · 등급 <b>${G.grade}</b></div>`;
+      const seal = $('bigSeal'); seal.innerHTML = '최고가<br>매수신고인'; seal.className = 'in'; Sound.play('chime'); await sleep(1400); seal.className = '';
+    } else {
+      res.innerHTML = `<div class="lose">최고가매수신고인 · ${winner.friend ? esc(winner.name) + ' (채널)' : maskName(winner.name)} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - m.bid)}</b> · 보증금 ${fmtWon(m.deposit)} 반환</div>`;
+      Sound.play('deny'); await sleep(1200);
+    }
+    res.innerHTML += `<button class="btn gold" id="obNext">${won ? '정산서 보기' : '계속'}</button>`;
+    await new Promise(ok => ($('obNext').onclick = ok)); ob.classList.remove('in');
+    if (!won) return;
+    // 정산서 + 난이도(★)는 결과에서만 공개
+    const rows = S.lines.filter(([l, v]) => v || l.startsWith('인수액')).map(([l, v]) => `<tr><td>${l}</td><td class="num">${(v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v))}</td></tr>`).join('');
+    await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table><p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">채널에서는 대출·잔금·명도 절차를 생략하고 정산 손익을 바로 반영합니다. 누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
+  },
+
+  /* ---- 메뉴: 순위표 ---- */
+  board() {
+    const here = Object.values(Net.players).filter(p => !p.gone && p.pnl !== undefined).map(p => ({ name: p.name, pnl: p.pnl }));
+    const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, pnl: v.pnl, away: true })); // 전에 만난 사람(마지막으로 본 손익)
+    const rows = [{ name: Net.me, pnl: this.pnl(), me: true }, ...here, ...away].sort((a, b) => b.pnl - a.pnl).slice(0, 10);
+    const f = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
+    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done).map(k => `${my[k].name} ${fmtWon(my[k].bid)} (개찰 ${this.mmss(this.left(this.caseFor(k)))} 뒤)`);
+    return `<b>채널 ${this.ch} 순위</b> <span class="small">(누적 손익)</span><br>${rows.map((r, i) => `${i + 1}. ${r.me ? '<b>' : ''}${esc(r.name)}${r.me ? ' (나)</b>' : ''} ${f(r.pnl)}${r.away ? ' <span class="small">(자리 비움)</span>' : ''}`).join('<br>')}` +
+      (pend.length ? `<br><span class="small">낸 입찰표: ${esc(pend.join(' · '))}</span>` : '') +
+      (this.results.length ? `<br><span class="small">최근: ${this.results.slice(0, 3).map(r => `${esc(r.name)} ${r.won ? '낙찰 ' + f(r.profit) : '패찰'}`).join(' · ')}</span>` : '');
+  },
+};
+// 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
+function noSlot() { return Live.on ? Live.used >= FEEL.liveSlots : State.evening; }
+function slotLabel() { return Live.on ? `오늘 남은 조사 ${Math.max(0, FEEL.liveSlots - Live.used)}회` : `시간 1칸: ${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}`; }
+
 /* ===================== 메인: 상태 · 입력 · 걷기 · 카메라 · 장면 전환 ===================== */
 const GAME_START = '2025-11-04'; // 화요일 = D-7 → D-3·D-2가 주말
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
@@ -3524,10 +3776,11 @@ const State = {
 };
 function dateOfDay(d) { return Engine.addDays(GAME_START, d); }
 function weekdayOf(d) { return new Date(dateOfDay(d) + 'T00:00:00Z').getUTCDay(); }
-function isWeekend(d = State.day) { const w = weekdayOf(d); return w === 0 || w === 6; }
+function isWeekend(d = State.day) { if (Live.on) return false; const w = weekdayOf(d); return w === 0 || w === 6; }
 function dLabel(d = State.day) { return d >= 7 ? 'D-day' : `D-${7 - d}`; }
 function halfLabel() { return State.evening ? '저녁' : State.half ? '오후' : '오전'; }
 function clockText() {
+  if (Live.on) return Live.clock();
   const base = State.evening ? 18 * 60 : State.half ? 13 * 60 : 9 * 60;
   const m = base + Math.floor(State.clockMin); const h = Math.floor(m / 60) % 12 || 12; return `${h}:${String(m % 60).padStart(2, '0')}`;
 }
@@ -3621,7 +3874,8 @@ const Game = {
 function startGame(capital, opts = {}) {
   State.capital = capital; State.cash = capital; HUD.setCash(capital, false);
   State.seed = opts.seed || (Date.now() & 0x7fffffff); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자
-  State.week = Generator.generateWeek({ capital, seed: State.seed });
+  if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed }); // 채널: 실제 시간으로 돌아가는 세계
+  $('btnEndDay').hidden = Live.on;
   if (Net.on) { $('tChat').hidden = false; $('mpInfo').hidden = false; }
   Game.zones = {};
   Game.zone = getZone('gwangjin');
@@ -3639,7 +3893,7 @@ function startGame(capital, opts = {}) {
   (async () => {
     await Banner.day(dLabel(), halfLabel(), false);
     Banner.area(...Game.zone.spec.dongLabel);
-    setTimeout(() => HUD.page('이번 주 물건 떴다. 사무실 PC부터 봐.'), 1200);
+    if (!Live.on) setTimeout(() => HUD.page('이번 주 물건 떴다. 사무실 PC부터 봐.'), 1200);
   })();
 }
 
@@ -3650,7 +3904,7 @@ function courtPlaceHere() {
   return z.places.find(p => p.kind === 'court' && (!tc || p.court === tc.court)) || null;
 }
 function getZone(id) {
-  if (Game.zones[id]) return Game.zones[id];
+  if (Game.zones[id] && !Game.zones[id].stale) return Game.zones[id];
   let spec, cases = [];
   if (id.startsWith('court_')) spec = courtZoneSpec(id.slice(6));
   else if (id.startsWith('gu_')) { spec = genericZoneSpec(id.slice(3)); cases = State.week.cases.filter(c => c.gu === spec.gu); }
@@ -3784,6 +4038,7 @@ async function driveAcross(toGu) {
 async function homeDoor() {
   if (Game.busy) return; Game.busy = true;
   try {
+    if (Live.on) { await Dialog.say([{ name: '내 집', text: `집이다. 채널에서는 시간이 실제로 흘러서 잠으로 건너뛸 수 없다. 다음 날까지 ${Live.untilDay()}, 다음 개찰까지 ${Live.mmss(Live.nextOpen().ms)}.` }]); return; }
     const left = 7 - State.day;
     if (left <= 0) { await Dialog.say([{ name: '내 집', text: State.phase === 'dday' ? '오늘이 매각기일이다. 지금 자면 입찰은 못 한다. 법원부터 가자.' : '낙찰 뒤 절차(대출·잔금·명도)가 남았다. 잘 때가 아니다.' }]); return; }
     const pick = await Dialog.say([{ name: '내 집', text: `집이다. 지금은 ${dLabel()} ${halfLabel()}. 자고 일어날까?` }], [
@@ -3879,10 +4134,12 @@ function exitCar() {
 
 /* ---- 시간: 조사하기 1칸 소모 ---- */
 async function spendSlot() {
+  if (Live.on) return Live.spendSlot();
   if (State.evening) { Toast.show('오늘은 더 조사할 수 없어요. 내일 다시.'); return false; }
   return advanceSlot();
 }
 async function endDay() {
+  if (Live.on) { Toast.show('채널에서는 시간이 실제로 흘러요. 넘길 수 없어요.'); return; }
   if (State.day >= 7) {
     if (State.phase === 'dday') { State.evening = true; State.phase = 'nobid'; if (Net.on) Net.sendNoBid(); HUD.page('입찰 마감됐다. 이번 주는 구경만 했네.'); setTimeout(() => finishGame(), 1200); }
     else Toast.show('낙찰 뒤 절차(대출·잔금·명도)를 마저 하세요.');
@@ -3902,6 +4159,7 @@ async function endDay() {
   } else if (State.day >= 4) HUD.page(`매각 ${dLabel()}다. 입찰할 물건은 정했어?`);
 }
 async function advanceSlot() {
+  if (Live.on) return true; // 채널: 이동·입원은 시간을 쓰지 않는다 (조사 횟수만 하루 2번)
   if (State.day >= 7 && State.phase !== 'dday') return true; // 낙찰 뒤 절차는 시간 칸을 쓰지 않는다
   if (State.evening) return endDay().then(() => true);
   if (State.half === 0) { State.half = 1; State.clockMin = 0; flipHud(); }
@@ -3925,7 +4183,8 @@ function update(dt) {
   Game.t += dt;
   HUD.tick(dt);
   if (Game.scene === 'title') return;
-  Net.tick(dt);
+  Net.tick(dt); Live.tick(dt);
+  if (Layout.editing) return;
   if (ChatBar.open_) return;
   const interact = consume('e') || (!Game.driving && consume(' ')) || consume('Enter'); if (Game.driving) Pressed[' '] = false;
   if (Dialog.open) { if (interact) Dialog.press(); for (const n of ['1', '2', '3', '4']) if (consume(n) && Dialog._choice) Dialog._choice(Number(n) - 1); return; }
@@ -4241,23 +4500,23 @@ function draw() {
     const car = Game.driving ? '내리기' : (tg && tg.kind === 'car' ? '타기' : '승하차'); const tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
   }
   $('hudSpeed').textContent = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '';
-  $('hudTime').textContent = `${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
+  $('hudTime').textContent = Live.on ? Live.hudText() : `${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
   drawHudExtras();
 }
 
 /* ---- HUD: 시간 칸 2개 + 목표 물건 할 일 체크 ---- */
 let _hudKey = '';
 function drawHudExtras() {
-  const slots = State.evening ? 2 : State.half; const c = State.target && State.week.cases.find(x => x.id === State.target);
+  const slots = Live.on ? Math.min(2, Live.used) : State.evening ? 2 : State.half; const c = State.target && State.week.cases.find(x => x.id === State.target);
   const s = c ? State.seen[c.id] || {} : {};
   const items = c ? [['명세서', s.spec || s.survey], ['등기부', s.registry], ['전입세대', s.movein], ['현장', s.site], ['은행', s.bank]] : [];
-  const key = `${slots}|${c ? c.id : ''}|${items.map(i => +!!i[1]).join('')}|${State.day}`;
+  const key = `${slots}|${c ? c.id : ''}|${items.map(i => +!!i[1]).join('')}|${State.day}|${Live.on ? Math.floor(Live.now() / 1000) : ''}`;
   if (key === _hudKey) return; const prevKey = _hudKey; _hudKey = key;
-  $('hudSlots').innerHTML = [0, 1].map(i => `<span class="pip ${i < slots ? 'used' : i === slots ? 'now' : ''}"></span>`).join('') + `<small>${State.evening ? '오늘 조사 끝' : `오늘 남은 조사 ${2 - slots}`}</small>`;
+  $('hudSlots').innerHTML = [0, 1].map(i => `<span class="pip ${i < slots ? 'used' : i === slots ? 'now' : ''}"></span>`).join('') + `<small>${Live.on ? (Live.used >= FEEL.liveSlots ? `오늘 조사 끝 · 다음 날 ${Live.untilDay()}` : `오늘 남은 조사 ${FEEL.liveSlots - Live.used}`) : State.evening ? '오늘 조사 끝' : `오늘 남은 조사 ${2 - slots}`}</small>`;
   const q = $('quest');
   if (!c) { q.classList.remove('in'); return; }
   const prevDone = (prevKey.split('|')[2] || '');
-  q.innerHTML = `<b>★ ${c.name}</b><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>`;
+  q.innerHTML = `<b>★ ${c.name}</b><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>${Live.on && c.live ? `<div style="font-size:11px;opacity:.9">${c.closed ? '개찰 끝' : `개찰까지 ${Live.mmss(Live.left(c))} · ${COURTS[c.court].name}`}${Live.mine[c.live.key] ? ' · 입찰표 냈음' : ''}</div>` : ''}`;
   q.classList.add('in');
 }
 
@@ -4309,7 +4568,7 @@ function frame(now) {
  * 정보는 그 장소에서만 얻는다. 얻은 서류는 수첩에 원문 그대로 쌓인다.
  */
 Object.assign(State, { docs: [], seen: {}, clues: {}, memo: '', caseMemo: {}, judgment: {}, ticket: null, siteSession: null });
-const caseById = id => State.week.cases.find(c => c.id === id);
+const caseById = id => State.week.cases.find(c => c.id === id) || (Live.on ? Live.closed[id] : undefined); // 채널: 개찰이 끝난 물건도 찾는다
 function markSeen(caseId, what, extra = true) { (State.seen[caseId] = State.seen[caseId] || {})[what] = extra; }
 function addDoc(caseId, kind, title, html) {
   State.docs.push({ id: State.docs.length + 1, caseId, kind, title, html, day: State.day, half: State.half, evening: State.evening });
@@ -4393,8 +4652,7 @@ async function staffTalk(kind) {
   if (kind === 'bank' && State.phase === 'won') { State.ticket = null; return loanReview(false); }
   if (kind === 'bank' && State.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
   const greet = { registry: '네, 등기사항증명서 발급이세요?', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
-  const nextSlot = State.half ? '다음 날 오전' : '오후';
-  const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기 <small>(시간 1칸: ${halfLabel()} → ${nextSlot})</small>`, value: 'inv', disabled: State.evening }, { label: '그만두기', value: 'no' }]);
+  const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기 <small>(${slotLabel()})</small>`, value: 'inv', disabled: noSlot() }, { label: '그만두기', value: 'no' }]);
   if (pick !== 'inv') return;
   const localGus = [Game.zone.gu, ...(Game.zone.spec.guAlso || [])];
   const filter = kind === 'agent' ? (c => localGus.includes(c.gu)) : () => true;
@@ -4427,9 +4685,10 @@ async function objectUse(o, kind) {
   if (o.type === 'arcade') { Sound.play('blip', 0.8); await Dialog.say([{ name: `게임기 ${o.no}번`, text: '화면에 "COMING SOON"만 떠 있다. 미니게임은 아직 준비 중이다.' }]); return; }
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
+  if (c.closed) { await Dialog.say([{ text: '이 물건은 매각이 끝났다. 새 물건은 사무실 PC에서 확인하자.' }]); return; }
   if ((o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell')) && State.phase === 'evict' && State.bidResult && c.id === State.bidResult.caseId) return evictAtSite(c);
   if (State.siteSession !== c.id) {
-    const pick = await Dialog.say([{ text: `${c.name} 현장이다. 본격적으로 둘러볼까?` }], [{ label: `현장 조사 시작 <small>(시간 1칸: ${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'})</small>`, value: 'go', disabled: State.evening }, { label: '나중에', value: 'no' }]);
+    const pick = await Dialog.say([{ text: `${c.name} 현장이다. 본격적으로 둘러볼까?` }], [{ label: `현장 조사 시작 <small>(${slotLabel()})</small>`, value: 'go', disabled: noSlot() }, { label: '나중에', value: 'no' }]);
     if (pick !== 'go' || !(await spendSlot())) return;
     State.siteSession = c.id; markSeen(c.id, 'site', { day: State.day });
   }
@@ -4499,6 +4758,7 @@ function bidForm(c, practice) {
       const bid = Math.round(+$('bfBid').value);
       if (!bid || bid < c.minPrice) { Sound.play('deny'); Toast.show(`최저매각가격 ${fmtWon(c.minPrice)} 미만은 무효예요. 다시 적어 주세요.`, 2800); return; }
       if (!practice && State.cash < dep) { Sound.play('deny'); Toast.show(`보증금 ${fmtWon(dep)}이(가) 없어서 입찰할 수 없어요.`, 2800); return; }
+      if (!practice && Live.on && State.cash < bid * 0.2) { Sound.play('deny'); Toast.show(`대출 80%를 받아도 현금이 모자라요. 낙찰가의 20%(${fmtWon(Math.ceil(bid * 0.2))}) 이상 있어야 해요.`, 3200); return; } // 채널: 잔금 절차가 없으니 여기서 감당 가능한지 본다
       close({ bid, deposit: dep });
     };
   });
@@ -4506,6 +4766,7 @@ function bidForm(c, practice) {
 
 async function courtClerk() {
   const zoneCourt = Game.zone.spec.court || (Game.room && Game.room.place && Game.room.place.court);
+  if (Live.on) return Live.court(zoneCourt); // 채널: 개찰 전까지 아무 때나 입찰표
   if (State.phase === 'pay') return payBalance();
   if (State.day < 7) {
     const pick = await Dialog.say([say('court', '매각기일에 오세요. 입찰은 그날 이 법정에서 합니다. 입찰표 쓰는 연습은 해 보셔도 돼요.')], [{ label: '입찰 연습 <small>(시간 소모 없음)</small>', value: 'p' }, { label: '그만두기', value: 'n' }]);
@@ -5078,6 +5339,55 @@ const Notebook = {
 };
 function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]); }
 
+/* ===================== 버튼 위치 조정: 메뉴에서 켜고 조이스틱·버튼을 끌어서 옮긴다 =====================
+ * 가로/세로(그리고 폰 가로 .short)마다 따로, 화면 비율로 이 기기에 저장한다. '기본값'이면 CSS 기본 위치로 돌아간다.
+ */
+const Layout = {
+  editing: false, drag: null, IDS: ['stick', 'tAct', 'tCar', 'tChat', 'pedals', 'hudBtns', 'radar', 'minimap'],
+  bucket() { return (innerWidth > innerHeight ? 'l' : 'p') + (document.body.classList.contains('short') ? 's' : ''); },
+  data() { return Store.get('layout', {}); },
+  parentRect(el) { const p = el.offsetParent; return p ? p.getBoundingClientRect() : { left: 0, top: 0, width: innerWidth, height: innerHeight }; },
+  place(el, x, y) { el.style.setProperty('left', x + 'px', 'important'); el.style.setProperty('top', y + 'px', 'important'); el.style.setProperty('right', 'auto', 'important'); el.style.setProperty('bottom', 'auto', 'important'); },
+  apply() {
+    const d = this.data()[this.bucket()] || {};
+    for (const id of this.IDS) {
+      const el = $(id); if (!el) continue; const p = d[id];
+      for (const k of ['left', 'top', 'right', 'bottom']) el.style.removeProperty(k);
+      if (!p) continue;
+      const pr = this.parentRect(el); const w = el.offsetWidth, h = el.offsetHeight;
+      this.place(el, Math.max(0, Math.min(pr.width - w, p.x * pr.width)), Math.max(0, Math.min(pr.height - h, p.y * pr.height)));
+    }
+  },
+  edit(v) {
+    this.editing = v; document.body.classList.toggle('layoutEdit', v); $('layoutBar').classList.toggle('in', v);
+    if (v) { Sound.play('paper'); Toast.show('조이스틱·버튼을 끌어서 옮기세요. 끝나면 완료.', 3000); } else { Sound.play('click'); this.apply(); }
+  },
+  bind() {
+    $('layoutDone').onclick = () => this.edit(false);
+    $('layoutReset').onclick = () => { const all = this.data(); delete all[this.bucket()]; Store.set('layout', all); this.apply(); Toast.show('기본 위치로 되돌렸어요.'); };
+    const sel = this.IDS.map(i => '#' + i).join(',');
+    document.addEventListener('pointerdown', e => {
+      if (!this.editing || !e.target.closest || e.target.closest('#layoutBar')) return;
+      const el = e.target.closest(sel); if (!el) return;
+      e.preventDefault(); e.stopPropagation();
+      const r = el.getBoundingClientRect(); this.drag = { el, id: el.id, dx: e.clientX - r.left, dy: e.clientY - r.top, ptr: e.pointerId };
+      el.classList.add('dragging'); try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    }, true);
+    document.addEventListener('pointermove', e => {
+      const d = this.drag; if (!d || e.pointerId !== d.ptr) return; e.preventDefault(); e.stopPropagation();
+      const pr = this.parentRect(d.el); const x = Math.max(0, Math.min(pr.width - d.el.offsetWidth, e.clientX - d.dx - pr.left)), y = Math.max(0, Math.min(pr.height - d.el.offsetHeight, e.clientY - d.dy - pr.top));
+      this.place(d.el, x, y); d.fx = x / pr.width; d.fy = y / pr.height;
+    }, true);
+    const up = e => {
+      const d = this.drag; if (!d || e.pointerId !== d.ptr) return; e.stopPropagation(); this.drag = null; d.el.classList.remove('dragging');
+      if (d.fx === undefined) return; const all = this.data(); const b = all[this.bucket()] = all[this.bucket()] || {}; b[d.id] = { x: d.fx, y: d.fy }; Store.set('layout', all); Sound.play('click');
+    };
+    document.addEventListener('pointerup', up, true); document.addEventListener('pointercancel', up, true);
+    document.addEventListener('click', e => { if (this.editing && !(e.target.closest && e.target.closest('#layoutBar'))) { e.stopPropagation(); e.preventDefault(); } }, true); // 조정 중엔 버튼이 눌리지 않게
+    addEventListener('resize', () => setTimeout(() => this.apply(), 80));
+  },
+};
+
 /* ===================== 부트: 타이틀 · 설정 · 터치 ===================== */
 (function boot() {
   if (location.hash === '#test') { $('devPage').style.display = 'block'; $('title').style.display = 'none'; devPage(); return; }
@@ -5105,7 +5415,7 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   $('btnStart').onclick = () => {
     Sound.init(); Sound.play('stamp'); tryLandscape();
     const v = Number($('capInput').value); if (v) { if (v < 1e7) { Toast.show('자본은 1천만 원 이상으로 넣어 주세요.'); return; } cap = Math.round(v); }
-    if (Net.on && Net.mode === 'channel') { Net.cap = cap; Net.started = true; startGame(cap, { seed: Net.seed }); return; } // 채널은 각자 시작, 주는 채널·날짜로 정해진다
+    if (Net.on && Net.mode === 'channel') { cap = Live.capOf(Net.ch); Net.cap = cap; Net.started = true; startGame(cap, { seed: Net.seed }); return; } // 채널 N = 자본 N억 // 채널은 각자 시작, 주는 채널·날짜로 정해진다
     if (Net.on && !Net.host) { Toast.show('방장이 시작하면 같이 시작해요.'); return; }
     if (Net.on && Net.host) { Net.seed = (Date.now() & 0x7fffffff); Net.cap = cap; Net.started = true; Net.send({ t: 'init', seed: Net.seed, cap }); startGame(cap, { seed: Net.seed }); return; }
     startGame(cap);
@@ -5123,8 +5433,9 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   document.querySelectorAll('#mpBox .ch').forEach(b => b.onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
     Store.set('mpName', name); document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = true); b.classList.add('sel'); $('mpStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
-    const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = false); b.classList.remove('sel'); }
-    else $('mpStatus').insertAdjacentHTML('beforeend', '<br><span class="small">자본을 고르고 시작하세요. 같은 채널 사람들과 같은 물건으로 플레이하고, 법원에서 같이 개찰합니다.</span>');
+    $('caps').classList.add('dim'); $('capInput').disabled = true; $('capInput').placeholder = `채널 ${b.dataset.ch} 자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))}`;
+    const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { $('caps').classList.remove('dim'); $('capInput').disabled = false; $('capInput').placeholder = '직접 입력(원)'; document.querySelectorAll('#mpBox .btn').forEach(x => x.disabled = false); b.classList.remove('sel'); }
+    else { $('mpStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); const rs = $('liveReset'); if (rs) rs.onclick = () => { Live.reset(Number(b.dataset.ch)); rs.parentElement.textContent = '기록을 지웠어요. 고른 자본으로 새로 시작합니다.'; }; }
   });
   $('mpCreate').onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
@@ -5137,13 +5448,15 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
     Store.set('mpName', name); $('mpCreate').disabled = true; $('mpJoin').disabled = true;
     const ok = await Net.join(code, name); if (!ok) { $('mpCreate').disabled = false; $('mpJoin').disabled = false; }
   };
-  ChatBar.bind();
+  ChatBar.bind(); Layout.bind();
+  $('btnLayout').onclick = () => { Menu.toggle(false); Layout.edit(true); };
   document.querySelectorAll('.btn').forEach(b => b.addEventListener('pointerdown', () => { Sound.init(); Sound.play('click'); }));
   $('btnNote').onclick = () => Notebook.toggle();
   $('minimap').onclick = () => SeoulMap.toggle(true);
   $('radar').onclick = () => { Sound.init(); ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; };
-  $('zoneMap').addEventListener('click', e => { if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
-  $('zoneCanvas').addEventListener('click', e => ZoneMap.click(e));
+  $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
+  $('zoneCanvas').addEventListener('click', e => { if (!ZoneMap.dragged) ZoneMap.click(e); });
+  ZoneMap.bindGestures();
   $('nav').addEventListener('click', e => { if (e.target.id === 'navX') Nav.clear(); });
   addEventListener('resize', () => ZoneMap.open && ZoneMap.fit());
   $('mapCanvas').addEventListener('pointermove', e => SeoulMap.onMove(e));
@@ -5166,6 +5479,7 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   // 터치
   if (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) document.body.classList.add('touchOn');
   resize(); // touchOn이 정해진 뒤 가로 눕힘 여부를 다시 계산
+  Layout.apply();
   const stick = $('stick'), knob = $('knob'); let sid = null;
   const moveStick = e => { const r = localRect(stick), q = localPt(e); let dx = q.x - r.left - r.width / 2, dy = q.y - r.top - r.height / 2; const L = Math.hypot(dx, dy), M = r.width / 2 - 10; if (L > M) { dx = dx / L * M; dy = dy / L * M; } knob.style.transform = `translate(${dx}px, ${dy}px)`; Touch.x = dx / M; Touch.y = dy / M; Touch.active = true; };
   stick.addEventListener('pointerdown', e => { sid = e.pointerId; try { stick.setPointerCapture(sid); } catch (err) {} Sound.init(); moveStick(e); });

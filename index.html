@@ -66,6 +66,9 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 #edgeSign.in { transform:translate(-50%,0); opacity:1; }
 #nav { position:absolute; left:50%; bottom:18px; transform:translate(-50%,140%); display:flex; gap:12px; align-items:center; background:rgba(12,16,26,.88); border:2px solid #7a5cf0; border-radius:12px; padding:6px 16px 6px 12px; color:#fff; box-shadow:0 4px 0 rgba(0,0,0,.5); opacity:0; transition:transform .25s ease-out, opacity .25s; max-width:min(92vw, 520px); }
 #nav.in { transform:translate(-50%,0); opacity:1; }
+#nav { pointer-events:auto; }
+#nav .nx { background:none; border:1px solid rgba(255,255,255,.35); color:#ddd; border-radius:6px; width:26px; height:26px; font-size:13px; cursor:pointer; margin-left:4px; }
+#nav .nx:hover { background:rgba(255,255,255,.15); }
 #nav .arrow { font-size:34px; line-height:1; color:#c9b6ff; min-width:36px; text-align:center; }
 #nav .txt b { display:block; font-size:17px; } #nav .txt small { display:block; font-size:11px; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:420px; }
 .touchOn #nav { bottom:150px; }
@@ -175,6 +178,15 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 /* 서류 뷰어: 행정 레이어 */
 #docView { position:fixed; left:50%; top:50%; width:min(820px, calc(100% - 24px)); max-height:calc(100% - 40px); display:flex; flex-direction:column; background:#fff; color:#111; border-radius:6px; z-index:33; box-shadow:0 14px 40px rgba(0,0,0,.6); transform:translate(-50%, 120vh) rotate(6deg); transition:transform .3s ease-out; pointer-events:auto; -webkit-user-select:text; user-select:text; }
 #docView.in { transform:translate(-50%, -50%) rotate(0); }
+#docView.wide { width:min(1280px, calc(100% - 24px)); }
+.docPair { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; } .docPair > div { min-width:0; }
+@media (max-width:900px) { .docPair { grid-template-columns:1fr; } }
+#memoPad { position:fixed; left:50%; top:50%; width:min(560px, calc(100% - 24px)); max-height:calc(100% - 40px); display:none; flex-direction:column; background:#fffaf0; color:#222; border-radius:6px; z-index:33; box-shadow:0 14px 40px rgba(0,0,0,.6); transform:translate(-50%,-50%); }
+#memoPad.in { display:flex; }
+#memoPad textarea { margin:14px; min-height:240px; font:16px var(--serif); line-height:1.6; background:repeating-linear-gradient(#fffaf0 0 27px, #e8dcc0 27px 28px); border:1px solid #c9b98f; border-radius:6px; padding:6px 10px; resize:vertical; -webkit-user-select:text; user-select:text; }
+#memoPad .ksub { padding:0 14px 12px; font-size:12px; color:#666; }
+.panel textarea.small { min-height:70px; margin-top:4px; }
+.nbH { margin:16px 0 6px; font-size:14px; } .nbH small { font-weight:400; color:#8a8470; }
 #docView.fold { transition:transform .15s ease-in; transform:translate(-50%, -50%) scaleY(.35) !important; }
 .docBar { display:flex; justify-content:space-between; align-items:center; gap:8px; background:var(--navy); color:#fff; padding:8px 12px; border-radius:6px 6px 0 0; font-size:13px; }
 .docBar .btn { padding:4px 10px; font-size:12px; }
@@ -390,6 +402,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="dropSign"></div>
 <div id="edgeSign"></div>
 <div id="nav"></div>
+<div id="memoPad"><div class="docBar"><span id="memoTitle"></span><button class="btn" onclick="MemoPad.close()">닫기 (Esc)</button></div><textarea id="memoText" placeholder="이 건물(물건)에 대해 적어 두세요. 수첩 '메모' 탭에도 같이 보여요."></textarea><div class="ksub">메모는 시간을 쓰지 않아요. 결과 화면 전까지 언제든 고칠 수 있어요.</div></div>
 <div id="docView"><div class="docBar"><span id="docTitle"></span><button class="btn" onclick="DocViewer.close()">닫기 (E)</button></div><div id="docBody"></div></div>
 <div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 법원은 그 구 안에 있어요(차 타면 내비 안내) · M/Esc 닫기</small></div><div id="mapConfirm"></div></div>
 <div id="mapHover"></div>
@@ -422,6 +435,9 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>구역 지도(장소 위치)</th><td>N</td><td class="tc">왼쪽 레이더 탭</td></tr>
       <tr><th>옆 구로 이동</th><td colspan="2">큰길 따라 구역 끝까지 운전 (지도 M도 가능)</td></tr>
       <tr><th>내비게이션</th><td colspan="2">차에 타면 자동 안내 (목표: 노란 화살표 · 매각기일엔 법원)</td></tr>
+      <tr><th>메모장</th><td colspan="2">현장 안 메모장(E) · 물건 카드의 메모장 버튼 · 수첩 메모 탭</td></tr>
+      <tr><th>서류 같이 보기</th><td colspan="2">사무실 PC → 물건 카드 → 두 서류 같이 보기</td></tr>
+      <tr><th>목적지 설정</th><td colspan="2">구역 지도(N)에서 장소 탭 · 서울 지도(M)에서 구 선택 → 목적지로 설정 · 패널 ✕로 끄기</td></tr>
       <tr><th>자고 넘기기</th><td colspan="2">건대 구역 '내 집' 문에서 E</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
@@ -437,7 +453,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <button class="btn" onclick="Menu.toggle(false)">닫기 (Esc)</button>
 </div>
 <div id="zoneMap">
-  <div class="zh"><span id="zoneMapName"></span><small>닫기: 바깥 탭 또는 Esc / N</small></div>
+  <div class="zh"><span id="zoneMapName"></span><small>장소나 가장자리 구 이름을 누르면 목적지 · 닫기: 바깥 탭 / Esc / N</small></div>
   <canvas id="zoneCanvas"></canvas>
   <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#d08a3a"></i>내 집</span><span><i style="background:#2bb673"></i>지하철</span></div>
 </div>
@@ -2217,13 +2233,14 @@ const SeoulMap = {
     if (this.anim) return; const r = e.target.getBoundingClientRect(); const h = this.hit(e.clientX - r.left, e.clientY - r.top);
     if (!h) return; Sound.play('click');
     const zoneId = ZONE_OF_GU[h.gu || COURT_GU[h.court]];
-    if (Game.zone && zoneId === Game.zone.id) { Toast.show(h.court ? `${COURTS[h.court].name}은(는) 지금 있는 구에 있어요. 차를 타면 내비가 안내해요.` : '지금 있는 곳이에요.'); return; }
-    this.sel = { ...h, zoneId };
     const to = h.gu || COURT_GU[h.court]; const { slot } = travelCost(currentGu(), to);
     const name = h.gu ? DISTRICT[h.gu].name : `${COURTS[h.court].name}(${DISTRICT[to].name})`;
+    if (Game.zone && zoneId === Game.zone.id) { if (h.court) { setNavDest({ gu: to, place: 'court', label: COURTS[h.court].name }); this.toggle(false); } else Toast.show('지금 있는 곳이에요.'); return; }
+    this.sel = { ...h, zoneId };
     const timeTxt = State.evening ? '저녁' : slot ? `${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}` : '시간 그대로';
-    $('mapConfirm').innerHTML = `<span>${name}(으)로 이동 · ${timeTxt}</span><button class="btn gold" id="mapGo">출발</button><button class="btn" id="mapCancel">취소</button>`;
+    $('mapConfirm').innerHTML = `<span>${name}(으)로 이동 · ${timeTxt}</span><button class="btn gold" id="mapGo">출발</button><button class="btn" id="mapDest">목적지로 설정</button><button class="btn" id="mapCancel">취소</button>`;
     $('mapConfirm').classList.add('in');
+    $('mapDest').onclick = () => { setNavDest({ gu: to, place: h.court ? 'court' : null, label: name }); $('mapConfirm').classList.remove('in'); this.sel = null; this.toggle(false); };
     $('mapGo').onclick = () => this.go(); $('mapCancel').onclick = () => { $('mapConfirm').classList.remove('in'); this.sel = null; };
   },
   canDepart() {
@@ -2387,6 +2404,21 @@ const ZoneMap = {
     }
     this.cache.set(z.id, c); return c;
   },
+  // 장소나 가장자리 구 이름을 누르면 목적지
+  click(e) {
+    const z = Game.zone, c = $('zoneCanvas'), r = c.getBoundingClientRect(), P = this.PX;
+    const mx = (e.clientX - r.left) * c.width / r.width, my = (e.clientY - r.top) * c.height / r.height;
+    let best = null, bd = 20;
+    for (const pl of z.places) { const d = Math.hypot(pl.door.tx * P - mx, pl.door.ty * P - my); if (d < bd) { bd = d; best = pl; } }
+    if (best) { setNavDest({ gu: z.gu, place: best.id, label: best.name }); this.toggle(false); return; }
+    if (z.spec.court) return;
+    for (const [dx, dy, X, Y, al] of this.edgeAnchors(z)) {
+      const g = neighborGu(z.gu, dx, dy); if (!g) continue;
+      const x0 = al === 'left' ? X - 6 : al === 'right' ? X - 90 : X - 45, x1 = al === 'left' ? X + 90 : al === 'right' ? X + 6 : X + 45;
+      if (mx >= x0 && mx <= x1 && Math.abs(my - Y) <= 12) { setNavDest({ gu: g, place: null, label: DISTRICT[g].name }); this.toggle(false); return; }
+    }
+  },
+  edgeAnchors(z) { const P = this.PX; return [[-1, 0, 6, z.H * P / 2, 'left'], [1, 0, z.W * P - 6, z.H * P / 2, 'right'], [0, -1, z.W * P / 2, 12, 'center'], [0, 1, z.W * P / 2, z.H * P - 6, 'center']]; },
   draw() {
     const z = Game.zone, c = $('zoneCanvas'), x = c.getContext('2d'), P = this.PX, p = Game.player, t = performance.now() / 1000;
     x.drawImage(this.base(z), 0, 0);
@@ -2409,7 +2441,7 @@ const ZoneMap = {
     // 나
     // 가장자리: 그쪽으로 달리면 나오는 옆 구
     if (!z.spec.court) { x.font = 'bold 11px "IBM Plex Sans KR", sans-serif';
-      for (const [dx, dy, X, Y, al] of [[-1, 0, 6, z.H * P / 2, 'left'], [1, 0, z.W * P - 6, z.H * P / 2, 'right'], [0, -1, z.W * P / 2, 12, 'center'], [0, 1, z.W * P / 2, z.H * P - 6, 'center']]) {
+      for (const [dx, dy, X, Y, al] of this.edgeAnchors(z)) {
         const g = neighborGu(z.gu, dx, dy); const txt = g ? `${EDGE_ARROW[dx + ',' + dy]} ${DISTRICT[g].name}` : '서울 끝'; x.textAlign = al;
         const w = x.measureText(txt).width + 8; x.fillStyle = 'rgba(10,12,14,.7)'; x.fillRect(al === 'left' ? X - 4 : al === 'right' ? X - w + 4 : X - w / 2, Y - 11, w, 15); x.fillStyle = g ? '#cfe8d2' : '#999'; x.fillText(txt, X, Y);
       } }
@@ -2427,10 +2459,24 @@ const ZoneMap = {
 const NAV_ARROW = { left: '↰', right: '↱', uturn: '↶', straight: '↑', arrive: '⚑' };
 const NAV_WORD = { left: '좌회전', right: '우회전', uturn: '유턴' };
 function fmtDist(m) { return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.max(10, m) + 'm'; }
+// 지도에서 고른 목적지. place가 있으면 노란 화살표도 거기로
+function setNavDest(d) {
+  State.navDest = d; Nav.mutedKey = ''; Nav.key = '';
+  const z = Game.zone; if (d.place && z && z.places.some(p => p.id === d.place)) State.targetPlace = d.place;
+  Toast.show(`목적지: ${d.label}${Game.driving ? '' : ' · 차에 타면 안내해요'}`); Sound.play('tick');
+}
 const Nav = {
   key: '', dist: null, goal: null, path: [], said: {}, on: false, started: false, arrived: false, tick: 0, html: '',
   goalOf() {
     const z = Game.zone; if (!z || z.spec.court) return null;
+    const nd = State.navDest; // 사용자가 지도에서 직접 고른 목적지가 우선
+    if (nd) {
+      const here = [z.gu, ...(z.spec.guAlso || [])].includes(nd.gu);
+      if (!here) return { kind: 'gu', gu: nd.gu, label: nd.label || DISTRICT[nd.gu].name };
+      const pl = nd.place && z.places.find(p => p.id === nd.place);
+      if (pl) return { kind: 'place', id: pl.id, label: pl.name };
+      State.navDest = null; Toast.show(`${DISTRICT[nd.gu].name} 도착. 목적지를 해제했어요.`);
+    }
     const tc = State.target && State.week.cases.find(x => x.id === State.target);
     if (State.phase === 'dday' || State.phase === 'pay') {
       const court = tc ? tc.court : null;
@@ -2509,8 +2555,12 @@ const Nav = {
     return null;
   },
   off() { this.path = []; if (this.on) { this.on = false; $('nav').classList.remove('in'); } this.key = ''; },
+  mutedKey: '',
+  clear() { // 패널의 ✕: 이 목적지 안내를 끈다 (새 목적지를 고르면 다시 켜짐)
+    this.mutedKey = this.key; State.navDest = null; if (State.phase !== 'dday' && State.phase !== 'pay') State.targetPlace = null; this.off(); Toast.show('목적지 안내를 껐어요.');
+  },
   show(arrow, main, sub) {
-    const h = `<div class="arrow">${arrow}</div><div class="txt"><b>${main}</b><small>${sub}</small></div>`;
+    const h = `<div class="arrow">${arrow}</div><div class="txt"><b>${main}</b><small>${sub}</small></div><button class="nx" id="navX" title="안내 끄기">✕</button>`;
     if (h !== this.html) { this.html = h; $('nav').innerHTML = h; }
     if (!this.on) { this.on = true; $('nav').classList.add('in'); }
   },
@@ -2520,6 +2570,7 @@ const Nav = {
     if (!g) { this.off(); return; }
     if (g.kind === 'gu') { g.edge = this.edgeFor(z.gu, g.gu); if (!g.edge) { this.off(); return; } }
     const key = z.id + '|' + (g.kind === 'place' ? g.id : 'gu:' + g.gu);
+    if (key === this.mutedKey) { this.off(); return; }
     if (key !== this.key) { this.key = key; this.goal = g; this.compute(z, g); this.said = {}; this.started = false; this.arrived = false; this.tick = 0; }
     this.tick -= dt; if (this.tick > 0 && this.on) return; this.tick = 0.25;
     const path = this.trace(z, Math.floor(c.x / TILE), Math.floor(c.y / TILE), 160); this.path = path;
@@ -2617,7 +2668,7 @@ const INTERIOR_DEFS = {
     '###########',
     '#G...R...U#',
     '#.........#',
-    '#L.......H#',
+    '#L.W.....H#',
     '#.........#',
     '#####D#####' ], npc: {} },
   site_land: { title: '물건 현장', floor: 'grass', bgm: 'town', tone: 'fence', map: [
@@ -2625,7 +2676,7 @@ const INTERIOR_DEFS = {
     '#..........#',
     '#.XXXX..U..#',
     '#.XXXX.....#',
-    '#..........#',
+    '#.......W..#',
     '#####D######' ], npc: {} },
 };
 const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집' };
@@ -2649,6 +2700,7 @@ function buildInterior(place) {
     if (ch === 'L') objs.push({ type: 'mailbox', tx: x, ty: y, label: '우편함' });
     if (ch === 'R') objs.push({ type: 'bell', tx: x, ty: y, label: '초인종' });
     if (ch === 'G') objs.push({ type: 'board', tx: x, ty: y, label: '게시판' });
+    if (ch === 'W') objs.push({ type: 'memo', tx: x, ty: y, label: '메모장' });
     if (ch === 'U') objs.push({ type: 'roof', tx: x, ty: y, label: cs && cs.type === '토지' ? '둘러보기' : '옥상 계단' });
     if (ch === 'H' && cs && cs.lien) objs.push({ type: 'banner', tx: x, ty: y, label: '현수막' });
     if (def.npc[ch]) npcs.push({ sprite: def.npc[ch], tx: x, ty: y, x: x * TILE + 8, y: y * TILE + 14, dir: 0, role: ch === 'N' ? 'danye' : 'clerk', breath: Math.random() * 2 });
@@ -2697,6 +2749,7 @@ function drawInterior(ctx, room, t) {
     else if (ch === 'F') { ctx.fillStyle = '#6b3a3a'; ctx.fillRect(X + 1, Y, 14, TILE); ctx.fillStyle = '#7d4848'; ctx.fillRect(X + 4, Y + 2, 10, 12); }
     else if (ch === 'Q') { ctx.fillStyle = '#d0d4da'; ctx.fillRect(X + 3, Y + 1, 10, 14); ctx.fillStyle = '#c33'; ctx.fillRect(X + 5, Y + 4, 6, 3); ctx.fillStyle = '#333'; ctx.fillRect(X + 5, Y + 9, 6, 1); }
     else if (ch === 'L') { ctx.fillStyle = '#8a8f96'; ctx.fillRect(X + 1, Y + 1, 14, 14); ctx.fillStyle = '#5c6168'; for (let i = 0; i < 3; i++) ctx.fillRect(X + 3, Y + 3 + i * 4, 10, 2); }
+    else if (ch === 'W') { ctx.fillStyle = '#7a5a3a'; ctx.fillRect(X + 1, Y + 4, 14, 11); ctx.fillStyle = '#fffaf0'; ctx.fillRect(X + 3, Y + 2, 9, 10); ctx.fillStyle = '#8a8f96'; for (let i = 0; i < 3; i++) ctx.fillRect(X + 4, Y + 4 + i * 3, 7, 1); ctx.fillStyle = '#d6b23a'; ctx.fillRect(X + 12, Y + 1, 2, 9); ctx.fillStyle = '#333'; ctx.fillRect(X + 12, Y + 10, 2, 2); }
     else if (ch === 'G') { ctx.fillStyle = '#6b4a2f'; ctx.fillRect(X + 1, Y + 1, 14, 13); ctx.fillStyle = '#e8dcc0'; ctx.fillRect(X + 3, Y + 3, 5, 6); ctx.fillStyle = '#f5f5f5'; ctx.fillRect(X + 9, Y + 3, 4, 8); }
     else if (ch === 'U') { for (let i = 0; i < 4; i++) { ctx.fillStyle = i % 2 ? '#6a6a70' : '#7a7a80'; ctx.fillRect(X, Y + i * 4, TILE, 4); } if (cs && cs.type === '토지') { ctx.fillStyle = FLOOR[0]; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#c9b37a'; ctx.fillRect(X + 6, Y + 2, 3, 12); ctx.fillStyle = '#efe6d2'; ctx.fillRect(X + 2, Y + 2, 12, 6); } }
     else if (ch === 'H' && cs && cs.lien) { ctx.fillStyle = '#fff'; ctx.fillRect(X - 6, Y + 2, TILE + 6, 11); ctx.fillStyle = '#c0302a'; ctx.fillRect(X - 4, Y + 4, TILE + 2, 2); ctx.fillRect(X - 4, Y + 8, TILE - 2, 2); }
@@ -2846,7 +2899,8 @@ const PropertyCard = {
       <div class="pcBtns">
         <button class="btn" id="pcTarget">목표로 표시</button>
         <button class="btn gold" id="pcBid">${State.target === c.id ? '★ 입찰 대상 (지정됨)' : '★ 입찰 대상 지정'}</button>
-        ${Game.scene === 'room' && Game.room.place.kind === 'office' ? '<button class="btn" id="pcSpec">매각물건명세서</button><button class="btn" id="pcSurvey">현황조사서</button>' : ''}
+        ${Game.scene === 'room' && Game.room.place.kind === 'office' ? '<button class="btn" id="pcSpec">매각물건명세서</button><button class="btn" id="pcSurvey">현황조사서</button><button class="btn" id="pcBoth">두 서류 같이 보기</button>' : ''}
+        <button class="btn" id="pcMemo">메모장${(State.caseMemo || {})[c.id] ? ' ✎' : ''}</button>
         <button class="btn" id="pcClose">닫기</button>
       </div>`;
     drawThumb($('pcThumb').getContext('2d'), c);
@@ -2857,10 +2911,29 @@ const PropertyCard = {
       const open = async (kind, title, html) => { this.close(); if (!State.docs.some(d => d.caseId === c.id && d.kind === kind)) addDoc(c.id, kind, title, html); else markSeen(c.id, kind, { day: State.day }); await DocViewer.show(html, { title }); };
       $('pcSpec').onclick = () => open('spec', `매각물건명세서 · ${c.name}`, docSpec(c));
       $('pcSurvey').onclick = () => open('survey', `현황조사서 · ${c.name}`, docSurvey(c));
+      $('pcBoth').onclick = async () => { // 명세서 + 현황조사서 나란히
+        this.close(); const spec = docSpec(c), survey = docSurvey(c);
+        if (!State.docs.some(d => d.caseId === c.id && d.kind === 'spec')) addDoc(c.id, 'spec', `매각물건명세서 · ${c.name}`, spec); else markSeen(c.id, 'spec', { day: State.day });
+        if (!State.docs.some(d => d.caseId === c.id && d.kind === 'survey')) addDoc(c.id, 'survey', `현황조사서 · ${c.name}`, survey); else markSeen(c.id, 'survey', { day: State.day });
+        await DocViewer.show(docPair(spec, survey), { title: `매각물건명세서 + 현황조사서 · ${c.name}`, wide: true });
+      };
     }
+    $('pcMemo').onclick = () => { this.close(); MemoPad.open(c); };
     el.classList.add('in'); Sound.play('paper');
   },
   close() { $('propCard').classList.remove('in'); this.open_ = false; },
+};
+function docPair(a, b) { return `<div class="docPair"><div>${a}</div><div>${b}</div></div>`; }
+/* ---- 물건별 메모장: 현장 안 메모장 또는 물건 카드에서 ---- */
+const MemoPad = {
+  open_: false, c: null,
+  open(c) {
+    this.c = c; this.open_ = true; const el = $('memoPad'); $('memoTitle').textContent = `메모장 · ${c.name}`;
+    const ta = $('memoText'); ta.value = (State.caseMemo || {})[c.id] || ''; ta.oninput = () => { State.caseMemo[c.id] = ta.value; };
+    ta.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); this.close(); } }; // 창으로 올라가면 메뉴가 열려 버린다
+    el.classList.add('in'); Sound.play('paper'); setTimeout(() => ta.focus(), 50);
+  },
+  close() { if (!this.open_) return; this.open_ = false; $('memoPad').classList.remove('in'); $('memoText').blur(); Sound.play('click'); if (this.c && (State.caseMemo[this.c.id] || '').trim()) Toast.show('메모를 수첩에 적어 뒀어요.'); },
 };
 function drawThumb(x, c) {
   x.imageSmoothingEnabled = false; x.fillStyle = '#a9c6e0'; x.fillRect(0, 0, 96, 64); x.fillStyle = '#7f8a74'; x.fillRect(0, 54, 96, 10);
@@ -3029,20 +3102,42 @@ function siteClues(c) {
   return out;
 }
 function bellTalk(c) {
-  const o = c.occupant; const t = c.data.tenants[0];
-  if (c.risks.includes('hidden')) return [{ text: caseExtras(c).lightOn ? '딩동… 안에서 TV 소리가 나는 것 같은데 아무도 나오지 않는다.' : '딩동… 아무 대답이 없다.', emote: 'silence' }];
-  if (o.kind === 'vacant') return [{ text: '딩동… 인기척이 없다. 문틈에 먼지가 쌓여 있다.', emote: 'silence' }];
-  if (o.kind === 'owner') return [{ name: '점유자', sprite: 'occ_oldman', voice: 'occ', text: '누구세요? …경매요? 할 말 없으니까 가세요.', emote: 'anger' }];
-  if (o.kind === 'lien') return [{ name: '유치권자 측', sprite: 'occ_worker', voice: 'occ', text: '공사대금 못 받아서 저희가 지키고 있는 겁니다. 함부로 들어오시면 안 돼요.', emote: 'anger' }];
-  if (o.kind === 'heir') return [{ name: '점유자', sprite: 'occ_young', voice: 'occ', text: '아버지 돌아가시고 저희 형제들이 살고 있어요. 저희도 정리가 안 돼서요…', emote: 'sweat' }];
-  return [{ name: '점유자', sprite: 'occ_auntie', voice: 'occ', text: `세입자예요. ${t.move.slice(0, 4)}년부터 살았어요. 보증금은 어떻게 되는 거예요?`, emote: 'sweat' }];
+  const o = c.occupant; const t = c.data.tenants[0]; const R = caseRng(c, 91); const X = caseExtras(c);
+  for (let i = 0; i < 5; i++) R.next(); // 사건번호가 비슷하면 첫 난수도 비슷해서 몇 번 버린다
+  const L = (name, sprite, text, emote) => ({ name, sprite, voice: 'occ', text, emote });
+  if (c.risks.includes('hidden')) return [{ text: X.lightOn ? '딩동… 안에서 TV 소리가 나는 것 같은데 아무도 나오지 않는다.' : '딩동… 아무 대답이 없다.', emote: 'silence' }];
+  if (o.kind === 'vacant') return [{ text: R.pick(['딩동… 인기척이 없다. 문틈에 먼지가 쌓여 있다.', '딩동… 대답이 없다. 문 앞에 전단지가 수북하다.', '딩동… 조용하다. 창문에 커튼도 없다.']), emote: 'silence' }];
+  if (o.kind === 'owner') return R.pick([
+    [L('점유자', 'occ_oldman', '누구세요? …경매요? 할 말 없으니까 가세요.', 'anger')],
+    [L('점유자', 'occ_oldman', '또 보러 왔어요? 내 집인데 왜 자꾸 와요.', 'anger'), L('점유자', 'occ_oldman', '…사정이 있어서 이렇게 된 거지, 나도 곧 정리할 겁니다.', 'sweat')],
+    [L('점유자', 'occ_auntie', '집주인인데요. 경매 때문에 오셨죠? 안은 못 보여 드려요.', 'sweat'), L('점유자', 'occ_auntie', '낙찰되면 그때 얘기해요. 지금은 저도 머리가 복잡해서.', 'sweat')],
+  ]);
+  if (o.kind === 'lien') return R.pick([
+    [L('유치권자 측', 'occ_worker', '공사대금 못 받아서 저희가 지키고 있는 겁니다. 함부로 들어오시면 안 돼요.', 'anger')],
+    [L('유치권자 측', 'occ_worker', `${c.lien ? c.lien.holder : '저희 회사'} 직원입니다. 공사 끝내고 돈을 못 받았어요.`, 'anger'), L('유치권자 측', 'occ_worker', '현수막 보셨죠? 받을 돈 다 받기 전엔 못 나갑니다.', 'anger')],
+  ]);
+  if (o.kind === 'heir') return R.pick([
+    [L('점유자', 'occ_young', '아버지 돌아가시고 저희 형제들이 살고 있어요. 저희도 정리가 안 돼서요…', 'sweat')],
+    [L('점유자', 'occ_young', '상속 문제로 형제들끼리 아직 얘기 중이에요.', 'sweat'), L('점유자', 'occ_young', '경매요? …누가 사 가면 어떻게 되는 건지 저희도 몰라요.', 'sweat')],
+  ]);
+  // 임차인: 성격 4종 × 사실(입주 연도·보증금·확정일자·배당요구)은 사건 데이터 그대로
+  const yr = t.move.slice(0, 4), dep = fmtWon(t.deposit);
+  const claim = t.fixed && t.claimDate ? R.pick(['확정일자도 받아 뒀고, 법원에서 온 배당요구 서류도 냈어요.', '확정일자는 당연히 받았죠. 법원 서류도 제출했고요.'])
+    : t.fixed && !t.claimDate ? R.pick(['확정일자는 받아 놨는데… 법원에서 온 서류는 뭘 내라는 건지 몰라서 아직이에요.', '확정일자는 있어요. 배당요구? 그건 안 했는데… 해야 하는 거예요?'])
+    : !t.fixed && t.claimDate ? R.pick(['확정일자요? 그런 건 안 받았는데, 법원에서 온 건 냈어요.', '전입신고는 했는데 확정일자는 안 받았어요. 법원 서류는 냈고요.'])
+    : R.pick(['확정일자니 배당요구니 그런 건 잘 몰라요. 월세만 꼬박꼬박 냈는데.', '서류 같은 건 하나도 안 했어요. 집주인이 괜찮다고 해서.']);
+  const persona = R.RI(0, 3);
+  if (persona === 0) return [L(`세입자 ${t.name}`, 'occ_auntie', `세입자예요. ${yr}년에 들어왔어요. 보증금 ${dep}인데… 그거 다 받을 수 있는 거예요?`, 'sweat'), L(`세입자 ${t.name}`, 'occ_auntie', claim, 'sweat')];
+  if (persona === 1) return [L(`세입자 ${t.name}`, 'occ_oldman', `…세 들어 삽니다. ${yr}년부터요. 자세한 건 집주인한테 물어보세요.`, 'anger'), L(`세입자 ${t.name}`, 'occ_oldman', claim, 'silence')];
+  if (persona === 2) return [L(`세입자 ${t.name}`, 'occ_grandma', `아이고, 또 경매 보러 오셨어? ${yr}년부터 여기 살았어. 보증금이 ${dep}인데 집주인은 연락도 안 돼.`, 'sweat'), L(`세입자 ${t.name}`, 'occ_grandma', claim, 'sweat'), L(`세입자 ${t.name}`, 'occ_grandma', '새 주인 오면 우리 어떻게 되는 거야? 이사비라도 줘야지.', 'anger')];
+  return [L(`세입자 ${t.name}`, 'occ_young', `누구세요? 경매요? …저 ${yr}년에 전입했고 보증금은 ${dep}이에요.`, 'surprise'), L(`세입자 ${t.name}`, 'occ_young', claim, 'sweat')];
 }
 
 /* ---- 문서 뷰어: 아래에서 회전하며 올라오고, 닫으면 접혀서 수첩으로 날아간다 ---- */
 const DocViewer = {
   open: false,
-  async show(html, { title = '', toNotebook = true } = {}) {
-    this.open = true; const el = $('docView'); $('docBody').innerHTML = html; $('docTitle').textContent = title;
+  async show(html, { title = '', toNotebook = true, wide = false } = {}) {
+    this.open = true; const el = $('docView'); el.classList.toggle('wide', wide); $('docBody').innerHTML = html; $('docTitle').textContent = title;
     el.classList.remove('fly'); el.style.transform = ''; el.classList.add('in'); Sound.play('paper');
     await new Promise(res => { this._close = res; });
     if (toNotebook && !REDUCED_MOTION) {
@@ -3445,6 +3540,7 @@ function update(dt) {
   if (Game.formOpen || State.finished) return;
   if (DocViewer.open) { if (interact || consume('Escape')) DocViewer.close(); return; }
   if ($('caseList').classList.contains('in')) { if (Game.pickerOpen) { if (consume('Escape')) Game.pickerOpen(null); return; } if (consume('Escape') || interact) $('caseList').classList.remove('in'); return; }
+  if (MemoPad.open_) { if (consume('Escape')) MemoPad.close(); return; }
   if (PropertyCard.open_) { if (interact || consume('Escape')) PropertyCard.close(); return; }
   if (Notebook.open || Menu.open) return;
   State.clockMin = Math.min(170, State.clockMin + dt * FEEL.clockMinPerSec);
@@ -3792,7 +3888,7 @@ function frame(now) {
 /* ===================== 3단계: 장소별 조사하기 =====================
  * 정보는 그 장소에서만 얻는다. 얻은 서류는 수첩에 원문 그대로 쌓인다.
  */
-Object.assign(State, { docs: [], seen: {}, clues: {}, memo: '', judgment: {}, ticket: null, siteSession: null });
+Object.assign(State, { docs: [], seen: {}, clues: {}, memo: '', caseMemo: {}, judgment: {}, ticket: null, siteSession: null });
 const caseById = id => State.week.cases.find(c => c.id === id);
 function markSeen(caseId, what, extra = true) { (State.seen[caseId] = State.seen[caseId] || {})[what] = extra; }
 function addDoc(caseId, kind, title, html) {
@@ -3903,6 +3999,7 @@ async function objectUse(o, kind) {
   if (o.type === 'pc') { Sound.play('click'); CaseList.openAll(); return; }
   if (o.type === 'ticket') return takeTicket();
   if (o.type === 'chair') { const p = Game.player; p.x = o.tx * TILE + 8; p.y = o.ty * TILE + 14; p.dir = 0; p.vx = p.vy = 0; p.sit = true; Sound.play('click'); return; }
+  if (o.type === 'memo' && Game.room.cs) { MemoPad.open(Game.room.cs); return; } // 메모는 시간이 들지 않는다
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
   if ((o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell')) && State.phase === 'evict' && State.bidResult && c.id === State.bidResult.caseId) return evictAtSite(c);
@@ -3911,7 +4008,7 @@ async function objectUse(o, kind) {
     if (pick !== 'go' || !(await spendSlot())) return;
     State.siteSession = c.id; markSeen(c.id, 'site', { day: State.day });
   }
-  if (o.type === 'bell') { Sound.play('ding'); await sleep(800); Sound.play('step', 'wood'); await sleep(250); Sound.play('step', 'wood'); await sleep(300); await Dialog.say(bellTalk(c)); recordClue(c, 'bell', bellTalk(c).map(l => (l.name ? `${l.name}: ` : '') + l.text).join(' ')); return; }
+  if (o.type === 'bell') { Sound.play('ding'); await sleep(800); Sound.play('step', 'wood'); await sleep(250); Sound.play('step', 'wood'); await sleep(300); await Dialog.say(bellTalk(c)); recordClue(c, 'bell', bellTalk(c).map(l => (l.name ? `${l.name}: ` : '') + l.text).join(' / ')); return; }
   const clue = siteClues(c).find(x => x.obj === o.type);
   if (!clue) { await Dialog.say([{ text: '특별한 건 없다.' }]); return; }
   await clueFx(); await Dialog.say([{ text: clue.text }]);
@@ -4475,10 +4572,17 @@ const Notebook = {
     $('nbTabs').querySelectorAll('.btn').forEach(b => b.onclick = () => { this.saveJudgment(); this.tab = +b.dataset.i; Sound.play('flip'); this.render(); });
     const body = $('nbBody');
     if (this.tab === 0) body.innerHTML = this.docsHtml();
-    else if (this.tab === 1) { body.innerHTML = `<textarea id="nbMemo" placeholder="자유롭게 적어 두세요.">${escapeHtml(State.memo)}</textarea>`; $('nbMemo').oninput = e => (State.memo = e.target.value); }
+    else if (this.tab === 1) {
+      const ids = State.week.cases.filter(c => (State.caseMemo || {})[c.id] || c.id === State.target || State.seen[c.id]).map(c => c.id);
+      body.innerHTML = `<textarea id="nbMemo" placeholder="자유롭게 적어 두세요.">${escapeHtml(State.memo)}</textarea>` +
+        (ids.length ? `<h4 class="nbH">물건별 메모 <small>(현장 메모장·물건 카드에서도 적을 수 있어요)</small></h4>` + ids.map(id => { const c = caseById(id); return `<div class="nbCase"><b>${id === State.target ? '★ ' : ''}${c.name}</b><small>${c.caseNo}</small><textarea class="small" data-memo="${id}" placeholder="이 물건에 대한 메모">${escapeHtml(State.caseMemo[id] || '')}</textarea></div>`; }).join('') : '');
+      $('nbMemo').oninput = e => (State.memo = e.target.value);
+      body.querySelectorAll('[data-memo]').forEach(t => t.oninput = () => { State.caseMemo[t.dataset.memo] = t.value; });
+    }
     else if (this.tab === 2) body.innerHTML = this.judgeHtml();
     else body.innerHTML = this.missedHtml();
     body.querySelectorAll('[data-doc]').forEach(a => a.onclick = () => { const d = State.docs.find(x => x.id === +a.dataset.doc); this.toggle(false); DocViewer.show(d.html, { title: d.title, toNotebook: false }); });
+    body.querySelectorAll('[data-both]').forEach(a => a.onclick = () => { const id = a.dataset.both; const s = State.docs.find(x => x.caseId === id && x.kind === 'spec'), v = State.docs.find(x => x.caseId === id && x.kind === 'survey'); this.toggle(false); DocViewer.show(docPair(s.html, v.html), { title: `매각물건명세서 + 현황조사서 · ${caseById(id).name}`, toNotebook: false, wide: true }); });
     if (this.tab === 2) this.bindJudge();
   },
   missedHtml() {
@@ -4500,6 +4604,8 @@ const Notebook = {
       h += `<div class="nbCase"><b>${id === State.target ? '★ ' : ''}${c.name}</b><small>${c.caseNo}</small><ul>`;
       for (const d of State.docs.filter(x => x.caseId === id)) h += `<li><a data-doc="${d.id}">${d.title.split(' · ')[0]}</a> <small>${whenLabel(d)}</small></li>`;
       for (const cl of State.clues[id] || []) h += `<li class="clue">현장: ${escapeHtml(cl.text)} <small>${dLabel(cl.day)}</small></li>`;
+      if (State.docs.some(x => x.caseId === id && x.kind === 'spec') && State.docs.some(x => x.caseId === id && x.kind === 'survey')) h += `<li><a data-both="${id}">명세서 + 현황조사서 같이 보기</a></li>`;
+      if ((State.caseMemo || {})[id]) h += `<li class="clue">메모: ${escapeHtml(State.caseMemo[id]).slice(0, 60)}${State.caseMemo[id].length > 60 ? '…' : ''}</li>`;
       h += '</ul></div>';
     }
     if ((State.fines || []).length) h += `<div class="nbCase"><b>과태료 고지서</b><ul>${State.fines.map(f => `<li>${f.why} ${fmtWon(f.amt)} <small>${dLabel(f.day)}</small></li>`).join('')}</ul></div>`;
@@ -4574,6 +4680,8 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   $('minimap').onclick = () => SeoulMap.toggle(true);
   $('radar').onclick = () => { Sound.init(); ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; };
   $('zoneMap').addEventListener('click', e => { if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
+  $('zoneCanvas').addEventListener('click', e => ZoneMap.click(e));
+  $('nav').addEventListener('click', e => { if (e.target.id === 'navX') Nav.clear(); });
   addEventListener('resize', () => ZoneMap.open && ZoneMap.fit());
   $('mapCanvas').addEventListener('pointermove', e => SeoulMap.onMove(e));
   $('mapCanvas').addEventListener('click', e => SeoulMap.onClick(e));

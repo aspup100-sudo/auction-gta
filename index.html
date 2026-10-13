@@ -35,12 +35,10 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 #title .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; }
 #title input { font:inherit; width:150px; background:#1d2029; color:var(--paper); border:1px solid #3c4252; border-radius:8px; padding:8px 10px; }
 #title .foot { position:absolute; bottom:12px; font-size:12px; opacity:.5; }
-/* 폰 세로: 가로로 돌리라는 안내 */
-#rotate { display:none; position:fixed; inset:0; z-index:70; background:#14161c; color:var(--paper); flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:24px; }
-#rotate .ph { width:34px; height:60px; border:3px solid var(--gold); border-radius:8px; animation:rotPh 1.8s ease-in-out infinite alternate; margin-bottom:12px; }
-#rotate b { font-size:20px; } #rotate small { opacity:.7; }
-@keyframes rotPh { 0%, 30% { transform:rotate(0); } 70%, 100% { transform:rotate(90deg); } }
-@media (orientation: portrait) and (max-width: 700px) { .touchOn #rotate { display:flex; } }
+/* 폰을 세로로 들어도 가로로: body를 90도 눕힌다 (JS resize()가 body.rot를 붙임) */
+body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:rotate(90deg) translateY(-100%); transform-origin:top left; overflow:hidden; }
+.rot .propCard { top:12px; max-height:calc(100% - 36px); }
+.rot #caseList { max-height:calc(100% - 40px); }
 #title .mp { background:rgba(255,255,255,.04); border:1px solid #3c4252; border-radius:10px; padding:8px 14px; max-width:min(560px, 92vw); font-size:14px; }
 #title .mp summary { cursor:pointer; color:var(--gold); } #title .mp summary small { color:var(--paper); opacity:.7; }
 #title .mp .row { margin-top:8px; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
@@ -379,28 +377,28 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #castList label { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; } #castList label span { width:38%; color:#c9c2a8; } #castList input { flex:1; min-width:0; padding:5px 8px; border-radius:6px; border:1px solid #6b6a62; background:#fffdf7; color:#1a1408; font:inherit; }
 #iosHint { margin-top:8px; font-size:12px; color:#c9c2a8; }
 /* 폰 가로(높이가 낮은 화면): HUD를 작게, 조작 버튼을 모서리로 */
-@media (max-height: 520px) {
-  .touchOn #pager { width:min(300px, 36vw); font-size:11.5px; padding:4px 8px; }
-  .touchOn #minimap { width:120px; height:87px; top:10px; right:12px; }
-  .touchOn #hudCash { top:102px; right:12px; font-size:22px; }
-  .touchOn #hudTime { top:128px; right:12px; font-size:13px; }
-  .touchOn #hudSlots { top:148px; right:12px; }
-  .touchOn .hudBtns { top:10px !important; right:142px; } .touchOn .hudBtns .btn { padding:5px 8px; font-size:12px; }
-  .touchOn #radar { top:60px; left:12px; width:80px; height:80px; }
-  .touchOn #quest { top:60px; left:100px; max-width:220px; } .touchOn #balanceDue { top:112px !important; left:100px; }
-  .touchOn #stick { width:100px; height:100px; left:20px; bottom:20px; } .touchOn #knob { left:28px; top:28px; width:44px; height:44px; }
-  .touchOn #tAct { width:72px; height:72px; right:20px; bottom:24px; font-size:13px; }
-  .touchOn #tCar { right:104px; bottom:30px; width:54px; height:54px; } .touchOn.driving #tCar { right:124px; bottom:30px; }
-  .touchOn #pedals { right:16px; bottom:16px; gap:6px; } .touchOn #pedals button { width:82px; height:44px; } .touchOn #tHb { height:34px !important; }
-  .touchOn #hudSpeed { right:124px; bottom:92px; font-size:18px; }
-  .touchOn #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
-  .touchOn #nav { left:56%; bottom:10px; padding:4px 12px; font-size:12px; max-width:min(60vw, 380px); }
-  .touchOn #toasts { bottom:auto; top:56px; }
-  .touchOn #chatLog { bottom:130px; left:126px; } .touchOn #chatBar { bottom:100px; }
-  .touchOn #tChat { right:104px; bottom:92px; width:54px; height:36px; } .touchOn.driving #tChat { right:16px; bottom:170px; }
-  .touchOn #placeBanner { padding:4px 16px; } .touchOn #placeBanner b { font-size:16px; }
-  .touchOn #edgeSign { padding:4px 12px; } .touchOn #edgeSign b { font-size:15px; }
-}
+  .short #pager { width:280px; font-size:11.5px; padding:4px 8px; }
+  .short #minimap { width:120px; height:87px; top:10px; right:12px; }
+  .short #hudCash { top:102px; right:12px; font-size:22px; }
+  .short #hudTime { top:128px; right:12px; font-size:13px; }
+  .short #hudSlots { top:148px; right:12px; }
+  .short .hudBtns { top:10px !important; right:142px; } .short .hudBtns .btn { padding:5px 8px; font-size:12px; }
+  .short #radar { top:60px; left:12px; width:80px; height:80px; }
+  .short #quest { top:60px; left:100px; max-width:220px; } .short #balanceDue { top:112px !important; left:100px; }
+  .short #stick { width:100px; height:100px; left:20px; bottom:20px; } .short #knob { left:28px; top:28px; width:44px; height:44px; }
+  .short #tAct { width:72px; height:72px; right:20px; bottom:24px; font-size:13px; }
+  .short #tCar { right:104px; bottom:30px; width:54px; height:54px; } .short.driving #tCar { right:124px; bottom:30px; }
+  .short #pedals { right:16px; bottom:16px; gap:6px; } .short #pedals button { width:82px; height:44px; } .short #tHb { height:34px !important; }
+  .short #hudSpeed { right:124px; bottom:92px; font-size:18px; }
+  .short #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
+  .short #nav { left:56%; bottom:10px; padding:4px 12px; font-size:12px; max-width:380px; }
+  .short #toasts { bottom:auto; top:56px; }
+  .short #chatLog { bottom:130px; left:126px; max-width:300px; } .short #chatBar { bottom:100px; width:380px; }
+  .short #tChat { right:104px; bottom:92px; width:54px; height:36px; } .short.driving #tChat { right:16px; bottom:170px; }
+  .short #placeBanner { padding:4px 16px; } .short #placeBanner b { font-size:16px; }
+  .short #edgeSign { padding:4px 12px; } .short #edgeSign b { font-size:15px; }
+  .short #title { gap:8px; justify-content:flex-start; padding-top:10px; overflow:auto; } .short #title h1 { font-size:30px; letter-spacing:3px; } .short #title .tag, .short #title .foot, .short #title .troad, .short #title .tstars { display:none; }
+  .short #title .caps .btn { padding:6px 10px; font-size:13px; } .short #title .mp { padding:4px 10px; font-size:12px; } .short #title .mp .mpHint { display:none; } .short #title #iosHint { font-size:11px; }
 </style>
 </head>
 <body>
@@ -430,7 +428,6 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
 </div>
 
-<div id="rotate"><div class="ph"></div><b>폰을 가로로 돌려 주세요</b><small>이 게임은 가로 화면에 맞춰져 있어요</small></div>
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
   <div id="chatLog"></div>
@@ -2290,7 +2287,7 @@ const SeoulMap = {
     return null;
   },
   onMove(e) {
-    if (this.anim) return; const r = e.target.getBoundingClientRect(); const h = this.hit(e.clientX - r.left, e.clientY - r.top);
+    if (this.anim) return; const r = localRect(e.target), q = localPt(e); const h = this.hit(q.x - r.left, q.y - r.top);
     const key = h ? (h.gu || 'c:' + h.court) : null;
     if (key !== (this.hover && (this.hover.gu || 'c:' + this.hover.court))) { this.hover = h; this.hoverT = 0; if (h) Sound.play('tick'); }
     const hc = $('mapHover');
@@ -2299,10 +2296,10 @@ const SeoulMap = {
     const cnt = this.counts()[h.gu] || 0;
     hc.innerHTML = h.gu ? `<b>${DISTRICT[h.gu].name}</b><div>관할: ${COURTS[DISTRICT[h.gu].court].name}</div><div>진행 물건 ${cnt}건</div><div>시세 수준 ${'★'.repeat(DISTRICT[h.gu].tier)}${'☆'.repeat(5 - DISTRICT[h.gu].tier)}</div><div>이동: ${h.gu === from ? '현재 위치' : slot ? '시간 1칸' : '시간 소모 없음'} (거리 ${d})</div>`
       : `<b>${COURTS[h.court].name}</b><div>${DISTRICT[to].name}에 있어요 · 입찰은 관할 법원에서</div><div>이동: ${to === from ? '현재 위치' : slot ? '시간 1칸' : '시간 소모 없음'} (거리 ${d})</div><div class="dim">차를 타면 내비가 법원까지 안내해요</div>`;
-    hc.style.left = Math.min(e.clientX + 14, innerWidth - 230) + 'px'; hc.style.top = Math.min(e.clientY + 14, innerHeight - 150) + 'px'; hc.classList.add('in');
+    hc.style.left = Math.min(q.x + 14, VW - 230) + 'px'; hc.style.top = Math.min(q.y + 14, VH - 150) + 'px'; hc.classList.add('in');
   },
   onClick(e) {
-    if (this.anim) return; const r = e.target.getBoundingClientRect(); const h = this.hit(e.clientX - r.left, e.clientY - r.top);
+    if (this.anim) return; const r = localRect(e.target), q = localPt(e); const h = this.hit(q.x - r.left, q.y - r.top);
     if (!h) return; Sound.play('click');
     const zoneId = ZONE_OF_GU[h.gu || COURT_GU[h.court]];
     const to = h.gu || COURT_GU[h.court]; const { slot } = travelCost(currentGu(), to);
@@ -2457,7 +2454,7 @@ const ZoneMap = {
   fit() {
     const z = Game.zone, c = $('zoneCanvas'); const w = z.W * this.PX, h = z.H * this.PX;
     c.width = w; c.height = h;
-    const s = Math.min((innerWidth - 32) / w, (innerHeight - 110) / h, 1.6);
+    const s = Math.min((VW - 32) / w, (VH - 110) / h, 1.6);
     c.style.width = Math.round(w * s) + 'px'; c.style.height = Math.round(h * s) + 'px';
   },
   base(z) {
@@ -2478,8 +2475,8 @@ const ZoneMap = {
   },
   // 장소나 가장자리 구 이름을 누르면 목적지
   click(e) {
-    const z = Game.zone, c = $('zoneCanvas'), r = c.getBoundingClientRect(), P = this.PX;
-    const mx = (e.clientX - r.left) * c.width / r.width, my = (e.clientY - r.top) * c.height / r.height;
+    const z = Game.zone, c = $('zoneCanvas'), r = localRect(c), P = this.PX, q = localPt(e);
+    const mx = (q.x - r.left) * c.width / r.width, my = (q.y - r.top) * c.height / r.height;
     let best = null, bd = 20;
     for (const pl of z.places) { const d = Math.hypot(pl.door.tx * P - mx, pl.door.ty * P - my); if (d < bd) { bd = d; best = pl; } }
     if (best) { setNavDest({ gu: z.gu, place: best.id, label: best.name }); this.toggle(false); return; }
@@ -3496,8 +3493,20 @@ const Touch = { x: 0, y: 0, active: false, gas: false, brake: false, hb: false }
 /* ---- 캔버스 ---- */
 const cv = document.getElementById('game'); const ctx = cv.getContext('2d');
 let VW = 0, VH = 0, DPR = 1;
-function resize() { DPR = Math.min(2, window.devicePixelRatio || 1); VW = innerWidth; VH = innerHeight; cv.width = VW * DPR; cv.height = VH * DPR; cv.style.width = VW + 'px'; cv.style.height = VH + 'px'; }
-addEventListener('resize', resize); resize();
+// 폰을 세로로 들고 있어도 가로로 논다: body를 90도 눕히고(body.rot) 가로·세로를 바꿔 쓴다. 터치 좌표는 localPt/localRect로 되돌린다.
+let ROT = false;
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  const touch = document.body.classList.contains('touchOn');
+  ROT = touch && innerHeight > innerWidth && Math.min(innerWidth, innerHeight) <= 760;
+  document.body.classList.toggle('rot', ROT);
+  VW = ROT ? innerHeight : innerWidth; VH = ROT ? innerWidth : innerHeight;
+  document.body.classList.toggle('short', touch && VH <= 520);
+  cv.width = VW * DPR; cv.height = VH * DPR; cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+}
+function localPt(e) { return ROT ? { x: e.clientY, y: innerWidth - e.clientX } : { x: e.clientX, y: e.clientY }; }
+function localRect(el) { const r = el.getBoundingClientRect(); return ROT ? { left: r.top, top: innerWidth - r.right, width: r.height, height: r.width } : { left: r.left, top: r.top, width: r.width, height: r.height }; }
+addEventListener('resize', resize); addEventListener('orientationchange', () => setTimeout(resize, 50)); resize();
 
 /* ---- 공용 액터 ---- */
 function makeWalker(sprite, x, y) {
@@ -5093,9 +5102,10 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
   $('dialog').addEventListener('click', e => { if (!e.target.closest('.choice')) Dialog.press(); });
   // 터치
   if (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) document.body.classList.add('touchOn');
+  resize(); // touchOn이 정해진 뒤 가로 눕힘 여부를 다시 계산
   const stick = $('stick'), knob = $('knob'); let sid = null;
-  const moveStick = e => { const r = stick.getBoundingClientRect(); let dx = e.clientX - r.left - r.width / 2, dy = e.clientY - r.top - r.height / 2; const L = Math.hypot(dx, dy), M = r.width / 2 - 10; if (L > M) { dx = dx / L * M; dy = dy / L * M; } knob.style.transform = `translate(${dx}px, ${dy}px)`; Touch.x = dx / M; Touch.y = dy / M; Touch.active = true; };
-  stick.addEventListener('pointerdown', e => { sid = e.pointerId; stick.setPointerCapture(sid); Sound.init(); moveStick(e); });
+  const moveStick = e => { const r = localRect(stick), q = localPt(e); let dx = q.x - r.left - r.width / 2, dy = q.y - r.top - r.height / 2; const L = Math.hypot(dx, dy), M = r.width / 2 - 10; if (L > M) { dx = dx / L * M; dy = dy / L * M; } knob.style.transform = `translate(${dx}px, ${dy}px)`; Touch.x = dx / M; Touch.y = dy / M; Touch.active = true; };
+  stick.addEventListener('pointerdown', e => { sid = e.pointerId; try { stick.setPointerCapture(sid); } catch (err) {} Sound.init(); moveStick(e); });
   stick.addEventListener('pointermove', e => { if (e.pointerId === sid) moveStick(e); });
   const endStick = () => { sid = null; Touch.active = false; Touch.x = Touch.y = 0; knob.style.transform = ''; };
   stick.addEventListener('pointerup', endStick); stick.addEventListener('pointercancel', endStick);

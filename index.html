@@ -342,7 +342,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #balanceDue { top:150px !important; }
 #rankBox { position:absolute; top:190px; left:12px; width:172px; background:rgba(20,22,28,.86); border:1px solid #c9b98f; border-radius:8px; padding:5px 8px 6px; font-size:11.5px; line-height:1.35; color:var(--paper); pointer-events:auto; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.4); }
 #rankBox .rbHead { display:flex; justify-content:space-between; font-size:10.5px; color:#c9b98f; margin-bottom:2px; } #rankBox .rbRow { display:flex; gap:5px; align-items:baseline; white-space:nowrap; } #rankBox .rbRow.me { color:#ffd84a; font-weight:700; } #rankBox .rk { width:13px; text-align:right; opacity:.8; } #rankBox .nm { flex:1; overflow:hidden; text-overflow:ellipsis; } #rankBox .pn { font-variant-numeric:tabular-nums; } #rankBox .pn.up { color:#7fe0a0; } #rankBox .pn.down { color:#ff8c7a; } #rankBox .rbMore { font-size:10px; opacity:.6; text-align:right; }
-#rankBox .rbOn { margin-top:4px; padding-top:3px; border-top:1px solid rgba(201,185,143,.35); font-size:10.5px; color:#c9b98f; } #rankBox .rbOn small { opacity:.7; } #rankBox .rbWho { display:flex; gap:5px; align-items:baseline; white-space:nowrap; overflow:hidden; } #rankBox .rbWho .nm { flex:0 1 auto; } #rankBox .rbWho small { flex:1; overflow:hidden; text-overflow:ellipsis; opacity:.75; font-size:10px; } #rankBox .dot { width:6px; height:6px; border-radius:50%; background:#7fe0a0; flex:0 0 6px; box-shadow:0 0 4px #7fe0a0; align-self:center; } #rankBox .dot.idle { background:#8a8a8a; box-shadow:none; }
+#rankBox .rbOn { margin-top:4px; padding-top:3px; border-top:1px solid rgba(201,185,143,.35); font-size:10.5px; color:#c9b98f; } #rankBox .rbOn small { opacity:.7; } #rankBox .rbBad { display:block; color:#ff8c7a; font-weight:700; } #rankBox .rbHost { opacity:.55; } #rankBox .rbWho { display:flex; gap:5px; align-items:baseline; white-space:nowrap; overflow:hidden; } #rankBox .rbWho .nm { flex:0 1 auto; } #rankBox .rbWho small { flex:1; overflow:hidden; text-overflow:ellipsis; opacity:.75; font-size:10px; } #rankBox .dot { width:6px; height:6px; border-radius:50%; background:#7fe0a0; flex:0 0 6px; box-shadow:0 0 4px #7fe0a0; align-self:center; } #rankBox .dot.idle { background:#8a8a8a; box-shadow:none; }
 .touchOn #rankBox { top:215px; width:150px; font-size:11px; }
 #dlgPortrait.nod { animation:nod .7s ease-in-out; } @keyframes nod { 0%,100%{transform:translateY(0)} 25%{transform:translateY(5px)} 50%{transform:translateY(0)} 75%{transform:translateY(5px)} }
 .tstars { position:absolute; inset:0; pointer-events:none; } .tstars i { position:absolute; width:3px; height:3px; background:#fff; border-radius:50%; opacity:.5; animation:twinkle 2.4s ease-in-out infinite; }
@@ -1410,6 +1410,8 @@ Object.assign(FEEL, {
   edgeWalkToast: 5,       // 걸어서 가장자리 이 거리(타일) 안에서 바깥쪽으로 밀면 '차를 타야 해요' 토스트 (3초마다)        // 걸어서 가장자리 이 거리(타일) 안으로 가면 '차를 타야 넘어가요' 표지판       // 구역 가장자리에서 이 거리(타일) 안으로 바깥을 향해 달리면 '→ 옆 구' 표지판
   edgeBounce: 70,         // 길이 없는 가장자리(서울 끝)에 닿았을 때 되튕기는 속도(px/s)
   carBounce: 0.35,
+  netPingSec: 4,          // 방장 심장박동 간격(초)
+  hostDeadSec: 20,        // 손님: 방장 소식이 이만큼 없으면 다시 잇기 (자리가 비면 내가 방장)
   liveIdleSec: 20,
   liveGoneSec: 45, // 이만큼 위치 신호가 없으면 나간 사람으로 (목록에서 빠지고 '나갔어요') // 채널 접속자 목록: 이 시간 동안 위치 신호가 없으면 '자리 비움'
   parkedCarKeepSec: 60, // 다른 사람 차: 마지막 위치 신호 뒤 이만큼은 그 자리에 세워 둔 걸로 보인다
@@ -3592,9 +3594,11 @@ const Net = {
       const peer = new Peer('agta-ch' + this.ch, { debug: 0 }); this.peer = peer; let settled = false;
       peer.on('open', () => { settled = true; this.host = true; this.myId = 'host'; this.hostConn = null; this.conns = {}; this.setStatus('open', this.chText()); res(true); });
       peer.on('connection', conn => this.wire(conn));
+      peer.on('disconnected', () => { try { if (!peer.destroyed) peer.reconnect(); } catch (err) {} }); // 중계 서버와 잠깐 끊김(폰 절전 등): 같은 방장 자리로 다시 붙는다
       peer.on('error', e => {
         if (e.type === 'unavailable-id') { if (!settled) { settled = true; try { peer.destroy(); } catch (err) {} this.peer = null; this.joinChannel().then(res); } return; }
-        if (!settled) { settled = true; this.setStatus(this.started ? 'lost' : 'error', '중계 서버에 연결하지 못했어요.'); if (this.started) this.retryT = 6; res(false); }
+        if (!settled) { settled = true; this.setStatus(this.started ? 'lost' : 'error', '중계 서버에 연결하지 못했어요.'); if (this.started) this.retryT = 6; res(false); return; }
+        if (/network|server|socket/.test(e.type)) { this.setStatus('lost', '중계 서버와 끊겼어요. 다시 잇는 중…'); this.retryT = 4; } // 자리 잡은 뒤의 끊김: 다시 시도
       });
     });
   },
@@ -3605,11 +3609,12 @@ const Net = {
       peer.on('open', () => {
         this.setStatus('connecting', '채널에 들어가는 중…');
         const conn = peer.connect('agta-ch' + this.ch, { reliable: true }); this.hostConn = conn;
-        conn.on('open', () => { settled = true; this.wire(conn, true); this.setStatus('open', this.chText()); this.send({ t: 'hello', name: this.me }); res(true); });
+        conn.on('open', () => { settled = true; this.gotPlayers = false; this.hostSeen = performance.now(); this.wire(conn, true); this.setStatus('open', this.chText()); this.send({ t: 'hello', name: this.me }); res(true); });
         conn.on('error', () => { if (!settled) { settled = true; this.setStatus('lost', '연결 실패, 다시 시도 중…'); this.retryT = 3; res(false); } });
       });
+      peer.on('disconnected', () => { try { if (!peer.destroyed) peer.reconnect(); } catch (err) {} });
       peer.on('error', e => {
-        if (settled) return; settled = true;
+        if (settled) { if (/network|server|socket/.test(e.type)) { this.setStatus('lost', '중계 서버와 끊겼어요. 다시 잇는 중…'); this.retryT = 4; } return; } settled = true;
         if (e.type === 'peer-unavailable') { try { peer.destroy(); } catch (err) {} this.peer = null; setTimeout(() => this.claimChannel().then(res), 300 + Math.random() * 1200); } // 방장이 막 나갔다: 내가 맡아 본다
         else { this.setStatus(this.started ? 'lost' : 'error', '중계 서버에 연결하지 못했어요.'); if (this.started) this.retryT = 6; res(false); }
       });
@@ -3683,6 +3688,8 @@ const Net = {
   /* ---- 받기 ---- */
   handle(m, conn) {
     if (!m || m.from === this.myId) return;
+    if (!this.host) this.hostSeen = performance.now(); // 손님: 방장 쪽에서 뭐든 오면 살아 있는 것
+    if (m.t === 'ping') { const hp = this.players[m.from]; if (hp) hp.gone = false; this.relay(m, conn); return; } // 방장 심장박동 (제목 화면에 있어도 손님이 방장 생사를 안다)
     if (m.t === 'hello') {
       if (!this.host) return;
       this.players[m.from] = Object.assign(this.players[m.from] || {}, { name: m.name, gone: false }); if (conn) this.conns[m.from] = conn;
@@ -3699,6 +3706,7 @@ const Net = {
     this.relay(m, conn);
     if (m.t === 'lbid') { Live.onBid(m); return; }
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
+    if (m.t === 'hosp') { Pvp.onHosp(m, p); return; }
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) p.pal = m.pal; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
@@ -3722,6 +3730,11 @@ const Net = {
   tick(dt) {
     if (!this.on) return;
     this.rosterTick(dt);
+    // 방장: 심장박동. 손님: 방장 소식이 FEEL.hostDeadSec 동안 없으면(폰이 잠들어 멈춘 방장 등) 끊긴 것으로 보고 다시 잇는다 → 자리가 비면 내가 방장
+    if (this.transport === 'peer' && this.status === 'open') {
+      if (this.host) { this.pingT = (this.pingT || 0) - dt; if (this.pingT <= 0) { this.pingT = FEEL.netPingSec; this.send({ t: 'ping' }); } }
+      else if (this.hostSeen && performance.now() - this.hostSeen > FEEL.hostDeadSec * 1000) { this.hostSeen = 0; this.setStatus('lost', '방장 응답이 없어요. 채널을 다시 잇는 중…'); this.retryT = 0.5 + Math.random() * 2; try { if (this.hostConn) this.hostConn.close(); } catch (e) {} }
+    }
     if (this.retryT > 0) { this.retryT -= dt; if (this.retryT <= 0 && this.transport === 'peer' && this.status === 'lost') { this.retryT = 6; if (this.mode === 'channel') this.claimChannel(); else if (!this.host) this.join(this.room, this.me); } }
     for (const id in this.players) { const p = this.players[id]; if (p.bubble) { p.bubble.t -= dt; if (p.bubble.t <= 0) p.bubble = null; } if (p.x !== undefined && p.tx !== undefined) { const k = 1 - Math.exp(-12 * dt); p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k; } }
     if (this.myBubble) { this.myBubble.t -= dt; if (this.myBubble.t <= 0) this.myBubble = null; }
@@ -3849,7 +3862,22 @@ const Pvp = {
     pl.vx = pl.vy = 0; pl.push = 0.35; pl.hurtCd = 1.5; pl.hurt = 0.6; shake(7, 0.35); Sound.play('crash'); Game.hitstop = 0.06;
     State.cash += m.fee + (m.hosp || 0); HUD.setCash(State.cash); setTimeout(() => Sound.play('coins'), 500); if (Live.on) Live.save();
     Toast.show(`${p.name} 차에 치였다! 합의금 ${fmtWon(m.fee)} 받음${m.hosp ? ` · 병원비 ${fmtWon(m.hosp)}은 ${p.name}이(가) 냄` : ''}`, 3200);
-    if (m.severe) hospitalize({ fee: m.hosp, by: p.name });
+    // 플레이어 차에 치인 것도 치인 횟수에 든다. 이번에 병원에 실려 가면(세 번째 치임이든, 같은 사람에게 세 번째든) 친 사람도 같이 정신과 병동으로 (사용자 요청 2026-10-14)
+    State.hits = (State.hits || 0) + 1;
+    if (m.severe || State.hits >= FEEL.hospitalHits) {
+      const hosp = m.hosp || Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000;
+      if (!m.hosp) { State.cash += hosp; HUD.setCash(State.cash); } // 병원비는 친 사람이 낸다 (severe면 이미 받았음)
+      Net.send({ t: 'hosp', to: m.from, fee: m.hosp ? 0 : hosp, severe: !!m.severe });
+      hospitalize({ fee: hosp, by: p.name });
+    }
+  },
+  // 내가 친 사람이 병원에 실려 갔다 → 병원비(아직 안 냈으면)를 물어주고 나도 정신과 병동으로
+  onHosp(m, p) {
+    if (m.to !== Net.myId || !Game.player) return;
+    if (m.fee) { State.cash -= m.fee; HUD.setCash(State.cash); if (Live.on) Live.save(); }
+    Toast.show(`${p.name}이(가) 내 차에 치여 병원에 실려 갔다!${m.fee ? ` 병원비 ${fmtWon(m.fee)} 물어줌.` : ''} 나도 정신과 병동행.`, 3600);
+    State.pvp = 0;
+    if (!m.severe) asylum(p.name, m.fee, `${p.name}을(를) 차로 쳐서 병원에 실려 가게 했다.`); // severe면 친 쪽(hit)에서 이미 정신과 병동으로 갔다
   },
 };
 
@@ -4297,7 +4325,7 @@ const Live = {
     const myIdx = rows.findIndex(r => r.me); const show = rows.slice(0, 4); if (myIdx >= 4) { show.length = 3; show.push(rows[myIdx]); }
     const row = r => { const i = rows.indexOf(r); return `<div class="rbRow ${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.away ? ' <small>·</small>' : ''}</span><span class="pn ${cls(r.pnl)}">${f(r.pnl)}</span></div>`; };
     const on = this.online(); const who = on.slice(0, 4).map(o => `<div class="rbWho"><i class="dot${o.doing === '자리 비움' ? ' idle' : ''}"></i><span class="nm">${esc(o.name)}</span><small>${esc(o.doing)}</small></div>`).join('');
-    return `<div class="rbHead"><span>순위 · 채널 ${this.ch}</span><span>${rows.length}명</span></div>${show.map(row).join('')}${rows.length > show.length ? `<div class="rbMore">전체 보기 ▸</div>` : ''}<div class="rbOn">지금 접속 ${on.length + 1}명 <small>(나 포함)</small></div>${who}${on.length > 4 ? `<div class="rbMore">외 ${on.length - 4}명</div>` : on.length ? '' : '<div class="rbWho"><small>아직 나뿐이에요</small></div>'}`;
+    return `<div class="rbHead"><span>순위 · 채널 ${this.ch}</span><span>${rows.length}명</span></div>${show.map(row).join('')}${rows.length > show.length ? `<div class="rbMore">전체 보기 ▸</div>` : ''}<div class="rbOn">지금 접속 ${on.length + 1}명 <small>(나 포함)</small>${Net.status !== 'open' ? `<span class="rbBad">${Net.status === 'connecting' ? '연결 중…' : '연결 끊김 · 다시 잇는 중'}</span>` : Net.host ? '<small class="rbHost">· 내가 방장</small>' : ''}</div>${who}${on.length > 4 ? `<div class="rbMore">외 ${on.length - 4}명</div>` : on.length ? '' : '<div class="rbWho"><small>아직 나뿐이에요</small></div>'}`;
   },
 
   /* ---- 메뉴: 순위판 ---- */
@@ -4696,7 +4724,8 @@ async function hospitalize(opts = {}) {
   } finally { p.hurtCd = 2; Game.busy = false; }
 }
 /* ---- 정신과 병동: 같이 하기에서 다른 플레이어를 FEEL.pvpAsylumHits번 치면 (합의금·병원비는 이미 물어줌) 같은 병원 정신과 병동에 입원 ---- */
-async function asylum(victim, total) {
+async function asylum(victim, total, why) {
+  if (Game.busy) { await new Promise(r => { const iv = setInterval(() => { if (!Game.busy) { clearInterval(iv); r(); } }, 200); }); } // 대화·이동 중이면 끝나고
   Game.busy = true; const p = Game.player;
   try {
     await sleep(500); Sound.play('horn'); await sleep(320); Sound.play('horn');
@@ -4706,9 +4735,9 @@ async function asylum(victim, total) {
     if (h) { p.x = h.door.tx * TILE + 8; p.y = h.door.ty * TILE + 8; p.dir = 0; Cam.x = p.x; Cam.y = p.y; }
     p.vx = p.vy = 0; p.push = 0; Game.prompt = { target: null, t: 0 }; $('edgeSign').classList.remove('in');
     await iris(false); Game.trans = null;
-    if (Live.on) await Live.bedRest(total, h, { title: '정신과 병동 입원 중', sec: FEEL.liveAsylumSec, note: `${victim}에게 합의금과 병원비를 물어줬습니다.` }); else await advanceSlot();
+    if (Live.on) await Live.bedRest(total, h, { title: '정신과 병동 입원 중', sec: FEEL.liveAsylumSec, note: why || `${victim}에게 합의금과 병원비를 물어줬습니다.` }); else await advanceSlot();
     await Dialog.say([
-      { name: `${h ? h.name : '병원'} 정신과 병동`, text: `사람을 ${FEEL.pvpAsylumHits}번이나 차로 쳐서 정신과 병동에 입원했다. ${victim}에게 합의금과 병원비 ${fmtWon(total)}을 물어줬다.` },
+      { name: `${h ? h.name : '병원'} 정신과 병동`, text: `${why || `사람을 ${FEEL.pvpAsylumHits}번이나 차로 쳐서`} 정신과 병동에 입원했다.${total ? ` ${victim}에게 합의금과 병원비 ${fmtWon(total)}을 물어줬다.` : ''}` },
       { name: castLabel('hospital'), sprite: 'banker', voice: 'banker', text: '운전대 잡기 전에 마음부터 진정시키세요. 다음엔 면허도 위험해요.', emote: 'anger' }]);
   } finally { p.hurtCd = 2; Game.busy = false; }
 }

@@ -42,6 +42,8 @@ html, body { margin:0; height:100%; background:var(--night); color:var(--paper);
 #rotate b { font-size:20px; } #rotate small { opacity:.7; }
 @keyframes rotPh { 0%, 30% { transform:rotate(0); } 70%, 100% { transform:rotate(90deg); } }
 @media (orientation: portrait) and (max-width: 700px) { .touchOn #rotate { display:flex; } }
+body.gated #rotate { display:none !important; } /* 웹(설치 전) 안내 화면은 세로로 그냥 본다; 설치한 앱은 가로 (manifest orientation landscape + 세로면 #rotate 안내). 사용자 2026-10-14 */
+body.gated #title { overflow:auto; justify-content:flex-start; padding-top:max(24px, 8vh); gap:14px; } body.gated #title h1 { font-size:clamp(34px, 9vw, 64px); }
 /* 폰을 세로로 들어도 가로로: body를 90도 눕힌다 (JS resize()가 body.rot를 붙임) */
 body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:rotate(90deg) translateY(-100%); transform-origin:top left; overflow:hidden; }
 .rot .propCard { top:12px; max-height:calc(100% - 36px); }
@@ -6104,7 +6106,7 @@ const Layout = {
     // 설치해야만 시작 (사용자 요청 2026-10-14 '웹에서는 시작 안 되게'): 웹사이트로 열면(설치 안 된 브라우저 탭) 설치 안내만 보인다.
     // 예외: 아티팩트처럼 iframe 안에서 열렸을 때, 파일로 열었을 때, 로컬 테스트(127.0.0.1/localhost). 설치한 앱(standalone)은 통과.
     const gated = /^https?:$/.test(location.protocol) && !standalone && window === window.top && !/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && !localStorage.getItem('auctionGTA.webOk');
-    if (gated) { $('title').classList.add('gated'); $('installGate').hidden = false; $('btnGuide').classList.add('gold'); }
+    if (gated) { $('title').classList.add('gated'); document.body.classList.add('gated'); $('installGate').hidden = false; $('btnGuide').classList.add('gold'); }
     if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   } catch (e) {}
   let cap = 2e8;

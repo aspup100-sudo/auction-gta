@@ -1342,6 +1342,7 @@ const FEEL = {
   liveListings: 7,        // 실시간 채널: 동시에 돌아가는 물건 수 (서로 어긋나게 → 약 3분마다 매각기일; 사용자 요청 6~7개)
   liveSlots: 2,           // 실시간 채널: 게임 하루(실제 20/7분)에 조사할 수 있는 횟수
   liveBidDdayOnly: true,  // 실시간 채널: 입찰표는 매각기일(마지막 날)에만 받는다 (현실대로; false면 개찰 전 아무 때나)
+  livePayMin: 10,         // 실시간 채널: 낙찰 뒤 잔금(대출→법원 납부) 기한, 실제 분 (현실의 대금지급기한 약 1달 ≒ 반 주)
   liveHospitalSec: 20,    // 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
   liveAsylumSec: 60,      // 실시간 채널: 정신과 병동 입원 시간(초)
   pvpAsylumHits: 3,       // 같이 하기: 내 차로 다른 플레이어를 이만큼 치면 병원비까지 물어주고 정신과 병동
@@ -2734,6 +2735,8 @@ const Nav = {
       State.navDest = null; Toast.show(`${DISTRICT[nd.gu].name} 도착. 목적지를 해제했어요.`);
     }
     const tc = State.target && State.week.cases.find(x => x.id === State.target);
+    const pw = Live.on && Live.pending(); // 채널: 잔금 낼 차례면 그 사건의 법원으로
+    if (pw && Live.canPay(pw)) { const pc = Live.caseFor(Live.key(pw.k, pw.n)); const court = pc ? pc.court : null; const cp = z.places.find(p => p.kind === 'court' && (!court || p.court === court)); if (cp) return { kind: 'place', id: cp.id, label: cp.name }; if (court) { const g = COURT_GU[court]; if (g !== z.gu) return { kind: 'gu', gu: g, label: `${COURTS[court].name} (${DISTRICT[g].name})` }; } }
     if (State.phase === 'dday' || State.phase === 'pay') {
       const court = tc ? tc.court : null;
       const cp = z.places.find(p => p.kind === 'court' && (!court || p.court === court));
@@ -3815,13 +3818,14 @@ const ChatBar = {
  * 채널은 실제 시간으로 흐른다. 1주(D-7 → 개찰) = FEEL.liveWeekMin분, 물건 FEEL.liveListings개가 서로 어긋나게 돌아서
  * 몇 분마다 어딘가에서 개찰이 열린다. 입찰표는 법원에서 개찰 전까지 아무 때나 낼 수 있고, 개찰 시각이 되면
  * 그 물건에 입찰표를 낸 사람들(같은 채널 플레이어 + 엔진 경쟁자)끼리 자동으로 개찰한다. 어디에 있든 결과를 받는다.
- * 돈은 채널별로 이 기기에 저장되어 다음에 들어와도 이어진다. 대출·잔금·명도 절차는 채널에서는 생략하고 §11 정산으로 바로 손익을 반영한다.
+ * 돈은 채널별로 이 기기에 저장되어 다음에 들어와도 이어진다. 낙찰하면 현실처럼 은행에서 경락잔금대출을 받고 법원에 잔금을 내야 하며(기한 FEEL.livePayMin분, 실제 시간),
+ * 기한을 넘기면 보증금 몰수(재매각). 명도만 생략하고 잔금을 내는 순간 §11 정산으로 손익을 반영한다. (사용자 요청 2026-10-14: 현실 절차대로)
  * 물건·경쟁자는 (채널, 물건 자리, 회차)로 정해지는 시드에서 나오므로 누가 언제 들어와도 같다.
  */
 const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
 const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3]; // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
 const Live = {
-  on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0,
+  on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0, bdT: 0,
   capOf(ch) { return ch * 1e8; }, // 채널 N = 자본 N억 (사용자 요청)
   weekMs() { return FEEL.liveWeekMin * 60000; },
   dayMs() { return this.weekMs() / 7; },
@@ -3853,6 +3857,7 @@ const Live = {
   clock() { const f = (this.now() % this.dayMs()) / this.dayMs(); const m = 9 * 60 + Math.floor(f * 9 * 60); const h = Math.floor(m / 60) % 12 || 12; return `${h}:${String(m % 60).padStart(2, '0')}`; },
   hudText() {
     const live = State.week.cases.filter(c => c.live && !c.closed);
+    const pw = this.pending(); if (pw) return `${this.clock()} · 잔금 기한 ${this.mmss(this.payLeft(pw))} · ${this.payWhere(pw)}`;
     const open = live.filter(c => this.isDday(c)).sort((a, b) => a.live.tEnd - b.live.tEnd)[0];
     if (open) return `${this.clock()} · ${open.name.split(' ')[0]} 입찰 중 · 개찰 ${this.mmss(this.left(open))}`;
     const nx = live.sort((a, b) => this.untilDday(a) - this.untilDday(b))[0];
@@ -3879,7 +3884,7 @@ const Live = {
     State.week = { seed: Net.seed, capital: State.capital, saleDate: '2025-11-11', cases };
     for (const key in this.mine) this.book[key] = this.book[key] || {};
     this.save();
-    setTimeout(() => HUD.page(sv ? `채널 ${this.ch} 이어서 한다. 누적 손익 ${(sv.cash - sv.capital >= 0 ? '+' : '−') + fmtWon(Math.abs(sv.cash - sv.capital))}. 물건은 사무실 PC.` : `채널 ${this.ch}다. 1주가 실제 ${FEEL.liveWeekMin}분이고 물건 ${FEEL.liveListings}개가 돌아간다. 입찰은 매각기일 당일 법원에서.`), 2500);
+    setTimeout(() => HUD.page(sv ? `채널 ${this.ch} 이어서 한다. 누적 손익 ${(sv.cash - sv.capital >= 0 ? '+' : '−') + fmtWon(Math.abs(sv.cash - sv.capital))}. 물건은 사무실 PC.` : `채널 ${this.ch}다. 1주가 실제 ${FEEL.liveWeekMin}분이고 물건 ${FEEL.liveListings}개가 돌아간다. 입찰은 매각기일 당일 법원에서. 낙찰하면 ${FEEL.livePayMin}분 안에 은행 대출 받고 잔금까지.`), 2500);
   },
   titleHint(ch) {
     const sv = this.saved(ch); const p = sv ? sv.cash - sv.capital : 0;
@@ -3889,7 +3894,7 @@ const Live = {
   /* ---- 시간 흐름 ---- */
   tick(dt) {
     if (!this.on || !State.week) return;
-    if (!this.ready) { this.readyT -= dt; if (this.readyT <= 0) { this.ready = true; this.announce(); for (const key in this.mine) if (!this.mine[key].done && this.now() >= this.caseFor(key).live.tEnd) this.queue.push(key); } }
+    if (!this.ready) { this.readyT -= dt; if (this.readyT <= 0) { this.ready = true; this.announce(); for (const key in this.mine) if (!this.mine[key].done && !this.mine[key].opened && this.now() >= this.caseFor(key).live.tEnd) this.queue.push(key); const pw = this.pending(); if (pw && Game.player) HUD.page(`${pw.name} 잔금 ${fmtWon(pw.bid - pw.deposit)} 기한 ${this.mmss(this.payLeft(pw))} 남았다. ${this.canPay(pw) ? '법원 가서 내.' : '은행부터 가.'}`, '알림'); } }
     const d = Math.floor(this.now() / this.dayMs());
     if (d !== this.dayIdx) { this.dayIdx = d; this.used = 0; this.save(); if (Game.player) { flipHud(); Toast.show(`새 날이다 · 조사 ${FEEL.liveSlots}회 충전`); } }
     for (let k = 0; k < FEEL.liveListings; k++) {
@@ -3897,14 +3902,16 @@ const Live = {
       if (this.now() >= c.live.tEnd) this.roll(k);
       else if (this.isDday(c) && !c.live.told && Game.player) { c.live.told = true; HUD.page(`${c.name} 오늘이 매각기일이다. ${COURTS[c.court].name}에서 ${this.mmss(this.left(c))} 안에 입찰표 내.`); Sound.play('chime'); }
     }
-    if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) this.openResult(this.queue.shift());
+    for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && this.now() >= m.payBy && !this.queue.includes(k)) this.queue.push(k); } // 잔금 기한 경과
+    if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) { const k = this.queue.shift(); const m = this.mine[k]; if (m && m.opened) this.forfeitWin(m, '기한 경과'); else this.openResult(k); }
+    this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const pw = this.pending(); const bd = $('balanceDue'); if (pw) { const t = `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
     this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && p.pnl !== undefined) this.seen[p.name] = { pnl: p.pnl, at: this.now() }; this.save(); }
   },
   // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
   roll(k) {
     const old = State.week.cases[k]; old.closed = true; this.closed[old.id] = old;
     const key = old.live.key;
-    if (this.mine[key] && !this.mine[key].done) this.queue.push(key);
+    if (this.mine[key] && !this.mine[key].done && !this.mine[key].opened) this.queue.push(key);
     else if (Game.player) Toast.show(`${old.name} 개찰 끝 · 새 물건 등장`, 2600);
     const cyc = this.cycle(k); const c = this.makeCase(k, cyc.n); State.week.cases[k] = c;
     if (State.target === old.id) { State.target = null; State.targetPlace = null; }
@@ -3920,6 +3927,16 @@ const Live = {
   /* ---- 입찰 (법원에서 아무 때나) ---- */
   async court(zoneCourt) {
     const here = State.week.cases.filter(c => !c.closed && c.court === zoneCourt);
+    const pw = this.pending(); // 낙찰받은 물건의 잔금이 남아 있으면 그것부터 (관할 법원이 같을 때)
+    if (pw) {
+      const pc = this.caseFor(this.key(pw.k, pw.n));
+      if (pc && pc.court === zoneCourt) {
+        const bal = pw.bid - pw.deposit, can = State.cash >= bal;
+        const pick = await Dialog.say([say('court', `${pc.caseNo} ${pc.name} 매수인이시죠. 잔금 ${fmtWon(bal)}, 대금지급기한까지 ${this.mmss(this.payLeft(pw))} 남았습니다. ${can ? '지금 납부하시겠어요?' : '현금이 모자라시네요. 은행에서 경락잔금대출부터 받고 오세요.'}`)], [{ label: '잔금 납부', value: 'pay', disabled: !can }, { label: '다른 사건 입찰', value: 'bid', disabled: !here.length }, { label: '그만두기', value: 'n' }]);
+        if (pick === 'pay') { if (pw.phase !== 'pay') pw.phase = 'pay'; await this.withWin(pw, () => payBalance()); return; }
+        if (pick !== 'bid') return;
+      } else if (pc && !here.length) { await Dialog.say([say('court', `${pc.caseNo} 잔금은 ${courtOf(pc).name}에 내셔야 합니다. 기한 ${this.mmss(this.payLeft(pw))}.`)]); return; }
+    }
     if (!here.length) { await Dialog.say([say('court', `지금 이 법원에서 진행 중인 사건은 없습니다. 다른 법원 사건이에요. 수첩에서 관할 법원을 확인하세요.`)]); return; }
     let c = targetCase(); if (!c || c.closed || c.court !== zoneCourt) {
       if (c && c.court !== zoneCourt && !c.closed) await Dialog.say([say('court', `${c.caseNo}은(는) ${courtOf(c).name} 사건입니다. 여기서는 이 법원 사건만 입찰할 수 있어요.`)]);
@@ -3956,7 +3973,7 @@ const Live = {
 
   /* ---- 개찰: 결정적(모두 같은 결과) ---- */
   async openResult(key) {
-    const m = this.mine[key]; if (!m || m.done) return; this.opening = true; Game.busy = true;
+    const m = this.mine[key]; if (!m || m.done || m.opened) return; this.opening = true; Game.busy = true;
     try {
       const c = this.caseFor(key);
       const others = Object.entries(this.book[key] || {}).filter(([id]) => id !== Net.myId).map(([id, b]) => ({ name: b.name, bid: b.bid, me: false, friend: true, id }));
@@ -3965,21 +3982,17 @@ const Live = {
       const winner = tops.length > 1 ? [...tops].sort((a, b) => a.name.localeCompare(b.name))[Net.tieIndex(c, tops.length)] : tops[0];
       const sorted = [...all].sort((a, b) => a.bid - b.bid || (a === winner ? 1 : b === winner ? -1 : 0));
       const won = winner.me; const second = all.filter(x => x !== winner).sort((a, b) => b.bid - a.bid)[0];
-      // §11 정산: 대출·명도 없이 (채널에서는 절차 생략)
-      const keep = { br: State.bidResult, ph: State.phase, loan: State.loan, ev: State.evict };
-      // 낙찰가가 가진 돈을 넘으면 그만큼 대출로 치고 이자(금융비용)를 현금에서 뺀다 (사용자 요청 2026-10-14)
-      const loanAmt = won ? Math.max(0, m.bid - (State.cash + m.deposit)) : 0;
-      State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won, count: all.length, bids: sorted, winner, second, tie: tops.length > 1 }; State.phase = won ? 'won' : 'lost'; State.loan = loanAmt ? { bank: loanAmt, savings: 0, extra: 0 } : null; State.evict = null;
-      const S = computeSettlement(); const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
-      State.bidResult = keep.br; State.phase = keep.ph; State.loan = keep.loan; State.evict = keep.ev;
-      m.done = true; m.won = won; m.profit = won ? S.profit : 0; m.loan = loanAmt; this.lastMissed = missed; delete this.book[key];
-      State.cash += m.deposit + m.profit; HUD.setCash(State.cash);
-      this.results.unshift({ at: new Date().toISOString().slice(0, 16).replace('T', ' '), name: c.name, caseNo: c.caseNo, won, profit: m.profit, grade: G.grade, bid: m.bid, winner: winner.me ? '본인' : winner.name, wbid: winner.bid });
-      Records.add(S, c, G); this.save();
-      await this.ceremony(c, sorted, winner, won, m, second, S, G);
+      m.opened = true; m.won = won; delete this.book[key];
+      if (won) {
+        // 낙찰: 현실처럼 은행 대출 → 법원 잔금. 보증금은 법원에 묶여 있고, 기한을 넘기면 몰수 (사용자 요청 2026-10-14)
+        m.phase = 'won'; m.loanState = null; m.payBy = this.now() + this.payMs(); State.target = c.id; State.targetPlace = null;
+      } else { m.done = true; m.profit = 0; State.cash += m.deposit; HUD.setCash(State.cash); this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, profit: 0, bid: m.bid, winner: winner.name, wbid: winner.bid }); }
+      this.save();
+      await this.ceremony(c, sorted, winner, won, m, second);
     } finally { this.opening = false; Game.busy = false; }
   },
-  async ceremony(c, sorted, winner, won, m, second, S, G) {
+  stamp() { return new Date().toISOString().slice(0, 16).replace('T', ' '); },
+  async ceremony(c, sorted, winner, won, m, second) {
     Sound.play('chime'); HUD.page(`${c.name} 개찰 결과 나왔다.`, '법원');
     const ob = $('openBoard'); ob.innerHTML = `<div class="obHead">${courtOf(c).name} 개찰 · ${c.caseNo} · 최저매각가격 ${fmtWon(c.minPrice)}</div><ol id="obList"></ol><div id="obResult"></div>`; ob.classList.add('in');
     for (let i = 0; i < sorted.length; i++) {
@@ -3991,18 +4004,76 @@ const Live = {
     await sleep(400); const res = $('obResult');
     if (won) {
       await hitStamp(); shake(8, 0.3);
-      res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b>${fmtWon(m.bid - second.bid)}</b>` : '단독 입찰'}</div><div>정산 손익 <b>${(m.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(m.profit))}</b> · 등급 <b>${G.grade}</b></div>`;
+      const bal = m.bid - m.deposit;
+      res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b>${fmtWon(m.bid - second.bid)}</b>` : '단독 입찰'}</div><div>잔금 <b>${fmtWon(bal)}</b> · 대금지급기한 <b>${FEEL.livePayMin}분</b></div><div class="small">${State.cash >= bal ? '현금이 충분하니 법원 수납 창구에서 바로 내도 돼요.' : '은행에서 경락잔금대출을 받고 법원에 잔금을 내세요.'} 기한을 넘기면 보증금 ${fmtWon(m.deposit)}을 잃어요.</div>`;
       const seal = $('bigSeal'); seal.innerHTML = '최고가<br>매수신고인'; seal.className = 'in'; Sound.play('chime'); await sleep(1400); seal.className = '';
     } else {
       res.innerHTML = `<div class="lose">최고가매수신고인 · ${winner.friend ? esc(winner.name) + ' (채널)' : maskName(winner.name)} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - m.bid)}</b> · 보증금 ${fmtWon(m.deposit)} 반환</div>`;
       Sound.play('deny'); await sleep(1200);
     }
-    res.innerHTML += `<button class="btn gold" id="obNext">${won ? '정산서 보기' : '계속'}</button>`;
+    res.innerHTML += `<button class="btn gold" id="obNext">${won ? '확인' : '계속'}</button>`;
     await new Promise(ok => ($('obNext').onclick = ok)); ob.classList.remove('in');
-    if (!won) return;
-    // 정산서 + 난이도(★)는 결과에서만 공개
+    if (won) HUD.page(`낙찰이다. ${FEEL.livePayMin}분 안에 ${courtOf(c).name}에 잔금 ${fmtWon(m.bid - m.deposit)} 내. ${State.cash >= m.bid - m.deposit ? '현금은 충분해.' : '은행부터 가서 대출 받아.'}`);
+  },
+
+  /* ---- 낙찰 뒤: 은행 대출 → 법원 잔금 (실제 시간 기한) ---- */
+  payMs() { return FEEL.livePayMin * 60000; },
+  pending() { let best = null; for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && (!best || m.payBy < best.payBy)) best = m; } return best; },
+  payLeft(m) { return Math.max(0, m.payBy - this.now()); },
+  canPay(m) { return m.phase === 'pay' || State.cash >= m.bid - m.deposit; }, // 대출이 나왔거나 현금이 충분하면 법원으로
+  payWhere(m) { return this.canPay(m) ? '법원에 납부' : '은행 대출부터'; },
+  // 솔로의 대출·잔금 코드를 그대로 쓰려고 State를 잠깐 그 낙찰 건으로 바꿨다가 되돌린다
+  async withWin(m, fn) {
+    this.caseFor(this.key(m.k, m.n)); // 다시 들어온 뒤에도 사건을 찾을 수 있게
+    const keep = { br: State.bidResult, ph: State.phase, loan: State.loan, ev: State.evict, tg: State.target };
+    State.bidResult = { caseId: m.caseId, bid: m.bid, deposit: m.deposit, won: true }; State.phase = m.phase; State.loan = m.loanState; State.evict = null; State.target = m.caseId;
+    try { await fn(); } finally {
+      if (!m.done) { m.phase = State.phase; m.loanState = State.loan; }
+      State.bidResult = keep.br; State.phase = keep.ph; State.loan = keep.loan; State.evict = keep.ev; State.target = keep.tg; this.save();
+    }
+  },
+  async bank(savings) {
+    const m = this.pending(); const c = this.caseFor(this.key(m.k, m.n)); const who = savings ? 'savings' : 'bank';
+    if (m.phase === 'pay') { await Dialog.say([say(who, `${c.caseNo} 대출은 이미 나갔어요. ${courtOf(c).name}에 잔금을 내세요. 기한 ${this.mmss(this.payLeft(m))}.`)]); return; }
+    if (!savings && m.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
+    if (savings && m.phase !== 'savings') { await Dialog.say([say('savings', '저희 대출 상품은 금리가 좀 높아요. 1금융권 먼저 알아보세요.')]); return; }
+    await this.withWin(m, () => loanReview(savings));
+    if (m.phase === 'pay') { State.targetPlace = null; HUD.page(`잔금 ${fmtWon(m.bid - m.deposit)}은 ${courtOf(c).name} 가서 내. 기한 ${this.mmss(this.payLeft(m))}.`); }
+  },
+  // 법원에 잔금을 냈다: 명도는 생략하고 바로 §11 정산 (대출 이자·추가비용 포함)
+  async paid(c) {
+    const m = Object.values(this.mine).find(x => x.opened && x.won && !x.done && x.caseId === c.id); if (!m) return;
+    const L = State.loan || { bank: 0, savings: 0, extra: 0 };
+    State.phase = 'won'; const S = computeSettlement(); const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
+    m.done = true; m.profit = S.profit; m.loan = L.bank + L.savings;
+    // 잔금까지 낸 상태의 현금 = 시작 − 낙찰가 + 대출. 처분하고 대출을 갚으면 시작 + 손익이 된다
+    State.cash += S.profit + m.bid - (L.bank + L.savings); HUD.setCash(State.cash);
+    this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: true, profit: S.profit, grade: G.grade, bid: m.bid, winner: '본인', wbid: m.bid });
+    Records.add(S, c, G); this.save();
+    $('balanceDue').classList.remove('in'); Game.keyIcon = 0;
+    await Dialog.say([say('court', '소유권이전등기는 법원이 촉탁합니다. 채널에서는 명도를 생략하고 바로 정산해 드릴게요.')]);
     const rows = S.lines.filter(([l, v]) => v || l.startsWith('인수액')).map(([l, v]) => `<tr><td>${l}</td><td class="num">${(v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v))}</td></tr>`).join('');
-    await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table>${m.loan ? `<p class="small">낙찰가 중 ${fmtWon(m.loan)}은 대출로 메워서 그 이자가 금융비용으로 빠졌어요.</p>` : ''}${this.lastMissed && this.lastMissed.length ? `<h3>놓친 조사</h3><ul>${this.lastMissed.map(x => `<li><b>${x.place}</b> — ${x.text}</li>`).join('')}</ul><p class="small">조사를 건너뛴 만큼 위 비용을 미리 알 수 없었어요.</p>` : ''}<p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">채널에서는 대출·잔금·명도 절차를 생략하고 정산 손익을 바로 반영합니다. 누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
+    await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table>${m.loan ? `<p class="small">경락잔금대출 ${fmtWon(m.loan)}${L.savings ? ` (저축은행 ${fmtWon(L.savings)} 포함)` : ''}은 처분하면서 갚았고, 그 이자가 금융비용으로 빠졌어요.</p>` : ''}${missed && missed.length ? `<h3>놓친 조사</h3><ul>${missed.map(x => `<li><b>${x.place}</b> — ${x.text}</li>`).join('')}</ul><p class="small">조사를 건너뛴 만큼 위 비용을 미리 알 수 없었어요.</p>` : ''}<p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">채널에서는 명도 절차를 생략하고 잔금을 내면 바로 정산합니다. 누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
+  },
+  // 대금지급기한을 넘겼거나 대출이 부결됐다: 보증금 몰수, 받은 대출은 돌려준다
+  async forfeitWin(m, why) {
+    if (!m || m.done) return; this.opening = true; Game.busy = true;
+    try {
+      const c = this.caseFor(this.key(m.k, m.n)); const L = m.loanState || State.loan || { bank: 0, savings: 0, extra: 0 };
+      m.done = true; m.forfeit = true; m.profit = -m.deposit; m.why = why; State.cash -= (L.bank || 0) + (L.savings || 0); HUD.setCash(State.cash);
+      const keep = { br: State.bidResult, ph: State.phase, loan: State.loan };
+      State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won: true }; State.phase = 'forfeit'; State.loan = null;
+      const S = computeSettlement(); const G = gradeScore(S, c, Engine.analyze(c.data, m.bid), missedInfo(c));
+      State.bidResult = keep.br; State.phase = keep.ph; State.loan = keep.loan;
+      this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, forfeit: true, profit: -m.deposit, grade: G.grade, bid: m.bid, winner: '본인', wbid: m.bid });
+      Records.add(S, c, G); this.save();
+      if (State.target === c.id) { State.target = null; State.targetPlace = null; }
+      const env = $('envelope'); env.classList.add('in'); Sound.play('paper'); await sleep(900);
+      env.innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>재 매 각 결 정</h2><p>${c.caseNo} 사건의 매수인이 대금지급기한까지 그 의무를 이행하지 아니하였으므로 재매각을 명한다. 매수인이 낸 매수신청보증금 ${fmtWon(m.deposit)}은(는) 반환하지 아니한다.</p><p class="small">(${why})</p></div>`;
+      const bd = $('balanceDue'); bd.textContent = `잔금 ${fmtWon(m.bid - m.deposit)} · 기한 경과`; bd.classList.add('in', 'over'); Sound.play('coins'); await sleep(2600);
+      env.classList.remove('in'); env.innerHTML = ''; bd.classList.remove('in', 'over');
+      await Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: why === '기한 경과' ? `보증금 ${fmtWon(m.deposit)} 날렸네. 낙찰받으면 바로 은행부터 뛰어야지.` : '그래서 입찰 전에 은행부터 가 보라고 했잖아.', emote: 'silence' }]);
+    } finally { this.opening = false; Game.busy = false; }
   },
 
   /* ---- 입원: 실제 시간으로 병원에 묶인다 (그 사이 매각기일을 놓칠 수 있다) ---- */
@@ -4028,11 +4099,11 @@ const Live = {
     const f = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
     const cls = v => (v > 0 ? 'up' : v < 0 ? 'down' : ''); // .plus는 현금 팝업 애니메이션 클래스라 피한다
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
-    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done).map(k => { const c = this.caseFor(k); return `<span class="chip">${esc(my[k].name.split(' ').slice(0, 2).join(' '))} · ${fmtWon(my[k].bid)} · 개찰 ${this.mmss(this.left(c))}</span>`; });
+    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done).map(k => { const c = this.caseFor(k); return `<span class="chip">${esc(my[k].name.split(' ').slice(0, 2).join(' '))} · ${fmtWon(my[k].bid)} · ${my[k].opened ? `잔금 ${this.mmss(this.payLeft(my[k]))}` : `개찰 ${this.mmss(this.left(c))}`}</span>`; });
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">자본 ${fmtWon(State.capital)} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
       <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : ''}</td><td class="pn ${cls(r.pnl)}">${f(r.pnl)}</td></tr>`).join('')}</table>
       ${pend.length ? `<div class="lvChips"><small>낸 입찰표</small>${pend.join('')}</div>` : ''}
-      ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won ? cls(r.profit) : 'dim'}">${r.won ? '낙찰 ' + f(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
+      ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? cls(r.profit) : 'dim'}">${r.won ? '낙찰 ' + f(r.profit) : r.forfeit ? '보증금 몰수 ' + f(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
   },
 };
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
@@ -4970,10 +5041,12 @@ async function staffTalk(kind) {
   if (kind === 'court') return courtClerk();
   if (kind === 'arcade') { await Dialog.say([say('arcade', '어서 와. 기계는 아직 세팅 중이야.'), say('arcade', '미니게임 들어오면 제일 먼저 알려 줄게. 구경은 마음껏 해.')]); return; }
   if (kind === 'hospital') { await Dialog.say([say('hospital', State.hospital ? `또 오셨네요. 이번 주 입원만 ${State.hospital}번째예요.` : '다친 데는 없으시죠?'), say('hospital', `차에 ${FEEL.hospitalHits}번 치이면 바로 입원이에요. 횡단보도 신호 지키세요.`)]); return; }
+  if (kind === 'savings' && Live.on && Live.pending()) return Live.bank(true); // 채널: 낙찰 건 대출
   if (kind === 'savings') { if (State.phase === 'savings') return loanReview(true); await Dialog.say([say('savings', '저희 대출 상품은 금리가 좀 높아요. 1금융권 먼저 알아보세요.')]); return; }
   if (kind === 'bank' && !(State.ticket && State.ticket.called)) {
     await Dialog.say([say('bank', State.ticket ? `번호표 ${State.ticket.no}번이시죠? 차례가 되면 불러 드릴게요.` : '번호표 먼저 뽑아 주시겠어요? 입구 왼쪽 기계에 있어요.')]); return;
   }
+  if (kind === 'bank' && Live.on && Live.pending()) { State.ticket = null; return Live.bank(false); } // 채널: 낙찰 건 경락잔금대출
   if (kind === 'bank' && State.phase === 'won') { State.ticket = null; return loanReview(false); }
   if (kind === 'bank' && State.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
   const greet = { registry: '네, 등기사항증명서 발급이세요?', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
@@ -5083,7 +5156,7 @@ function bidForm(c, practice) {
       const bid = Math.round(+$('bfBid').value);
       if (!bid || bid < c.minPrice) { Sound.play('deny'); Toast.show(`최저매각가격 ${fmtWon(c.minPrice)} 미만은 무효예요. 다시 적어 주세요.`, 2800); return; }
       if (!practice && State.cash < dep) { Sound.play('deny'); Toast.show(`보증금 ${fmtWon(dep)}이(가) 없어서 입찰할 수 없어요.`, 2800); return; }
-      if (!practice && Live.on && State.cash < bid * 0.2) { Sound.play('deny'); Toast.show(`대출 80%를 받아도 현금이 모자라요. 낙찰가의 20%(${fmtWon(Math.ceil(bid * 0.2))}) 이상 있어야 해요.`, 3200); return; } // 채널: 잔금 절차가 없으니 여기서 감당 가능한지 본다
+      if (!practice && Live.on && State.cash < bid * 0.2) { Sound.play('deny'); Toast.show(`대출 80%를 받아도 현금이 모자라요. 낙찰가의 20%(${fmtWon(Math.ceil(bid * 0.2))}) 이상 있어야 해요.`, 3200); return; } // 채널: 보증금 날리는 입찰은 처음부터 막는다
       close({ bid, deposit: dep });
     };
   });
@@ -5251,6 +5324,7 @@ function addSavingsBank() {
   z.chunks.clear(); State.targetPlace = 'savings'; HUD.page('저축은행 위치를 지도에 표시했어. 걸어가.', '알림');
 }
 async function forfeit(c) {
+  if (Live.on) return Live.forfeitWin(Live.pending(), '대출 부결'); // 채널: 그 낙찰 건만 보증금 몰수, 게임은 계속
   State.phase = 'forfeit';
   $('envelope').classList.add('in'); Sound.play('paper'); await sleep(900);
   $('envelope').innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>재 매 각 결 정</h2><p>${c.caseNo} 사건의 매수인이 대금지급기한까지 그 의무를 이행하지 아니하였으므로 재매각을 명한다. 매수인이 낸 매수신청보증금 ${fmtWon(State.bidResult.deposit)}은(는) 반환하지 아니한다.</p></div>`;
@@ -5263,13 +5337,15 @@ async function forfeit(c) {
 /* ---------- 잔금 납부 ---------- */
 async function payBalance() {
   const c = caseById(State.bidResult.caseId);
-  if (Game.zone.spec.court !== c.court) { await Dialog.say([say('court', `잔금은 ${courtOf(c).name}에 내셔야 합니다.`)]); return; }
+  const hereCourt = Game.zone.spec.court || (Game.room && Game.room.place && Game.room.place.court);
+  if (hereCourt !== c.court) { await Dialog.say([say('court', `잔금은 ${courtOf(c).name}에 내셔야 합니다.`)]); return; }
   const bal = State.bidResult.bid - State.bidResult.deposit;
   const pick = await Dialog.say([say('court', `${c.caseNo} 사건 대금 ${fmtWon(bal)} 납부하시겠어요?`)], [{ label: '잔금 납부', value: 'y', disabled: State.cash < bal }, { label: '나중에', value: 'n' }]);
   if (pick !== 'y') { if (State.cash < bal) Toast.show('현금이 모자라요. 은행 대출부터 받으세요.'); return; }
   State.cash -= bal; HUD.setCash(State.cash); Sound.play('coins');
   await hitStamp(); Toast.show('소유권이전등기 촉탁'); Game.keyIcon = 2; Sound.play('key');
   $('balanceDue').classList.remove('in');
+  if (Live.on) return Live.paid(c); // 채널: 명도 생략, 바로 정산
   State.phase = 'evict'; State.targetPlace = null;
   await Dialog.say([say('court', '소유권이전등기는 법원이 촉탁합니다. 이제 집을 넘겨받으시면 됩니다.')]);
   HUD.page(`이제 명도다. ${c.name} 현장 가서 초인종 눌러.`);

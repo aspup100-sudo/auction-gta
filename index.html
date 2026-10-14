@@ -4330,12 +4330,12 @@ const Live = {
     await Dialog.say([{ text: `${c.name}, 이제 내 집이다. 안에 들어가 상태를 확인하고, 부동산에 임대나 매도를 내놓자.` }]);
     HUD.page(`내 집이 됐다. 현장 들어가서 상태 보고, 부동산(${castName('agent')})에 임대·매도 내놔. 대출 이자는 파는 날까지 계속 붙는다.`);
   },
-  assetLine(m) {
+  assetLine(m, full = false) { // full=false: 화면 왼쪽 HUD 줄 (월세 입금은 안 보여 준다, 사용자 2026-10-14 '월세입금은 여기선 보여주지 마') · full=true: 메뉴 목록
     const a = m.asset, nm = m.name.split(' ')[0];
     if (a.repair === 'doing') return `내 집 ${nm} · 수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))}`;
     if (a.offer) return `내 집 ${nm} · 매수 희망 ${fmtWon(a.offer.price)} · 부동산으로`;
     if (a.listed) return `내 집 ${nm} · 매수자 찾는 중 ${this.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - this.now()))}`;
-    if (a.rentOn) return `내 집 ${nm} · 월세 ${fmtWon(a.rent)} · 다음 입금 ${this.mmss(Math.max(0, a.rentAt + this.monthMs() - this.now()))}`;
+    if (a.rentOn) return full ? `내 집 ${nm} · 월세 ${fmtWon(a.rent)} · 다음 입금 ${this.mmss(Math.max(0, a.rentAt + this.monthMs() - this.now()))}` : `내 집 ${nm} · 임대 중`;
     return `내 집 ${nm} · ${a.cond ? this.COND[a.cond].label : '상태 미확인'} · 부동산에 임대·매도`;
   },
   assetTick() {
@@ -4476,7 +4476,7 @@ const Live = {
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
       <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>`).join('')}</table>
       ${pend.length ? `<div class="lvChips"><small>낸 입찰표</small>${pend.join('')}</div>` : ''}
-      ${this.owned().length ? `<div class="lvRecent lvHomes"><small>내 집</small>${this.owned().map(m => { const a = m.asset || {}; return `<div><span>${esc(this.assetLine(m).replace(/^내 집 /, ''))}</span>${a.rentOn ? `<b class="up">월세 ${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b>` : ''}</div>`; }).join('')}</div>` : ''}
+      ${this.owned().length ? `<div class="lvRecent lvHomes"><small>내 집</small>${this.owned().map(m => { const a = m.asset || {}; return `<div><span>${esc(this.assetLine(m, true).replace(/^내 집 /, ''))}</span>${a.rentOn ? `<b class="up">월세 ${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b>` : ''}</div>`; }).join('')}</div>` : ''}
       ${this.rentLog.length ? `<div class="lvRecent"><small>월세 입금 내역 · 총 ${this.rentLog.length}회 ${f(this.rentLog.reduce((s, r) => s + r.amt, 0))}</small>${this.rentLog.slice(0, 8).map(r => `<div><span>${esc(r.at.slice(5))} · ${esc(r.name)}</span><b class="up">+${f(r.amt)}</b></div>`).join('')}${this.rentLog.length > 8 ? `<div><span>외 ${this.rentLog.length - 8}회</span></div>` : ''}</div>` : ''}
       ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? (r.profit > 0 ? 'up' : r.profit < 0 ? 'down' : '') : 'dim'}">${r.won ? '낙찰 ' + fp(r.profit) : r.forfeit ? '보증금 몰수 ' + fp(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
   },

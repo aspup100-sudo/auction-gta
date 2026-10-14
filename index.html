@@ -64,7 +64,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .touchOn #chatLog { bottom:240px; }
 /* 터치 기기: 키보드가 화면 아래를 덮으므로 입력줄은 맨 위에 둔다 (iOS 가로는 키보드가 거의 전체를 가림) */
 .touchOn #chatBar { bottom:auto; top:8px; transform:translate(-50%, -140%); z-index:40; } .touchOn #chatBar.in { transform:translate(-50%, 0); } .touchOn #chatBar input { font-size:16px; } #chatBar .btn { white-space:nowrap; flex:none; } #chatBar { align-items:center; } #chatClose { display:none; } .touchOn #chatClose { display:inline-block; padding:8px 10px; }
-.touchOn.chatOpen #pager, .touchOn.chatOpen #toasts, .touchOn.chatOpen #quest, .touchOn.chatOpen #hudBtns { visibility:hidden; }
+.touchOn.chatOpen #pager, .touchOn.chatOpen #toasts, .touchOn.chatOpen #quest, .touchOn.chatOpen #hudBtns, .touchOn.chatOpen #rankBox { visibility:hidden; }
 #tChat { position:absolute; right:24px; bottom:140px; width:60px; height:44px; border-radius:22px; background:rgba(255,255,255,.18); color:#fff; font-weight:700; border:1px solid rgba(255,255,255,.3); pointer-events:auto; font-size:12px; }
 .mpInfo { background:#e8dcc0; border:1px solid #c9b98f; border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:13px; line-height:1.5; } .mpInfo code { background:#fffaf0; padding:1px 6px; border-radius:4px; letter-spacing:2px; }
 /* 채널 순위판 */
@@ -335,6 +335,9 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #quest.in { transform:none; } #quest b { color:var(--gold); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .qItems { display:flex; flex-wrap:wrap; gap:3px 10px; margin-top:3px; } .qItems span { opacity:.6; } .qItems span.done { opacity:1; color:#9fe29a; } .qItems span.just { animation:bump .4s ease-out; }
 #balanceDue { top:150px !important; }
+#rankBox { position:absolute; top:190px; left:12px; width:172px; background:rgba(20,22,28,.86); border:1px solid #c9b98f; border-radius:8px; padding:5px 8px 6px; font-size:11.5px; line-height:1.35; color:var(--paper); pointer-events:auto; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.4); }
+#rankBox .rbHead { display:flex; justify-content:space-between; font-size:10.5px; color:#c9b98f; margin-bottom:2px; } #rankBox .rbRow { display:flex; gap:5px; align-items:baseline; white-space:nowrap; } #rankBox .rbRow.me { color:#ffd84a; font-weight:700; } #rankBox .rk { width:13px; text-align:right; opacity:.8; } #rankBox .nm { flex:1; overflow:hidden; text-overflow:ellipsis; } #rankBox .pn { font-variant-numeric:tabular-nums; } #rankBox .pn.up { color:#7fe0a0; } #rankBox .pn.down { color:#ff8c7a; } #rankBox .rbMore { font-size:10px; opacity:.6; text-align:right; }
+.touchOn #rankBox { top:215px; width:150px; font-size:11px; }
 #dlgPortrait.nod { animation:nod .7s ease-in-out; } @keyframes nod { 0%,100%{transform:translateY(0)} 25%{transform:translateY(5px)} 50%{transform:translateY(0)} 75%{transform:translateY(5px)} }
 .tstars { position:absolute; inset:0; pointer-events:none; } .tstars i { position:absolute; width:3px; height:3px; background:#fff; border-radius:50%; opacity:.5; animation:twinkle 2.4s ease-in-out infinite; }
 .tstars i:nth-child(1){left:12%;top:18%} .tstars i:nth-child(2){left:28%;top:9%;animation-delay:.4s} .tstars i:nth-child(3){left:66%;top:14%;animation-delay:.9s} .tstars i:nth-child(4){left:84%;top:22%;animation-delay:1.3s} .tstars i:nth-child(5){left:48%;top:6%;animation-delay:.7s} .tstars i:nth-child(6){left:74%;top:34%;animation-delay:1.7s} .tstars i:nth-child(7){left:20%;top:38%;animation-delay:2s} .tstars i:nth-child(8){left:92%;top:8%;animation-delay:1.1s}
@@ -425,6 +428,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short .hudBtns { top:10px !important; right:142px; } .short .hudBtns .btn { padding:5px 8px; font-size:12px; }
   .short #radar { top:60px; left:12px; width:80px; height:80px; }
   .short #quest { top:60px; left:100px; max-width:220px; } .short #balanceDue { top:112px !important; left:100px; }
+  .short #rankBox { top:142px; left:100px; width:150px; }
   .short #stick { width:100px; height:100px; left:20px; bottom:20px; } .short #knob { left:28px; top:28px; width:44px; height:44px; }
   .short #tAct { width:72px; height:72px; right:20px; bottom:24px; font-size:13px; }
   .short #tCar { right:104px; bottom:30px; width:54px; height:54px; } .short.driving #tCar { right:124px; bottom:30px; }
@@ -441,7 +445,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #title .caps .btn { padding:6px 10px; font-size:13px; } .short #title .mp { padding:4px 10px; font-size:12px; } .short #title .mp .ch { min-width:58px; padding:5px 7px; } .short #title .mp .ch b { font-size:13px; } .short #title .nameBox { padding:3px 10px; } .short #title .mp .mpHint { display:none; } .short #title #iosHint { font-size:11px; }
   /* 아이폰 가로: 카메라(노치) 쪽 여백을 비운다 */
   .short #pager { left:calc(12px + env(safe-area-inset-left, 0px)); }
-  .short #quest, .short #balanceDue { left:calc(100px + env(safe-area-inset-left, 0px)); }
+  .short #quest, .short #balanceDue, .short #rankBox { left:calc(100px + env(safe-area-inset-left, 0px)); }
   .short #radar { left:calc(12px + env(safe-area-inset-left, 0px)); }
   .short #stick { left:calc(20px + env(safe-area-inset-left, 0px)); }
   .short #chatLog, .short #roadSign { left:calc(126px + env(safe-area-inset-left, 0px)); }
@@ -503,6 +507,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="hudSlots"></div>
   <div id="quest"></div>
   <div id="balanceDue"></div>
+  <div id="rankBox" hidden></div>
   <div class="hudBtns" id="hudBtns"><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
   <canvas id="radar" width="132" height="132" title="구역 지도 (N)"></canvas>
   <div id="hudSpeed"></div>
@@ -3915,7 +3920,7 @@ const Live = {
     for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && !this.queue.includes(k)) { if (this.prePay(m) && this.now() >= m.payBy) this.queue.push(k); else if (m.phase === 'forced' && this.now() >= m.forcedUntil) this.queue.push(k); } } // 잔금 기한 경과 · 강제집행 완료
     if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) { const k = this.queue.shift(); const m = this.mine[k]; if (m && m.opened && m.phase === 'forced') this.forcedDone(m); else if (m && m.opened) this.forfeitWin(m, '기한 경과'); else this.openResult(k); }
     this.assetTick();
-    this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
+    this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const rb = $('rankBox'); if (!rb.hidden) { const h = this.miniBoard(); if (rb.innerHTML !== h) rb.innerHTML = h; } const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
     this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && p.pnl !== undefined) this.seen[p.name] = { pnl: p.pnl, at: this.now() }; this.save(); }
   },
   // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
@@ -4225,6 +4230,19 @@ const Live = {
     });
   },
 
+  /* ---- 왼쪽 미니 순위판 (항상 보임) ---- */
+  rankRows() {
+    const here = Object.values(Net.players).filter(p => !p.gone && p.pnl !== undefined).map(p => ({ name: p.name, pnl: p.pnl }));
+    const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, pnl: v.pnl, away: true }));
+    return [{ name: Net.me, pnl: this.pnl(), me: true }, ...here, ...away].sort((a, b) => b.pnl - a.pnl);
+  },
+  miniBoard() {
+    const rows = this.rankRows(); const f = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v)); const cls = v => (v > 0 ? 'up' : v < 0 ? 'down' : '');
+    const myIdx = rows.findIndex(r => r.me); const show = rows.slice(0, 4); if (myIdx >= 4) { show.length = 3; show.push(rows[myIdx]); }
+    const row = r => { const i = rows.indexOf(r); return `<div class="rbRow ${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.away ? ' <small>·</small>' : ''}</span><span class="pn ${cls(r.pnl)}">${f(r.pnl)}</span></div>`; };
+    return `<div class="rbHead"><span>순위 · 채널 ${this.ch}</span><span>${rows.length}명</span></div>${show.map(row).join('')}${rows.length > show.length ? `<div class="rbMore">전체 보기 ▸</div>` : ''}`;
+  },
+
   /* ---- 메뉴: 순위판 ---- */
   board() {
     const here = Object.values(Net.players).filter(p => !p.gone && p.pnl !== undefined).map(p => ({ name: p.name, pnl: p.pnl }));
@@ -4362,6 +4380,7 @@ function startGame(capital, opts = {}) {
   if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed }); // 채널: 실제 시간으로 돌아가는 세계
   $('btnEndDay').hidden = Live.on;
   if (Net.on) { $('tChat').hidden = false; $('mpInfo').hidden = false; }
+  $('rankBox').hidden = !Live.on; // 채널: 순위판을 왼쪽에 항상 (사용자 요청 2026-10-14)
   Game.zones = {};
   Game.zone = getZone('gwangjin');
   const office = Game.zone.places.find(p => p.id === 'office');
@@ -5888,7 +5907,7 @@ function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&':
  * 가로/세로(그리고 폰 가로 .short)마다 따로, 화면 비율로 이 기기에 저장한다. '기본값'이면 CSS 기본 위치로 돌아간다.
  */
 const Layout = {
-  editing: false, drag: null, IDS: ['stick', 'tAct', 'tCar', 'tChat', 'pedals', 'hudBtns', 'radar', 'minimap'],
+  editing: false, drag: null, IDS: ['stick', 'tAct', 'tCar', 'tChat', 'pedals', 'hudBtns', 'radar', 'minimap', 'rankBox'],
   bucket() { return (innerWidth > innerHeight ? 'l' : 'p') + (document.body.classList.contains('short') ? 's' : ''); },
   data() { return Store.get('layout', {}); },
   parentRect(el) { const p = el.offsetParent; return p ? p.getBoundingClientRect() : { left: 0, top: 0, width: innerWidth, height: innerHeight }; },
@@ -6049,6 +6068,7 @@ const Layout = {
   $('setBgm').oninput = e => { Settings.bgm = +e.target.value; saveSettings(); Sound.applyVolumes(); };
   $('setShake').onchange = e => { Settings.shake = e.target.checked; saveSettings(); };
   $('setText').onchange = e => { Settings.textSpeed = e.target.value; saveSettings(); };
+  $('rankBox').addEventListener('click', () => { if (!Layout.editing && !Menu.open) Menu.toggle(true); }); // 미니 순위판 → 메뉴의 전체 순위
   $('dialog').addEventListener('click', e => { if (!e.target.closest('.choice')) Dialog.press(); });
   // 터치
   if (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) document.body.classList.add('touchOn');

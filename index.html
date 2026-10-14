@@ -473,7 +473,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #pedals { right:calc(16px + env(safe-area-inset-right, 0px)); } .short #tChat { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tChat { right:calc(16px + env(safe-area-inset-right, 0px)); }
   /* 폰 가로: 서울 지도를 화면에 꽉 차게 */
   .short #mapCanvas { width:calc(100% - 16px); height:calc(100% - 44px); top:calc(50% + 18px); }
-  .short #mapX { top:6px; padding:6px 12px; font-size:13px; } .short .mapTitle { top:4px; font-size:15px; padding-right:90px; padding-left:90px; } .short .mapTitle small { display:inline; margin-left:8px; font-size:11px; }
+  .short #mapX { top:6px; padding:6px 12px; font-size:13px; } .short .mapTitle { top:8px; font-size:15px; padding-right:100px; padding-left:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .short .mapTitle small { display:none; } /* 폰: 제목 한 줄만 (사용자 2026-10-14 '위에 글 정리해') */
   .short #mapConfirm { bottom:8px; padding:6px 10px; gap:6px; }
   .short #openBoard { top:6px; max-height:calc(100% - 12px); padding:8px 10px; } .short .obHead { font-size:11.5px; margin-bottom:3px; } .short .obRow { padding:2px 6px; font-size:13px; } .short #obResult { margin-top:5px; line-height:1.4; font-size:12.5px; } .short #obResult .win { font-size:16px; } .short #obResult .lose { font-size:14px; } .short #obResult .btn { margin-top:4px; } /* 폰 가로: 개찰판이 화면을 넘지 않게 줄이고, 넘치면 스크롤 (사용자 2026-10-14 '나가는 것도 잘려 못 나가') */
   .short #menu { width:min(640px, calc(100% - 24px)); padding:12px 16px; } .short #menu h2 { font-size:18px; margin-bottom:8px; } .short .keys { font-size:12px; }
@@ -546,7 +546,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="navPick"></div>
 <div id="memoPad"><div class="docBar"><span id="memoTitle"></span><button class="btn" onclick="MemoPad.close()">닫기 (Esc)</button></div><textarea id="memoText" placeholder="이 건물(물건)에 대해 적어 두세요. 수첩 '메모' 탭에도 같이 보여요."></textarea><div class="ksub">메모는 시간을 쓰지 않아요. 결과 화면 전까지 언제든 고칠 수 있어요.</div></div>
 <div id="docView"><div class="docBar"><span id="docTitle"></span><button class="btn" onclick="DocViewer.close()">닫기 (E)</button></div><div id="docBody"></div></div>
-<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 눌러 이동 · 법원은 그 구 안에 있어요(차 타면 내비 안내) · M/Esc 닫기</small></div><div id="mapConfirm"></div><button id="mapX" title="닫기">✕ 닫기</button></div>
+<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 누르면 그 구로 가요 · 법원도 그 구 안에</small></div><div id="mapConfirm"></div><button id="mapX" title="닫기">✕ 닫기</button></div>
 <div id="mapHover"></div>
 <div id="caseList"></div>
 <div id="dialog">

@@ -421,11 +421,11 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #quitBox { margin-top:14px; padding-top:10px; border-top:1px dashed #cfc7ad; display:flex; gap:8px; align-items:center; flex-wrap:wrap; } #quitBox small { opacity:.65; font-weight:400; margin-left:4px; } #quitBox .qWarn { color:#a33; font-size:13px; } #btnGuide small { opacity:.65; font-weight:400; margin-left:4px; }
 #installGuide { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(600px, calc(100% - 24px)); max-height:calc(100% - 40px); overflow:auto; z-index:70; } #installGuide.in { transform:translate(-50%, -50%); }
 #dupGate { left:50%; top:50%; transform:translate(-50%, -50%); box-shadow:0 0 0 100vmax rgba(0,0,0,.8); width:min(460px, calc(100% - 24px)); z-index:95; } #dupGate .rcpt { width:100%; } #dupGate p { font-size:14px; line-height:1.5; margin:10px 0; } #dupGate .pcBtns { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; } body.dup #rotate { display:none !important; }
-#assetBox { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(480px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #assetBox.in { transform:translate(-50%, -50%); } #assetBox .rcpt { width:100%; } /* 내 집·임대 현황 창 (사용자 2026-10-14: 임대 중 누르면 설정 말고 현황) */
+#assetBox, #rankWin { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(480px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #assetBox.in, #rankWin.in { transform:translate(-50%, -50%); } #assetBox .rcpt, #rankWin .rcpt { width:100%; } #rankWin .lvRank { width:100%; } /* 내 집·임대 현황 창 (사용자 2026-10-14: 임대 중 누르면 설정 말고 현황) */
 #assetBox .ah { margin:10px 0; padding:10px 12px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; } #assetBox .ah.rent { border-color:var(--gold); background:#fff8e3; } #assetBox .ah h3 { margin:0 0 6px; font-size:15px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; } #assetBox .ah h3 .tag { font-size:11px; color:#fff; background:#b8860b; border-radius:10px; padding:1px 8px; font-weight:400; } #assetBox .ah h3 .tag.gray { background:#7a7a7a; } #assetBox .ah h3 .tag.red { background:#c0392b; }
 #assetBox .kv2 { display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:13px; } #assetBox .kv2 span:nth-child(odd) { color:#6a5a3a; } #assetBox .kv2 b.up { color:#1f7a3a; } #assetBox .kv2 b.down { color:#c0392b; }
 #assetBox .lvRecent { max-height:180px; overflow:auto; } #assetBox .empty { text-align:center; color:#6a5a3a; font-size:13px; padding:14px 0; }
-.short #assetBox { max-height:calc(100% - 12px); } .short #assetBox .rcpt { padding:12px 14px 10px; } .short #assetBox .rcHead { font-size:18px; } .short #assetBox .ah { margin:6px 0; padding:7px 10px; } .short #assetBox .lvRecent { max-height:120px; }
+.short #assetBox, .short #rankWin { max-height:calc(100% - 12px); } .short #assetBox .rcpt, .short #rankWin .rcpt { padding:12px 14px 10px; } .short #assetBox .rcHead, .short #rankWin .rcHead { font-size:18px; } .short #assetBox .ah { margin:6px 0; padding:7px 10px; } .short #assetBox .lvRecent { max-height:120px; }
 #shop { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(640px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #shop.in { transform:translate(-50%, -50%); } #shop .rcpt { width:100%; } #shop .rcHead small { display:block; font:600 13px var(--ui); color:#6a5a3a; margin-top:2px; }
 .shTabs { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; } .shTabs .btn.sel { background:var(--gold); color:#1a1408; }
 .shGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; } .shItem { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; text-align:center; } .shItem.own { border-color:#8fb58f; } .shItem.on { border-color:var(--gold); background:#fff8e3; } .shItem canvas { width:72px; height:48px; image-rendering:pixelated; background:#e2d6bb; border-radius:6px; object-fit:contain; } .shItem b { font-size:12.5px; } .shItem span { font-size:11.5px; color:#6a5a3a; } .shItem .btn { font-size:12px; padding:4px 10px; } .shNote { font-size:12px; color:#555; margin:10px 0 0; }
@@ -631,6 +631,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
 <div id="assetBox" class="ovl"></div>
+<div id="rankWin" class="ovl"></div>
 <div id="dupGate" class="ovl"></div>
 <div id="layoutBar"><span>버튼을 끌어서 옮기세요</span><button class="btn" id="layoutReset">기본값</button><button class="btn gold" id="layoutDone">완료</button></div>
 <div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
@@ -3951,7 +3952,7 @@ const Net = {
   info() {
     if (!this.on) return '';
     const st = { open: '연결됨', connecting: '연결 중', lost: '끊김(재연결 중)', error: '오류', off: '' }[this.status] || this.status;
-    if (Live.on) return Live.board() + `<div class="lvFoot">채팅: 스페이스·T 키 또는 채팅 버튼${this.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div>`;
+    if (Live.on) return ''; // 채널 현황은 순위 창(RankWin)·내 집 현황(AssetBox)에서 — 메뉴에는 설정만 (사용자 2026-10-14)
     const fr = Object.values(this.players).map(p => `${esc(p.name)}${p.gone ? '(나감)' : ''}${p.day !== undefined ? ` · ${dLabel(p.day)}` : ''}`).join(', ');
     return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: 스페이스·T 키 또는 채팅 버튼</span>`;
   },
@@ -4485,18 +4486,16 @@ const Live = {
   },
 
   /* ---- 메뉴: 순위판 ---- */
-  board() {
-    const all = this.rankRows(); const here = all.filter(r => !r.me && !r.away); const rows = all.slice(0, 10);
+  board() { // 순위 창 내용 (사용자 2026-10-14: 자본 랭킹 누르면 그것만, 메뉴에는 설정만)
+    const all = this.rankRows(); const here = all.filter(r => !r.me && !r.away); const rows = all.slice(0, 30);
     const f = v => fmtWon(v), fp = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
     const cls = v => this.rankCls(v); // .plus는 현금 팝업 애니메이션 클래스라 피한다
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
-    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done && my[k].phase !== 'own').map(k => { const c = this.caseFor(k); return `<span class="chip">${esc(my[k].name.split(' ').slice(0, 2).join(' '))} · ${fmtWon(my[k].bid)} · ${my[k].opened ? (my[k].phase === 'own' ? '보유 중' : my[k].phase === 'forced' ? '강제집행 중' : my[k].phase === 'evict' ? '명도 중' : `잔금 ${this.mmss(this.payLeft(my[k]))}`) : `개찰 ${this.mmss(this.left(c))}`}</span>`; });
-    return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
+    const on = this.online();
+    return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · 접속 ${1 + on.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
       <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>`).join('')}</table>
-      ${pend.length ? `<div class="lvChips"><small>낸 입찰표</small>${pend.join('')}</div>` : ''}
-      ${this.owned().length ? `<div class="lvRecent lvHomes"><small>내 집</small>${this.owned().map(m => { const a = m.asset || {}; return `<div><span>${esc(this.assetLine(m, true).replace(/^내 집 /, ''))}</span>${a.rentOn ? `<b class="up">월세 ${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b>` : ''}</div>`; }).join('')}</div>` : ''}
-      ${this.rentLog.length ? `<div class="lvRecent"><small>월세 입금 내역 · 총 ${this.rentLog.length}회 ${f(this.rentLog.reduce((s, r) => s + r.amt, 0))}</small>${this.rentLog.slice(0, 8).map(r => `<div><span>${esc(r.at.slice(5))} · ${esc(r.name)}</span><b class="up">+${f(r.amt)}</b></div>`).join('')}${this.rentLog.length > 8 ? `<div><span>외 ${this.rentLog.length - 8}회</span></div>` : ''}</div>` : ''}
-      ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? (r.profit > 0 ? 'up' : r.profit < 0 ? 'down' : '') : 'dim'}">${r.won ? '낙찰 ' + fp(r.profit) : r.forfeit ? '보증금 몰수 ' + fp(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
+      ${all.length > rows.length ? `<div class="lvFoot">외 ${all.length - rows.length}명</div>` : ''}
+      <div class="lvRecent"><small>지금 접속 ${on.length + 1}명 (나 포함)${Net.host ? ' · 내가 방장' : ''}</small>${on.length ? on.map(o => `<div><span>${esc(o.name)}</span><b class="dim">${esc(o.doing)}</b></div>`).join('') : '<div><span>아직 나뿐이에요</span></div>'}</div>`;
   },
 };
 /* ---- 내 집·임대 현황 창: HUD의 '내 집 … · 임대 중' 줄을 누르면 (사용자 2026-10-14: 설정으로 들어가지 말고 따로 현황) ---- */
@@ -4521,14 +4520,28 @@ const AssetBox = {
         <span>보유</span><b>${a.at ? L.mmss(L.now() - a.at) + ' 째' : '-'}</b></div></div>`; };
     const pending = m => `<div class="ah"><h3>${esc(m.name)} <span class="tag red">${m.phase === 'forced' ? '강제집행 중' : m.phase === 'evict' ? '명도 중' : '잔금 전'}</span></h3><div class="kv2"><span>낙찰가</span><b>${f(m.bid)}</b>${m.phase === 'forced' ? `<span>정산까지</span><b>${L.mmss(Math.max(0, m.forcedUntil - L.now()))}</b>` : m.phase === 'evict' ? `<span>할 일</span><b>현장 초인종${m.order ? ' · 인도명령 받음' : ''}</b>` : `<span>잔금</span><b class="down">${f(m.bid - m.deposit)} · 기한 ${L.mmss(L.payLeft(m))}</b><span>할 일</span><b>${L.canPay(m) ? '법원에서 잔금 납부' : '은행에서 대출부터'}</b>`}</div></div>`;
     const total = L.rentLog.reduce((s, r) => s + r.amt, 0);
+    const bids = Object.keys(L.mine).filter(k => !L.mine[k].opened && !L.mine[k].done).map(k => { const m = L.mine[k], c = L.caseFor(k); return `<span class="chip">${esc(m.name.split(' ').slice(0, 2).join(' '))} · ${f(m.bid)} · 개찰 ${L.mmss(L.left(c))}</span>`; });
+    const res = L.results.slice(0, 5).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? (r.profit > 0 ? 'up' : r.profit < 0 ? 'down' : '') : 'dim'}">${r.won ? '낙찰 ' + fp(r.profit) : r.forfeit ? '보증금 몰수 ' + fp(r.profit) : '패찰'}</b></div>`);
     el.innerHTML = `<div class="rcpt"><button class="xClose" id="abX" aria-label="닫기">×</button><div class="rcHead">내 집 현황</div><div class="rcSub">채널 ${L.ch} · 보유 ${homes.length}채${pend.length ? ` · 진행 중 ${pend.length}건` : ''} · 월세 누적 ${f(total)}</div>
       ${homes.map(home).join('')}${pend.map(pending).join('')}
       ${!homes.length && !pend.length ? '<div class="empty">아직 내 집이 없어요. 낙찰받고 잔금을 내면 여기에 나와요.</div>' : ''}
+      ${bids.length ? `<div class="lvChips"><small>낸 입찰표 (개찰 전)</small>${bids.join('')}</div>` : ''}
       ${L.rentLog.length ? `<div class="lvRecent"><small>월세 입금 내역 · 총 ${L.rentLog.length}회 ${f(total)}</small>${L.rentLog.map(r => `<div><span>${esc(r.at.slice(5))} · ${esc(r.name)}</span><b class="up">+${f(r.amt)} <small>잔고 ${f(r.cash)}</small></b></div>`).join('')}</div>` : ''}
+      ${res.length ? `<div class="lvRecent"><small>최근 결과</small>${res.join('')}</div>` : ''}
       <div class="pcBtns"><button class="btn" id="abClose">닫기</button></div></div>`;
     this.bind();
   },
   bind() { for (const id of ['abClose', 'abX']) { const b = $(id); if (b) b.onclick = () => this.close(); } },
+};
+/* ---- 자본 순위 창: 미니 순위판(#rankBox)을 누르면 순위만 (사용자 2026-10-14) ---- */
+const RankWin = {
+  open_: false, timer: 0,
+  open() { if (this.open_ || !Live.on) return; this.open_ = true; Game.formOpen = true; Sound.play('paper'); $('rankWin').classList.add('in'); this.render(); this.timer = setInterval(() => this.render(), 1000); },
+  close() { if (!this.open_) return; this.open_ = false; Game.formOpen = false; $('rankWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip'); },
+  render() {
+    $('rankWin').innerHTML = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">자본 순위</div>${Live.board()}<div class="lvFoot">채팅: 스페이스·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
+    for (const id of ['rwClose', 'rwX']) { const b = $(id); if (b) b.onclick = () => this.close(); }
+  },
 };
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
 function noSlot() { return Live.on ? !!FEEL.liveSlots && Live.used >= FEEL.liveSlots : State.evening; }
@@ -5048,6 +5061,7 @@ function update(dt) {
   if (ZoneMap.open) { if (consume('Escape') || consume('n')) ZoneMap.toggle(false); return; }
   if (Shop.open_) { if (consume('Escape')) Shop.close(); return; } // 상점: Esc로 닫힘 (메뉴보다 먼저)
   if (AssetBox.open_) { if (consume('Escape')) AssetBox.close(); return; }
+  if (RankWin.open_) { if (consume('Escape')) RankWin.close(); return; }
   if (consume('n') && Game.scene === 'zone' && !Notebook.open && !Menu.open) { ZoneMap.toggle(true); return; }
   if (consume('Tab')) Notebook.toggle();
   if (consume('Escape')) { if (Notebook.open) Notebook.toggle(false); else Menu.toggle(); }
@@ -5413,7 +5427,7 @@ const Radar = {
 /* ---- 메뉴 ---- */
 const Menu = {
   open: false,
-  toggle(v = !this.open) { this.open = v; $('menu').classList.toggle('in', v); Sound.play('click'); if (v && Net.on) $('mpInfo').innerHTML = Net.info(); },
+  toggle(v = !this.open) { this.open = v; $('menu').classList.toggle('in', v); Sound.play('click'); if (v && Net.on) { const h = Net.info(); $('mpInfo').innerHTML = h; $('mpInfo').hidden = !h; } },
 };
 
 /* ---- 루프 ---- */
@@ -6595,7 +6609,8 @@ const Instance = {
   $('setPager').checked = !!Settings.pager; document.body.classList.toggle('pagerOn', !!Settings.pager);
   $('setPager').onchange = e => { Settings.pager = e.target.checked; saveSettings(); document.body.classList.toggle('pagerOn', Settings.pager); };
   $('setText').onchange = e => { Settings.textSpeed = e.target.value; saveSettings(); };
-  $('rankBox').addEventListener('click', () => { if (!Layout.editing && !Menu.open) Menu.toggle(true); }); // 미니 순위판 → 메뉴의 전체 순위
+  $('rankBox').addEventListener('click', () => { if (!Layout.editing && !Menu.open) RankWin.open(); }); // 미니 순위판 → 자본 순위 창 (사용자 2026-10-14: 누르면 그것만)
+  $('rankWin').addEventListener('click', e => { if (e.target.id === 'rankWin') RankWin.close(); });
   $('balanceDue').addEventListener('click', () => { if (!Layout.editing && !Menu.open && Game.scene !== 'title') AssetBox.open(); }); // 내 집·잔금 줄 → 내 집·임대 현황 창 (사용자 2026-10-14: 설정 말고 따로 현황)
   $('assetBox').addEventListener('click', e => { if (e.target.id === 'assetBox') AssetBox.close(); });
   $('dialog').addEventListener('click', e => { if (!e.target.closest('.choice')) Dialog.press(); });

@@ -1399,7 +1399,9 @@ Object.assign(FEEL, {
   carRoadAssist: 1.6,     // 핸들을 안 잡으면 도로 방향으로 저절로 맞춰 주는 세기(rad/s). 0이면 끔
   carGrip: 14,            // 높을수록 미끄러짐 적음 (9→14)
   carGripHandbrake: 1.4,
-  edgeSignDist: 36,       // 구역 가장자리에서 이 거리(타일) 안으로 바깥을 향해 달리면 '→ 옆 구' 표지판
+  edgeSignDist: 36,
+  edgeWalkDist: 8,
+  edgeWalkToast: 5,       // 걸어서 가장자리 이 거리(타일) 안에서 바깥쪽으로 밀면 '차를 타야 해요' 토스트 (3초마다)        // 걸어서 가장자리 이 거리(타일) 안으로 가면 '차를 타야 넘어가요' 표지판       // 구역 가장자리에서 이 거리(타일) 안으로 바깥을 향해 달리면 '→ 옆 구' 표지판
   edgeBounce: 70,         // 길이 없는 가장자리(서울 끝)에 닿았을 때 되튕기는 속도(px/s)
   carBounce: 0.35,
   liveIdleSec: 20,
@@ -4615,6 +4617,22 @@ function checkEdgeExit(dt, z, c) {
   }
   driveAcross(to);
 }
+// 걸어서 구역 끝으로 가면: 옆 구는 차로만 넘어간다고 알려 준다 (사용자 요청 2026-10-14 '걸어서 가려고 하면 차를 타야 한다고')
+function checkEdgeWalk(dt, z, p, ix, iy) {
+  if (Game.edgeBounceCd > 0) Game.edgeBounceCd -= dt;
+  const el = $('edgeSign'); if (z.spec.court) return;
+  const W = z.W * TILE, H = z.H * TILE, M = FEEL.edgeWalkDist * TILE;
+  let e = null;
+  for (const c of [{ dx: -1, dy: 0, d: p.x }, { dx: 1, dy: 0, d: W - p.x }, { dx: 0, dy: -1, d: p.y }, { dx: 0, dy: 1, d: H - p.y }]) if (c.d <= M && (!e || c.d < e.d)) e = c;
+  if (!e) { if (el.dataset.k && el.dataset.k[0] === 'w') { el.classList.remove('in'); el.dataset.k = ''; } return; }
+  const to = neighborGu(z.gu, e.dx, e.dy); const key = 'w' + e.dx + ',' + e.dy + (to || '');
+  if (el.dataset.k !== key) {
+    el.dataset.k = key; const arrow = EDGE_ARROW[e.dx + ',' + e.dy];
+    el.innerHTML = to ? `<b>${arrow} ${DISTRICT[to].name}</b><small>🚗 차를 타야 넘어가요 · 걸어서는 못 가요</small>` : `<b>${arrow} 서울 끝</b><small>이쪽으로는 길이 없어요</small>`;
+    el.classList.add('in');
+  }
+  if (e.d <= FEEL.edgeWalkToast * TILE && (ix * e.dx + iy * e.dy > 0) && !(Game.edgeBounceCd > 0)) { Game.edgeBounceCd = 3; Toast.show(to ? `${DISTRICT[to].name}로 가려면 차를 타야 해요. 내 차는 레이더의 흰 표시예요.` : '여기는 서울 끝이에요.', 2800); Sound.play('deny'); }
+}
 async function driveAcross(toGu) {
   if (Game.busy || Game.edgeGoing) return; Game.edgeGoing = true; Game.busy = true;
   const el = $('edgeSign'); el.classList.remove('in'); el.dataset.k = '';
@@ -4838,6 +4856,7 @@ function update(dt) {
     } else {
       Nav.update(dt);
       stepWalker(p, dt, ix, iy, run, solid, 'asphalt');
+      if (!frozen) checkEdgeWalk(dt, z, p, ix, iy);
       const nearCar = Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
       if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'walker') talkWalker(tg.w); else enterPlace(tg); }

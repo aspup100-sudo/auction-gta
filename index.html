@@ -63,13 +63,13 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title .nameBox { display:flex; align-items:center; gap:10px; padding:6px 14px; } #title .nameBox label { color:var(--paper); opacity:.75; font-size:13px; white-space:nowrap; } #title .nameBox input { width:150px; } #title .nameBox.locked input { background:#e8e2cf; color:#555; border-style:dashed; } #title .nameBox #nameLock { color:#ffd84a; font-size:11px; white-space:nowrap; } #title .nameBox #nameLock:empty { display:none; } #title .mp .ch .chMine { font-style:normal; font-size:10px; color:#ffd84a; margin-top:2px; }
 #title .modeRow { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; } #title .modeRow .mode { display:inline-flex; flex-direction:column; align-items:center; gap:2px; min-width:180px; padding:10px 18px; font-size:16px; font-weight:700; line-height:1.2; } #title .modeRow .mode small { font-size:12px; font-weight:400; opacity:.65; } #title .modeRow .mode.sel { border-color:var(--gold); color:var(--gold); background:rgba(205,174,112,.12); } #title .modeRow .mode.sel small { opacity:.9; }
 #title .mpWrap { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:flex-start; max-width:min(1000px, 94vw); } #title .mpWrap .mp { flex:1 1 320px; max-width:480px; display:none; } #title.modeRoom #mpBox, #title.modeCh #chBox { display:block; } /* 누른 쪽만 펼친다 (사용자: 버튼으로) */ #title.chOn #mpBox, #title.chOn #nameBox, #title.roomOn #chBox, #title.chOn .modeRow, #title.roomOn .modeRow { display:none; } #title .mp #chStatus { margin-top:8px; min-height:1.2em; color:#fff; }
-#chatLog { position:absolute; left:12px; bottom:170px; max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; }
+#chatLog { position:absolute; left:12px; top:12px; max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; } /* 왼쪽 위 피드: 채팅 + 플레이어 소식 (사용자 2026-10-14) */ body.pagerOn #chatLog { top:96px; } #chatLog div.news { background:rgba(15,51,88,.7); border-left:3px solid var(--gold); }
 #chatLog.in { opacity:1; } #chatLog div { background:rgba(0,0,0,.45); border-radius:6px; padding:2px 8px; margin-top:3px; } #chatLog b { color:var(--gold); margin-right:4px; } #chatLog div.me b { color:#9fe3ff; }
 #chatBar { position:absolute; left:50%; bottom:64px; transform:translate(-50%, 140%); display:flex; gap:6px; width:min(92vw, 460px); opacity:0; transition:transform .2s, opacity .2s; pointer-events:auto; }
 #chatBar { visibility:hidden; pointer-events:none; } /* 닫혀 있을 때는 투명해도 터치를 받지 않게 (네비판 눌렀는데 키보드가 뜨던 문제) */
 #chatBar.in { transform:translate(-50%, 0); opacity:1; visibility:visible; pointer-events:auto; }
 #chatBar input { flex:1; font:inherit; background:rgba(12,16,26,.95); color:#fff; border:2px solid var(--gold); border-radius:10px; padding:8px 12px; -webkit-user-select:text; user-select:text; }
-.touchOn #chatLog { bottom:240px; }
+.touchOn #chatLog { top:12px; }
 /* 터치 기기: 키보드가 화면 아래를 덮으므로 입력줄은 맨 위에 둔다 (iOS 가로는 키보드가 거의 전체를 가림) */
 .touchOn #chatBar { bottom:auto; top:8px; transform:translate(-50%, -140%); z-index:40; } .touchOn #chatBar.in { transform:translate(-50%, 0); } .touchOn #chatBar input { font-size:16px; } #chatBar .btn { white-space:nowrap; flex:none; } #chatBar { align-items:center; } #chatClose { display:none; } .touchOn #chatClose { display:inline-block; padding:8px 10px; }
 .touchOn.chatOpen #pager, .touchOn.chatOpen #toasts, .touchOn.chatOpen #quest, .touchOn.chatOpen #hudBtns, .touchOn.chatOpen #rankBox { visibility:hidden; }
@@ -207,6 +207,9 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #dropSign.in { animation:drop 2.6s ease-out forwards; }
 #dropSign b { display:block; font-size:22px; } #dropSign small { opacity:.85; }
 @keyframes drop { 0%{transform:translate(-50%,-120%)} 12%{transform:translate(-50%,24px)} 18%{transform:translate(-50%,14px)} 85%{transform:translate(-50%,14px)} 100%{transform:translate(-50%,-120%)} }
+/* 지도 두 개(동네·서울)를 한 지도의 탭처럼 (사용자 2026-10-14 '지도 하나로 묶자') */
+.mapTabs { position:absolute; top:10px; left:calc(12px + env(safe-area-inset-left, 0px)); z-index:3; display:flex; gap:6px; } .mapTabs .btn { padding:7px 12px; font-size:13px; } .mapTabs .btn.on { background:var(--gold); color:#1a1408; border-color:var(--gold); } .mapTabs .btn[disabled] { opacity:.4; }
+.short .mapTabs { top:6px; } .short .mapTabs .btn { padding:5px 10px; font-size:12px; } .short #zoneMap .zh small { display:none; }
 #seoulMap { position:fixed; inset:0; z-index:28; background:rgba(8,9,12,.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); opacity:0; pointer-events:none; transition:opacity .35s ease-out; }
 #seoulMap.in { opacity:1; pointer-events:auto; }
 #mapCanvas { position:absolute; left:50%; top:52%; width:min(900px, calc(100% - 32px)); height:min(640px, calc(100% - 120px)); transform:translate(-50%, -50%) scale(.2); transform-origin:calc(100% - 90px) 0; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,.6); transition:transform .35s ease-out; }
@@ -455,7 +458,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
   .short #nav { left:56%; bottom:10px; padding:4px 10px 4px 4px; font-size:12px; max-width:360px; gap:8px; } /* 400→360: 오른쪽 끝이 내리기 버튼과 겹쳤다 (사용자 2026-10-14) */ .short #navMap { width:96px; height:70px; } .short #nav .turn .arrow { font-size:26px; } .short #nav .txt b { font-size:14px; } .short #navPick { padding:8px 10px; max-height:90vh; } .short #navPick h3 { font-size:14px; } .short #navPick .grid button { padding:5px 8px; font-size:12px; } .short #navPick .sec { margin:6px 0 3px; }
   .short #toasts { bottom:auto; top:56px; }
-  .short #chatLog { bottom:130px; left:126px; max-width:300px; } .short #chatBar { width:min(380px, 70vw); }
+  .short #chatLog { top:6px; left:12px; max-width:280px; font-size:11px; } .short #chatLog div { padding:1px 6px; margin-top:2px; } .short #chatBar { width:min(380px, 70vw); }
   .short #tChat { right:104px; bottom:92px; width:54px; height:36px; } .short.driving #tChat { right:16px; bottom:170px; }
   .short #placeBanner { padding:4px 16px; } .short #placeBanner b { font-size:16px; }
   .short #edgeSign { padding:4px 12px; } .short #edgeSign b { font-size:15px; }
@@ -466,7 +469,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #quest, .short #balanceDue { left:calc(100px + env(safe-area-inset-left, 0px)); } .short #rankBox { left:calc(12px + env(safe-area-inset-left, 0px)); }
   .short #radar { left:calc(12px + env(safe-area-inset-left, 0px)); }
   .short #stick { left:calc(20px + env(safe-area-inset-left, 0px)); }
-  .short #chatLog, .short #roadSign { left:calc(126px + env(safe-area-inset-left, 0px)); }
+  .short #roadSign { left:calc(126px + env(safe-area-inset-left, 0px)); } .short #chatLog { left:calc(12px + env(safe-area-inset-left, 0px)); }
   .short #minimap, .short #hudCash, .short #hudTime, .short #hudSlots { right:calc(12px + env(safe-area-inset-right, 0px)); }
   .short .hudBtns { right:calc(142px + env(safe-area-inset-right, 0px)); }
   .short #tAct { right:calc(20px + env(safe-area-inset-right, 0px)); } .short #tCar { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tCar { right:calc(124px + env(safe-area-inset-right, 0px)); }
@@ -546,7 +549,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="navPick"></div>
 <div id="memoPad"><div class="docBar"><span id="memoTitle"></span><button class="btn" onclick="MemoPad.close()">닫기 (Esc)</button></div><textarea id="memoText" placeholder="이 건물(물건)에 대해 적어 두세요. 수첩 '메모' 탭에도 같이 보여요."></textarea><div class="ksub">메모는 시간을 쓰지 않아요. 결과 화면 전까지 언제든 고칠 수 있어요.</div></div>
 <div id="docView"><div class="docBar"><span id="docTitle"></span><button class="btn" onclick="DocViewer.close()">닫기 (E)</button></div><div id="docBody"></div></div>
-<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 누르면 그 구로 가요 · 법원도 그 구 안에</small></div><div id="mapConfirm"></div><button id="mapX" title="닫기">✕ 닫기</button></div>
+<div id="seoulMap"><canvas id="mapCanvas"></canvas><div class="mapTabs"><button class="btn" type="button" data-go="zone">동네 지도</button><button class="btn on" type="button">서울 전체</button></div><div class="mapTitle">서울 · 이번 주 경매 물건 <small>구를 누르면 그 구로 가요 · 법원도 그 구 안에</small></div><div id="mapConfirm"></div><button id="mapX" title="닫기">✕ 닫기</button></div>
 <div id="mapHover"></div>
 <div id="caseList"></div>
 <div id="dialog">
@@ -607,7 +610,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="quitBox"><button class="btn" id="btnQuit">게임 나가기 <small>제목 화면으로</small></button></div>
 </div>
 <div id="zoneMap">
-  <div class="zh"><span id="zoneMapName"></span><small>장소나 가장자리 구 이름을 누르면 목적지 · 두 손가락/휠로 확대 · 닫기: 바깥 탭 / Esc / N</small></div>
+  <div class="mapTabs"><button class="btn on" type="button">동네 지도</button><button class="btn" type="button" data-go="seoul">서울 전체</button></div>
+  <div class="zh"><span id="zoneMapName"></span><small>장소를 누르면 목적지 · 두 손가락/휠로 확대 · 바깥을 누르면 닫기</small></div>
   <canvas id="zoneCanvas"></canvas>
   <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#d08a3a"></i>내 집</span><span><i style="background:#8a3ac0"></i>게임장</span><span><i style="background:#e0405a"></i>병원</span><span><i style="background:#2bb673"></i>지하철</span></div>
 </div>
@@ -1456,7 +1460,7 @@ Object.assign(FEEL, {
   bumpSpeed: 25,          // 이 속도 이상이면 '툭' 접촉음, 70 이상이면 쾅(수리비)
   channelWaitSec: 20,     // 공개 채널 개찰 대기 최대 시간(초)
   chatBubbleTime: 6,      // 말풍선이 머리 위에 떠 있는 시간(초)
-  chatLogTime: 12,        // 채팅 기록이 화면 왼쪽에 남는 시간(초)
+  chatLogTime: 30,        // 왼쪽 위 피드(채팅·플레이어 소식)가 남는 시간(초) · 12→30 (피드로 바뀌며, 2026-10-14)
   settleMin: 300000, settleMax: 1000000, // 걷다가 차에 치였을 때 내가 받는 합의금(원)
   hospitalHits: 3,        // 이 횟수째 치이면 입원 (합의금 대신 입원비를 내고 병원 앞에서 다시 시작)
   hospitalMin: 3000000, hospitalMax: 5000000, // 입원비(원) · 시간도 1칸 지나간다
@@ -3807,6 +3811,7 @@ const Net = {
       p.lastZ = p.z; p.lastS = p.s; return;
     }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
+    if (m.t === 'news') { this.pushLog(p.name, String(m.text || '').slice(0, 80), false, true); Sound.play('blip', 1.1); return; }
     if (m.t === 'greet') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); if (m.to === this.myId && !m.re) this.onGreet(m, p); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
@@ -3868,12 +3873,14 @@ const Net = {
     text = (text || '').trim().slice(0, 60); if (!text) return;
     this.myBubble = { text, t: FEEL.chatBubbleTime }; this.pushLog(this.me, text, true); this.send({ t: 'chat', text }); Sound.play('blip', 1.6);
   },
-  pushLog(name, text, me) {
-    this.log.push({ name, text, me }); if (this.log.length > 6) this.log.shift();
+  // 왼쪽 위 피드: 채팅과 플레이어 소식(낙찰·잔금·명도·임대·매도)을 한 상자에 (사용자 2026-10-14 '플레이어 현황이랑 채팅 하나로 묶자')
+  pushLog(name, text, me, news) {
+    this.log.push({ name, text, me, news }); if (this.log.length > 5) this.log.shift();
     const el = $('chatLog'); if (!el) return;
-    el.innerHTML = this.log.map(l => `<div class="${l.me ? 'me' : ''}"><b>${esc(l.name)}</b> ${esc(l.text)}</div>`).join(''); el.classList.add('in');
+    el.innerHTML = this.log.map(l => `<div class="${l.me ? 'me' : ''}${l.news ? ' news' : ''}"><b>${esc(l.name)}</b> ${esc(l.text)}</div>`).join(''); el.classList.add('in');
     clearTimeout(this.logT); this.logT = setTimeout(() => el.classList.remove('in'), FEEL.chatLogTime * 1000);
   },
+  news(text) { if (!this.on || !text) return; this.pushLog(this.me, text, true, true); this.send({ t: 'news', text: String(text).slice(0, 80) }); }, // 내 현황을 채널 모두에게
   sendBid(c, bid) { this.send({ t: 'bid', caseId: c.id, bid }); },
   sendNoBid() { this.send({ t: 'nobid' }); },
   // 개찰에 넣을 친구 입찰(같은 사건만)
@@ -4217,6 +4224,7 @@ const Live = {
       if (won) {
         // 낙찰: 현실처럼 은행 대출 → 법원 잔금. 보증금은 법원에 묶여 있고, 기한을 넘기면 몰수 (사용자 요청 2026-10-14)
         m.phase = 'won'; m.loanState = null; m.payBy = this.now() + this.payMs(); State.target = c.id; State.targetPlace = null;
+        Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 낙찰 · ${fmtWon(m.bid)}`);
       } else { m.done = true; m.profit = 0; State.cash += m.deposit; HUD.setCash(State.cash); this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, profit: 0, bid: m.bid, winner: winner.name, wbid: winner.bid }); }
       this.save();
       await this.ceremony(c, sorted, winner, won, m, second);
@@ -4281,6 +4289,7 @@ const Live = {
   async paid(c) {
     const m = Object.values(this.mine).find(x => x.opened && x.won && !x.done && x.caseId === c.id); if (!m) return;
     m.loanState = State.loan; m.loan = State.loan ? (State.loan.bank + State.loan.savings) : 0;
+    Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 잔금 납부${c.occupant.kind === 'vacant' ? '' : ' · 명도 시작'}`);
     if (c.occupant.kind === 'vacant') {
       await Dialog.say([say('court', '소유권이전등기는 법원이 촉탁합니다. 빈집이라 바로 인도받으시면 돼요.')]);
       Game.keyIcon = 2; Sound.play('key'); return this.takeOver(m, c, { moveFee: 0, forced: null, paidAssume: 0 });
@@ -4296,6 +4305,7 @@ const Live = {
     if (ok) return this.takeOver(m, c, State.evict);
     // 강제집행: 실제 시간이 걸린다 (FEEL.liveForcedSec). 집행비는 이미 냈다
     m.evictState = State.evict; m.phase = 'forced'; State.phase = 'forced'; m.forcedUntil = this.now() + FEEL.liveForcedSec * 1000; this.save();
+    Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 강제집행 신청`);
     HUD.page(`강제집행 신청했다. ${this.mmss(FEEL.liveForcedSec * 1000)} 뒤에 집행 끝나면 정산.`, '법원');
   },
   async forcedDone(m) {
@@ -4314,6 +4324,7 @@ const Live = {
     // 잔금까지 낸 현금 = 시작 − 낙찰가 + 대출 − 이미 낸 명도비. 처분하고 대출을 갚으면 시작 + 손익
     State.cash += S.profit + m.bid - (L.bank + L.savings) + already; HUD.setCash(State.cash);
     this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: true, profit: S.profit, grade: G.grade, bid: m.bid, winner: '본인', wbid: m.bid });
+    Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 매도 · 손익 ${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}`);
     Records.add(S, c, G); this.save();
     $('balanceDue').classList.remove('in'); if (State.target === c.id) { State.target = null; State.targetPlace = null; }
     const rows = S.lines.filter(([l, v]) => v || l.startsWith('인수액')).map(([l, v]) => `<tr><td>${l}</td><td class="num">${(v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v))}</td></tr>`).join('');
@@ -4329,6 +4340,7 @@ const Live = {
   async takeOver(m, c, E) {
     m.evictState = E || null; m.phase = 'own'; State.phase = 'own'; m.asset = { at: this.now(), cond: null, repair: 'none', rentOn: false, rent: 0, rentTotal: 0, rentMonths: 0, rentAt: 0, listed: null, offer: null }; this.save();
     if (State.target === c.id) { State.target = null; State.targetPlace = null; }
+    Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 집 넘겨받음`);
     await Dialog.say([{ text: `${c.name}, 이제 내 집이다. 안에 들어가 상태를 확인하고, 부동산에 임대나 매도를 내놓자.` }]);
     HUD.page(`내 집이 됐다. 현장 들어가서 상태 보고, 부동산(${castName('agent')})에 임대·매도 내놔. 대출 이자는 파는 날까지 계속 붙는다.`);
   },
@@ -4389,7 +4401,7 @@ const Live = {
     opts.push({ label: `급매 <small>${fmtWon(Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5)} 바로</small>`, value: 'quick' });
     opts.push({ label: '시세 물어보기', value: 'inv' }, { label: '그만두기', value: 'n' });
     const pick = await Dialog.say([say('agent', `${c.name}, 상태 ${K.label}${a.repair === 'done' ? '(수리 끝)' : ''}${a.rentOn ? `, 월세 ${fmtWon(a.rent)} 받는 중` : ''}. ${a.cond !== 'good' && a.repair !== 'done' ? `이 상태면 시세보다 ${Math.round((1 - K.mod) * 100)}% 깎여요. ` : ''}어떻게 할까요?`)], opts);
-    if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); this.save(); await Dialog.say([say('agent', `세입자 바로 붙였어요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
+    if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); this.save(); Net.news(`${m.name.split(' ')[0]} 집 임대 놓음 · 월세 ${fmtWon(rent)}`); await Dialog.say([say('agent', `세입자 바로 붙였어요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
     if (pick === 'sell') { a.listed = this.now(); this.save(); await Dialog.say([say('agent', `내놨어요. ${FEEL.liveSaleMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
     if (pick === 'quick') return this.sold(m, c, Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5, true);
     return pick;
@@ -4408,6 +4420,7 @@ const Live = {
     try {
       const c = this.caseFor(this.key(m.k, m.n)); const L = m.loanState || State.loan || { bank: 0, savings: 0, extra: 0 };
       m.done = true; m.forfeit = true; m.profit = -m.deposit; m.why = why; State.cash -= (L.bank || 0) + (L.savings || 0); HUD.setCash(State.cash);
+      Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 보증금 몰수 (${why || '기한 경과'})`);
       const keep = { br: State.bidResult, ph: State.phase, loan: State.loan };
       State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won: true }; State.phase = 'forfeit'; State.loan = null;
       const S = computeSettlement(); const G = gradeScore(S, c, Engine.analyze(c.data, m.bid), missedInfo(c));
@@ -6488,6 +6501,8 @@ const Instance = {
   $('minimap').onclick = () => SeoulMap.toggle(true);
   $('radar').onclick = () => { Sound.init(); ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; };
   $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
+  // 지도 탭: 동네 지도 ↔ 서울 전체 (한 지도처럼; 사용자 2026-10-14)
+  document.querySelectorAll('.mapTabs .btn[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); Sound.init(); if (b.dataset.go === 'seoul') { ZoneMap.toggle(false); SeoulMap.toggle(true); } else { if (Game.scene !== 'zone') { Toast.show('건물 밖에서만 동네 지도를 볼 수 있어요.'); return; } SeoulMap.toggle(false); ZoneMap.toggle(true); } });
   $('zoneCanvas').addEventListener('click', e => { if (!ZoneMap.dragged) ZoneMap.click(e); });
   ZoneMap.bindGestures();
   $('nav').addEventListener('click', e => { if (e.target.id === 'navX') Nav.clear(); else if (Game.driving && Game.scene === 'zone' && !NavPick.on) NavPick.open(); }); // 내비를 누르면 목적지 다시 고르기

@@ -1343,7 +1343,13 @@ const FEEL = {
   liveSlots: 2,           // 실시간 채널: 게임 하루(실제 20/7분)에 조사할 수 있는 횟수
   liveBidDdayOnly: true,  // 실시간 채널: 입찰표는 매각기일(마지막 날)에만 받는다 (현실대로; false면 개찰 전 아무 때나)
   livePayMin: 10,
-  liveForcedSec: 90,      // 실시간 채널: 강제집행(인도명령 집행)이 끝나기까지 실제 초
+  liveForcedSec: 90,
+  liveMonthMin: 4,        // 실시간 채널: 집을 보유하는 동안 '한 달' = 실제 몇 분 (월세 입금·보유 개월 계산)
+  liveRentYield: 0.045,   // 실시간 채널: 연 임대수익률 → 월세 = 시세 × 이 값 / 12
+  liveSaleMin: 3,         // 실시간 채널: 매도 내놓은 뒤 매수 희망자가 나타나기까지 실제 분
+  liveRepairSec: 60,      // 실시간 채널: 수리(인테리어) 공사 실제 초
+  liveQuickSale: 0.93,    // 실시간 채널: 급매 가격 비율
+  liveRepairPremium: 1.04, // 실시간 채널: 수리 뒤 매도가 배수 (월세는 ×1.1)      // 실시간 채널: 강제집행(인도명령 집행)이 끝나기까지 실제 초
   liveOrderFee: 50000,    // 실시간 채널: 인도명령 신청 비용(송달료 등)
   liveOrderEase: 15,      // 실시간 채널: 인도명령을 받아 두면 점유자 경계심(저항)이 이만큼 낮아진다         // 실시간 채널: 낙찰 뒤 잔금(대출→법원 납부) 기한, 실제 분 (현실의 대금지급기한 약 1달 ≒ 반 주)
   liveHospitalSec: 20,    // 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
@@ -3908,7 +3914,8 @@ const Live = {
     }
     for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && !this.queue.includes(k)) { if (this.prePay(m) && this.now() >= m.payBy) this.queue.push(k); else if (m.phase === 'forced' && this.now() >= m.forcedUntil) this.queue.push(k); } } // 잔금 기한 경과 · 강제집행 완료
     if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) { const k = this.queue.shift(); const m = this.mine[k]; if (m && m.opened && m.phase === 'forced') this.forcedDone(m); else if (m && m.opened) this.forfeitWin(m, '기한 경과'); else this.openResult(k); }
-    this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const pw = this.pending(); const bd = $('balanceDue'); if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
+    this.assetTick();
+    this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
     this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && p.pnl !== undefined) this.seen[p.name] = { pnl: p.pnl, at: this.now() }; this.save(); }
   },
   // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
@@ -4029,7 +4036,10 @@ const Live = {
 
   /* ---- 낙찰 뒤: 은행 대출 → 법원 잔금 (실제 시간 기한) ---- */
   payMs() { return FEEL.livePayMin * 60000; },
-  pending() { let best = null; for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && (!best || m.payBy < best.payBy)) best = m; } return best; },
+  pending() { let best = null; for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && m.phase !== 'own' && (!best || m.payBy < best.payBy)) best = m; } return best; },
+  owned() { return Object.values(this.mine).filter(m => m.opened && m.won && !m.done && m.phase === 'own'); },
+  ownedFor(c) { return this.owned().find(m => m.caseId === c.id) || null; },
+  monthMs() { return FEEL.liveMonthMin * 60000; },
   payLeft(m) { return Math.max(0, m.payBy - this.now()); },
   prePay(m) { return m.phase === 'won' || m.phase === 'savings' || m.phase === 'pay'; }, // 잔금 전
   heldCases() { return Object.values(this.mine).filter(m => m.opened && m.won && !m.done).map(m => this.caseFor(this.key(m.k, m.n))); },
@@ -4060,7 +4070,7 @@ const Live = {
     m.loanState = State.loan; m.loan = State.loan ? (State.loan.bank + State.loan.savings) : 0;
     if (c.occupant.kind === 'vacant') {
       await Dialog.say([say('court', '소유권이전등기는 법원이 촉탁합니다. 빈집이라 바로 인도받으시면 돼요.')]);
-      Game.keyIcon = 2; Sound.play('key'); return this.settle(m, c, { moveFee: 0, forced: null, paidAssume: 0 });
+      Game.keyIcon = 2; Sound.play('key'); return this.takeOver(m, c, { moveFee: 0, forced: null, paidAssume: 0 });
     }
     m.phase = 'evict'; State.phase = 'evict'; State.targetPlace = null; this.save();
     await Dialog.say([say('court', `소유권이전등기는 법원이 촉탁합니다. ${c.occupant.name || '점유자'}이(가) 살고 있으니 명도를 하셔야 해요. 안 나가면 인도명령을 신청하세요.`)]);
@@ -4070,32 +4080,115 @@ const Live = {
   async site(m, c) { await this.withWin(m, () => evictAtSite(c)); },
   async evicted(c, ok) {
     const m = this.evictFor(c); if (!m) return;
-    if (ok) return this.settle(m, c, State.evict);
+    if (ok) return this.takeOver(m, c, State.evict);
     // 강제집행: 실제 시간이 걸린다 (FEEL.liveForcedSec). 집행비는 이미 냈다
     m.evictState = State.evict; m.phase = 'forced'; State.phase = 'forced'; m.forcedUntil = this.now() + FEEL.liveForcedSec * 1000; this.save();
     HUD.page(`강제집행 신청했다. ${this.mmss(FEEL.liveForcedSec * 1000)} 뒤에 집행 끝나면 정산.`, '법원');
   },
   async forcedDone(m) {
     if (!m || m.done) return; this.opening = true; Game.busy = true;
-    try { const c = this.caseFor(this.key(m.k, m.n)); Sound.play('chime'); HUD.page(`${c.name} 강제집행 끝났다. 집 넘겨받았다.`, '법원'); await this.settle(m, c, m.evictState); } finally { this.opening = false; Game.busy = false; }
+    try { const c = this.caseFor(this.key(m.k, m.n)); Sound.play('chime'); HUD.page(`${c.name} 강제집행 끝났다. 집 넘겨받았다.`, '법원'); await this.withWin(m, () => this.takeOver(m, c, m.evictState)); } finally { this.opening = false; Game.busy = false; }
   },
   // §11 정산: 대출 이자·이사비·강제집행비·인수액 반영. 이미 현금에서 나간 돈(이사비·집행비·인수 보증금)은 정산 줄에도 있으니 되돌려 더한다
-  async settle(m, c, E) {
+  async settle(m, c, E, O) {
     const L = m.loanState || { bank: 0, savings: 0, extra: 0 };
     const keep = { br: State.bidResult, ph: State.phase, loan: State.loan, ev: State.evict };
-    State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won: true }; State.phase = 'won'; State.loan = L; State.evict = E || null;
-    const S = computeSettlement(); const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
-    State.bidResult = keep.br; State.phase = keep.ph === 'evict' || keep.ph === 'forced' ? 'investigate' : keep.ph; State.loan = keep.loan; State.evict = keep.ev;
+    State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won: true }; State.phase = 'won'; State.loan = L; State.evict = E || null; State.saleOverride = O || null;
+    const S = computeSettlement(); State.saleOverride = null; const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
+    State.bidResult = keep.br; State.phase = ['evict', 'forced', 'own'].includes(keep.ph) ? 'investigate' : keep.ph; State.loan = keep.loan; State.evict = keep.ev;
     m.done = true; m.profit = S.profit; m.loan = L.bank + L.savings;
-    const already = E ? (E.moveFee || 0) + (E.forced ? E.forced.cost : 0) + (E.paidAssume || 0) : 0;
+    const already = (E ? (E.moveFee || 0) + (E.forced ? E.forced.cost : 0) + (E.paidAssume || 0) : 0) + (O ? O.repair - O.rentTotal : 0); // 현금에서 이미 나간 돈(명도비·수리비)과 이미 들어온 돈(월세)
     // 잔금까지 낸 현금 = 시작 − 낙찰가 + 대출 − 이미 낸 명도비. 처분하고 대출을 갚으면 시작 + 손익
     State.cash += S.profit + m.bid - (L.bank + L.savings) + already; HUD.setCash(State.cash);
     this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: true, profit: S.profit, grade: G.grade, bid: m.bid, winner: '본인', wbid: m.bid });
     Records.add(S, c, G); this.save();
     $('balanceDue').classList.remove('in'); if (State.target === c.id) { State.target = null; State.targetPlace = null; }
     const rows = S.lines.filter(([l, v]) => v || l.startsWith('인수액')).map(([l, v]) => `<tr><td>${l}</td><td class="num">${(v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v))}</td></tr>`).join('');
-    await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table>${m.loan ? `<p class="small">경락잔금대출 ${fmtWon(m.loan)}${L.savings ? ` (저축은행 ${fmtWon(L.savings)} 포함)` : ''}은 처분하면서 갚았고, 그 이자가 금융비용으로 빠졌어요.</p>` : ''}${E && E.forced ? `<p class="small">강제집행으로 ${E.forced.months}개월이 더 걸려 금융비용도 그만큼 늘었어요.</p>` : ''}${missed && missed.length ? `<h3>놓친 조사</h3><ul>${missed.map(x => `<li><b>${x.place}</b> — ${x.text}</li>`).join('')}</ul><p class="small">조사를 건너뛴 만큼 위 비용을 미리 알 수 없었어요.</p>` : ''}<p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
+    await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table>${m.loan ? `<p class="small">경락잔금대출 ${fmtWon(m.loan)}${L.savings ? ` (저축은행 ${fmtWon(L.savings)} 포함)` : ''}은 처분하면서 갚았고, 그 이자가 금융비용으로 빠졌어요.</p>` : ''}${E && E.forced ? `<p class="small">강제집행으로 ${E.forced.months}개월이 더 걸려 금융비용도 그만큼 늘었어요.</p>` : ''}${O ? `<p class="small">${O.condLabel} 상태로 ${O.repair ? '수리해서 ' : ''}${O.rentMonths ? `${O.rentMonths}개월 세를 놓다가 ` : ''}${O.quick ? '급매로 ' : ''}팔았어요. 보유 ${O.months}개월.</p>` : ''}${missed && missed.length ? `<h3>놓친 조사</h3><ul>${missed.map(x => `<li><b>${x.place}</b> — ${x.text}</li>`).join('')}</ul><p class="small">조사를 건너뛴 만큼 위 비용을 미리 알 수 없었어요.</p>` : ''}<p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
   },
+  /* ---- 내 집: 상태 확인 → 수리 → 임대·매도 (사용자 선택 2026-10-14: 임대+매도, 집 상태·수리비 변수) ---- */
+  COND: { good: { p: 0.5, repair: 0.005, mod: 1, label: '깨끗함', text: '벽지도 바닥도 멀쩡하다. 청소만 하면 바로 쓸 수 있겠다.' }, worn: { p: 0.35, repair: 0.02, mod: 0.96, label: '낡음', text: '벽지가 누렇게 바랬고 싱크대 문짝이 떨어져 있다. 손볼 데가 꽤 있다.' }, wrecked: { p: 0.15, repair: 0.06, mod: 0.88, label: '파손', text: '들어가 보니 엉망이다. 벽은 뚫려 있고 보일러는 뜯겨 나갔고 바닥은 물이 샌 자국투성이다.' } },
+  condOf(c) { const R = caseRng(c, 77); for (let i = 0; i < 3; i++) R.U(0, 1); const u = R.U(0, 1); return u < this.COND.good.p ? 'good' : u < this.COND.good.p + this.COND.worn.p ? 'worn' : 'wrecked'; },
+  repairCostOf(c, cond) { return Math.round(c.appraisal * this.COND[cond].repair / 1e4) * 1e4; },
+  valueMod(m) { const a = m.asset; return (a.cond ? this.COND[a.cond].mod : 1) * (a.repair === 'done' ? FEEL.liveRepairPremium : 1); },
+  monthlyRent(c, m) { const a = m.asset; return Math.round(c.market * FEEL.liveRentYield / 12 * (a.cond ? this.COND[a.cond].mod : 1) * (a.repair === 'done' ? 1.1 : 1) / 1e4) * 1e4; },
+  heldMonths(m) { return Math.max(1, Math.floor((this.now() - m.asset.at) / this.monthMs())) + (m.evictState && m.evictState.forced ? m.evictState.forced.months : 0); },
+  async takeOver(m, c, E) {
+    m.evictState = E || null; m.phase = 'own'; State.phase = 'own'; m.asset = { at: this.now(), cond: null, repair: 'none', rentOn: false, rent: 0, rentTotal: 0, rentMonths: 0, rentAt: 0, listed: null, offer: null }; this.save();
+    if (State.target === c.id) { State.target = null; State.targetPlace = null; }
+    await Dialog.say([{ text: `${c.name}, 이제 내 집이다. 안에 들어가 상태를 확인하고, 부동산에 임대나 매도를 내놓자.` }]);
+    HUD.page(`내 집이 됐다. 현장 들어가서 상태 보고, 부동산(${castName('agent')})에 임대·매도 내놔. 대출 이자는 파는 날까지 계속 붙는다.`);
+  },
+  assetLine(m) {
+    const a = m.asset, nm = m.name.split(' ')[0];
+    if (a.repair === 'doing') return `내 집 ${nm} · 수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))}`;
+    if (a.offer) return `내 집 ${nm} · 매수 희망 ${fmtWon(a.offer.price)} · 부동산으로`;
+    if (a.listed) return `내 집 ${nm} · 매수자 찾는 중 ${this.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - this.now()))}`;
+    if (a.rentOn) return `내 집 ${nm} · 월세 ${fmtWon(a.rent)} · 다음 입금 ${this.mmss(Math.max(0, a.rentAt + this.monthMs() - this.now()))}`;
+    return `내 집 ${nm} · ${a.cond ? this.COND[a.cond].label : '상태 미확인'} · 부동산에 임대·매도`;
+  },
+  assetTick() {
+    for (const m of this.owned()) {
+      const a = m.asset; if (!a) continue; let changed = false;
+      if (a.repair === 'doing' && this.now() >= a.repairUntil) { a.repair = 'done'; changed = true; if (Game.player) { Toast.show(`${m.name.split(' ')[0]} 수리 끝 · 집값 +${Math.round((FEEL.liveRepairPremium - 1) * 100)}%, 월세 +10%`, 3000); Sound.play('ding'); } }
+      if (a.rentOn && this.now() >= a.rentAt + this.monthMs()) { a.rentAt += this.monthMs(); a.rentTotal += a.rent; a.rentMonths++; State.cash += a.rent; HUD.setCash(State.cash); changed = true; if (Game.player) { Toast.show(`월세 입금 ${fmtWon(a.rent)} (${m.name.split(' ')[0]})`); Sound.play('coins'); } }
+      if (a.listed && !a.offer && this.now() >= a.listed + FEEL.liveSaleMin * 60000) {
+        const c = this.caseFor(this.key(m.k, m.n)); const R = caseRng(c, 500 + (a.offerNo || 0)); const price = Math.round(Generator.disposalValue(c) * this.valueMod(m) * R.U(0.96, 1.04) / 1e5) * 1e5;
+        a.offer = { price, at: this.now() }; a.offerNo = (a.offerNo || 0) + 1; changed = true;
+        if (Game.player) HUD.page(`${m.name} 사겠다는 사람 나왔어요. ${fmtWon(price)}. 사무실로 와서 결정하세요.`, castName('agent'));
+      }
+      if (changed) this.save();
+    }
+  },
+  // 현장: 처음 들어가면 상태가 드러난다 (시드 고정) → 수리
+  async home(m, c) {
+    const a = m.asset;
+    if (!a.cond) {
+      a.cond = this.condOf(c); this.save(); const K = this.COND[a.cond];
+      Sound.play('door'); await sleep(300);
+      await Dialog.say([{ text: `${c.name}. ${K.text}` }, { text: `상태: ${K.label}. 수리 견적 ${fmtWon(this.repairCostOf(c, a.cond))}. ${a.cond === 'good' ? '안 고쳐도 제값 받는다.' : `이대로 팔면 시세보다 ${Math.round((1 - K.mod) * 100)}% 싸게 팔린다.`}` }]);
+    }
+    const K = this.COND[a.cond], cost = this.repairCostOf(c, a.cond);
+    const opts = [];
+    if (a.repair === 'none') opts.push({ label: `수리하기 <small>${fmtWon(cost)} · 실제 ${FEEL.liveRepairSec}초</small>`, value: 'fix', disabled: State.cash < cost });
+    opts.push({ label: '나가기', value: 'n' });
+    const pick = await Dialog.say([{ text: `내 집 · 상태 ${K.label}${a.repair === 'done' ? ' (수리 끝)' : a.repair === 'doing' ? ` (수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))})` : ''}${a.rentOn ? ` · 월세 ${fmtWon(a.rent)}` : ''}. ${a.repair === 'done' ? '수리해 두면 매도가 +4%, 월세 +10%.' : '수리하면 매도가 +4%, 월세 +10%가 붙고 상태 할인이 사라진다.'}` }], opts);
+    if (pick === 'fix') { State.cash -= cost; HUD.setCash(State.cash); Sound.play('coins'); a.repair = 'doing'; a.repairUntil = this.now() + FEEL.liveRepairSec * 1000; a.repairCost = cost; this.save(); await Dialog.say([{ text: `인테리어 업체를 불렀다. ${FEEL.liveRepairSec}초 뒤 공사가 끝난다.` }]); }
+  },
+  // 부동산: 임대·매도
+  async agent() {
+    const list = this.owned(); let m = list[0];
+    if (list.length > 1) { const pick = await Dialog.say([say('agent', '어느 집 이야기예요?')], [...list.map((x, i) => ({ label: x.name, value: String(i) })), { label: '시세 물어보기', value: 'inv' }, { label: '그만두기', value: 'n' }]); if (pick === 'inv' || pick === 'n' || pick == null) return pick; m = list[+pick]; }
+    const c = this.caseFor(this.key(m.k, m.n)), a = m.asset;
+    if (!a.cond) { await Dialog.say([say('agent', `${c.name}요? 집 상태부터 보고 오세요. 안에 들어가 보기 전엔 값을 못 매겨요.`)]); return 'done'; }
+    if (a.repair === 'doing') { await Dialog.say([say('agent', `공사 중이죠? 끝나면 와요. ${this.mmss(Math.max(0, a.repairUntil - this.now()))} 남았네요.`)]); return 'done'; }
+    const K = this.COND[a.cond], base = Generator.disposalValue(c) * this.valueMod(m), rent = this.monthlyRent(c, m);
+    if (a.offer) {
+      const pick = await Dialog.say([say('agent', `${c.name} ${fmtWon(a.offer.price)}에 사겠대요. 시세는 ${fmtWon(c.market)}. 받으실래요?`)], [{ label: `${fmtWon(a.offer.price)}에 팔기`, value: 'y' }, { label: `더 기다리기 <small>다음 매수자 ${FEEL.liveSaleMin}분</small>`, value: 'w' }, { label: '그만두기', value: 'n' }]);
+      if (pick === 'y') return this.sold(m, c, a.offer.price, false);
+      if (pick === 'w') { a.offer = null; a.listed = this.now(); this.save(); await Dialog.say([say('agent', '알겠어요. 다른 손님 더 붙여 볼게요.')]); }
+      return 'done';
+    }
+    if (a.listed) { await Dialog.say([say('agent', `매수자 찾는 중이에요. ${this.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - this.now()))} 안에 손님 올 거예요.`)], [{ label: `급매로 지금 팔기 <small>${fmtWon(Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5)}</small>`, value: 'q' }, { label: '기다리기', value: 'n' }]).then(p => p === 'q' ? this.sold(m, c, Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5, true) : null); return 'done'; }
+    const opts = [];
+    if (!a.rentOn) opts.push({ label: `임대 내놓기 <small>월세 ${fmtWon(rent)} · ${FEEL.liveMonthMin}분마다 입금</small>`, value: 'rent' });
+    opts.push({ label: `매도 내놓기 <small>시세 근처 · 매수자 ${FEEL.liveSaleMin}분</small>`, value: 'sell' });
+    opts.push({ label: `급매 <small>${fmtWon(Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5)} 바로</small>`, value: 'quick' });
+    opts.push({ label: '시세 물어보기', value: 'inv' }, { label: '그만두기', value: 'n' });
+    const pick = await Dialog.say([say('agent', `${c.name}, 상태 ${K.label}${a.repair === 'done' ? '(수리 끝)' : ''}${a.rentOn ? `, 월세 ${fmtWon(a.rent)} 받는 중` : ''}. ${a.cond !== 'good' && a.repair !== 'done' ? `이 상태면 시세보다 ${Math.round((1 - K.mod) * 100)}% 깎여요. ` : ''}어떻게 할까요?`)], opts);
+    if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); this.save(); await Dialog.say([say('agent', `세입자 바로 붙였어요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
+    if (pick === 'sell') { a.listed = this.now(); this.save(); await Dialog.say([say('agent', `내놨어요. ${FEEL.liveSaleMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
+    if (pick === 'quick') return this.sold(m, c, Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5, true);
+    return pick;
+  },
+  async sold(m, c, price, quick) {
+    const a = m.asset; const months = this.heldMonths(m);
+    await hitStamp(); Sound.play('coins');
+    await Dialog.say([say('agent', `${fmtWon(price)}에 계약했어요. 축하합니다. 정산서 뽑아 드릴게요.`)]);
+    await this.settle(m, c, m.evictState, { price, months, condLabel: this.COND[a.cond].label + (a.repair === 'done' ? '·수리' : ''), repair: a.repair === 'done' ? a.repairCost : 0, rent: a.rent, rentMonths: a.rentMonths, rentTotal: a.rentTotal, quick });
+    return 'done';
+  },
+
   // 대금지급기한을 넘겼거나 대출이 부결됐다: 보증금 몰수, 받은 대출은 돌려준다
   async forfeitWin(m, why) {
     if (!m || m.done || !this.prePay(m)) return; this.opening = true; Game.busy = true;
@@ -4140,10 +4233,11 @@ const Live = {
     const f = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
     const cls = v => (v > 0 ? 'up' : v < 0 ? 'down' : ''); // .plus는 현금 팝업 애니메이션 클래스라 피한다
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
-    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done).map(k => { const c = this.caseFor(k); return `<span class="chip">${esc(my[k].name.split(' ').slice(0, 2).join(' '))} · ${fmtWon(my[k].bid)} · ${my[k].opened ? (my[k].phase === 'forced' ? '강제집행 중' : my[k].phase === 'evict' ? '명도 중' : `잔금 ${this.mmss(this.payLeft(my[k]))}`) : `개찰 ${this.mmss(this.left(c))}`}</span>`; });
+    const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done && my[k].phase !== 'own').map(k => { const c = this.caseFor(k); return `<span class="chip">${esc(my[k].name.split(' ').slice(0, 2).join(' '))} · ${fmtWon(my[k].bid)} · ${my[k].opened ? (my[k].phase === 'own' ? '보유 중' : my[k].phase === 'forced' ? '강제집행 중' : my[k].phase === 'evict' ? '명도 중' : `잔금 ${this.mmss(this.payLeft(my[k]))}`) : `개찰 ${this.mmss(this.left(c))}`}</span>`; });
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">자본 ${fmtWon(State.capital)} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
       <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : ''}</td><td class="pn ${cls(r.pnl)}">${f(r.pnl)}</td></tr>`).join('')}</table>
       ${pend.length ? `<div class="lvChips"><small>낸 입찰표</small>${pend.join('')}</div>` : ''}
+      ${this.owned().length ? `<div class="lvChips"><small>내 집</small>${this.owned().map(m => `<span class="chip">${esc(this.assetLine(m).replace(/^내 집 /, ''))}</span>`).join('')}</div>` : ''}
       ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? cls(r.profit) : 'dim'}">${r.won ? '낙찰 ' + f(r.profit) : r.forfeit ? '보증금 몰수 ' + f(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
   },
 };
@@ -5091,6 +5185,7 @@ async function staffTalk(kind) {
   if (kind === 'bank' && Live.on && Live.pending()) { State.ticket = null; return Live.bank(false); } // 채널: 낙찰 건 경락잔금대출
   if (kind === 'bank' && State.phase === 'won') { State.ticket = null; return loanReview(false); }
   if (kind === 'bank' && State.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
+  if (kind === 'agent' && Live.on && Live.owned().length) { const r = await Live.agent(); if (r !== 'inv') return; } // 채널: 내 집 임대·매도
   const greet = { registry: '네, 등기사항증명서 발급이세요?', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
   const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기 <small>(${slotLabel()})</small>`, value: 'inv', disabled: noSlot() }, { label: '그만두기', value: 'no' }]);
   if (pick !== 'inv') return;
@@ -5126,6 +5221,7 @@ async function objectUse(o, kind) {
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
   if (c.closed) { await Dialog.say([{ text: '이 물건은 매각이 끝났다. 새 물건은 사무실 PC에서 확인하자.' }]); return; }
+  if (Live.on) { const own = Live.ownedFor(c); if (own) return Live.home(own, c); } // 채널: 내 집 (상태 확인·수리)
   if (Live.on && (o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell'))) { const m = Live.evictFor(c); if (m) return Live.site(m, c); } // 채널: 낙찰받은 집 명도
   if ((o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell')) && State.phase === 'evict' && State.bidResult && c.id === State.bidResult.caseId) return evictAtSite(c);
   if (State.siteSession !== c.id) {
@@ -5473,17 +5569,19 @@ function computeSettlement() {
   if (State.phase === 'forfeit') return { kind: 'forfeit', lines: [['보증금 몰수', -br.deposit]], profit: -br.deposit };
   const a = Engine.analyze(c.data, br.bid); const R = caseRng(c, 123);
   const L = State.loan || { bank: 0, savings: 0, extra: 0 }; const E = State.evict || { moveFee: 0, forced: null };
-  const months = HOLD_MONTHS + (E.forced ? E.forced.months : 0);
-  const disposal = Generator.disposalValue(c);
+  const O = State.saleOverride || null; // 채널: 실제로 매도한 가격·보유 개월·수리비·임대 수입으로 정산
+  const months = O ? O.months : HOLD_MONTHS + (E.forced ? E.forced.months : 0);
+  const disposal = O ? O.price : Generator.disposalValue(c);
   const lines = [
-    [c.share ? `처분가치 (시세 ${fmtWon(c.market)} × 지분 × 0.7)` : c.super ? `처분가치 (시세 ${fmtWon(c.market)} × 0.6)` : c.lien && c.lien.real ? `처분가치 (시세 − 유치권 ${fmtWon(c.lien.amount)})` : '처분가치 (시세)', disposal],
+    O ? [`매도가 (시세 ${fmtWon(c.market)} · ${O.condLabel}${O.quick ? ' · 급매' : ''})`, disposal] : [c.share ? `처분가치 (시세 ${fmtWon(c.market)} × 지분 × 0.7)` : c.super ? `처분가치 (시세 ${fmtWon(c.market)} × 0.6)` : c.lien && c.lien.real ? `처분가치 (시세 − 유치권 ${fmtWon(c.lien.amount)})` : '처분가치 (시세)', disposal],
     ['낙찰가', -br.bid],
     ['인수액 (임차보증금·전세금)', -a.assumeTotal],
     ['이사비', -E.moveFee],
     ['강제집행비', -(E.forced ? E.forced.cost : 0)],
-    ['수리비', -Math.round(c.appraisal * R.U(0.005, 0.03) / 1e4) * 1e4],
+    O ? ['수리비 (인테리어 공사)', -O.repair] : ['수리비', -Math.round(c.appraisal * R.U(0.005, 0.03) / 1e4) * 1e4],
     [`금융비용 (대출 ${fmtWon(L.bank + L.savings)} × 연 5% × ${months}개월)`, -Math.round((L.bank + L.savings) * LOAN_RATE * months / 12)],
   ];
+  if (O && O.rentTotal) lines.push([`임대 수입 (월세 ${fmtWon(O.rent)} × ${O.rentMonths}개월)`, O.rentTotal]);
   if (L.extra) lines.push(['저축은행 고금리 추가비용', -L.extra]);
   if (c.illegal) lines.push(['이행강제금 (위반건축물 1년분)', -c.illegal.fine]);
   lines.push(['부대비용 (취득세·법무비 등 낙찰가 × 3%)', -Math.round(br.bid * EXTRA_RATE)]);

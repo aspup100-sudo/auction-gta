@@ -17,7 +17,9 @@
 <style>
 :root { --night:#14161c; --paper:#efe6d2; --gold:#cdae70; --seal:#b3392a; --navy:#0f3358; --blue:#1b5ea6; --ui:'IBM Plex Sans KR',system-ui,sans-serif; --serif:'Gowun Batang',serif; }
 * { box-sizing:border-box; }
-html, body { margin:0; height:100%; background:var(--night); color:var(--paper); font-family:var(--ui); overflow:hidden; -webkit-user-select:none; user-select:none; }
+html, body { margin:0; height:100%; background:var(--night); color:var(--paper); font-family:var(--ui); overflow:hidden; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; overscroll-behavior:none; }
+*:not(input):not(textarea) { -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; } /* 폰에서 꾹 눌러도 복사·찾아보기 메뉴가 안 뜨게 (사용자 2026-10-14 '꾹 누르면 계속 뜬다') */
+button, .btn, #touch, #hud, #hudBtns, #roadSign, #nav, #rankBox, #pager { -webkit-user-select:none !important; user-select:none !important; touch-action:manipulation; }
 #game { position:fixed; inset:0; display:block; image-rendering:pixelated; touch-action:none; }
 [hidden] { display:none !important; } /* .btn 등의 display 규칙이 hidden 속성을 덮어쓰지 않게 (채널에서 '오늘 일정 끝내기'가 보이던 버그) */
 .btn { font:inherit; color:var(--paper); background:#262a35; border:1px solid #3c4252; border-radius:8px; padding:8px 14px; cursor:pointer; transition:transform .12s ease-out, background .12s, box-shadow .12s; }
@@ -450,7 +452,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #pedals { right:16px; bottom:16px; gap:6px; } .short #pedals button { width:82px; height:44px; } .short #tHb { height:34px !important; }
   .short #hudSpeed { right:124px; bottom:92px; font-size:18px; }
   .short #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
-  .short #nav { left:56%; bottom:10px; padding:4px 10px 4px 4px; font-size:12px; max-width:400px; gap:8px; } .short #navMap { width:96px; height:70px; } .short #nav .turn .arrow { font-size:26px; } .short #nav .txt b { font-size:14px; } .short #navPick { padding:8px 10px; max-height:90vh; } .short #navPick h3 { font-size:14px; } .short #navPick .grid button { padding:5px 8px; font-size:12px; } .short #navPick .sec { margin:6px 0 3px; }
+  .short #nav { left:56%; bottom:10px; padding:4px 10px 4px 4px; font-size:12px; max-width:360px; gap:8px; } /* 400→360: 오른쪽 끝이 내리기 버튼과 겹쳤다 (사용자 2026-10-14) */ .short #navMap { width:96px; height:70px; } .short #nav .turn .arrow { font-size:26px; } .short #nav .txt b { font-size:14px; } .short #navPick { padding:8px 10px; max-height:90vh; } .short #navPick h3 { font-size:14px; } .short #navPick .grid button { padding:5px 8px; font-size:12px; } .short #navPick .sec { margin:6px 0 3px; }
   .short #toasts { bottom:auto; top:56px; }
   .short #chatLog { bottom:130px; left:126px; max-width:300px; } .short #chatBar { width:min(380px, 70vw); }
   .short #tChat { right:104px; bottom:92px; width:54px; height:36px; } .short.driving #tChat { right:16px; bottom:170px; }
@@ -6298,6 +6300,30 @@ const Layout = {
  * 나중 창에 '이미 열려 있어요'를 띄운다. 거기서 '이 창에서 하기'를 고르면 먼저 창이 멈춘다 (채널이면 저장하고 연결을 끊는다).
  * 로컬 테스트(127.0.0.1)는 한 브라우저에서 여러 페이지를 띄우므로 ?dupcheck 가 있을 때만 검사한다.
  */
+/* 아이폰 앱: 키보드·선택 메뉴가 닫힌 뒤에도 화면이 줄어든 채(아래 검은 띠) 남거나 위로 밀려 있는 걸 되돌린다 (사용자 2026-10-14 '차 탈 때 화면 이상해') */
+const ViewFix = {
+  busy: false, lastStuckH: 0,
+  ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent) && ((matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone); },
+  check() {
+    if (!document.body.classList.contains('touchOn')) return;
+    const ae = document.activeElement; if (ae && /^(input|textarea)$/i.test(ae.tagName)) return; // 글자를 적는 중엔 키보드 때문에 줄어든 게 정상
+    const vv = window.visualViewport;
+    const scrolled = (window.scrollY || window.pageYOffset || 0) > 0 || (vv && (vv.offsetTop > 1 || vv.offsetLeft > 1));
+    const shrunk = !!vv && innerHeight < Math.round(vv.height) - 1; // 보이는 영역보다 레이아웃이 작다 = 키보드가 남긴 자국
+    const stuck = this.ios() && innerWidth > innerHeight && innerHeight < Math.min(screen.width, screen.height) - 2 && innerHeight !== this.lastStuckH; // 가로인데 화면 높이가 폰 짧은 변보다 작다
+    if (scrolled) scrollTo(0, 0);
+    if (scrolled || shrunk || stuck) { this.lastStuckH = innerHeight; this.nudge(); }
+  },
+  nudge() { // 문서 높이를 살짝 바꿨다 되돌리면 iOS가 레이아웃 뷰포트를 다시 잰다
+    if (this.busy) return; this.busy = true; const de = document.documentElement; de.style.height = '100.01%';
+    requestAnimationFrame(() => { de.style.height = ''; scrollTo(0, 0); setTimeout(() => { this.busy = false; if (typeof resize === 'function') resize(); if (typeof Layout !== 'undefined' && Layout.apply) Layout.apply(); }, 60); });
+  },
+  bind() {
+    setInterval(() => this.check(), 1000);
+    if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(() => this.check(), 350));
+    document.addEventListener('focusout', () => { setTimeout(() => this.check(), 300); setTimeout(() => this.check(), 900); }); // 키보드가 내려간 뒤 한 번 더
+  },
+};
 const Instance = {
   halted: false, bc: null, id: Math.random().toString(36).slice(2), waiting: false,
   bind() {
@@ -6437,7 +6463,11 @@ const Instance = {
     Store.set('mpName', name); $('mpCreate').disabled = true; $('mpJoin').disabled = true;
     const ok = await Net.join(code, name); if (!ok) { $('mpCreate').disabled = false; $('mpJoin').disabled = false; }
   };
-  Instance.bind(); ChatBar.bind(); Layout.bind();
+  Instance.bind(); ChatBar.bind(); Layout.bind(); ViewFix.bind();
+  // 폰: 꾹 누르면 뜨는 복사·찾아보기 메뉴와 글자 선택을 막는다 (입력칸은 그대로)
+  const typingEl = el => el && /^(input|textarea)$/i.test(el.tagName);
+  document.addEventListener('contextmenu', e => { if (document.body.classList.contains('touchOn') && !typingEl(e.target)) e.preventDefault(); });
+  document.addEventListener('selectstart', e => { if (document.body.classList.contains('touchOn') && !typingEl(e.target) && !e.target.closest('#devPage')) e.preventDefault(); });
   $('btnLayout').onclick = () => { Menu.toggle(false); Layout.edit(true); };
   // 게임 나가기 → 제목 화면 (사용자 요청 2026-10-14). 한 번 더 묻고 새로고침으로 깨끗하게 돌아간다. 채널 기록은 저장돼 있어 이어서 할 수 있고, 혼자 하기 진행은 사라진다.
   const quitBtnHtml = `<button class="btn" id="btnQuit">게임 나가기 <small>제목 화면으로</small></button>`;

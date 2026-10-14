@@ -51,7 +51,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title .mp .row { margin-top:8px; } #title .mp .chHead { margin-top:12px; color:var(--paper); font-weight:700; } #title .mp .chHead small { font-weight:400; opacity:.6; margin-left:6px; }
 #title .mp .chRow { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:6px; } #title .mp .ch { display:inline-flex; flex-direction:column; align-items:center; min-width:72px; padding:7px 10px; line-height:1.15; gap:2px; } #title .mp .ch b { font-size:14px; } #title .mp .ch small { font-size:11px; opacity:.7; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .ch.sel small { opacity:1; }
 /* 제목 화면: 모드(혼자/친구/채널)를 먼저 고르고, 고른 뒤에만 자본·이름·시작 버튼이 보인다 (사용자 2026-10-14: 헷갈리지 않게) */
-#title #capLabel, #title #caps, #title #capRow, #title #nameBox { display:none; } #title #modeHint { color:var(--paper); opacity:.6; font-size:13px; margin-top:-4px; } #title.modeSolo #modeHint, #title.modeRoom #modeHint, #title.modeCh #modeHint { display:none; }
+#title #capLabel, #title #caps, #title #capRow, #title #nameBox { display:none; } #title.gated #modeRow, #title.gated #modeHint, #title.gated #capLabel, #title.gated #caps, #title.gated #capRow, #title.gated #nameBox, #title.gated .mpWrap, #title.gated #profileTitle { display:none !important; } #title #installGate { max-width:520px; background:rgba(205,174,112,.12); border:1px solid var(--gold); border-radius:10px; padding:10px 16px; color:var(--paper); text-align:center; } #title #installGate b { color:var(--gold); font-size:16px; } #title #installGate p { margin:6px 0 0; font-size:13px; opacity:.85; line-height:1.5; } #title #modeHint { color:var(--paper); opacity:.6; font-size:13px; margin-top:-4px; } #title.modeSolo #modeHint, #title.modeRoom #modeHint, #title.modeCh #modeHint { display:none; }
 #title.modeSolo #capLabel, #title.modeRoom #capLabel { display:block; } #title.modeSolo #caps, #title.modeRoom #caps { display:flex; } #title.modeSolo #capRow, #title.modeRoom #capRow, #title.modeCh.chOn #capRow { display:flex; } #title.modeRoom #nameBox, #title.modeCh #nameBox { display:flex; }
 #title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title.chOn .mp .ch.sel { cursor:pointer; } #title.chOn .mp .ch.sel::after { content:'다시 누르면 나가기'; font-size:10px; opacity:.7; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
@@ -411,7 +411,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #devPage details summary { cursor:pointer; color:var(--gold); }
 #devPage .note { font-size:12px; opacity:.6; }
 
-#title .installRow { margin-top:6px; } #btnGuide small { opacity:.65; font-weight:400; margin-left:4px; }
+#title .installRow { margin-top:6px; }
+#quitBox { margin-top:14px; padding-top:10px; border-top:1px dashed #cfc7ad; display:flex; gap:8px; align-items:center; flex-wrap:wrap; } #quitBox small { opacity:.65; font-weight:400; margin-left:4px; } #quitBox .qWarn { color:#a33; font-size:13px; } #btnGuide small { opacity:.65; font-weight:400; margin-left:4px; }
 #installGuide { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(600px, calc(100% - 24px)); max-height:calc(100% - 40px); overflow:auto; z-index:70; } #installGuide.in { transform:translate(-50%, -50%); }
 #installGuide .rcpt { width:100%; } #installGuide .ig { margin:10px 0; padding:10px 12px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; } #installGuide .ig.here { border-color:var(--gold); background:#fff8e3; } #installGuide .ig h3 { margin:0 0 6px; font-size:15px; display:flex; gap:8px; align-items:center; } #installGuide .ig h3 .tagHere { font-size:11px; color:#fff; background:#b8860b; border-radius:10px; padding:1px 8px; font-weight:400; } #installGuide .ig ol { margin:0; padding-left:20px; line-height:1.55; font-size:14px; } #installGuide .ig p { margin:6px 0 0; font-size:12.5px; color:#555; } #installGuide .igLink { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; font-size:13px; } #installGuide .igLink code { background:#0d0f14; color:var(--gold); padding:3px 8px; border-radius:6px; user-select:all; }
 .xClose { position:sticky; top:0; display:block; margin:-4px -6px -28px auto; width:30px; height:30px; border-radius:50%; border:2px solid #fff; background:#14213a; color:#fff; font-size:20px; line-height:26px; text-align:center; padding:0; cursor:pointer; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,.35); font-family:sans-serif; }
@@ -477,6 +478,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div class="tag">걸어서 모으는 정보, 손으로 하는 권리분석</div>
   <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo">혼자 하기<small>자본 골라서 시작</small></button><button class="btn mode" data-mode="modeRoom">친구와 같이 하기<small>방 만들기</small></button><button class="btn mode" data-mode="modeCh">실시간 채널<small>코드 없이 아무나</small></button></div>
   <div id="modeHint">어떻게 할지 먼저 골라 주세요</div>
+  <div id="installGate" hidden><b>📲 설치해서 열어야 시작할 수 있어요</b><p>웹 브라우저에서는 둘러보기만 돼요. 아래 "앱으로 설치하는 법"대로 홈 화면(폰)이나 바탕화면(컴퓨터)에 설치한 뒤, 그 아이콘으로 열어 주세요.</p></div>
   <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"><small id="nameLock"></small><button class="btn" id="btnProfile">내 캐릭터 꾸미기</button></div>
   <div class="mp" id="profileTitle" hidden><div class="mph">내 캐릭터 <small>색을 눌러 고르세요</small></div><div class="profileBox" data-profile></div></div>
   <div class="mpWrap">
@@ -590,6 +592,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <button class="btn" id="btnLayout">버튼 위치 조정</button>
   <button class="btn" id="btnEndDay">오늘 일정 끝내기</button>
   <button class="btn" onclick="Menu.toggle(false)">닫기 (Esc)</button>
+  <div id="quitBox"><button class="btn" id="btnQuit">게임 나가기 <small>제목 화면으로</small></button></div>
 </div>
 <div id="zoneMap">
   <div class="zh"><span id="zoneMapName"></span><small>장소나 가장자리 구 이름을 누르면 목적지 · 두 손가락/휠로 확대 · 닫기: 바깥 탭 / Esc / N</small></div>
@@ -6069,6 +6072,10 @@ const Layout = {
       $('igCopy').onclick = () => { try { navigator.clipboard.writeText(url); Toast.show('주소를 복사했어요. 친구에게 보내 주세요.'); } catch (e) { Toast.show('주소: ' + url); } };
       const now = $('igNow'); if (now) now.onclick = () => { if (doInstall()) el.classList.remove('in'); };
     };
+    // 설치해야만 시작 (사용자 요청 2026-10-14 '웹에서는 시작 안 되게'): 웹사이트로 열면(설치 안 된 브라우저 탭) 설치 안내만 보인다.
+    // 예외: 아티팩트처럼 iframe 안에서 열렸을 때, 파일로 열었을 때, 로컬 테스트(127.0.0.1/localhost). 설치한 앱(standalone)은 통과.
+    const gated = /^https?:$/.test(location.protocol) && !standalone && window === window.top && !/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && !localStorage.getItem('auctionGTA.webOk');
+    if (gated) { $('title').classList.add('gated'); $('installGate').hidden = false; $('btnGuide').classList.add('gold'); }
     if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   } catch (e) {}
   let cap = 2e8;
@@ -6138,6 +6145,16 @@ const Layout = {
   };
   ChatBar.bind(); Layout.bind();
   $('btnLayout').onclick = () => { Menu.toggle(false); Layout.edit(true); };
+  // 게임 나가기 → 제목 화면 (사용자 요청 2026-10-14). 한 번 더 묻고 새로고침으로 깨끗하게 돌아간다. 채널 기록은 저장돼 있어 이어서 할 수 있고, 혼자 하기 진행은 사라진다.
+  const quitBtnHtml = `<button class="btn" id="btnQuit">게임 나가기 <small>제목 화면으로</small></button>`;
+  const quitClick = () => {
+    Sound.play('paper'); const box = $('quitBox');
+    const warn = Live.on ? '채널 기록(돈·입찰·순위)은 저장돼 있어 다음에 이어서 해요.' : Net.on ? '친구 방에서 나가요. 진행은 저장되지 않아요.' : '이번 판 진행은 저장되지 않아요. (결과 기록은 남아요)';
+    box.innerHTML = `<span class="qWarn">정말 제목 화면으로 나갈까요? ${warn}</span><button class="btn gold" id="quitYes">네, 나가기</button><button class="btn" id="quitNo">아니요</button>`;
+    $('quitYes').onclick = () => { try { if (Live.on) Live.save(); } catch (e) {} try { Net.send({ t: 'bye' }); } catch (e) {} if (location.hash) history.replaceState(null, '', location.pathname); location.reload(); };
+    $('quitNo').onclick = () => { box.innerHTML = quitBtnHtml; $('btnQuit').onclick = quitClick; };
+  };
+  $('btnQuit').onclick = quitClick;
   document.querySelectorAll('.btn').forEach(b => b.addEventListener('pointerdown', () => { Sound.init(); Sound.play('click'); }));
   $('btnNote').onclick = () => Notebook.toggle();
   $('minimap').onclick = () => SeoulMap.toggle(true);

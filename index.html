@@ -416,6 +416,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #title .installRow { margin-top:6px; }
 #quitBox { margin-top:14px; padding-top:10px; border-top:1px dashed #cfc7ad; display:flex; gap:8px; align-items:center; flex-wrap:wrap; } #quitBox small { opacity:.65; font-weight:400; margin-left:4px; } #quitBox .qWarn { color:#a33; font-size:13px; } #btnGuide small { opacity:.65; font-weight:400; margin-left:4px; }
 #installGuide { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(600px, calc(100% - 24px)); max-height:calc(100% - 40px); overflow:auto; z-index:70; } #installGuide.in { transform:translate(-50%, -50%); }
+#dupGate { left:50%; top:50%; transform:translate(-50%, -50%); box-shadow:0 0 0 100vmax rgba(0,0,0,.8); width:min(460px, calc(100% - 24px)); z-index:95; } #dupGate .rcpt { width:100%; } #dupGate p { font-size:14px; line-height:1.5; margin:10px 0; } #dupGate .pcBtns { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; } body.dup #rotate { display:none !important; }
 #shop { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(640px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #shop.in { transform:translate(-50%, -50%); } #shop .rcpt { width:100%; } #shop .rcHead small { display:block; font:600 13px var(--ui); color:#6a5a3a; margin-top:2px; }
 .shTabs { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; } .shTabs .btn.sel { background:var(--gold); color:#1a1408; }
 .shGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; } .shItem { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; text-align:center; } .shItem.own { border-color:#8fb58f; } .shItem.on { border-color:var(--gold); background:#fff8e3; } .shItem canvas { width:72px; height:48px; image-rendering:pixelated; background:#e2d6bb; border-radius:6px; object-fit:contain; } .shItem b { font-size:12.5px; } .shItem span { font-size:11.5px; color:#6a5a3a; } .shItem .btn { font-size:12px; padding:4px 10px; } .shNote { font-size:12px; color:#555; margin:10px 0 0; }
@@ -618,6 +619,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
+<div id="dupGate" class="ovl"></div>
 <div id="layoutBar"><span>버튼을 끌어서 옮기세요</span><button class="btn" id="layoutReset">기본값</button><button class="btn gold" id="layoutDone">완료</button></div>
 <div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
 
@@ -5310,6 +5312,7 @@ const Menu = {
 /* ---- 루프 ---- */
 let last = performance.now();
 function frame(now) {
+  if (Instance.halted) return; // 다른 창이 게임을 가져갔다 (boot.js Instance)
   let dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (Game.hitstop > 0) { Game.hitstop -= dt; dt = 0; }
   update(dt); draw();
@@ -6235,6 +6238,42 @@ const Layout = {
   },
 };
 
+/* ---- 한 번에 한 창만 (사용자 2026-10-14: 컴퓨터에서 두 번 열면 창이 두 개 열린다) ----
+ * 설치된 앱은 manifest launch_handler(focus-existing)로 기존 창이 올라오고, 그래도 두 창이 열리면 BroadcastChannel로 서로 알아채서
+ * 나중 창에 '이미 열려 있어요'를 띄운다. 거기서 '이 창에서 하기'를 고르면 먼저 창이 멈춘다 (채널이면 저장하고 연결을 끊는다).
+ * 로컬 테스트(127.0.0.1)는 한 브라우저에서 여러 페이지를 띄우므로 ?dupcheck 가 있을 때만 검사한다.
+ */
+const Instance = {
+  halted: false, bc: null, id: Math.random().toString(36).slice(2), waiting: false,
+  bind() {
+    if (/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && !/dupcheck/.test(location.search)) return;
+    try { this.bc = new BroadcastChannel('agta-instance'); } catch (e) { return; }
+    this.bc.onmessage = e => {
+      const m = e.data; if (!m || m.from === this.id) return;
+      if (m.t === 'ping' && !this.halted) this.bc.postMessage({ t: 'alive', from: this.id, playing: Game.scene !== 'title' });
+      else if (m.t === 'alive' && this.waiting) { this.waiting = false; this.showDup(m.playing); }
+      else if (m.t === 'takeover' && !this.halted) this.halt();
+    };
+    this.waiting = true; this.bc.postMessage({ t: 'ping', from: this.id }); setTimeout(() => { this.waiting = false; }, 600);
+  },
+  showDup(playing) {
+    const el = $('dupGate');
+    el.innerHTML = `<div class="rcpt"><div class="rcHead">이미 다른 창에서 열려 있어요</div><p>경매 GTA는 한 번에 한 창에서만 해요.${playing ? ' 다른 창은 지금 게임 중이에요.' : ''} 이 창은 닫고 먼저 연 창을 쓰는 게 좋아요.</p><div class="pcBtns"><button class="btn gold" id="dupClose">이 창 닫기</button><button class="btn" id="dupHere">여기서 하기 <small>먼저 연 창은 멈춤</small></button></div></div>`;
+    el.classList.add('in'); document.body.classList.add('dup');
+    $('dupClose').onclick = () => { try { window.close(); } catch (e) {} setTimeout(() => { if (!window.closed) { el.querySelector('p').textContent = '이 창은 브라우저의 닫기(X)로 닫아 주세요.'; } }, 300); };
+    $('dupHere').onclick = () => { this.bc.postMessage({ t: 'takeover', from: this.id }); el.classList.remove('in'); document.body.classList.remove('dup'); Sound.init(); };
+  },
+  halt() {
+    this.halted = true;
+    try { if (Live.on) Live.save(); } catch (e) {}
+    try { Net.send({ t: 'bye' }); Net.on = false; Net.closeWs(); if (Net.peer) Net.peer.destroy(); if (Net.bc) Net.bc.close(); } catch (e) {}
+    try { Sound.applyVolumes && (Settings.muted = true, Sound.applyVolumes()); } catch (e) {}
+    const el = $('dupGate');
+    el.innerHTML = `<div class="rcpt"><div class="rcHead">다른 창에서 게임을 열었어요</div><p>이 창은 멈췄어요. 닫아 주세요.${Live.on ? ' 채널 기록은 저장했어요.' : ''}</p><div class="pcBtns"><button class="btn gold" id="dupReload">이 창에서 다시 시작</button></div></div>`;
+    el.classList.add('in'); document.body.classList.add('dup');
+    $('dupReload').onclick = () => location.reload();
+  },
+};
 /* ===================== 부트: 타이틀 · 설정 · 터치 ===================== */
 (function boot() {
   if (location.hash === '#test') { $('devPage').style.display = 'block'; $('title').style.display = 'none'; devPage(); return; }
@@ -6342,7 +6381,7 @@ const Layout = {
     Store.set('mpName', name); $('mpCreate').disabled = true; $('mpJoin').disabled = true;
     const ok = await Net.join(code, name); if (!ok) { $('mpCreate').disabled = false; $('mpJoin').disabled = false; }
   };
-  ChatBar.bind(); Layout.bind();
+  Instance.bind(); ChatBar.bind(); Layout.bind();
   $('btnLayout').onclick = () => { Menu.toggle(false); Layout.edit(true); };
   // 게임 나가기 → 제목 화면 (사용자 요청 2026-10-14). 한 번 더 묻고 새로고침으로 깨끗하게 돌아간다. 채널 기록은 저장돼 있어 이어서 할 수 있고, 혼자 하기 진행은 사라진다.
   const quitBtnHtml = `<button class="btn" id="btnQuit">게임 나가기 <small>제목 화면으로</small></button>`;

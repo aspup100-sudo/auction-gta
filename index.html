@@ -411,7 +411,9 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #devPage details summary { cursor:pointer; color:var(--gold); }
 #devPage .note { font-size:12px; opacity:.6; }
 
-#btnInstall { margin-top:10px; }
+#title .installRow { margin-top:6px; } #btnGuide small { opacity:.65; font-weight:400; margin-left:4px; }
+#installGuide { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(600px, calc(100% - 24px)); max-height:calc(100% - 40px); overflow:auto; z-index:70; } #installGuide.in { transform:translate(-50%, -50%); }
+#installGuide .rcpt { width:100%; } #installGuide .ig { margin:10px 0; padding:10px 12px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; } #installGuide .ig.here { border-color:var(--gold); background:#fff8e3; } #installGuide .ig h3 { margin:0 0 6px; font-size:15px; display:flex; gap:8px; align-items:center; } #installGuide .ig h3 .tagHere { font-size:11px; color:#fff; background:#b8860b; border-radius:10px; padding:1px 8px; font-weight:400; } #installGuide .ig ol { margin:0; padding-left:20px; line-height:1.55; font-size:14px; } #installGuide .ig p { margin:6px 0 0; font-size:12.5px; color:#555; } #installGuide .igLink { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; font-size:13px; } #installGuide .igLink code { background:#0d0f14; color:var(--gold); padding:3px 8px; border-radius:6px; user-select:all; }
 .xClose { position:sticky; top:0; display:block; margin:-4px -6px -28px auto; width:30px; height:30px; border-radius:50%; border:2px solid #fff; background:#14213a; color:#fff; font-size:20px; line-height:26px; text-align:center; padding:0; cursor:pointer; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,.35); font-family:sans-serif; }
 .xClose:hover { background:#b3392a; }
 .keys { margin:8px 0 10px; font-size:13px; }
@@ -498,7 +500,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   </div>
   <div class="row" id="capRow"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
-  <button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button>
+  <div class="row installRow"><button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button><button class="btn" id="btnGuide">📲 앱으로 설치하는 법 <small>폰 · 컴퓨터</small></button></div>
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
 </div>
 
@@ -605,6 +607,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="evictPanel" class="ovl"></div>
 <div id="result"></div>
 <div id="records" class="ovl"></div>
+<div id="installGuide" class="ovl"></div>
 <div id="layoutBar"><span>버튼을 끌어서 옮기세요</span><button class="btn" id="layoutReset">기본값</button><button class="btn gold" id="layoutDone">완료</button></div>
 <div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
 
@@ -6044,9 +6047,28 @@ const Layout = {
   try {
     let deferred = null;
     addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; $('btnInstall').hidden = false; $('btnInstall').textContent = document.body.classList.contains('touchOn') ? '홈 화면에 설치' : '바탕화면에 앱으로 설치'; });
-    $('btnInstall').onclick = () => { if (!deferred) return; deferred.prompt(); deferred = null; $('btnInstall').hidden = true; };
+    const doInstall = () => { if (!deferred) return false; deferred.prompt(); deferred = null; $('btnInstall').hidden = true; return true; };
+    $('btnInstall').onclick = doInstall;
     const standalone = (matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
     if (/^https?:$/.test(location.protocol) && /iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) $('iosHint').hidden = false;
+    // 설치 방법 안내 (사용자 요청 2026-10-14: 폰·컴퓨터에 어떻게 설치하는지 모르는 사람을 위해)
+    $('btnGuide').onclick = () => {
+      Sound.init(); Sound.play('paper');
+      const ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), android = /android/i.test(ua), pc = !ios && !android;
+      const url = /^https?:$/.test(location.protocol) ? location.href.split('#')[0].split('?')[0] : 'https://aspup100-sudo.github.io/auction-gta/';
+      const here = (on) => on ? ' here' : '', tag = (on) => on ? '<span class="tagHere">지금 이 기기</span>' : '';
+      $('installGuide').innerHTML = `<div class="rcpt"><div class="rcHead">앱으로 설치하는 법 <small>${standalone ? '이미 앱으로 열었어요' : '설치하면 아이콘으로 바로 열려요'}</small></div>
+        <div class="igLink">게임 주소 <code>${esc(url)}</code><button class="btn" id="igCopy">주소 복사</button><small>친구에게 보내면 같은 채널에서 만날 수 있어요.</small></div>
+        <div class="ig${here(android)}"><h3>📱 안드로이드 폰 ${tag(android)}</h3><ol><li><b>Chrome</b>으로 위 주소를 연다.</li><li>오른쪽 위 <b>⋮ 메뉴</b> → <b>"홈 화면에 추가"</b> (또는 <b>"앱 설치"</b>).</li><li><b>추가</b>를 누르면 홈 화면에 아이콘이 생긴다. 그걸로 열면 전체 화면 앱처럼 돌아간다.</li></ol>${deferred ? '<p>이 화면에서 바로 설치할 수도 있어요 → <button class="btn gold" id="igNow">지금 설치</button></p>' : ''}</div>
+        <div class="ig${here(ios)}"><h3>🍎 아이폰 · 아이패드 ${tag(ios)}</h3><ol><li><b>Safari</b>로 위 주소를 연다 (크롬·카카오톡 안 브라우저에서는 안 돼요).</li><li>아래 가운데 <b>공유 버튼</b> (네모에 위 화살표) 누르기.</li><li>목록에서 <b>"홈 화면에 추가"</b> → 오른쪽 위 <b>추가</b>.</li></ol><p>홈 화면 아이콘으로 열면 주소창 없이 전체 화면으로 열려요.</p></div>
+        <div class="ig${here(pc)}"><h3>💻 컴퓨터 (Windows · Mac) ${tag(pc)}</h3><ol><li><b>Chrome</b> 또는 <b>Edge</b>로 위 주소를 연다.</li><li>주소창 오른쪽 끝의 <b>설치 아이콘</b> (모니터에 ↓ 모양)을 누르거나, 오른쪽 위 <b>⋮ 메뉴 → "앱으로 설치" / "경매 GTA 설치"</b>.</li><li><b>설치</b>를 누르면 바탕화면과 시작 메뉴에 아이콘이 생기고, 창으로 따로 열린다.</li></ol>${deferred ? '<p>이 화면에서 바로 설치할 수도 있어요 → <button class="btn gold" id="igNow">지금 설치</button></p>' : ''}<p>삭제는 앱 창 오른쪽 위 ⋮ → "앱 제거".</p></div>
+        <p style="font-size:12.5px;color:#555;margin:4px 0 0">설치한 뒤에는 인터넷 없이도 열려요 (같이 하기·실시간 채널은 인터넷 필요). 새 버전은 다음에 열 때 자동으로 바뀌고, 안 바뀌면 새로고침을 두 번 해 주세요.</p>
+        <div class="pcBtns"><button class="btn" id="igClose">닫기</button></div></div>`;
+      const el = $('installGuide'); el.classList.add('in');
+      $('igClose').onclick = () => el.classList.remove('in');
+      $('igCopy').onclick = () => { try { navigator.clipboard.writeText(url); Toast.show('주소를 복사했어요. 친구에게 보내 주세요.'); } catch (e) { Toast.show('주소: ' + url); } };
+      const now = $('igNow'); if (now) now.onclick = () => { if (doInstall()) el.classList.remove('in'); };
+    };
     if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   } catch (e) {}
   let cap = 2e8;

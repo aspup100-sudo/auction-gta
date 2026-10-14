@@ -3094,7 +3094,7 @@ const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: 
 const WEEKDAY_ONLY = ['registry', 'center', 'bank', 'savings'];
 
 function buildInterior(place) {
-  const cs = place.caseId ? State.week.cases.find(c => c.id === place.caseId) : null;
+  const cs = place.caseId ? caseById(place.caseId) : null; // 채널: 회차가 지나 목록에서 빠진 내 낙찰 물건도 찾는다 (사용자 2026-10-14 '명도할 때 아무것도 안 돼')
   const def = INTERIOR_DEFS[cs && cs.type === '토지' ? 'site_land' : place.kind];
   const map = def.map, H = map.length, W = map[0].length;
   const solid = new Uint8Array(W * H);
@@ -5501,9 +5501,9 @@ async function objectUse(o, kind) {
   if (o.type === 'arcade') { Sound.play('blip', 0.8); await Dialog.say([{ name: `게임기 ${o.no}번`, text: '화면에 "COMING SOON"만 떠 있다. 미니게임은 아직 준비 중이다.' }]); return; }
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
-  if (c.closed) { await Dialog.say([{ text: '이 물건은 매각이 끝났다. 새 물건은 사무실 PC에서 확인하자.' }]); return; }
   if (Live.on) { const own = Live.ownedFor(c); if (own) return Live.home(own, c); } // 채널: 내 집 (상태 확인·수리)
-  if (Live.on && (o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell'))) { const m = Live.evictFor(c); if (m) return Live.site(m, c); } // 채널: 낙찰받은 집 명도
+  if (Live.on && (o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell'))) { const m = Live.evictFor(c); if (m) return Live.site(m, c); } // 채널: 낙찰받은 집 명도 (개찰이 끝난 물건이므로 '매각 끝' 안내보다 먼저)
+  if (c.closed) { await Dialog.say([{ text: '이 물건은 매각이 끝났다. 새 물건은 사무실 PC에서 확인하자.' }]); return; }
   if ((o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell')) && State.phase === 'evict' && State.bidResult && c.id === State.bidResult.caseId) return evictAtSite(c);
   if (State.siteSession !== c.id) {
     const pick = await Dialog.say([{ text: `${c.name} 현장이다. 본격적으로 둘러볼까?` }], [{ label: `현장 조사 시작 <small>(${slotLabel()})</small>`, value: 'go', disabled: noSlot() }, { label: '나중에', value: 'no' }]);

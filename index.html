@@ -88,7 +88,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title a { color:var(--gold); }
 
 /* HUD */
-#hud { position:fixed; inset:0; pointer-events:none; opacity:0; transition:opacity .3s; z-index:10; padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0); }
+#hud { position:fixed; top:0; left:0; right:0; height:var(--vh, 100%); pointer-events:none; opacity:0; transition:opacity .3s; z-index:10; padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0); }
 #hud.on { opacity:1; }
 #minimap { position:absolute; top:12px; right:16px; width:180px; height:130px; pointer-events:auto; cursor:pointer; border-radius:8px; box-shadow:0 3px 0 rgba(0,0,0,.45); }
 #hudCash { position:absolute; top:152px; right:16px; font:700 clamp(20px, 3.2vw, 30px)/1 var(--ui); color:#ffd84a; letter-spacing:1px; -webkit-text-stroke:1.5px #000; paint-order:stroke; text-shadow:0 2px 0 #000; transition:color .2s; }
@@ -156,7 +156,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .toast.in { opacity:1; transform:none; }
 
 /* 대화창 */
-#dialog { position:fixed; left:50%; bottom:16px; width:min(760px, calc(100% - 32px)); transform:translate(-50%, 130%); background:rgba(20,22,28,.96); border:2px solid var(--gold); border-radius:12px; padding:14px 16px; z-index:30; display:flex; gap:14px; transition:transform .22s ease-out; box-shadow:0 6px 0 rgba(0,0,0,.4); pointer-events:auto; }
+#dialog { position:fixed; left:50%; bottom:calc(16px - var(--vgap, 0px)); width:min(760px, calc(100% - 32px)); transform:translate(-50%, 130%); background:rgba(20,22,28,.96); border:2px solid var(--gold); border-radius:12px; padding:14px 16px; z-index:30; display:flex; gap:14px; transition:transform .22s ease-out; box-shadow:0 6px 0 rgba(0,0,0,.4); pointer-events:auto; }
 #dialog.in { transform:translate(-50%, 0); }
 .portraitWrap { position:relative; flex:none; }
 #dlgPortrait { width:96px; height:96px; image-rendering:pixelated; background:#2a2e39; border-radius:8px; border:1px solid #3c4252; }
@@ -262,7 +262,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .doc.memo p { font-family:var(--serif); font-size:16px; }
 
 /* 모바일 조작 */
-#touch { position:fixed; inset:0; pointer-events:none; z-index:12; display:none; }
+#touch { position:fixed; top:0; left:0; right:0; height:var(--vh, 100%); pointer-events:none; z-index:12; display:none; } /* inset:0 → 진짜 높이(--vh): iOS 앱에서 줄어든 화면이 남아도 조작판이 아래 끝까지 (2026-10-14) */
 /* 버튼 위치 조정 모드 */
 #layoutBar { position:fixed; top:8px; left:50%; transform:translate(-50%, -160%); z-index:40; background:#14161c; border:2px solid var(--gold); border-radius:10px; padding:6px 12px; color:#fff; display:flex; gap:8px; align-items:center; font-size:13px; transition:transform .2s; box-shadow:0 4px 0 rgba(0,0,0,.5); }
 #layoutBar.in { transform:translate(-50%, 0); }
@@ -4626,7 +4626,19 @@ const Touch = { x: 0, y: 0, active: false, gas: false, brake: false, hb: false }
 
 /* ---- 캔버스 ---- */
 const cv = document.getElementById('game'); const ctx = cv.getContext('2d');
-let VW = 0, VH = 0, DPR = 1;
+let VW = 0, VH = 0, DPR = 1, IW0 = 0, IH0 = 0;
+// iOS 홈 화면 앱: 키보드가 내려간 뒤에도 레이아웃 높이(innerHeight)가 줄어든 채 남아 아래가 검게 비던 문제(사용자 2026-10-14, v57 흔들기로도 안 잡힘).
+// 그래서 '진짜 높이'를 따로 잰다: 보이는 영역(visualViewport)이 더 크면 그 값, 아이폰 앱 가로면 폰 짧은 변. 글자 입력 중(키보드 올라옴)엔 그대로 둔다.
+let IOS_APP = null;
+function iosStandalone() { if (IOS_APP === null) IOS_APP = /iphone|ipad|ipod/i.test(navigator.userAgent) && ((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || !!navigator.standalone); return IOS_APP; }
+function realVH() {
+  const h = innerHeight;
+  const ae = document.activeElement; if (ae && /^(input|textarea)$/i.test(ae.tagName)) return h;
+  const vv = window.visualViewport; let best = h;
+  if (vv && vv.offsetTop < 1 && Math.round(vv.height) > h + 1 && Math.round(vv.height) - h < 200) best = Math.round(vv.height);
+  if (iosStandalone() && innerWidth > innerHeight) { const s = Math.min(screen.width, screen.height); if (s > best && s - h < 200) best = s; }
+  return best;
+}
 // 폰을 세로로 들고 있어도 가로로 논다: body를 90도 눕히고(body.rot) 가로·세로를 바꿔 쓴다. 터치 좌표는 localPt/localRect로 되돌린다.
 let ROT = false;
 function resize() {
@@ -4634,7 +4646,9 @@ function resize() {
   const touch = document.body.classList.contains('touchOn');
   ROT = false; // 화면 눕히기는 사용자가 어색하다고 해서 끔(2026-10-13); 세로면 #rotate 안내가 뜬다
   document.body.classList.toggle('rot', ROT);
-  VW = ROT ? innerHeight : innerWidth; VH = ROT ? innerWidth : innerHeight;
+  IW0 = innerWidth; IH0 = innerHeight;
+  VW = ROT ? innerHeight : innerWidth; VH = ROT ? innerWidth : realVH();
+  const de = document.documentElement; de.style.setProperty('--vh', VH + 'px'); de.style.setProperty('--vgap', Math.max(0, VH - innerHeight) + 'px'); // HUD·조작판·대화창이 캔버스와 같은 높이를 쓰게
   document.body.classList.toggle('short', touch && VH <= 520);
   cv.width = VW * DPR; cv.height = VH * DPR; cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
 }
@@ -5477,7 +5491,7 @@ const Menu = {
 let last = performance.now();
 function frame(now) {
   if (Instance.halted) return; // 다른 창이 게임을 가져갔다 (boot.js Instance)
-  if (!ROT && (innerWidth !== VW || innerHeight !== VH || Math.min(2, window.devicePixelRatio || 1) !== DPR)) resize(); // 폰이 세로로 켜졌다 가로로 돌아간 뒤 resize 이벤트가 안 와서 캔버스가 반만 그려지던 것 (사용자 2026-10-14 '들어가면 한 번씩 오른쪽이 검게')
+  if (!ROT && (innerWidth !== IW0 || innerHeight !== IH0 || Math.min(2, window.devicePixelRatio || 1) !== DPR || realVH() !== VH)) resize(); // realVH: 키보드가 내려가 진짜 높이가 돌아오면 바로 // 폰이 세로로 켜졌다 가로로 돌아간 뒤 resize 이벤트가 안 와서 캔버스가 반만 그려지던 것 (사용자 2026-10-14 '들어가면 한 번씩 오른쪽이 검게')
   let dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (Game.hitstop > 0) { Game.hitstop -= dt; dt = 0; }
   update(dt); draw();
@@ -6426,21 +6440,23 @@ const LeftStack = {
   },
 };
 const ViewFix = {
-  busy: false, lastStuckH: 0,
-  ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent) && ((matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone); },
+  busy: false, lastNudge: 0, n: 0,
+  ios() { return typeof iosStandalone === 'function' ? iosStandalone() : false; },
   check() {
     if (!document.body.classList.contains('touchOn')) return;
     const ae = document.activeElement; if (ae && /^(input|textarea)$/i.test(ae.tagName)) return; // 글자를 적는 중엔 키보드 때문에 줄어든 게 정상
     const vv = window.visualViewport;
     const scrolled = (window.scrollY || window.pageYOffset || 0) > 0 || (vv && (vv.offsetTop > 1 || vv.offsetLeft > 1));
     const shrunk = !!vv && innerHeight < Math.round(vv.height) - 1; // 보이는 영역보다 레이아웃이 작다 = 키보드가 남긴 자국
-    const stuck = this.ios() && innerWidth > innerHeight && innerHeight < Math.min(screen.width, screen.height) - 2 && innerHeight !== this.lastStuckH; // 가로인데 화면 높이가 폰 짧은 변보다 작다
+    const stuck = this.ios() && innerWidth > innerHeight && innerHeight < Math.min(screen.width, screen.height) - 2; // 가로인데 화면 높이가 폰 짧은 변보다 작다
     if (scrolled) scrollTo(0, 0);
-    if (scrolled || shrunk || stuck) { this.lastStuckH = innerHeight; this.nudge(); }
+    if (scrolled || ((shrunk || stuck) && Date.now() - this.lastNudge > 4000)) { this.lastNudge = Date.now(); this.nudge(); } // v72: 한 번만 흔들고 포기하지 않고 줄어든 동안 4초마다 다시 (그 사이엔 realVH가 진짜 높이로 그린다)
   },
-  nudge() { // 문서 높이를 살짝 바꿨다 되돌리면 iOS가 레이아웃 뷰포트를 다시 잰다
-    if (this.busy) return; this.busy = true; const de = document.documentElement; de.style.height = '100.01%';
-    requestAnimationFrame(() => { de.style.height = ''; scrollTo(0, 0); setTimeout(() => { this.busy = false; if (typeof resize === 'function') resize(); if (typeof Layout !== 'undefined' && Layout.apply) Layout.apply(); }, 60); });
+  nudge() { // 문서 높이를 살짝 바꿨다 되돌리면 iOS가 레이아웃 뷰포트를 다시 잰다; 번갈아 viewport 메타도 건드려 본다
+    if (this.busy) return; this.busy = true; const de = document.documentElement; const n = this.n++;
+    const meta = document.querySelector('meta[name=viewport]'); const mc = meta ? meta.getAttribute('content') : '';
+    if (n % 2) { if (meta) meta.setAttribute('content', mc + ', height=device-height'); } else de.style.height = '100.01%';
+    requestAnimationFrame(() => { de.style.height = ''; if (meta) meta.setAttribute('content', mc); scrollTo(0, 0); setTimeout(() => { this.busy = false; if (typeof resize === 'function') resize(); if (typeof Layout !== 'undefined' && Layout.apply) Layout.apply(); }, 60); });
   },
   bind() {
     setInterval(() => this.check(), 1000);

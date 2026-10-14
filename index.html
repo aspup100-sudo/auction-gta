@@ -285,7 +285,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #bidForm.in { transform:translate(-50%, -50%); }
 #bidForm input { font:700 18px var(--ui); width:100%; padding:6px 8px; border:1px solid #9aa3b2; border-radius:4px; -webkit-user-select:text; user-select:text; }
 #bidForm .prac { color:var(--seal); }
-#openBoard { left:50%; top:12px; width:min(460px, calc(100% - 24px)); transform:translate(-50%, -20px); background:rgba(15,51,88,.97); border:2px solid var(--gold); border-radius:10px; padding:12px 14px; color:#fff; z-index:31; }
+#openBoard { left:50%; top:12px; width:min(460px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; transform:translate(-50%, -20px); background:rgba(15,51,88,.97); border:2px solid var(--gold); border-radius:10px; padding:12px 14px; color:#fff; z-index:31; }
 #openBoard.in { transform:translate(-50%, 0); }
 .obHead { font-size:13px; opacity:.85; margin-bottom:6px; }
 #obList { list-style:none; margin:0; padding:0; } .obRow { display:flex; justify-content:space-between; padding:5px 8px; border-bottom:1px solid rgba(255,255,255,.15); animation:rowIn .3s ease-out; font-size:15px; }
@@ -472,6 +472,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #mapCanvas { width:calc(100% - 16px); height:calc(100% - 44px); top:calc(50% + 18px); }
   .short #mapX { top:6px; padding:6px 12px; font-size:13px; } .short .mapTitle { top:4px; font-size:15px; padding-right:90px; padding-left:90px; } .short .mapTitle small { display:inline; margin-left:8px; font-size:11px; }
   .short #mapConfirm { bottom:8px; padding:6px 10px; gap:6px; }
+  .short #openBoard { top:6px; max-height:calc(100% - 12px); padding:8px 10px; } .short .obHead { font-size:11.5px; margin-bottom:3px; } .short .obRow { padding:2px 6px; font-size:13px; } .short #obResult { margin-top:5px; line-height:1.4; font-size:12.5px; } .short #obResult .win { font-size:16px; } .short #obResult .lose { font-size:14px; } .short #obResult .btn { margin-top:4px; } /* 폰 가로: 개찰판이 화면을 넘지 않게 줄이고, 넘치면 스크롤 (사용자 2026-10-14 '나가는 것도 잘려 못 나가') */
   .short #menu { width:min(640px, calc(100% - 24px)); padding:12px 16px; } .short #menu h2 { font-size:18px; margin-bottom:8px; } .short .keys { font-size:12px; }
 </style>
 </head>
@@ -4224,7 +4225,7 @@ const Live = {
     for (let i = 0; i < sorted.length; i++) {
       await sleep(i >= sorted.length - 2 ? 900 : 450);
       const b = sorted[i]; const li = document.createElement('li'); li.className = 'obRow' + (b.me ? ' me' : '');
-      li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(채널)</small>` : maskName(b.name)}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li);
+      li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(채널)</small>` : maskName(b.name)}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li); ob.scrollTop = ob.scrollHeight;
       Sound.play('drum'); shake(1.5, 0.1);
     }
     await sleep(400); const res = $('obResult');
@@ -4237,7 +4238,7 @@ const Live = {
       res.innerHTML = `<div class="lose">최고가매수신고인 · ${winner.friend ? esc(winner.name) + ' (채널)' : maskName(winner.name)} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - m.bid)}</b> · 보증금 ${fmtWon(m.deposit)} 반환</div>`;
       Sound.play('deny'); await sleep(1200);
     }
-    res.innerHTML += `<button class="btn gold" id="obNext">${won ? '확인' : '계속'}</button>`;
+    res.innerHTML += `<button class="btn gold" id="obNext">${won ? '확인' : '계속'}</button>`; ob.scrollTop = ob.scrollHeight; // 입찰자가 많아 판이 길면 버튼이 보이게 끝으로 (사용자 2026-10-14)
     await new Promise(ok => ($('obNext').onclick = ok)); ob.classList.remove('in');
     if (won) HUD.page(`낙찰이다. ${FEEL.livePayMin}분 안에 ${courtOf(c).name}에 잔금 ${fmtWon(m.bid - m.deposit)} 내. ${State.cash >= m.bid - m.deposit ? '현금은 충분해.' : '은행부터 가서 대출 받아.'}`);
   },
@@ -5632,7 +5633,7 @@ async function runOpening(c, r) {
     await sleep(last2 ? 2000 : 1200);
     if (i === sorted.length - 1) { Sound.ambience(false); $('vignette').classList.add('in'); await sleep(600); }
     const b = sorted[i]; const li = document.createElement('li'); li.className = 'obRow' + (b.me ? ' me' : '');
-    li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(친구)</small>` : maskName(b.name)}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li);
+    li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(친구)</small>` : maskName(b.name)}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li); ob.scrollTop = ob.scrollHeight;
     Sound.play('drum'); shake(1.5, 0.1);
   }
   await sleep(500); $('vignette').classList.remove('in');
@@ -5649,7 +5650,7 @@ async function runOpening(c, r) {
     res.innerHTML = `<div class="lose">최고가매수신고인 · ${winner.friend ? esc(winner.name) + ' (친구)' : maskName(winner.name)} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - r.bid)}</b></div>`;
     await sleep(2200);
   }
-  res.innerHTML += `<button class="btn gold" id="obNext">계속</button>`;
+  res.innerHTML += `<button class="btn gold" id="obNext">계속</button>`; ob.scrollTop = ob.scrollHeight; // 입찰자가 많아 판이 길면 버튼이 보이게 끝으로 (사용자 2026-10-14)
   await new Promise(ok => ($('obNext').onclick = ok));
   ob.classList.remove('in'); $('game').classList.remove('desat'); Game.courtZoom = null; Sound.playBgm('court');
   Game.busy = false;

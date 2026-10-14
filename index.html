@@ -4415,12 +4415,13 @@ const Live = {
     if (a.repair === 'doing') { await Dialog.say([say('agent', `공사 중이죠? 끝나면 와요. ${this.mmss(Math.max(0, a.repairUntil - this.now()))} 남았네요.`)]); return 'done'; }
     const K = this.COND[a.cond], base = Generator.disposalValue(c) * this.valueMod(m), rent = this.monthlyRent(c, m);
     if (a.offer) {
-      const pick = await Dialog.say([say('agent', `${c.name} ${fmtWon(a.offer.price)}에 사겠대요. 시세는 ${fmtWon(c.market)}. 받으실래요?`)], [{ label: `${fmtWon(a.offer.price)}에 팔기`, value: 'y' }, { label: `더 기다리기 <small>다음 매수자 ${FEEL.liveSaleMin}분</small>`, value: 'w' }, { label: '그만두기', value: 'n' }]);
+      const pick = await Dialog.say([say('agent', `${c.name} ${fmtWon(a.offer.price)}에 사겠대요. 시세는 ${fmtWon(c.market)}. 받으실래요?`)], [{ label: `${fmtWon(a.offer.price)}에 팔기`, value: 'y' }, { label: `더 기다리기 <small>다음 매수자 ${FEEL.liveSaleMin}분</small>`, value: 'w' }, { label: '매도 취소 <small>손님 돌려보내고 내리기</small>', value: 'c' }, { label: '그만두기', value: 'n' }]);
       if (pick === 'y') return this.sold(m, c, a.offer.price, false);
       if (pick === 'w') { a.offer = null; a.listed = this.now(); this.save(); await Dialog.say([say('agent', '알겠어요. 다른 손님 더 붙여 볼게요.')]); }
+      if (pick === 'c') { a.offer = null; a.listed = null; this.save(); await Dialog.say([say('agent', '손님 돌려보내고 매물 내렸어요. 다시 팔고 싶으면 또 오세요.')]); } // 매도 취소 (사용자 2026-10-14)
       return 'done';
     }
-    if (a.listed) { await Dialog.say([say('agent', `매수자 찾는 중이에요. ${this.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - this.now()))} 안에 손님 올 거예요.`)], [{ label: `급매로 지금 팔기 <small>${fmtWon(Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5)}</small>`, value: 'q' }, { label: '기다리기', value: 'n' }]).then(p => p === 'q' ? this.sold(m, c, Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5, true) : null); return 'done'; }
+    if (a.listed) { await Dialog.say([say('agent', `매수자 찾는 중이에요. ${this.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - this.now()))} 안에 손님 올 거예요.`)], [{ label: `급매로 지금 팔기 <small>${fmtWon(Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5)}</small>`, value: 'q' }, { label: '매도 취소 <small>매물 내리기</small>', value: 'c' }, { label: '기다리기', value: 'n' }]).then(async p => { if (p === 'q') return this.sold(m, c, Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5, true); if (p === 'c') { a.listed = null; a.offer = null; this.save(); await Dialog.say([say('agent', '매물 내렸어요. 다시 팔고 싶으면 또 오세요.')]); } }); return 'done'; }
     const opts = [];
     if (!a.rentOn) opts.push({ label: `임대 내놓기 <small>월세 ${fmtWon(rent)} · ${FEEL.liveMonthMin}분마다 입금</small>`, value: 'rent' });
     opts.push({ label: `매도 내놓기 <small>시세 근처 · 매수자 ${FEEL.liveSaleMin}분</small>`, value: 'sell' });

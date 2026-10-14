@@ -315,7 +315,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #envelope { left:50%; top:50%; width:min(520px, calc(100% - 24px)); transform:translate(-50%, 60vh) rotate(4deg); background:#fffdf6; color:#111; border-radius:6px; padding:16px 18px; box-shadow:0 14px 40px rgba(0,0,0,.6); min-height:60px; }
 #envelope.in { transform:translate(-50%, -50%); }
 #balanceDue { position:absolute; top:84px; left:12px; background:#14161c; border:2px solid var(--gold); color:#ffd84a; padding:4px 10px; border-radius:6px; font-weight:700; font-size:13px; opacity:0; transition:opacity .2s; }
-#balanceDue.in { opacity:1; } #balanceDue.over { color:#ff6a50; border-color:#ff6a50; text-decoration:line-through; }
+#balanceDue.in { opacity:1; pointer-events:auto; cursor:pointer; } /* 누르면 메뉴의 내 집·월세 입금 내역 (사용자 2026-10-14) */ #balanceDue.over { color:#ff6a50; border-color:#ff6a50; text-decoration:line-through; }
 #evictPanel { left:50%; bottom:16px; width:min(520px, calc(100% - 24px)); transform:translate(-50%, 30px); background:rgba(20,22,28,.97); border:2px solid var(--gold); border-radius:12px; padding:12px 14px; }
 #evictPanel.in { transform:translate(-50%, 0); }
 .epHead { display:flex; gap:10px; align-items:center; } .epHead > div { flex:1; } #epPortrait { width:64px; height:64px; image-rendering:pixelated; background:#2a2e39; border-radius:6px; }
@@ -4042,7 +4042,7 @@ const ChatBar = {
 const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
 const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3]; // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
 const Live = {
-  on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0, bdT: 0,
+  on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], rentLog: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0, bdT: 0,
   capOf(ch) { return ch * 1e8; }, // 채널 N = 자본 N억 (사용자 요청)
   weekMs() { return FEEL.liveWeekMin * 60000; },
   dayMs() { return this.weekMs() / 7; },
@@ -4087,15 +4087,15 @@ const Live = {
 
   /* ---- 저장 (채널별, 이 기기) ---- */
   storeKey() { return 'live' + this.ch; },
-  save() { Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0 }); },
+  save() { Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0 }); },
   saved(ch) { return Store.get('live' + ch, null); },
   reset(ch) { Store.set('live' + ch, null); },
 
   /* ---- 시작 ---- */
   start() {
-    this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.closed = {}; this.queue = []; this.ready = false; this.readyT = 2.5;
+    this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.rentLog = []; this.closed = {}; this.queue = []; this.ready = false; this.readyT = 2.5;
     let sv = this.saved(this.ch); if (sv && sv.capital !== capital) sv = null; // 예전 규칙으로 저장된 기록은 새로
-    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.seen = sv.seen || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
+    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.rentLog = sv.rentLog || []; this.seen = sv.seen || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
     else { State.capital = capital; State.cash = capital; }
     HUD.setCash(State.cash, false);
     this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;
@@ -4342,7 +4342,7 @@ const Live = {
     for (const m of this.owned()) {
       const a = m.asset; if (!a) continue; let changed = false;
       if (a.repair === 'doing' && this.now() >= a.repairUntil) { a.repair = 'done'; changed = true; if (Game.player) { Toast.show(`${m.name.split(' ')[0]} 수리 끝 · 집값 +${Math.round((FEEL.liveRepairPremium - 1) * 100)}%, 월세 +10%`, 3000); Sound.play('ding'); } }
-      if (a.rentOn && this.now() >= a.rentAt + this.monthMs()) { a.rentAt += this.monthMs(); a.rentTotal += a.rent; a.rentMonths++; State.cash += a.rent; HUD.setCash(State.cash); changed = true; if (Game.player) { Toast.show(`월세 입금 ${fmtWon(a.rent)} (${m.name.split(' ')[0]})`); Sound.play('coins'); } }
+      if (a.rentOn && this.now() >= a.rentAt + this.monthMs()) { a.rentAt += this.monthMs(); a.rentTotal += a.rent; a.rentMonths++; State.cash += a.rent; HUD.setCash(State.cash); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ')[0], amt: a.rent, cash: State.cash }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player) { Toast.show(`월세 입금 ${fmtWon(a.rent)} (${m.name.split(' ')[0]})`); Sound.play('coins'); } }
       if (a.listed && !a.offer && this.now() >= a.listed + FEEL.liveSaleMin * 60000) {
         const c = this.caseFor(this.key(m.k, m.n)); const R = caseRng(c, 500 + (a.offerNo || 0)); const price = Math.round(Generator.disposalValue(c) * this.valueMod(m) * R.U(0.96, 1.04) / 1e5) * 1e5;
         a.offer = { price, at: this.now() }; a.offerNo = (a.offerNo || 0) + 1; changed = true;
@@ -4476,7 +4476,8 @@ const Live = {
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
       <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>`).join('')}</table>
       ${pend.length ? `<div class="lvChips"><small>낸 입찰표</small>${pend.join('')}</div>` : ''}
-      ${this.owned().length ? `<div class="lvChips"><small>내 집</small>${this.owned().map(m => `<span class="chip">${esc(this.assetLine(m).replace(/^내 집 /, ''))}</span>`).join('')}</div>` : ''}
+      ${this.owned().length ? `<div class="lvRecent lvHomes"><small>내 집</small>${this.owned().map(m => { const a = m.asset || {}; return `<div><span>${esc(this.assetLine(m).replace(/^내 집 /, ''))}</span>${a.rentOn ? `<b class="up">월세 ${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b>` : ''}</div>`; }).join('')}</div>` : ''}
+      ${this.rentLog.length ? `<div class="lvRecent"><small>월세 입금 내역 · 총 ${this.rentLog.length}회 ${f(this.rentLog.reduce((s, r) => s + r.amt, 0))}</small>${this.rentLog.slice(0, 8).map(r => `<div><span>${esc(r.at.slice(5))} · ${esc(r.name)}</span><b class="up">+${f(r.amt)}</b></div>`).join('')}${this.rentLog.length > 8 ? `<div><span>외 ${this.rentLog.length - 8}회</span></div>` : ''}</div>` : ''}
       ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? (r.profit > 0 ? 'up' : r.profit < 0 ? 'down' : '') : 'dim'}">${r.won ? '낙찰 ' + fp(r.profit) : r.forfeit ? '보증금 몰수 ' + fp(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
   },
 };
@@ -6526,6 +6527,7 @@ const Instance = {
   $('setShake').onchange = e => { Settings.shake = e.target.checked; saveSettings(); };
   $('setText').onchange = e => { Settings.textSpeed = e.target.value; saveSettings(); };
   $('rankBox').addEventListener('click', () => { if (!Layout.editing && !Menu.open) Menu.toggle(true); }); // 미니 순위판 → 메뉴의 전체 순위
+  $('balanceDue').addEventListener('click', () => { if (!Layout.editing && !Menu.open && Game.scene !== 'title') Menu.toggle(true); }); // 내 집·잔금 줄 → 메뉴의 내 집 목록과 월세 입금 내역
   $('dialog').addEventListener('click', e => { if (!e.target.closest('.choice')) Dialog.press(); });
   // 터치
   if (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) document.body.classList.add('touchOn');

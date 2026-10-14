@@ -342,10 +342,10 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #quest.in { transform:none; } #quest b { color:var(--gold); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .qItems { display:flex; flex-wrap:wrap; gap:3px 10px; margin-top:3px; } .qItems span { opacity:.6; } .qItems span.done { opacity:1; color:#9fe29a; } .qItems span.just { animation:bump .4s ease-out; }
 #balanceDue { top:150px !important; }
-#rankBox { position:absolute; top:190px; left:12px; width:172px; background:rgba(20,22,28,.86); border:1px solid #c9b98f; border-radius:8px; padding:5px 8px 6px; font-size:11.5px; line-height:1.35; color:var(--paper); pointer-events:auto; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.4); }
+#rankBox { position:absolute; top:190px; left:12px; width:186px; background:rgba(20,22,28,.86); border:1px solid #c9b98f; border-radius:8px; padding:5px 8px 6px; font-size:11.5px; line-height:1.35; color:var(--paper); pointer-events:auto; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.4); }
 #rankBox .rbHead { display:flex; justify-content:space-between; font-size:10.5px; color:#c9b98f; margin-bottom:2px; } #rankBox .rbRow { display:flex; gap:5px; align-items:baseline; white-space:nowrap; } #rankBox .rbRow.me { color:#ffd84a; font-weight:700; } #rankBox .rk { width:13px; text-align:right; opacity:.8; } #rankBox .nm { flex:1; overflow:hidden; text-overflow:ellipsis; } #rankBox .pn { font-variant-numeric:tabular-nums; } #rankBox .pn.up { color:#7fe0a0; } #rankBox .pn.down { color:#ff8c7a; } #rankBox .rbMore { font-size:10px; opacity:.6; text-align:right; }
 #rankBox .rbOn { margin-top:4px; padding-top:3px; border-top:1px solid rgba(201,185,143,.35); font-size:10.5px; color:#c9b98f; } #rankBox .rbOn small { opacity:.7; } #rankBox .rbBad { display:block; color:#ff8c7a; font-weight:700; } #rankBox .rbHost { opacity:.55; } #rankBox .rbWho { display:flex; gap:5px; align-items:baseline; white-space:nowrap; overflow:hidden; } #rankBox .rbWho .nm { flex:0 1 auto; } #rankBox .rbWho small { flex:1; overflow:hidden; text-overflow:ellipsis; opacity:.75; font-size:10px; } #rankBox .dot { width:6px; height:6px; border-radius:50%; background:#7fe0a0; flex:0 0 6px; box-shadow:0 0 4px #7fe0a0; align-self:center; } #rankBox .dot.idle { background:#8a8a8a; box-shadow:none; }
-.touchOn #rankBox { top:215px; width:150px; font-size:11px; }
+.touchOn #rankBox { top:215px; width:164px; font-size:11px; }
 #dlgPortrait.nod { animation:nod .7s ease-in-out; } @keyframes nod { 0%,100%{transform:translateY(0)} 25%{transform:translateY(5px)} 50%{transform:translateY(0)} 75%{transform:translateY(5px)} }
 .tstars { position:absolute; inset:0; pointer-events:none; } .tstars i { position:absolute; width:3px; height:3px; background:#fff; border-radius:50%; opacity:.5; animation:twinkle 2.4s ease-in-out infinite; }
 .tstars i:nth-child(1){left:12%;top:18%} .tstars i:nth-child(2){left:28%;top:9%;animation-delay:.4s} .tstars i:nth-child(3){left:66%;top:14%;animation-delay:.9s} .tstars i:nth-child(4){left:84%;top:22%;animation-delay:1.3s} .tstars i:nth-child(5){left:48%;top:6%;animation-delay:.7s} .tstars i:nth-child(6){left:74%;top:34%;animation-delay:1.7s} .tstars i:nth-child(7){left:20%;top:38%;animation-delay:2s} .tstars i:nth-child(8){left:92%;top:8%;animation-delay:1.1s}
@@ -438,7 +438,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short .hudBtns { top:10px !important; right:142px; } .short .hudBtns .btn { padding:5px 8px; font-size:12px; }
   .short #radar { top:60px; left:12px; width:80px; height:80px; }
   .short #quest { top:60px; left:100px; max-width:220px; } .short #balanceDue { top:112px !important; left:100px; }
-  .short #rankBox { top:142px; left:100px; width:150px; }
+  .short #rankBox { top:142px; left:100px; width:164px; }
   .short #stick { width:100px; height:100px; left:20px; bottom:20px; } .short #knob { left:28px; top:28px; width:44px; height:44px; }
   .short #tAct { width:72px; height:72px; right:20px; bottom:24px; font-size:13px; }
   .short #tCar { right:104px; bottom:30px; width:54px; height:54px; } .short.driving #tCar { right:124px; bottom:30px; }
@@ -1413,6 +1413,10 @@ Object.assign(FEEL, {
   edgeBounce: 70,         // 길이 없는 가장자리(서울 끝)에 닿았을 때 되튕기는 속도(px/s)
   carBounce: 0.35,
   netPingSec: 4,          // 방장 심장박동 간격(초)
+  relayUrl: '',           // 중계 서버 주소(https://…workers.dev). 비어 있으면 PeerJS. boot.js가 relay-url.txt에서 읽어 채운다 (사용자 요청 2026-10-14 '중계서버 두자')
+  relayUrlFile: 'https://aspup100-sudo.github.io/auction-gta/relay-url.txt', // 같은 폴더에 relay-url.txt가 없을 때(아티팩트 등) 여기서 읽는다
+  wsDeadSec: 35,          // 중계 서버 소식(10초마다 심장박동)이 이만큼 없으면 다시 잇기
+  wsPosHz: 6,             // 중계 서버로 보내는 위치 신호 횟수/초 (PeerJS는 8)
   hostDeadSec: 20,        // 손님: 방장 소식이 이만큼 없으면 다시 잇기 (자리가 비면 내가 방장)
   liveIdleSec: 20,
   liveGoneSec: 45, // 이만큼 위치 신호가 없으면 나간 사람으로 (목록에서 빠지고 '나갔어요') // 채널 접속자 목록: 이 시간 동안 위치 신호가 없으면 '자리 비움'
@@ -3547,13 +3551,14 @@ const DocViewer = {
 /* ===================== 친구와 같이 하기: 방 코드 · 같은 경매 · 말풍선 채팅 =====================
  * 서버 없이 브라우저끼리 직접 연결(WebRTC, PeerJS 중계로 주소만 교환). 같은 방 = 같은 주(물건·경쟁자·시드).
  * 주고받는 것: 위치(초당 8번) · 채팅 · 입찰가(사건별) · 입찰 안 함. 돈·시간은 각자 진행.
- * transport 'peer' = PeerJS(인터넷) / 'local' = BroadcastChannel(같은 브라우저 탭끼리, 테스트용)
+ * transport 'ws' = 우리 중계 서버(relay/, Cloudflare Worker; FEEL.relayUrl이 있으면 이걸 쓴다) / 'peer' = PeerJS(서버 없을 때) / 'local' = BroadcastChannel(같은 브라우저 탭끼리, 테스트용)
+ * 중계 서버가 있으면 채널의 '방장'은 서버다: 사람 목록·입찰표 장부·순위표를 서버가 들고 있어 폰이 잠들어도 채널이 끊기지 않는다 (사용자 요청 2026-10-14 '중계서버 두자').
  */
 const PEER_URLS = ['https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js', 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js'];
 const FRIEND_SPRITES = ['walker2', 'walker1', 'walker3', 'occ_young'];
 const Net = {
   on: false, host: false, started: false, room: '', me: '', myId: '', status: 'off', transport: 'peer', mode: 'room', ch: 0, // mode: 'room' 친구 방(코드) | 'channel' 공개 채널
-  players: {}, conns: {}, peer: null, bc: null, hostConn: null, myBubble: null, log: [], posT: 0, retryT: 0, seed: 0, cap: 0,
+  players: {}, conns: {}, peer: null, bc: null, hostConn: null, ws: null, wsPath: '', relayReady: null, myBubble: null, log: [], posT: 0, retryT: 0, seed: 0, cap: 0,
   onStatus: null, // 타이틀 화면이 상태를 그릴 때 쓰는 콜백
 
   genCode() { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 6; i++) s += A[Math.floor(Math.random() * A.length)]; return s; },
@@ -3569,7 +3574,7 @@ const Net = {
   leave() {
     if (this.started) return false;
     try { if (this.hostConn) this.hostConn.close(); } catch (e) {} for (const id in this.conns) { try { this.conns[id].close(); } catch (e) {} }
-    try { if (this.peer) this.peer.destroy(); } catch (e) {} try { if (this.bc) this.bc.close(); } catch (e) {}
+    try { if (this.peer) this.peer.destroy(); } catch (e) {} try { if (this.bc) this.bc.close(); } catch (e) {} this.closeWs();
     this.peer = null; this.bc = null; this.hostConn = null; this.conns = {}; this.players = {}; this.on = false; this.host = false; this.room = ''; this.ch = 0; this.mode = 'room'; this.retryT = 0; this.status = 'off';
     return true;
   },
@@ -3586,8 +3591,34 @@ const Net = {
       if (!this.gotPlayers) { this.host = true; this.myId = 'host'; }
       this.setStatus('open', this.chText()); return true;
     }
+    if (await this.pickWs()) { if (await this.connectWs('/ch/' + n)) return true; if (!this.on) return false; this.transport = 'peer'; } // 중계 서버가 안 되면 예전 방식(PeerJS)으로
     if (!(await this.loadPeer())) { this.on = false; this.setStatus('error', '연결 모듈을 못 불러왔어요. 인터넷을 확인해 주세요.'); return false; }
     return this.claimChannel();
+  },
+  /* ---- 중계 서버(ws) ---- */
+  async pickWs() { try { await this.relayReady; } catch (e) {} if (this.transport === 'local') return false; this.transport = FEEL.relayUrl ? 'ws' : 'peer'; return this.transport === 'ws'; },
+  wsUrl(path) { return FEEL.relayUrl.replace(/^http/, 'ws') + path + `?id=${encodeURIComponent(this.myId)}&name=${encodeURIComponent(this.me)}`; },
+  closeWs() { const w = this.ws; this.ws = null; if (w) { try { w.onclose = null; w.onmessage = null; w.close(); } catch (e) {} } },
+  connectWs(path) {
+    return new Promise(res => {
+      this.wsPath = path; this.closeWs(); let ws;
+      try { ws = new WebSocket(this.wsUrl(path)); } catch (e) { this.setStatus(this.started ? 'lost' : 'error', '중계 서버 주소가 잘못됐어요.'); if (this.started) this.retryT = 8; return res(false); }
+      this.ws = ws; let settled = false; this.setStatus('connecting', this.mode === 'channel' ? '채널에 들어가는 중…' : this.host ? '방을 만드는 중…' : '방에 들어가는 중…');
+      const to = setTimeout(() => { if (!settled) { try { ws.close(); } catch (e) {} } }, 8000);
+      ws.onopen = () => {
+        settled = true; clearTimeout(to); this.hostSeen = performance.now(); this.gotPlayers = false;
+        this.setStatus('open', this.mode === 'channel' ? this.chText() : this.host ? '방 준비 완료' : '방에 들어왔어요. 방장이 시작하면 같이 시작해요.');
+        this.send({ t: 'hello', name: this.me, host: this.host, cash: Live.on ? State.cash : undefined }); if (Live.on && Live.ready) Live.announce(); res(true);
+      };
+      ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } this.handle(m); };
+      ws.onerror = () => {};
+      ws.onclose = () => {
+        clearTimeout(to); if (this.ws !== ws) return; this.ws = null; if (!this.on) return;
+        if (!settled) { settled = true; if (this.started) { this.setStatus('lost', '중계 서버에 연결하지 못했어요. 다시 시도 중…'); this.retryT = 5 + Math.random() * 3; } else this.setStatus('error', '중계 서버에 연결하지 못했어요. 인터넷을 확인해 주세요.'); res(false); return; }
+        if (this.noRoom) return;
+        this.setStatus('lost', '중계 서버와 끊겼어요. 다시 잇는 중…'); this.retryT = 1 + Math.random() * 2;
+      };
+    });
   },
   // 채널의 방장 자리('agta-chN')가 비어 있으면 내가 방장, 아니면 손님으로 들어간다. 방장이 나가면 남은 사람끼리 다시 이 과정을 거친다.
   claimChannel() {
@@ -3627,6 +3658,7 @@ const Net = {
   async create(name) {
     this.me = (name || '').trim() || '방장'; this.host = true; this.on = true; this.room = this.genCode(); this.players = {}; this.myId = 'host';
     if (this.transport === 'local') { this.openLocal(); this.setStatus('open', '방 준비 완료'); return this.room; }
+    if (await this.pickWs()) { if (await this.connectWs('/room/' + this.room)) return this.room; if (!this.on) return null; this.transport = 'peer'; }
     if (!(await this.loadPeer())) { this.on = false; this.setStatus('error', '연결 모듈을 못 불러왔어요. 인터넷을 확인해 주세요.'); return null; }
     return new Promise(res => {
       const tryOpen = () => {
@@ -3646,6 +3678,12 @@ const Net = {
     this.me = (name || '').trim() || '친구'; this.host = false; this.on = true; this.room = (code || '').trim().toUpperCase(); this.players = {};
     this.myId = 'g' + Math.random().toString(36).slice(2, 8);
     if (this.transport === 'local') { this.openLocal(); this.setStatus('connecting', '방장에게 인사하는 중…'); this.send({ t: 'hello', name: this.me }); return true; }
+    if (await this.pickWs()) {
+      this.noRoom = false; const ok = await this.connectWs('/room/' + this.room);
+      if (ok) for (let i = 0; i < 40 && !this.gotPlayers && !this.noRoom; i++) await new Promise(r => setTimeout(r, 100)); // 서버가 '방 없음'이라 하거나 사람 목록을 줄 때까지
+      if (this.noRoom) { this.on = false; this.closeWs(); return false; }
+      if (ok || !this.on) return ok; this.transport = 'peer';
+    }
     if (!(await this.loadPeer())) { this.on = false; this.setStatus('error', '연결 모듈을 못 불러왔어요. 인터넷을 확인해 주세요.'); return false; }
     return new Promise(res => {
       const peer = this.peer || new Peer(undefined, { debug: 0 }); this.peer = peer;
@@ -3681,17 +3719,25 @@ const Net = {
     m.from = this.myId; m.name = this.me;
     try {
       if (this.transport === 'local') { if (this.bc) this.bc.postMessage(m); return; }
+      if (this.transport === 'ws') { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(m)); return; }
       if (this.host) { for (const id in this.conns) this.conns[id].send(m); }
       else if (this.hostConn && this.hostConn.open) this.hostConn.send(m);
     } catch (e) { /* 끊긴 연결은 close에서 정리 */ }
   },
-  relay(m, fromConn) { if (!this.host || this.transport === 'local') return; for (const id in this.conns) if (this.conns[id] !== fromConn) { try { this.conns[id].send(m); } catch (e) {} } },
+  relay(m, fromConn) { if (!this.host || this.transport !== 'peer') return; for (const id in this.conns) if (this.conns[id] !== fromConn) { try { this.conns[id].send(m); } catch (e) {} } },
 
   /* ---- 받기 ---- */
   handle(m, conn) {
     if (!m || m.from === this.myId) return;
-    if (!this.host) this.hostSeen = performance.now(); // 손님: 방장 쪽에서 뭐든 오면 살아 있는 것
+    if (!this.host || this.transport === 'ws') this.hostSeen = performance.now(); // 손님: 방장(중계 서버) 쪽에서 뭐든 오면 살아 있는 것
     if (m.t === 'ping') { const hp = this.players[m.from]; if (hp) hp.gone = false; this.relay(m, conn); return; } // 방장 심장박동 (제목 화면에 있어도 손님이 방장 생사를 안다)
+    if (m.from === 'server') { // 중계 서버가 직접 보낸 것 (사람 목록은 아래 players에서)
+      if (m.t === 'lbook') Live.onBook(m);
+      else if (m.t === 'noroom') { this.noRoom = true; this.setStatus('error', '그 코드의 방이 없어요. 코드를 다시 확인해 주세요.'); }
+      else if (m.t === 'hostgone') { if (Game.scene !== 'title') Toast.show('방장이 나갔어요. 돌아오면 다시 이어져요.'); }
+      else if (m.t === 'players') { this.handlePlayers(m); }
+      return;
+    }
     if (m.t === 'hello') {
       if (!this.host) return;
       this.players[m.from] = Object.assign(this.players[m.from] || {}, { name: m.name, gone: false }); if (conn) this.conns[m.from] = conn;
@@ -3702,7 +3748,7 @@ const Net = {
       if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `들어온 친구: ${this.names().join(', ')}`);
       return;
     }
-    if (m.t === 'players') { this.gotPlayers = true; if (Live.on && Live.ready) Live.announce(); for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); return; }
+    if (m.t === 'players') { this.handlePlayers(m); return; }
     const p = this.players[m.from] || (this.players[m.from] = { name: m.name || '친구' }); p.name = m.name || p.name; p.gone = false;
     if (m.t === 'init') { if (!this.host && !this.started && this.mode === 'room') { this.seed = m.seed; this.cap = m.cap; this.started = true; if (typeof startGame === 'function') startGame(m.cap, { seed: m.seed }); } return; }
     this.relay(m, conn);
@@ -3710,12 +3756,13 @@ const Net = {
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'hosp') { Pvp.onHosp(m, p); return; }
     if (m.t === 'lbook') { Live.onBook(m); return; }
-    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) p.pal = m.pal; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
+    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) p.pal = m.pal; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
     if (m.t === 'result') { p.result = m; return; }
   },
+  handlePlayers(m) { this.gotPlayers = true; if (Live.on && Live.ready) Live.announce(); for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); },
 
   /* ---- 게임 안 ---- */
   // 들어오고 나간 사람 알림 (채널·친구 방, 게임 중에만). 사용자 요청 2026-10-14
@@ -3737,13 +3784,15 @@ const Net = {
       if (this.host) { this.pingT = (this.pingT || 0) - dt; if (this.pingT <= 0) { this.pingT = FEEL.netPingSec; this.send({ t: 'ping' }); } }
       else if (this.hostSeen && performance.now() - this.hostSeen > FEEL.hostDeadSec * 1000) { this.hostSeen = 0; this.setStatus('lost', '방장 응답이 없어요. 채널을 다시 잇는 중…'); this.retryT = 0.5 + Math.random() * 2; try { if (this.hostConn) this.hostConn.close(); } catch (e) {} }
     }
-    if (this.retryT > 0) { this.retryT -= dt; if (this.retryT <= 0 && this.transport === 'peer' && this.status === 'lost') { this.retryT = 6; if (this.mode === 'channel') this.claimChannel(); else if (!this.host) this.join(this.room, this.me); } }
+    // 중계 서버: 10초마다 심장박동이 온다. FEEL.wsDeadSec 동안 아무 소식이 없으면(폰 절전 뒤 죽은 소켓) 닫고 다시 잇는다
+    if (this.transport === 'ws' && this.status === 'open' && this.hostSeen && performance.now() - this.hostSeen > FEEL.wsDeadSec * 1000) { this.hostSeen = 0; const w = this.ws; this.ws = null; try { if (w) { w.onclose = null; w.close(); } } catch (e) {} this.setStatus('lost', '중계 서버 응답이 없어요. 다시 잇는 중…'); this.retryT = 0.5; }
+    if (this.retryT > 0) { this.retryT -= dt; if (this.retryT <= 0 && this.status === 'lost') { this.retryT = 6; if (this.transport === 'ws') this.connectWs(this.wsPath); else if (this.transport === 'peer') { if (this.mode === 'channel') this.claimChannel(); else if (!this.host) this.join(this.room, this.me); } } }
     for (const id in this.players) { const p = this.players[id]; if (p.bubble) { p.bubble.t -= dt; if (p.bubble.t <= 0) p.bubble = null; } if (p.x !== undefined && p.tx !== undefined) { const k = 1 - Math.exp(-12 * dt); p.x += (p.tx - p.x) * k; p.y += (p.ty - p.y) * k; } }
     if (this.myBubble) { this.myBubble.t -= dt; if (this.myBubble.t <= 0) this.myBubble = null; }
     if (!this.started || !Game.player) return;
-    this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / 8;
+    this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined });
   },
   chat(text) {
     text = (text || '').trim().slice(0, 60); if (!text) return;
@@ -3822,7 +3871,7 @@ const Net = {
   info() {
     if (!this.on) return '';
     const st = { open: '연결됨', connecting: '연결 중', lost: '끊김(재연결 중)', error: '오류', off: '' }[this.status] || this.status;
-    if (Live.on) return Live.board() + '<div class="lvFoot">채팅: T 키 또는 채팅 버튼</div>';
+    if (Live.on) return Live.board() + `<div class="lvFoot">채팅: T 키 또는 채팅 버튼${this.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div>`;
     const fr = Object.values(this.players).map(p => `${esc(p.name)}${p.gone ? '(나감)' : ''}${p.day !== undefined ? ` · ${dLabel(p.day)}` : ''}`).join(', ');
     return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
   },
@@ -3954,6 +4003,8 @@ const Live = {
   },
   untilDay() { return this.mmss(this.dayMs() - (this.now() % this.dayMs())); },
   pnl() { return State.cash - State.capital; },
+  // 순위는 지금 가진 돈(현금)으로 (사용자 요청 2026-10-14 '수익 말고 지금 가진 자본을 랭킹에'). 예전 기록·예전 버전은 손익만 있어 시작 자본을 더해 맞춘다
+  cashOf(v) { if (!v) return undefined; if (typeof v.cash === 'number') return v.cash; if (typeof v.pnl === 'number') return v.pnl + State.capital; return undefined; },
 
   /* ---- 저장 (채널별, 이 기기) ---- */
   storeKey() { return 'live' + this.ch; },
@@ -3997,7 +4048,7 @@ const Live = {
     if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) { const k = this.queue.shift(); const m = this.mine[k]; if (m && m.opened && m.phase === 'forced') this.forcedDone(m); else if (m && m.opened) this.forfeitWin(m, '기한 경과'); else this.openResult(k); }
     this.assetTick();
     this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const rb = $('rankBox'); if (!rb.hidden) { const h = this.miniBoard(); if (rb.innerHTML !== h) rb.innerHTML = h; } const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
-    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && p.pnl !== undefined) this.seen[p.name] = { pnl: p.pnl, at: this.now() }; this.save(); }
+    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, at: this.now() }; this.save(); }
   },
   // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
   roll(k) {
@@ -4067,8 +4118,8 @@ const Live = {
     for (const n in m.seen || {}) if (n !== Net.me && (!this.seen[n] || this.seen[n].at < m.seen[n].at)) this.seen[n] = m.seen[n]; // 순위표는 서로 나눠 가진다
   },
   bookOut() { const out = {}; for (const key in this.book) { out[key] = Object.assign({}, this.book[key]); if (this.mine[key]) out[key][Net.myId] = { name: Net.me, bid: this.mine[key].bid }; } return out; },
-  seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { pnl: this.pnl(), at: this.now() }; return o; },
-  announce() { if (!this.on) return; for (const key in this.mine) if (!this.mine[key].done) Net.send({ t: 'lbid', key, bid: this.mine[key].bid, caseNo: this.mine[key].caseId }); Net.send({ t: 'lbook', book: this.bookOut(), seen: this.seenOut() }); },
+  seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { cash: State.cash, pnl: this.pnl(), at: this.now() }; return o; },
+  announce() { if (!this.on) return; for (const key in this.mine) if (!this.mine[key].done) Net.send({ t: 'lbid', key, bid: this.mine[key].bid, caseNo: this.mine[key].caseId }); Net.send({ t: 'lbook', book: this.bookOut(), seen: this.seenOut() }); if (Net.transport === 'ws') Net.send({ t: 'getbook' }); }, // 중계 서버: 서버가 들고 있는 장부·순위표를 받는다
 
   /* ---- 개찰: 결정적(모두 같은 결과) ---- */
   async openResult(key) {
@@ -4308,10 +4359,11 @@ const Live = {
 
   /* ---- 왼쪽 미니 순위판 (항상 보임) ---- */
   rankRows() {
-    const here = Object.values(Net.players).filter(p => !p.gone && p.pnl !== undefined).map(p => ({ name: p.name, pnl: p.pnl }));
-    const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, pnl: v.pnl, away: true }));
-    return [{ name: Net.me, pnl: this.pnl(), me: true }, ...here, ...away].sort((a, b) => b.pnl - a.pnl);
+    const here = Object.values(Net.players).filter(p => !p.gone && this.cashOf(p) !== undefined).map(p => ({ name: p.name, cash: this.cashOf(p), doing: this.doing(p) }));
+    const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, cash: this.cashOf(v), away: true })).filter(r => r.cash !== undefined); // 전에 만난 사람(마지막으로 본 자본)
+    return [{ name: Net.me, cash: State.cash, me: true, doing: '나' }, ...here, ...away].sort((a, b) => b.cash - a.cash);
   },
+  rankCls(v) { return v > State.capital ? 'up' : v < State.capital ? 'down' : ''; }, // 시작 자본보다 불었으면 초록, 줄었으면 빨강
   // 지금 접속한 사람이 어디서 뭘 하는지 (pos 메시지로 아는 만큼만). 사용자 요청 2026-10-14: '실시간으로 누가 플레이 중인지'
   PLACE_KO: { office: '사무실', registry: '등기소', center: '주민센터', bank: '은행', savings: '저축은행', agent: '부동산', court: '법원', hospital: '병원', arcade: '게임장', home: '집' },
   guName(z) { if (!z) return ''; if (z.startsWith('court_')) { const ct = COURTS[z.slice(6)]; return ct ? ct.short : '법원'; } const spec = ZONE_SPECS[z]; const gu = spec ? spec.gu : z.startsWith('gu_') ? z.slice(3) : z; return DISTRICT[gu] ? DISTRICT[gu].short : ''; },
@@ -4323,27 +4375,25 @@ const Live = {
   },
   online() { return Object.values(Net.players).filter(p => !p.gone).map(p => ({ name: p.name, doing: this.doing(p) })); },
   miniBoard() {
-    const rows = this.rankRows(); const f = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v)); const cls = v => (v > 0 ? 'up' : v < 0 ? 'down' : '');
+    const rows = this.rankRows(); const f = v => fmtWon(v), cls = v => this.rankCls(v);
     const myIdx = rows.findIndex(r => r.me); const show = rows.slice(0, 4); if (myIdx >= 4) { show.length = 3; show.push(rows[myIdx]); }
-    const row = r => { const i = rows.indexOf(r); return `<div class="rbRow ${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.away ? ' <small>·</small>' : ''}</span><span class="pn ${cls(r.pnl)}">${f(r.pnl)}</span></div>`; };
+    const row = r => { const i = rows.indexOf(r); return `<div class="rbRow ${r.me ? 'me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(r.name)}${r.away ? ' <small>·</small>' : ''}</span><span class="pn ${cls(r.cash)}">${f(r.cash)}</span></div>`; };
     const on = this.online(); const who = on.slice(0, 4).map(o => `<div class="rbWho"><i class="dot${o.doing === '자리 비움' ? ' idle' : ''}"></i><span class="nm">${esc(o.name)}</span><small>${esc(o.doing)}</small></div>`).join('');
-    return `<div class="rbHead"><span>순위 · 채널 ${this.ch}</span><span>${rows.length}명</span></div>${show.map(row).join('')}${rows.length > show.length ? `<div class="rbMore">전체 보기 ▸</div>` : ''}<div class="rbOn">지금 접속 ${on.length + 1}명 <small>(나 포함)</small>${Net.status !== 'open' ? `<span class="rbBad">${Net.status === 'connecting' ? '연결 중…' : '연결 끊김 · 다시 잇는 중'}</span>` : Net.host ? '<small class="rbHost">· 내가 방장</small>' : ''}</div>${who}${on.length > 4 ? `<div class="rbMore">외 ${on.length - 4}명</div>` : on.length ? '' : '<div class="rbWho"><small>아직 나뿐이에요</small></div>'}`;
+    return `<div class="rbHead"><span>자본 순위 · 채널 ${this.ch}</span><span>${rows.length}명</span></div>${show.map(row).join('')}${rows.length > show.length ? `<div class="rbMore">전체 보기 ▸</div>` : ''}<div class="rbOn">지금 접속 ${on.length + 1}명 <small>(나 포함)</small>${Net.status !== 'open' ? `<span class="rbBad">${Net.status === 'connecting' ? '연결 중…' : '연결 끊김 · 다시 잇는 중'}</span>` : Net.host ? '<small class="rbHost">· 내가 방장</small>' : ''}</div>${who}${on.length > 4 ? `<div class="rbMore">외 ${on.length - 4}명</div>` : on.length ? '' : '<div class="rbWho"><small>아직 나뿐이에요</small></div>'}`;
   },
 
   /* ---- 메뉴: 순위판 ---- */
   board() {
-    const here = Object.values(Net.players).filter(p => !p.gone && p.pnl !== undefined).map(p => ({ name: p.name, pnl: p.pnl, doing: this.doing(p) }));
-    const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, pnl: v.pnl, away: true })); // 전에 만난 사람(마지막으로 본 손익)
-    const rows = [{ name: Net.me, pnl: this.pnl(), me: true, doing: '나' }, ...here, ...away].sort((a, b) => b.pnl - a.pnl).slice(0, 10);
-    const f = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
-    const cls = v => (v > 0 ? 'up' : v < 0 ? 'down' : ''); // .plus는 현금 팝업 애니메이션 클래스라 피한다
+    const all = this.rankRows(); const here = all.filter(r => !r.me && !r.away); const rows = all.slice(0, 10);
+    const f = v => fmtWon(v), fp = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
+    const cls = v => this.rankCls(v); // .plus는 현금 팝업 애니메이션 클래스라 피한다
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
     const my = this.mine; const pend = Object.keys(my).filter(k => !my[k].done && my[k].phase !== 'own').map(k => { const c = this.caseFor(k); return `<span class="chip">${esc(my[k].name.split(' ').slice(0, 2).join(' '))} · ${fmtWon(my[k].bid)} · ${my[k].opened ? (my[k].phase === 'own' ? '보유 중' : my[k].phase === 'forced' ? '강제집행 중' : my[k].phase === 'evict' ? '명도 중' : `잔금 ${this.mmss(this.payLeft(my[k]))}`) : `개찰 ${this.mmss(this.left(c))}`}</span>`; });
-    return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">자본 ${fmtWon(State.capital)} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
-      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.pnl)}">${f(r.pnl)}</td></tr>`).join('')}</table>
+    return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · ${1 + here.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
+      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>`).join('')}</table>
       ${pend.length ? `<div class="lvChips"><small>낸 입찰표</small>${pend.join('')}</div>` : ''}
       ${this.owned().length ? `<div class="lvChips"><small>내 집</small>${this.owned().map(m => `<span class="chip">${esc(this.assetLine(m).replace(/^내 집 /, ''))}</span>`).join('')}</div>` : ''}
-      ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? cls(r.profit) : 'dim'}">${r.won ? '낙찰 ' + f(r.profit) : r.forfeit ? '보증금 몰수 ' + f(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
+      ${this.results.length ? `<div class="lvRecent"><small>최근 결과</small>${this.results.slice(0, 3).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? (r.profit > 0 ? 'up' : r.profit < 0 ? 'down' : '') : 'dim'}">${r.won ? '낙찰 ' + fp(r.profit) : r.forfeit ? '보증금 몰수 ' + fp(r.profit) : '패찰'}</b></div>`).join('')}</div>` : ''}`;
   },
 };
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
@@ -6109,6 +6159,11 @@ const Layout = {
     if (gated) { $('title').classList.add('gated'); document.body.classList.add('gated'); $('installGate').hidden = false; $('btnGuide').classList.add('gold'); }
     if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   } catch (e) {}
+  // 중계 서버 주소: 게임 폴더의 relay-url.txt (배포 워크플로가 써 넣는다) → 없으면 GitHub Pages의 것. 둘 다 없으면 PeerJS로 (사용자 요청 2026-10-14)
+  Net.relayReady = (async () => {
+    if (FEEL.relayUrl) return; const urls = /^https?:$/.test(location.protocol) ? ['./relay-url.txt', FEEL.relayUrlFile] : [FEEL.relayUrlFile];
+    for (const u of urls) { try { const r = await fetch(u, { cache: 'no-store' }); if (!r.ok) continue; const t = (await r.text()).trim(); if (/^https?:\/\/[\w.-]+(:\d+)?\/?$/.test(t)) { FEEL.relayUrl = t.replace(/\/+$/, ''); return; } } catch (e) {} }
+  })();
   let cap = 2e8;
   document.querySelectorAll('#caps .btn').forEach(b => b.onclick = () => {
     Sound.init(); Sound.play('click');

@@ -1,0 +1,60 @@
+# 중계 서버 배포: relay/ 가 바뀌어 main에 올라오거나, Actions 탭에서 손으로 실행하면 Cloudflare Workers에 올린다.
+# 필요한 비밀값(저장소 Settings → Secrets and variables → Actions): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID  (relay/README.md 참고)
+# 배포가 끝나면 서버 주소를 relay-url.txt에 적어 커밋하고, Pages 배포를 다시 돌려 게임이 그 주소를 읽게 한다.
+name: Relay
+on:
+  push:
+    branches: [main]
+    paths: ['relay/**', '.github/workflows/relay.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: relay
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        name: 비밀값 확인
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN 과 CLOUDFLARE_ACCOUNT_ID 비밀값이 아직 없어 배포를 건너뛰어요. relay/README.md 의 설치 순서를 보세요."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - id: deploy
+        if: steps.check.outputs.ok == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: relay
+          command: deploy
+      - name: 서버 주소를 relay-url.txt에 적기
+        if: steps.check.outputs.ok == 'true'
+        env:
+          URL_OUT: ${{ steps.deploy.outputs.deployment-url }}
+          STDOUT: ${{ steps.deploy.outputs.command-stdout }}
+        run: |
+          URL="$URL_OUT"
+          if [ -z "$URL" ]; then URL=$(printf '%s' "$STDOUT" | grep -oE 'https://[a-z0-9.-]+\.workers\.dev' | head -1); fi
+          if [ -z "$URL" ]; then echo "::error::배포 주소를 찾지 못했어요"; exit 1; fi
+          echo "relay: $URL"
+          printf '%s\n' "$URL" > relay-url.txt
+          curl -fsS --max-time 20 "$URL/health" || { echo "::error::서버가 응답하지 않아요: $URL"; exit 1; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- relay-url.txt; then echo "주소 그대로"; else git add relay-url.txt && git commit -m "relay: 서버 주소 갱신 ($URL)" && git push; fi
+      - name: 게임(Pages) 다시 배포
+        if: steps.check.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref main

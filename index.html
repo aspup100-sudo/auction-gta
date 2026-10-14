@@ -1385,7 +1385,16 @@ const FEEL = {
   liveRentYield: 0.045,   // 실시간 채널: 연 임대수익률 → 월세 = 시세 × 이 값 / 12
   liveSaleMin: 3,         // 실시간 채널: 매도 내놓은 뒤 매수 희망자가 나타나기까지 실제 분
   liveRepairSec: 60,      // 실시간 채널: 수리(인테리어) 공사 실제 초
-  liveQuickSale: 0.93,    // 실시간 채널: 급매 가격 비율
+  liveQuickSale: 0.93,    // 실시간 채널: 급매 가격 비율 (아파트 기준; 종류별은 liveLiq)
+  // 실시간 채널: 물건 종류별 유동성 (사용자 2026-10-14 '토지·상가·근생은 잘 안 팔리잖아'): wait = 매수자 기다리는 시간 배수(× liveSaleMin), lo~hi = 매수 희망가 범위(기준값 대비), miss = 한 번 기다려도 손님이 안 오는 확률, quick = 급매 비율, rent = 월세 배수
+  liveLiq: {
+    아파트:   { wait: 1,   lo: 0.96, hi: 1.04, miss: 0,    quick: 0.93, rent: 1,    note: '잘 팔려요' },
+    오피스텔: { wait: 1.3, lo: 0.94, hi: 1.02, miss: 0.1,  quick: 0.92, rent: 1.1,  note: '그럭저럭 팔려요' },
+    다세대:   { wait: 1.5, lo: 0.93, hi: 1.01, miss: 0.15, quick: 0.91, rent: 1,    note: '손님이 좀 뜸해요' },
+    단독:     { wait: 2,   lo: 0.90, hi: 1.0,  miss: 0.2,  quick: 0.9,  rent: 0.9,  note: '손님이 뜸해요' },
+    근린상가: { wait: 2.5, lo: 0.86, hi: 0.98, miss: 0.3,  quick: 0.88, rent: 1.3,  note: '잘 안 팔려요 · 월세는 높아요' },
+    토지:     { wait: 3.5, lo: 0.82, hi: 0.96, miss: 0.4,  quick: 0.85, rent: 0.35, note: '정말 안 팔려요 · 월세도 적어요(주차장·야적장)' },
+  },
   liveRepairPremium: 1.04, // 실시간 채널: 수리 뒤 매도가 배수 (월세는 ×1.1)      // 실시간 채널: 강제집행(인도명령 집행)이 끝나기까지 실제 초
   liveOrderFee: 50000,    // 실시간 채널: 인도명령 신청 비용(송달료 등)
   liveOrderEase: 15,      // 실시간 채널: 인도명령을 받아 두면 점유자 경계심(저항)이 이만큼 낮아진다         // 실시간 채널: 낙찰 뒤 잔금(대출→법원 납부) 기한, 실제 분 (현실의 대금지급기한 약 1달 ≒ 반 주)
@@ -4355,7 +4364,10 @@ const Live = {
   condOf(c) { const R = caseRng(c, 77); for (let i = 0; i < 3; i++) R.U(0, 1); const u = R.U(0, 1); return u < this.COND.good.p ? 'good' : u < this.COND.good.p + this.COND.worn.p ? 'worn' : 'wrecked'; },
   repairCostOf(c, cond) { return Math.round(c.appraisal * this.COND[cond].repair / 1e4) * 1e4; },
   valueMod(m) { const a = m.asset; return (a.cond ? this.COND[a.cond].mod : 1) * (a.repair === 'done' ? FEEL.liveRepairPremium : 1); },
-  monthlyRent(c, m) { const a = m.asset; return Math.round(c.market * FEEL.liveRentYield / 12 * (a.cond ? this.COND[a.cond].mod : 1) * (a.repair === 'done' ? 1.1 : 1) / 1e4) * 1e4; },
+  liq(c) { return (c && FEEL.liveLiq[c.type]) || FEEL.liveLiq.아파트; }, // 종류별 유동성 (feel.js liveLiq)
+  saleWaitMs(c) { return FEEL.liveSaleMin * this.liq(c).wait * 60000; },
+  quickPrice(c, m) { return Math.round(Generator.disposalValue(c) * this.valueMod(m) * this.liq(c).quick / 1e5) * 1e5; },
+  monthlyRent(c, m) { const a = m.asset; return Math.round(c.market * FEEL.liveRentYield / 12 * this.liq(c).rent * (a.cond ? this.COND[a.cond].mod : 1) * (a.repair === 'done' ? 1.1 : 1) / 1e4) * 1e4; },
   heldMs(m) { return (m.asset && m.asset.held) || 0; }, // 보유 시간은 게임을 켜 둔 동안만 흐른다 (사용자 2026-10-14: 방치 월세가 너무 세다)
   heldMonths(m) { return Math.max(1, Math.floor(this.heldMs(m) / this.monthMs())) + (m.evictState && m.evictState.forced ? m.evictState.forced.months : 0); },
   monthlyInterest(m) { const Lo = m.loanState || {}; const loan = (Lo.bank || 0) + (Lo.savings || 0); return loan ? Math.round(loan * LOAN_RATE / 12) : 0; }, // §11 금융비용과 같은 연 5%, 매달 현금에서 빠진다
@@ -4370,7 +4382,7 @@ const Live = {
     const a = m.asset, nm = m.name.split(' ')[0];
     if (a.repair === 'doing') return `내 집 ${nm} · 수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))}`;
     if (a.offer) return `내 집 ${nm} · 매수 희망 ${fmtWon(a.offer.price)} · 부동산으로`;
-    if (a.listed) return `내 집 ${nm} · 매수자 찾는 중 ${this.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - this.now()))}`;
+    if (a.listed) return `내 집 ${nm} · 매수자 찾는 중 ${this.mmss(Math.max(0, a.listed + this.saleWaitMs(this.caseFor(this.key(m.k, m.n))) - this.now()))}`;
     if (a.rentOn) return full ? `내 집 ${nm} · 월세 ${fmtWon(a.rent)} · 다음 입금 ${this.mmss(Math.max(0, (a.rentHeld || 0) + this.monthMs() - (a.held || 0)))}` : `내 집 ${nm} · 임대 중`;
     return `내 집 ${nm} · ${a.cond ? this.COND[a.cond].label : '상태 미확인'} · 부동산에 임대·매도`;
   },
@@ -4383,10 +4395,11 @@ const Live = {
       if (int && a.held >= a.intHeld + this.monthMs()) { a.intHeld += this.monthMs(); a.intPaid += int; State.cash -= int; HUD.setCash(State.cash); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ')[0], amt: -int, cash: State.cash, kind: 'int' }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player) { Toast.show(`대출 이자 ${fmtWon(int)} 빠져나감 (${m.name.split(' ')[0]})`); Sound.play('click'); } }
       if (a.repair === 'doing' && this.now() >= a.repairUntil) { a.repair = 'done'; changed = true; if (Game.player) { Toast.show(`${m.name.split(' ')[0]} 수리 끝 · 집값 +${Math.round((FEEL.liveRepairPremium - 1) * 100)}%, 월세 +10%`, 3000); Sound.play('ding'); } }
       if (a.rentOn && a.held >= (a.rentHeld || 0) + this.monthMs()) { a.rentHeld = (a.rentHeld || 0) + this.monthMs(); a.rentAt = this.now(); a.rentTotal += a.rent; a.rentMonths++; State.cash += a.rent; HUD.setCash(State.cash); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ')[0], amt: a.rent, cash: State.cash }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player) { Toast.show(`월세 입금 ${fmtWon(a.rent)} (${m.name.split(' ')[0]})`); Sound.play('coins'); } }
-      if (a.listed && !a.offer && this.now() >= a.listed + FEEL.liveSaleMin * 60000) {
-        const c = this.caseFor(this.key(m.k, m.n)); const R = caseRng(c, 500 + (a.offerNo || 0)); const price = Math.round(Generator.disposalValue(c) * this.valueMod(m) * R.U(0.96, 1.04) / 1e5) * 1e5;
-        a.offer = { price, at: this.now() }; a.offerNo = (a.offerNo || 0) + 1; changed = true;
-        if (Game.player) HUD.page(`${m.name} 사겠다는 사람 나왔어요. ${fmtWon(price)}. 사무실로 와서 결정하세요.`, castName('agent'));
+      const c0 = this.caseFor(this.key(m.k, m.n));
+      if (a.listed && !a.offer && c0 && this.now() >= a.listed + this.saleWaitMs(c0)) {
+        const c = c0, Q = this.liq(c); const R = caseRng(c, 500 + (a.offerNo || 0)); a.offerNo = (a.offerNo || 0) + 1; changed = true;
+        if (R.chance(Q.miss)) { a.listed = this.now(); a.missNo = (a.missNo || 0) + 1; if (Game.player) HUD.page(`${m.name}, 이번엔 보러 온 사람이 없네요. ${c.type}은(는) ${Q.note}. 계속 내놓을게요.`, castName('agent')); } // 손님이 안 오는 판 (토지·상가)
+        else { const price = Math.round(Generator.disposalValue(c) * this.valueMod(m) * R.U(Q.lo, Q.hi) / 1e5) * 1e5; a.offer = { price, at: this.now() }; if (Game.player) HUD.page(`${m.name} 사겠다는 사람 나왔어요. ${fmtWon(price)}. 사무실로 와서 결정하세요.`, castName('agent')); }
       }
       if (changed) this.save();
     }
@@ -4413,24 +4426,24 @@ const Live = {
     const c = this.caseFor(this.key(m.k, m.n)), a = m.asset;
     if (!a.cond) { await Dialog.say([say('agent', `${c.name}요? 집 상태부터 보고 오세요. 안에 들어가 보기 전엔 값을 못 매겨요.`)]); return 'done'; }
     if (a.repair === 'doing') { await Dialog.say([say('agent', `공사 중이죠? 끝나면 와요. ${this.mmss(Math.max(0, a.repairUntil - this.now()))} 남았네요.`)]); return 'done'; }
-    const K = this.COND[a.cond], base = Generator.disposalValue(c) * this.valueMod(m), rent = this.monthlyRent(c, m);
+    const K = this.COND[a.cond], base = Generator.disposalValue(c) * this.valueMod(m), rent = this.monthlyRent(c, m), Q = this.liq(c), waitMin = Math.round(FEEL.liveSaleMin * Q.wait * 10) / 10, quick = this.quickPrice(c, m);
     if (a.offer) {
-      const pick = await Dialog.say([say('agent', `${c.name} ${fmtWon(a.offer.price)}에 사겠대요. 시세는 ${fmtWon(c.market)}. 받으실래요?`)], [{ label: `${fmtWon(a.offer.price)}에 팔기`, value: 'y' }, { label: `더 기다리기 <small>다음 매수자 ${FEEL.liveSaleMin}분</small>`, value: 'w' }, { label: '매도 취소 <small>손님 돌려보내고 내리기</small>', value: 'c' }, { label: '그만두기', value: 'n' }]);
+      const pick = await Dialog.say([say('agent', `${c.name} ${fmtWon(a.offer.price)}에 사겠대요. 시세는 ${fmtWon(c.market)}. 받으실래요?`)], [{ label: `${fmtWon(a.offer.price)}에 팔기`, value: 'y' }, { label: `더 기다리기 <small>다음 매수자 ${waitMin}분</small>`, value: 'w' }, { label: '매도 취소 <small>손님 돌려보내고 내리기</small>', value: 'c' }, { label: '그만두기', value: 'n' }]);
       if (pick === 'y') return this.sold(m, c, a.offer.price, false);
       if (pick === 'w') { a.offer = null; a.listed = this.now(); this.save(); await Dialog.say([say('agent', '알겠어요. 다른 손님 더 붙여 볼게요.')]); }
       if (pick === 'c') { a.offer = null; a.listed = null; this.save(); await Dialog.say([say('agent', '손님 돌려보내고 매물 내렸어요. 다시 팔고 싶으면 또 오세요.')]); } // 매도 취소 (사용자 2026-10-14)
       return 'done';
     }
-    if (a.listed) { await Dialog.say([say('agent', `매수자 찾는 중이에요. ${this.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - this.now()))} 안에 손님 올 거예요.`)], [{ label: `급매로 지금 팔기 <small>${fmtWon(Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5)}</small>`, value: 'q' }, { label: '매도 취소 <small>매물 내리기</small>', value: 'c' }, { label: '기다리기', value: 'n' }]).then(async p => { if (p === 'q') return this.sold(m, c, Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5, true); if (p === 'c') { a.listed = null; a.offer = null; this.save(); await Dialog.say([say('agent', '매물 내렸어요. 다시 팔고 싶으면 또 오세요.')]); } }); return 'done'; }
+    if (a.listed) { await Dialog.say([say('agent', `매수자 찾는 중이에요. ${this.mmss(Math.max(0, a.listed + this.saleWaitMs(c) - this.now()))} 뒤에 손님이 ${Q.miss ? `올 수도 있어요. ${c.type}은(는) ${Q.note}` : '올 거예요'}.${a.missNo ? ` (벌써 ${a.missNo}번 허탕)` : ''}`)], [{ label: `급매로 지금 팔기 <small>${fmtWon(quick)}</small>`, value: 'q' }, { label: '매도 취소 <small>매물 내리기</small>', value: 'c' }, { label: '기다리기', value: 'n' }]).then(async p => { if (p === 'q') return this.sold(m, c, quick, true); if (p === 'c') { a.listed = null; a.offer = null; this.save(); await Dialog.say([say('agent', '매물 내렸어요. 다시 팔고 싶으면 또 오세요.')]); } }); return 'done'; }
     const opts = [];
     if (!a.rentOn) opts.push({ label: `임대 내놓기 <small>월세 ${fmtWon(rent)} · ${FEEL.liveMonthMin}분마다 입금</small>`, value: 'rent' });
-    opts.push({ label: `매도 내놓기 <small>시세 근처 · 매수자 ${FEEL.liveSaleMin}분</small>`, value: 'sell' });
-    opts.push({ label: `급매 <small>${fmtWon(Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5)} 바로</small>`, value: 'quick' });
+    opts.push({ label: `매도 내놓기 <small>기준값의 ${Math.round(Q.lo * 100)}~${Math.round(Q.hi * 100)}% · 매수자 ${waitMin}분${Q.miss ? ` · 허탕 ${Math.round(Q.miss * 100)}%` : ''}</small>`, value: 'sell' });
+    opts.push({ label: `급매 <small>${fmtWon(quick)} 바로 (${Math.round(Q.quick * 100)}%)</small>`, value: 'quick' });
     opts.push({ label: '시세 물어보기', value: 'inv' }, { label: '그만두기', value: 'n' });
     const pick = await Dialog.say([say('agent', `${c.name}, 상태 ${K.label}${a.repair === 'done' ? '(수리 끝)' : ''}${a.rentOn ? `, 월세 ${fmtWon(a.rent)} 받는 중` : ''}. ${a.cond !== 'good' && a.repair !== 'done' ? `이 상태면 시세보다 ${Math.round((1 - K.mod) * 100)}% 깎여요. ` : ''}어떻게 할까요?`)], opts);
     if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); a.rentHeld = a.held || 0; this.save(); Net.news(`${m.name.split(' ')[0]} 집 임대 놓음 · 월세 ${fmtWon(rent)}`); await Dialog.say([say('agent', `세입자 바로 붙였어요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
-    if (pick === 'sell') { a.listed = this.now(); this.save(); await Dialog.say([say('agent', `내놨어요. ${FEEL.liveSaleMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
-    if (pick === 'quick') return this.sold(m, c, Math.round(base * FEEL.liveQuickSale / 1e5) * 1e5, true);
+    if (pick === 'sell') { a.listed = this.now(); a.missNo = 0; this.save(); await Dialog.say([say('agent', `내놨어요. ${c.type}은(는) ${Q.note}. ${waitMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
+    if (pick === 'quick') return this.sold(m, c, quick, true);
     return pick;
   },
   async sold(m, c, price, quick) {
@@ -4539,7 +4552,7 @@ const AssetBox = {
         <span>낙찰가</span><b>${f(m.bid)}</b>
         <span>상태</span><b>${a.cond ? L.COND[a.cond].label : '미확인 (현장에 들어가 보세요)'}${a.repair === 'done' ? ' · 수리 끝' : a.repair === 'doing' ? ` · 수리 중 ${L.mmss(Math.max(0, a.repairUntil - L.now()))}` : ''}</b>
         ${a.rentOn ? `<span>월세</span><b class="up">${f(a.rent)} · 다음 입금 ${L.mmss(nxt)}</b><span>받은 월세</span><b>${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b>` : `<span>임대</span><b>안 놓음 · 부동산(${esc(castName('agent'))})에서 임대·매도</b>`}
-        ${a.offer ? `<span>매수 희망</span><b class="up">${f(a.offer.price)} · 부동산으로</b>` : a.listed ? `<span>매도</span><b>매수자 찾는 중 ${L.mmss(Math.max(0, a.listed + FEEL.liveSaleMin * 60000 - L.now()))}</b>` : ''}
+        ${a.offer ? `<span>매수 희망</span><b class="up">${f(a.offer.price)} · 부동산으로</b>` : a.listed ? `<span>매도</span><b>매수자 찾는 중 ${L.mmss(Math.max(0, a.listed + L.saleWaitMs(L.caseFor(L.key(m.k, m.n))) - L.now()))}${a.missNo ? ` · 허탕 ${a.missNo}번` : ''}</b>` : ''}
         ${loan ? `<span>대출</span><b class="down">${f(loan)}${Lo.savings ? ` (저축은행 ${f(Lo.savings)} 포함)` : ''} · 매달 이자 ${f(mi)}</b><span>낸 이자</span><b>${f(a.intPaid || 0)}${a.rentOn ? ` · 월세 빼면 한 달 ${(a.rent - mi >= 0 ? '+' : '−') + f(Math.abs(a.rent - mi))}` : ''}</b>` : ''}
         <span>보유</span><b>${L.mmss(a.held || 0)} 째 <small>(켜 둔 시간만 · 한 달 = ${FEEL.liveMonthMin}분)</small></b></div></div>`; };
     const pending = m => `<div class="ah"><h3>${esc(m.name)} <span class="tag red">${m.phase === 'forced' ? '강제집행 중' : m.phase === 'evict' ? '명도 중' : '잔금 전'}</span></h3><div class="kv2"><span>낙찰가</span><b>${f(m.bid)}</b>${m.phase === 'forced' ? `<span>정산까지</span><b>${L.mmss(Math.max(0, m.forcedUntil - L.now()))}</b>` : m.phase === 'evict' ? `<span>할 일</span><b>현장 초인종${m.order ? ' · 인도명령 받음' : ''}</b>` : `<span>잔금</span><b class="down">${f(m.bid - m.deposit)} · 기한 ${L.mmss(L.payLeft(m))}</b><span>할 일</span><b>${L.canPay(m) ? '법원에서 잔금 납부' : '은행에서 대출부터'}</b>`}</div></div>`;

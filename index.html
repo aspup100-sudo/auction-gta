@@ -96,6 +96,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #hudTime { position:absolute; top:188px; right:16px; font:600 15px var(--ui); color:#fff; text-shadow:0 1px 0 #000, 0 0 4px #000; }
 #hudTime.flip { animation:flip .5s ease-out; }
 @keyframes flip { 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
+body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 켠다 */
 #pager { position:absolute; top:12px; left:12px; width:min(330px, 60vw); background:#9fb08a; border:3px solid #2b2f2a; border-radius:8px; padding:6px 8px; box-shadow:0 3px 0 #000; font:500 12.5px/1.5 var(--ui); color:#1f2b18; }
 #pager::before { content:'PAGER'; position:absolute; top:-9px; left:8px; font-size:9px; background:#2b2f2a; color:#9fb08a; padding:0 4px; border-radius:3px; letter-spacing:1px; }
 #pager.buzz { animation:buzz .35s; }
@@ -564,6 +565,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
   <label>BGM <input type="range" id="setBgm" min="0" max="1" step="0.1"></label>
   <label>화면 흔들림 <input type="checkbox" id="setShake"></label>
+  <label>왼쪽 위 호출기 메시지 <input type="checkbox" id="setPager"></label>
   <label>텍스트 속도 <select id="setText"><option value="slow">느림</option><option value="normal">보통</option><option value="instant">즉시</option></select></label>
   <details class="keys"><summary>조작키 보기</summary>
     <table>
@@ -1395,7 +1397,7 @@ const Store = {
   get(k, d) { try { const v = localStorage.getItem('auctionGTA.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('auctionGTA.' + k, JSON.stringify(v)); } catch (e) { /* 저장 실패해도 게임은 계속 */ } },
 };
-const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal' }, Store.get('settings', {}));
+const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal', pager: false }, Store.get('settings', {})); // pager: 왼쪽 위 호출기 상자. 기본 꺼짐 (사용자 2026-10-14 '왼쪽 맨 위 단예 저거 없애')
 function saveSettings() { Store.set('settings', Settings); }
 /* 등장인물 이름: 고정. 사용자가 2026-10-14에 정해 준 이름이며 메뉴에서 바꿀 수 없다 (사용자 요청 v36) */
 // [역할 키, 이름, 역할]
@@ -6525,6 +6527,8 @@ const Instance = {
   $('setSfx').oninput = e => { Settings.sfx = +e.target.value; saveSettings(); Sound.applyVolumes(); Sound.play('blip'); };
   $('setBgm').oninput = e => { Settings.bgm = +e.target.value; saveSettings(); Sound.applyVolumes(); };
   $('setShake').onchange = e => { Settings.shake = e.target.checked; saveSettings(); };
+  $('setPager').checked = !!Settings.pager; document.body.classList.toggle('pagerOn', !!Settings.pager);
+  $('setPager').onchange = e => { Settings.pager = e.target.checked; saveSettings(); document.body.classList.toggle('pagerOn', Settings.pager); };
   $('setText').onchange = e => { Settings.textSpeed = e.target.value; saveSettings(); };
   $('rankBox').addEventListener('click', () => { if (!Layout.editing && !Menu.open) Menu.toggle(true); }); // 미니 순위판 → 메뉴의 전체 순위
   $('balanceDue').addEventListener('click', () => { if (!Layout.editing && !Menu.open && Game.scene !== 'title') Menu.toggle(true); }); // 내 집·잔금 줄 → 메뉴의 내 집 목록과 월세 입금 내역

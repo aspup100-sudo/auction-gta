@@ -109,8 +109,6 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #zoneMap .zh { color:#f3e9c8; font-weight:700; font-size:16px; text-shadow:0 2px 0 #000; }
 #zoneMap .zh small { color:#b9b39f; font-weight:400; margin-left:8px; }
 #zoneCanvas { transform-origin:50% 50%; border:3px solid #cdae70; border-radius:8px; box-shadow:0 8px 0 rgba(0,0,0,.5); image-rendering:pixelated; background:#2b312e; }
-#zoneMap .zl { color:#c9c2a8; font-size:12px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
-#zoneMap .zl i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:-1px; }
 #roadSign { position:absolute; right:16px; bottom:18px; background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:6px 14px; color:#fff; box-shadow:0 3px 0 #000; transform:translateY(120%); opacity:0; transition:transform .25s ease-out, opacity .25s; }
 #roadSign.in { transform:none; opacity:1; }
 #edgeSign { position:absolute; left:50%; top:14px; transform:translate(-50%,-160%); background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:5px 16px; color:#fff; text-align:center; box-shadow:0 3px 0 #000; opacity:0; transition:transform .25s ease-out, opacity .25s; }
@@ -442,14 +440,14 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #iosHint { margin-top:8px; font-size:12px; color:#c9c2a8; }
 /* 폰 가로(높이가 낮은 화면): HUD를 작게, 조작 버튼을 모서리로 */
   .short #pager { width:280px; font-size:11.5px; padding:4px 8px; }
-  .short #minimap { width:120px; height:87px; top:10px; right:12px; }
-  .short #hudCash { top:102px; right:12px; font-size:22px; }
-  .short #hudTime { top:128px; right:12px; font-size:13px; }
-  .short #hudSlots { top:148px; right:12px; }
-  .short .hudBtns { top:10px !important; right:142px; } .short .hudBtns .btn { padding:5px 8px; font-size:12px; }
-  .short #radar { top:60px; left:12px; width:80px; height:80px; }
-  .short #quest { top:60px; left:100px; max-width:220px; } .short #balanceDue { top:112px !important; left:100px; }
-  .short #rankBox { top:174px; left:12px; width:164px; font-size:10.5px; line-height:1.3; padding:4px 7px 5px; } .short #rankBox .rbOn { margin-top:3px; padding-top:2px; } /* 매물 카드(60~170px) 아래, 조이스틱(273px~) 위의 빈 자리에 줄인 판으로 (사용자 2026-10-14: 모바일에서 겹친다 / 왼쪽 끝에) */
+  .short #minimap { display:none; } /* 폰: 서울 축소 지도 대신 둥근 동네 레이더가 오른쪽 위 (누르면 합쳐진 지도) (사용자 2026-10-14) */
+  .short #hudCash { top:112px; right:12px; font-size:22px; }
+  .short #hudTime { top:138px; right:12px; font-size:13px; }
+  .short #hudSlots { top:158px; right:12px; }
+  .short .hudBtns { top:10px !important; right:118px; } .short .hudBtns .btn { padding:5px 8px; font-size:12px; }
+  .short #radar { top:10px; left:auto; right:12px; width:96px; height:96px; bottom:auto; }
+  .short #quest { top:6px; left:184px; max-width:220px; } .short #balanceDue { top:var(--stackBd, 6px) !important; left:12px; font-size:12px; padding:3px 8px; } /* 왼쪽 위: 순위 → 내 집·잔금 → 채팅 순으로 쌓는다 (boot.js LeftStack) */
+  .short #rankBox { top:6px; left:12px; width:164px; font-size:10.5px; line-height:1.3; padding:4px 7px 5px; } .short #rankBox .rbOn { margin-top:3px; padding-top:2px; } /* 매물 카드(60~170px) 아래, 조이스틱(273px~) 위의 빈 자리에 줄인 판으로 (사용자 2026-10-14: 모바일에서 겹친다 / 왼쪽 끝에) */
   .short #stick { width:100px; height:100px; left:20px; bottom:20px; } .short #knob { left:28px; top:28px; width:44px; height:44px; }
   .short #tAct { width:72px; height:72px; right:20px; bottom:24px; font-size:13px; }
   .short #tCar { right:104px; bottom:30px; width:54px; height:54px; } .short.driving #tCar { right:124px; bottom:30px; }
@@ -457,8 +455,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #hudSpeed { right:124px; bottom:92px; font-size:18px; }
   .short #roadSign { right:auto; left:126px; bottom:10px; padding:4px 12px; } #roadSign b { font-size:15px; } #roadSign small { font-size:10px; }
   .short #nav { left:56%; bottom:10px; padding:4px 10px 4px 4px; font-size:12px; max-width:360px; gap:8px; } /* 400→360: 오른쪽 끝이 내리기 버튼과 겹쳤다 (사용자 2026-10-14) */ .short #navMap { width:96px; height:70px; } .short #nav .turn .arrow { font-size:26px; } .short #nav .txt b { font-size:14px; } .short #navPick { padding:8px 10px; max-height:90vh; } .short #navPick h3 { font-size:14px; } .short #navPick .grid button { padding:5px 8px; font-size:12px; } .short #navPick .sec { margin:6px 0 3px; }
-  .short #toasts { bottom:auto; top:56px; }
-  .short #chatLog { top:6px; left:12px; max-width:280px; font-size:11px; } .short #chatLog div { padding:1px 6px; margin-top:2px; } .short #chatBar { width:min(380px, 70vw); }
+  .short #toasts { bottom:auto; top:120px; }
+  .short #chatLog { top:var(--stackCl, 6px); left:12px; max-width:250px; font-size:11px; } .short #chatLog div { padding:1px 6px; margin-top:2px; } .short #chatBar { width:min(380px, 70vw); }
   .short #tChat { right:104px; bottom:92px; width:54px; height:36px; } .short.driving #tChat { right:16px; bottom:170px; }
   .short #placeBanner { padding:4px 16px; } .short #placeBanner b { font-size:16px; }
   .short #edgeSign { padding:4px 12px; } .short #edgeSign b { font-size:15px; }
@@ -466,12 +464,12 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #title .caps .btn { padding:6px 10px; font-size:13px; } .short #title .mp { padding:4px 10px; font-size:12px; } .short #title .mp .ch { min-width:58px; padding:5px 7px; } .short #title .mp .ch b { font-size:13px; } .short #title .nameBox { padding:3px 10px; } .short #title .mp .mpHint { display:none; } .short #title #iosHint { font-size:11px; }
   /* 아이폰 가로: 카메라(노치) 쪽 여백을 비운다 */
   .short #pager { left:calc(12px + env(safe-area-inset-left, 0px)); }
-  .short #quest, .short #balanceDue { left:calc(100px + env(safe-area-inset-left, 0px)); } .short #rankBox { left:calc(12px + env(safe-area-inset-left, 0px)); }
-  .short #radar { left:calc(12px + env(safe-area-inset-left, 0px)); }
+  .short #quest { left:calc(184px + env(safe-area-inset-left, 0px)); } .short #balanceDue, .short #rankBox { left:calc(12px + env(safe-area-inset-left, 0px)); }
+  .short #radar { right:calc(12px + env(safe-area-inset-right, 0px)); }
   .short #stick { left:calc(20px + env(safe-area-inset-left, 0px)); }
   .short #roadSign { left:calc(126px + env(safe-area-inset-left, 0px)); } .short #chatLog { left:calc(12px + env(safe-area-inset-left, 0px)); }
   .short #minimap, .short #hudCash, .short #hudTime, .short #hudSlots { right:calc(12px + env(safe-area-inset-right, 0px)); }
-  .short .hudBtns { right:calc(142px + env(safe-area-inset-right, 0px)); }
+  .short .hudBtns { right:calc(118px + env(safe-area-inset-right, 0px)); }
   .short #tAct { right:calc(20px + env(safe-area-inset-right, 0px)); } .short #tCar { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tCar { right:calc(124px + env(safe-area-inset-right, 0px)); }
   .short #pedals { right:calc(16px + env(safe-area-inset-right, 0px)); } .short #tChat { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tChat { right:calc(16px + env(safe-area-inset-right, 0px)); }
   /* 폰 가로: 서울 지도를 화면에 꽉 차게 */
@@ -613,7 +611,6 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div class="mapTabs"><button class="btn on" type="button">동네 지도</button><button class="btn" type="button" data-go="seoul">서울 전체</button></div>
   <div class="zh"><span id="zoneMapName"></span><small>장소를 누르면 목적지 · 두 손가락/휠로 확대 · 바깥을 누르면 닫기</small></div>
   <canvas id="zoneCanvas"></canvas>
-  <div class="zl"><span><i style="background:#ffd84a"></i>나</span><span><i style="background:#e8392b"></i>현장</span><span><i style="background:#1b5ea6"></i>주민센터</span><span><i style="background:#0f3358"></i>등기소·법원</span><span><i style="background:#2a8a4a"></i>은행</span><span><i style="background:#7a5a2a"></i>저축은행</span><span><i style="background:#b06a2a"></i>중개사</span><span><i style="background:#cdae70"></i>사무실</span><span><i style="background:#d08a3a"></i>내 집</span><span><i style="background:#8a3ac0"></i>게임장</span><span><i style="background:#e0405a"></i>병원</span><span><i style="background:#2bb673"></i>지하철</span></div>
 </div>
 <div id="bidForm" class="ovl"></div>
 <div id="mpWait" class="ovl"></div>
@@ -2682,7 +2679,7 @@ const ZoneMap = {
   fit() {
     const z = Game.zone, c = $('zoneCanvas'); const w = z.W * this.PX, h = z.H * this.PX;
     c.width = w; c.height = h;
-    const s = Math.min((VW - 32) / w, (VH - 110) / h, 1.6);
+    const s = Math.min((VW - 24) / w, (VH - (document.body.classList.contains('short') ? 54 : 76)) / h, 1.8); // 설명 줄을 빼고 화면에 더 꽉 차게 (사용자 2026-10-14)
     c.style.width = Math.round(w * s) + 'px'; c.style.height = Math.round(h * s) + 'px';
     this.zoom = 1; this.px = this.py = 0; this.applyT();
   },
@@ -6318,6 +6315,21 @@ const Layout = {
  * 로컬 테스트(127.0.0.1)는 한 브라우저에서 여러 페이지를 띄우므로 ?dupcheck 가 있을 때만 검사한다.
  */
 /* 아이폰 앱: 키보드·선택 메뉴가 닫힌 뒤에도 화면이 줄어든 채(아래 검은 띠) 남거나 위로 밀려 있는 걸 되돌린다 (사용자 2026-10-14 '차 탈 때 화면 이상해') */
+/* 폰 가로(.short) 왼쪽 위 기둥: 순위판 → 내 집·잔금 줄 → 채팅/소식 피드를 높이에 맞춰 쌓는다 (사용자 2026-10-14) */
+const LeftStack = {
+  bind() { setInterval(() => this.apply(), 250); },
+  apply() {
+    const b = document.body, bd = $('balanceDue'), cl = $('chatLog'), rb = $('rankBox'), pg = $('pager');
+    if (!b.classList.contains('short')) { bd.style.removeProperty('--stackBd'); cl.style.removeProperty('--stackCl'); if (this.set) { rb.style.top = ''; this.set = false; } return; }
+    if (typeof Layout !== 'undefined' && Layout.editing) return;
+    let y = 6; this.set = true;
+    if (b.classList.contains('pagerOn') && pg && pg.offsetHeight) y += pg.offsetHeight + 8;
+    if (!rb.hidden && rb.offsetHeight) { rb.style.top = y + 'px'; y += rb.offsetHeight + 6; }
+    bd.style.setProperty('--stackBd', y + 'px');
+    if (bd.classList.contains('in')) y += bd.offsetHeight + 6;
+    cl.style.setProperty('--stackCl', y + 'px');
+  },
+};
 const ViewFix = {
   busy: false, lastStuckH: 0,
   ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent) && ((matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone); },
@@ -6480,7 +6492,7 @@ const Instance = {
     Store.set('mpName', name); $('mpCreate').disabled = true; $('mpJoin').disabled = true;
     const ok = await Net.join(code, name); if (!ok) { $('mpCreate').disabled = false; $('mpJoin').disabled = false; }
   };
-  Instance.bind(); ChatBar.bind(); Layout.bind(); ViewFix.bind();
+  Instance.bind(); ChatBar.bind(); Layout.bind(); ViewFix.bind(); LeftStack.bind();
   // 폰: 꾹 누르면 뜨는 복사·찾아보기 메뉴와 글자 선택을 막는다 (입력칸은 그대로)
   const typingEl = el => el && /^(input|textarea)$/i.test(el.tagName);
   document.addEventListener('contextmenu', e => { if (document.body.classList.contains('touchOn') && !typingEl(e.target)) e.preventDefault(); });
@@ -6499,7 +6511,7 @@ const Instance = {
   document.querySelectorAll('.btn').forEach(b => b.addEventListener('pointerdown', () => { Sound.init(); Sound.play('click'); }));
   $('btnNote').onclick = () => Notebook.toggle();
   $('minimap').onclick = () => SeoulMap.toggle(true);
-  $('radar').onclick = () => { Sound.init(); ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; };
+  $('radar').onclick = () => { Sound.init(); if (Game.scene !== 'zone') { SeoulMap.toggle(true); return; } ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; }; // 폰에선 이 레이더가 유일한 지도 버튼: 동네 밖이면 서울 지도
   $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
   // 지도 탭: 동네 지도 ↔ 서울 전체 (한 지도처럼; 사용자 2026-10-14)
   document.querySelectorAll('.mapTabs .btn[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); Sound.init(); if (b.dataset.go === 'seoul') { ZoneMap.toggle(false); SeoulMap.toggle(true); } else { if (Game.scene !== 'zone') { Toast.show('건물 밖에서만 동네 지도를 볼 수 있어요.'); return; } SeoulMap.toggle(false); ZoneMap.toggle(true); } });

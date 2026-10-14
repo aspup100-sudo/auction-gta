@@ -262,6 +262,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .layoutEdit #stick, .layoutEdit #tAct, .layoutEdit #tCar, .layoutEdit #tChat, .layoutEdit #pedals, .layoutEdit #hudBtns, .layoutEdit #radar, .layoutEdit #minimap { outline:2px dashed #ffd84a; outline-offset:3px; cursor:move; pointer-events:auto; }
 .layoutEdit .dragging { outline-color:#fff; filter:brightness(1.3); }
 .touchOn #touch { display:block; }
+.touchOn #btnChat { display:none !important; } /* 폰은 터치 채팅 버튼 */
 .touchOn #radar { bottom:auto; top:110px; left:12px; width:96px; height:96px; }
 #stick { position:absolute; left:24px; bottom:24px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.2); pointer-events:auto; }
 #knob { position:absolute; left:35px; top:35px; width:50px; height:50px; border-radius:50%; background:rgba(205,174,112,.6); }
@@ -508,7 +509,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="quest"></div>
   <div id="balanceDue"></div>
   <div id="rankBox" hidden></div>
-  <div class="hudBtns" id="hudBtns"><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
+  <div class="hudBtns" id="hudBtns"><button class="btn" id="btnChat" hidden title="T">채팅</button><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
   <canvas id="radar" width="132" height="132" title="구역 지도 (N)"></canvas>
   <div id="hudSpeed"></div>
   <div id="roadSign"></div>
@@ -553,6 +554,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>차 타기·내리기</th><td>F (차 옆에서 / 속도 40 이하)</td><td class="tc">F 버튼</td></tr>
       <tr><th>운전</th><td>W 가속 · S 브레이크/후진 · A D 핸들</td><td class="tc">가속·브레이크 버튼으로 전진·후진, 조이스틱은 핸들만</td></tr>
       <tr><th>핸드브레이크</th><td>Space</td><td class="tc">HB 버튼</td></tr>
+      <tr><th>채팅 (같이 하기·채널)</th><td>T 또는 위쪽 '채팅' 버튼 · Enter 보내기 · Esc 닫기</td><td class="tc">채팅 버튼</td></tr>
+      <tr><th>내 차</th><td colspan="2">혼자: 사무실 문 앞 · 같이 하기·채널: 사무실 뒤 공용 주차장에 사람마다 한 칸</td></tr>
       <tr><th>서울 지도</th><td>M (차 근처에서 이동 확정)</td><td class="tc">우상단 미니맵</td></tr>
       <tr><th>구역 지도(장소 위치)</th><td>N</td><td class="tc">왼쪽 레이더 탭</td></tr>
       <tr><th>옆 구로 이동</th><td colspan="2">큰길 따라 구역 끝까지 운전 (지도 M도 가능)</td></tr>
@@ -1394,6 +1397,7 @@ Object.assign(FEEL, {
   edgeSignDist: 36,       // 구역 가장자리에서 이 거리(타일) 안으로 바깥을 향해 달리면 '→ 옆 구' 표지판
   edgeBounce: 70,         // 길이 없는 가장자리(서울 끝)에 닿았을 때 되튕기는 속도(px/s)
   carBounce: 0.35,
+  parkedCarKeepSec: 60, // 다른 사람 차: 마지막 위치 신호 뒤 이만큼은 그 자리에 세워 둔 걸로 보인다
   carStuckSec: 1.2,       // 페달을 밟는데 이만큼 안 움직이면 끼인 것으로 보고 빼낸다(초)
   camZoomAtMax: 0.75,     // 최고속일 때 줌 배수 (정지 1.0)
   repairMin: 10000, repairMax: 50000,
@@ -1715,6 +1719,7 @@ const ZONE_SPECS = {
       { name: '동일로', en: 'Dongil-ro', lanes: 4, width: 10, pts: [[252, 0], [255, 99], [264, 204]] },
     ],
     subway: [{ x: 138, y: 99, line: 2, label: '② 건대입구' }, { x: 165, y: 126, line: 7, label: '⑦ 건대입구' }],
+    parking: [{ x: 106, y: 100, w: 12, h: 8, name: '공용 주차장' }], // 사무실 뒤. 같이 하기·채널에서는 사람마다 여기 한 칸씩 (사용자 요청 2026-10-14)
     places: [ // 큰길 쪽 건물을 골라 배정할 위치 힌트(타일)
       { id: 'office', kind: 'office', name: '선배네 경매 사무실', near: [105, 87] },
       { id: 'registry', kind: 'registry', name: '광진등기소', near: [195, 78] },
@@ -2051,6 +2056,11 @@ function zoneChunk(zone, cx, cy) {
   }
   // 주차장 칸
   for (const pk of zone.parking) { x.fillStyle = '#4a4b4f'; x.fillRect(pk.x * TILE, pk.y * TILE, pk.w * TILE, pk.h * TILE); x.fillStyle = 'rgba(240,240,240,.8)'; for (let i = 0; i <= pk.w; i += 3) { x.fillRect((pk.x + i) * TILE, pk.y * TILE, 2, pk.h * TILE * 0.4); x.fillRect((pk.x + i) * TILE, (pk.y + pk.h * 0.6) * TILE, 2, pk.h * TILE * 0.4); } }
+  for (const pk of zone.parking) if (pk.name) { // 이름표 + P 표지 (가운데 통로)
+    const cx = (pk.x + pk.w / 2) * TILE, cy = (pk.y + pk.h / 2) * TILE;
+    x.save(); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = 'rgba(255,255,255,.55)'; x.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; x.fillText(pk.name, cx, cy); x.restore();
+    x.fillStyle = '#2d5fb3'; x.fillRect(pk.x * TILE - 8, pk.y * TILE - 2, 8, 8); x.fillStyle = '#fff'; x.font = 'bold 7px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('P', pk.x * TILE - 4, pk.y * TILE + 2); x.textBaseline = 'alphabetic';
+  }
   // 큰길은 벡터로 다시 그려 대각선도 매끈하게 (충돌은 타일 기준)
   x.lineJoin = 'round'; x.lineCap = 'butt';
   const strokeRoad = (r, w, col) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); r.pts.forEach(([px, py], i) => (i ? x.lineTo(px * TILE, py * TILE) : x.moveTo(px * TILE, py * TILE))); x.stroke(); };
@@ -3740,6 +3750,14 @@ const Net = {
     }
     return out;
   },
+  // 같은 구역에 세워 둔 다른 사람 차 (주인이 걷거나 건물 안에 있어도 보인다; 운전 중이면 drawFriend가 그린다)
+  parkedCars() {
+    if (!this.on || !Game.zone) return [];
+    const out = [];
+    for (const id in this.players) { const p = this.players[id]; if (p.gone || p.dr || p.cx === undefined || p.z !== Game.zone.id || performance.now() - p.last > FEEL.parkedCarKeepSec * 1000) continue; out.push(p); }
+    return out;
+  },
+  drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, '#d9a441', 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
     if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, '#d9a441', 24, 12, 'car', 1); this.label(c, p.name, p.cx, p.cy - 12); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, p.pal); } // 친구가 꾸민 색 그대로
@@ -3821,6 +3839,7 @@ const ChatBar = {
     $('chatSend').onclick = () => this.send();
     $('chatClose').onclick = () => this.close();
     $('tChat').onclick = () => this.open();
+    $('btnChat').onclick = () => this.open(); // 컴퓨터용 (터치 버튼은 폰에서만 보인다, 사용자 2026-10-14: '컴퓨터에서는 채팅 없는 것 같아')
     if (window.visualViewport) { visualViewport.addEventListener('resize', () => this.fit()); visualViewport.addEventListener('scroll', () => this.fit()); }
     inp.addEventListener('blur', () => { if (document.body.classList.contains('touchOn')) setTimeout(() => scrollTo(0, 0), 50); }); // iOS가 입력창 때문에 밀어 둔 화면을 되돌린다
   },
@@ -4376,7 +4395,7 @@ function startGame(capital, opts = {}) {
   State.seed = opts.seed || (Date.now() & 0x7fffffff); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자
   if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed }); // 채널: 실제 시간으로 돌아가는 세계
   $('btnEndDay').hidden = Live.on;
-  if (Net.on) { $('tChat').hidden = false; $('mpInfo').hidden = false; }
+  if (Net.on) { $('tChat').hidden = false; $('btnChat').hidden = false; $('mpInfo').hidden = false; }
   $('rankBox').hidden = !Live.on; // 채널: 순위판을 왼쪽에 항상 (사용자 요청 2026-10-14)
   Game.zones = {};
   Game.zone = getZone('gwangjin');
@@ -4385,7 +4404,10 @@ function startGame(capital, opts = {}) {
   Game.player = makeWalker('player', office.door.tx * TILE + 8, office.door.ty * TILE + 8); // 문 타일 정중앙(건물과 겹치지 않게)
   Game.player.dir = 0;
   spawnDecor();
-  Game.car = placeCarNear(Game.zone, office.door.tx, office.door.ty); Game.driving = false;
+  // 같이 하기·채널: 사람마다 공용 주차장 한 칸씩 (이름으로 정해져 늘 같은 칸). 혼자: 사무실 문 앞 길가
+  const bays = parkingBays(Game.zone);
+  Game.car = Net.on && bays.length ? carAtBay(bays, bayIndex(Net.me, bays.length)) : placeCarNear(Game.zone, office.door.tx, office.door.ty); Game.driving = false;
+  if (Net.on && bays.length) { State.carHint = 8; setTimeout(() => Toast.show('내 차는 사무실 뒤 공용 주차장에 있어요. 사람마다 한 칸씩이에요.', 3600), 2600); }
   Game.traffic = spawnTraffic(Game.zone);
   State.targetPlace = 'office';
   $('title').classList.add('out'); setTimeout(() => $('title').style.display = 'none', 400);
@@ -4447,6 +4469,17 @@ function spawnDecor() {
   const alley = []; for (let i = 0; i < 4000 && alley.length < 30; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) === T.ALLEY) alley.push([x, y]); }
   Game.cats = alley.slice(0, 3).map(([x, y]) => ({ x: x * TILE + 8, y: y * TILE + 8, t: Math.random() * 5, vx: 0, sit: true }));
 }
+/* ---- 공용 주차장: 칸 3타일 폭, 위아래 두 줄 (위 줄은 위를 보고, 아래 줄은 아래를 본다) ---- */
+function parkingBays(z) {
+  const out = [];
+  for (const pk of z.parking) for (let i = 0; i + 3 <= pk.w; i += 3) {
+    const x = (pk.x + i + 1.5) * TILE;
+    out.push({ x, y: (pk.y + pk.h * 0.2) * TILE, a: -Math.PI / 2 }); out.push({ x, y: (pk.y + pk.h * 0.8) * TILE, a: Math.PI / 2 });
+  }
+  return out;
+}
+function bayIndex(name, n) { let h = 0; for (const ch of String(name || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return n ? h % n : 0; }
+function carAtBay(bays, i) { const b = bays[i % bays.length]; const c = makeCar(b.x, b.y, b.a); c.bay = i % bays.length; return c; }
 function placeCarNear(z, tx, ty) {
   // 문에서 가까운 도로 가장자리(보도 옆 차선)에 주차
   let best = null, bd = 1e9;
@@ -4890,6 +4923,7 @@ function drawZone(t) {
   // 사람·고양이 (y 정렬)
   const actors = [...Game.decor.map(w => ({ y: w.y, d: () => drawWalker(ctx, w, t) })), ...(Game.driving ? [] : [{ y: Game.player.y, d: () => drawWalker(ctx, Game.player, t) }]),
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
+    ...Net.parkedCars().map(p => ({ y: p.cy, d: () => Net.drawParkedCar(ctx, p) })),
     ...Game.cats.map(c => ({ y: c.y, d: () => { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(c.x - 4, c.y + 2, 9, 2); const img = Sprites.cat(c.sit ? 0 : Math.floor(t * 6) % 2); ctx.save(); ctx.translate(c.x, c.y); if (c.vx < 0) ctx.scale(-1, 1); ctx.drawImage(img, -5, -5); ctx.restore(); } }))];
   actors.sort((a, b) => a.y - b.y).forEach(a => a.d());
   for (const q of Particles) { ctx.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }

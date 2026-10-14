@@ -50,6 +50,9 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title .mp summary, #title .mp .mph { cursor:default; color:var(--gold); font-weight:700; } #title .mp summary small, #title .mp .mph small { color:var(--paper); opacity:.7; font-weight:400; margin-left:6px; }
 #title .mp .row { margin-top:8px; } #title .mp .chHead { margin-top:12px; color:var(--paper); font-weight:700; } #title .mp .chHead small { font-weight:400; opacity:.6; margin-left:6px; }
 #title .mp .chRow { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:6px; } #title .mp .ch { display:inline-flex; flex-direction:column; align-items:center; min-width:72px; padding:7px 10px; line-height:1.15; gap:2px; } #title .mp .ch b { font-size:14px; } #title .mp .ch small { font-size:11px; opacity:.7; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .ch.sel small { opacity:1; }
+/* 제목 화면: 모드(혼자/친구/채널)를 먼저 고르고, 고른 뒤에만 자본·이름·시작 버튼이 보인다 (사용자 2026-10-14: 헷갈리지 않게) */
+#title #capLabel, #title #caps, #title #capRow, #title #nameBox { display:none; } #title #modeHint { color:var(--paper); opacity:.6; font-size:13px; margin-top:-4px; } #title.modeSolo #modeHint, #title.modeRoom #modeHint, #title.modeCh #modeHint { display:none; }
+#title.modeSolo #capLabel, #title.modeRoom #capLabel { display:block; } #title.modeSolo #caps, #title.modeRoom #caps { display:flex; } #title.modeSolo #capRow, #title.modeRoom #capRow, #title.modeCh.chOn #capRow { display:flex; } #title.modeRoom #nameBox, #title.modeCh #nameBox { display:flex; }
 #title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title.chOn .mp .ch.sel { cursor:pointer; } #title.chOn .mp .ch.sel::after { content:'다시 누르면 나가기'; font-size:10px; opacity:.7; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
 #title .mp .mpHint { margin-top:6px; font-size:12px; opacity:.6; }
@@ -470,17 +473,10 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div class="troad"><div class="tcar"></div><div class="tcar t2"></div></div>
   <h1>경매 GTA</h1>
   <div class="tag">걸어서 모으는 정보, 손으로 하는 권리분석</div>
-  <div id="capLabel">시작 자본을 고르세요</div>
-  <div class="caps" id="caps">
-    <button class="btn" data-v="50000000">5천만 원</button>
-    <button class="btn" data-v="100000000">1억 원</button>
-    <button class="btn sel" data-v="200000000">2억 원</button>
-    <button class="btn" data-v="500000000">5억 원</button>
-  </div>
-  <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
+  <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo">혼자 하기<small>자본 골라서 시작</small></button><button class="btn mode" data-mode="modeRoom">친구와 같이 하기<small>방 만들기</small></button><button class="btn mode" data-mode="modeCh">실시간 채널<small>코드 없이 아무나</small></button></div>
+  <div id="modeHint">어떻게 할지 먼저 골라 주세요</div>
   <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"><small id="nameLock"></small><button class="btn" id="btnProfile">내 캐릭터 꾸미기</button></div>
   <div class="mp" id="profileTitle" hidden><div class="mph">내 캐릭터 <small>색을 눌러 고르세요</small></div><div class="profileBox" data-profile></div></div>
-  <div class="modeRow"><button class="btn mode" data-mode="modeRoom">친구와 같이 하기<small>방 만들기</small></button><button class="btn mode" data-mode="modeCh">실시간 채널<small>코드 없이 아무나</small></button></div>
   <div class="mpWrap">
   <div class="mp" id="mpBox">
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
@@ -493,6 +489,14 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
     <div class="mpHint">실제 시간으로 계속 돌아가는 세계예요. 매각기일 당일 법원에서 입찰하면 자동 개찰되고, 돈과 순위는 채널별로 이어져요.</div>
   </div>
   </div>
+  <div id="capLabel">시작 자본을 고르세요</div>
+  <div class="caps" id="caps">
+    <button class="btn" data-v="50000000">5천만 원</button>
+    <button class="btn" data-v="100000000">1억 원</button>
+    <button class="btn sel" data-v="200000000">2억 원</button>
+    <button class="btn" data-v="500000000">5억 원</button>
+  </div>
+  <div class="row" id="capRow"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button>
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
@@ -6057,7 +6061,8 @@ const Layout = {
   // 제목 화면: '친구와 같이 하기' / '실시간 채널' 버튼 → 누른 쪽만 펼친다
   document.querySelectorAll('#title .modeRow .mode').forEach(b => b.onclick = () => {
     Sound.init(); const t = $('title'); const on = t.classList.contains(b.dataset.mode);
-    t.classList.remove('modeRoom', 'modeCh'); document.querySelectorAll('#title .modeRow .mode').forEach(x => x.classList.remove('sel'));
+    if (Net.on) { Toast.show(Net.mode === 'channel' ? '고른 채널을 다시 누르면 나올 수 있어요.' : '지금 친구 방에 들어가 있어요. 새로고침하면 나와요.'); return; } // 연결된 채로 모드를 바꾸면 헷갈리니 막는다
+    t.classList.remove('modeSolo', 'modeRoom', 'modeCh'); document.querySelectorAll('#title .modeRow .mode').forEach(x => x.classList.remove('sel'));
     if (!on) { t.classList.add(b.dataset.mode); b.classList.add('sel'); } Sound.play('paper');
   });
   const chButtons = () => document.querySelectorAll('#mpBox .btn, #chBox .btn');

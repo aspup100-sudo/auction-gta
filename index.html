@@ -1805,6 +1805,7 @@ const ZONE_SPECS = {
       { id: 'agent', kind: 'agent', name: '강남역 공인중개사', near: [120, 144] },
       { id: 'bank', kind: 'bank', name: '한빛은행 강남역지점', near: [177, 78] },
       { id: 'hospital', kind: 'hospital', name: '강남병원', near: [240, 150] },
+      { id: 'registry', kind: 'registry', name: '강남등기소', near: [60, 90] }, // 동네마다 등기소 (사용자 2026-10-14 '여긴 등기소 없는데?')
     ],
   },
   mapo: {
@@ -1821,6 +1822,7 @@ const ZONE_SPECS = {
       { id: 'agent', kind: 'agent', name: '홍대 공인중개사', near: [90, 135] },
       { id: 'bank', kind: 'bank', name: '한빛은행 합정지점', near: [60, 180] },
       { id: 'hospital', kind: 'hospital', name: '홍대병원', near: [195, 60] },
+      { id: 'registry', kind: 'registry', name: '서부등기국', near: [240, 140] },
     ],
   },
   gwanak: {
@@ -1836,6 +1838,7 @@ const ZONE_SPECS = {
       { id: 'agent', kind: 'agent', name: '신림 공인중개사', near: [180, 120] },
       { id: 'bank', kind: 'bank', name: '한빛은행 신림지점', near: [165, 66] },
       { id: 'hospital', kind: 'hospital', name: '신림병원', near: [75, 60] },
+      { id: 'registry', kind: 'registry', name: '관악등기소', near: [225, 150] },
     ],
   },
 };
@@ -1874,6 +1877,7 @@ function genericZoneSpec(gu) {
       { id: 'agent', kind: 'agent', name: `${d.short} 공인중개사`, near: [xs[1] - 26, ys[0] + 22] },
       { id: 'bank', kind: 'bank', name: `한빛은행 ${d.short}지점`, near: [xs[0] - 28, ys[0] - 22] },
       { id: 'hospital', kind: 'hospital', name: `${d.short}병원`, near: [xs[1] + 26, ys[1] + 22] },
+      { id: 'registry', kind: 'registry', name: `${d.short}등기소`, near: [xs[1] + 26, ys[0] - 22] },
     ] };
 }
 function applyOsm(spec) {

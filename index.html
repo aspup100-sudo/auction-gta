@@ -1405,6 +1405,7 @@ Object.assign(FEEL, {
   liveIdleSec: 20,
   liveGoneSec: 45, // 이만큼 위치 신호가 없으면 나간 사람으로 (목록에서 빠지고 '나갔어요') // 채널 접속자 목록: 이 시간 동안 위치 신호가 없으면 '자리 비움'
   parkedCarKeepSec: 60, // 다른 사람 차: 마지막 위치 신호 뒤 이만큼은 그 자리에 세워 둔 걸로 보인다
+  trafficSpacing: 400,    // NPC 차 1대당 도로 길이(px). 260 → 400 (사용자 2026-10-14: 차가 너무 많다)
   carStuckSec: 1.2,       // 페달을 밟는데 이만큼 안 움직이면 끼인 것으로 보고 빼낸다(초)
   camZoomAtMax: 0.75,     // 최고속일 때 줌 배수 (정지 1.0)
   repairMin: 10000, repairMax: 50000,
@@ -2314,7 +2315,7 @@ function spawnTraffic(z) {
     r.len = L * TILE;
     // 이 도로 위 교차로들의 위치(호 길이)
     r.stops = z.crossings.filter(c => c.arm.has(r)).map(c => ({ c, s: arcPos(r, c.x, c.y), half: ((c.arm.get(r) === 'a' ? c.halfB : c.halfA) + 3.6) * TILE }));
-    const n = Math.round(r.len / 260);
+    const n = Math.round(r.len / FEEL.trafficSpacing); // 도로 길이당 NPC 차 수
     for (let i = 0; i < n; i++) {
       const k = KINDS[Math.floor(Math.random() * KINDS.length) % KINDS.length];
       const dirn = r.oneway ? 1 : i % 2 ? 1 : -1, lanes = r.oneway ? r.lanes : r.lanes / 2;

@@ -3789,6 +3789,7 @@ const Net = {
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
+    if (m.t === 'greet') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); if (m.to === this.myId && !m.re) this.onGreet(m, p); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
     if (m.t === 'result') { p.result = m; return; }
@@ -3824,6 +3825,22 @@ const Net = {
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
     this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined });
+  },
+  /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
+  idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
+  greet(p, text, re) {
+    const id = this.idOf(p); if (!id) return;
+    this.myBubble = { text, t: FEEL.chatBubbleTime }; this.pushLog(this.me, text, true); Sound.play('blip', 1.6);
+    this.send({ t: 'greet', to: id, text, re: !!re });
+  },
+  // 인사를 받았다: 손이 비어 있으면 답인사를 고른다, 바쁘면(대화·운전·서류) 토스트만
+  async onGreet(m, p) {
+    if (Game.busy || Dialog.open || Game.driving || Game.formOpen || Game.scene === 'title' || !Game.player) { Toast.show(`${p.name}: ${m.text}`, 3000); return; }
+    Game.busy = true;
+    try {
+      const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: m.text, emote: 'excl' }], [...GREET_REPLIES.map(r => ({ label: r, value: r })), { label: '못 본 척하기', value: null }]);
+      if (pick) this.greet(p, pick, true);
+    } finally { Game.busy = false; }
   },
   chat(text) {
     text = (text || '').trim().slice(0, 60); if (!text) return;
@@ -3907,6 +3924,16 @@ const Net = {
     return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: T 키 또는 채팅 버튼</span>`;
   },
 };
+const GREETS = ['안녕하세요?', '반가워요!', '같이 다닐래요?', '조심히 다니세요'];
+const GREET_REPLIES = ['안녕하세요!', '네, 반가워요', '좋아요, 같이 가요', '지금은 바빠요, 나중에요'];
+// E(인사)로 옆의 플레이어에게 말 걸기 → 상대 화면에 말풍선 + 답인사 고르기
+async function greetFriend(p) {
+  if (Game.busy || Dialog.open) return; Game.busy = true;
+  try {
+    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 뭐라고 할까?` }], [...GREETS.map(g => ({ label: g, value: g })), { label: '그냥 지나가기', value: null }]);
+    if (pick) Net.greet(p, pick);
+  } finally { Game.busy = false; }
+}
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
 /* ---- 플레이어끼리: 내 차로 다른 플레이어를 치면 합의금을 물어주고, FEEL.pvpAsylumHits번째부터는 병원비까지 물어준 뒤 정신과 병동 ----
@@ -4652,6 +4679,7 @@ function zoneInteractTarget(fromCar = false) {
     const dx = pl.door.tx * TILE + 8 - p.x, dy = pl.door.ty * TILE + 8 - p.y, d = Math.hypot(dx, dy);
     if (d < bd) { bd = d; best = pl; }
   }
+  if (!fromCar && !best && Net.on) for (const f of Net.visible('zone')) { const q = f.p; if (q.dr) continue; const d = Math.hypot(q.x - p.x, q.y - p.y); if (d < bd) { bd = d; best = q.tg || (q.tg = { kind: 'friend', p: q }); } } // 같은 채널·방 플레이어에게 인사 (사용자 2026-10-14)
   if (!fromCar && !best) for (const w of Game.decor) { if (w.stun > 0) continue; const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w.tg || (w.tg = { kind: 'walker', w }); } } // 지나가는 행인에게 말 걸기 (같은 객체를 유지해야 prompt가 매 프레임 초기화되지 않는다)
   return best;
 }
@@ -4684,6 +4712,7 @@ function roomInteractTarget() {
   const consider = (o, x, y, lim = 24) => { const d = Math.hypot(x - p.x, y - p.y); if (d < bd && d < lim) { bd = d; best = o; } };
   for (const n of r.npcs) if (n.talk) consider({ kind: 'npc', npc: n }, n.x, n.y + (n.role === 'clerk' ? 28 : 0));
   for (const g of r.guests) if (!g.gone && !g.walkTo) consider({ kind: 'guest', guest: g }, g.x, g.y + 8, 20);
+  if (Net.on) for (const f of Net.visible('room')) consider(f.p.tg || (f.p.tg = { kind: 'friend', p: f.p }), f.p.x, f.p.y, 22);
   for (const o of r.objs) if (o.type !== 'chair') consider({ kind: 'obj', obj: o }, o.tx * TILE + 8, o.ty * TILE + 22);
   // 은행 빈 의자: 바로 옆에 섰을 때만
   if (r.place.kind === 'bank' && !p.sit) for (const o of r.objs) if (o.type === 'chair' && !o.taken) consider({ kind: 'obj', obj: o, label: '앉기' }, o.tx * TILE + 8, o.ty * TILE + 12, 15);
@@ -4978,7 +5007,7 @@ function update(dt) {
       if (!frozen) checkEdgeWalk(dt, z, p, ix, iy);
       const nearCar = Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
-      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'walker') talkWalker(tg.w); else enterPlace(tg); }
+      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
       else if (fKey) Toast.show('차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
     }
@@ -5193,6 +5222,7 @@ function promptWord(tg) {
   if (tg.kind === 'exit') return '나가기';
   if (tg.kind === 'npc' || tg.kind === 'guest') return '대화';
   if (tg.kind === 'walker') return '말 걸기';
+  if (tg.kind === 'friend') return '인사';
   if (tg.kind === 'obj') return tg.label || (tg.obj && tg.obj.label) || '사용';
   if (tg.kind === 'site') return Game.driving ? '물건 보기' : '들어가기';
   return '들어가기';
@@ -5381,6 +5411,7 @@ async function interactRoom(tg) {
     if (tg.kind === 'npc' && tg.npc.role === 'danye') return await danyeTalk();
     if (tg.kind === 'npc') return await staffTalk(kind);
     if (tg.kind === 'guest') return await guestTalk(kind, tg.guest);
+    if (tg.kind === 'friend') { Game.busy = false; return greetFriend(tg.p); }
     if (tg.kind === 'obj') return await objectUse(tg.obj, kind);
   } finally { Game.busy = false; }
 }

@@ -52,7 +52,7 @@ jobs:
           curl -fsS --max-time 20 "$URL/health" || { echo "::error::서버가 응답하지 않아요: $URL"; exit 1; }
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- relay-url.txt; then echo "주소 그대로"; else git add relay-url.txt && git commit -m "relay: 서버 주소 갱신 ($URL)" && git push; fi
+          if [ -n "$(git status --porcelain -- relay-url.txt)" ]; then git add relay-url.txt && git commit -m "relay: 서버 주소 갱신 ($URL)" && git push; else echo "주소 그대로"; fi
       - name: 게임(Pages) 다시 배포
         if: steps.check.outputs.ok == 'true'
         env:

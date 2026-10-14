@@ -53,7 +53,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title.chOn .mp .ch.sel { cursor:pointer; } #title.chOn .mp .ch.sel::after { content:'다시 누르면 나가기'; font-size:10px; opacity:.7; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
 #title .mp .mpHint { margin-top:6px; font-size:12px; opacity:.6; }
-#title .nameBox { display:flex; align-items:center; gap:10px; padding:6px 14px; } #title .nameBox label { color:var(--paper); opacity:.75; font-size:13px; white-space:nowrap; } #title .nameBox input { width:150px; }
+#title .nameBox { display:flex; align-items:center; gap:10px; padding:6px 14px; } #title .nameBox label { color:var(--paper); opacity:.75; font-size:13px; white-space:nowrap; } #title .nameBox input { width:150px; } #title .nameBox.locked input { background:#e8e2cf; color:#555; border-style:dashed; } #title .nameBox #nameLock { color:#ffd84a; font-size:11px; white-space:nowrap; } #title .nameBox #nameLock:empty { display:none; } #title .mp .ch .chMine { font-style:normal; font-size:10px; color:#ffd84a; margin-top:2px; }
 #title .modeRow { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; } #title .modeRow .mode { display:inline-flex; flex-direction:column; align-items:center; gap:2px; min-width:180px; padding:10px 18px; font-size:16px; font-weight:700; line-height:1.2; } #title .modeRow .mode small { font-size:12px; font-weight:400; opacity:.65; } #title .modeRow .mode.sel { border-color:var(--gold); color:var(--gold); background:rgba(205,174,112,.12); } #title .modeRow .mode.sel small { opacity:.9; }
 #title .mpWrap { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:flex-start; max-width:min(1000px, 94vw); } #title .mpWrap .mp { flex:1 1 320px; max-width:480px; display:none; } #title.modeRoom #mpBox, #title.modeCh #chBox { display:block; } /* 누른 쪽만 펼친다 (사용자: 버튼으로) */ #title.chOn #mpBox, #title.chOn #nameBox, #title.roomOn #chBox, #title.chOn .modeRow, #title.roomOn .modeRow { display:none; } #title .mp #chStatus { margin-top:8px; min-height:1.2em; color:#fff; }
 #chatLog { position:absolute; left:12px; bottom:170px; max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; }
@@ -478,7 +478,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"><button class="btn" id="btnProfile">내 캐릭터 꾸미기</button></div>
+  <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"><small id="nameLock"></small><button class="btn" id="btnProfile">내 캐릭터 꾸미기</button></div>
   <div class="mp" id="profileTitle" hidden><div class="mph">내 캐릭터 <small>색을 눌러 고르세요</small></div><div class="profileBox" data-profile></div></div>
   <div class="modeRow"><button class="btn mode" data-mode="modeRoom">친구와 같이 하기<small>방 만들기</small></button><button class="btn mode" data-mode="modeCh">실시간 채널<small>코드 없이 아무나</small></button></div>
   <div class="mpWrap">
@@ -3914,7 +3914,7 @@ const Live = {
 
   /* ---- 저장 (채널별, 이 기기) ---- */
   storeKey() { return 'live' + this.ch; },
-  save() { Store.set(this.storeKey(), { capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0 }); },
+  save() { Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0 }); },
   saved(ch) { return Store.get('live' + ch, null); },
   reset(ch) { Store.set('live' + ch, null); },
 
@@ -3934,8 +3934,10 @@ const Live = {
   },
   titleHint(ch) {
     const sv = this.saved(ch); const p = sv ? sv.cash - sv.capital : 0;
-    return (sv ? `<br><span class="small">이 채널 기록: 자본 ${fmtWon(sv.capital)} · 누적 손익 ${(p >= 0 ? '+' : '−') + fmtWon(Math.abs(p))} <button class="btn" id="liveReset">기록 지우고 새로</button></span>` : '');
+    return (sv ? `<br><span class="small">이 채널 기록: ${esc(this.savedName(ch))} · 자본 ${fmtWon(sv.capital)} · 누적 손익 ${(p >= 0 ? '+' : '−') + fmtWon(Math.abs(p))} <button class="btn" id="liveReset">기록 지우고 새로</button></span>` : '');
   },
+  // 기록에 적힌 이름 (예전 기록은 이름이 없어 마지막에 쓴 이름으로). 기록이 있으면 제목 화면에서 이름을 다시 적지 않고 그 이름으로 이어서 한다 (사용자 요청 2026-10-14)
+  savedName(ch) { const sv = this.saved(ch); if (!sv || sv.capital !== this.capOf(ch)) return ''; return (sv.name || Store.get('mpName', '') || '').trim(); },
 
   /* ---- 시간 흐름 ---- */
   tick(dt) {
@@ -6059,13 +6061,20 @@ const Layout = {
     if (!on) { t.classList.add(b.dataset.mode); b.classList.add('sel'); } Sound.play('paper');
   });
   const chButtons = () => document.querySelectorAll('#mpBox .btn, #chBox .btn');
-  const chReset = (b) => { $('title').classList.remove('chOn'); $('btnStart').textContent = '시작하기'; chButtons().forEach(x => x.disabled = false); b.classList.remove('sel'); $('chStatus').textContent = ''; };
+  // 이름 잠금: 기록이 있는 채널은 그 이름으로 이어서 (입력칸을 못 바꾸게), 나오거나 기록을 지우면 다시 풀린다
+  const lockName = (name) => { const inp = $('mpName'); if (name) { inp.value = name; inp.readOnly = true; $('nameBox').classList.add('locked'); $('nameLock').textContent = '이 채널 기록의 이름이에요'; } else { inp.readOnly = false; $('nameBox').classList.remove('locked'); $('nameLock').textContent = ''; } };
+  // 채널 버튼 밑에 '철수 이어서' 표시
+  const refreshChSaved = () => document.querySelectorAll('#chBox .ch').forEach(b => { const n = Live.savedName(Number(b.dataset.ch)); let el = b.querySelector('.chMine'); if (!n) { if (el) el.remove(); return; } if (!el) { el = document.createElement('i'); el.className = 'chMine'; b.appendChild(el); } el.textContent = `${n} 이어서`; });
+  refreshChSaved();
+  const chReset = (b) => { $('title').classList.remove('chOn'); $('btnStart').textContent = '시작하기'; chButtons().forEach(x => x.disabled = false); b.classList.remove('sel'); $('chStatus').textContent = ''; lockName(''); refreshChSaved(); };
   document.querySelectorAll('#chBox .ch').forEach(b => b.onclick = async () => {
     Sound.init();
     if (Net.on) { if (b.classList.contains('sel') && Net.mode === 'channel' && Net.leave()) { chReset(b); Toast.show(`채널 ${b.dataset.ch}에서 나왔어요.`); } return; } // 고른 채널을 다시 누르면 나가기
-    const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
+    const savedName = Live.savedName(Number(b.dataset.ch)); // 한 번 했던 채널이면 이름을 다시 적지 않는다
+    const name = savedName || $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
+    lockName(savedName);
     Store.set('mpName', name); chButtons().forEach(x => x.disabled = x !== b); b.classList.add('sel'); $('chStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
-    $('title').classList.add('chOn'); $('btnStart').textContent = `채널 ${b.dataset.ch} 시작하기 (자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))})`; // 채널은 자본이 정해져 있어 자본 선택을 숨긴다
+    $('title').classList.add('chOn'); $('btnStart').textContent = savedName ? `채널 ${b.dataset.ch} 이어서 시작하기 (${savedName})` : `채널 ${b.dataset.ch} 시작하기 (자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))})`; // 채널은 자본이 정해져 있어 자본 선택을 숨긴다
     const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { chReset(b); }
     else if (Net.on) { $('chStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); }
   });
@@ -6105,7 +6114,12 @@ const Layout = {
   $('chStatus').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return; const wrap = b.parentElement;
     if (b.id === 'liveReset') { resetPrev = wrap.innerHTML; wrap.innerHTML = `<b style="color:#ff8a7a">정말 기록을 지우고 새로 시작할까요?</b> 누적 손익과 입찰 기록이 모두 사라져요. <button class="btn" id="liveResetYes">네, 새로 시작</button> <button class="btn" id="liveResetNo">아니요</button>`; }
-    else if (b.id === 'liveResetYes') { Live.reset(Net.ch); wrap.textContent = '기록을 지웠어요. 고른 자본으로 새로 시작합니다.'; Sound.play('paper'); }
+    else if (b.id === 'liveResetYes') { // 기록을 지우면 채널에서 나와 이름부터 다시 정하고 들어가게 (사용자 요청 2026-10-14)
+      const ch = Net.ch; Live.reset(ch); Sound.play('paper');
+      const sel = document.querySelector('#chBox .ch.sel'); if (sel && Net.leave()) chReset(sel);
+      lockName(''); $('mpName').value = ''; Store.set('mpName', ''); refreshChSaved();
+      $('chStatus').textContent = `채널 ${ch} 기록을 지웠어요. 이름을 새로 정하고 채널을 다시 골라 주세요.`; $('mpName').focus();
+    }
     else if (b.id === 'liveResetNo') { wrap.innerHTML = resetPrev; }
   });
   addEventListener('resize', () => ZoneMap.open && ZoneMap.fit());

@@ -416,6 +416,10 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #title .installRow { margin-top:6px; }
 #quitBox { margin-top:14px; padding-top:10px; border-top:1px dashed #cfc7ad; display:flex; gap:8px; align-items:center; flex-wrap:wrap; } #quitBox small { opacity:.65; font-weight:400; margin-left:4px; } #quitBox .qWarn { color:#a33; font-size:13px; } #btnGuide small { opacity:.65; font-weight:400; margin-left:4px; }
 #installGuide { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(600px, calc(100% - 24px)); max-height:calc(100% - 40px); overflow:auto; z-index:70; } #installGuide.in { transform:translate(-50%, -50%); }
+#shop { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(640px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #shop.in { transform:translate(-50%, -50%); } #shop .rcpt { width:100%; } #shop .rcHead small { display:block; font:600 13px var(--ui); color:#6a5a3a; margin-top:2px; }
+.shTabs { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; } .shTabs .btn.sel { background:var(--gold); color:#1a1408; }
+.shGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; } .shItem { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; text-align:center; } .shItem.own { border-color:#8fb58f; } .shItem.on { border-color:var(--gold); background:#fff8e3; } .shItem canvas { width:72px; height:48px; image-rendering:pixelated; background:#e2d6bb; border-radius:6px; object-fit:contain; } .shItem b { font-size:12.5px; } .shItem span { font-size:11.5px; color:#6a5a3a; } .shItem .btn { font-size:12px; padding:4px 10px; } .shNote { font-size:12px; color:#555; margin:10px 0 0; }
+.short #shop { max-height:calc(100% - 8px); } .short #shop .rcpt { padding:10px 12px 8px; } .short .shGrid { grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:5px; } .short .shItem { padding:5px 4px; } .short .shItem canvas { width:54px; height:36px; }
 #installGuide .rcpt { width:100%; } #installGuide .ig { margin:10px 0; padding:10px 12px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; } #installGuide .ig.here { border-color:var(--gold); background:#fff8e3; } #installGuide .ig h3 { margin:0 0 6px; font-size:15px; display:flex; gap:8px; align-items:center; } #installGuide .ig h3 .tagHere { font-size:11px; color:#fff; background:#b8860b; border-radius:10px; padding:1px 8px; font-weight:400; } #installGuide .ig ol { margin:0; padding-left:20px; line-height:1.55; font-size:14px; } #installGuide .ig p { margin:6px 0 0; font-size:12.5px; color:#555; } #installGuide .igLink { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; font-size:13px; } #installGuide .igLink code { background:#0d0f14; color:var(--gold); padding:3px 8px; border-radius:6px; user-select:all; }
 .xClose { position:sticky; top:0; display:block; margin:-4px -6px -28px auto; width:30px; height:30px; border-radius:50%; border:2px solid #fff; background:#14213a; color:#fff; font-size:20px; line-height:26px; text-align:center; padding:0; cursor:pointer; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,.35); font-family:sans-serif; }
 .xClose:hover { background:#b3392a; }
@@ -589,7 +593,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   </details>
   <details class="keys" open><summary>내 캐릭터 꾸미기</summary>
     <div class="profileBox" data-profile></div>
-    <div class="ksub">친구와 같이 할 때도 이 모습으로 보여요. 이 기기에 저장됩니다.</div>
+    <div class="ksub">친구와 같이 할 때도 이 모습으로 보여요. 이 기기에 저장됩니다. 옷·차 스킨은 광진구 건대 편집숍에서 돈 주고 살 수 있어요.</div>
   </details>
   <button class="btn" id="btnLayout">버튼 위치 조정</button>
   <button class="btn" id="btnEndDay">오늘 일정 끝내기</button>
@@ -613,6 +617,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="result"></div>
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
+<div id="shop" class="ovl"></div>
 <div id="layoutBar"><span>버튼을 끌어서 옮기세요</span><button class="btn" id="layoutReset">기본값</button><button class="btn gold" id="layoutDone">완료</button></div>
 <div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
 
@@ -1389,7 +1394,7 @@ const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_M
 function saveSettings() { Store.set('settings', Settings); }
 /* 등장인물 이름: 고정. 사용자가 2026-10-14에 정해 준 이름이며 메뉴에서 바꿀 수 없다 (사용자 요청 v36) */
 // [역할 키, 이름, 역할]
-const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '한민경', '등기소 직원'], ['center', '이체은', '주민센터 직원'], ['bank', '조하영', '은행원'], ['savings', '조수민', '저축은행 직원'], ['agent', '김해람', '중개사'], ['court', '이주원', '집행관'], ['arcade', '장우준', '게임장 사장'], ['hospital', '김정윤', '간호사'], ['guest', '김건명', '대기 손님'], ['vip', '이혁진', '길에서 만나는 멋쟁이']];
+const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '한민경', '등기소 직원'], ['center', '이체은', '주민센터 직원'], ['bank', '조하영', '은행원'], ['savings', '조수민', '저축은행 직원'], ['agent', '김해람', '중개사'], ['court', '이주원', '집행관'], ['arcade', '장우준', '게임장 사장'], ['hospital', '김정윤', '간호사'], ['shop', '이채현', '편집숍 점원'], ['guest', '김건명', '대기 손님'], ['vip', '이혁진', '길에서 만나는 멋쟁이']];
 const CAST_DEFAULT = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[1]]));
 const CAST_ROLE = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[2]]));
 function castLabel(k) { const n = castName(k), role = CAST_ROLE[k]; return role && k !== 'danye' && n !== role ? `${n} (${role})` : n; } // 대화창 이름: '한민경 (등기소 직원)'
@@ -1466,9 +1471,12 @@ const PROFILE_SWATCHES = {
 const PROFILE_LABEL = { hair: '머리', skin: '피부', shirt: '옷', pants: '바지' };
 const Profile = {
   get() { return Store.get('profile', {}); },
-  set(k, v) { const p = this.get(); p[k] = v; Store.set('profile', p); this.apply(); },
-  reset() { Store.set('profile', {}); this.apply(); },
-  apply() { const p = this.get(); const base = Sprites.PLAYER_DEFAULT; Sprites.setPal('player', { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: p.shirt || base.shirt, shirt2: shade(p.shirt || base.shirt, -0.18), pants: p.pants || base.pants }); },
+  set(k, v) { const p = this.get(); p[k] = v; Store.set('profile', p); this.apply(); if (this.redraw) this.redraw(); },
+  reset() { Store.set('profile', {}); this.apply(); if (this.redraw) this.redraw(); },
+  redraw: null, // boot.js가 프로필 편집기 다시 그리기를 넣는다 (상점에서 입으면 메뉴 편집기도 바뀌게)
+  apply() { Sprites.setPal('player', this.pal(this.get())); },
+  // 프로필(머리·피부·옷·바지 색 + 상점에서 산 outfit)을 스프라이트 팔레트로. 친구 것도 같은 식으로 그린다 (pos에 프로필을 그대로 실어 보냄)
+  pal(p) { p = p || {}; const base = Sprites.PLAYER_DEFAULT; const o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit]; const shirt = p.shirt || base.shirt; return { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: o ? o.pal.shirt : shirt, shirt2: o ? o.pal.shirt2 : shade(shirt, -0.18), pants: o ? o.pal.pants : (p.pants || base.pants), tie: o && o.pal.tie ? o.pal.tie : undefined }; },
 };
 function shade(hex, k) { const n = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * (1 + k)))); return '#' + [f(n >> 16), f((n >> 8) & 255), f(n & 255)].map(v => v.toString(16).padStart(2, '0')).join(''); }
 
@@ -1753,6 +1761,7 @@ const ZONE_SPECS = {
       { id: 'home', kind: 'home', name: '내 집', near: [48, 100] }, // 자고 일어나면 다음 날(또는 매각기일) 아침
       { id: 'arcade', kind: 'arcade', name: '건대 게임장', near: [66, 132] }, // 미니게임 기계 자리(추후)
       { id: 'hospital', kind: 'hospital', name: '건대병원', near: [232, 150] }, // 차에 여러 번 치이면 여기서 다시 시작
+      { id: 'shop', kind: 'shop', name: '건대 편집숍', near: [128, 150] }, // 옷·차 스킨 상점 (사용자 요청 2026-10-14)
     ],
   },
   gangnam: {
@@ -2432,6 +2441,7 @@ function updateTraffic(dt, z) {
   });
 }
 function drawCarSprite(c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
+  let stripe = null; if (col && typeof col === 'object') { stripe = col.stripe || null; col = col.col; } // 상점 차 스킨: { col, stripe }
   c.save(); c.translate(x, y); c.rotate(a);
   c.fillStyle = 'rgba(0,0,0,.32)'; c.fillRect(-len / 2 + 2, -wid / 2 + 2, len, wid);
   c.fillStyle = col; c.fillRect(-len / 2, -wid / 2, len, wid);
@@ -2439,6 +2449,7 @@ function drawCarSprite(c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed 
   if (kind === 'bus') { c.fillStyle = 'rgba(20,30,40,.7)'; c.fillRect(len / 2 - 6, -wid / 2 + 2, 4, wid - 4); c.fillStyle = 'rgba(255,255,255,.25)'; for (let i = -len / 2 + 4; i < len / 2 - 8; i += 6) c.fillRect(i, -wid / 2 + 2, 4, wid - 4); }
   else { c.fillStyle = 'rgba(20,30,40,.78)'; c.fillRect(len / 2 - 10, -wid / 2 + 1.5, 5, wid - 3); c.fillRect(-len / 2 + 3, -wid / 2 + 2, 3, wid - 4); c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(-len / 2 + 7, -wid / 2 + 2, len - 18, wid - 4); }
   if (kind === 'taxi') { c.fillStyle = '#fff3c0'; c.fillRect(-2, -2, 4, 4); }
+  if (stripe) { c.fillStyle = stripe; c.fillRect(-len / 2 + 2, -1, len - 4, 2); c.fillRect(-len / 2 + 2, -wid / 2 + 1, 2, wid - 2); } // 가운데 줄 + 뒤쪽 띠
   c.fillStyle = '#ffe9a0'; c.fillRect(len / 2 - 1, -wid / 2 + 1, 1, 2); c.fillRect(len / 2 - 1, wid / 2 - 3, 1, 2);
   c.fillStyle = speed < 0 ? '#ff4030' : '#a02020'; c.fillRect(-len / 2, -wid / 2 + 1, 1, 2); c.fillRect(-len / 2, wid / 2 - 3, 1, 2);
   c.restore();
@@ -2939,7 +2950,7 @@ const NavPick = {
     const z = Game.zone; if (!z || Game.scene !== 'zone' || z.spec.court) return;
     const nd = State.navDest, cur = nd ? (nd.place ? 'p:' + nd.place : 'g:' + nd.gu) : '';
     let auto = null; { const keep = State.navDest; State.navDest = null; try { auto = Nav.goalOf(); } catch (e) {} State.navDest = keep; }
-    const ICON = { court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', site: '📍' };
+    const ICON = { court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', shop: '🛍️', site: '📍' };
     const btn = (attr, cls, label) => `<button ${attr} class="${cls}">${label}</button>`;
     let h = `<h3><span>어디로 갈까요?<small>누르면 바로 안내</small></span><button class="nx" id="navPickX" title="닫기">✕</button></h3>`;
     if (auto && !cur) h += `<div class="sec">추천</div><div class="grid">${btn('data-auto="1"', 'rec', '★ ' + esc(auto.label))}${btn('data-free="1"', Nav.free ? 'sel' : '', '🚗 그냥 운전하기 <small>목적지 없이</small>')}</div>`;
@@ -3040,6 +3051,14 @@ const INTERIOR_DEFS = {
     '#..A.A.A.A...#',
     '#M.F.......M.#',
     '######D#######' ], npc: { K: 'occ_young' } },
+  shop: { title: '편집숍', floor: 'wood', bgm: 'town', tone: 'neon', map: [
+    '############',
+    '#J.J.J.J..K#',
+    '#.........C#',
+    '#..........#',
+    '#.V..V..V..#',
+    '#M........M#',
+    '#####D######' ], npc: { K: 'occ_young' } },
   hospital: { title: '병원', floor: 'marble', bgm: 'office', tone: 'bright', map: [
     '##############',
     '#..K....K....#',
@@ -3064,7 +3083,7 @@ const INTERIOR_DEFS = {
     '#.......W..#',
     '#####D######' ], npc: {} },
 };
-const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집', arcade: '게임장', hospital: '병원' };
+const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집', arcade: '게임장', hospital: '병원', shop: '상점' };
 // 평일 낮에만 여는 곳
 const WEEKDAY_ONLY = ['registry', 'center', 'bank', 'savings'];
 
@@ -3077,7 +3096,7 @@ function buildInterior(place) {
   let exit = null;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ch = map[y][x];
-    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGXA'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
+    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGXAJV'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
     if (ch === 'D') exit = { tx: x, ty: y };
     if (ch === 'S') objs.push({ type: 'chair', tx: x, ty: y });
     if (ch === 'P') objs.push({ type: 'pc', tx: x, ty: y, label: 'PC' });
@@ -3086,6 +3105,8 @@ function buildInterior(place) {
     if (ch === 'R') objs.push({ type: 'bell', tx: x, ty: y, label: '초인종' });
     if (ch === 'G') objs.push({ type: 'board', tx: x, ty: y, label: '게시판' });
     if (ch === 'W') objs.push({ type: 'memo', tx: x, ty: y, label: '메모장' });
+    if (ch === 'J') objs.push({ type: 'rack', tx: x, ty: y, label: '옷 구경' });
+    if (ch === 'V') objs.push({ type: 'carshop', tx: x, ty: y, label: '차 스킨 구경' });
     if (ch === 'A') objs.push({ type: 'arcade', tx: x, ty: y, label: '게임기', no: objs.filter(o => o.type === 'arcade').length + 1 });
     if (ch === 'U') objs.push({ type: 'roof', tx: x, ty: y, label: cs && cs.type === '토지' ? '둘러보기' : '옥상 계단' });
     if (ch === 'H' && cs && cs.lien) objs.push({ type: 'banner', tx: x, ty: y, label: '현수막' });
@@ -3140,6 +3161,14 @@ function drawInterior(ctx, room, t) {
     else if (ch === 'U') { for (let i = 0; i < 4; i++) { ctx.fillStyle = i % 2 ? '#6a6a70' : '#7a7a80'; ctx.fillRect(X, Y + i * 4, TILE, 4); } if (cs && cs.type === '토지') { ctx.fillStyle = FLOOR[0]; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#c9b37a'; ctx.fillRect(X + 6, Y + 2, 3, 12); ctx.fillStyle = '#efe6d2'; ctx.fillRect(X + 2, Y + 2, 12, 6); } }
     else if (ch === 'H' && cs && cs.lien) { ctx.fillStyle = '#fff'; ctx.fillRect(X - 6, Y + 2, TILE + 6, 11); ctx.fillStyle = '#c0302a'; ctx.fillRect(X - 4, Y + 4, TILE + 2, 2); ctx.fillRect(X - 4, Y + 8, TILE - 2, 2); }
     else if (ch === 'X') { if (cs && cs.super) { ctx.fillStyle = '#8a5a3a'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#a06a44'; ctx.fillRect(X, Y, TILE, 3); if ((x + y) % 3 === 0) { ctx.fillStyle = '#3f5670'; ctx.fillRect(X + 4, Y + 6, 6, 5); } } else { ctx.fillStyle = '#9a8460'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.fillRect(X + 3, Y + 5, 4, 3); } }
+    else if (ch === 'J') { // 옷걸이: 봉 + 옷 세 벌
+      ctx.fillStyle = '#5a4a3c'; ctx.fillRect(X + 1, Y + 1, 14, 2); ctx.fillRect(X + 1, Y + 1, 2, 14); ctx.fillRect(X + 13, Y + 1, 2, 14);
+      const cols = [['#e26a9a', '#b84a78'], ['#3b7dd8', '#2a5aa0'], ['#e0b43a', '#fff0a0']]; for (let i = 0; i < 3; i++) { ctx.fillStyle = cols[(i + x) % 3][0]; ctx.fillRect(X + 3 + i * 4, Y + 4, 3, 8); ctx.fillStyle = cols[(i + x) % 3][1]; ctx.fillRect(X + 3 + i * 4, Y + 10, 3, 2); }
+    }
+    else if (ch === 'V') { // 차 전시대: 받침 + 차 (색이 천천히 돈다)
+      ctx.fillStyle = '#3a3540'; ctx.fillRect(X - 6, Y + 2, TILE + 12, 12); ctx.fillStyle = '#4a4455'; ctx.fillRect(X - 6, Y + 2, TILE + 12, 2);
+      const skins = ['#e03a3a', '#15151c', '#ffd84a', '#5fb4f0', '#6a3fb5']; drawCarSprite(ctx, X + 8, Y + 8, 0, { col: skins[(x + Math.floor(t / 4)) % skins.length], stripe: '#f6f6f6' }, 22, 10, 'car', 0);
+    }
     else if (ch === 'A') { // 게임기: 몸통·화면(색이 천천히 바뀜)·조이스틱·버튼
       const hue = ((x * 53 + y * 17) + t * 40) % 360;
       ctx.fillStyle = '#1c1a2e'; ctx.fillRect(X + 1, Y - 2, 14, 18); ctx.fillStyle = '#3a3560'; ctx.fillRect(X + 1, Y - 2, 14, 2);
@@ -3756,7 +3785,7 @@ const Net = {
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'hosp') { Pvp.onHosp(m, p); return; }
     if (m.t === 'lbook') { Live.onBook(m); return; }
-    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) p.pal = m.pal; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
+    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
@@ -3849,10 +3878,10 @@ const Net = {
     for (const id in this.players) { const p = this.players[id]; if (p.gone || p.dr || p.cx === undefined || p.z !== Game.zone.id || performance.now() - p.last > FEEL.parkedCarKeepSec * 1000) continue; out.push(p); }
     return out;
   },
-  drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, '#d9a441', 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
+  drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
-    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, '#d9a441', 24, 12, 'car', 1); this.label(c, p.name, p.cx, p.cy - 12); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
-    let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, p.pal); } // 친구가 꾸민 색 그대로
+    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); this.label(c, p.name, p.cx, p.cy - 12); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m }, t);
     this.label(c, p.name, p.x, p.y - 22);
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - 30);
@@ -4365,7 +4394,7 @@ const Live = {
   },
   rankCls(v) { return v > State.capital ? 'up' : v < State.capital ? 'down' : ''; }, // 시작 자본보다 불었으면 초록, 줄었으면 빨강
   // 지금 접속한 사람이 어디서 뭘 하는지 (pos 메시지로 아는 만큼만). 사용자 요청 2026-10-14: '실시간으로 누가 플레이 중인지'
-  PLACE_KO: { office: '사무실', registry: '등기소', center: '주민센터', bank: '은행', savings: '저축은행', agent: '부동산', court: '법원', hospital: '병원', arcade: '게임장', home: '집' },
+  PLACE_KO: { office: '사무실', registry: '등기소', center: '주민센터', bank: '은행', savings: '저축은행', agent: '부동산', court: '법원', hospital: '병원', arcade: '게임장', home: '집', shop: '상점' },
   guName(z) { if (!z) return ''; if (z.startsWith('court_')) { const ct = COURTS[z.slice(6)]; return ct ? ct.short : '법원'; } const spec = ZONE_SPECS[z]; const gu = spec ? spec.gu : z.startsWith('gu_') ? z.slice(3) : z; return DISTRICT[gu] ? DISTRICT[gu].short : ''; },
   doing(p) {
     if (p.last !== undefined && performance.now() - p.last > FEEL.liveIdleSec * 1000) return '자리 비움';
@@ -4910,6 +4939,7 @@ function update(dt) {
   if (consume('m')) SeoulMap.toggle();
   if (SeoulMap.open) { if (consume('Escape')) SeoulMap.toggle(false); return; }
   if (ZoneMap.open) { if (consume('Escape') || consume('n')) ZoneMap.toggle(false); return; }
+  if (Shop.open_) { if (consume('Escape')) Shop.close(); return; } // 상점: Esc로 닫힘 (메뉴보다 먼저)
   if (consume('n') && Game.scene === 'zone' && !Notebook.open && !Menu.open) { ZoneMap.toggle(true); return; }
   if (consume('Tab')) Notebook.toggle();
   if (consume('Escape')) { if (Notebook.open) Notebook.toggle(false); else Menu.toggle(); }
@@ -5056,7 +5086,7 @@ function drawZone(t) {
   // 신호등 · NPC 차량 · 내 차
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
-  { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); drawCarSprite(ctx, c.x, c.y, c.a, '#c8ccd2', 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
+  { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); drawCarSprite(ctx, c.x, c.y, c.a, Shop.myCar(), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
@@ -5120,7 +5150,7 @@ function drawFlag(c, X, Y, t, pl) {
   if (State.visited[pl.id]) { c.strokeStyle = '#7fe08a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(X + 3, Y - 13); c.lineTo(X + 5, Y - 11); c.lineTo(X + 9, Y - 16); c.stroke(); }
 }
 function drawPlaceIcon(c, X, Y, kind) {
-  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'], arcade: ['#8a3ac0', '겜'], hospital: ['#e0405a', '+'] }[kind]; if (!ICON) return;
+  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'], arcade: ['#8a3ac0', '겜'], hospital: ['#e0405a', '+'], shop: ['#d94a8a', '숍'] }[kind]; if (!ICON) return;
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(X + 1, Y + 1, 8, 0, 7); c.fill();
   c.fillStyle = ICON[0]; c.beginPath(); c.arc(X, Y, 8, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
   c.fillStyle = '#fff'; c.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ICON[1], X, Y + 0.5); c.textBaseline = 'alphabetic';
@@ -5171,7 +5201,8 @@ function drawPrompt(t) {
   const p = Game.player; const k = Math.min(1, Game.prompt.t / FEEL.promptPop); const lift = Game.driving ? 6 : 0;
   const sc = k < 0.6 ? k / 0.6 * 1.15 : 1.15 - (k - 0.6) / 0.4 * 0.15;
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
-  const ps = tg.kind === 'walker' ? (FEEL.promptScaleWalker || 1) : (FEEL.promptScale || 1); ctx.save(); // 행인 '말 걸기'는 작게 (사용자: 너무 크다) ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
+  const ps = tg.kind === 'walker' ? (FEEL.promptScaleWalker || 1) : (FEEL.promptScale || 1); // 행인 '말 걸기'는 작게 (사용자: 너무 크다)
+  ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
   ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#14161c'; ctx.lineWidth = 1;
   ctx.font = touch ? 'bold 7px "IBM Plex Sans KR", sans-serif' : 'bold 8px sans-serif'; const bw = touch ? Math.max(12, Math.ceil(ctx.measureText(word).width) + 8) : 12;
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-bw / 2, -6, bw, 11, 2) : ctx.rect(-bw / 2, -6, bw, 11); ctx.fill(); ctx.stroke();
@@ -5253,7 +5284,7 @@ const Radar = {
       const v = z.at(Math.floor(ptx + (xx - S / 2) / scale), Math.floor(pty + (yy - S / 2) / scale));
       if (v === T.ROAD) { x.fillStyle = '#7d8b84'; x.fillRect(xx, yy, 2, 2); } else if (v === T.ALLEY) { x.fillStyle = '#4c5d55'; x.fillRect(xx, yy, 2, 2); } else if (v === T.BLD) { x.fillStyle = '#26352d'; x.fillRect(xx, yy, 2, 2); }
     }
-    const ICON = { court: '#ffffff', bank: '#2ad06a', savings: '#c8a060', center: '#5aa0ff', agent: '#f0a040', registry: '#9ab0ff', office: '#cdae70', site: '#ff5a4a' };
+    const ICON = { court: '#ffffff', bank: '#2ad06a', savings: '#c8a060', center: '#5aa0ff', agent: '#f0a040', registry: '#9ab0ff', office: '#cdae70', site: '#ff5a4a', shop: '#ff7ac0', home: '#f0c070', arcade: '#c070ff', hospital: '#ff6070' };
     for (const pl of z.places) {
       let dx = (pl.door.tx - ptx) * scale, dy = (pl.door.ty - pty) * scale; const d = Math.hypot(dx, dy), R = S / 2 - 7;
       if (d > R) { dx = dx / d * R; dy = dy / d * R; }
@@ -5320,7 +5351,7 @@ async function issueDoc(caseId, kind, title, html, { fee = 0 } = {}) {
 }
 
 const STAFF = { registry: ['등기소 직원', 'clerk', 'clerk'], center: ['주민센터 직원', 'clerk', 'clerk'], bank: ['은행원', 'banker', 'banker'], agent: ['중개사', 'agent', 'agent'], court: ['집행관', 'clerk', 'clerk'], savings: ['저축은행 직원', 'banker', 'banker'] };
-STAFF.arcade = ['게임장 사장', 'occ_young', 'occ']; STAFF.hospital = ['간호사', 'banker', 'banker'];
+STAFF.arcade = ['게임장 사장', 'occ_young', 'occ']; STAFF.hospital = ['간호사', 'banker', 'banker']; STAFF.shop = ['편집숍 점원', 'occ_young', 'occ'];
 const say = (kind, text, extra = {}) => ({ name: castLabel(kind), sprite: STAFF[kind][1], voice: STAFF[kind][2], text, ...extra });
 /* 실내에서 기다리는 손님들: 말을 걸면 그 장소다운 잡담을 한다 (사건 정보는 절대 없음) */
 const GUEST_LINES = {
@@ -5364,6 +5395,7 @@ async function danyeTalk() {
 
 async function staffTalk(kind) {
   if (kind === 'court') return courtClerk();
+  if (kind === 'shop') { const pick = await Dialog.say([say('shop', `어서 오세요. 옷도 있고 차 색도 바꿔 드려요. 지금 ${fmtWon(State.cash)} 있으시네요.`)], [{ label: '옷 보기', value: 'clothes' }, { label: '차 스킨 보기', value: 'car' }, { label: '구경만', value: 'n' }]); if (pick === 'clothes' || pick === 'car') Shop.open(pick); return; }
   if (kind === 'arcade') { await Dialog.say([say('arcade', '어서 와. 기계는 아직 세팅 중이야.'), say('arcade', '미니게임 들어오면 제일 먼저 알려 줄게. 구경은 마음껏 해.')]); return; }
   if (kind === 'hospital') { await Dialog.say([say('hospital', State.hospital ? `또 오셨네요. 이번 주 입원만 ${State.hospital}번째예요.` : '다친 데는 없으시죠?'), say('hospital', `차에 ${FEEL.hospitalHits}번 치이면 바로 입원이에요. 횡단보도 신호 지키세요.`)]); return; }
   if (kind === 'savings' && Live.on && Live.pending()) return Live.bank(true); // 채널: 낙찰 건 대출
@@ -5406,6 +5438,8 @@ async function objectUse(o, kind) {
   if (o.type === 'ticket') return takeTicket();
   if (o.type === 'chair') { const p = Game.player; p.x = o.tx * TILE + 8; p.y = o.ty * TILE + 14; p.dir = 0; p.vx = p.vy = 0; p.sit = true; Sound.play('click'); return; }
   if (o.type === 'memo' && Game.room.cs) { MemoPad.open(Game.room.cs); return; } // 메모는 시간이 들지 않는다
+  if (o.type === 'rack') { Shop.open('clothes'); return; }
+  if (o.type === 'carshop') { Shop.open('car'); return; }
   if (o.type === 'arcade') { Sound.play('blip', 0.8); await Dialog.say([{ name: `게임기 ${o.no}번`, text: '화면에 "COMING SOON"만 떠 있다. 미니게임은 아직 준비 중이다.' }]); return; }
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
@@ -6073,6 +6107,85 @@ const Notebook = {
 };
 function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]); }
 
+/* ===================== 상점: 내 돈으로 옷·차 스킨 사기 (사용자 요청 2026-10-14) =====================
+ * 광진구 '건대 편집숍'(kind 'shop')에서 점원·옷걸이·차 전시대를 쓰면 열린다. 산 것은 이 기기에 저장(Store 'wardrobe'),
+ * 입은 옷·차 스킨은 Profile(outfit/car)에 있어 친구에게도 pos로 전달된다. 돈은 지금 하는 판(혼자 하기 자본 / 채널 돈)에서 빠진다.
+ */
+const SHOP_ITEMS = {
+  clothes: [ // 꾸미기(무료 색)와 달리 투톤·넥타이가 붙는다
+    { id: 'c_white', name: '하얀 셔츠', price: 300e4, pal: { shirt: '#f4f4f4', shirt2: '#cfd4dc', pants: '#2b3a6e' } },
+    { id: 'c_hoodie', name: '파란 후드', price: 350e4, pal: { shirt: '#3b7dd8', shirt2: '#2a5aa0', pants: '#8a8a95' } },
+    { id: 'c_track', name: '빨간 트레이닝복', price: 400e4, pal: { shirt: '#d8323a', shirt2: '#f6f6f6', pants: '#d8323a' } },
+    { id: 'c_jumper', name: '초록 점퍼', price: 600e4, pal: { shirt: '#2f7d4f', shirt2: '#f0e4a0', pants: '#3a3a46' } },
+    { id: 'c_suit', name: '검정 정장', price: 1200e4, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', tie: '#9b1f2a' } },
+    { id: 'c_navy', name: '남색 정장', price: 1500e4, pal: { shirt: '#1d2a4a', shirt2: '#152040', pants: '#1d2a4a', tie: '#2f8bd8' } },
+    { id: 'c_pink', name: '분홍 코트', price: 2000e4, pal: { shirt: '#e26a9a', shirt2: '#b84a78', pants: '#f1f1f1' } },
+    { id: 'c_purple', name: '보라 재킷', price: 2500e4, pal: { shirt: '#6a3fb5', shirt2: '#d9a441', pants: '#15151c' } },
+    { id: 'c_gold', name: '금빛 재킷', price: 5000e4, pal: { shirt: '#e0b43a', shirt2: '#fff0a0', pants: '#15151c', tie: '#15151c' } },
+    { id: 'c_vip', name: 'VIP 블랙', price: 1e8, pal: { shirt: '#15151c', shirt2: '#c9a24a', pants: '#15151c', tie: '#c9a24a' } },
+  ],
+  car: [
+    { id: 'k_white', name: '흰색', price: 300e4, col: '#f2f2f2' },
+    { id: 'k_blue', name: '파란색', price: 500e4, col: '#2f6fd8' },
+    { id: 'k_green', name: '초록색', price: 500e4, col: '#2f9a5a' },
+    { id: 'k_yellow', name: '노란색', price: 600e4, col: '#f2c230' },
+    { id: 'k_red', name: '빨간 스포츠', price: 1500e4, col: '#e03a3a', stripe: '#f6f6f6' },
+    { id: 'k_black', name: '검정 세단', price: 2000e4, col: '#15151c', stripe: '#c9a24a' },
+    { id: 'k_purple', name: '보라 튜닝', price: 2500e4, col: '#6a3fb5', stripe: '#e26a9a' },
+    { id: 'k_sky', name: '하늘색 레이싱', price: 3000e4, col: '#5fb4f0', stripe: '#15151c' },
+    { id: 'k_gold', name: '금빛 리무진', price: 1e8, col: '#ffd84a', stripe: '#fff6c0' },
+  ],
+};
+const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it);
+const Shop = {
+  open_: false, tab: 'clothes',
+  owned() { const w = Store.get('wardrobe', null); return (w && w.owned) || []; },
+  has(id) { return this.owned().includes(id); },
+  // 차 색: 내 차(기본 은색) / 친구 차(기본 금색). 스킨이 있으면 그 색 (줄무늬 포함)
+  carOf(id, fallback) { const it = id && SHOP_BY_ID[id]; return it && it.col ? { col: it.col, stripe: it.stripe } : { col: fallback }; },
+  myCar() { return this.carOf(Profile.get().car, '#c8ccd2'); },
+  open(tab) {
+    if (this.open_) return; this.open_ = true; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
+    $('shop').classList.add('in'); this.render();
+  },
+  close() { if (!this.open_) return; this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
+  render() {
+    const p = Profile.get(); const list = SHOP_ITEMS[this.tab]; const isC = this.tab === 'clothes';
+    const wearing = isC ? p.outfit : p.car;
+    const card = it => {
+      const own = this.has(it.id), on = wearing === it.id;
+      const btn = on ? `<button class="btn" data-off="1">${isC ? '벗기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : '칠하기'}</button>` : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
+      return `<div class="shItem${on ? ' on' : own ? ' own' : ''}"><canvas data-prev="${it.id}" width="${isC ? 16 : 28}" height="16"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : '내 차') : own ? '보유' : fmtWon(it.price)}</span>${btn}</div>`;
+    };
+    $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>
+      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷</button><button class="btn${isC ? '' : ' sel'}" data-tab="car">🚗 차 스킨</button></div>
+      <div class="shGrid">${list.map(card).join('')}</div>
+      <p class="shNote">${isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
+      <div class="pcBtns"><button class="btn" id="shClose">닫기</button></div></div>`;
+    const el = $('shop');
+    el.querySelectorAll('canvas[data-prev]').forEach(cv => this.preview(cv, SHOP_BY_ID[cv.dataset.prev]));
+    el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
+    el.querySelectorAll('[data-buy]').forEach(b => (b.onclick = () => this.buy(SHOP_BY_ID[b.dataset.buy])));
+    el.querySelectorAll('[data-wear]').forEach(b => (b.onclick = () => this.wear(SHOP_BY_ID[b.dataset.wear])));
+    el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { Profile.set(isC ? 'outfit' : 'car', null); Sound.play('click'); this.render(); }));
+    $('shClose').onclick = () => this.close();
+  },
+  preview(cv, it) {
+    const x = cv.getContext('2d'); x.imageSmoothingEnabled = false;
+    if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); x.drawImage(Sprites.sheet(name), 0, 0, 16, 16, 0, 0, 16, 16); } // 정면 서 있는 모습
+    else drawCarSprite(x, 14, 8, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0);
+  },
+  buy(it) {
+    if (this.has(it.id)) return this.wear(it);
+    if (State.cash < it.price) { Sound.play('deny'); Toast.show(`돈이 모자라요. ${fmtWon(it.price - State.cash)} 더 필요해요.`); return; }
+    State.cash -= it.price; HUD.setCash(State.cash); if (Live.on) Live.save();
+    Store.set('wardrobe', { owned: this.owned().concat(it.id) });
+    Sound.play('coins'); Toast.show(`${it.name} 샀어요 (${fmtWon(it.price)})`);
+    this.wear(it);
+  },
+  wear(it) { Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
+};
+
 /* ===================== 버튼 위치 조정: 메뉴에서 켜고 조이스틱·버튼을 끌어서 옮긴다 =====================
  * 가로/세로(그리고 폰 가로 .short)마다 따로, 화면 비율로 이 기기에 저장한다. '기본값'이면 CSS 기본 위치로 돌아간다.
  */
@@ -6253,11 +6366,11 @@ const Layout = {
   // 내 캐릭터 꾸미기: 제목 화면과 메뉴 양쪽에 같은 편집기
   const drawProfile = () => document.querySelectorAll('.profileBox').forEach(box => {
     const p = Profile.get();
-    box.innerHTML = `<canvas width="32" height="32"></canvas><div>${Object.keys(PROFILE_SWATCHES).map(k => `<div class="prow"><span>${PROFILE_LABEL[k]}</span>${PROFILE_SWATCHES[k].map(c => `<button class="sw${(p[k] || Sprites.PLAYER_DEFAULT[k]) === c ? ' sel' : ''}" data-k="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div>`).join('')}<button class="btn" data-reset="1">기본 모습으로</button></div>`;
+    box.innerHTML = `<canvas width="32" height="32"></canvas><div>${Object.keys(PROFILE_SWATCHES).map(k => `<div class="prow"><span>${PROFILE_LABEL[k]}</span>${PROFILE_SWATCHES[k].map(c => `<button class="sw${(p[k] || Sprites.PLAYER_DEFAULT[k]) === c ? ' sel' : ''}" data-k="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div>`).join('')}${p.outfit && SHOP_BY_ID[p.outfit] ? `<div class="prow"><span>입은 옷</span><small>${esc(SHOP_BY_ID[p.outfit].name)}</small><button class="btn" data-off="outfit">벗기</button></div>` : ''}${p.car && SHOP_BY_ID[p.car] ? `<div class="prow"><span>내 차</span><small>${esc(SHOP_BY_ID[p.car].name)}</small><button class="btn" data-off="car">기본 차로</button></div>` : ''}<button class="btn" data-reset="1">기본 모습으로</button></div>`;
     const cv = box.querySelector('canvas'); const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = false; cx.drawImage(Sprites.portrait('player'), 0, 0);
   });
-  document.addEventListener('click', e => { const b = e.target.closest('.profileBox button'); if (!b) return; if (b.dataset.reset) Profile.reset(); else Profile.set(b.dataset.k, b.dataset.c); Sound.play('tick'); drawProfile(); });
-  Profile.apply(); drawProfile();
+  document.addEventListener('click', e => { const b = e.target.closest('.profileBox button'); if (!b) return; if (b.dataset.reset) Profile.reset(); else if (b.dataset.off) Profile.set(b.dataset.off, null); else Profile.set(b.dataset.k, b.dataset.c); Sound.play('tick'); drawProfile(); });
+  Profile.redraw = drawProfile; Profile.apply(); drawProfile();
   $('btnProfile').onclick = () => { const el = $('profileTitle'); el.hidden = !el.hidden; Sound.play('paper'); };
   // 채널 기록 지우기: 한 번 더 묻는다 (confirm 대신 버튼 교체; 상태 글이 다시 그려져도 되게 위임)
   let resetPrev = '';

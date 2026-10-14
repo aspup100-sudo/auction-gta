@@ -5369,6 +5369,7 @@ const Menu = {
 let last = performance.now();
 function frame(now) {
   if (Instance.halted) return; // 다른 창이 게임을 가져갔다 (boot.js Instance)
+  if (!ROT && (innerWidth !== VW || innerHeight !== VH || Math.min(2, window.devicePixelRatio || 1) !== DPR)) resize(); // 폰이 세로로 켜졌다 가로로 돌아간 뒤 resize 이벤트가 안 와서 캔버스가 반만 그려지던 것 (사용자 2026-10-14 '들어가면 한 번씩 오른쪽이 검게')
   let dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (Game.hitstop > 0) { Game.hitstop -= dt; dt = 0; }
   update(dt); draw();

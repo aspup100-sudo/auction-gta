@@ -1385,6 +1385,7 @@ Object.assign(FEEL, {
   edgeSignDist: 36,       // 구역 가장자리에서 이 거리(타일) 안으로 바깥을 향해 달리면 '→ 옆 구' 표지판
   edgeBounce: 70,         // 길이 없는 가장자리(서울 끝)에 닿았을 때 되튕기는 속도(px/s)
   carBounce: 0.35,
+  carStuckSec: 1.2,       // 페달을 밟는데 이만큼 안 움직이면 끼인 것으로 보고 빼낸다(초)
   camZoomAtMax: 0.75,     // 최고속일 때 줌 배수 (정지 1.0)
   repairMin: 10000, repairMax: 50000,
   fineSignal: 60000,      // 신호위반 과태료(연출)
@@ -2160,6 +2161,8 @@ function updateMyCar(dt, z, input) {
   const fwd0 = c.vx * fx + c.vy * fy; // 진행 방향 속도
   let fwd = fwd0;
   const { up, down, left, right, hb } = input;
+  if (carBlocked(z, c)) unstickCar(c, z); // 이미 건물에 물려 있으면 먼저 빼낸다(수리비 없이)
+  const wasBlocked = carBlocked(z, c), oa = c.a;
   if (up) fwd += FEEL.carAccel * dt * (fwd < 0 ? 2.5 : 1);
   else if (down) fwd -= (fwd > 5 ? FEEL.carBrake : FEEL.carAccel * 0.7) * dt;
   else fwd -= fwd * FEEL.carDrag * dt;
@@ -2174,6 +2177,7 @@ function updateMyCar(dt, z, input) {
     const rd = roadAt(z, c.x, c.y);
     if (rd) { let ra = Math.atan2(rd.uy, rd.ux); if (Math.cos(ra - c.a) < 0) ra += Math.PI; let diff = Math.atan2(Math.sin(ra - c.a), Math.cos(ra - c.a)); const lim = FEEL.carRoadAssist * k * dt; c.a += Math.max(-lim, Math.min(lim, diff)); }
   }
+  if (!wasBlocked && carBlocked(z, c)) c.a = oa; // 제자리 회전으로 건물 모서리에 파고들지 않게
   // 새 방향 기준으로 분해: 옆 미끄러짐 성분만 그립으로 줄인다 (핸드브레이크면 덜 줄어 드리프트)
   const nfx = Math.cos(c.a), nfy = Math.sin(c.a);
   const f1 = c.vx * nfx + c.vy * nfy, l1 = -c.vx * nfy + c.vy * nfx;
@@ -2184,17 +2188,42 @@ function updateMyCar(dt, z, input) {
   const lateral = Math.abs(-c.vx * nfy + c.vy * nfx);
   if (lateral > 40 && c.speed > 60) { for (const [px, py] of carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: 0 }); if (Skids.length > 900) Skids.splice(0, Skids.length - 900); if (Math.random() < 0.3) Sound.play('skid'); }
   // 이동 + 충돌
-  c.hitCd -= dt; c.fineCd -= dt;
+  c.hitCd -= dt; c.fineCd -= dt; c.unstickCd = (c.unstickCd || 0) - dt;
   const ox = c.x, oy = c.y;
   c.x += c.vx * dt; if (carBlocked(z, c)) { c.x = ox; hit(c, 'x'); }
   c.y += c.vy * dt; if (carBlocked(z, c)) { c.y = oy; hit(c, 'y'); }
   c.x = Math.max(12, Math.min(z.W * TILE - 12, c.x)); c.y = Math.max(12, Math.min(z.H * TILE - 12, c.y));
   if (carBlocked(z, c)) { c.x = ox; c.y = oy; }
   collideTraffic(c, z);
+  // 끼임 구제: 페달을 밟는데도 안 움직이면(또는 이미 건물 안에 물려 있으면) 가장 가까운 빈 자리로 빼낸다
+  c.stuckT = ((up || down) && Math.hypot(c.x - ox, c.y - oy) < 40 * dt) ? (c.stuckT || 0) + dt : 0;
+  if (c.stuckT > FEEL.carStuckSec) unstickCar(c, z);
   c.exhaustT -= dt; if (c.exhaustT <= 0 && (up || c.speed > 20)) { c.exhaustT = 0.08; puff(c.x - nfx * 13, c.y - nfy * 13, 'rgba(120,120,125,', 1); }
   c.rock = Math.max(0, c.rock - dt * 4);
   Engine_sfx(c);
   checkTrafficFines(c, z);
+}
+// 차가 끼었을 때: 주변을 돌며 차가 들어갈 수 있고 길(인도 포함) 위인 가장 가까운 자리를 찾아 옮긴다
+function unstickCar(c, z) {
+  const ox = c.x, oy = c.y, oa = c.a;
+  const fits = (x, y, a) => { const t = { x, y, a }; if (carBlocked(z, t)) return false; const v = z.at(Math.floor(x / TILE), Math.floor(y / TILE)); return v !== T.BLD && v !== undefined; };
+  const prefer = (x, y) => { const v = z.at(Math.floor(x / TILE), Math.floor(y / TILE)); return v === T.ROAD || v === T.ALLEY; };
+  let best = null;
+  for (let r = 6; r <= 120 && !best; r += 6) {
+    for (let i = 0; i < 24; i++) {
+      const ang = i / 24 * Math.PI * 2, x = ox + Math.cos(ang) * r, y = oy + Math.sin(ang) * r;
+      for (const a of [oa, oa + Math.PI / 2, oa - Math.PI / 2, oa + Math.PI]) {
+        if (!fits(x, y, a)) continue;
+        if (!best || (prefer(x, y) && !best.pref)) best = { x, y, a, pref: prefer(x, y) };
+        if (best.pref) break;
+      }
+      if (best && best.pref) break;
+    }
+  }
+  if (!best) return;
+  c.x = best.x; c.y = best.y; c.a = best.a; c.vx = c.vy = 0; c.speed = 0; c.stuckT = 0; c.rock = 1; c.hitCd = Math.max(c.hitCd, 1.5);
+  if (!c.unstickCd || c.unstickCd <= 0) { Toast.show('끼인 차를 빼냈어요'); Sound.play('carDoor'); }
+  c.unstickCd = 3;
 }
 function hit(c, axis) {
   const sp = c.speed;
@@ -2727,7 +2756,7 @@ const Nav = {
   // 목적지에서 모든 도로 타일까지의 비용(도로 1, 골목 3, 보도 6)
   compute(z, goal) {
     const W = z.W, H = z.H, N = W * H; const dist = new Int32Array(N).fill(-1); const buckets = []; let maxd = 0;
-    const cost = v => (v === T.ROAD ? 1 : v === T.ALLEY ? 3 : v === T.WALK ? 6 : v === T.GROUND || v === T.PARK ? 8 : 0); // 건물만 못 지나간다
+    const cost = v => (v === T.ROAD ? 1 : v === T.ALLEY ? 3 : v === T.WALK ? 12 : v === T.GROUND || v === T.PARK ? 20 : 0); // 건물만 못 지나간다. 인도·공터는 비싸게 → 경로가 길 밖으로 새지 않는다 (사용자: '길이 아닌데')
     const seed = (x, y) => { const i = y * W + x; dist[i] = 0; (buckets[0] || (buckets[0] = [])).push(i); };
     if (goal.kind === 'place') {
       const d = z.places.find(p => p.id === goal.id).door; let best = null, bd = 1e9;
@@ -2800,8 +2829,8 @@ const Nav = {
     x.save(); x.translate(cx, cy); x.rotate(-(car.a + Math.PI / 2));
     const R = Math.ceil(Math.hypot(W, H) / s / 2) + 1;
     for (let ty = -R; ty <= R; ty++) for (let tx = -R; tx <= R; tx++) {
-      const v = z.at(bx + tx, by + ty); if (v !== T.ROAD && v !== T.ALLEY && v !== T.PARK) continue;
-      x.fillStyle = v === T.ROAD ? '#3b4d6e' : v === T.ALLEY ? '#2a3853' : '#1d3a2e'; x.fillRect((bx + tx - ptx) * s, (by + ty - pty) * s, s + 0.5, s + 0.5);
+      const v = z.at(bx + tx, by + ty); if (v !== T.ROAD && v !== T.ALLEY && v !== T.PARK && v !== T.WALK) continue;
+      x.fillStyle = v === T.ROAD ? '#3b4d6e' : v === T.ALLEY ? '#2a3853' : v === T.WALK ? '#1a2234' : '#1d3a2e'; // 인도는 아주 옅게 x.fillRect((bx + tx - ptx) * s, (by + ty - pty) * s, s + 0.5, s + 0.5);
     }
     if (this.path.length > 1) {
       x.strokeStyle = '#3fa9ff'; x.lineWidth = 3.5; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath();
@@ -2832,6 +2861,14 @@ const Nav = {
       this.show(NAV_ARROW.arrive, '목적지 주변', g.label); return;
     }
     if (g.kind === 'gu' && remain <= 12) { this.show(NAV_ARROW.straight, `구역 끝까지 직진 · ${DISTRICT[g.gu].name} 진입`, sub); return; }
+    // 길 밖(인도·공터)에 있으면 회전 안내 대신 가장 가까운 도로 쪽을 가리킨다
+    const here = z.at(Math.floor(c.x / TILE), Math.floor(c.y / TILE));
+    if (here !== T.ROAD && here !== T.ALLEY) {
+      const rt = path.find(([x, y]) => { const v = z.at(x, y); return v === T.ROAD || v === T.ALLEY; });
+      let arrow = NAV_ARROW.straight, word = '앞으로';
+      if (rt) { const ang = Math.atan2(rt[1] * TILE + 8 - c.y, rt[0] * TILE + 8 - c.x) - c.a; const d = Math.atan2(Math.sin(ang), Math.cos(ang)); if (d > 0.6) { arrow = NAV_ARROW.right; word = '오른쪽으로'; } else if (d < -0.6) { arrow = NAV_ARROW.left; word = '왼쪽으로'; } if (Math.abs(d) > 2.4) { arrow = NAV_ARROW.uturn; word = '돌아서'; } }
+      this.show(arrow, `${word} 도로로 나가세요`, sub); return;
+    }
     const t = this.nextTurn(z, path, c);
     if (!t) { this.show(NAV_ARROW.straight, g.kind === 'gu' ? `${EDGE_ARROW[g.edge.dx + ',' + g.edge.dy]} ${DISTRICT[g.gu].name} 방면 직진` : '직진', sub); return; }
     const tm = Math.round(t.d * 4 / 10) * 10; const word = NAV_WORD[t.kind];

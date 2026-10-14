@@ -412,6 +412,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .keys th { color:#c9c2a8; font-weight:600; white-space:nowrap; width:34%; }
 .keys td.tc { color:#9fb3c8; width:30%; }
 .keys .ksub { margin-top:6px; font-size:11px; color:#8b8f99; }
+.profileBox { display:flex; gap:12px; align-items:flex-start; } .profileBox canvas { width:72px; height:72px; image-rendering:pixelated; background:#e2d6bb; border-radius:8px; flex:none; } #title .profileBox canvas { background:#1b2232; } .profileBox .prow { display:flex; align-items:center; gap:6px; margin:4px 0; flex-wrap:wrap; } .profileBox .prow span { width:34px; font-size:12px; opacity:.8; } .profileBox .sw { width:22px; height:22px; border-radius:50%; border:2px solid rgba(0,0,0,.25); cursor:pointer; padding:0; } .profileBox .sw.sel { border-color:#ffd84a; box-shadow:0 0 0 2px #1b2232; } .profileBox .btn { font-size:11px; padding:4px 8px; margin-top:4px; }
 #castList label { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; } #castList label span { width:38%; color:#c9c2a8; } #castList input { flex:1; min-width:0; padding:5px 8px; border-radius:6px; border:1px solid #6b6a62; background:#fffdf7; color:#1a1408; font:inherit; }
 #iosHint { margin-top:8px; font-size:12px; color:#c9c2a8; }
 /* 폰 가로(높이가 낮은 화면): HUD를 작게, 조작 버튼을 모서리로 */
@@ -470,7 +471,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"></div>
+  <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"><button class="btn" id="btnProfile">내 캐릭터 꾸미기</button></div>
+  <div class="mp" id="profileTitle" hidden><div class="mph">내 캐릭터 <small>색을 눌러 고르세요</small></div><div class="profileBox" data-profile></div></div>
   <div class="mpWrap">
   <div class="mp" id="mpBox"><div class="mph">친구와 같이 하기 <small>방 만들기</small></div>
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
@@ -563,6 +565,10 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>대화 선택</th><td>1 2 3 4</td><td class="tc">탭</td></tr>
     </table>
     <div class="ksub">오른쪽 열은 휴대폰 터치 조작이에요.</div>
+  </details>
+  <details class="keys" open><summary>내 캐릭터 꾸미기</summary>
+    <div class="profileBox" data-profile></div>
+    <div class="ksub">친구와 같이 할 때도 이 모습으로 보여요. 이 기기에 저장됩니다.</div>
   </details>
   <details class="keys"><summary>등장인물 이름 바꾸기</summary>
     <div id="castList"></div>
@@ -875,6 +881,9 @@ const Generator = (() => {
   };
 
   function personName(R) { return R.pick(SURN) + R.pick(GIVEN) + R.pick(GIVEN); }
+  // 임차인 이름: 사용자가 정한 등장인물 이름에서 고른다 (personName과 같은 횟수로 R을 써서 다른 값은 그대로)
+  const TENANT_NAMES = ['강민찬', '이채현', '정연우', '고현서', '김건명'];
+  function tenantName(R, used) { const a = SURN.indexOf(R.pick(SURN)), b = GIVEN.indexOf(R.pick(GIVEN)), c = GIVEN.indexOf(R.pick(GIVEN)); const pool = TENANT_NAMES.filter(n => !used.some(t => t.name === n)); return pool.length ? pool[(a + b * 3 + c * 7) % pool.length] : TENANT_NAMES[(a + b) % TENANT_NAMES.length]; }
   function dateMinus(d, days) { return addDays(d, -days); }
 
   function makeName(R, type, dong) {
@@ -987,7 +996,7 @@ const Generator = (() => {
     const tRisk = risks.find(r => TENANT_RISKS.includes(r));
     const claimOk = () => addDays(startDate, R.RI(10, Math.max(11, (Date.parse(deadline) - Date.parse(startDate)) / 864e5 - 1)));
     const claimLate = () => addDays(deadline, R.RI(3, 40));
-    const tn = personName(R);
+    const tn = tenantName(R, tenants);
     if (tRisk === 'normal') {
       const mv = addDays(mortDate, R.RI(30, 600));
       tenants.push({ name: tn, move: mv, fixed: mv, deposit: Math.round(Math.min(minPrice, appraisal * R.U(0.1, 0.3)) / 1e6) * 1e6, claimed: 'yes', claimDate: claimOk() });
@@ -1330,7 +1339,7 @@ const FEEL = {
   liveListings: 7,        // 실시간 채널: 동시에 돌아가는 물건 수 (서로 어긋나게 → 약 3분마다 매각기일; 사용자 요청 6~7개)
   liveSlots: 2,           // 실시간 채널: 게임 하루(실제 20/7분)에 조사할 수 있는 횟수
   liveBidDdayOnly: true,  // 실시간 채널: 입찰표는 매각기일(마지막 날)에만 받는다 (현실대로; false면 개찰 전 아무 때나)
-  liveHospitalSec: 30,    // 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
+  liveHospitalSec: 20,    // 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
   liveAsylumSec: 60,      // 실시간 채널: 정신과 병동 입원 시간(초)
   pvpAsylumHits: 3,       // 같이 하기: 내 차로 다른 플레이어를 이만큼 치면 병원비까지 물어주고 정신과 병동
   // 카메라
@@ -1349,8 +1358,11 @@ const Store = {
 const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal' }, Store.get('settings', {}));
 function saveSettings() { Store.set('settings', Settings); }
 /* 등장인물 이름: 메뉴에서 바꿀 수 있고 이 기기에 저장된다. 비우면 기본 이름 */
-const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '등기소 직원', ''], ['center', '주민센터 직원', ''], ['bank', '은행원', ''], ['savings', '저축은행 직원', ''], ['agent', '중개사', ''], ['court', '집행관', '법원'], ['arcade', '게임장 사장', '게임장'], ['hospital', '간호사', '병원'], ['guest', '대기 손님', '실내에서 기다리는 사람들']];
+// [역할 키, 기본 이름, 역할] — 이름은 사용자가 2026-10-14에 정해 준 것
+const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '한민경', '등기소 직원'], ['center', '이체은', '주민센터 직원'], ['bank', '조하영', '은행원'], ['savings', '조수민', '저축은행 직원'], ['agent', '김해람', '중개사'], ['court', '이주원', '집행관'], ['arcade', '장우준', '게임장 사장'], ['hospital', '김정윤', '간호사'], ['guest', '김건명', '대기 손님'], ['vip', '이혁진', '길에서 만나는 멋쟁이']];
 const CAST_DEFAULT = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[1]]));
+const CAST_ROLE = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[2]]));
+function castLabel(k) { const n = castName(k), role = CAST_ROLE[k]; return role && k !== 'danye' && n !== role ? `${n} (${role})` : n; } // 대화창 이름: '한민경 (등기소 직원)'
 const Cast = Object.assign({}, Store.get('cast', {}));
 function castName(k) { return (Cast[k] || '').trim() || CAST_DEFAULT[k] || k; }
 function saveCast() { Store.set('cast', Cast); }
@@ -1402,6 +1414,22 @@ Object.assign(FEEL, {
   cashTickEvery: 0.07,    // 현금 숫자가 돌 때 틱 소리 간격(초)
   signalGreen: 7, signalYellow: 1.5,
 });
+
+/* ---- 내 캐릭터 꾸미기: 머리·피부·옷·바지 색 (이 기기에 저장, 친구에게는 pos로 전달) ---- */
+const PROFILE_SWATCHES = {
+  hair: ['#2b2230', '#5a3a22', '#a86a3a', '#d9b24a', '#c23b3b', '#3b5bd9', '#7a3bd9', '#e8e8ea'],
+  skin: ['#f1c9a5', '#e2b48d', '#c98f66', '#8d5a3c', '#f6dcc5'],
+  shirt: ['#2f4f86', '#9b3b3b', '#2f7d4f', '#d9a441', '#6a3fb5', '#e26a9a', '#f1f1f1', '#15151c'],
+  pants: ['#3a3a46', '#2b3a6e', '#6b4a2b', '#1c1c22', '#8a8a95', '#5a2b2b'],
+};
+const PROFILE_LABEL = { hair: '머리', skin: '피부', shirt: '옷', pants: '바지' };
+const Profile = {
+  get() { return Store.get('profile', {}); },
+  set(k, v) { const p = this.get(); p[k] = v; Store.set('profile', p); this.apply(); },
+  reset() { Store.set('profile', {}); this.apply(); },
+  apply() { const p = this.get(); const base = Sprites.PLAYER_DEFAULT; Sprites.setPal('player', { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: p.shirt || base.shirt, shirt2: shade(p.shirt || base.shirt, -0.18), pants: p.pants || base.pants }); },
+};
+function shade(hex, k) { const n = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * (1 + k)))); return '#' + [f(n >> 16), f((n >> 8) & 255), f(n & 255)].map(v => v.toString(16).padStart(2, '0')).join(''); }
 
 /* ===================== Web Audio 합성 효과음 / BGM ===================== */
 const Sound = (() => {
@@ -1533,6 +1561,7 @@ const Sprites = (() => {
     occ_young:   { hair: '#18161c', skin: '#f2cda8', shirt: '#d8d8d8', shirt2: '#b0b0b0', pants: '#2c3d63', shoe: '#eee' },
     occ_worker:  { hair: '#222', skin: '#d9a77d', shirt: '#4a6b8a', shirt2: '#37536d', pants: '#40464f', shoe: '#2a2a2a', hardhat: '#f2c230' },
     occ_grandma: { hair: '#e6e6e6', skin: '#e8bb93', shirt: '#7f6aa8', shirt2: '#654f8c', pants: '#5a5163', shoe: '#2a2a2a', perm: true },
+    vip: { hair: '#111318', skin: '#f3d2b0', shirt: '#15151c', shirt2: '#c9a24a', pants: '#15151c', shoe: '#4a2f14', tie: '#c9a24a' }, // 이혁진: 검은 정장에 금빛 타이
     walker1: { hair: '#2d2018', skin: '#f0c7a2', shirt: '#9b3b3b', shirt2: '#7a2e2e', pants: '#2f3240', shoe: '#1c1c1c' },
     walker2: { hair: '#101010', skin: '#efc29b', shirt: '#3b7a5a', shirt2: '#2d5e45', pants: '#555', shoe: '#ddd', longHair: true },
     walker3: { hair: '#7a5a3a', skin: '#f3d0b0', shirt: '#e2c35a', shirt2: '#bfa040', pants: '#3a4a6a', shoe: '#333' },
@@ -1649,7 +1678,10 @@ const Sprites = (() => {
     p(d, 3, 2, 1, 1); p(d, 5, 2, 1, 1);
     return (cache[key] = c);
   }
-  return { PAL, drawSprite, sheet, portrait, emote, tree, cat };
+  const PLAYER_DEFAULT = { ...PAL.player };
+  // 팔레트를 바꾸면 그 이름의 스프라이트·초상화 캐시를 지운다 (내 캐릭터 꾸미기, 친구 캐릭터)
+  function setPal(name, pal) { const next = { ...(PAL[name] || PLAYER_DEFAULT), ...pal }; if (PAL[name] && JSON.stringify(PAL[name]) === JSON.stringify(next)) return; PAL[name] = next; delete cache[name]; delete cache['portrait:' + name]; }
+  return { PAL, PLAYER_DEFAULT, setPal, drawSprite, sheet, portrait, emote, tree, cat };
 })();
 
 /* ===================== 구역(동네) 데이터 · 생성 · 렌더 =====================
@@ -2625,7 +2657,11 @@ const ZoneMap = {
       x.fillStyle = 'rgba(10,12,14,.75)'; x.fillRect(X - w / 2, Y + 10, w, 15); x.fillStyle = pl.kind === 'site' ? '#ffb0a8' : '#f3e9c8'; x.fillText(label, X, Y + 18);
     }
     // 내 차(걸을 때)
-    if (!Game.driving) { x.save(); x.translate(Game.car.x / TILE * P, Game.car.y / TILE * P); x.rotate(Game.car.a); x.fillStyle = '#fff'; x.fillRect(-5, -3, 10, 6); x.restore(); }
+    if (!Game.driving) { // 내 차: 노란 테두리 + 숨쉬는 원 + '내 차' 이름표 (사용자: 차 위치를 지도에 표시)
+      const cx = Game.car.x / TILE * P, cy = Game.car.y / TILE * P; x.save(); x.strokeStyle = 'rgba(255,216,74,.9)'; x.lineWidth = 2; x.beginPath(); x.arc(cx, cy, 9 + Math.sin(t * 4) * 2, 0, 7); x.stroke();
+      x.translate(cx, cy); x.rotate(Game.car.a); x.fillStyle = '#fff'; x.fillRect(-6, -3.5, 12, 7); x.fillStyle = '#4a90e2'; x.fillRect(-2, -2.5, 4, 5); x.restore();
+      x.save(); x.font = 'bold 10px "IBM Plex Sans KR", sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.8)'; x.strokeText('내 차', cx, cy - 14); x.fillStyle = '#ffd84a'; x.fillText('내 차', cx, cy - 14); x.restore();
+    }
     // 나
     // 가장자리: 그쪽으로 달리면 나오는 옆 구
     if (!z.spec.court) { x.font = 'bold 11px "IBM Plex Sans KR", sans-serif';
@@ -3583,7 +3619,7 @@ const Net = {
     if (m.t === 'lbid') { Live.onBid(m); return; }
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'lbook') { Live.onBook(m); return; }
-    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
+    if (m.t === 'pos') { p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) p.pal = m.pal; p.tx = m.x; p.ty = m.y; p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; p.day = m.day; p.half = m.half; p.pnl = m.pn; p.last = performance.now(); if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS) { p.x = m.x; p.y = m.y; } p.lastZ = p.z; p.lastS = p.s; return; }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
@@ -3599,7 +3635,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / 8;
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined });
   },
   chat(text) {
     text = (text || '').trim().slice(0, 60); if (!text) return;
@@ -3651,7 +3687,8 @@ const Net = {
   },
   drawFriend(c, p, sp, t) {
     if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, '#d9a441', 24, 12, 'car', 1); this.label(c, p.name, p.cx, p.cy - 12); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
-    drawWalker(c, { sprite: sp, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m }, t);
+    let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, p.pal); } // 친구가 꾸민 색 그대로
+    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m }, t);
     this.label(c, p.name, p.x, p.y - 22);
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - 30);
   },
@@ -3852,6 +3889,8 @@ const Live = {
     const key = c.live.key, m = this.mine[key];
     if (!this.bidOpen(c)) { await Dialog.say([say('court', `${c.caseNo} ${c.name}의 매각기일은 ${this.mmss(this.untilDday(c))} 뒤(${this.dayLabel(c)})입니다. 입찰표는 그날 이 법정에서 받습니다. 그때 오세요.`)]); return; }
     if (m) { await Dialog.say([say('court', `${c.caseNo}은(는) 이미 입찰표를 내셨어요 (${fmtWon(m.bid)}). 개찰은 ${this.mmss(this.left(c))} 뒤에 자동으로 열립니다. 결과는 어디 계시든 알려 드려요.`)]); return; }
+    const sn = State.seen[c.id] || {}; // 조사를 하나도 안 한 물건은 입찰표를 안 내준다 (조사 미흡 불이익, 사용자 요청 2026-10-14)
+    if (!(sn.spec || sn.survey || sn.registry || sn.site || sn.center || sn.agent)) { await Dialog.say([say('court', `${c.caseNo} ${c.name}… 이 물건 서류를 아직 하나도 안 보셨네요. 매각물건명세서나 현황조사서라도 열람하고 오세요. 아무 조사 없이 낸 입찰표는 받지 않습니다.`, { emote: 'silence' })]); return; }
     const pick = await Dialog.say([say('court', `${c.caseNo} ${c.name}, 오늘이 매각기일입니다. 입찰 마감(개찰)까지 ${this.mmss(this.left(c))}. 한 번 낸 입찰표는 바꿀 수 없어요.`)], [{ label: '입찰표 쓰기', value: 'y' }, { label: '그만두기', value: 'n' }]);
     if (pick !== 'y') return;
     if (this.now() >= c.live.tEnd) { Toast.show('방금 개찰이 끝났어요.'); return; }
@@ -3888,10 +3927,12 @@ const Live = {
       const won = winner.me; const second = all.filter(x => x !== winner).sort((a, b) => b.bid - a.bid)[0];
       // §11 정산: 대출·명도 없이 (채널에서는 절차 생략)
       const keep = { br: State.bidResult, ph: State.phase, loan: State.loan, ev: State.evict };
-      State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won, count: all.length, bids: sorted, winner, second, tie: tops.length > 1 }; State.phase = won ? 'won' : 'lost'; State.loan = null; State.evict = null;
+      // 낙찰가가 가진 돈을 넘으면 그만큼 대출로 치고 이자(금융비용)를 현금에서 뺀다 (사용자 요청 2026-10-14)
+      const loanAmt = won ? Math.max(0, m.bid - (State.cash + m.deposit)) : 0;
+      State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won, count: all.length, bids: sorted, winner, second, tie: tops.length > 1 }; State.phase = won ? 'won' : 'lost'; State.loan = loanAmt ? { bank: loanAmt, savings: 0, extra: 0 } : null; State.evict = null;
       const S = computeSettlement(); const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
       State.bidResult = keep.br; State.phase = keep.ph; State.loan = keep.loan; State.evict = keep.ev;
-      m.done = true; m.won = won; m.profit = won ? S.profit : 0; delete this.book[key];
+      m.done = true; m.won = won; m.profit = won ? S.profit : 0; m.loan = loanAmt; this.lastMissed = missed; delete this.book[key];
       State.cash += m.deposit + m.profit; HUD.setCash(State.cash);
       this.results.unshift({ at: new Date().toISOString().slice(0, 16).replace('T', ' '), name: c.name, caseNo: c.caseNo, won, profit: m.profit, grade: G.grade, bid: m.bid, winner: winner.me ? '본인' : winner.name, wbid: winner.bid });
       Records.add(S, c, G); this.save();
@@ -3921,7 +3962,7 @@ const Live = {
     if (!won) return;
     // 정산서 + 난이도(★)는 결과에서만 공개
     const rows = S.lines.filter(([l, v]) => v || l.startsWith('인수액')).map(([l, v]) => `<tr><td>${l}</td><td class="num">${(v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v))}</td></tr>`).join('');
-    await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table><p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">채널에서는 대출·잔금·명도 절차를 생략하고 정산 손익을 바로 반영합니다. 누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
+    await DocViewer.show(`<div class="doc"><div class="docHead">채널 ${this.ch} · 정산서</div><h2>${c.name}</h2><p class="small">${c.caseNo} · 낙찰가 ${fmtWon(m.bid)} · 보유 ${S.months}개월 · 등급 ${G.grade} (${G.score}점)</p><table class="kv">${rows}<tr><th>최종 손익</th><th class="num">${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}</th></tr></table>${m.loan ? `<p class="small">낙찰가 중 ${fmtWon(m.loan)}은 대출로 메워서 그 이자가 금융비용으로 빠졌어요.</p>` : ''}${this.lastMissed && this.lastMissed.length ? `<h3>놓친 조사</h3><ul>${this.lastMissed.map(x => `<li><b>${x.place}</b> — ${x.text}</li>`).join('')}</ul><p class="small">조사를 건너뛴 만큼 위 비용을 미리 알 수 없었어요.</p>` : ''}<p>난이도 ${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)} · ${c.risks.length ? c.risks.map(r => RISK_NAME(r)).join(' · ') : '깨끗한 물건'}</p><p class="small">채널에서는 대출·잔금·명도 절차를 생략하고 정산 손익을 바로 반영합니다. 누적 손익 ${(this.pnl() >= 0 ? '+' : '−') + fmtWon(Math.abs(this.pnl()))}</p></div>`, { title: '정산서' });
   },
 
   /* ---- 입원: 실제 시간으로 병원에 묶인다 (그 사이 매각기일을 놓칠 수 있다) ---- */
@@ -4053,6 +4094,11 @@ function drawWalker(c, w, t, opts = {}) {
   const bob = w.moving && (w.frame === 1 || w.frame === 3) ? -FEEL.bobPx : 0;
   const breath = opts.breath ? (Math.sin(t * Math.PI * 2 / FEEL.npcBreathPeriod) > 0.6 ? -1 : 0) : 0;
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(w.x, w.y, 5, 2.2, 0, 0, 7); c.fill();
+  if (w.vip) { // 금빛 반짝임 + 이름표: 멀리서도 멋쟁이인 걸 알 수 있게
+    c.save(); c.fillStyle = '#ffd86b';
+    for (let i = 0; i < 3; i++) { const a = t * 1.6 + i * 2.1, r = 11 + Math.sin(t * 3 + i) * 2, X = w.x + Math.cos(a) * r, Y = w.y - 8 + Math.sin(a) * r * 0.5, sz = 1.2 + (Math.sin(t * 5 + i * 2) + 1) * 0.8; c.beginPath(); c.moveTo(X, Y - sz); c.lineTo(X + sz, Y); c.lineTo(X, Y + sz); c.lineTo(X - sz, Y); c.fill(); }
+    c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 20); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 20); c.restore();
+  }
   Sprites.drawSprite(c, w.sprite, w.dir, w.frame, Math.round(w.x - 8), Math.round(w.y - 15 + bob + breath), 1, w.sit);
 }
 function dirToward(from, to) { const dx = to.x - from.x, dy = to.y - from.y; return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0); }
@@ -4073,6 +4119,7 @@ function startGame(capital, opts = {}) {
   Game.zones = {};
   Game.zone = getZone('gwangjin');
   const office = Game.zone.places.find(p => p.id === 'office');
+  Profile.apply(); // 내가 꾸민 캐릭터 색
   Game.player = makeWalker('player', office.door.tx * TILE + 8, office.door.ty * TILE + 8); // 문 타일 정중앙(건물과 겹치지 않게)
   Game.player.dir = 0;
   spawnDecor();
@@ -4133,6 +4180,7 @@ function spawnDecor() {
   const z = Game.zone; Game.decor = [];
   const walkTiles = []; for (let i = 0; i < 4000 && walkTiles.length < 300; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) === T.WALK) walkTiles.push([x, y]); }
   for (let i = 0; i < FEEL.decorWalkers; i++) { const [x, y] = walkTiles[i * 7 % walkTiles.length]; const w = makeWalker(['walker1', 'walker2', 'walker3'][i % 3], x * TILE + 8, y * TILE + 8); w.ai = { t: 0, ix: 0, iy: 0 }; Game.decor.push(w); }
+  if (walkTiles.length) { const [x, y] = walkTiles[11 % walkTiles.length]; const v = makeWalker('vip', x * TILE + 8, y * TILE + 8); v.ai = { t: 0, ix: 0, iy: 0 }; v.vip = true; Game.decor.push(v); } // 이혁진: 동네마다 한 명, 누가 봐도 멋진 사람
   const alley = []; for (let i = 0; i < 4000 && alley.length < 30; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) === T.ALLEY) alley.push([x, y]); }
   Game.cats = alley.slice(0, 3).map(([x, y]) => ({ x: x * TILE + 8, y: y * TILE + 8, t: Math.random() * 5, vx: 0, sit: true }));
 }
@@ -4163,8 +4211,14 @@ function zoneInteractTarget(fromCar = false) {
 const WALKER_NAMES = ['지나가던 주민', '동네 아주머니', '학생', '배달 기사님', '산책 나온 아저씨', '편의점 알바생', '강아지 산책 중인 분'];
 async function talkWalker(w) {
   if (Game.busy) return; Game.busy = true;
-  const z = Game.zone, p = Game.player; const i = Game.decor.indexOf(w); const name = WALKER_NAMES[(i < 0 ? 0 : i) % WALKER_NAMES.length];
+  const z = Game.zone, p = Game.player; const i = Game.decor.indexOf(w); const name = w.vip ? castName('vip') : WALKER_NAMES[(i < 0 ? 0 : i) % WALKER_NAMES.length];
   w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
+  if (w.vip) { // 이혁진: 말을 걸면 100원을 건넨다 (사용자 요청)
+    const V = [`안녕하세요. 오늘 옷 괜찮죠? 자, 이거 받으세요.`, `또 만났네요. 부지런한 사람은 보기 좋아요. 자, 100원.`, `여유는 지갑이 아니라 태도에서 나와요. 그래도 커피값에 보태요.`, `서류 꼼꼼히 보는 사람이 결국 이겨요. 응원의 뜻으로.`];
+    await Dialog.say([{ name, sprite: 'vip', text: V[(i + State.day + (w.talks || 0)) % V.length] }]);
+    w.talks = (w.talks || 0) + 1; State.cash += 100; HUD.setCash(State.cash); Sound.play('coins'); Toast.show(`${name}에게 100원을 받았다.`);
+    w.ai.t = 0.3; Game.busy = false; return;
+  }
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
   const hello = [`안녕하세요. ${dong} 처음 오셨어요?`, `네? 아, 길 물어보시려고요?`, `${gu}는 요즘 공사가 많아서 길이 좀 막혀요.`, `오늘 날씨 좋죠? 걷기 딱 좋아요.`, `경매 보러 오신 분이죠? 요즘 그런 분들 자주 보여요.`];
     const pick = await Dialog.say([{ name, sprite: w.sprite, text: hello[(i + State.day) % hello.length] }], [
@@ -4284,7 +4338,7 @@ async function hospitalize(opts = {}) {
     if (Live.on) await Live.bedRest(fee, h); // 채널: 시간을 건너뛸 수 없으니 실제 시간으로 입원
     await Dialog.say([
       { name: h ? h.name : '병원', text: opts.by ? `${opts.by}의 차에 크게 치여 구급차에 실려 왔다. 병원비 ${fmtWon(fee)}은 ${opts.by}이(가) 물어줬다. ${Live.on ? `${FEEL.liveHospitalSec}초 입원 뒤 ` : timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` : Live.on ? `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${FEEL.liveHospitalSec}초 입원 뒤 퇴원했다.` : `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
-      { name: castName('hospital'), sprite: 'banker', voice: 'banker', text: '합의금 욕심내다 큰일 나요. 길 건널 때 좌우 좀 보세요.' }]);
+      { name: castLabel('hospital'), sprite: 'banker', voice: 'banker', text: '합의금 욕심내다 큰일 나요. 길 건널 때 좌우 좀 보세요.' }]);
     Toast.show(opts.by ? `입원 · 병원비 ${fmtWon(fee)}은 ${opts.by}이(가) 냄` : `입원비 ${fmtWon(fee)}`, 2600);
   } finally { p.hurtCd = 2; Game.busy = false; }
 }
@@ -4302,7 +4356,7 @@ async function asylum(victim, total) {
     if (Live.on) await Live.bedRest(total, h, { title: '정신과 병동 입원 중', sec: FEEL.liveAsylumSec, note: `${victim}에게 합의금과 병원비를 물어줬습니다.` }); else await advanceSlot();
     await Dialog.say([
       { name: `${h ? h.name : '병원'} 정신과 병동`, text: `사람을 ${FEEL.pvpAsylumHits}번이나 차로 쳐서 정신과 병동에 입원했다. ${victim}에게 합의금과 병원비 ${fmtWon(total)}을 물어줬다.` },
-      { name: castName('hospital'), sprite: 'banker', voice: 'banker', text: '운전대 잡기 전에 마음부터 진정시키세요. 다음엔 면허도 위험해요.', emote: 'anger' }]);
+      { name: castLabel('hospital'), sprite: 'banker', voice: 'banker', text: '운전대 잡기 전에 마음부터 진정시키세요. 다음엔 면허도 위험해요.', emote: 'anger' }]);
   } finally { p.hurtCd = 2; Game.busy = false; }
 }
 
@@ -4831,7 +4885,7 @@ async function issueDoc(caseId, kind, title, html, { fee = 0 } = {}) {
 
 const STAFF = { registry: ['등기소 직원', 'clerk', 'clerk'], center: ['주민센터 직원', 'clerk', 'clerk'], bank: ['은행원', 'banker', 'banker'], agent: ['중개사', 'agent', 'agent'], court: ['집행관', 'clerk', 'clerk'], savings: ['저축은행 직원', 'banker', 'banker'] };
 STAFF.arcade = ['게임장 사장', 'occ_young', 'occ']; STAFF.hospital = ['간호사', 'banker', 'banker'];
-const say = (kind, text, extra = {}) => ({ name: castName(kind), sprite: STAFF[kind][1], voice: STAFF[kind][2], text, ...extra });
+const say = (kind, text, extra = {}) => ({ name: castLabel(kind), sprite: STAFF[kind][1], voice: STAFF[kind][2], text, ...extra });
 /* 실내에서 기다리는 손님들: 말을 걸면 그 장소다운 잡담을 한다 (사건 정보는 절대 없음) */
 const GUEST_LINES = {
   hospital: ['횡단보도에서 치였어요. 합의금은 받았는데 다리가 아파요.', '여기 응급실은 24시간이에요.', '세 번째 치인 사람은 바로 입원이래요. 조심하세요.'],
@@ -4845,7 +4899,7 @@ const GUEST_LINES = {
 async function guestTalk(kind, g) {
   const lines = GUEST_LINES[kind] || ['...'];
   if (g.line === undefined) g.line = Math.floor(Math.random() * lines.length);
-  await Dialog.say([{ name: castName('guest'), sprite: g.sprite, voice: 'occ', text: lines[g.line] }]);
+  await Dialog.say([{ name: castLabel('guest'), sprite: g.sprite, voice: 'occ', text: lines[g.line] }]);
 }
 
 async function interactRoom(tg) {
@@ -5695,6 +5749,15 @@ const Layout = {
   ZoneMap.bindGestures();
   $('nav').addEventListener('click', e => { if (e.target.id === 'navX') Nav.clear(); });
   NavPick.bind();
+  // 내 캐릭터 꾸미기: 제목 화면과 메뉴 양쪽에 같은 편집기
+  const drawProfile = () => document.querySelectorAll('.profileBox').forEach(box => {
+    const p = Profile.get();
+    box.innerHTML = `<canvas width="32" height="32"></canvas><div>${Object.keys(PROFILE_SWATCHES).map(k => `<div class="prow"><span>${PROFILE_LABEL[k]}</span>${PROFILE_SWATCHES[k].map(c => `<button class="sw${(p[k] || Sprites.PLAYER_DEFAULT[k]) === c ? ' sel' : ''}" data-k="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div>`).join('')}<button class="btn" data-reset="1">기본 모습으로</button></div>`;
+    const cv = box.querySelector('canvas'); const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = false; cx.drawImage(Sprites.portrait('player'), 0, 0);
+  });
+  document.addEventListener('click', e => { const b = e.target.closest('.profileBox button'); if (!b) return; if (b.dataset.reset) Profile.reset(); else Profile.set(b.dataset.k, b.dataset.c); Sound.play('tick'); drawProfile(); });
+  Profile.apply(); drawProfile();
+  $('btnProfile').onclick = () => { const el = $('profileTitle'); el.hidden = !el.hidden; Sound.play('paper'); };
   // 채널 기록 지우기: 한 번 더 묻는다 (confirm 대신 버튼 교체; 상태 글이 다시 그려져도 되게 위임)
   let resetPrev = '';
   $('chStatus').addEventListener('click', e => {
@@ -5711,7 +5774,7 @@ const Layout = {
   $('btnEndDay').onclick = async () => { Menu.toggle(false); await endDay(); };
   $('btnMenu').onclick = () => Menu.toggle();
   // 등장인물 이름 편집
-  $('castList').innerHTML = CAST_ROLES.map(([k, def, hint]) => `<label><span>${def}${hint ? ` <small>(${hint})</small>` : ''}</span><input data-cast="${k}" placeholder="${def}" maxlength="12" value="${(Cast[k] || '').replace(/"/g, '&quot;')}"></label>`).join('');
+  $('castList').innerHTML = CAST_ROLES.map(([k, def, hint]) => `<label><span>${hint || def}${hint ? ` <small>(${def})</small>` : ''}</span><input data-cast="${k}" placeholder="${def}" maxlength="12" value="${(Cast[k] || '').replace(/"/g, '&quot;')}"></label>`).join('');
   $('castList').querySelectorAll('input').forEach(inp => inp.oninput = () => { Cast[inp.dataset.cast] = inp.value; saveCast(); });
   const muteLabel = () => ($('btnMute').textContent = Settings.muted ? '소리 꺼짐' : '소리');
   $('btnMute').onclick = () => { Settings.muted = !Settings.muted; saveSettings(); Sound.applyVolumes(); muteLabel(); }; muteLabel();

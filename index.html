@@ -418,7 +418,6 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .keys td.tc { color:#9fb3c8; width:30%; }
 .keys .ksub { margin-top:6px; font-size:11px; color:#8b8f99; }
 .profileBox { display:flex; gap:12px; align-items:flex-start; } .profileBox canvas { width:72px; height:72px; image-rendering:pixelated; background:#e2d6bb; border-radius:8px; flex:none; } #title .profileBox canvas { background:#1b2232; } .profileBox .prow { display:flex; align-items:center; gap:6px; margin:4px 0; flex-wrap:wrap; } .profileBox .prow span { width:34px; font-size:12px; opacity:.8; } .profileBox .sw { width:22px; height:22px; border-radius:50%; border:2px solid rgba(0,0,0,.25); cursor:pointer; padding:0; } .profileBox .sw.sel { border-color:#ffd84a; box-shadow:0 0 0 2px #1b2232; } .profileBox .btn { font-size:11px; padding:4px 8px; margin-top:4px; }
-#castList label { display:flex; align-items:center; gap:8px; margin:6px 0; font-size:13px; } #castList label span { width:38%; color:#c9c2a8; } #castList input { flex:1; min-width:0; padding:5px 8px; border-radius:6px; border:1px solid #6b6a62; background:#fffdf7; color:#1a1408; font:inherit; }
 #iosHint { margin-top:8px; font-size:12px; color:#c9c2a8; }
 /* 폰 가로(높이가 낮은 화면): HUD를 작게, 조작 버튼을 모서리로 */
   .short #pager { width:280px; font-size:11.5px; padding:4px 8px; }
@@ -577,10 +576,6 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <details class="keys" open><summary>내 캐릭터 꾸미기</summary>
     <div class="profileBox" data-profile></div>
     <div class="ksub">친구와 같이 할 때도 이 모습으로 보여요. 이 기기에 저장됩니다.</div>
-  </details>
-  <details class="keys"><summary>등장인물 이름 바꾸기</summary>
-    <div id="castList"></div>
-    <div class="ksub">비우면 기본 이름으로 돌아가요. 이 기기에만 저장됩니다.</div>
   </details>
   <button class="btn" id="btnLayout">버튼 위치 조정</button>
   <button class="btn" id="btnEndDay">오늘 일정 끝내기</button>
@@ -1376,15 +1371,13 @@ const Store = {
 };
 const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal' }, Store.get('settings', {}));
 function saveSettings() { Store.set('settings', Settings); }
-/* 등장인물 이름: 메뉴에서 바꿀 수 있고 이 기기에 저장된다. 비우면 기본 이름 */
-// [역할 키, 기본 이름, 역할] — 이름은 사용자가 2026-10-14에 정해 준 것
+/* 등장인물 이름: 고정. 사용자가 2026-10-14에 정해 준 이름이며 메뉴에서 바꿀 수 없다 (사용자 요청 v36) */
+// [역할 키, 이름, 역할]
 const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '한민경', '등기소 직원'], ['center', '이체은', '주민센터 직원'], ['bank', '조하영', '은행원'], ['savings', '조수민', '저축은행 직원'], ['agent', '김해람', '중개사'], ['court', '이주원', '집행관'], ['arcade', '장우준', '게임장 사장'], ['hospital', '김정윤', '간호사'], ['guest', '김건명', '대기 손님'], ['vip', '이혁진', '길에서 만나는 멋쟁이']];
 const CAST_DEFAULT = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[1]]));
 const CAST_ROLE = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[2]]));
 function castLabel(k) { const n = castName(k), role = CAST_ROLE[k]; return role && k !== 'danye' && n !== role ? `${n} (${role})` : n; } // 대화창 이름: '한민경 (등기소 직원)'
-const Cast = Object.assign({}, Store.get('cast', {}));
-function castName(k) { return (Cast[k] || '').trim() || CAST_DEFAULT[k] || k; }
-function saveCast() { Store.set('cast', Cast); }
+function castName(k) { return CAST_DEFAULT[k] || k; }
 Object.assign(FEEL, {
   // 운전 (GTA 초기작 느낌)
   carMaxSpeed: 230,       // px/s → HUD에는 80km/h로 표시 (270→230: 키보드로 다루기 쉽게)
@@ -2733,7 +2726,7 @@ const NAV_WORD = { left: '좌회전', right: '우회전', uturn: '유턴' };
 function fmtDist(m) { return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.max(10, m) + 'm'; }
 // 지도에서 고른 목적지. place가 있으면 노란 화살표도 거기로
 function setNavDest(d) {
-  State.navDest = d; Nav.mutedKey = ''; Nav.key = '';
+  State.navDest = d; Nav.mutedKey = ''; Nav.key = ''; Nav.free = false;
   const z = Game.zone; if (d.place && z && z.places.some(p => p.id === d.place)) State.targetPlace = d.place;
   Toast.show(`목적지: ${d.label}${Game.driving ? '' : ' · 차에 타면 안내해요'}`); Sound.play('tick');
 }
@@ -2830,7 +2823,7 @@ const Nav = {
     return null;
   },
   off() { this.path = []; if (this.on) { this.on = false; $('nav').classList.remove('in'); } this.key = ''; },
-  mutedKey: '',
+  mutedKey: '', free: false, // free: 목적지 없이 그냥 운전 (사용자 요청 2026-10-14) — 내비는 지도만 보여 주고 안내는 하지 않는다
   clear() { // 패널의 ✕: 이 목적지 안내를 끈다 (새 목적지를 고르면 다시 켜짐)
     this.mutedKey = this.key; State.navDest = null; if (State.phase !== 'dday' && State.phase !== 'pay') State.targetPlace = null; this.off(); Toast.show('목적지 안내를 껐어요.');
   },
@@ -2863,6 +2856,7 @@ const Nav = {
   },
   update(dt) {
     if (!Game.driving || Game.scene !== 'zone' || NavPick.on) { if (this.on || this.path.length) this.off(); return; } // 목적지 고르는 동안은 안내를 미룬다
+    if (this.free) { this.path = []; this.key = ''; this.show('🚗', '목적지 없이 운전 중', '내비를 누르면 목적지 고르기'); return; }
     const z = Game.zone, c = Game.car; const g = this.goalOf();
     if (!g) { this.off(); return; }
     if (g.kind === 'gu') { g.edge = this.edgeFor(z.gu, g.gu); if (!g.edge) { this.off(); return; } }
@@ -2914,7 +2908,8 @@ const NavPick = {
     const ICON = { court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', site: '📍' };
     const btn = (attr, cls, label) => `<button ${attr} class="${cls}">${label}</button>`;
     let h = `<h3><span>어디로 갈까요?<small>누르면 바로 안내</small></span><button class="nx" id="navPickX" title="닫기">✕</button></h3>`;
-    if (auto && !cur) h += `<div class="sec">추천</div><div class="grid">${btn('data-auto="1"', 'rec', '★ ' + esc(auto.label))}</div>`;
+    if (auto && !cur) h += `<div class="sec">추천</div><div class="grid">${btn('data-auto="1"', 'rec', '★ ' + esc(auto.label))}${btn('data-free="1"', Nav.free ? 'sel' : '', '🚗 그냥 운전하기 <small>목적지 없이</small>')}</div>`;
+    else h += `<div class="grid" style="margin-top:4px">${btn('data-free="1"', Nav.free ? 'sel' : '', '🚗 그냥 운전하기 <small>목적지 없이</small>')}</div>`;
     const sites = z.places.filter(p => p.kind === 'site'), others = z.places.filter(p => p.kind !== 'site');
     if (sites.length) h += `<div class="sec">이 구역 경매 물건</div><div class="grid">${sites.map(p => btn(`data-place="${p.id}"`, cur === 'p:' + p.id ? 'sel' : '', (ICON.site) + ' ' + esc(p.name))).join('')}</div>`;
     h += `<div class="sec">${DISTRICT[z.gu].name} 장소</div><div class="grid">${others.map(p => btn(`data-place="${p.id}"`, cur === 'p:' + p.id ? 'sel' : '', (ICON[p.kind] || '📍') + ' ' + esc(p.name))).join('')}</div>`;
@@ -2928,7 +2923,8 @@ const NavPick = {
     $('navPick').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return; const z = Game.zone; const d = b.dataset;
       if (b.id === 'navPickX') { this.close(); Sound.play('click'); return; }
-      if (d.auto) { State.navDest = null; Nav.mutedKey = ''; Nav.key = ''; this.close(); Sound.play('tick'); return; }
+      if (d.auto) { State.navDest = null; Nav.mutedKey = ''; Nav.key = ''; Nav.free = false; this.close(); Sound.play('tick'); return; }
+      if (d.free) { Nav.free = true; State.navDest = null; this.close(); Sound.play('tick'); Toast.show('목적지 없이 운전해요. 내비를 누르면 다시 고를 수 있어요.', 2600); return; }
       if (d.place && z) { const p = z.places.find(x => x.id === d.place); if (p) setNavDest({ gu: z.gu, place: p.id, label: p.name }); this.close(); return; }
       if (d.gu) { setNavDest({ gu: d.gu, place: null, label: DISTRICT[d.gu].name }); this.close(); return; }
       if (d.map) { this.close(); ZoneMap.toggle(true); $('zoneMapName').textContent = z ? z.name + ' 구역 지도' : ''; }
@@ -4680,7 +4676,7 @@ function exitCar() {
     const px = c.x + Math.cos(c.a + Math.PI / 2 * side) * 16 * (side ? 1 : 0) - (side ? 0 : Math.cos(c.a) * 18), py = c.y + Math.sin(c.a + Math.PI / 2 * side) * 16 * (side ? 1 : 0) - (side ? 0 : Math.sin(c.a) * 18);
     if (z.at(Math.floor(px / TILE), Math.floor(py / TILE)) !== T.BLD) { Game.player.x = px; Game.player.y = py; break; }
   }
-  Game.driving = false; Game.player.vx = Game.player.vy = 0; Sound.play('carDoor'); NavPick.close();
+  Game.driving = false; Game.player.vx = Game.player.vy = 0; Sound.play('carDoor'); NavPick.close(); Nav.free = false;
   const es = $('edgeSign'); es.classList.remove('in'); es.dataset.k = '';
 }
 
@@ -6033,7 +6029,7 @@ const Layout = {
   $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
   $('zoneCanvas').addEventListener('click', e => { if (!ZoneMap.dragged) ZoneMap.click(e); });
   ZoneMap.bindGestures();
-  $('nav').addEventListener('click', e => { if (e.target.id === 'navX') Nav.clear(); });
+  $('nav').addEventListener('click', e => { if (e.target.id === 'navX') Nav.clear(); else if (Game.driving && Game.scene === 'zone' && !NavPick.on) NavPick.open(); }); // 내비를 누르면 목적지 다시 고르기
   NavPick.bind();
   // 내 캐릭터 꾸미기: 제목 화면과 메뉴 양쪽에 같은 편집기
   const drawProfile = () => document.querySelectorAll('.profileBox').forEach(box => {
@@ -6059,9 +6055,6 @@ const Layout = {
   addEventListener('resize', () => SeoulMap.open && SeoulMap.resize());
   $('btnEndDay').onclick = async () => { Menu.toggle(false); await endDay(); };
   $('btnMenu').onclick = () => Menu.toggle();
-  // 등장인물 이름 편집
-  $('castList').innerHTML = CAST_ROLES.map(([k, def, hint]) => `<label><span>${hint || def}${hint ? ` <small>(${def})</small>` : ''}</span><input data-cast="${k}" placeholder="${def}" maxlength="12" value="${(Cast[k] || '').replace(/"/g, '&quot;')}"></label>`).join('');
-  $('castList').querySelectorAll('input').forEach(inp => inp.oninput = () => { Cast[inp.dataset.cast] = inp.value; saveCast(); });
   const muteLabel = () => ($('btnMute').textContent = Settings.muted ? '소리 꺼짐' : '소리');
   $('btnMute').onclick = () => { Settings.muted = !Settings.muted; saveSettings(); Sound.applyVolumes(); muteLabel(); }; muteLabel();
   $('setSfx').value = Settings.sfx; $('setBgm').value = Settings.bgm; $('setShake').checked = Settings.shake; $('setText').value = Settings.textSpeed;

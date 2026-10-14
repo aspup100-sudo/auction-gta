@@ -53,7 +53,8 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
 #title .mp .mpHint { margin-top:6px; font-size:12px; opacity:.6; }
 #title .nameBox { display:flex; align-items:center; gap:10px; padding:6px 14px; } #title .nameBox label { color:var(--paper); opacity:.75; font-size:13px; white-space:nowrap; } #title .nameBox input { width:150px; }
-#title .mpWrap { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:flex-start; max-width:min(1000px, 94vw); } #title .mpWrap .mp { flex:1 1 320px; max-width:480px; } #title.chOn #mpBox, #title.chOn #nameBox, #title.roomOn #chBox { display:none; } #title .mp #chStatus { margin-top:8px; min-height:1.2em; color:#fff; }
+#title .modeRow { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; } #title .modeRow .mode { display:inline-flex; flex-direction:column; align-items:center; gap:2px; min-width:180px; padding:10px 18px; font-size:16px; font-weight:700; line-height:1.2; } #title .modeRow .mode small { font-size:12px; font-weight:400; opacity:.65; } #title .modeRow .mode.sel { border-color:var(--gold); color:var(--gold); background:rgba(205,174,112,.12); } #title .modeRow .mode.sel small { opacity:.9; }
+#title .mpWrap { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:flex-start; max-width:min(1000px, 94vw); } #title .mpWrap .mp { flex:1 1 320px; max-width:480px; display:none; } #title.modeRoom #mpBox, #title.modeCh #chBox { display:block; } /* 누른 쪽만 펼친다 (사용자: 버튼으로) */ #title.chOn #mpBox, #title.chOn #nameBox, #title.roomOn #chBox, #title.chOn .modeRow, #title.roomOn .modeRow { display:none; } #title .mp #chStatus { margin-top:8px; min-height:1.2em; color:#fff; }
 #chatLog { position:absolute; left:12px; bottom:170px; max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; }
 #chatLog.in { opacity:1; } #chatLog div { background:rgba(0,0,0,.45); border-radius:6px; padding:2px 8px; margin-top:3px; } #chatLog b { color:var(--gold); margin-right:4px; } #chatLog div.me b { color:#9fe3ff; }
 #chatBar { position:absolute; left:50%; bottom:64px; transform:translate(-50%, 140%); display:flex; gap:6px; width:min(92vw, 460px); opacity:0; transition:transform .2s, opacity .2s; pointer-events:auto; }
@@ -473,13 +474,14 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div class="row"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
   <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"><button class="btn" id="btnProfile">내 캐릭터 꾸미기</button></div>
   <div class="mp" id="profileTitle" hidden><div class="mph">내 캐릭터 <small>색을 눌러 고르세요</small></div><div class="profileBox" data-profile></div></div>
+  <div class="modeRow"><button class="btn mode" data-mode="modeRoom">친구와 같이 하기<small>방 만들기</small></button><button class="btn mode" data-mode="modeCh">실시간 채널<small>코드 없이 아무나</small></button></div>
   <div class="mpWrap">
-  <div class="mp" id="mpBox"><div class="mph">친구와 같이 하기 <small>방 만들기</small></div>
+  <div class="mp" id="mpBox">
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
     <div id="mpStatus"></div>
     <div class="mpHint">방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작해요. 인터넷이 필요해요(폰 데이터도 됨).</div>
   </div>
-  <div class="mp" id="chBox"><div class="mph">실시간 채널 <small>코드 없이 아무나</small></div>
+  <div class="mp" id="chBox">
     <div class="row chRow"><button class="btn ch" data-ch="1"><b>채널 1</b><small>자본 1억</small></button><button class="btn ch" data-ch="2"><b>채널 2</b><small>자본 2억</small></button><button class="btn ch" data-ch="3"><b>채널 3</b><small>자본 3억</small></button><button class="btn ch" data-ch="4"><b>채널 4</b><small>자본 4억</small></button><button class="btn ch" data-ch="5"><b>채널 5</b><small>자본 5억</small></button></div>
     <div id="chStatus"></div>
     <div class="mpHint">실제 시간으로 계속 돌아가는 세계예요. 매각기일 당일 법원에서 입찰하면 자동 개찰되고, 돈과 순위는 채널별로 이어져요.</div>
@@ -1322,6 +1324,7 @@ const FEEL = {
   // 상호작용
   promptPop: 0.15,        // E 말풍선 튀어나오는 시간
   promptScale: 1.7,       // E 말풍선 크기 배수 (1.0→1.7: 사용자 요청으로 키움)
+  promptScaleWalker: 0.95,  // 행인에게 '말 걸기' 말풍선 크기 (장소 말풍선보다 작게)
   promptFloatPeriod: 1.0,
   npcLookRadius: 3,       // 타일
   npcBreathPeriod: 2.0,
@@ -4735,7 +4738,7 @@ function drawPrompt(t) {
   const p = Game.player; const k = Math.min(1, Game.prompt.t / FEEL.promptPop); const lift = Game.driving ? 6 : 0;
   const sc = k < 0.6 ? k / 0.6 * 1.15 : 1.15 - (k - 0.6) / 0.4 * 0.15;
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
-  const ps = FEEL.promptScale || 1; ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
+  const ps = tg.kind === 'walker' ? (FEEL.promptScaleWalker || 1) : (FEEL.promptScale || 1); ctx.save(); // 행인 '말 걸기'는 작게 (사용자: 너무 크다) ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
   ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#14161c'; ctx.lineWidth = 1;
   ctx.font = touch ? 'bold 7px "IBM Plex Sans KR", sans-serif' : 'bold 8px sans-serif'; const bw = touch ? Math.max(12, Math.ceil(ctx.measureText(word).width) + 8) : 12;
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-bw / 2, -6, bw, 11, 2) : ctx.rect(-bw / 2, -6, bw, 11); ctx.fill(); ctx.stroke();
@@ -5716,6 +5719,12 @@ const Layout = {
     const cp = $('mpCopy'); if (cp) cp.onclick = () => { try { navigator.clipboard.writeText(Net.room); Toast.show('방 코드를 복사했어요.'); } catch (e) { Toast.show('코드: ' + Net.room); } };
     if (!Net.host && Net.on && Net.mode === 'room') { $('btnStart').textContent = '방장을 기다리는 중'; $('btnStart').disabled = true; }
   };
+  // 제목 화면: '친구와 같이 하기' / '실시간 채널' 버튼 → 누른 쪽만 펼친다
+  document.querySelectorAll('#title .modeRow .mode').forEach(b => b.onclick = () => {
+    Sound.init(); const t = $('title'); const on = t.classList.contains(b.dataset.mode);
+    t.classList.remove('modeRoom', 'modeCh'); document.querySelectorAll('#title .modeRow .mode').forEach(x => x.classList.remove('sel'));
+    if (!on) { t.classList.add(b.dataset.mode); b.classList.add('sel'); } Sound.play('paper');
+  });
   const chButtons = () => document.querySelectorAll('#mpBox .btn, #chBox .btn');
   const chReset = (b) => { $('title').classList.remove('chOn'); $('btnStart').textContent = '시작하기'; chButtons().forEach(x => x.disabled = false); b.classList.remove('sel'); $('chStatus').textContent = ''; };
   document.querySelectorAll('#chBox .ch').forEach(b => b.onclick = async () => {

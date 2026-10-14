@@ -79,7 +79,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .lvHead { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; } .lvCh { font:700 16px var(--serif); color:var(--navy); } .lvPill { font-size:11px; padding:2px 8px; border-radius:10px; background:#d9cfb3; color:#5a4a2a; } .lvPill.on { background:#1f7a3a; color:#fff; } .lvSub { font-size:11px; opacity:.6; margin-left:auto; }
 .lvRank { width:100%; border-collapse:collapse; background:#fffaf0; border-radius:8px; overflow:hidden; } .lvRank td { padding:5px 8px; border-top:1px solid #efe6d2; font-size:13px; } .lvRank tr:first-child td { border-top:none; }
 .lvRank .rk { width:30px; text-align:center; } .lvRank .md { display:inline-block; min-width:20px; height:20px; line-height:20px; border-radius:50%; font-weight:700; color:#8b8f99; font-size:12px; } .lvRank .md.r1, .lvRank .md.r2, .lvRank .md.r3 { color:#fff; } .lvRank .md.r1 { background:#d4a62a; } .lvRank .md.r2 { background:#9aa3ad; } .lvRank .md.r3 { background:#b0733d; }
-.lvRank .nm small { font-size:10px; color:#8b8f99; margin-left:4px; } .lvRank tr.me td { background:#fff3cc; font-weight:700; } .lvRank tr.away td { opacity:.55; }
+.lvRank .nm small { font-size:10px; color:#8b8f99; margin-left:4px; } .lvRank tr[data-who] { cursor:pointer; } .lvRank tr.sel td { background:#efe4c4; } .lvRank tr.lvAs td { background:#f6efdc; padding:4px 10px 8px 34px; font-size:12px; border-top:none; } .lvAs .al { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-top:1px dashed #d9cfb3; } .lvAs .al:first-child { border-top:none; } .lvAs .al small { color:#8b8f99; margin-left:4px; } .lvAs .al b { white-space:nowrap; font-weight:600; } .lvAs .al i { font-style:normal; font-size:11px; margin-left:4px; } .lvAs .al i.up { color:#1f7a3a; } .lvAs .al i.down { color:#c0392b; } .lvRank tr.me td { background:#fff3cc; font-weight:700; } .lvRank tr.away td { opacity:.55; }
 .lvRank .pn { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; } .lvRank .pn.up, .lvRecent b.up { color:#1f7a3a; } .lvRank .pn.down, .lvRecent b.down { color:#c0392b; } .lvRecent b.dim { color:#8b8f99; font-weight:400; }
 .lvChips, .lvRecent { margin-top:8px; font-size:12px; } .lvChips small, .lvRecent small { display:block; color:#8b8f99; margin-bottom:3px; font-size:11px; } .chip { display:inline-block; background:#fffaf0; border:1px solid #d9cfb3; border-radius:12px; padding:2px 8px; margin:2px 4px 2px 0; }
 .lvRecent div { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-top:1px dashed #d9cfb3; } .lvRecent div:first-of-type { border-top:none; } .lvFoot { margin-top:8px; font-size:11px; opacity:.6; }
@@ -3816,6 +3816,7 @@ const Net = {
     }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
     if (m.t === 'news') { this.pushLog(p.name, String(m.text || '').slice(0, 80), false, true); Sound.play('blip', 1.1); return; }
+    if (m.t === 'asset') { p.assets = Array.isArray(m.list) ? m.list.slice(0, 8) : []; return; } // 상대 자산 요약 (순위 창에서 보여 준다)
     if (m.t === 'greet') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); if (m.to === this.myId && !m.re) this.onGreet(m, p); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
@@ -4140,7 +4141,7 @@ const Live = {
     if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) { const k = this.queue.shift(); const m = this.mine[k]; if (m && m.opened && m.phase === 'forced') this.forcedDone(m); else if (m && m.opened) this.forfeitWin(m, '기한 경과'); else this.openResult(k); }
     this.assetTick();
     this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const rb = $('rankBox'); if (!rb.hidden) { const h = this.miniBoard(); if (rb.innerHTML !== h) rb.innerHTML = h; } const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
-    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, at: this.now() }; this.save(); }
+    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, at: this.now(), as: p.assets || (this.seen[p.name] && this.seen[p.name].as) }; Net.send({ t: 'asset', list: this.assetSummary() }); this.save(); }
   },
   // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
   roll(k) {
@@ -4207,10 +4208,25 @@ const Live = {
   onBook(m) {
     if (!this.on) return;
     for (const key in m.book || {}) { const b = this.book[key] = this.book[key] || {}; for (const id in m.book[key]) if (id !== Net.myId) b[id] = m.book[key][id]; }
-    for (const n in m.seen || {}) if (n !== Net.me && (!this.seen[n] || this.seen[n].at < m.seen[n].at)) this.seen[n] = m.seen[n]; // 순위표는 서로 나눠 가진다
+    for (const n in m.seen || {}) { const cur = this.seen[n], inc = m.seen[n]; if (n !== Net.me && (!cur || cur.at < inc.at)) this.seen[n] = (!inc.as && cur && cur.as) ? Object.assign({}, inc, { as: cur.as }) : inc; } // 순위표는 서로 나눠 가진다 (자산 요약은 없으면 전 것을 유지)
   },
   bookOut() { const out = {}; for (const key in this.book) { out[key] = Object.assign({}, this.book[key]); if (this.mine[key]) out[key][Net.myId] = { name: Net.me, bid: this.mine[key].bid }; } return out; },
-  seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { cash: State.cash, pnl: this.pnl(), at: this.now() }; return o; },
+  // 남에게 보여 주는 내 자산 요약 (순위 창에서 사람을 누르면 보인다, 사용자 2026-10-14) — 작게: 이름·단계·낙찰가·월세·대출
+  assetSummary() {
+    const out = [];
+    for (const k in this.mine) { const m = this.mine[k]; if (m.done) continue; const a = m.asset || {}; const Lo = m.loanState || {}; const loan = (Lo.bank || 0) + (Lo.savings || 0);
+      const s = !m.opened ? 'bid' : m.phase === 'own' ? (a.rentOn ? 'rent' : (a.listed || a.offer) ? 'sale' : 'own') : m.phase === 'forced' ? 'forced' : m.phase === 'evict' ? 'evict' : 'pay';
+      const e = { n: m.name.split(' ').slice(0, 2).join(' '), s, b: m.bid }; if (a.rentOn) e.r = a.rent; if (loan) e.l = loan; if (a.cond) e.c = a.cond; out.push(e); if (out.length >= 8) break; }
+    return out;
+  },
+  assetsOf(name) { if (name === Net.me) return this.assetSummary(); const p = Object.values(Net.players).find(q => q.name === name && !q.gone); if (p && p.assets) return p.assets; const v = this.seen[name]; return v && v.as ? v.as : null; },
+  assetCard(name) {
+    const L = this.assetsOf(name); const f = v => fmtWon(v); const S = { bid: '입찰표 냄', pay: '잔금 전', evict: '명도 중', forced: '강제집행 중', own: '보유 중', rent: '임대 중', sale: '매도 중' };
+    if (!L) return '<div class="al"><span>자산 정보를 아직 못 받았어요</span></div>';
+    if (!L.length) return '<div class="al"><span>집 없음 · 현금만</span></div>';
+    return L.map(e => `<div class="al"><span>${esc(e.n)} <small>${S[e.s] || e.s}${e.c && this.COND[e.c] ? ' · ' + this.COND[e.c].label : ''}</small></span><b>${f(e.b)}${e.r ? ` <i class="up">월세 ${f(e.r)}</i>` : ''}${e.l ? ` <i class="down">대출 ${f(e.l)}</i>` : ''}</b></div>`).join('');
+  },
+  seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { cash: State.cash, pnl: this.pnl(), at: this.now(), as: this.assetSummary() }; return o; },
   announce() { if (!this.on) return; for (const key in this.mine) if (!this.mine[key].done) Net.send({ t: 'lbid', key, bid: this.mine[key].bid, caseNo: this.mine[key].caseId }); Net.send({ t: 'lbook', book: this.bookOut(), seen: this.seenOut() }); if (Net.transport === 'ws') Net.send({ t: 'getbook' }); }, // 중계 서버: 서버가 들고 있는 장부·순위표를 받는다
 
   /* ---- 개찰: 결정적(모두 같은 결과) ---- */
@@ -4493,7 +4509,8 @@ const Live = {
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
     const on = this.online();
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · 접속 ${1 + on.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
-      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>`).join('')}</table>
+      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name)}</td></tr>` : ''}`).join('')}</table>
+      <div class="lvFoot">사람을 누르면 가진 집·대출이 보여요</div>
       ${all.length > rows.length ? `<div class="lvFoot">외 ${all.length - rows.length}명</div>` : ''}
       <div class="lvRecent"><small>지금 접속 ${on.length + 1}명 (나 포함)${Net.host ? ' · 내가 방장' : ''}</small>${on.length ? on.map(o => `<div><span>${esc(o.name)}</span><b class="dim">${esc(o.doing)}</b></div>`).join('') : '<div><span>아직 나뿐이에요</span></div>'}</div>`;
   },
@@ -4535,12 +4552,14 @@ const AssetBox = {
 };
 /* ---- 자본 순위 창: 미니 순위판(#rankBox)을 누르면 순위만 (사용자 2026-10-14) ---- */
 const RankWin = {
-  open_: false, timer: 0,
+  open_: false, timer: 0, sel: null,
   open() { if (this.open_ || !Live.on) return; this.open_ = true; Game.formOpen = true; Sound.play('paper'); $('rankWin').classList.add('in'); this.render(); this.timer = setInterval(() => this.render(), 1000); },
-  close() { if (!this.open_) return; this.open_ = false; Game.formOpen = false; $('rankWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip'); },
+  close() { if (!this.open_) return; this.open_ = false; this.last = ''; Game.formOpen = false; $('rankWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip'); },
   render() {
-    $('rankWin').innerHTML = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">자본 순위</div>${Live.board()}<div class="lvFoot">채팅: 스페이스·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
+    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">자본 순위</div>${Live.board()}<div class="lvFoot">채팅: 스페이스·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
+    if (h === this.last) return; this.last = h; $('rankWin').innerHTML = h; // 바뀐 게 없으면 다시 그리지 않는다 (누르는 중에 행이 사라지지 않게)
     for (const id of ['rwClose', 'rwX']) { const b = $(id); if (b) b.onclick = () => this.close(); }
+    $('rankWin').querySelectorAll('tr[data-who]').forEach(tr => tr.onclick = () => { const n = tr.dataset.who; this.sel = this.sel === n ? null : n; Sound.play('click'); this.render(); });
   },
 };
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)

@@ -575,9 +575,9 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 /* 여러 명 모집 · 초대장 (v90) */
 #partyAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 #partyAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #partyAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #partyAsk b { font-size:15px; } #partyAsk span { font-size:12px; color:#6a4a1a; } #partyAsk .sm { font-size:11px; opacity:.8; } #partyAsk .bad { color:#c0392b; } #partyAsk div { display:flex; gap:6px; justify-content:center; margin-top:6px; } #partyAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; }
-#callAsk { position:fixed; left:50%; bottom:calc(150px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
-#callAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #callAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #callAsk b { font-size:15px; } #callAsk span { font-size:12px; color:#6a4a1a; } #callAsk .sm { font-size:11px; opacity:.8; } #callAsk .bad { color:#c0392b; } #callAsk div { display:flex; gap:6px; justify-content:center; margin-top:6px; } #callAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; }
-#rankWin .rwCall { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center; margin:8px 0 2px; font-size:12.5px; } #rankWin .rwCall .btn { padding:6px 10px; font-size:13px; } #rankWin .rwCall small { width:100%; text-align:center; color:#6a5a3a; }
+#pokeAsk { position:fixed; left:50%; bottom:calc(150px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
+#pokeAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #pokeAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #pokeAsk b { font-size:15px; } #pokeAsk span { font-size:12px; color:#6a4a1a; } #pokeAsk .sm { font-size:11px; opacity:.8; } #pokeAsk .bad { color:#c0392b; } #pokeAsk div { display:flex; gap:6px; justify-content:center; margin-top:6px; } #pokeAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; }
+#rankWin .rwPoke { display:flex; justify-content:center; margin:8px 0 2px; } #rankWin .rwPoke small { color:#6a5a3a; font-size:12.5px; }
 .pSeats { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 6px; } .pSeat { width:84px; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px; border-radius:10px; background:#05030f; border:2px solid #3a2a7a; } .pSeat canvas, .pCard canvas { width:44px; height:44px; image-rendering:pixelated; border-radius:6px; background:#1a1440; } .pSeat b { font-size:12px; color:#fff; } .pSeat small { font-size:10px; color:#7ae8ff; }
 .pSeat.empty { border-style:dashed; opacity:.7; } .pSeat.empty i { width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-style:normal; font-size:22px; color:#5a4aaa; border-radius:6px; background:#120c30; animation:blink 1.4s steps(1) infinite; }
 .pBoard { display:grid; grid-template-columns:repeat(var(--n, 3), 1fr); gap:8px; margin:8px 0 4px; } .pBoard.n4 { --n:4; } .pBoard.n2 { --n:2; }
@@ -904,7 +904,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
-<div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="callAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
+<div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
 <div id="assetBox" class="ovl"></div>
 <div id="rankWin" class="ovl"></div>
 <div id="dupGate" class="ovl"></div>
@@ -4253,7 +4253,8 @@ const Net = {
     if (m.t === 'rps') { Rps.onNet(m, p); return; } // 게임장 가위바위보 (v81)
     if (m.t === 'fight') { Fight.onNet(m, p); return; } // 게임장 격투 게임 (v82)
     if (m.t === 'party') { Party.onNet(m, p); return; } // 여러 명 모집 · 초대장 (v90)
-    if (m.t === 'gcall') { GameCall.onNet(m, p); return; } // 순위표에서 '게임하자' 알림 (v100)
+    if (m.t === 'cbreq' || m.t === 'cback') { ChatBack.onNet(m, p); return; } // 자리 비운 동안의 채팅 (v100)
+    if (m.t === 'poke') { Poke.onNet(m, p); return; } // 콕 찌르기 (v100)
     if (m.t === 'vip') { VipNet.onNet(m, p); return; } // 이혁진 위치·도망·말 걸기 차례 (v91)
     if (m.t === 'vduel') { VipDuel.onNet(m, p); return; } // 이혁진 룰렛: 한 번에 한 사람
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
@@ -4288,14 +4289,14 @@ const Net = {
     for (const id in this.players) { const p = this.players[id]; if (!p.gone && p.last !== undefined && performance.now() - p.last > FEEL.liveGoneSec * 1000) p.gone = true; } // 위치 신호가 오래 끊기면 나간 것으로 (연결 종료 신호가 없는 경우)
     const now = new Set(this.names()); const was = this.roster || new Set();
     if (this.roster && Game.scene !== 'title') {
-      for (const n of now) if (!was.has(n)) { this.pushLog(n, '님이 들어왔어요', false, true); Sound.play('blip', 1.3); } // 입장·퇴장은 채팅창에 (사용자 2026-10-15)
-      for (const n of was) if (!now.has(n)) this.pushLog(n, '님이 나갔어요', false, true);
+      for (const n of now) if (!was.has(n)) { this.pushLog(n, '님이 들어왔어요', false, true, true); Sound.play('blip', 1.3); } // 입장·퇴장은 채팅창에 (사용자 2026-10-15)
+      for (const n of was) if (!now.has(n)) this.pushLog(n, '님이 나갔어요', false, true, true);
     }
     this.roster = now;
   },
   tick(dt) {
     if (!this.on) return;
-    this.rosterTick(dt);
+    this.rosterTick(dt); ChatBack.tick(dt);
     // 방장: 심장박동. 손님: 방장 소식이 FEEL.hostDeadSec 동안 없으면(폰이 잠들어 멈춘 방장 등) 끊긴 것으로 보고 다시 잇는다 → 자리가 비면 내가 방장
     if (this.transport === 'peer' && this.status === 'open') {
       if (this.host) { this.pingT = (this.pingT || 0) - dt; if (this.pingT <= 0) { this.pingT = FEEL.netPingSec; this.send({ t: 'ping' }); } }
@@ -4336,8 +4337,8 @@ const Net = {
     this.myBubble = { text, t: FEEL.chatBubbleTime }; this.pushLog(this.me, text, true); this.send({ t: 'chat', text }); Sound.play('blip', 1.6);
   },
   // 왼쪽 위 피드: 채팅과 플레이어 소식(낙찰·잔금·명도·임대·매도)을 한 상자에 (사용자 2026-10-14 '플레이어 현황이랑 채팅 하나로 묶자')
-  pushLog(name, text, me, news) {
-    const e = { name, text, me, news: !!news, money: news === 'money' ? 1 : 0, minus: news === 'money' && /−/.test(text) ? 1 : 0, at: Date.now() };
+  pushLog(name, text, me, news, local) {
+    const e = { name, text, me, news: !!news, money: news === 'money' ? 1 : 0, minus: news === 'money' && /−/.test(text) ? 1 : 0, at: Date.now() }; if (local) e.local = 1; // local: 나한테만 의미 있는 줄 (입장·퇴장·콕) — 놓친 채팅으로 넘겨주지 않는다
     this.log.push(e); if (this.log.length > 5) this.log.shift();
     const h = this.hist(); h.push(e); if (h.length > 300) h.splice(0, h.length - 300); this.histSave();
     const el = $('chatLines'); if (!el) return;
@@ -4584,6 +4585,74 @@ const Ride = {
     if (p && p.cx !== undefined) { const a = (p.ca || 0) + Math.PI / 2; pl.x = p.cx + Math.cos(a) * 14; pl.y = p.cy + Math.sin(a) * 14; }
     const z = Game.zone; if (z && z.at(Math.floor(pl.x / TILE), Math.floor(pl.y / TILE)) === T.BLD && p) { pl.x = p.cx; pl.y = p.cy; }
     Sound.play('carDoor'); Toast.show(byMe ? '내렸어요.' : `${p ? p.name : '운전자'}이(가) 차에서 내려서 같이 내렸어요.`);
+  },
+};
+
+/* ---- 자리 비운 동안의 채팅 (사용자 2026-10-15 '내가 나간 동안 채팅은 기록에 안 남아?') ----
+ * 접속해 있을 때 5초마다 '마지막으로 본 때'를 저장해 두고, 다시 들어와 다른 사람이 보이면 그중 한 명에게 그 뒤 기록을 달라고 한다.
+ * 받은 쪽은 자기 지난 기록(채팅·소식, 내 돈·입장·콕은 빼고 최근 120줄)을 보내 주고, 나는 겹치지 않는 줄만 시간순으로 끼워 넣는다.
+ * 그동안 아무도 접속해 있지 않았으면 받아 올 곳이 없다. {t:'cbreq', to, since} → {t:'cback', to, lines:[{n,x,a,w}]} */
+const ChatBack = {
+  seenT: 0, since: undefined, asked: false, askT: 0,
+  key() { return 'chatSeen' + Net.histKey(); },
+  tick(dt) {
+    const live = Net.status === 'open' && Game.scene !== 'title' && !!Game.player;
+    if (!live) { if (this.wasLive) { this.wasLive = false; this.since = Store.get(this.key(), 0) || 0; this.asked = false; this.askT = 0; this.tries = 0; } return; } this.wasLive = true; // 끊겼다 다시 이어지면 끊기기 직전부터 다시 받는다
+    if (this.since === undefined || this.sinceKey !== this.key()) { this.sinceKey = this.key(); this.since = Store.get(this.key(), 0) || 0; this.asked = false; }
+    this.seenT -= dt; if (this.seenT <= 0) { this.seenT = 5; Store.set(this.key(), Date.now()); }
+    if (this.asked || !this.since) return;
+    // 나와 같은 이름(방금 끊긴 내 예전 연결)은 빼고, 대답이 없으면 3초 뒤 다음 사람에게 다시 묻는다
+    const ids = Object.keys(Net.players).filter(id => Net.players[id] && !Net.players[id].gone && Net.players[id].name !== Net.me).sort((x, y) => (Net.players[y].last || 0) - (Net.players[x].last || 0)); if (!ids.length) return;
+    this.askT += dt; if (this.askT < (this.tries ? 3 : 2)) return; this.askT = 0;
+    const id = ids[(this.tries || 0) % ids.length]; this.tries = (this.tries || 0) + 1; if (this.tries > Math.min(4, ids.length + 1)) { this.asked = true; return; }
+    Net.send({ t: 'cbreq', to: id, since: this.since });
+  },
+  onNet(m, p) {
+    if (m.to !== Net.myId) return;
+    if (m.t === 'cbreq') {
+      const since = +m.since || 0, now = Date.now();
+      const lines = Net.hist().filter(l => l.at > since && l.at <= now && !l.money && !l.local).slice(-120).map(l => ({ n: l.me ? Net.me : l.name, x: String(l.text).slice(0, 120), a: l.at, w: l.news ? 1 : 0 }));
+      Net.send({ t: 'cback', to: m.from, lines }); // 빈 목록이어도 보낸다 (그만 물어보게)
+      return;
+    }
+    this.asked = true; this.tries = 0;
+    const since = this.since || 0, h = Net.hist(), have = new Set(h.map(l => l.at + '|' + l.name + '|' + l.text));
+    const got = (Array.isArray(m.lines) ? m.lines : []).filter(l => l && +l.a > since && +l.a <= Date.now() && l.n && l.x).map(l => ({ name: String(l.n).slice(0, 24), text: String(l.x).slice(0, 120), me: l.n === Net.me, news: !!l.w, money: 0, minus: 0, at: +l.a, back: 1 })).filter(e => !have.has(e.at + '|' + e.name + '|' + e.text));
+    if (!got.length) return;
+    h.push(...got); h.sort((a, b) => a.at - b.at); if (h.length > 300) h.splice(0, h.length - 300); Net.histSave();
+    Net.pushLog('채팅', `자리 비운 동안 ${got.length}줄이 있었어요 · 피드를 누르면 지난 기록에서 볼 수 있어요`, false, true, true);
+  },
+};
+/* ---- 콕 찌르기 (사용자 2026-10-15 '페이스북 콕 찌르기 같은 거') ----
+ * 순위표에서 접속한 친구 이름을 누르고 '👉 콕 찌르기'. 받은 쪽에는 카드가 잠깐 뜨고 바로 되찌를 수 있다. 돈·이동은 없다. {t:'poke', to} */
+const Poke = {
+  sent: {}, from: null,
+  send(id) {
+    const p = Net.players[id]; if (!Net.on || !p || p.gone) return;
+    if (Date.now() - (this.sent[id] || 0) < 10000) return Toast.show(`${p.name}님은 방금 찔렀어요. 조금 있다 다시 찔러 주세요.`);
+    this.sent[id] = Date.now(); Net.send({ t: 'poke', to: id }); Sound.play('pop'); this.askPerm(); // 누를 때 한 번 알림 허용을 묻는다 (사용자 동작이 있어야 물을 수 있다)
+    Net.pushLog(Net.me, `${p.name}님을 콕 찔렀어요 👉`, true, true, true);
+  },
+  onNet(m, p) {
+    if (m.to !== Net.myId) return; const name = (p && p.name) || '친구';
+    Net.pushLog(name, '님이 나를 콕 찔렀어요 👉', false, true, true); Sound.play('ding'); this.notify(name);
+    this.from = { id: m.from, name }; this.show();
+  },
+  // 게임을 켜 둔 채 다른 앱·창을 보고 있으면 기기 알림으로 (사용자 '게임 밖에 나가 있을 때 알림'). 완전히 끈 상태는 푸시 서버가 있어야 해서 아직 안 된다.
+  askPerm() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {} },
+  notify(name) {
+    try {
+      if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
+      const opt = { body: `${name}님이 콕 찔렀어요`, tag: 'poke', icon: 'icons/icon-192.png' };
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification('👉 경매 GTA', opt)).catch(() => {}); else new Notification('👉 경매 GTA', opt);
+    } catch (e) {}
+  },
+  show() {
+    const el = $('pokeAsk'), f = this.from; clearTimeout(this.t); if (!f) { el.classList.remove('in'); return; }
+    el.innerHTML = `<i class="tk">👉 콕!</i><b>${esc(f.name)}님이 콕 찔렀어요</b><div><button class="btn gold" id="pkBack">👉 되찌르기</button><button class="btn" id="pkX">닫기</button></div>`;
+    el.classList.add('in');
+    $('pkBack').onclick = () => { this.send(f.id); this.from = null; this.show(); }; $('pkX').onclick = () => { this.askPerm(); this.from = null; this.show(); };
+    this.t = setTimeout(() => { if (this.from === f) { this.from = null; this.show(); } }, 12000);
   },
 };
 
@@ -5216,20 +5285,19 @@ const AssetBox = {
 /* ---- 자본 순위 창: 미니 순위판(#rankBox)을 누르면 순위만 (사용자 2026-10-14) ---- */
 const RankWin = {
   open_: false, timer: 0, sel: null,
-  // 고른 줄이 지금 접속한 친구면 '게임하자' 알림 버튼 (v100)
-  callBar() {
-    if (!this.sel || this.sel === Net.me) return Net.on && Object.values(Net.players).some(p => p && !p.gone) ? '<div class="rwCall"><small>친구 이름을 누르면 같이 게임하자고 알림을 보낼 수 있어요.</small></div>' : '';
+  // 고른 줄이 접속한 친구면 콕 찌르기 (v100, 사용자 '페이스북 콕 찌르기 같은 거')
+  pokeBar() {
+    if (!this.sel || this.sel === Net.me) return '';
     const id = Object.keys(Net.players).find(k => Net.players[k] && !Net.players[k].gone && Net.players[k].name === this.sel);
-    if (!id) return `<div class="rwCall"><small>${esc(this.sel)}님은 지금 접속해 있지 않아요.</small></div>`;
-    return `<div class="rwCall"><b>${esc(this.sel)}</b>님에게 <button class="btn gold" data-call="${id}|arcade">🕹 게임장 가자</button><button class="btn gold" data-call="${id}|casino">🎰 카지노 가자</button></div>`;
+    return `<div class="rwPoke">${id ? `<button class="btn gold" data-poke="${id}">👉 ${esc(this.sel)}님 콕 찌르기</button>` : `<small>${esc(this.sel)}님은 지금 접속해 있지 않아서 찌를 수 없어요.</small>`}</div>`;
   },
   open() { if (this.open_ || !Live.on) return; this.open_ = true; Game.formOpen = true; Sound.play('paper'); $('rankWin').classList.add('in'); this.render(); this.timer = setInterval(() => this.render(), 1000); },
   close() { if (!this.open_) return; this.open_ = false; this.last = ''; Game.formOpen = false; $('rankWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip'); },
   render() {
-    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">자본 순위</div>${Live.board()}${this.callBar()}<div class="lvFoot">채팅: Enter·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
+    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">자본 순위</div>${Live.board()}${this.pokeBar()}<div class="lvFoot">채팅: Enter·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
     if (h === this.last) return; this.last = h; $('rankWin').innerHTML = h; // 바뀐 게 없으면 다시 그리지 않는다 (누르는 중에 행이 사라지지 않게)
     for (const id of ['rwClose', 'rwX']) { const b = $(id); if (b) b.onclick = () => this.close(); }
-    $('rankWin').querySelectorAll('[data-call]').forEach(b => (b.onclick = () => { const [id, place] = b.dataset.call.split('|'); GameCall.send(id, place); }));
+    $('rankWin').querySelectorAll('[data-poke]').forEach(b => (b.onclick = () => Poke.send(b.dataset.poke)));
     $('rankWin').querySelectorAll('tr[data-who]').forEach(tr => tr.onclick = () => { const n = tr.dataset.who; this.sel = this.sel === n ? null : n; Sound.play('click'); this.render(); });
   },
 };
@@ -8759,53 +8827,11 @@ const PARTY_GAMES = { rps: { name: '가위바위보', kind: 'arcade', sizes: [3,
 async function mgGoTo(id) {
   if (Tetris.open_) Tetris.close(); // 초대를 받으면 테트리스는 접고 간다
   if (!id || (Game.scene === 'room' && Game.room && Game.room.place.id === id)) return true;
-  let pl = Game.zone && Game.zone.places.find(x => x.id === id);
-  if (!pl && GAME_PLACES[id] && !Game.busy && Game.zone && !(typeof Ride !== 'undefined' && Ride.with)) { // 다른 동네에 있으면 건대입구로 바로 데려간다 (v100 게임하자 알림)
-    if (Game.scene === 'room') await exitPlace();
-    Game.busy = true; await iris(true); await arriveZone(GAME_PLACES[id].zone, currentGu()); exitCar(); Game.car.vx = Game.car.vy = 0; await iris(false); Game.trans = null; Game.busy = false;
-    pl = Game.zone.places.find(x => x.id === id);
-  }
-  if (!pl || Game.busy || (typeof Ride !== 'undefined' && Ride.with)) return false;
+  const pl = Game.zone && Game.zone.places.find(x => x.id === id); if (!pl || Game.busy || (typeof Ride !== 'undefined' && Ride.with)) return false;
   const drove = Game.driving; if (drove) exitCar();
   await enterPlace(pl); const ok = Game.scene === 'room' && Game.room && Game.room.place.id === id;
   if (ok) Toast.show(`${pl.name}에 왔어요.${drove ? ' 타고 있던 차는 세워 둔 자리에 그대로 있어요.' : ''}`); return ok;
 }
-const GAME_PLACES = { arcade: { zone: 'gwangjin', name: '건대 게임장', what: '가위바위보·격투·테트리스' }, casino: { zone: 'gwangjin', name: '건대 카지노', what: '룰렛·홀짝·블랙잭' } };
-/* ---- 게임하자 알림 (사용자 2026-10-15 '친구 랭킹 목록에서 친구한테 게임하자고 알림 보낼 수 있게') ----
- * 순위표에서 접속한 친구를 누르면 '게임장 가자'·'카지노 가자'. 받은 쪽은 카드에서 가기 → 어느 동네에 있든 그 가게로 바로 간다.
- * 보낸 쪽에는 친구가 오는지 알려 주고 '나도 가기'를 띄운다. {t:'gcall', k:'ask'|'ok'|'no', to, gid, place} */
-const GameCall = {
-  ask: null, back: null, sent: {},
-  send(id, place) {
-    const p = Net.players[id], G = GAME_PLACES[place]; if (!Net.on || !p || p.gone || !G) return;
-    if (Date.now() - (this.sent[id] || 0) < 15000) return Toast.show(`${p.name}님에게 방금 보냈어요. 조금 있다 다시 보내 주세요.`);
-    this.sent[id] = Date.now(); const gid = Net.myId + ':' + Date.now().toString(36);
-    Net.send({ t: 'gcall', k: 'ask', to: id, gid, place }); Sound.play('blip'); Toast.show(`${p.name}님에게 ${G.name} 가자고 알림을 보냈어요.`);
-  },
-  reply(a, k) { Net.send({ t: 'gcall', k, to: a.from, gid: a.gid, place: a.place }); },
-  onNet(m, p) {
-    if (m.to !== Net.myId || !GAME_PLACES[m.place]) return; const name = (p && p.name) || '친구', G = GAME_PLACES[m.place];
-    if (m.k === 'ask') { this.ask = { from: m.from, gid: m.gid, place: m.place, name }; Sound.play('ding'); return this.show(); }
-    if (m.k === 'ok') { this.back = { from: m.from, place: m.place, name }; Sound.play('ding'); return this.show(); }
-    if (m.k === 'no') Toast.show(`${name}님이 지금은 못 간대요.`);
-  },
-  show() {
-    const el = $('callAsk'), a = this.ask, b = !a && this.back; clearTimeout(this.t);
-    if (!a && !b) { el.classList.remove('in'); return; }
-    const G = GAME_PLACES[(a || b).place], here = Game.scene === 'room' && Game.room && Game.room.place.id === (a || b).place;
-    el.innerHTML = a ? `<i class="tk">🎮 게임하자</i><b>${esc(a.name)}님이 ${G.name}에서 같이 놀재요</b><span>${G.what}</span>${here ? '' : '<span class="sm">가기를 누르면 어디 있든 바로 가요.</span>'}<div><button class="btn gold" id="gcYes">가기</button><button class="btn" id="gcNo">나중에</button></div>`
-      : `<i class="tk">🎮 게임하자</i><b>${esc(b.name)}님이 ${G.name}으로 와요</b>${here ? '<span>여기서 기다리면 돼요.</span>' : ''}<div>${here ? '' : '<button class="btn gold" id="gcGo">나도 가기</button>'}<button class="btn" id="gcClose">닫기</button></div>`;
-    el.classList.add('in');
-    if (a) { $('gcYes').onclick = () => this.accept(); $('gcNo').onclick = () => { this.reply(a, 'no'); this.ask = null; this.show(); }; }
-    else { if ($('gcGo')) $('gcGo').onclick = async () => { this.back = null; this.show(); if (!(await mgGoTo(b.place))) Toast.show('지금은 갈 수 없어요. 하던 걸 먼저 끝내 주세요.'); }; $('gcClose').onclick = () => { this.back = null; this.show(); }; }
-    const cur = a || b; this.t = setTimeout(() => { if (this.ask === cur) { this.reply(cur, 'no'); this.ask = null; } if (this.back === cur) this.back = null; this.show(); }, 30000);
-  },
-  async accept() {
-    const a = this.ask; if (!a) return; if (Game.busy || Game.formOpen) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.');
-    this.ask = null; this.show();
-    if (await mgGoTo(a.place)) this.reply(a, 'ok'); else { this.reply(a, 'no'); Toast.show('지금은 갈 수 없어요.'); }
-  },
-};
 const Party = {
   p: null, inv: null, pend: null, timer: null,
   on(game) { return !!this.p && (!game || this.p.game === game); },

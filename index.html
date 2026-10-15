@@ -91,7 +91,8 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 /* HUD */
 #hud { position:fixed; top:0; left:0; right:0; height:var(--vh, 100%); pointer-events:none; opacity:0; transition:opacity .3s; z-index:10; padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0); }
 #hud.on { opacity:1; }
-#minimap { position:absolute; top:12px; right:16px; width:180px; height:130px; pointer-events:auto; cursor:pointer; border-radius:8px; box-shadow:0 3px 0 rgba(0,0,0,.45); }
+#minimap { display:none !important; } /* v76 (사용자 2026-10-15 '컴터도 왼쪽 밑 맵 없애고 오른쪽 위를 왼쪽 밑 맵처럼'): 서울 축소 지도는 안 쓰고, 둥근 동네 지도가 오른쪽 위 (누르면 동네 지도 / 서울 전체) */
+#minimapOld { position:absolute; top:12px; right:16px; width:180px; height:130px; pointer-events:auto; cursor:pointer; border-radius:8px; box-shadow:0 3px 0 rgba(0,0,0,.45); }
 #hudCash { position:absolute; top:152px; right:16px; font:700 clamp(20px, 3.2vw, 30px)/1 var(--ui); color:#ffd84a; letter-spacing:1px; -webkit-text-stroke:1.5px #000; paint-order:stroke; text-shadow:0 2px 0 #000; transition:color .2s; }
 #hudCash.down { color:#ff6a50; }
 #hudTime { position:absolute; top:188px; right:16px; font:600 15px var(--ui); color:#fff; text-shadow:0 1px 0 #000, 0 0 4px #000; }
@@ -104,7 +105,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 @keyframes buzz { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-2px)} 40%{transform:translateX(2px)} 60%{transform:translateX(-1px)} }
 #pagerText { min-height:20px; } #pagerText .pl { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; animation:lcd .3s steps(4); }
 @keyframes lcd { from{opacity:0} to{opacity:1} }
-#radar { position:absolute; left:14px; bottom:14px; width:132px; height:132px; border-radius:50%; box-shadow:0 4px 0 rgba(0,0,0,.5); pointer-events:auto; cursor:pointer; }
+#radar { position:absolute; top:12px; right:16px; width:132px; height:132px; border-radius:50%; box-shadow:0 4px 0 rgba(0,0,0,.5); pointer-events:auto; cursor:pointer; }
 #zoneMap { position:fixed; inset:0; z-index:27; touch-action:none; overflow:hidden; background:rgba(8,9,12,.6); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; flex-direction:column; gap:8px; }
 #zoneMap.in { display:flex; }
 #zoneMap .zh { color:#f3e9c8; font-weight:700; font-size:16px; text-shadow:0 2px 0 #000; }
@@ -186,7 +187,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #menu.in { transform:translate(-50%, -50%); opacity:1; pointer-events:auto; }
 #menu label { display:flex; justify-content:space-between; align-items:center; margin:10px 0; gap:10px; }
 
-#hudSpeed { position:absolute; left:150px; bottom:20px; font:700 22px var(--ui); color:#fff; -webkit-text-stroke:1px #000; paint-order:stroke; text-shadow:0 2px 0 #000; }
+#hudSpeed { position:absolute; left:16px; bottom:20px; font:700 22px var(--ui); color:#fff; -webkit-text-stroke:1px #000; paint-order:stroke; text-shadow:0 2px 0 #000; }
 .touchOn #hudSpeed { left:auto; right:120px; bottom:140px; }
 .propCard { position:fixed; top:250px; right:16px; width:min(320px, calc(100% - 32px)); background:#fff; color:#14213a; border-top:6px solid var(--navy); border-radius:8px; padding:12px 14px; z-index:25; transform:translateX(calc(100% + 30px)); transition:transform .25s ease-out; box-shadow:0 8px 24px rgba(0,0,0,.4); pointer-events:auto; overflow-x:hidden; overflow-y:auto; max-height:calc(100vh - 250px - 24px); overscroll-behavior:contain; }
 .propCard.in { transform:none; }
@@ -273,7 +274,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .layoutEdit .dragging { outline-color:#fff; filter:brightness(1.3); }
 .touchOn #touch { display:block; }
 .touchOn #btnChat { display:none !important; } /* 폰은 터치 채팅 버튼 */
-.touchOn #radar { bottom:auto; top:110px; left:12px; width:96px; height:96px; }
+.touchOn #radar { top:12px; right:16px; width:120px; height:120px; }
 #stick { position:absolute; left:24px; bottom:24px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.2); pointer-events:auto; }
 #knob { position:absolute; left:35px; top:35px; width:50px; height:50px; border-radius:50%; background:rgba(205,174,112,.6); }
 #tAct { position:absolute; right:24px; bottom:36px; width:84px; height:84px; border-radius:50%; background:rgba(205,174,112,.75); color:#1a1408; font-weight:700; border:none; pointer-events:auto; }
@@ -545,7 +546,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="balanceDue"></div>
   <div id="rankBox" hidden></div>
   <div class="hudBtns" id="hudBtns"><button class="btn" id="btnChat" hidden title="스페이스 / T">채팅</button><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
-  <canvas id="radar" width="132" height="132" title="구역 지도 (N)"></canvas>
+  <canvas id="radar" width="132" height="132" title="지도 (N · 서울 전체는 M)"></canvas>
   <div id="hudSpeed"></div>
   <div id="roadSign"></div>
   <div class="osm">© OpenStreetMap contributors</div>
@@ -592,8 +593,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>핸드브레이크</th><td>Space</td><td class="tc">HB 버튼</td></tr>
       <tr><th>채팅 (같이 하기·채널)</th><td>스페이스(걸을 때) 또는 T, 위쪽 '채팅' 버튼 · Enter 보내기 · Esc 닫기</td><td class="tc">채팅 버튼</td></tr>
       <tr><th>내 차</th><td colspan="2">혼자: 사무실 문 앞 · 같이 하기·채널: 사무실 뒤 공용 주차장에 사람마다 한 칸</td></tr>
-      <tr><th>서울 지도</th><td>M (차 근처에서 이동 확정)</td><td class="tc">우상단 미니맵</td></tr>
-      <tr><th>구역 지도(장소 위치)</th><td>N</td><td class="tc">왼쪽 레이더 탭</td></tr>
+      <tr><th>서울 지도</th><td>M (차 근처에서 이동 확정)</td><td class="tc">오른쪽 위 둥근 지도 → 서울 전체</td></tr>
+      <tr><th>구역 지도(장소 위치)</th><td>N 또는 오른쪽 위 둥근 지도</td><td class="tc">오른쪽 위 둥근 지도</td></tr>
       <tr><th>옆 구로 이동</th><td colspan="2">큰길 따라 구역 끝까지 운전 (지도 M도 가능)</td></tr>
       <tr><th>내비게이션</th><td colspan="2">차에 타면 자동 안내 (목표: 노란 화살표 · 매각기일엔 법원)</td></tr>
       <tr><th>메모장</th><td colspan="2">현장 안 메모장(E) · 물건 카드의 메모장 버튼 · 수첩 메모 탭</td></tr>

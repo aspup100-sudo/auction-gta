@@ -452,6 +452,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .short #assetBox, .short #rankWin { max-height:calc(100% - 12px); } .short #assetBox .rcpt, .short #rankWin .rcpt { padding:12px 14px 10px; } .short #assetBox .rcHead, .short #rankWin .rcHead { font-size:18px; } .short #assetBox .ah { margin:6px 0; padding:7px 10px; } .short #assetBox .lvRecent { max-height:120px; }
 #shop { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(640px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #shop.in { transform:translate(-50%, -50%); } #shop .rcpt { width:100%; } #shop .rcHead small { display:block; font:600 13px var(--ui); color:#6a5a3a; margin-top:2px; }
 .shTabs { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; } .shTabs .btn.sel { background:var(--gold); color:#1a1408; }
+#shBig { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.45); z-index:5; } #shBig.in { display:flex; } #shBig .sbIn { background:#fffdf7; border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; align-items:center; gap:6px; max-width:calc(100% - 24px); } #shBig canvas { width:320px; height:208px; max-width:100%; image-rendering:pixelated; border-radius:8px; } #shBig b { color:#2a2016; font-size:15px; } #shBig small { color:#6a5a3a; font-size:12px; min-height:1em; } .shItem canvas { cursor:pointer; } #shop { position:relative; }
 #shop .shTag { display:flex; gap:6px; align-items:center; justify-content:center; margin:0 0 8px; font-weight:700; font-size:13px; } #shop .shTag input { width:160px; padding:5px 8px; border:1px solid #c8b88f; border-radius:6px; font:14px var(--ui); } .shGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; } .shItem { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; text-align:center; } .shItem.own { border-color:#8fb58f; } .shItem.on { border-color:var(--gold); background:#fff8e3; } .shItem canvas { width:72px; height:48px; image-rendering:pixelated; background:#e2d6bb; border-radius:6px; object-fit:contain; } .shItem b { font-size:12.5px; } .shItem span { font-size:11.5px; color:#6a5a3a; } .shItem .btn { font-size:12px; padding:4px 10px; } .shNote { font-size:12px; color:#555; margin:10px 0 0; }
 .short #shop { max-height:calc(100% - 8px); } .short #shop .rcpt { padding:10px 12px 8px; } .short .shGrid { grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:5px; } .short .shItem { padding:5px 4px; } .short .shItem canvas { width:54px; height:36px; }
 #installGuide .rcpt { width:100%; } #installGuide .ig { margin:10px 0; padding:10px 12px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; } #installGuide .ig.here { border-color:var(--gold); background:#fff8e3; } #installGuide .ig h3 { margin:0 0 6px; font-size:15px; display:flex; gap:8px; align-items:center; } #installGuide .ig h3 .tagHere { font-size:11px; color:#fff; background:#b8860b; border-radius:10px; padding:1px 8px; font-weight:400; } #installGuide .ig ol { margin:0; padding-left:20px; line-height:1.55; font-size:14px; } #installGuide .ig p { margin:6px 0 0; font-size:12.5px; color:#555; } #installGuide .igLink { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; font-size:13px; } #installGuide .igLink code { background:#0d0f14; color:var(--gold); padding:3px 8px; border-radius:6px; user-select:all; }
@@ -1886,7 +1887,7 @@ const Profile = {
   redraw: null, // boot.js가 프로필 편집기 다시 그리기를 넣는다 (상점에서 입으면 메뉴 편집기도 바뀌게)
   apply() { Sprites.setPal('player', this.pal(this.get())); },
   // 프로필(머리·피부·옷·바지 색 + 상점에서 산 outfit)을 스프라이트 팔레트로. 친구 것도 같은 식으로 그린다 (pos에 프로필을 그대로 실어 보냄)
-  pal(p) { p = p || {}; const base = Sprites.PLAYER_DEFAULT; const o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit]; const shirt = p.shirt || base.shirt; return { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: o ? o.pal.shirt : shirt, shirt2: o ? o.pal.shirt2 : shade(shirt, -0.18), pants: o ? o.pal.pants : (p.pants || base.pants), tie: o && o.pal.tie ? o.pal.tie : undefined }; },
+  pal(p) { p = p || {}; const base = Sprites.PLAYER_DEFAULT; const o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit]; const shirt = p.shirt || base.shirt; return { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: o ? o.pal.shirt : shirt, shirt2: o ? o.pal.shirt2 : shade(shirt, -0.18), pants: o ? o.pal.pants : (p.pants || base.pants), tie: o && o.pal.tie ? o.pal.tie : undefined, dress: o && o.pal.dress || undefined, veil: o && o.pal.veil || undefined, tux: o && o.pal.tux || undefined }; },
 };
 function shade(hex, k) { const n = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * (1 + k)))); return '#' + [f(n >> 16), f((n >> 8) & 255), f(n & 255)].map(v => v.toString(16).padStart(2, '0')).join(''); }
 
@@ -2056,6 +2057,9 @@ const Sprites = (() => {
         p('rgba(220,120,110,.55)', 6, 6, 1, 1); p('rgba(220,120,110,.55)', 9, 6, 1, 1);
       } else { p(pal.hair, 5, 3, 6, 4); p(pal.hair, 4, 4, 1, 2); p(pal.hair, 11, 4, 1, 2); }
       if (pal.longHair) { p(pal.hair, 4, 5, 1, 4); p(pal.hair, 11, 5, 1, 4); if (dir === 3) p(pal.hair, 5, 7, 6, 2); }
+      if (pal.dress) { p(pal.dress, 4, 11, 8, 4); p(pal.dress, 3, 13, 10, 2); p('#e4e4ee', 4, 12, 8, 1); } // 웨딩드레스 치마 (v107)
+      if (pal.tux && dir === 0) { p('#f4f4f4', 7, 8, 2, 3); p('#15151c', 6, 8, 4, 1); p('#15151c', 7, 9, 2, 1); } // 턱시도: 흰 셔츠 + 나비넥타이
+      if (pal.veil) { const V = 'rgba(255,255,255,.85)'; p(V, 4, 0, 8, 1); p(V, 3, 1, 1, 9); p(V, 12, 1, 1, 9); if (dir === 3) p(V, 4, 3, 8, 6); }
       if (pal.perm) { p(pal.hair, 4, 1, 8, 1); p(pal.hair, 3, 2, 1, 3); p(pal.hair, 12, 2, 1, 3); }
       if (pal.hardhat) { p(pal.hardhat, 4, 0, 8, 3); p(pal.hardhat, 3, 2, 10, 1); }
     } else {
@@ -2073,6 +2077,8 @@ const Sprites = (() => {
       q(pal.hair, 5, 1, 6, 2); q(pal.hair, 8, 3, 3, 3); q(pal.hair, 5, 3, 4, 1); q(pal.hair, 10, 2, 1, 4);
       q('#1b1420', 6, 5, 1, 1); q(pal.skin, 4, 5, 1, 1);
       if (pal.longHair) q(pal.hair, 9, 6, 2, 3);
+      if (pal.dress) { q(pal.dress, 5, 11, 6, 4); q(pal.dress, 4, 13, 8, 2); }
+      if (pal.veil) { q('rgba(255,255,255,.85)', 9, 0, 3, 1); q('rgba(255,255,255,.85)', 10, 1, 2, 9); }
       if (pal.perm) { q(pal.hair, 4, 1, 8, 1); q(pal.hair, 11, 2, 1, 3); }
       if (pal.hardhat) { q(pal.hardhat, 4, 0, 8, 3); q(pal.hardhat, 3, 2, 10, 1); }
     }
@@ -2856,7 +2862,7 @@ function updateTraffic(dt, z) {
   });
 }
 function drawCarSprite(c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
-  if (col && typeof col === 'object' && col.ride) return drawRide(c, x, y, a, col.ride, speed, col.rider, col.tag); // 재치 탈것 스킨
+  if (col && typeof col === 'object' && col.ride) return drawRide(c, x, y, a, col.ride, col.spd || 0, col.rider, col.tag); // spd: 실제 속력 (주차·미리보기는 0) // 재치 탈것 스킨
   let stripe = null; if (col && typeof col === 'object') { stripe = col.stripe || null; col = col.col; } // 상점 차 스킨: { col, stripe }
   c.save(); c.translate(x, y); c.rotate(a);
   c.fillStyle = 'rgba(0,0,0,.32)'; c.fillRect(-len / 2 + 2, -wid / 2 + 2, len, wid);
@@ -2883,9 +2889,37 @@ function drawSignals(c, z, t) {
 /* ---- 재치 있는 탈것 스킨 (사용자 2026-10-15 '제트기, 자전거, 친구 등에 업히기, 오토바이, 스쿠터, 외발자전거, 의자, 카트, 늑구(늑대), 부캉이(상어)… 재치 있을수록 비싸게') ----
  * 상점 차 스킨에 ride가 있으면 차 대신 이걸 그린다. 모양만 바뀌고 속도·부딪힘은 차와 같다.
  * 위에서 본 모습, 앞이 +x. rider {hair, shirt}가 있으면 위에 탄 내 머리·어깨를 그린다 (주차해 둔 건 빈 채로). */
+// 탈것마다 특징 (사용자 2026-10-15 승인 목록): 달릴 때 / 타고 멈췄을 때. 앞쪽이 +x. 소리 말(삐-, 뿌우 등)은 돌려준다.
+function rideFx(c, ride, mv, still, t, speed, r, circ, rd) {
+  const P = rd ? rd.pants || '#2b3a6e' : '#2b3a6e', SK = rd ? rd.skin || '#f0c8a0' : '#f0c8a0', A = (al, f) => { c.globalAlpha = al; f(); c.globalAlpha = 1; }, every = (n, d) => t % n < d;
+  switch (ride) {
+    case 'bike': if (mv && rd) { const ph = Math.sin(t * 14) * 1.5; r(-1 + ph, -4, 2, 1, P); r(-1 - ph, 3, 2, 1, P); } else if (still) { r(-1, 4, 2, 2, P); r(-1, 6, 2, 1, '#222'); } return '';
+    case 'scooter': if (mv && rd) { const k = (t * 1.6) % 1; if (k < 0.4) r(-7 - k * 8, 2, 3, 1.5, P); } else if (still) { r(3, -3, 1.5, 6, SK); } return '';
+    case 'moto': if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 4 + k / 3) % 1; A(0.5 * (1 - ph), () => circ(-14 - ph * 8, 2, 1 + ph * 2, '#b8b8b8')); } return '';
+    case 'uni': if (still) { const fl = Math.sin(t * 10) * 2; r(-1 + fl, -10, 1.5, 4, rd.shirt); r(-1 - fl, 6, 1.5, 4, rd.shirt); } return '';
+    case 'bus': if (mv) { if (every(1, 0.6)) { r(13, -3, 1, 6, '#ff9a20'); } } else if (still) { r(4, 5, 5, 1.5, '#2a2a2a'); r(-8, 5, 4, 1.5, '#2a2a2a'); return every(3, 0.8) ? '삐-' : ''; } return '';
+    case 'cart': if (mv && Math.abs(speed) > 90) { for (const s of [-1, 1]) A(0.6, () => r(-16 - (t * 30) % 6, s * 5, 4, 0.75, '#fff')); } else if (!mv) { r(-5, -4, 3, 3, '#e8402a'); r(-1, 1, 4, 3, '#e8c060'); r(2, -4, 2, 4, '#4ab04a'); r(-4, 1, 2, 3, '#f4f4f4'); } return '';
+    case 'chair': if (still && every(4, 2)) { r(1, -7, 1.5, 3, SK); r(1, 4, 1.5, 3, SK); r(-9, -4, 2, 8, '#1d2a4a'); } return '';
+    case 'cabrio': if (mv && rd) { const w = Math.sin(t * 16); r(-6, -3 + w * 0.5, 3, 1, rd.hair); r(-6, 1.5 - w * 0.5, 3, 1, '#5a3020'); } else if (still) { const w = Math.round(Math.sin(t * 8)); r(0, 4 + w, 1.5, 3, '#f0c8a0'); } return '';
+    case 'horse': if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 3 + k / 3) % 1; A(0.5 * (1 - ph), () => circ(-13 - ph * 7, (k - 1) * 3, 1 + ph * 2, '#d8ccaa')); } else if (still && every(3.5, 1)) { r(9, -6, 3, 1.5, '#4a2a14'); r(9, 4.5, 3, 1.5, '#4a2a14'); return '히힝~'; } return '';
+    case 'piggy': if (mv) { const ph = (t * 2) % 1; A(1 - ph, () => { r(6 + ph * 3, -4 - ph * 3, 1, 1.5, '#8ad0ff'); r(6 + ph * 2, 3 + ph * 3, 1, 1.5, '#8ad0ff'); }); } else if (still) { r(-1, -7, 2, 2, '#f0c8a0'); r(-1, 5, 2, 2, '#f0c8a0'); return every(3, 1.2) ? '헉헉' : ''; } return '';
+    case 'benz': if (mv) { const xx = ((t * 24) % 44) - 22; if (xx > -13 && xx < 12) A(0.45, () => r(xx, -5.5, 1.5, 11, '#fff')); } else if (still && t % 1 < 0.5) { for (const [X, Y] of [[12, -5.5], [12, 3.5], [-13.5, -5.5], [-13.5, 3.5]]) r(X, Y, 1.5, 2, '#ffa020'); } return '';
+    case 'wolf': if (mv) { r(16, 0.5, 2, 1, '#e8607a'); } else if (still && every(4, 1.4)) return '아우~'; return '';
+    case 'shark': if (mv) { for (let k = 0; k < 3; k++) { const ph = (t * 2 + k / 3) % 1; A(0.6 * (1 - ph), () => { r(-18 - ph * 8, -4 - ph * 4, 2.5, 0.75, '#fff'); r(-18 - ph * 8, 3 + ph * 4, 2.5, 0.75, '#fff'); }); } } else if (still) { const fx = Math.cos(t * 2) * 12, fy = Math.sin(t * 2) * 8; c.fillStyle = '#4a6880'; c.beginPath(); c.moveTo(fx, fy - 2); c.lineTo(fx - 3, fy + 1.5); c.lineTo(fx + 1, fy + 1.5); c.fill(); } return '';
+    case 'ferrari': if (mv) { for (const [dx, al] of [[-7, 0.28], [-13, 0.14]]) A(al, () => { c.fillStyle = '#ff3a44'; c.beginPath(); c.ellipse(dx, 0, 12, 5, 0, 0, 7); c.fill(); }); } else if (still) { const ph = (t * 2) % 1; A(0.5 * (1 - ph), () => circ(-14 - ph * 4, 1, 1 + ph * 2, '#b8b8b8')); } return '';
+    case 'train': if (still) { const ph = (t * 1.5) % 1; A(0.7 * (1 - ph), () => circ(12, -ph * 6, 1.5 + ph * 2.5, '#f4f4f4')); return every(3, 0.9) ? '뿌우~' : ''; } return '';
+    case 'lambo': if (mv) { if (Math.random() < 0.6) { r(-15 - Math.random() * 3, -1.5, 3, 1.5, '#ff8a20'); r(-15 - Math.random() * 3, 0.5, 3, 1.5, '#ffd84a'); } } else if (still) { r(-2, -9, 6, 4, '#f0b81a'); r(-2, 5, 6, 4, '#f0b81a'); r(-1, -8, 4, 2, '#3a4a5a'); r(-1, 6, 4, 2, '#3a4a5a'); } return '';
+    case 'jet': if (mv) A(0.5, () => { r(-34, -12.5, 26, 1, '#fff'); r(-34, 11.5, 26, 1, '#fff'); }); else if (still) for (let k = 0; k < 3; k++) { const ph = (t * 2 + k / 3) % 1; A(0.25 * (1 - ph), () => circ(-16 - ph * 6, Math.sin(t * 9 + k) * 1.5, 1.5 + ph * 2, '#fff8e0')); } return '';
+    case 'wings': if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 1.2 + k / 3) % 1; A(1 - ph, () => r(-6 - ph * 10, (k - 1) * 6 + Math.sin(t * 4 + k) * 2, 2, 1, '#ffffff')); } return '';
+    case 'dragon': if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 1.4 + k / 3) % 1; A(0.55 * (1 - ph), () => { circ(-18 - ph * 10, (k - 1) * 7, 2 + ph * 2, '#ffffff'); circ(-16 - ph * 10, (k - 1) * 7 + 1.5, 1.5 + ph * 2, '#eef4ff'); }); } return '';
+  }
+  return '';
+}
 function drawRide(c, x, y, a, ride, speed, rider, tag) {
-  const t = performance.now() / 1000, mv = Math.abs(speed) > 0.5;
+  const t = performance.now() / 1000, mv = Math.abs(speed) > 4, still = !mv && !!rider;
   c.save(); c.translate(x, y); c.rotate(a);
+  if (still && (ride === 'moto' || ride === 'ferrari')) c.translate(Math.sin(t * 40) * 0.4, 0); // 공회전 들썩
+  if (still && ride === 'wings') c.translate(0, Math.sin(t * 3) * 1.5); // 공중에 둥둥
   const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
   const circ = (X, Y, R, col) => { c.fillStyle = col; c.beginPath(); c.arc(X, Y, R, 0, 7); c.fill(); };
   const shadow = (W, H) => { c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(2, 2, W, H, 0, 0, 7); c.fill(); };
@@ -2907,7 +2941,7 @@ function drawRide(c, x, y, a, ride, speed, rider, tag) {
     case 'train': { shadow(17, 6); if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 3 + k / 3) % 1; c.fillStyle = `rgba(235,235,235,${0.6 * (1 - ph)})`; c.beginPath(); c.arc(12 - ph * 14, Math.sin(k * 2) * 1.5, 1.5 + ph * 3, 0, 7); c.fill(); } r(-17, -5, 16, 10, '#2f6ab0'); r(-17, -1, 16, 2, '#24508a'); for (let i = 0; i < 5; i++) { r(-16 + i * 3, -5, 2, 1, '#cfe8ff'); r(-16 + i * 3, 4, 2, 1, '#cfe8ff'); } r(-1, -1, 2, 2, '#333'); r(1, -5, 15, 10, '#d8323a'); r(1, -1, 15, 2, '#f4f4f4'); r(2, -4, 5, 8, '#15151c'); r(15, -4, 3, 8, '#b02028'); r(17, -1, 1, 2, '#fff3a0'); r(11, -1.5, 3, 3, '#333'); if (rider) circ(4.5, 0, 2.4, rider.hair); break; }
     case 'wings': { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(5, 7, 6, 3, 0, 0, 7); c.fill(); const L = 7 + Math.sin(t * (mv ? 14 : 4)) * 1.5; for (const s of [-1, 1]) { c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(-1, s * 2); c.lineTo(-9, s * (4 + L)); c.lineTo(-5, s * (3 + L * 0.6)); c.lineTo(-3, s * (4 + L * 0.8)); c.lineTo(0, s * (3 + L * 0.5)); c.lineTo(2, s * 2); c.closePath(); c.fill(); c.strokeStyle = '#b8c4d8'; c.lineWidth = 0.75; c.stroke(); } me(0); c.strokeStyle = '#ffd84a'; c.lineWidth = 1.2; c.beginPath(); c.arc(0.5, 0, 4.2, 0, 7); c.stroke(); if (mv) r(-8 - Math.random() * 6, Math.random() * 8 - 4, 1, 1, '#fff6c0'); break; }
     case 'dragon': { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(4, 8, 14, 4, 0, 0, 7); c.fill(); const sp = mv ? 8 : 3; // 용: 구불구불 몸통이 따라오며 난다
-      for (let i = 8; i >= 0; i--) { const sx = 9 - i * 3.4, sy = Math.sin(t * sp - i * 0.8) * 2.5; circ(sx, sy, 3.4 - i * 0.22, i % 2 ? '#2f8a5a' : '#3a9a6a'); r(sx - 0.5, sy - 0.5, 1, 1, '#ffd84a'); if (i === 2 || i === 6) { r(sx - 1, sy - 4.5, 2, 1.5, '#2a6a44'); r(sx - 1, sy + 3, 2, 1.5, '#2a6a44'); } }
+      for (let i = 8; i >= 0; i--) { const sx = still ? Math.cos(i * 0.75 + 0.6) * 8 - 2 : 9 - i * 3.4, sy = still ? Math.sin(i * 0.75 + 0.6) * 7 : Math.sin(t * sp - i * 0.8) * 2.5; /* 멈추면 똬리 */ circ(sx, sy, 3.4 - i * 0.22, i % 2 ? '#2f8a5a' : '#3a9a6a'); r(sx - 0.5, sy - 0.5, 1, 1, '#ffd84a'); if (i === 2 || i === 6) { r(sx - 1, sy - 4.5, 2, 1.5, '#2a6a44'); r(sx - 1, sy + 3, 2, 1.5, '#2a6a44'); } }
       const hy = Math.sin(t * sp + 0.8) * 2.5; r(10, hy - 3, 6, 6, '#3a9a6a'); r(15, hy - 2, 3, 4, '#4aaa7a'); r(9, hy - 5, 4, 1.5, '#ffd84a'); r(9, hy + 3.5, 4, 1.5, '#ffd84a'); r(13, hy - 2, 1, 1, '#ffec60'); r(13, hy + 1, 1, 1, '#ffec60'); const wh = Math.sin(t * 5) * 1.5; r(17, hy - 3 + wh, 4, 0.75, '#ffd84a'); r(17, hy + 2 - wh, 4, 0.75, '#ffd84a');
       if (mv && t % 3 < 0.6) { r(18, hy - 1, 3 + Math.random() * 3, 2, '#ff8a20'); r(18, hy - 0.5, 2, 1, '#fff3a0'); } // 가끔 불을 뿜는다
       me(2); break; }
@@ -2917,7 +2951,9 @@ function drawRide(c, x, y, a, ride, speed, rider, tag) {
     case 'cabrio': { shadow(13, 6); r(-12, -5, 24, 10, '#e83a6a'); r(-12, -5, 24, 1, '#b82a52'); r(-12, 4, 24, 1, '#b82a52'); r(-8, -4, 12, 8, '#f4e8d4'); r(4, -4, 1, 8, '#9ad0ff'); r(-10, -3, 2, 6, '#c8b898'); r(11, -4, 1, 2, '#fff3a0'); r(11, 2, 1, 2, '#fff3a0'); if (rider) { r(-3, -3.5, 4, 3, rider.shirt); circ(-1, -2, 2.2, rider.hair); } r(-3, 0.5, 4, 3, '#2f6ab0'); circ(-1, 2, 2.2, '#5a3020'); break; } // 오픈카: 나랑 옆자리 친구가 보인다
     default: r(-10, -5, 20, 10, '#888');
   }
+  const say = rideFx(c, ride, mv, still, t, speed, r, circ, rider);
   c.restore();
+  if (say && typeof Net !== 'undefined') Net.label(c, say, x, y - 16);
   if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y + 15); // 업힌 친구 이름 (사용자 2026-10-15)
 }
 
@@ -4115,7 +4151,9 @@ const Net = {
     this.peer = null; this.bc = null; this.hostConn = null; this.conns = {}; this.players = {}; this.on = false; this.host = false; this.room = ''; this.ch = 0; this.mode = 'room'; this.retryT = 0; this.status = 'off';
     return true;
   },
-  names() { return Object.values(this.players).filter(p => !p.gone).map(p => p.name); },
+  // 정말 게임 안에 있는 사람: 연결만 살아 있고(제목 화면·백그라운드의 방장 심장박동 등) 위치 신호가 FEEL.liveGoneSec 넘게 없으면 접속으로 안 친다 (v107 버그: 안 들어온 사람이 접속 2명에 보임)
+  inGame(p) { return !!p && !p.gone && p.last !== undefined && performance.now() - p.last < FEEL.liveGoneSec * 1000; },
+  names() { return Object.values(this.players).filter(p => this.inGame(p)).map(p => p.name); },
   // 공개 채널: 같은 날·같은 채널이면 누가 언제 들어와도 같은 주(물건·경쟁자)
   channelSeed(n) { const day = Math.floor((Date.now() + 9 * 3600e3) / 86400000); return ((n * 7919 + day * 104729) ^ 0x5a5a) & 0x7fffffff; },
   chText() { return `채널 ${this.ch} · 지금 ${1 + this.names().length}명${this.names().length ? ' (' + this.names().join(', ') + ')' : ''}`; },
@@ -4295,6 +4333,7 @@ const Net = {
     if (m.t === 'fight') { Fight.onNet(m, p); return; } // 게임장 격투 게임 (v82)
     if (m.t === 'party') { Party.onNet(m, p); return; } // 여러 명 모집 · 초대장 (v90)
     if (m.t === 'cbreq' || m.t === 'cback') { ChatBack.onNet(m, p); return; } // 자리 비운 동안의 채팅 (v100)
+    if (m.t === 'tip') { Tip.onNet(m, p); return; } // 용돈 1,000원 (v107)
     if (m.t === 'poke') { Poke.onNet(m, p); return; } // 콕 찌르기 (v100)
     if (m.t === 'vip') { VipNet.onNet(m, p); return; } // 이혁진 위치·도망·말 걸기 차례 (v91)
     if (m.t === 'vduel') { VipDuel.onNet(m, p); return; } // 이혁진 룰렛: 한 번에 한 사람
@@ -4355,7 +4394,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -4439,12 +4478,14 @@ const Net = {
     for (const id in this.players) { const p = this.players[id]; if (p.gone || p.dr || p.cx === undefined || p.z !== Game.zone.id || performance.now() - p.last > FEEL.parkedCarKeepSec * 1000) continue; out.push(p); }
     return out;
   },
+  // 친구 차 속력: 위치 변화로 어림 (탈것 특징 '달릴 때/멈췄을 때'에 쓴다)
+  carSpd(p) { const now = performance.now(); if (p._st == null) { p._sx = p.cx; p._sy = p.cy; p._st = now; p._sv = 0; } const dt = (now - p._st) / 1000; if (dt > 0.25) { p._sv = Math.hypot(p.cx - p._sx, p.cy - p._sy) / dt; p._sx = p.cx; p._sy = p.cy; p._st = now; } return p._sv; },
   drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
-    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441', p.pal), 24, 12, 'car', 1); const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(Shop.carOf(p.car, '#d9a441', p.pal), { spd: this.carSpd(p) }), 24, 12, 'car', 1); const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
-    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m }, t);
+    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw ? Infinity : 0 }, t);
     this.label(c, p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - (Titles.of(p.name, p.tt) ? 39 : 30));
   },
@@ -4474,8 +4515,8 @@ const GREET_REPLIES = ['안녕하세요!', '네, 반가워요', '좋아요, 같�
 async function greetFriend(p) {
   if (Game.busy || Dialog.open) return; Game.busy = true;
   try {
-    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 뭐라고 할까?` }], [...GREETS.map(g => ({ label: g, value: g })), { label: '그냥 지나가기', value: null }]);
-    if (pick) Net.greet(p, pick);
+    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 뭐라고 할까?` }], [...GREETS.map(g => ({ label: g, value: g })), { label: '💸 용돈 1,000원 주기', value: '__tip' }, { label: '그냥 지나가기', value: null }]);
+    if (pick === '__tip') Tip.give(p); else if (pick) Net.greet(p, pick);
   } finally { Game.busy = false; }
 }
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -4664,6 +4705,25 @@ const ChatBack = {
     Net.pushLog('채팅', `자리 비운 동안 ${got.length}줄이 있었어요 · 피드를 누르면 지난 기록에서 볼 수 있어요`, false, true, true);
   },
 };
+/* ---- 용돈 1,000원 (사용자 2026-10-15 '플레이어끼리 용돈 줄 수 있게 1000원', '받는 사람은 절하는 걸로') ----
+ * 걸어서 친구 앞에서 E → '💸 용돈 1,000원 주기'. 받은 쪽은 2.4초 동안 큰절을 한다 (pos의 bw로 친구 화면에도 보인다). 액수가 작아서 하루 한도와 상관없다. {t:'tip', to} */
+const Tip = {
+  AMT: 1000, sent: {},
+  give(p) {
+    const id = Net.idOf(p); if (!id) return;
+    if (Date.now() - (this.sent[id] || 0) < 5000) return Toast.show(`${p.name}님한테 방금 줬어요. 조금 있다 다시 줄 수 있어요.`);
+    if (State.cash < this.AMT) return Toast.show('줄 돈이 없어요.');
+    this.sent[id] = Date.now(); mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id }); Sound.play('coins');
+    Net.myBubble = { text: '옛다 용돈!', t: FEEL.chatBubbleTime }; Net.pushLog(Net.me, `${p.name}님한테 용돈 1,000원을 줬어요 💸`, true, true, true);
+  },
+  onNet(m, p) {
+    if (m.to !== Net.myId || !Game.player) return; const name = (p && p.name) || '친구';
+    mgCash(this.AMT, `용돈 (${name})`); Sound.play('coins'); Toast.show(`${name}님이 용돈 1,000원을 줬어요. 감사합니다 꾸벅!`, 3000);
+    Net.pushLog(name, '님이 용돈 1,000원을 줬어요 💸', false, true, true);
+    Game.player.bowT = performance.now() + 2400; Net.myBubble = { text: '감사합니다!', t: FEEL.chatBubbleTime }; // 받는 사람은 큰절
+  },
+};
+
 /* ---- 콕 찌르기 (사용자 2026-10-15 '페이스북 콕 찌르기 같은 거') ----
  * 순위표에서 접속한 친구 이름을 누르고 '👉 콕 찌르기'. 받은 쪽에는 카드가 잠깐 뜨고 바로 되찌를 수 있다. 돈·이동은 없다. {t:'poke', to} */
 const Poke = {
@@ -5232,7 +5292,7 @@ const Live = {
   /* ---- 왼쪽 미니 순위판 (항상 보임) ---- */
   rankRows() {
     // 접속한 사람은 자본 신호(pos.cs)가 아직 없어도 '접속 중'으로 (전엔 기록된 자본으로 떨어져 '자리 비움'으로 보였다; 사용자 2026-10-15 '접속중인데 들어가면 접속 아닌데')
-    const here = Object.values(Net.players).filter(p => !p.gone && p.name && p.name !== Net.me).map(p => { const c = this.cashOf(p); return { name: p.name, cash: c !== undefined ? c : this.seen[p.name] ? this.cashOf(this.seen[p.name]) : undefined, doing: this.doing(p) }; }).filter(r => r.cash !== undefined);
+    const here = Object.values(Net.players).filter(p => Net.inGame(p) && p.name && p.name !== Net.me) /* 연결만 있고 게임 밖(제목 화면·앱 내려 둠)이면 접속 아님 (v107) */.map(p => { const c = this.cashOf(p); return { name: p.name, cash: c !== undefined ? c : this.seen[p.name] ? this.cashOf(this.seen[p.name]) : undefined, doing: this.doing(p) }; }).filter(r => r.cash !== undefined);
     const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, cash: this.cashOf(v), away: true })).filter(r => r.cash !== undefined); // 전에 만난 사람(마지막으로 본 자본)
     return [{ name: Net.me, cash: State.cash, me: true, doing: '나' }, ...here, ...away].sort((a, b) => b.cash - a.cash);
   },
@@ -5246,7 +5306,7 @@ const Live = {
     if (p.z === undefined) return '접속 중';
     return `${p.dr ? '운전 중' : '걷는 중'}${this.guName(p.z) ? ' · ' + this.guName(p.z) : ''}`;
   },
-  online() { return Object.values(Net.players).filter(p => !p.gone).map(p => ({ name: p.name, doing: this.doing(p) })); },
+  online() { return Object.values(Net.players).filter(p => Net.inGame(p)).map(p => ({ name: p.name, doing: this.doing(p) })); },
   miniBoard() {
     const rows = this.rankRows(); const f = v => fmtWon(v), cls = v => this.rankCls(v);
     const myIdx = rows.findIndex(r => r.me); const show = rows.slice(0, 4); if (myIdx >= 4) { show.length = 3; show.push(rows[myIdx]); }
@@ -5521,12 +5581,21 @@ function drawWalker(c, w, t, opts = {}) {
   const bob = w.moving && (w.frame === 1 || w.frame === 3) ? -FEEL.bobPx : 0;
   const breath = opts.breath ? (Math.sin(t * Math.PI * 2 / FEEL.npcBreathPeriod) > 0.6 ? -1 : 0) : 0;
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(w.x, w.y, 5, 2.2, 0, 0, 7); c.fill();
+  if (w.bowT && performance.now() < w.bowT) return drawBow(c, w, t); // 용돈 받고 큰절 (v107)
   if (w.vip) { // 금빛 반짝임 + 이름표: 멀리서도 멋쟁이인 걸 알 수 있게
     c.save(); c.fillStyle = '#ffd86b';
     for (let i = 0; i < 3; i++) { const a = t * 1.6 + i * 2.1, r = 11 + Math.sin(t * 3 + i) * 2, X = w.x + Math.cos(a) * r, Y = w.y - 8 + Math.sin(a) * r * 0.5, sz = 1.2 + (Math.sin(t * 5 + i * 2) + 1) * 0.8; c.beginPath(); c.moveTo(X, Y - sz); c.lineTo(X + sz, Y); c.lineTo(X, Y + sz); c.lineTo(X - sz, Y); c.fill(); }
     c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 20); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 20); c.restore();
   }
   Sprites.drawSprite(c, w.sprite, w.dir, w.frame, Math.round(w.x - 8), Math.round(w.y - 15 + bob + breath), 1, w.sit);
+}
+// 큰절: 무릎 꿇고 엎드려 이마를 바닥에 (옆모습, 보던 쪽으로). 1.2초마다 한 번 꾸벅
+function drawBow(c, w, t) {
+  const P = Sprites.PAL[w.sprite] || Sprites.PLAYER_DEFAULT, f = w.dir === 1 ? -1 : 1, up = (t % 1.2) < 0.35 ? 1 : 0;
+  c.save(); c.translate(Math.round(w.x), Math.round(w.y)); c.scale(f, 1);
+  const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
+  r(-7, -4, 6, 4, P.pants); r(-8, -2, 2, 2, P.shoe || '#222'); r(-4, -8 - up, 7, 4, P.shirt); r(-4, -8 - up, 7, 1, P.shirt2 || P.shirt); r(2, -6 - up, 5, 5, P.hair); r(5, -3 - up, 2, 2, P.skin); r(6, -1, 3, 1, P.skin); r(-1, -4 - up, 2, 4 + up, P.shirt);
+  c.restore();
 }
 function dirToward(from, to) { const dx = to.x - from.x, dy = to.y - from.y; return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0); }
 
@@ -5802,11 +5871,14 @@ async function talkWalker(w) {
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
   const hello = [`안녕하세요. ${dong} 처음 오셨어요?`, `네? 아, 길 물어보시려고요?`, `${gu}는 요즘 공사가 많아서 길이 좀 막혀요.`, `오늘 날씨 좋죠? 걷기 딱 좋아요.`, `경매 보러 오신 분이죠? 요즘 그런 분들 자주 보여요.`];
     const pick = await Dialog.say([{ name, sprite: w.sprite, text: hello[(i + State.day) % hello.length] }], [
-    { label: '동네 어때요?', value: 'town' }, { label: '요즘 경매 어때요?', value: 'auction' }, { label: '그냥 인사했어요', value: 'bye' },
+    { label: '동네 어때요?', value: 'town' }, { label: '요즘 경매 어때요?', value: 'auction' }, { label: '💸 용돈 1,000원 주기', value: 'tip' }, { label: '그냥 인사했어요', value: 'bye' },
   ]);
   const town = [`${dong}은 역이 가까워서 출퇴근은 편해요. 대신 밤에 큰길은 좀 시끄럽고요.`, `오래된 집이 많아서 골목이 좁아요. 주차가 늘 전쟁이에요.`, `학교랑 마트가 가까워서 애 키우는 집이 많아요.`, `요즘 카페가 많이 생겼어요. 동네가 좀 바뀌는 중이죠.`];
   const auction = [`글쎄요, 법원 앞에 사람 많더라고요. 서류 잘 보고 들어가야 한대요.`, `저도 잘은 몰라요. 싸다고 덥석 받으면 큰일 난다는 얘기만 들었어요.`, `등기부랑 전입 같은 건 직접 떼 보셔야죠. 남 말만 믿으면 안 돼요.`, `주민센터랑 중개사한테 물어보세요. 저는 그냥 지나가는 사람이라.`];
-  if (pick === 'town') await Dialog.say([{ name, sprite: w.sprite, text: town[(i * 3 + State.day) % town.length] }]);
+  if (pick === 'tip') { // 지나가는 사람한테도 용돈 (사용자 2026-10-15 'npc도 가능하게'). 받은 사람은 큰절
+    if (State.cash < 1000) await Dialog.say([{ name, sprite: w.sprite, text: '마음만 받을게요. 지갑이 비셨네요.' }]);
+    else { mgCash(-1000, `용돈 (${name})`); Sound.play('coins'); w.bowT = performance.now() + 2400; w.ai.t = 3; Game.busy = false; w.bubble = { text: ['아이고 감사합니다!', '이걸 왜 저한테… 감사합니다!', '복 받으실 거예요!'][(i + State.day) % 3], t: 2.6 }; return; }
+  } else if (pick === 'town') await Dialog.say([{ name, sprite: w.sprite, text: town[(i * 3 + State.day) % town.length] }]);
   else if (pick === 'auction') await Dialog.say([{ name, sprite: w.sprite, text: auction[(i * 5 + State.day) % auction.length] }]);
   else await Dialog.say([{ name, sprite: w.sprite, text: ['네, 좋은 하루요.', '조심히 다니세요. 여기 차들이 험해요.', '네네, 안녕히 가세요.'][i % 3] }]);
   w.ai.t = 0.3; Game.busy = false;
@@ -6242,13 +6314,14 @@ function drawZone(t) {
   // 신호등 · NPC 차량 · 내 차
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
-  { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); drawCarSprite(ctx, c.x, c.y, c.a, Shop.myCar(Game.driving), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
+  { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(Shop.myCar(Game.driving), { spd: Game.driving ? Math.abs(c.speed) : 0 }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
   const actors = [...Game.decor.map(w => ({ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else drawWalker(ctx, w, t); if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - 30); } })), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); } }]),
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
     ...Pets.actors(ctx, Net.visible('zone'), t),
+    ...Fx.actors(ctx, Net.visible('zone'), t),
     ...Net.parkedCars().map(p => ({ y: p.cy, d: () => Net.drawParkedCar(ctx, p) })),
     ...Game.cats.map(c => ({ y: c.y, d: () => { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(c.x - 4, c.y + 2, 9, 2); const img = Sprites.cat(c.sit ? 0 : Math.floor(t * 6) % 2); ctx.save(); ctx.translate(c.x, c.y); if (c.vx < 0) ctx.scale(-1, 1); ctx.drawImage(img, -5, -5); ctx.restore(); } }))];
   actors.sort((a, b) => a.y - b.y).forEach(a => a.d());
@@ -6317,7 +6390,7 @@ function drawRoom(t) {
   const p = Game.player;
   const actors = [{ y: p.y, d: () => { drawWalker(ctx, p, t); Titles.drawMine(ctx, p); } }];
   for (const f of Net.visible('room')) actors.push({ y: f.p.y, d: () => Net.drawFriend(ctx, f.p, f.sp, t) });
-  actors.push(...Pets.actors(ctx, Net.visible('room'), t));
+  actors.push(...Pets.actors(ctx, Net.visible('room'), t)); actors.push(...Fx.actors(ctx, Net.visible('room'), t));
   for (const n of r.npcs) actors.push({ y: n.y, d: () => drawWalker(ctx, { ...n, frame: 0, moving: false }, t + n.breath, { breath: true }) });
   for (const g of r.guests) if (!g.gone) actors.push({ y: g.y, d: () => drawWalker(ctx, g.walkTo ? g : { ...g, frame: 0, moving: false }, t, { breath: !g.walkTo }) });
   actors.sort((a, b) => a.y - b.y).forEach(a => a.d());
@@ -7550,6 +7623,8 @@ const SHOP_ITEMS = {
     { id: 'c_purple', name: '보라 재킷', price: 2500e4, pal: { shirt: '#6a3fb5', shirt2: '#d9a441', pants: '#15151c' } },
     { id: 'c_gold', name: '금빛 재킷', price: 5000e4, pal: { shirt: '#e0b43a', shirt2: '#fff0a0', pants: '#15151c', tie: '#15151c' } },
     { id: 'c_vip', name: 'VIP 블랙', price: 1e8, pal: { shirt: '#15151c', shirt2: '#c9a24a', pants: '#15151c', tie: '#c9a24a' } },
+    { id: 'c_tux', name: '턱시도', price: 1e8, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', tux: true } },
+    { id: 'c_wedding', name: '웨딩드레스', price: 1.5e8, pal: { shirt: '#fbfbfb', shirt2: '#e8e8f0', pants: '#fbfbfb', dress: '#ffffff', veil: true } },
   ],
   pet: [ // 희귀할수록 비싸다 (사용자 2026-10-15). 그림은 pets.js PET_DRAW
     { id: 'p_mouse', name: '생쥐', price: 100e4, pet: 'mouse' },
@@ -7603,6 +7678,16 @@ const SHOP_ITEMS = {
     { id: 'r_wings', name: '천사 날개', price: 4e8, ride: 'wings' },
     { id: 'r_dragon', name: '용', price: 5e8, ride: 'dragon' },
   ],
+  fx: [ // 걸을 때 몸 주변 이펙트 (사용자 2026-10-15). 그림은 pets.js FX_DRAW
+    { id: 'f_gloom', name: '우울 (먹구름)', price: 1000e4, fx: 'gloom' },
+    { id: 'f_snow', name: '눈송이', price: 2000e4, fx: 'snow' },
+    { id: 'f_sparkle', name: '반짝이', price: 3000e4, fx: 'sparkle' },
+    { id: 'f_heart', name: '하트', price: 5000e4, fx: 'heart' },
+    { id: 'f_fire', name: '불꽃', price: 8000e4, fx: 'fire' },
+    { id: 'f_rainbow', name: '무지개', price: 1e8, fx: 'rainbow' },
+    { id: 'f_money', name: '돈다발 날리기', price: 2e8, fx: 'money' },
+    { id: 'f_tornado', name: '용오름', price: 3e8, fx: 'tornado' },
+  ],
 };
 const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it);
 const Shop = {
@@ -7618,24 +7703,24 @@ const Shop = {
   },
   close() { if (!this.open_) return; this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
   render() {
-    const p = Profile.get(); const list = SHOP_ITEMS[this.tab]; const isC = this.tab === 'clothes', isP = this.tab === 'pet';
-    const wearing = isC ? p.outfit : isP ? (SHOP_ITEMS.pet.find(x => x.pet === p.pet) || {}).id : p.car;
+    const p = Profile.get(); const list = SHOP_ITEMS[this.tab]; const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx';
+    const wearing = isC ? p.outfit : isP ? (SHOP_ITEMS.pet.find(x => x.pet === p.pet) || {}).id : isF ? p.fx : p.car;
     const card = it => {
       const own = this.has(it.id), on = wearing === it.id;
-      const btn = on ? `<button class="btn" data-off="1">${isC ? '벗기' : isP ? '집에 두기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? '데리고 다니기' : '칠하기'}</button>` : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
-      return `<div class="shItem${on ? ' on' : own ? ' own' : ''}"><canvas data-prev="${it.id}" width="${isC ? 16 : isP || it.ride ? 72 : 28}" height="${isP || it.ride ? 48 : 16}"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isP ? '같이 다니는 중' : '내 차') : own ? '보유' : fmtWon(it.price)}</span>${btn}</div>`;
+      const btn = on ? `<button class="btn" data-off="1">${isC ? '벗기' : isP ? '집에 두기' : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? '데리고 다니기' : isF ? '켜기' : '타기'}</button>` : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
+      return `<div class="shItem${on ? ' on' : own ? ' own' : ''}"><canvas data-prev="${it.id}" width="${isC ? 16 : isP || isF || it.ride ? 72 : 28}" height="${isP || isF || it.ride ? 48 : 16}" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? '보유' : fmtWon(it.price)}</span>${btn}</div>`;
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>
-      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫</button></div>
+      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">✨ 이펙트</button></div>
       ${isP && p.pet ? `<div class="shTag">명찰 <input id="shTagIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.petName || '')}"><button class="btn gold" id="shTagOk">달기</button></div>` : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
-      <p class="shNote">${isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
+      <p class="shNote">그림을 누르면 움직이는 미리보기를 볼 수 있어요. ${isF ? '이펙트는 걸어 다닐 때 내 몸 주변에 보이고, 친구 화면에도 보여요. 산 이펙트는 이 기기에서 계속 가져요.' : isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
       <div class="pcBtns"><button class="btn" id="shClose">닫기</button></div></div>`;
     const el = $('shop');
-    el.querySelectorAll('canvas[data-prev]').forEach(cv => this.preview(cv, SHOP_BY_ID[cv.dataset.prev]));
+    el.querySelectorAll('canvas[data-prev]').forEach(cv => { this.preview(cv, SHOP_BY_ID[cv.dataset.prev]); cv.onclick = () => this.big(SHOP_BY_ID[cv.dataset.prev]); });
     el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
     el.querySelectorAll('[data-buy]').forEach(b => (b.onclick = () => this.buy(SHOP_BY_ID[b.dataset.buy])));
     el.querySelectorAll('[data-wear]').forEach(b => (b.onclick = () => this.wear(SHOP_BY_ID[b.dataset.wear])));
-    el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { Profile.set(isC ? 'outfit' : isP ? 'pet' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
+    el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { Profile.set(isC ? 'outfit' : isP ? 'pet' : isF ? 'fx' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
     $('shClose').onclick = () => this.close();
     if ($('shRideOk')) $('shRideOk').onclick = () => { const v = $('shRideIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('rideName', v); Sound.play('pop'); Toast.show(v ? `'${v}' 등에 업혔어요` : '이름을 뗐어요'); this.render(); }; // 업히기 친구 이름 (사용자 2026-10-15)
     if ($('shTagOk')) $('shTagOk').onclick = () => { const v = $('shTagIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('petName', v); Pets.mineT = -1; Sound.play('pop'); Toast.show(v ? `명찰 '${v}' 달았어요` : '명찰을 뗐어요'); this.render(); }; // 펫 명찰 (친구·여자친구 등, 사용자 2026-10-15)
@@ -7644,8 +7729,36 @@ const Shop = {
     const x = cv.getContext('2d'); x.imageSmoothingEnabled = false;
     if (it.pet) { x.clearRect(0, 0, cv.width, cv.height); const k = ['trex', 'giraffe', 'gf', 'bf', 'kid'].includes(it.pet) ? 1 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 3 : 2; x.save(); x.translate(36, it.pet === 'trex' ? 40 : it.pet === 'dolphin' ? 46 : PET_HD[it.pet] ? 47 : 42); if (PET_HD[it.pet]) x.scale(2, 2); /* 반 픽셀 그림 → 2배면 캔버스 1픽셀 */ /* 정수 배율로만 그려야 픽셀이 안 뭉개진다 */ x.scale(k, k); Pets.draw(x, it.pet, 0, 0, 1, false, 0); x.restore(); return; }
     if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); x.drawImage(Sprites.sheet(name), 0, 0, 16, 16, 0, 0, 16, 16); } // 정면 서 있는 모습
+    else if (it.fx) { this.fxPrev(x, it, 0, 1); }
     else if (it.ride) { x.clearRect(0, 0, cv.width, cv.height); x.save(); x.translate(36, 24); x.scale(2, 2); drawRide(x, 0, 0, 0, it.ride, 0, Profile.pal(Profile.get())); x.restore(); } /* 72×48 캔버스에 2배 정수 배율 (화면 크기와 1:1이라 선명) */
     else drawCarSprite(x, 14, 8, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0);
+  },
+  // 이펙트 칸 그림: 서 있는 내 캐릭터 + 이펙트 (k배)
+  fxPrev(x, it, t, k) { x.clearRect(0, 0, x.canvas.width, x.canvas.height); x.save(); x.scale(k, k); const W = x.canvas.width / k, H = x.canvas.height / k; Sprites.setPal('shop:me', Profile.pal(Profile.get())); x.drawImage(Sprites.sheet('shop:me'), 0, 0, 16, 16, Math.round(W / 2 - 8), Math.round(H - 21), 16, 16); FX_DRAW[it.fx](x, W / 2, H - 6, t || 0.7); x.restore(); },
+  // 크게 움직이는 미리보기 (사용자 2026-10-15 '각각 다 미리보기 할 수 있게'): 달리기/멈춤(5초 넘게 서 있기)을 번갈아 보여 준다
+  big(it) {
+    if (!it) return; this.bigIt = it; this.bigMode = 'auto'; this.bigT0 = performance.now(); Sound.play('pop');
+    let box = $('shBig'); if (!box) { box = document.createElement('div'); box.id = 'shBig'; $('shop').appendChild(box); }
+    const two = it.pet || it.ride || it.pal;
+    box.innerHTML = `<div class="sbIn"><b>${esc(it.name)}</b><canvas id="shBigCv" width="160" height="104"></canvas><small id="shBigLb"></small>
+      <div class="pcBtns">${two ? `<button class="btn" data-bm="move">${it.ride ? '달리기' : '걷기'}</button><button class="btn" data-bm="still">멈추기</button>` : ''}<button class="btn gold" id="shBigX">닫기</button></div></div>`;
+    box.classList.add('in'); box.querySelectorAll('[data-bm]').forEach(b => (b.onclick = () => { this.bigMode = b.dataset.bm; this.bigT0 = performance.now(); }));
+    $('shBigX').onclick = () => { box.classList.remove('in'); this.bigIt = null; }; box.onclick = e => { if (e.target === box) $('shBigX').onclick(); };
+    const loop = () => { if (!this.bigIt || this.bigIt !== it || !this.open_) return; this.bigDraw(it); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  },
+  bigDraw(it) {
+    const cv = $('shBigCv'); if (!cv) return; const x = cv.getContext('2d'); x.imageSmoothingEnabled = false; const t = performance.now() / 1000, el = (performance.now() - this.bigT0) / 1000;
+    const auto = this.bigMode === 'auto', mv = auto ? el % 9 < 3 : this.bigMode === 'move', since = auto ? (el % 9) - 3 : el; // 자동: 3초 움직이고 6초 멈춤
+    const idle = mv ? 0 : Math.max(0, since) + 4.4; // 멈추면 금방 '5초 넘게 서 있을 때' 모습이 나온다
+    const lb = $('shBigLb'); if (lb) lb.textContent = it.fx ? '걸어 다닐 때 이렇게 보여요' : mv ? (it.ride ? '달리는 중' : '움직이는 중') : (it.pet ? (idle > 5 ? '5초 넘게 서 있으면' : '멈춤') : '멈춤');
+    x.fillStyle = it.ride ? '#5a5d66' : '#cfc6a8'; x.fillRect(0, 0, 160, 104);
+    if (it.ride) { x.fillStyle = '#f4f4f4'; const off = mv ? (t * 90) % 40 : 0; for (let X = -40; X < 200; X += 40) x.fillRect(Math.round(X - off), 51, 20, 2); }
+    else if (mv) { x.fillStyle = 'rgba(0,0,0,.12)'; const off = (t * 40) % 24; for (let X = -24; X < 184; X += 24) x.fillRect(Math.round(X - off), 92, 10, 2); }
+    if (it.ride) { x.save(); x.translate(80, 52); x.scale(3, 3); const pal = Profile.pal(Profile.get()); drawRide(x, 0, 0, 0, it.ride, mv ? 80 : 0, pal, it.ride === 'piggy' ? String(Profile.get().rideName || '').slice(0, 10) : ''); x.restore(); return; }
+    if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 2 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, 96); x.scale(hd ? k / 2 : k, hd ? k / 2 : k); Pets.draw(x, it.pet, 0, 0, 1, mv, t, '', idle, it.pet === 'monkey' && mv ? 'ride' : undefined); x.restore(); return; }
+    if (it.fx) { this.fxPrev(x, it, t, 3); return; }
+    if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, 56, 40, 48, 48); return; }
+    x.save(); x.translate(80, 52); x.scale(3, 3); drawCarSprite(x, 0, 0, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0); x.restore();
   },
   buy(it) {
     if (this.has(it.id)) return this.wear(it);
@@ -7655,7 +7768,7 @@ const Shop = {
     Sound.play('coins'); Toast.show(`${it.name} 샀어요 (${fmtWon(it.price)})`);
     this.wear(it);
   },
-  wear(it) { if (it.pet) { Profile.set('pet', it.pet); Pets.mineT = -1; Sound.play('chime'); return this.render(); } Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
+  wear(it) { if (it.fx) { Profile.set('fx', it.id); Pets.mineT = -1; Sound.play('chime'); return this.render(); } if (it.pet) { Profile.set('pet', it.pet); Pets.mineT = -1; Sound.play('chime'); return this.render(); } Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
 };
 
 /* ===================== 펫 (사용자 2026-10-15 '숍에서 펫도 살 수 있게, 돌아다니면 따라오는') =====================
@@ -7677,7 +7790,7 @@ const Pets = {
     return s;
   },
   mineT: -1, mineK: null,
-  mine() { const now = performance.now(); if (now - this.mineT > 800) { this.mineT = now; const p = Profile.get(); this.mineK = p.pet || null; this.mineN = p.petName || ''; } return this.mineK; },
+  mine() { const now = performance.now(); if (now - this.mineT > 800) { this.mineT = now; const p = Profile.get(); this.mineK = p.pet || null; this.mineN = p.petName || ''; this.mineF = p.fx || null; } return this.mineK; },
   // 그릴 목록에 넣을 펫들: 나(걸을 때) + 보이는 친구(걷는 중이고 펫이 있으면)
   actors(c, vis, t) {
     const out = [], k = this.mine(), P = Game.player;
@@ -7829,6 +7942,37 @@ const PET_DRAW = {
     c.fillStyle = 'rgba(110,200,255,.35)'; c.beginPath(); c.arc(0, -11 + bob, 9, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1; c.stroke();
     r(-5, -12 + bob, 9, 3, '#4a90c8'); r(-4, -10 + bob, 7, 1, '#cfe8f8'); r(4, -11 + bob, 2, 1, '#4a90c8'); r(0, -14 + bob, 2, 2, '#3a78b0'); r(-7, -14 + bob, 2, 2, '#3a78b0'); r(-7, -10 + bob, 2, 1, '#3a78b0'); r(2, -12 + bob, 1, 1, '#111');
     c.fillStyle = 'rgba(255,255,255,.8)'; c.fillRect(-5, -17 + bob, 2, 1); c.fillRect(-6, -16 + bob, 1, 1);
+  },
+};
+/* ===================== 이펙트 (사용자 2026-10-15 '반짝이, 용오름, 하트, 우울한 이펙트 등') =====================
+ * 건대 편집숍 '✨ 이펙트' 탭. Profile.fx = 아이템 id → 걸을 때 내 몸 주변에 그린다. pos.pal로 친구 화면에도 보인다. (x, y)는 발밑.
+ */
+const FX_DRAW = {
+  sparkle(c, x, y, t) { for (let i = 0; i < 4; i++) { const a = t * 1.8 + i * Math.PI / 2, X = Math.round(x + Math.cos(a) * 10), Y = Math.round(y - 8 + Math.sin(a) * 5), on = (Math.sin(t * 6 + i * 1.7) + 1) / 2; c.globalAlpha = 0.4 + on * 0.6; c.fillStyle = i % 2 ? '#fff6c0' : '#ffd84a'; c.fillRect(X, Y - 2, 1, 5); c.fillRect(X - 2, Y, 5, 1); if (on > 0.7) { c.fillStyle = '#fff'; c.fillRect(X, Y, 1, 1); } } c.globalAlpha = 1; },
+  heart(c, x, y, t) { for (let i = 0; i < 3; i++) { const ph = (t * 0.6 + i / 3) % 1, X = Math.round(x + Math.sin(t * 2 + i * 2) * 6 + (i - 1) * 4), Y = Math.round(y - 16 - ph * 16); c.globalAlpha = 1 - ph; c.fillStyle = i === 1 ? '#ff7aa8' : '#ff4a7a'; c.fillRect(X, Y, 2, 2); c.fillRect(X + 3, Y, 2, 2); c.fillRect(X, Y + 2, 5, 1); c.fillRect(X + 1, Y + 3, 3, 1); c.fillRect(X + 2, Y + 4, 1, 1); } c.globalAlpha = 1; },
+  gloom(c, x, y, t) { // 우울: 머리 위 먹구름에서 비가 내리고, 발밑이 어둡다
+    c.fillStyle = 'rgba(40,50,80,.25)'; c.beginPath(); c.ellipse(x, y, 8, 3, 0, 0, 7); c.fill();
+    const cx = Math.round(x + Math.sin(t * 0.8) * 1.5), cy = Math.round(y - 25); c.fillStyle = '#6a7080'; for (const [dx, dy, r] of [[-4, 1, 3], [0, -1, 4], [4, 1, 3], [-1, 2, 3], [2, 2, 3]]) { c.beginPath(); c.arc(cx + dx, cy + dy, r, 0, 7); c.fill(); } c.fillStyle = '#545a68'; c.fillRect(cx - 6, cy + 3, 12, 2);
+    c.fillStyle = '#8ab4e8'; for (let i = 0; i < 5; i++) { const ph = (t * 2.4 + i * 0.37) % 1; c.fillRect(cx - 5 + i * 2.5, cy + 5 + ph * 18, 1, 2); }
+  },
+  snow(c, x, y, t) { c.fillStyle = '#ffffff'; for (let i = 0; i < 8; i++) { const ph = (t * 0.45 + i / 8) % 1, X = Math.round(x - 12 + ((i * 37) % 24) + Math.sin(t * 2 + i) * 2), Y = Math.round(y - 26 + ph * 28); c.globalAlpha = ph < 0.85 ? 0.95 : (1 - ph) * 6; c.fillRect(X, Y, 1, 1); if (i % 3 === 0) { c.fillRect(X - 1, Y, 3, 1); c.fillRect(X, Y - 1, 1, 3); } } c.globalAlpha = 1; },
+  fire(c, x, y, t) { for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + t * 0.6, X = Math.round(x + Math.cos(a) * 8), Y = Math.round(y + Math.sin(a) * 3), h = 3 + Math.round((Math.sin(t * 12 + i * 2) + 1) * 2); c.fillStyle = '#ff5a1a'; c.fillRect(X - 1, Y - h, 3, h); c.fillStyle = '#ffb030'; c.fillRect(X, Y - h + 1, 1, h - 1); if (h > 5) { c.fillStyle = '#fff3a0'; c.fillRect(X, Y - 2, 1, 1); } } },
+  money(c, x, y, t) { for (let i = 0; i < 6; i++) { const ph = (t * 0.7 + i / 6) % 1, a = i * 1.1 + t * 0.3, X = Math.round(x + Math.cos(a) * (4 + ph * 12)), Y = Math.round(y - 12 - ph * 14 + ph * ph * 10), fl = Math.floor(t * 8 + i) % 2; c.globalAlpha = 1 - ph * 0.8; c.fillStyle = '#5aa04a'; c.fillRect(X, Y, fl ? 4 : 3, fl ? 2 : 3); c.fillStyle = '#9ad08a'; c.fillRect(X + 1, Y, 1, 1); } c.globalAlpha = 1; },
+  tornado(c, x, y, t) { // 용오름: 발밑부터 휘감아 올라가는 회오리 + 가끔 작은 용이 솟는다
+    for (let k = 0; k < 6; k++) { const yy = y - k * 5, R = 4 + k * 2.2; c.strokeStyle = `rgba(180,210,240,${0.55 - k * 0.06})`; c.lineWidth = 1; c.beginPath(); c.ellipse(x + Math.sin(t * 3 + k) * 1.5, yy, R, R * 0.35, 0, 0, 7); c.stroke(); }
+    c.fillStyle = '#e8f2ff'; for (let i = 0; i < 10; i++) { const ph = (t * 0.9 + i / 10) % 1, a = t * 7 + i * 2.3, R = 4 + ph * 12; c.fillRect(Math.round(x + Math.cos(a) * R), Math.round(y - ph * 28 + Math.sin(a) * R * 0.35), 1, 1); }
+    const dp = (t * 0.35) % 1; if (dp < 0.5) { const q = dp * 2, X = x + Math.cos(t * 7) * 7, Y = y - q * 34; c.globalAlpha = Math.sin(q * Math.PI); c.fillStyle = '#3a9a6a'; c.fillRect(Math.round(X - 1), Math.round(Y), 3, 2); c.fillRect(Math.round(X - 3), Math.round(Y + 2), 2, 2); c.fillStyle = '#ffd84a'; c.fillRect(Math.round(X + 1), Math.round(Y), 1, 1); c.globalAlpha = 1; }
+  },
+  rainbow(c, x, y, t) { const cols = ['#ff4a4a', '#ffa030', '#ffe040', '#5ac85a', '#4a9af0', '#8a5ae0']; c.globalAlpha = 0.75; cols.forEach((col, i) => { c.strokeStyle = col; c.lineWidth = 1; c.beginPath(); c.arc(x, y - 6, 15 - i, Math.PI * 1.05, Math.PI * 1.95); c.stroke(); }); c.globalAlpha = 1; },
+};
+const Fx = {
+  draw(c, id, x, y, t) { const it = id && SHOP_BY_ID[id]; const f = it && it.fx && FX_DRAW[it.fx]; if (f) { c.save(); f(c, x, y, t); c.restore(); } },
+  // 그릴 목록: 나(걸을 때) + 걷는 친구
+  actors(c, vis, t) {
+    const out = [], P = Game.player, me = Pets.mineF;
+    if (me && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push({ y: P.y + 0.3, d: () => this.draw(c, me, P.x, P.y, t) });
+    for (const { p } of vis) { const f = p.pal && p.pal.fx; if (!f || p.rd || (p.dr && p.s === 'zone')) continue; out.push({ y: p.y + 0.3, d: () => this.draw(c, f, p.x, p.y, t) }); }
+    return out;
   },
 };
 

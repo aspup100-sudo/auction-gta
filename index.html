@@ -7350,6 +7350,10 @@ const Notebook = {
   },
   docsHtml() {
     const ids = [...new Set([...State.docs.map(d => d.caseId), ...Object.keys(State.clues)])];
+    // 새 물건이 위로 (사용자 2026-10-15): 입찰 대상 → 이번 목록에 있는 물건(최근에 서류 받은 순) → 지난 회차
+    const cur = new Set(((State.week && State.week.cases) || []).map(c => c.id)), last = id => State.docs.map(d => d.caseId).lastIndexOf(id);
+    const rank = id => (id === State.target ? 2 : 0) + (cur.has(id) ? 1 : 0);
+    ids.sort((x, y) => rank(y) - rank(x) || last(y) - last(x));
     if (!ids.length && !(State.fines || []).length) return '<p class="dim">아직 받은 서류가 없어요. 사무실 PC부터 보세요.</p>';
     let h = '';
     for (const id of ids) {

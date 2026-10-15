@@ -1835,6 +1835,7 @@ Object.assign(FEEL, {
   fineSpeed: 40000,       // 보행자 근처 과속
   carEnterDist: 26,
   promptSound: false,     // 상호작용 표시(E)가 뜰 때 소리 (사용자 요청으로 끔)
+  pvpDailyCap: 100e4, /* 같은 친구와 하루에 오갈 수 있는 판돈 (가위바위보·격투·대전 테트리스 합산, 사용자 2026-10-15 '하루 한도만') */
   vipGift: 1000, vipDuelChance: 0.15, vipDuelStake: 1e7, /* 깜짝 룰렛: 받을 때 15% 확률로 제안, 판돈 천만 원 */ // 이혁진이 말 걸 때마다 주는 돈 (100 → 1000, 사용자 2026-10-15 '천원으로')
   liveSecondMin: 3,       // 채널 차순위매수신고: 최고가매수인 잔금 기한을 기다리는 시간(분)
   fuelDrive: 5000,        // 직접 운전해서 옆 구로 넘어갈 때 주유비(원, ±20%)
@@ -7499,6 +7500,21 @@ function mgCash(d, label) {
   if (Live.on && typeof Money !== 'undefined') Money.why(label);
   State.cash += d; HUD.setCash(State.cash); if (Live.on) Live.save();
 }
+/* 친구끼리 하루 한도 (사용자 2026-10-15 '컴퓨터 계정 폰 계정 두 개로 돈 계속 줄 수 있으니까' → '하루 한도만')
+ * 같은 상대(이름)와 오늘 주고받은 돈의 합(내 쪽 +/−)이 ±FEEL.pvpDailyCap을 넘지 않게 한다. 날짜는 기기 시계 기준 하루.
+ * 양쪽이 같은 결과를 적으니 장부도 서로 반대 부호로 같다. 정산 때 한도를 넘는 만큼은 주고받지 않는다. */
+const PvpCap = {
+  today() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; },
+  load() { const L = Store.get('pvpLedger', null); return L && L.d === this.today() && L.net ? L : { d: this.today(), net: {} }; },
+  key(name) { return String(name || '').trim().slice(0, 24) || '?'; },
+  net(name) { return this.load().net[this.key(name)] || 0; },
+  room(name) { return Math.max(0, FEEL.pvpDailyCap - Math.abs(this.net(name))); }, // 이기든 지든 걸 수 있는 판돈
+  roomAll(names) { return names.length ? Math.min(...names.map(n => this.room(n))) : FEEL.pvpDailyCap; },
+  allow(name, d) { const n = this.net(name), cap = FEEL.pvpDailyCap; return Math.max(-cap, Math.min(cap, n + d)) - n; }, // 한도 안에서 실제로 오갈 돈
+  settle(name, d) { const v = this.allow(name, d); if (v) { const L = this.load(), k = this.key(name); L.net[k] = (L.net[k] || 0) + v; Store.set('pvpLedger', L); } return v; },
+  note(name) { const r = this.room(name); return r >= FEEL.pvpDailyCap ? `같은 친구와는 하루 ${fmtWon(FEEL.pvpDailyCap)}까지` : r ? `오늘 ${name}님과 남은 한도 ${fmtWon(r)}` : `오늘 ${name}님과는 한도를 다 썼어요. 재미로만 할 수 있어요`; },
+  cut(label, want, got) { return got !== want ? `${label} · 하루 한도로 ${fmtWon(Math.abs(got))}만` : label; },
+};
 const RPS_H = [{ k: 'r', ko: '바위', e: '✊' }, { k: 's', ko: '가위', e: '✌️' }, { k: 'p', ko: '보', e: '✋' }];
 const RPS_BY = Object.fromEntries(RPS_H.map(h => [h.k, h]));
 function rpsBeat(a, b) { return a === b ? 0 : (a === 'r' && b === 's') || (a === 's' && b === 'p') || (a === 'p' && b === 'r') ? 1 : -1; }
@@ -7537,7 +7553,8 @@ const Rps = {
     if (this.stake > State.cash) { Sound.play('deny'); return this.render('판돈이 내 돈보다 많아요.'); }
     if (this.size > 2) { if (Party.create('rps', this.size, this.stake)) { this.view = 'party'; return this.render(); } return this.render('같이 하기는 채널이나 친구 방에서만 돼요.'); }
     if (this.size === 1) return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: this.stake });
-    const f = this.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; Sound.play('deny'); return this.render(this.friends().length ? '같이 할 친구를 골라 주세요.' : `접속한 친구가 없어요. 1인으로 하면 ${castName('arcade')}이랑 해요.`); }
+    const f = this.friends().find(x => x.id === this.vs); if (f && this.stake > PvpCap.room(f.name)) { Sound.play('deny'); return this.render(PvpCap.note(f.name)); }
+    if (!f) { this.vs = 'house'; Sound.play('deny'); return this.render(this.friends().length ? '같이 할 친구를 골라 주세요.' : `접속한 친구가 없어요. 1인으로 하면 ${castName('arcade')}이랑 해요.`); }
     const gid = Net.myId + ':' + Date.now().toString(36);
     this.pend = { gid, to: f.id, name: f.name, stake: this.stake, at: performance.now() };
     this.send('ask', f.id, { gid, stake: this.stake, place: Game.room.place.id }); Sound.play('blip'); this.view = 'wait'; this.render();
@@ -7569,7 +7586,7 @@ const Rps = {
   },
   finish() {
     const g = this.g; g.state = 'done'; const won = g.me > g.op;
-    if (g.stake) mgCash(won ? g.stake : -g.stake, won ? `가위바위보 승 (${g.name})` : `가위바위보 패 (${g.name})`);
+    if (g.stake) { const want = won ? g.stake : -g.stake, d = g.vs === 'house' ? want : PvpCap.settle(g.name, want); g.paid = d; mgCash(d, PvpCap.cut(won ? `가위바위보 승 (${g.name})` : `가위바위보 패 (${g.name})`, want, d)); }
     Sound.play(won ? 'coins' : 'deny');
     if (Net.on && won && (g.vs !== 'house' || g.stake >= 10e4)) Net.news(`가위바위보로 ${g.name}을(를) 이김${g.stake ? ` · 판돈 ${fmtWon(g.stake)}` : ''}`);
     this.render();
@@ -7587,7 +7604,7 @@ const Rps = {
     if (m.k === 'no') {
       if (this.ask && this.ask.gid === m.gid) { this.ask = null; this.showAsk(); return; } // 신청한 쪽이 취소
       if (!this.pend || this.pend.gid !== m.gid) return; this.pend = null; this.view = 'lobby'; Sound.play('deny');
-      return this.render(m.why === 'busy' ? `${name}은(는) 지금 다른 판 중이에요.` : m.why === 'cash' ? `${name}은(는) 판돈이 모자라요.` : m.why === 'far' ? `${name}은(는) 지금 올 수 없대요.` : `${name}이(가) 안 한대요.`);
+      return this.render(m.why === 'busy' ? `${name}은(는) 지금 다른 판 중이에요.` : m.why === 'cash' ? `${name}은(는) 판돈이 모자라요.` : m.why === 'cap' ? `오늘 ${name}님과는 하루 한도를 넘어서 그 판돈은 안 돼요.` : m.why === 'far' ? `${name}은(는) 지금 올 수 없대요.` : `${name}이(가) 안 한대요.`);
     }
     if (m.k === 'ok') {
       if (!this.pend || this.pend.gid !== m.gid) return; const P = this.pend; this.pend = null;
@@ -7600,16 +7617,17 @@ const Rps = {
   },
   showAsk() {
     const el = $('rpsAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; }
-    const short = a.stake > State.cash;
+    const short = a.stake > State.cash, over = a.stake > PvpCap.room(a.name);
     const away = a.place && !(Game.scene === 'room' && Game.room && Game.room.place.id === a.place);
-    el.innerHTML = `<b>✊✌️✋ ${esc(a.name)}이(가) 가위바위보 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : ''}<div><button class="btn gold" id="rpsYes" ${short ? 'disabled' : ''}>하기</button><button class="btn" id="rpsNo">안 하기</button></div>`;
+    el.innerHTML = `<b>✊✌️✋ ${esc(a.name)}이(가) 가위바위보 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="rpsYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="rpsNo">안 하기</button></div>`;
     el.classList.add('in');
-    $('rpsYes').onclick = () => this.accept(); $('rpsNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : 'no' }); this.ask = null; this.showAsk(); };
+    $('rpsYes').onclick = () => this.accept(); $('rpsNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : over ? 'cap' : 'no' }); this.ask = null; this.showAsk(); };
     clearTimeout(this.askT); this.askT = setTimeout(() => { if (this.ask === a) { this.ask = null; this.showAsk(); } }, 20000);
   },
   async accept() {
     const a = this.ask; if (!a) return; if (Game.busy) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.'); this.ask = null; this.showAsk();
     if (a.stake > State.cash) return this.send('no', a.from, { gid: a.gid, why: 'cash' });
+    if (a.stake > PvpCap.room(a.name)) return this.send('no', a.from, { gid: a.gid, why: 'cap' });
     if (!(await mgGoTo(a.place))) return this.send('no', a.from, { gid: a.gid, why: 'far' }); // v90: 밖에 있으면 게임장으로 바로 간다
     if (Rps.open_ && this.g) this.g = null;
     if (!this.open_) { this.open_ = true; Game.formOpen = true; $('rpsWin').classList.add('in'); clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500); }
@@ -7621,11 +7639,12 @@ const Rps = {
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = this.friends(); const opts = this.size === 1 ? [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }] : fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` }));
       const wait = this.view === 'wait', multi = this.size > 2;
+      const fsel = this.size === 2 ? fr.find(f => f.id === this.vs) : null, fRoom = fsel ? PvpCap.room(fsel.name) : Infinity; if (!wait && this.stake > fRoom) this.stake = Math.max(...RPS_STAKES.filter(s => s <= fRoom));
       el.innerHTML = arcadeShell('✊ 가위바위보 ✌', `<div class="rcpt arcade">${head}
         <div class="mgSec">인원 <small>${Net.on ? '2인부터는 친구에게 신청하거나 초대장을 보내요' : '친구랑 하기는 채널이나 친구 방에서 돼요'}</small></div><div class="mgRow">${[1, 2, 3, 4].map(n => `<button class="btn${this.size === n ? ' sel' : ''}" data-sz="${n}" ${wait || (n > 1 && !Net.on) ? 'disabled' : ''}>${n}인<small>${n === 1 ? `${castName('arcade')}이랑` : `${n - 1}명 모집`}</small></button>`).join('')}</div>
         ${multi ? '<p class="mgNote">다 같이 내서 두 가지 손만 나오면 진 손을 낸 사람이 탈락해요. 끝까지 남은 한 명이 판돈을 다 가져가요.</p>' : `<div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${this.size === 2 && !fr.length ? '<p class="mgNote">접속한 친구가 있으면 여기에 떠요. 밖에 있어도 초대장이 가요.</p>' : ''}`}
-        <div class="mgSec">판돈 <small>${multi ? '탈락한 사람이 우승한 사람에게 줘요' : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
+        <div class="mgSec">판돈 <small>${multi ? `탈락한 사람이 우승한 사람에게 줘요 · 같은 친구와는 하루 ${fmtWon(FEEL.pvpDailyCap)}까지` : fsel ? PvpCap.note(fsel.name) : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash || s > fRoom ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
         <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p></div>`,
         `<div class="pcBtns">${wait ? '<button class="btn" id="rpsCancel">신청 취소</button>' : `<button class="btn gold" id="rpsGo">${multi ? '👥 판 만들기' : 'START · 시작'}</button>`}<button class="btn" id="rpsX">← 일어나기</button></div>`);
       el.querySelectorAll('[data-sz]').forEach(b => (b.onclick = () => { this.size = Number(b.dataset.sz); if (this.size === 1) this.vs = 'house'; else if (this.size === 2 && !fr.some(f => f.id === this.vs)) this.vs = fr.length ? fr[0].id : 'house'; Sound.play('click'); this.render(); }));
@@ -8272,6 +8291,7 @@ const Fight = {
     if (this.stake > State.cash) { Sound.play('deny'); return this.render('판돈이 내 돈보다 많아요.'); }
     if (this.vs === 'house') { this.stake = 0; return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: 0, left: true }); } // 사장이랑은 판돈 없이 (사용자 2026-10-15 '사장이랑 해서 돈 못 따게, 친구랑만')
     const f = Rps.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; return this.render('그 친구가 게임장에 없어요.'); }
+    if (this.stake > PvpCap.room(f.name)) { Sound.play('deny'); return this.render(PvpCap.note(f.name)); }
     const gid = Net.myId + ':' + Date.now().toString(36);
     this.pend = { gid, to: f.id, name: f.name, stake: this.stake, at: performance.now() };
     this.send('ask', f.id, { gid, stake: this.stake, place: Game.room.place.id }); Sound.play('blip'); this.view = 'wait'; this.render();
@@ -8367,14 +8387,14 @@ const Fight = {
   },
   finish() {
     const g = this.g; g.state = 'done'; cancelAnimationFrame(this.raf); const won = g.me.wins > g.op.wins;
-    if (g.stake) mgCash(won ? g.stake : -g.stake, won ? `격투 게임 승 (${g.name})` : `격투 게임 패 (${g.name})`);
+    if (g.stake) { const want = won ? g.stake : -g.stake, d = g.vs === 'house' ? want : PvpCap.settle(g.name, want); g.paid = d; mgCash(d, PvpCap.cut(won ? `격투 게임 승 (${g.name})` : `격투 게임 패 (${g.name})`, want, d)); }
     Sound.play(won ? 'coins' : 'deny'); if (Net.on && won && (g.vs !== 'house' || g.stake >= 10e4)) Net.news(`격투 게임에서 ${g.name}을(를) 이김 ${g.me.wins}:${g.op.wins}${g.stake ? ` · 판돈 ${fmtWon(g.stake)}` : ''}`);
     this.view = 'done'; this.render();
   },
   onNet(m, p) {
     if (m.to !== Net.myId) return; const name = (p && p.name) || m.name || '친구';
     if (m.k === 'ask') { if (this.g && this.g.state !== 'done') return this.send('no', m.from, { gid: m.gid, why: 'busy' }); this.ask = { gid: m.gid, from: m.from, name, stake: Math.max(0, Number(m.stake) || 0), place: m.place || '' }; this.showAsk(); Sound.play('ding'); return; }
-    if (m.k === 'no') { if (this.ask && this.ask.gid === m.gid) { this.ask = null; this.showAsk(); return; } if (!this.pend || this.pend.gid !== m.gid) return; this.pend = null; this.view = 'lobby'; Sound.play('deny'); return this.render(m.why === 'busy' ? `${name}은(는) 지금 다른 판 중이에요.` : m.why === 'cash' ? `${name}은(는) 판돈이 모자라요.` : m.why === 'far' ? `${name}은(는) 지금 올 수 없대요.` : `${name}이(가) 안 한대요.`); }
+    if (m.k === 'no') { if (this.ask && this.ask.gid === m.gid) { this.ask = null; this.showAsk(); return; } if (!this.pend || this.pend.gid !== m.gid) return; this.pend = null; this.view = 'lobby'; Sound.play('deny'); return this.render(m.why === 'busy' ? `${name}은(는) 지금 다른 판 중이에요.` : m.why === 'cash' ? `${name}은(는) 판돈이 모자라요.` : m.why === 'cap' ? `오늘 ${name}님과는 하루 한도를 넘어서 그 판돈은 안 돼요.` : m.why === 'far' ? `${name}은(는) 지금 올 수 없대요.` : `${name}이(가) 안 한대요.`); }
     if (m.k === 'ok') { if (!this.pend || this.pend.gid !== m.gid) return; const P = this.pend; this.pend = null; if (!this.open_) return this.send('quit', m.from, { gid: m.gid }); return this.begin({ gid: P.gid, vs: P.to, name: P.name, stake: P.stake, left: true }); }
     const g = this.g; if (!g || g.gid !== m.gid) return; g.lastRemote = performance.now();
     if (m.k === 'st') { if (m.r !== g.round) return; g.op.net = m; if (typeof m.hp === 'number' && g.state === 'fight') g.op.hp = m.hp; if (g.op.net && g.op.x === undefined) g.op.x = m.x; return; }
@@ -8384,14 +8404,14 @@ const Fight = {
     if (m.k === 'quit' && g.state !== 'done') this.stop(`${name}이(가) 그만뒀어요. 판돈은 그대로예요.`);
   },
   showAsk() {
-    const el = $('fightAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; } const short = a.stake > State.cash;
+    const el = $('fightAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; } const short = a.stake > State.cash, over = a.stake > PvpCap.room(a.name);
     const away = a.place && !(Game.scene === 'room' && Game.room && Game.room.place.id === a.place);
-    el.innerHTML = `<b>🥊 ${esc(a.name)}이(가) 격투 게임 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : ''}<div><button class="btn gold" id="fgYes" ${short ? 'disabled' : ''}>하기</button><button class="btn" id="fgNo">안 하기</button></div>`;
-    el.classList.add('in'); $('fgYes').onclick = () => this.accept(); $('fgNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : 'no' }); this.ask = null; this.showAsk(); };
+    el.innerHTML = `<b>🥊 ${esc(a.name)}이(가) 격투 게임 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="fgYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="fgNo">안 하기</button></div>`;
+    el.classList.add('in'); $('fgYes').onclick = () => this.accept(); $('fgNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : over ? 'cap' : 'no' }); this.ask = null; this.showAsk(); };
     clearTimeout(this.askT); this.askT = setTimeout(() => { if (this.ask === a) { this.ask = null; this.showAsk(); } }, 20000);
   },
   async accept() {
-    const a = this.ask; if (!a) return; if (Game.busy) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.'); this.ask = null; this.showAsk(); if (a.stake > State.cash) return this.send('no', a.from, { gid: a.gid, why: 'cash' });
+    const a = this.ask; if (!a) return; if (Game.busy) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.'); this.ask = null; this.showAsk(); if (a.stake > State.cash) return this.send('no', a.from, { gid: a.gid, why: 'cash' }); if (a.stake > PvpCap.room(a.name)) return this.send('no', a.from, { gid: a.gid, why: 'cap' });
     if (Casino.open_ && Casino.locked()) return this.send('no', a.from, { gid: a.gid, why: 'busy' }); if (Casino.open_) Casino.close(); if (!(await mgGoTo(a.place))) return this.send('no', a.from, { gid: a.gid, why: 'far' });
     if (Rps.open_) Rps.close(); if (Casino.open_) Casino.close();
     if (!this.open_) { this.open_ = true; Game.formOpen = true; $('fightWin').classList.add('in'); clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500); }
@@ -8400,12 +8420,13 @@ const Fight = {
   render(msg) {
     if (!this.open_) return; const el = $('fightWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view);
     if (this.view === 'lobby' || this.view === 'wait') {
-      const fr = Rps.friends(), wait = this.view === 'wait'; const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` })));
+      const fr = Rps.friends(), wait = this.view === 'wait';
+      const fsel = this.vs !== 'house' ? fr.find(f => f.id === this.vs) : null, fRoom = fsel ? PvpCap.room(fsel.name) : Infinity; if (!wait && this.stake > fRoom) this.stake = Math.max(...RPS_STAKES.filter(s => s <= fRoom)); const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` })));
       el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>
         <p class="mgNote">내 캐릭터로 직접 싸워요. <b>A·D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기 · <b>J</b> 주먹 · <b>K</b> 발차기. 터치는 화면 버튼.</p>
         <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${Net.on && !fr.length ? '<p class="mgNote">접속한 친구가 있으면 여기에 떠요. 밖에 있어도 초대장이 가요.</p>' : ''}
-        <div class="mgSec">판돈 <small>${this.vs === 'house' ? '사장이랑은 재미로만 해요. 판돈은 친구랑 할 때만 걸 수 있어요' : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash || (s && this.vs === 'house') ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
+        <div class="mgSec">판돈 <small>${this.vs === 'house' ? '사장이랑은 재미로만 해요. 판돈은 친구랑 할 때만 걸 수 있어요' : fsel ? PvpCap.note(fsel.name) : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash || s > fRoom || (s && this.vs === 'house') ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
         <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p></div>`,
         `<div class="pcBtns">${wait ? '<button class="btn" id="fgCancel">신청 취소</button>' : '<button class="btn gold" id="fgGo">START · 시작</button>'}<button class="btn" id="fgX">← 일어나기</button></div>`);
       el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; if (this.vs === 'house') this.stake = 0; Sound.play('click'); this.render(); }));
@@ -8593,7 +8614,7 @@ const Tetris = {
     const seats = P.members.map(id => `<li class="${id === Net.myId ? 'me' : ''}">${esc(Party.nm(id))}${id === P.host ? ' <small>방장</small>' : ''}</li>`).join('') + Array.from({ length: Math.max(0, P.size - P.members.length) }, () => '<li class="empty">빈자리 · 모집 중…</li>').join('');
     const fr = host && P.members.length < P.size ? Party.friends().filter(f => !P.members.includes(f.id)) : [];
     const inv = !host || P.members.length >= P.size ? '' : fr.length ? `<div class="tetInv"><small>초대장 보내기 (밖에 있어도 와요)</small>${fr.map(f => `<button class="btn" data-inv="${f.id}" ${P.invited[f.id] ? 'disabled' : ''}>${esc(f.name)} <small>${P.invited[f.id] ? '보냄 ✓' : f.here ? '여기 있음' : '밖에 있음'}</small></button>`).join('')}</div>` : '<p class="tetNote">초대할 수 있는 친구가 없어요. 같은 동네에 접속한 친구만 보여요.</p>';
-    const opts = host ? `<div class="tetOpt"><span>인원</span>${[2, 3, 4].map(n => `<button class="btn${P.size === n ? ' sel' : ''}" data-tsz="${n}" ${n < P.members.length ? 'disabled' : ''}>${n}명</button>`).join('')}</div><div class="tetOpt"><span>판돈</span>${STK.map(v => `<button class="btn${P.stake === v ? ' sel' : ''}" data-tst="${v}" ${v > State.cash ? 'disabled' : ''}>${v ? fmtWon(v) : '없음'}</button>`).join('')}</div>` : `<p>판돈 <b style="font-size:15px">${P.stake ? fmtWon(P.stake) : '없음'}</b></p>`;
+    const opts = host ? `<div class="tetOpt"><span>인원</span>${[2, 3, 4].map(n => `<button class="btn${P.size === n ? ' sel' : ''}" data-tsz="${n}" ${n < P.members.length ? 'disabled' : ''}>${n}명</button>`).join('')}</div><div class="tetOpt"><span>판돈</span>${STK.map(v => `<button class="btn${P.stake === v ? ' sel' : ''}" data-tst="${v}" ${v > State.cash || v > PvpCap.roomAll(P.members.filter(id => id !== Net.myId).map(id => Party.nm(id))) ? 'disabled' : ''}>${v ? fmtWon(v) : '없음'}</button>`).join('')}</div>` : `<p>판돈 <b style="font-size:15px">${P.stake ? fmtWon(P.stake) : '없음'}</b></p>`;
     return `<h2>VS TETRIS</h2><p>두 줄 이상 지우면 상대에게 회색 줄이 올라가요. 마지막까지 버티면 이겨요.</p><ul class="tetSeats">${seats}</ul>${opts}${inv}
       ${host ? `<button class="btn gold" id="tetStart" ${P.members.length < 2 ? 'disabled' : ''}>START · 대전 시작</button>` : '<p class="tetNote">방장이 시작하면 바로 시작해요.</p>'}<button class="btn" id="tetLeave">${host ? '판 닫기' : '판에서 나가기'}</button>`;
   },
@@ -8603,7 +8624,7 @@ const Tetris = {
     const rows = rank.map((id, i) => `<li class="${id === me ? 'me' : ''}">${i + 1}위 ${esc(Party.nm(id))}${id === b.winner ? ' 🏆' : ''}</li>`).join('');
     if (this.state === 'out') return `<h2>K.O.</h2><p>맨 위까지 찼어요.${b.stake ? ` 판돈 −${fmtWon(b.stake)}` : ''}</p><p class="tetNote">남은 사람 ${b.alive.length}명 · 끝날 때까지 지켜봐요.</p><button class="btn" id="tetQ2">← 일어나기</button>`;
     const won = b.winner === me, again = P && Party.isHost() && P.members.length >= 2;
-    return `<h2>${won ? 'YOU WIN!' : 'GAME OVER'}</h2><p>${b.aborted ? '방장이 나가서 판이 끝났어요.' : won ? `끝까지 버텼어요!${b.stake && b.kos ? ` +${fmtWon(b.stake * b.kos)}` : ''}` : b.winner ? `${esc(Party.nm(b.winner))} 우승${b.stake ? ` · 나는 −${fmtWon(b.stake)}` : ''}` : '무승부'}</p><ul class="tetSeats">${rows}</ul>
+    return `<h2>${won ? 'YOU WIN!' : 'GAME OVER'}</h2><p>${b.aborted ? '방장이 나가서 판이 끝났어요.' : won ? `끝까지 버텼어요!${b.stake && b.kos ? ` +${fmtWon(b.won != null ? b.won : b.stake * b.kos)}` : ''}` : b.winner ? `${esc(Party.nm(b.winner))} 우승${b.stake ? ` · 나는 −${fmtWon(b.stake)}` : ''}` : '무승부'}</p><ul class="tetSeats">${rows}</ul>
       ${again ? '<button class="btn gold" id="tetStart">CONTINUE · 한 판 더</button>' : P ? '<p class="tetNote">방장이 다시 시작하면 바로 시작해요.</p>' : ''}<button class="btn" id="tetQ2">← 일어나기</button>`;
   },
   hostStart() {
@@ -8630,13 +8651,16 @@ const Tetris = {
   koMe(quit) {
     const b = this.b, me = Net.myId; if (!b || !b.alive.includes(me)) return;
     b.alive = b.alive.filter(x => x !== me); b.ko.push(me); this.state = 'out'; if (this.s) this.s.cur = null; Sound.play('deny');
-    if (b.stake) mgCash(-b.stake, '대전 테트리스 패'); Party.send('tko', { gid: b.gid });
+    if (b.stake) { /* 하루 한도: 우승자를 아직 모르니 남은 상대 중 한도가 가장 넉넉한 사람 기준으로 낸다 (받는 쪽은 자기 장부로 따로 줄인다) */
+      const opp = b.alive.filter(x => x !== me).map(id => Party.nm(id)).sort((x, y) => PvpCap.allow(x, -b.stake) - PvpCap.allow(y, -b.stake))[0];
+      const d = opp ? PvpCap.settle(opp, -b.stake) : -b.stake; mgCash(d, PvpCap.cut('대전 테트리스 패', -b.stake, d)); }
+    Party.send('tko', { gid: b.gid });
     if (!quit) { Party.send('tb', { gid: b.gid, b: this.boardStr(), sc: this.s ? this.s.score : 0, ln: this.s ? this.s.lines : 0, pd: 0 }); this.checkEnd(); this.overlay(); }
   },
   checkEnd() {
     const b = this.b; if (!b || b.state !== 'play' || b.alive.length > 1) return this.overlay();
     b.state = 'done'; b.winner = b.alive[0] || null; const me = Net.myId;
-    if (b.winner === me) { if (this.s) this.s.cur = null; if (b.stake && b.kos) mgCash(b.stake * b.kos, '대전 테트리스 승'); Sound.play('coins'); if (Net.on && b.kos) Net.news(`대전 테트리스 우승 (${b.order.length}명)${b.stake && b.kos ? ` +${fmtWon(b.stake * b.kos)}` : ''}`); }
+    if (b.winner === me) { if (this.s) this.s.cur = null; if (b.stake && b.kos) { b.won = b.ko.filter(id => id !== me).reduce((t, id) => t + PvpCap.settle(Party.nm(id), b.stake), 0); mgCash(b.won, '대전 테트리스 승'); } Sound.play('coins'); if (Net.on && b.kos) Net.news(`대전 테트리스 우승 (${b.order.length}명)${b.won ? ` +${fmtWon(b.won)}` : ''}`); }
     const P = Party.p; if (P) P.started = false;
     this.state = 'result'; this.overlay();
   },
@@ -8808,8 +8832,8 @@ const Party = {
   /* ---- 초대장 카드 ---- */
   showInv() {
     const el = $('partyAsk'), a = this.inv; if (!a) { el.classList.remove('in'); return; }
-    const G = PARTY_GAMES[a.game], short = a.stake > State.cash, here = Game.scene === 'room' && Game.room && Game.room.place.id === a.place;
-    el.innerHTML = `<i class="tk">🎟 초대장</i><b>${esc(a.name)}이(가) ${esc(a.pname)} ${G.name}에 불렀어요</b><span>${a.size}명 모집 · 지금 ${a.n}명${a.stake ? ` · 판돈 ${fmtWon(a.stake)}` : ''}</span>${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : ''}${here ? '' : '<span class="sm">가기를 누르면 그 가게 안으로 바로 가요.</span>'}<div><button class="btn gold" id="ptYes" ${short ? 'disabled' : ''}>가기</button><button class="btn" id="ptNo">거절</button></div>`;
+    const G = PARTY_GAMES[a.game], short = a.stake > State.cash, over = (a.game === 'rps' || a.game === 'tet') && a.stake > PvpCap.room(a.name), here = Game.scene === 'room' && Game.room && Game.room.place.id === a.place;
+    el.innerHTML = `<i class="tk">🎟 초대장</i><b>${esc(a.name)}이(가) ${esc(a.pname)} ${G.name}에 불렀어요</b><span>${a.size}명 모집 · 지금 ${a.n}명${a.stake ? ` · 판돈 ${fmtWon(a.stake)}` : ''}</span>${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}${here ? '' : '<span class="sm">가기를 누르면 그 가게 안으로 바로 가요.</span>'}<div><button class="btn gold" id="ptYes" ${short || over ? 'disabled' : ''}>가기</button><button class="btn" id="ptNo">거절</button></div>`;
     el.classList.add('in'); $('ptYes').onclick = () => this.accept(); $('ptNo').onclick = () => { this.send('no', { to: a.from, gid: a.gid, why: 'no' }); this.inv = null; this.showInv(); };
     clearTimeout(this.invT); this.invT = setTimeout(() => { if (this.inv === a) { this.inv = null; this.showInv(); } }, 30000);
   },
@@ -8873,7 +8897,9 @@ const Party = {
   rpsDrop(ids) { const g = this.p && this.p.g; if (!g || g.state === 'done' || !ids.length) return; g.alive = g.alive.filter(id => !ids.includes(id)); if (g.alive.length <= 1 && g.state !== 'reveal') return this.rpsFinish(); if (g.state === 'pick') this.rpsCheck(); },
   rpsFinish() {
     const P = this.p, g = P.g; g.state = 'done'; g.winner = g.alive[0] || null; const present = g.all.filter(id => P.members.includes(id)); g.pot = P.stake * Math.max(0, present.length - 1);
-    if (P.stake && g.winner) { if (g.winner === Net.myId) mgCash(g.pot, `가위바위보 ${present.length}명 판 우승`); else if (present.includes(Net.myId)) mgCash(-P.stake, '가위바위보 여러 명 판 탈락'); }
+    if (P.stake && g.winner) { /* 하루 한도: 탈락한 사람마다 따로 계산 (v98) */
+      if (g.winner === Net.myId) { g.pot = present.filter(id => id !== Net.myId).reduce((t, id) => t + PvpCap.settle(this.nm(id), P.stake), 0); mgCash(g.pot, `가위바위보 ${present.length}명 판 우승`); }
+      else if (present.includes(Net.myId)) { const d = PvpCap.settle(this.nm(g.winner), -P.stake); mgCash(d, PvpCap.cut('가위바위보 여러 명 판 탈락', -P.stake, d)); } }
     if (Net.on && g.winner === Net.myId) Net.news(`가위바위보 ${present.length}명 판에서 끝까지 살아남음${g.pot ? ` · +${fmtWon(g.pot)}` : ''}`);
     Sound.play(g.winner === Net.myId ? 'coins' : 'deny'); this.refresh();
   },

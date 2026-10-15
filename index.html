@@ -4223,6 +4223,7 @@ const Net = {
     if (m.t === 'rps') { Rps.onNet(m, p); return; } // 게임장 가위바위보 (v81)
     if (m.t === 'fight') { Fight.onNet(m, p); return; } // 게임장 격투 게임 (v82)
     if (m.t === 'party') { Party.onNet(m, p); return; } // 여러 명 모집 · 초대장 (v90)
+    if (m.t === 'vip') { VipNet.onNet(m, p); return; } // 이혁진 위치·도망·말 걸기 차례 (v91)
     if (m.t === 'vduel') { VipDuel.onNet(m, p); return; } // 이혁진 룰렛: 한 번에 한 사람
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'hosp') { Pvp.onHosp(m, p); return; }
@@ -5475,14 +5476,66 @@ const VIP_ESC = [
   { mode: 'horse', sp: 300, how: '말 타고', say: '한강 승마장에서 빌린 말이에요. 이랴!', land: '워워. 말 돌려주러 가야겠다.' },
   { mode: 'rocket', sp: 600, how: '로켓 배낭 메고', say: '로켓 배낭 시험 비행! 3, 2, 1!', land: '착지 성공. 연료비가 천 원의 십만 배예요.', fly: 38 },
 ];
-function vipEscape(w, n) {
-  const z = Game.zone; const K = VIP_ESC[n % VIP_ESC.length]; let best = null;
-  for (let i = 0; i < 400; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) !== (K.road ? T.ROAD : T.WALK)) continue; const d = Math.hypot(x * TILE - w.x, y * TILE - w.y); const pt = { x: x * TILE + 8, y: y * TILE + 8 }; if (d > 50 * TILE && d < 110 * TILE) { best = pt; break; } if (!best) best = pt; }
+function vipEscape(w, n, dest) { // dest: 다른 사람이 일으킨 도망 (같은 목적지로, 채팅 알림은 그 사람이 보낸다)
+  const z = Game.zone; const K = VIP_ESC[n % VIP_ESC.length]; let best = dest ? { x: dest.tx, y: dest.ty } : null; if (dest) { w.x = dest.x0; w.y = dest.y0; w.stun = 0; }
+  if (!dest) for (let i = 0; i < 400; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) !== (K.road ? T.ROAD : T.WALK)) continue; const d = Math.hypot(x * TILE - w.x, y * TILE - w.y); const pt = { x: x * TILE + 8, y: y * TILE + 8 }; if (d > 50 * TILE && d < 110 * TILE) { best = pt; break; } if (!best) best = pt; }
   if (!best) return;
   w.bubble = { text: K.say, t: 2.5 }; w.esc = { K, mode: K.mode, x0: w.x, y0: w.y, tx: best.x, ty: best.y, total: Math.hypot(best.x - w.x, best.y - w.y), sp: K.sp, t: 0, prep: K.mode === 'ufo' || K.dig ? 1.2 : 0.4 };
   Toast.show(`${castName('vip')}: ${K.say}`, 2800); Sound.play(K.mode === 'car' ? 'horn' : 'pop');
-  if (Net.on) Net.news(`${castName('vip')}이(가) ${K.how} 도망감`);
+  if (Net.on && !dest) { Net.news(`${castName('vip')}이(가) ${K.how} 도망감`); Net.send({ t: 'vip', k: 'esc', z: z.id, n, x0: Math.round(w.esc.x0), y0: Math.round(w.esc.y0), tx: best.x, ty: best.y }); }
 }
+/* ---- 이혁진은 채널(같이 하기)에서 모두에게 같은 자리에 보인다 (사용자 2026-10-15 '사람마다 이혁진 보이는 위치가 달라? 같게해야지')
+ * 같은 동네 길 위에 있는 사람 중 id가 가장 앞선 사람(리더)만 이혁진을 걷게 하고 초당 5번 위치를 알린다. 나머지는 그 위치를 부드럽게 따라간다.
+ * 리더가 건물에 들어가거나 나가면 다음 사람이 이어받는다 (지금 보이는 자리에서 그대로 이어서 걷는다).
+ * 말 걸기·룰렛은 한 번에 한 사람만 (사용자 2026-10-15 '이혁진이랑 상호작용은 한사람씩만'): 걸기 전에 lock을 알리고 0.4초 기다려
+ * 동시에 건 사람이 있으면 먼저 건 사람(at이 작은 쪽, 같으면 id가 앞선 쪽)만 이어 간다. lock이 걸린 동안은 모두에게 이혁진이 멈춰 서 있다. */
+const VipNet = {
+  lock: null, mine: null, lost: false, heard: null, sendT: 0,
+  vip() { return Game.decor.find(w => w.vip); },
+  leader() {
+    if (!Net.on || Game.scene !== 'zone') return false; const z = Game.zone.id, now = performance.now();
+    if (this.heard && this.heard.z === z && now - this.heard.at < 2500 && this.heard.id < Net.myId) return false;
+    for (const id in Net.players) { const p = Net.players[id]; if (!p.gone && p.z === z && p.s === 'zone' && now - (p.last || 0) < 5000 && id < Net.myId) return false; }
+    return true;
+  },
+  following() { return Net.on && this.heard && this.heard.z === Game.zone.id && performance.now() - this.heard.at < 2500 && !this.leader(); },
+  held(z) { const L = this.mine && this.mine.z === z ? this.mine : this.lock && this.lock.z === z ? this.lock : null; return L && performance.now() < L.until ? L : null; },
+  busyName(z) { const L = this.lock; return L && L.z === z && performance.now() < L.until ? L.name : ''; },
+  claim(dur) { if (!Net.on) return; this.mine = { z: Game.zone.id, at: Date.now(), until: performance.now() + dur * 1000, me: true }; this.lost = false; Net.send({ t: 'vip', k: 'lock', z: this.mine.z, at: this.mine.at, dur }); },
+  extend(dur) { if (!this.mine) return; this.mine.until = performance.now() + dur * 1000; Net.send({ t: 'vip', k: 'lock', z: this.mine.z, at: this.mine.at, dur, keep: 1 }); },
+  free() { if (!this.mine) return; Net.send({ t: 'vip', k: 'free', z: this.mine.z }); this.mine = null; },
+  onNet(m, p) {
+    const here = Game.scene !== 'title' && Game.zone && m.z === Game.zone.id, w = here ? this.vip() : null;
+    if (m.k === 'pos') {
+      if (!here || !w) return; this.heard = { id: m.from, z: m.z, at: performance.now() };
+      if (this.leader()) return; // 동시에 리더라고 생각한 경우: id가 앞선 쪽만 남는다 (heard가 그걸 정리)
+      if (w.esc) return; w.net = { x: m.x, y: m.y, d: m.d, m: !!m.m }; return;
+    }
+    if (m.k === 'esc') { if (!w || Game.scene !== 'zone') return; vipEscape(w, m.n, m); return; }
+    if (m.k === 'lock') {
+      const mine = this.mine; if (mine && mine.z === m.z && !m.keep) { if (mine.at < m.at || (mine.at === m.at && Net.myId < m.from)) return; this.mine = null; this.lost = true; }
+      this.lock = { z: m.z, id: m.from, name: (p && p.name) || '누군가', until: performance.now() + Math.min(600, m.dur || 45) * 1000 };
+      if (w && !m.keep) { w.bubble = { text: `${this.lock.name}님이랑 얘기 중`, t: 2 }; if (p && p.x !== undefined && p.z === m.z) w.dir = dirToward(w, p); }
+      return;
+    }
+    if (m.k === 'free') { if (this.lock && this.lock.id === m.from) this.lock = null; return; }
+  },
+  // updateDecor에서 이혁진 차례에 부른다. true면 이번 프레임은 여기서 다 움직였다 (평소 AI는 건너뜀)
+  step(w, dt) {
+    if (!Net.on) return false; const z = Game.zone.id, L = this.held(z);
+    if (this.leader()) {
+      this.sendT -= dt; if (this.sendT <= 0 && !w.esc) { this.sendT = 0.2; Net.send({ t: 'vip', k: 'pos', z, x: Math.round(w.x), y: Math.round(w.y), d: w.dir, m: w.moving ? 1 : 0 }); }
+      if (L) { w.moving = false; w.frame = 0; w.ai.ix = w.ai.iy = 0; w.ai.t = 0.5; return true; } // 누가 말 거는 중: 제자리
+      return false;
+    }
+    if (!this.following() || !w.net) { if (L) { w.moving = false; w.frame = 0; return true; } return false; }
+    const n = w.net, dx = n.x - w.x, dy = n.y - w.y, d = Math.hypot(dx, dy);
+    if (d > 6 * TILE) { w.x = n.x; w.y = n.y; } else { const k = 1 - Math.exp(-10 * dt); w.x += dx * k; w.y += dy * k; }
+    if (!(L && L.me)) w.dir = n.d; w.moving = n.m && !L;
+    if (w.moving) { w.ft = (w.ft || 0) + dt; if (w.ft >= FEEL.walkFrameTime) { w.ft -= FEEL.walkFrameTime; w.frame = w.frame % 4 + 1; } } else w.frame = 0;
+    return true;
+  },
+};
 function stepEscape(w, dt) {
   const e = w.esc; e.t += dt; w.moving = false;
   if (e.out !== undefined) { e.out -= dt; if (e.out <= 0) { w.esc = null; w.ai.t = 0.5; } return; }
@@ -5531,7 +5584,8 @@ function spawnDecor() {
   const z = Game.zone; Game.decor = [];
   const walkTiles = []; for (let i = 0; i < 4000 && walkTiles.length < 300; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) === T.WALK) walkTiles.push([x, y]); }
   for (let i = 0; i < FEEL.decorWalkers; i++) { const [x, y] = walkTiles[i * 7 % walkTiles.length]; const w = makeWalker(['walker1', 'walker2', 'walker3'][i % 3], x * TILE + 8, y * TILE + 8); w.ai = { t: 0, ix: 0, iy: 0 }; Game.decor.push(w); }
-  if (walkTiles.length) { const [x, y] = walkTiles[11 % walkTiles.length]; const v = makeWalker('vip', x * TILE + 8, y * TILE + 8); v.ai = { t: 0, ix: 0, iy: 0 }; v.vip = true; Game.decor.push(v); } // 이혁진: 동네마다 한 명, 누가 봐도 멋진 사람
+  const VR = makeRng([...String(z.id)].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 77)), vipTile = (() => { for (let i = 0; i < 4000; i++) { const x = Math.floor(VR.next() * z.W), y = Math.floor(VR.next() * z.H); if (z.at(x, y) === T.WALK) return [x, y]; } return null; })(); // 이혁진 첫 자리: 동네마다 정해진 곳 (모두에게 같게)
+  if (walkTiles.length) { const [x, y] = vipTile || walkTiles[11 % walkTiles.length]; const v = makeWalker('vip', x * TILE + 8, y * TILE + 8); v.ai = { t: 0, ix: 0, iy: 0 }; v.vip = true; Game.decor.push(v); } // 이혁진: 동네마다 한 명, 누가 봐도 멋진 사람
   const alley = []; for (let i = 0; i < 4000 && alley.length < 30; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) === T.ALLEY) alley.push([x, y]); }
   Game.cats = alley.slice(0, 3).map(([x, y]) => ({ x: x * TILE + 8, y: y * TILE + 8, t: Math.random() * 5, vx: 0, sit: true }));
 }
@@ -5576,14 +5630,18 @@ async function talkWalker(w) {
   if (Game.busy) return; Game.busy = true;
   const z = Game.zone, p = Game.player; const i = Game.decor.indexOf(w); const name = w.vip ? castName('vip') : WALKER_NAMES[(i < 0 ? 0 : i) % WALKER_NAMES.length];
   w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
-  if (w.vip && VipDuel.othersBusy()) { await Dialog.say([{ name, sprite: 'vip', text: `지금 ${VipDuel.othersBusy()}님이랑 게임 중이에요. 한 번에 한 분씩만 해요. 이따 봬요.` }]); w.ai.t = 0.3; Game.busy = false; return; }
+  if (w.vip && Net.on) { // 한 번에 한 사람만 (위 VipNet)
+    const who = VipNet.busyName(z.id); if (!who) { VipNet.claim(45); await new Promise(r => setTimeout(r, 400)); }
+    if (who || VipNet.lost) { VipNet.lost = false; await Dialog.say([{ name, sprite: 'vip', text: `지금 ${who || VipNet.busyName(z.id) || '다른 분'}님이랑 얘기 중이에요. 한 번에 한 분씩만 해요. 잠깐만 기다려 주세요.` }]); w.ai.t = 0.3; Game.busy = false; return; }
+  }
+  if (w.vip && VipDuel.othersBusy()) { await Dialog.say([{ name, sprite: 'vip', text: `지금 ${VipDuel.othersBusy()}님이랑 게임 중이에요. 한 번에 한 분씩만 해요. 이따 봬요.` }]); VipNet.free(); w.ai.t = 0.3; Game.busy = false; return; }
   if (w.vip) { // 이혁진: 말을 걸면 천 원을 건넨다 (사용자 요청)
     const V = [`안녕하세요. 오늘 옷 괜찮죠? 자, 이거 받으세요.`, `또 만났네요. 부지런한 사람은 보기 좋아요. 자, 천 원.`, `여유는 지갑이 아니라 태도에서 나와요. 그래도 커피값에 보태요.`, `서류 꼼꼼히 보는 사람이 결국 이겨요. 응원의 뜻으로.`];
     await Dialog.say([{ name, sprite: 'vip', text: V[(i + State.day + (w.talks || 0)) % V.length] }]);
     w.talks = (w.talks || 0) + 1; State.cash += FEEL.vipGift; HUD.setCash(State.cash); Sound.play('coins'); Toast.show(`${name}에게 ${fmtWon(FEEL.vipGift)}을 받았다.`); if (Net.on) Net.news(`${name}에게 ${fmtWon(FEEL.vipGift)} 받음`); // 채팅에 (사용자 2026-10-15)
     State.vipTalks = (State.vipTalks || 0) + 1; if (State.vipTalks % 10 === 0) vipEscape(w, State.vipTalks / 10 - 1);
     else if (VipDuel.canOffer()) { w.ai.t = 99; const played = await VipDuel.offer(w); if (played) { State.vipDuels = (State.vipDuels || 0) + 1; vipEscape(w, Math.floor(State.vipTalks / 10) + State.vipDuels); } } // 깜짝 룰렛 뒤에도 도망 (사용자 2026-10-15) // 10번마다 도망: 뛰어서 → 자전거 → 차 → 킥보드 → 헬기 → 풍선 → 땅굴 → 우주선 → 말 → 로켓 배낭, 다시 처음부터 (사용자 2026-10-15)
-    w.ai.t = 0.3; Game.busy = false; return;
+    VipNet.free(); w.ai.t = 0.3; Game.busy = false; return;
   }
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
   const hello = [`안녕하세요. ${dong} 처음 오셨어요?`, `네? 아, 길 물어보시려고요?`, `${gu}는 요즘 공사가 많아서 길이 좀 막혀요.`, `오늘 날씨 좋죠? 걷기 딱 좋아요.`, `경매 보러 오신 분이죠? 요즘 그런 분들 자주 보여요.`];
@@ -5854,9 +5912,11 @@ function update(dt) {
   if (Game.scene === 'title') return;
   Net.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); CourtRules.tick();
   if (Layout.editing) return;
-  if (ChatBar.open_) return;
-  const enterK = consume('Enter'), netEnter = Net.on && enterK && !Dialog.open && !DocViewer.open && !PropertyCard.open_ && !$('caseList').classList.contains('in'); // 같이 할 때는 Enter가 채팅 (사용자 2026-10-15 '엔터 치면 열리는걸로'; 전엔 스페이스)
-  const interact = consume('e') || (!Game.driving && consume(' ')) || (enterK && !netEnter); if (Game.driving) Pressed[' '] = false;
+  const chat = ChatBar.open_; /* 채팅 치는 동안에도 세상(차·행인·이혁진·내 차 관성)은 계속 돈다. 나만 손을 뗀 상태 (사용자 2026-10-15 '채팅 칠라면 멈추는데 다른사람이랑 달라?') */
+  let enterK = false, netEnter = false, interact = false;
+  if (!chat) {
+  enterK = consume('Enter'); netEnter = Net.on && enterK && !Dialog.open && !DocViewer.open && !PropertyCard.open_ && !$('caseList').classList.contains('in'); // 같이 할 때는 Enter가 채팅 (사용자 2026-10-15 '엔터 치면 열리는걸로'; 전엔 스페이스)
+  interact = consume('e') || (!Game.driving && consume(' ')) || (enterK && !netEnter); if (Game.driving) Pressed[' '] = false;
   if (Dialog.open) { if (interact) Dialog.press(); for (const n of ['1', '2', '3', '4']) if (consume(n) && Dialog._choice) Dialog._choice(Number(n) - 1); return; }
   if (consume('m')) SeoulMap.toggle();
   if (SeoulMap.open) { if (consume('Escape')) SeoulMap.toggle(false); return; }
@@ -5879,15 +5939,16 @@ function update(dt) {
   if (PropertyCard.open_) { if (interact || consume('Escape')) PropertyCard.close(); return; }
   if (Notebook.open || Menu.open) return;
   if (Net.on && (consume('t') || netEnter) && !Game.busy) { ChatBar.open(); return; }
+  }
   State.clockMin = Math.min(170, State.clockMin + dt * FEEL.clockMinPerSec);
   const p = Game.player;
-  const frozen = Game.busy || Game.trans;
+  const frozen = Game.busy || Game.trans || chat;
   const [ix, iy] = frozen ? [0, 0] : readMove();
   const run = (Keys.Shift || !!Touch.run) && !(Net.on && Net.mode === 'channel'); // 채널에서는 달리기 없음(차를 타게)
   if (Game.scene === 'zone') {
     const z = Game.zone;
     const solid = (tx, ty) => z.at(tx, ty) === T.BLD;
-    const fKey = consume('f');
+    const fKey = !chat && consume('f');
     if (Game.driving) {
       const c = Game.car;
       const inp = frozen ? {} : { up: Keys.w || Keys.ArrowUp || Touch.gas, down: Keys.s || Keys.ArrowDown || Touch.brake, left: Keys.a || Keys.ArrowLeft || (Touch.active && Touch.x < -0.3), right: Keys.d || Keys.ArrowRight || (Touch.active && Touch.x > 0.3), hb: Keys[' '] || Touch.hb };
@@ -5963,6 +6024,7 @@ function updateDecor(dt) {
     if (w.bubble) { w.bubble.t -= dt; if (w.bubble.t <= 0) w.bubble = null; }
     if (w.esc) { stepEscape(w, dt); continue; }
     w.hurtCd = Math.max(0, (w.hurtCd || 0) - dt);
+    if (w.vip && !(w.stun > 0) && VipNet.step(w, dt)) continue; // 채널: 모두에게 같은 자리 (위)
     if (w.stun > 0) { w.stun -= dt; w.moving = false; continue; }
     // 내 차에 치임: 튕겨 나가 잠시 쓰러지고, 나는 합의금을 문다
     if (Game.driving && Game.car.speed > FEEL.hitSpeed && w.hurtCd <= 0) {
@@ -7842,7 +7904,7 @@ const VipDuel = {
     const pick = await Dialog.say([{ name, sprite: 'vip', text: '……' }, { name, sprite: 'vip', text: `돈만 받아 가시니까 재미없죠? 저랑 게임 하나 하실래요?` }, { name, sprite: 'vip', text: `규칙은 간단해요. 총 한 자루, 실탄 몇 발, 공포탄 몇 발. 서로 번갈아 쏘고, 지는 사람이 이긴 사람에게 ${stake}.` }],
       [{ label: `한다 <small>(지면 ${stake})</small>`, value: 'y' }, { label: '안 한다', value: 'n' }]);
     if (pick !== 'y') { await Dialog.say([{ name, sprite: 'vip', text: '그래요. 아쉽네요. 마음 바뀌면 또 만나요.' }]); this.dim(false); return false; }
-    if (Net.on) Net.send({ t: 'vduel', k: 'on', z: Game.zone.id });
+    if (Net.on) { Net.send({ t: 'vduel', k: 'on', z: Game.zone.id }); VipNet.extend(420); } // 게임하는 동안 이혁진은 내 차지
     const won = await this.play();
     if (Net.on) { Net.send({ t: 'vduel', k: 'off' }); Net.news(`${name}이랑 룰렛 게임에서 ${won ? '이겨서' : '져서'} ${won ? '+' : '−'}${stake}`); }
     await Dialog.say([{ name, sprite: 'vip', text: won ? `하하, 오늘은 제가 졌네요. 약속대로 ${stake}. 다음엔 안 봐줘요.` : `약속은 약속이죠. ${stake} 잘 받겠습니다. 즐거웠어요.` }]);

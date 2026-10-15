@@ -547,6 +547,19 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 .dGive { background:none; border:none; color:#a8988a; font-size:11px; text-decoration:underline; cursor:pointer; margin-left:auto; } .dGive:disabled { opacity:.35; cursor:default; }
 .short .rpsBoard .hand { font-size:40px; height:46px; } .short .hjTable { height:80px; } .short .hjDice span { font-size:46px; } .short .dMsg { min-height:30px; font-size:13px; } .short .duel { gap:6px; }
 
+/* 이혁진 룰렛 장면 (v89: 벅샷처럼 그 자리에 앉아서) */
+.bs { position:absolute; inset:0; overflow:hidden; background:#000; animation:bsIn 1.6s ease-out; font-family:var(--ui); } @keyframes bsIn { from { filter:brightness(0); } }
+#bsCv { position:absolute; inset:0; width:100%; height:100%; display:block; } #bsCv.can { cursor:pointer; }
+.bsMon { position:absolute; left:calc(14px + env(safe-area-inset-left)); top:calc(12px + env(safe-area-inset-top)); display:flex; flex-direction:column; gap:3px; min-width:178px; padding:8px 12px; background:#04100a; border:3px solid #2a3a2a; border-radius:8px; box-shadow:inset 0 0 14px rgba(80,255,120,.15), 0 0 0 2px #000; font:700 13px ui-monospace, monospace; color:#7aff9a; text-shadow:0 0 6px rgba(80,255,120,.6); }
+.bsMon div { display:flex; align-items:center; gap:8px; } .bsMon b { min-width:52px; } .bsMon .bolts i { font-size:15px; } .bsMon em { font-style:normal; font-size:11px; color:#ffd86b; } .bsMon small { color:#4aaa6a; font-size:11px; }
+.bsTurn { position:absolute; top:calc(14px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); padding:4px 16px; border-radius:14px; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.15); font:800 14px var(--ui); letter-spacing:2px; color:#e8dcc8; } .bsTurn.me { color:#ffd86b; border-color:#ffd86b; } .bsTurn.op { color:#ff8a7a; border-color:#ff8a7a; } .bsTurn.off { display:none; }
+.bsSub { position:absolute; left:50%; bottom:96px; transform:translateX(-50%); width:min(760px, 92%); margin:0; text-align:center; font:700 18px/1.45 var(--ui); color:#fff; text-shadow:0 2px 4px #000, 0 0 14px #000; pointer-events:none; }
+.bsBottom { position:absolute; left:0; right:0; bottom:calc(12px + env(safe-area-inset-bottom)); display:flex; align-items:flex-end; justify-content:space-between; gap:10px; padding:0 calc(14px + env(safe-area-inset-right)) 0 calc(14px + env(safe-area-inset-left)); }
+.bsItems { display:flex; gap:6px; flex-wrap:wrap; width:30%; } .bsItems .dItem { width:60px; height:60px; justify-content:center; font-size:24px; color:#e8dcc8; background:linear-gradient(#3a2c22, #1a120e); border:1px solid #6a5238; border-radius:10px; box-shadow:0 5px 0 #000; transform:perspective(200px) rotateX(16deg); transition:transform .15s; } .bsItems .dItem:not(:disabled):hover { border-color:#ffd86b; transform:perspective(200px) rotateX(4deg) translateY(-5px); } .bsItems .dItem:disabled { opacity:.55; }
+.bsAct { flex:1; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; } .bsAct .btn { padding:12px 18px; font-size:15px; font-weight:800; } .bsAct .btn small { display:block; font-size:10px; font-weight:500; opacity:.75; } .bsAct .btn.red { background:#9b1f2a; color:#fff; border-color:#d04a50; } .bsAct .btn.ghost { background:rgba(0,0,0,.5); }
+.bs .dGive { width:30%; text-align:right; margin:0; }
+.short .bsMon { min-width:140px; padding:5px 8px; font-size:11px; top:6px; left:8px; } .short .bsMon .bolts i { font-size:12px; } .short .bsTurn { top:6px; font-size:12px; } .short .bsSub { bottom:58px; font-size:13px; } .short .bsItems .dItem { width:44px; height:44px; font-size:18px; } .short .bsItems .dItem small { display:none; } .short .bsAct { flex-wrap:nowrap; gap:5px; } .short .bsAct .btn { padding:8px 9px; font-size:12.5px; white-space:nowrap; } .short .bsAct .btn small { display:none; } .short .bsItems, .short .bs .dGive { width:auto; flex:none; } .short .bs .dGive { font-size:10px; max-width:84px; } .short .bsBottom { bottom:6px; }
+
 /* 채팅 자동 숨김 (사용자 2026-10-15): 줄은 10초 뒤 사라지고, 입력줄은 Enter나 💬로만 연다 */
 #chatLines div { background:rgba(0,0,0,.3); animation:clFade 10s linear forwards; }
 @keyframes clFade { 0%, 85% { opacity:1; } 99.9% { opacity:0; } 100% { opacity:0; max-height:0; padding:0; margin:0; overflow:hidden; } }
@@ -7791,12 +7804,12 @@ const VipDuel = {
     return new Promise(res => {
       this.done = res; this.open_ = true; Game.formOpen = true;
       this.s = { me: { hp: 3, items: [], cuffed: false, knows: null }, op: { hp: 3, items: [], cuffed: false, knows: null }, shells: [], turn: 'me', saw: false, busy: true, msg: '', load: null, round: 0 };
-      $('duelWin').classList.add('in'); this.reload().then(() => this.myTurn());
+      this.picked = false; $('duelWin').classList.add('in'); this.mount(); this.reload().then(() => this.myTurn());
     });
   },
   maxHp: 3,
   async reload() {
-    const S = this.s; S.round++; const total = 2 + Math.floor(Math.random() * 5), live = Math.max(1, Math.min(total - 1, Math.round(total * (0.35 + Math.random() * 0.3))));
+    const S = this.s; S.round++; S.loadT = performance.now(); const total = 2 + Math.floor(Math.random() * 5), live = Math.max(1, Math.min(total - 1, Math.round(total * (0.35 + Math.random() * 0.3))));
     S.shells = []; for (let i = 0; i < total; i++) S.shells.push(i < live ? 'live' : 'blank');
     for (let i = S.shells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [S.shells[i], S.shells[j]] = [S.shells[j], S.shells[i]]; }
     const keys = Object.keys(DUEL_ITEMS), give = who => { for (let k = 0; k < 2 && who.items.length < 4; k++) who.items.push(keys[Math.floor(Math.random() * keys.length)]); };
@@ -7807,16 +7820,16 @@ const VipDuel = {
   },
   other(who) { return who === 'me' ? 'op' : 'me'; },
   async shoot(who, target) {
-    const S = this.s; S.busy = true; const shell = S.shells.shift(), dmg = S.saw ? 2 : 1; S.saw = false; S.me.knows = S.op.knows = null;
+    const S = this.s; S.busy = true; this.picked = false; S.aim = { who, target, t0: performance.now() }; const shell = S.shells.shift(), dmg = S.saw ? 2 : 1; S.me.knows = S.op.knows = null;
     const tName = target === who ? (who === 'me' ? '나에게' : '자기에게') : (target === 'me' ? '나에게' : `${castName('vip')}에게`);
     this.render(`${who === 'me' ? '내가' : castName('vip') + '이(가)'} 총구를 ${tName} 겨눈다…`); await this.wait(1100);
     if (shell === 'live') {
-      S[target].hp = Math.max(0, S[target].hp - dmg); Sound.play('slam'); this.flash();
-      this.render(`탕! 실탄. ${target === 'me' ? '내' : castName('vip') + '의'} 번개 ${dmg}칸이 꺼졌다.`); await this.wait(1300);
+      S.saw = false; S[target].hp = Math.max(0, S[target].hp - dmg); Sound.play('slam'); S.fx = { k: 'bang', target, t0: performance.now() }; S.hurt = { who: target, t0: performance.now() }; this.flash();
+      this.render(`탕! 실탄. ${target === 'me' ? '내' : castName('vip') + '의'} 번개 ${dmg}칸이 꺼졌다.`); await this.wait(1300); S.aim = null;
       if (S[target].hp <= 0) return this.end(target !== 'me');
       return this.next(who, true);
     }
-    Sound.play('click'); this.render(`딸깍. 공포탄.${target === who ? ' 한 번 더 쏠 수 있다.' : ''}`); await this.wait(1000);
+    S.saw = false; Sound.play('click'); S.fx = { k: 'click', target, t0: performance.now() }; this.render(`딸깍. 공포탄.${target === who ? ' 한 번 더 쏠 수 있다.' : ''}`); await this.wait(1000); S.aim = null;
     return this.next(who, target !== who);
   },
   async next(who, pass) {
@@ -7826,11 +7839,11 @@ const VipDuel = {
     if (pass) { const o = this.other(who); if (S[o].cuffed) { S[o].cuffed = false; this.render(`${o === 'me' ? '나는' : castName('vip') + '은(는)'} 수갑 때문에 한 턴 쉰다.`); await this.wait(1000); } else turn = o; }
     S.turn = turn; return turn === 'me' ? this.myTurn() : this.opTurn();
   },
-  myTurn() { const S = this.s; S.busy = false; this.render(S.me.knows ? `돋보기로 봤다. 이번 탄은 ${S.me.knows === 'live' ? '실탄' : '공포탄'}.` : '내 차례. 누구에게 쏠까?'); },
+  myTurn() { const S = this.s; S.busy = false; this.picked = false; this.render(S.me.knows ? `돋보기로 봤다. 이번 탄은 ${S.me.knows === 'live' ? '실탄' : '공포탄'}.` : '내 차례. 누구에게 쏠까?'); },
   async useItem(who, k) {
     const S = this.s, me = S[who], i = me.items.indexOf(k); if (i < 0) return false;
     if (k === 'candy' && me.hp >= this.maxHp) return false; if (k === 'cuff' && S[this.other(who)].cuffed) return false; if (k === 'saw' && S.saw) return false;
-    me.items.splice(i, 1); const nm = who === 'me' ? '나' : castName('vip'); Sound.play('pop');
+    me.items.splice(i, 1); const nm = who === 'me' ? '나' : castName('vip'); Sound.play('pop'); S.fxItem = { who, k, t0: performance.now(), shell: S.shells[0] };
     if (k === 'mag') { me.knows = S.shells[0]; this.render(who === 'me' ? `돋보기로 봤다. 이번 탄은 ${S.shells[0] === 'live' ? '실탄' : '공포탄'}.` : `${nm}이(가) 돋보기로 약실을 들여다본다. 웃는다.`); }
     if (k === 'can') { const sh = S.shells.shift(); S.me.knows = S.op.knows = null; this.render(`${nm}이(가) 캔커피를 마시고 탄을 뺐다. ${sh === 'live' ? '실탄' : '공포탄'}이었다.`); }
     if (k === 'candy') { me.hp++; Sound.play('heart'); this.render(`${nm}이(가) 사탕을 먹었다. 번개 한 칸 회복.`); }
@@ -7861,28 +7874,155 @@ const VipDuel = {
   },
   async forfeit() { const S = this.s; if (!S || S.busy) return; S.busy = true; this.render('총을 내려놓았다. 졌다고 인정한다.'); await this.wait(900); this.end(false); },
   async end(won) {
-    const S = this.s; S.busy = true; S.over = won ? 'win' : 'lose'; Sound.play(won ? 'chime' : 'deny');
+    const S = this.s; S.busy = true; S.over = won ? 'win' : 'lose'; S.overT = performance.now(); S.aim = null; Sound.play(won ? 'chime' : 'deny');
     this.render(won ? `${castName('vip')}의 번개가 다 꺼졌다. 털썩 주저앉더니… 웃으면서 일어난다. 내가 이겼다!` : '눈앞이 하얘졌다… 정신을 차려 보니 테이블 앞. 내가 졌다.'); await this.wait(2200);
     mgCash(won ? FEEL.vipDuelStake : -FEEL.vipDuelStake, won ? `${castName('vip')} 룰렛 승` : `${castName('vip')} 룰렛 패`); Sound.play(won ? 'coins' : 'deny');
     this.open_ = false; Game.formOpen = false; $('duelWin').classList.remove('in'); const d = this.done; this.done = null; this.s = null; if (d) d(won);
   },
+  /* ---------- v89 장면 (사용자 '벅샷처럼 창이 아니라 그 상황 속에 들어가게'): 어두운 방, 전등 하나, 맞은편에 이혁진, 테이블 위에 총.
+     캔버스가 장면을 그리고, 위에는 제세동기 화면(번개) · 자막 · 내 아이템 · 총 집기만 얹는다. */
+  mount() {
+    const el = $('duelWin'); this.skin = (Profile.pal(Profile.get()) || {}).skin || '#f1c9a5';
+    el.innerHTML = `<div class="bs"><canvas id="bsCv"></canvas><div class="bsMon"></div><div class="bsTurn"></div><p class="bsSub"></p><div class="bsBottom"><div class="bsItems"></div><div class="bsAct"></div><button class="dGive" id="dGive"></button></div></div>`;
+    const cv = $('bsCv');
+    cv.onclick = e => { const S = this.s, g = this.gunBox; if (!S || !g || S.busy || S.turn !== 'me' || S.over || this.picked) return; const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; if (x > g.x0 && x < g.x1 && y > g.y0 && y < g.y1) this.pick(); };
+    cv.onmousemove = e => { const g = this.gunBox, r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; cv.classList.toggle('can', !!(g && this.myTurnNow() && !this.picked && x > g.x0 && x < g.x1 && y > g.y0 && y < g.y1)); };
+    const loop = now => { if (!this.open_ || !$('bsCv')) return; this.draw(now); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  },
+  myTurnNow() { const S = this.s; return !!S && S.turn === 'me' && !S.busy && !S.over; },
+  pick() { if (!this.myTurnNow()) return; this.picked = true; Sound.play('click'); this.render('총을 들었다. 누구에게 겨눌까?'); },
   flash() { const el = $('duelWin'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); },
   render(msg) {
-    const S = this.s; if (!S) return; if (msg !== undefined) S.msg = msg; const el = $('duelWin');
-    const bolts = n => `${'<i class="on">⚡</i>'.repeat(n)}${'<i>⚡</i>'.repeat(Math.max(0, this.maxHp - n))}`;
-    const items = (who, mine) => S[who].items.map(k => `<button class="dItem" ${mine ? `data-it="${k}"` : 'disabled'} title="${DUEL_ITEMS[k].tip}">${DUEL_ITEMS[k].e}<small>${DUEL_ITEMS[k].ko}</small></button>`).join('') || '<span class="dNone">아이템 없음</span>';
-    const shells = S.load ? `${'<i class="sh live"></i>'.repeat(S.load.live)}${'<i class="sh blank"></i>'.repeat(S.load.blank)}` : `<span class="dLeft">남은 탄 ${S.shells.length}발</span>`;
-    const myTurn = S.turn === 'me' && !S.busy && !S.over;
-    el.innerHTML = `<div class="duel">
-      <div class="dSide op"><b>${esc(castName('vip'))}${S.op.cuffed ? ' ⛓️' : ''}</b><span class="bolts">${bolts(S.op.hp)}</span><div class="dItems">${items('op', false)}</div></div>
-      <div class="dTable"><svg class="gun${S.saw ? ' sawn' : ''}" viewBox="0 0 220 40"><rect x="8" y="16" width="${S.saw ? 120 : 170}" height="7" rx="2" fill="#3a3a40"/><rect x="${S.saw ? 120 : 170}" y="14" width="22" height="11" rx="2" fill="#5a3a24"/><path d="M${S.saw ? 140 : 190} 14 l26 -2 l4 18 l-30 4 z" fill="#6b4428"/><rect x="${S.saw ? 70 : 100}" y="23" width="28" height="5" rx="2" fill="#2a2a2e"/></svg>
-        <div class="dShells">${shells}</div><p class="dMsg">${esc(S.msg || '')}</p>
-        <div class="dTurn">${S.over ? '' : S.turn === 'me' ? '내 차례' : `${esc(castName('vip'))} 차례`}${S.saw ? ' · 톱 (두 칸)' : ''}</div></div>
-      <div class="dSide me"><b>나${S.me.cuffed ? ' ⛓️' : ''}</b><span class="bolts">${bolts(S.me.hp)}</span><div class="dItems">${items('me', myTurn)}</div>
-        <div class="dBtns"><button class="btn" id="dSelf" ${myTurn ? '' : 'disabled'}>나에게 쏘기<small>공포탄이면 한 번 더</small></button><button class="btn red" id="dOp" ${myTurn ? '' : 'disabled'}>${esc(castName('vip'))}에게 쏘기</button></div>
-        <button class="dGive" id="dGive" ${myTurn ? '' : 'disabled'}>포기하고 ${fmtWon(FEEL.vipDuelStake)} 주기</button></div></div>`;
+    const S = this.s; if (!S) return; if (msg !== undefined) S.msg = msg; const el = $('duelWin'); if (!el.querySelector('.bs')) this.mount();
+    const vip = esc(castName('vip')), bolts = n => `${'<i class="on">⚡</i>'.repeat(n)}${'<i>⚡</i>'.repeat(Math.max(0, this.maxHp - n))}`, myTurn = this.myTurnNow();
+    el.querySelector('.bsMon').innerHTML = `<div><b>${vip}</b><span class="bolts">${bolts(S.op.hp)}</span>${S.op.cuffed ? '<em>⛓️ 수갑</em>' : ''}</div><div><b>나</b><span class="bolts">${bolts(S.me.hp)}</span>${S.me.cuffed ? '<em>⛓️ 수갑</em>' : ''}</div><small>${S.load ? `실탄 ${S.load.live} · 공포탄 ${S.load.blank}` : `남은 탄 ${S.shells.length}발`}${S.saw ? ' · 톱 (두 칸)' : ''}</small>`;
+    const tn = el.querySelector('.bsTurn'); tn.textContent = S.over || S.load ? '' : S.turn === 'me' ? '내 차례' : `${castName('vip')} 차례`; tn.className = `bsTurn ${S.over || S.load ? 'off' : S.turn}`;
+    el.querySelector('.bsSub').textContent = S.msg || '';
+    el.querySelector('.bsItems').innerHTML = S.me.items.map(k => `<button class="dItem" data-it="${k}" ${myTurn ? '' : 'disabled'} title="${DUEL_ITEMS[k].tip}">${DUEL_ITEMS[k].e}<small>${DUEL_ITEMS[k].ko}</small></button>`).join('');
+    el.querySelector('.bsAct').innerHTML = !myTurn ? '' : this.picked
+      ? `<button class="btn red" id="dOp">🎯 ${vip}에게 쏘기</button><button class="btn" id="dSelf">나에게 쏘기<small>공포탄이면 한 번 더</small></button><button class="btn ghost" id="dPut">내려놓기</button>`
+      : `<button class="btn gold" id="dPick">🔫 총 집기<small>테이블 위 총을 눌러도 돼요</small></button>`;
+    const give = $('dGive'); give.textContent = `포기하고 ${fmtWon(FEEL.vipDuelStake)} 주기`; give.disabled = !myTurn; give.onclick = () => this.forfeit();
     el.querySelectorAll('[data-it]').forEach(b => (b.onclick = () => this.meItem(b.dataset.it)));
-    $('dSelf').onclick = () => this.meShoot('me'); $('dOp').onclick = () => this.meShoot('op'); $('dGive').onclick = () => this.forfeit();
+    if ($('dPick')) $('dPick').onclick = () => this.pick();
+    if ($('dOp')) { $('dOp').onclick = () => this.meShoot('op'); $('dSelf').onclick = () => this.meShoot('me'); $('dPut').onclick = () => { this.picked = false; Sound.play('flip'); this.myTurn(); }; }
+  },
+  poly(c, pts, fill) { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.closePath(); c.fillStyle = fill; c.fill(); },
+  // 옆에서 본 산탄총: (x, y)가 개머리판 끝, 길이 L, 각도 a
+  gunSide(c, x, y, L, a, sawn) {
+    c.save(); c.translate(x, y); c.rotate(a); const end = sawn ? 0.74 : 1;
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(0.02 * L, 0.06 * L, end * L, 0.025 * L);
+    this.poly(c, [[0, -0.02 * L], [0.24 * L, -0.035 * L], [0.24 * L, 0.03 * L], [0, 0.075 * L]], '#5a3520');
+    c.fillStyle = '#7a4a2a'; c.fillRect(0.02 * L, -0.012 * L, 0.2 * L, 0.012 * L);
+    c.fillStyle = '#2e2e34'; c.fillRect(0.23 * L, -0.04 * L, 0.16 * L, 0.07 * L);
+    c.fillStyle = '#3c3c44'; c.fillRect(0.38 * L, -0.032 * L, (end - 0.38) * L, 0.03 * L); c.fillStyle = '#6a6a74'; c.fillRect(0.38 * L, -0.03 * L, (end - 0.38) * L, 0.006 * L);
+    c.fillStyle = '#26262c'; c.fillRect(0.38 * L, 0, Math.min(0.36, end - 0.4) * L, 0.022 * L);
+    c.fillStyle = '#6b4428'; c.fillRect(0.5 * L, -0.006 * L, 0.17 * L, 0.04 * L);
+    c.strokeStyle = '#26262c'; c.lineWidth = 0.008 * L; c.beginPath(); c.arc(0.29 * L, 0.04 * L, 0.025 * L, 0, Math.PI); c.stroke();
+    c.restore(); return { x: x + Math.cos(a) * end * L, y: y + Math.sin(a) * end * L };
+  },
+  // 총구가 이쪽을 보는 모습: 몸통은 (vx, vy) 쪽으로 멀어진다
+  gunFront(c, mx, my, R, vx, vy, hand) {
+    const dx = vx - mx, dy = vy - my, d = Math.hypot(dx, dy) || 1, nx = -dy / d, ny = dx / d, r2 = R * 0.35;
+    this.poly(c, [[mx + nx * R * 0.95, my + ny * R * 0.95], [mx - nx * R * 0.95, my - ny * R * 0.95], [vx - nx * r2, vy - ny * r2], [vx + nx * r2, vy + ny * r2]], '#2a2a30');
+    const at = f => [mx + dx * f, my + dy * f], w = f => R * (0.95 - 0.6 * f);
+    const [p1x, p1y] = at(0.3), [p2x, p2y] = at(0.55);
+    this.poly(c, [[p1x + nx * w(0.3) * 1.15, p1y + ny * w(0.3) * 1.15], [p1x - nx * w(0.3) * 1.15, p1y - ny * w(0.3) * 1.15], [p2x - nx * w(0.55) * 1.15, p2y - ny * w(0.55) * 1.15], [p2x + nx * w(0.55) * 1.15, p2y + ny * w(0.55) * 1.15]], '#6b4428');
+    if (hand) { c.fillStyle = hand; c.beginPath(); c.ellipse((p1x + p2x) / 2 + nx * R * 0.9, (p1y + p2y) / 2 + ny * R * 0.9, R * 0.45, R * 0.32, Math.atan2(dy, dx), 0, 7); c.fill(); }
+    let g = c.createRadialGradient(mx - R * 0.3, my - R * 0.3, R * 0.1, mx, my, R); g.addColorStop(0, '#8a8a94'); g.addColorStop(1, '#2a2a30');
+    c.fillStyle = g; c.beginPath(); c.arc(mx, my, R, 0, 7); c.fill();
+    g = c.createRadialGradient(mx, my, 0, mx, my, R * 0.64); g.addColorStop(0, '#000'); g.addColorStop(0.85, '#050505'); g.addColorStop(1, '#1a1a1e');
+    c.fillStyle = g; c.beginPath(); c.arc(mx, my, R * 0.64, 0, 7); c.fill();
+    return { x: mx, y: my };
+  },
+  shell(c, x, y, live, s, a = 0) {
+    c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = live ? '#c0262a' : '#2f5fb0'; c.fillRect(-6 * s, -30 * s, 12 * s, 24 * s);
+    c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(-4 * s, -28 * s, 2 * s, 20 * s); c.fillStyle = '#c9a24a'; c.fillRect(-6.5 * s, -7 * s, 13 * s, 7 * s); c.fillStyle = '#8a6a2a'; c.fillRect(-6.5 * s, -2 * s, 13 * s, 2 * s); c.restore();
+  },
+  whiteVip() { if (this._white) return this._white; const c2 = document.createElement('canvas'); c2.width = c2.height = 32; const x = c2.getContext('2d'); x.drawImage(Sprites.portrait('vip'), 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = '#fff'; x.fillRect(0, 0, 32, 32); return (this._white = c2); },
+  draw(now) {
+    const cv = $('bsCv'), S = this.s; if (!cv || !S) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight; if (!W || !H) return;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.imageSmoothingEnabled = false;
+    const s = Math.min(H / 720, W / 1000), t = now / 1000, fx = S.fx, fa = fx ? (now - fx.t0) / 1000 : 9;
+    let shx = 0, shy = 0; if (fx && fx.k === 'bang' && fa < 0.5) { const m = (1 - fa / 0.5) * 18 * s; shx = (Math.random() * 2 - 1) * m; shy = (Math.random() * 2 - 1) * m; }
+    c.save(); c.translate(shx, shy);
+    // 벽
+    c.fillStyle = '#0d0809'; c.fillRect(-30, -30, W + 60, H + 60);
+    c.fillStyle = 'rgba(255,255,255,.025)'; for (let x = (W / 2) % (110 * s); x < W; x += 110 * s) c.fillRect(x, 0, 2 * s, H * 0.6);
+    const lx = W / 2 + Math.sin(t * 0.7) * 10 * s, ly = H * 0.09;
+    // 이혁진: 테이블 건너편에 앉아 있다 (어깨·팔은 테이블에 걸친다)
+    const farY = H * 0.58, P = Math.min(H * 0.46, W * 0.27), bob = Math.sin(t * 1.5) * 2 * s;
+    let oy = farY - P * 0.86 + bob, rot = 0, g0; const hurt = S.hurt && S.hurt.who === 'op' ? (now - S.hurt.t0) / 1000 : 9;
+    if (hurt < 0.9) oy += Math.sin(Math.min(1, hurt / 0.12) * Math.PI / 2) * P * 0.08 * (1 - hurt / 0.9);
+    if (S.over === 'win') { const k = Math.min(1, (now - S.overT) / 900); oy += k * P * 0.4; rot = k * 0.28; }
+    c.save(); c.translate(W / 2, oy + P); c.rotate(rot);
+    this.poly(c, [[-P * 0.62, farY - oy - P + 12 * s], [P * 0.62, farY - oy - P + 12 * s], [P * 0.44, -P * 0.2], [-P * 0.44, -P * 0.2]], '#15151c');
+    c.drawImage(Sprites.portrait('vip'), -P / 2, -P, P, P);
+    g0 = c.createLinearGradient(0, -P, 0, 0); g0.addColorStop(0, 'rgba(0,0,0,0)'); g0.addColorStop(1, 'rgba(0,0,0,.45)'); c.fillStyle = g0; c.fillRect(-P * 0.65, -P, P * 1.3, P + 14 * s);
+    if (hurt < 0.22) { c.globalAlpha = 1 - hurt / 0.22; c.drawImage(this.whiteVip(), -P / 2, -P, P, P); c.globalAlpha = 1; }
+    c.restore();
+    c.strokeStyle = '#222'; c.lineWidth = 2 * s; c.beginPath(); c.moveTo(W / 2, 0); c.lineTo(lx, ly); c.stroke();
+    this.poly(c, [[lx - 16 * s, ly], [lx + 16 * s, ly], [lx + 46 * s, ly + 30 * s], [lx - 46 * s, ly + 30 * s]], '#2a3a2a');
+    c.fillStyle = '#fff4c8'; c.beginPath(); c.ellipse(lx, ly + 30 * s, 22 * s, 6 * s, 0, 0, 7); c.fill();
+    // 테이블
+    const fl = W / 2 - W * 0.36, fr = W / 2 + W * 0.36;
+    let g = c.createLinearGradient(0, farY, 0, H); g.addColorStop(0, '#13301f'); g.addColorStop(1, '#0a1c12');
+    this.poly(c, [[fl, farY], [fr, farY], [W * 1.15, H + 20], [-W * 0.15, H + 20]], g);
+    g = c.createRadialGradient(lx, H * 0.74, 10 * s, lx, H * 0.74, H * 0.42); g.addColorStop(0, 'rgba(255,230,160,.22)'); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.fillRect(0, farY, W, H - farY + 20);
+    this.poly(c, [[fl - 8 * s, farY - 7 * s], [fr + 8 * s, farY - 7 * s], [fr + 4 * s, farY + 5 * s], [fl - 4 * s, farY + 5 * s]], '#3a2414');
+    if (S.over !== 'win') for (const sd of [-1, 1]) { const ax = W / 2 + sd * P * 0.5; c.fillStyle = '#15151c'; c.beginPath(); c.ellipse(ax, farY + 6 * s, P * 0.16, 12 * s, 0, 0, 7); c.fill(); c.fillStyle = '#c8a888'; c.beginPath(); c.ellipse(ax - sd * P * 0.14, farY + 10 * s, 13 * s, 9 * s, 0, 0, 7); c.fill(); }
+    // 이혁진 아이템 (테이블 저쪽)
+    c.font = `${28 * s}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    S.op.items.forEach((k, i) => { const side = i < 2 ? -1 : 1, j = i % 2; c.fillText(DUEL_ITEMS[k].e, W / 2 + side * (P * 0.9 + j * 42 * s), farY + 22 * s); });
+    // 장전: 탄을 테이블에 늘어놓는다
+    if (S.load) { const n = S.load.live + S.load.blank, gap = 26 * s, x0 = W / 2 - (n - 1) * gap / 2, la = (now - (S.loadT || now)) / 1000;
+      for (let i = 0; i < n; i++) if (la > i * 0.09) this.shell(c, x0 + i * gap, H * 0.66, i < S.load.live, s * 1.1); }
+    // 총
+    const A = S.aim, ap = A ? Math.min(1, (now - A.t0) / 420) : 0, L = Math.min(W * 0.42, H * 0.78), gy = H * (S.load ? 0.76 : 0.7);
+    this.gunBox = null;
+    if (!A || ap < 1) { c.globalAlpha = 1 - ap; const gx = W / 2 - L / 2; this.gunSide(c, gx, gy - (this.picked && !A ? 30 * s : 0), L, this.picked && !A ? -0.12 : -0.05, S.saw); /* 들면 살짝 들린다 */ c.globalAlpha = 1; if (!A) this.gunBox = { x0: gx, x1: gx + L, y0: gy - 0.12 * L, y1: gy + 0.12 * L };
+      if (!A && this.myTurnNow() && !this.picked) { c.strokeStyle = `rgba(255,216,107,${0.25 + 0.25 * Math.sin(t * 4)})`; c.lineWidth = 2 * s; c.setLineDash([6 * s, 6 * s]); c.strokeRect(gx - 8 * s, gy - 0.1 * L, L + 16 * s, 0.22 * L); c.setLineDash([]); } }
+    let muzzle = null;
+    if (A) { c.globalAlpha = ap; c.save(); c.translate(0, (1 - ap) * H * 0.12);
+      const vipSkin = '#f3d2b0', tr = Math.sin(t * 23) * 1.6 * s;
+      if (A.who === 'me' && A.target === 'op') { // 내가 이혁진을 겨눈다 (1인칭)
+        const cx = W / 2 + 40 * s, mY = farY - P * 0.38, top = H * 0.72;
+        g = c.createLinearGradient(0, top, 0, H); g.addColorStop(0, '#7a4a2a'); g.addColorStop(1, '#3a2010');
+        this.poly(c, [[cx - 100 * s, H + 20], [cx + 80 * s, H + 20], [cx + 28 * s, H * 0.8], [cx - 24 * s, H * 0.8]], g);
+        this.poly(c, [[cx - 30 * s, H * 0.8], [cx + 34 * s, H * 0.8], [cx + 22 * s, top], [cx - 18 * s, top]], '#2e2e34');
+        this.poly(c, [[cx - 18 * s, top], [cx + 22 * s, top], [cx + 7 * s + tr, mY], [cx - 3 * s + tr, mY]], '#3a3a42'); c.fillStyle = 'rgba(255,255,255,.12)'; c.beginPath(); c.moveTo(cx - 8 * s, top); c.lineTo(cx + tr, mY); c.lineTo(cx + 1 * s + tr, mY); c.lineTo(cx - 4 * s, top); c.fill();
+        const pm = f => [cx - 18 * s + (cx - 3 * s + tr - (cx - 18 * s)) * f, top + (mY - top) * f, cx + 22 * s + (cx + 7 * s + tr - (cx + 22 * s)) * f];
+        const [a1, b1, c1] = pm(0.2), [a2, b2, c2] = pm(0.42); this.poly(c, [[a1 - 4 * s, b1], [c1 + 4 * s, b1], [c2 + 3 * s, b2], [a2 - 3 * s, b2]], '#6b4428');
+        c.fillStyle = this.skin; c.beginPath(); c.ellipse((a1 + c2) / 2 - 16 * s, (b1 + b2) / 2, 16 * s, 26 * s, -0.25, 0, 7); c.fill(); c.beginPath(); c.ellipse(cx + 34 * s, H * 0.84, 24 * s, 34 * s, 0.3, 0, 7); c.fill();
+        muzzle = { x: cx + 1.5 * s + tr, y: mY };
+      } else if (A.who === 'me') { // 나에게: 총구가 나를 본다
+        c.fillStyle = `rgba(0,0,0,${0.35 * ap})`; c.fillRect(-30, -30, W + 60, H + 60);
+        muzzle = this.gunFront(c, W / 2 + tr, H * 0.6 + tr * 0.7, H * 0.16, W / 2 + 150 * s, H * 0.12, this.skin);
+      } else if (A.target === 'me') { // 이혁진이 나를 겨눈다
+        muzzle = this.gunFront(c, W / 2 - 6 * s + tr * 0.4, farY - P * 0.2, H * 0.075, W / 2 + P * 0.3, farY - P * 0.44, vipSkin);
+      } else { // 이혁진이 자기에게
+        muzzle = this.gunSide(c, W / 2 + P * 0.62, farY + P * 0.04, Math.hypot(P * 0.5, P * 0.6) / (S.saw ? 0.74 : 1), Math.atan2(-P * 0.6, -P * 0.5), S.saw);
+      }
+      c.restore(); c.globalAlpha = 1; }
+    // 총구 불꽃 · 딸깍
+    if (fx && muzzle && fx.k === 'bang' && fa < 0.12) { const R = 90 * s * (1 - fa / 0.12 * 0.3); c.fillStyle = '#fff6c0'; c.beginPath(); for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, r = i % 2 ? R * 0.4 : R; c.lineTo(muzzle.x + Math.cos(a) * r, muzzle.y + Math.sin(a) * r); } c.fill(); }
+    if (fx && fx.k === 'click' && fa < 0.7) { c.font = `bold ${26 * s}px sans-serif`; c.fillStyle = `rgba(255,255,255,${1 - fa / 0.7})`; c.textAlign = 'center'; const m = muzzle || { x: W / 2, y: H * 0.6 }; c.fillText('딸깍', m.x + 60 * s, m.y - 30 * s - fa * 40 * s); }
+    // 아이템 쓰는 모습
+    const FI = S.fxItem, fi = FI ? (now - FI.t0) / 1000 : 9;
+    if (fi < 1.1) { const al = fi < 0.15 ? fi / 0.15 : fi > 0.85 ? (1.1 - fi) / 0.25 : 1, x = W / 2, y = FI.who === 'op' ? farY - P * 0.15 : H * 0.7, sc = 1 + 0.15 * Math.sin(Math.min(1, fi / 0.3) * Math.PI);
+      c.globalAlpha = Math.max(0, al); c.font = `${74 * s * sc}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(DUEL_ITEMS[FI.k].e, x, y);
+      if (FI.k === 'mag' && FI.who === 'me' && FI.shell) this.shell(c, x + 70 * s, y + 24 * s, FI.shell === 'live', s * 1.6);
+      if (FI.k === 'can' && FI.shell) this.shell(c, x + fi * W * 0.35, y - Math.sin(Math.min(1, fi) * Math.PI) * H * 0.22, FI.shell === 'live', s * 1.4, fi * 9);
+      c.globalAlpha = 1; }
+    c.restore();
+    // 조명: 전등 아래만 밝고 가장자리는 어둡다 (가끔 깜빡)
+    g = c.createRadialGradient(lx, H * 0.56, H * 0.1, W / 2, H * 0.58, Math.max(W, H) * 0.62); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.55, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,.96)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    if (Math.sin(t * 13) + Math.sin(t * 7.3) > 1.85) { c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, 0, W, H); }
+    if (fx && fx.k === 'bang') { if (fa < 0.2) { c.fillStyle = `rgba(255,255,255,${(1 - fa / 0.2) * (fx.target === 'me' ? 0.95 : 0.55)})`; c.fillRect(0, 0, W, H); }
+      if (fx.target === 'me' && fa < 1.4) { c.fillStyle = `rgba(150,0,0,${0.55 * (1 - fa / 1.4)})`; c.fillRect(0, 0, W, H); if (fa > 0.15 && fa < 0.7) { c.fillStyle = `rgba(0,0,0,${0.8 * (1 - (fa - 0.15) / 0.55)})`; c.fillRect(0, 0, W, H); } } }
+    if (S.over === 'lose') { const k = (now - S.overT) / 1000; c.fillStyle = k < 0.5 ? `rgba(255,255,255,${Math.min(1, k / 0.15)})` : `rgba(${Math.round(255 * Math.max(0, 1 - (k - 0.5)))},${Math.round(255 * Math.max(0, 1 - (k - 0.5)))},${Math.round(255 * Math.max(0, 1 - (k - 0.5)))},1)`; c.fillRect(0, 0, W, H); }
   },
 };
 

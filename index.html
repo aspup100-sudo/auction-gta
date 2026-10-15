@@ -856,7 +856,7 @@ const Engine = (() => {
   const REG_LABEL = {
     own: '소유권', mort: '근저당권', prov: '가압류', seize: '압류', secreg: '담보가등기',
     start: '경매개시결정', jeonY: '전세권', jeonN: '전세권', claimreg: '소유권이전청구권가등기',
-    inj: '처분금지가처분', super: '지상권'
+    inj: '처분금지가처분', super: '지상권', lease: '주택임차권'
   };
 
   function addDays(d, n) {
@@ -883,16 +883,21 @@ const Engine = (() => {
 
     // 2. 등기별 인수/소멸
     const fatal = [];
-    let jeonAssume = 0;
+    let jeonAssume = 0, otherAssume = 0; // otherAssume: 소멸하지 않는 가등기·가처분을 지키는 데 드는 돈 (r.amount, 등기부에는 안 보임 · 정리본 2묶음)
     const regResults = regs.map(r => {
       let status;
       if (r.cancelled) status = 'cancelled';
       else if (r === base) status = 'base';
       else if (r.type === 'own') status = 'owner';
+      else if (r.type === 'lease') status = 'lease'; // 임차권등기: 대항력은 임차인 쪽에서 따진다 (아래에서 채움)
+      else if (r.type === 'inj' && r.demolish) { // 토지소유자의 건물철거·토지인도 청구권 보전 가처분: 순위와 상관없이 소멸하지 않는다
+        status = 'fatal'; otherAssume += r.amount;
+        fatal.push({ type: r.type, date: r.date, holder: r.holder, note: '건물철거·토지인도 청구권을 지키려는 토지소유자의 가처분: 후순위여도 매각으로 소멸하지 않는다. 토지소유자가 이기면 건물이 철거될 수 있다.' });
+      }
       else if (!baseDate || r.date < baseDate) {
         if (r.type === 'jeonN') { status = 'assume'; jeonAssume += r.amount; }
         else if (r.type === 'claimreg' || r.type === 'inj') {
-          status = 'fatal';
+          status = 'fatal'; otherAssume += r.amount;
           fatal.push({ type: r.type, date: r.date, holder: r.holder,
             note: r.type === 'claimreg'
               ? '말소기준보다 앞선 소유권이전청구권 가등기: 본등기가 되면 낙찰자가 소유권을 잃을 수 있다. (단, 가등기가 순위보전 효력을 잃은 경우 등 예외가 있다: 대법원 2017다9121 참고)'
@@ -907,10 +912,12 @@ const Engine = (() => {
     // 3~5. 임차인
     const tenants = (caseData.tenants || []).map((t, i) => {
       const deposit = Math.round(t.deposit || 0);
-      const daehang = baseDate ? t.move < baseDate : true;
+      // noDaehang: 임대차 자체를 인정받지 못하는 점유자 (소유 법인의 대표이사, 허위·통정 임차인)
+      const daehang = t.noDaehang ? false : baseDate ? t.move < baseDate : true;
       const prio = t.fixed ? maxDate(addDays(t.move, 1), t.fixed) : null;
       let eligible = true, why = '';
-      if (t.claimed !== 'yes') { eligible = false; why = '배당요구 안 함'; }
+      if (t.noDaehang) { eligible = false; why = '임대차 불인정'; }
+      else if (t.claimed !== 'yes') { eligible = false; why = '배당요구 안 함'; }
       else if (deadline && !(t.claimDate && t.claimDate <= deadline)) { eligible = false; why = '배당요구종기 도과'; }
       else if (!t.fixed) { eligible = false; why = '확정일자 없음'; }
       return { ...t, idx: i, deposit, daehang, prioDate: prio, eligible, why, paid: 0, assumed: 0 };
@@ -958,11 +965,12 @@ const Engine = (() => {
     for (const t of tenants) {
       if (t.daehang) { t.assumed = Math.max(0, t.deposit - t.paid); tenantAssume += t.assumed; }
     }
+    for (const r of regResults) if (r.status === 'lease') { const t = tenants.find(x => x.name === r.holder); r.status = t && t.daehang ? 'assume' : 'extinguish'; }
     const paidSum = distribution.reduce((s, d) => s + d.paid, 0);
     return {
       bid, base: base ? { ...base, label: REG_LABEL[base.type] } : null, baseDate,
       regs: regResults, tenants, distribution,
-      assumeTenant: tenantAssume, assumeJeon: jeonAssume, assumeTotal: tenantAssume + jeonAssume,
+      assumeTenant: tenantAssume, assumeJeon: jeonAssume, assumeOther: otherAssume, assumeTotal: tenantAssume + jeonAssume + otherAssume,
       fatal, surplus: remain,
       balanced: paidSum + remain === bid
     };
@@ -1204,22 +1212,93 @@ const Generator = (() => {
     return c;
   }
 
+  /* ---- 정리본 2묶음 등기·권리 함정 (사용자 2026-10-15). makeCase 뒤에 덧씌운다.
+   * 사건번호로 만든 별도 난수(salt 1600)만 써서 기존 물건의 다른 값은 하나도 바뀌지 않는다.
+   * 연습 물건(튜토리얼)과 채널에서 이미 돌던 회차에는 씌우지 않는다 (호출하는 쪽에서 거른다). */
+  const TRAP_CRIT = ['jeonN', 'claimreg', 'inj', 'demolish', 'leasereg', 'tomb'];
+  const CORP_A = ['한결', '다온', '새솔', '푸른', '늘봄'], CORP_B = ['개발', '산업', '홀딩스', '상사'];
+  function trapRng(c) { let s = 1600; for (const ch of c.caseNo) s = (s * 31 + ch.charCodeAt(0)) >>> 0; return makeRng(s); }
+  function applyTraps(c) {
+    if (c._traps) return c; c._traps = true;
+    const R = trapRng(c); for (let i = 0; i < 3; i++) R.next();
+    if (!R.chance(0.3)) return c;
+    const reg = c.data.reg, owns = reg.filter(r => r.type === 'own'), ownR = owns[owns.length - 1], ownDate = ownR.date;
+    const mortR = reg.find(r => r.applicant), mortDate = mortR.date, startDate = c.startDate;
+    const days = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+    const between = (a, b) => addDays(a, R.RI(1, Math.max(1, days(a, b) - 1)));
+    const gapOK = days(ownDate, mortDate) >= 20;
+    const noTen = !c.data.tenants.length && ['owner', 'vacant'].includes(c.occupant.kind);
+    const building = !['토지'].includes(c.type);
+    const cand = [
+      ['jeon', 14, gapOK && !c.share], ['claimreg', 10, gapOK], ['fakegd', 10, gapOK], ['inj', 8, gapOK],
+      ['demolish', 7, ['단독', '다세대', '근린상가'].includes(c.type) && !c.super], ['leasereg', 24, noTen && gapOK && building],
+      ['sameday', 12, noTen && building], ['corp', 18, noTen && gapOK && building], ['fake', 16, noTen && gapOK && building],
+      ['tomb', 7, c.type === '토지' && !c.super],
+    ].filter(x => x[2]).map(x => [x[0], x[1]]);
+    if (!cand.length) return c;
+    let kind = R.weighted(cand);
+    const amt = (base, lo, hi) => Math.round(base * R.U(lo, hi) / 1e6) * 1e6;
+    const claimOk = () => between(startDate, c.deadline);
+    const occTenant = t => { c.occupant = { kind: 'tenant', name: t.name }; };
+    if (kind === 'jeon') {
+      const y = R.chance(0.5); kind = y ? 'jeonY' : 'jeonN';
+      reg.push({ section: '을', date: between(ownDate, mortDate), type: kind, holder: personName(R), amount: amt(c.appraisal, 0.3, 0.5), claimDate: y ? claimOk() : '' });
+    } else if (kind === 'claimreg') {
+      reg.push({ section: '갑', date: between(ownDate, mortDate), type: 'claimreg', holder: personName(R), amount: amt(disposalValue(c), 0.45, 0.7) });
+    } else if (kind === 'fakegd') { // 등기부엔 똑같이 '소유권이전청구권가등기'로 보이지만 실은 담보가등기 → 말소기준, 배당받고 소멸
+      reg.push({ section: '갑', date: between(ownDate, mortDate), type: 'secreg', look: 'claimreg', holder: personName(R), amount: amt(c.appraisal, 0.15, 0.35), claimDate: claimOk() });
+    } else if (kind === 'inj') {
+      reg.push({ section: '갑', date: between(ownDate, mortDate), type: 'inj', holder: personName(R), amount: amt(disposalValue(c), 0.45, 0.7) });
+    } else if (kind === 'demolish') {
+      reg.push({ section: '갑', date: between(mortDate, startDate), type: 'inj', demolish: true, holder: personName(R), amount: amt(disposalValue(c), 0.4, 0.6) });
+    } else if (kind === 'leasereg') { // 이사 나가면서 임차권등기명령: 전입세대열람엔 없고 을구에만 남는다
+      const name = tenantName(R, []), move = between(ownDate, mortDate), late = R.chance(0.5);
+      const fixed = late ? addDays(mortDate, R.RI(5, Math.max(6, Math.min(300, days(mortDate, startDate) - 40)))) : move;
+      const lr = between(fixed > mortDate ? fixed : mortDate, startDate);
+      const t = { name, move, fixed, deposit: amt(c.appraisal, 0.3, 0.55), claimed: 'yes', claimDate: lr, leaseReg: true }; // 개시결정 전에 등기한 임차권자는 배당요구한 것으로 본다 (민집 148조)
+      c.data.tenants.push(t); reg.push({ section: '을', date: lr, type: 'lease', holder: name, amount: t.deposit, move, fixed });
+      c.occupant = { kind: 'vacant', name: '' }; c.survey = '공실로 보임. 우편물 다수 적치.';
+    } else if (kind === 'sameday') { // 근저당 설정일과 같은 날 전입: 대항력은 다음 날 0시부터라 후순위
+      const t = { name: tenantName(R, []), move: mortDate, fixed: mortDate, deposit: amt(c.appraisal, 0.3, 0.5), claimed: 'yes', claimDate: claimOk() };
+      c.data.tenants.push(t); occTenant(t); c.survey = `임차인 ${t.name} 점유. 임대차 관계 진술 청취.`;
+    } else if (kind === 'corp') { // 중소기업 법인이 직원 숙소로 임차했는데 들어와 사는 건 대표이사: 대표이사는 직원이 아니라 대항력 없음 (주임법 3조 3항, 대법원 2023다226866)
+      const corp = `(주)${R.pick(CORP_A)}${R.pick(CORP_B)}`;
+      const mv = between(ownDate, mortDate);
+      const t = { name: tenantName(R, []), move: mv, fixed: mv, deposit: amt(c.appraisal, 0.3, 0.5), claimed: 'yes', claimDate: claimOk(), noDaehang: true, corp };
+      c.data.tenants.push(t); occTenant(t); c.survey = `임차인 ${corp}(법인) 점유. 법인 대표이사 ${t.name}이(가) 가족과 거주한다고 진술함.`;
+    } else if (kind === 'fake') { // 허위·통정 임차인: 서류 없이 보증금만 말로 주장
+      const t = { name: tenantName(R, []), move: between(ownDate, mortDate), fixed: '', deposit: amt(c.appraisal, 0.3, 0.5), claimed: 'no', claimDate: '', noDaehang: true, fake: true };
+      c.data.tenants.push(t); occTenant(t); c.survey = `임차인이라는 ${t.name} 점유. 임대차계약서를 제시하지 못하였고, 소유자와 친척 관계라고 진술함.`;
+    } else if (kind === 'tomb') {
+      c.tomb = { n: R.RI(1, 3) };
+    }
+    c.risks = [...c.risks, kind];
+    c.critical += TRAP_CRIT.includes(kind) ? 1 : 0;
+    const score = c.risks.length + c.critical; c.stars = score === 0 ? 1 : score === 1 ? 2 : score === 2 ? 3 : score <= 4 ? 4 : 5;
+    // 경쟁자: 법인 대표이사·허위 임차인은 겉보기(선순위 임차인)대로 겁먹고 피한다
+    const apparent = ['corp', 'fake'].includes(kind) ? { ...c.data, tenants: c.data.tenants.map(t => ({ ...t, noDaehang: false, claimed: 'no' })) } : c.data;
+    c.competition = makeCompetition(R, c, DISTRICT[c.gu], apparent);
+    if (apparent !== c.data) { const n = Math.max(0, c.competition.count - 2); c.competition = { count: n, bids: c.competition.bids.slice(0, n) }; } // 겉보기 선순위 임차인에 겁먹은 사람들이 빠진다
+    return c;
+  }
+
   /** 입찰일 기준 처분가치(낙찰자 입장) */
   function disposalValue(c) {
     if (c.share) return Math.round(c.market * c.share.num / c.share.den * 0.7);
     if (c.super) return Math.round(c.market * 0.6);
+    if (c.tomb) return Math.round(c.market * 0.7); // 분묘기지권: 무덤 자리는 못 쓴다
     if (c.lien && c.lien.real) return c.market - c.lien.amount;
     return c.market;
   }
 
   // §8 경쟁 입찰자 — 경쟁자도 엔진으로 인수액을 계산한다고 가정 (프로 입찰자)
-  function makeCompetition(R, c, gu) {
+  function makeCompetition(R, c, gu, data = c.data) {
     let n = R.RI(2, 6);
     if (gu.tier >= 4) n += R.RI(1, 2);
     if (gu.tier === 1) n -= 1;
     n -= c.critical + Math.floor((c.risks.length - c.critical) / 2);
     n = Math.max(gu.tier >= 4 ? 1 : 0, Math.min(8, n));
-    const assumeAtMin = Engine.analyze(c.data, c.minPrice).assumeTotal;
+    const assumeAtMin = Engine.analyze(data, c.minPrice).assumeTotal;
     const value = disposalValue(c) - assumeAtMin - (c.illegal ? c.illegal.fine : 0);
     const unit = value / (c.share ? c.area : c.area);
     const bids = [];
@@ -1232,7 +1311,7 @@ const Generator = (() => {
   }
 
   /** 이번 주 물건 20~30건 */
-  function generateWeek({ capital = null, seed = Date.now(), saleDate = '2025-11-11' } = {}) {
+  function generateWeek({ capital = null, seed = Date.now(), saleDate = '2025-11-11', traps = true } = {}) {
     const R = makeRng(seed);
     const year = saleDate.slice(0, 4);
     const total = R.RI(20, 30);
@@ -1265,10 +1344,11 @@ const Generator = (() => {
         i++;
       }
     }
+    if (traps) cases.forEach(applyTraps);
     return { seed, capital, saleDate, cases };
   }
 
-  return { generateWeek, makeCase, drawRisks, disposalValue, TENANT_RISKS, CRITICAL };
+  return { generateWeek, makeCase, applyTraps, drawRisks, disposalValue, TENANT_RISKS, CRITICAL };
 })();
 
 /* ===================== §7 수용 테스트 11건 ===================== */
@@ -1316,6 +1396,25 @@ const EngineTests = (() => {
     { n: 11, title: '개시결정만(강제경매)', bid: 10000,
       data: { deadline: '', reg: [reg('24-03-03', 'start'), reg('25-01-01', 'inj'), reg('20-01-01', 'claimreg')], tenants: [ten('A', '24-03-02', '24-03-02', 3000)] },
       expect: { base: '2024-03-03', dist: [3000], assume: 0, surplus: 7000, regStatus: { claimreg: 'fatal', inj: 'extinguish' } } },
+    // ---- 정리본 2묶음 (2026-10-15) ----
+    { n: 12, title: '선순위 전세권(배당요구 O) = 말소기준', bid: 15000,
+      data: { deadline: '', reg: [reg('18-03-01', 'jeonY', 12000), reg('20-02-02', 'mort', 10000)], tenants: [] },
+      expect: { base: '2018-03-01', dist: [12000, 3000], assume: 0, surplus: 0 } },
+    { n: 13, title: '가등기처럼 보이는 담보가등기', bid: 10000,
+      data: { deadline: '', reg: [{ ...reg('19-01-01', 'secreg', 4000), look: 'claimreg' }, reg('20-01-01', 'mort', 10000)], tenants: [ten('A', '19-06-01', '19-06-01', 5000)] },
+      expect: { base: '2019-01-01', dist: [4000, 5000, 1000], distKinds: ['secreg', 'tenant', 'mort'], daehang: [false], assume: 0, surplus: 0 } },
+    { n: 14, title: '선순위 처분금지가처분', bid: 12000,
+      data: { deadline: '', reg: [reg('19-01-01', 'inj', 5000), reg('20-01-01', 'mort', 10000)], tenants: [] },
+      expect: { base: '2020-01-01', dist: [10000], assume: 5000, surplus: 2000, regStatus: { inj: 'fatal' } } },
+    { n: 15, title: '후순위 건물철거 가처분도 인수', bid: 10000,
+      data: { deadline: '', reg: [reg('20-01-01', 'mort', 10000), { ...reg('22-01-01', 'inj', 3000), demolish: true }], tenants: [] },
+      expect: { base: '2020-01-01', dist: [10000], assume: 3000, surplus: 0, regStatus: { inj: 'fatal' } } },
+    { n: 16, title: '임차권등기명령 (이사 나가도 대항력)', bid: 15000,
+      data: { deadline: '', reg: [reg('20-01-01', 'mort', 10000), { ...reg('23-05-01', 'lease', 8000, 'A'), move: D('19-01-01') }], tenants: [{ ...ten('A', '19-01-01', '21-01-01', 8000, '23-05-01'), leaseReg: true }] },
+      expect: { base: '2020-01-01', dist: [10000, 5000], distKinds: ['mort', 'tenant'], daehang: [true], assume: 3000, surplus: 0, regStatus: { lease: 'assume' } } },
+    { n: 17, title: '법인 임차인 대표이사 거주', bid: 12000,
+      data: { deadline: '', reg: [reg('20-01-01', 'mort', 10000)], tenants: [{ ...ten('A', '19-01-01', '19-01-01', 6000), noDaehang: true }] },
+      expect: { dist: [10000], daehang: [false], assume: 0, surplus: 2000 } },
   ];
 
   function run(log = console.log) {
@@ -3548,22 +3647,27 @@ function caseExtras(c) {
 /* ---- 매각물건명세서 ---- */
 function docSpec(c) {
   const t = c.data.tenants; const firstLive = [...c.data.reg].filter(r => (!r.cancelled || r.daewi) && Engine.BASE_TYPES.includes(r.type)).sort((a, b) => (a.date < b.date ? -1 : 1))[0];
-  const rows = t.filter(x => !x.hidden).map(x => `<tr><td>${x.name}</td><td>전부</td><td>${x.claimed === 'yes' ? '권리신고' : '현황조사'}</td><td>주거 임차인</td><td>미상</td><td>${fmtNum(x.deposit / 1e4)}만원</td><td>${ymd(x.move)}</td><td>${x.fixed ? ymd(x.fixed) : ''}</td><td>${x.claimed === 'yes' ? ymd(x.claimDate) : ''}</td></tr>`).join('');
+  const rows = t.filter(x => !x.hidden).map(x => `<tr><td>${x.corp ? `${x.corp}<br><small>(대표이사 ${x.name} 거주)</small>` : x.name}</td><td>전부</td><td>${x.leaseReg ? '등기사항증명서' : x.claimed === 'yes' ? '권리신고' : '현황조사'}</td><td>주거 임차인${x.leaseReg ? '<br>(임차권등기자)' : x.corp ? '<br>(법인 임차인)' : ''}</td><td>미상</td><td>${fmtNum(x.deposit / 1e4)}만원</td><td>${ymd(x.move)}</td><td>${x.fixed ? ymd(x.fixed) : ''}</td><td>${x.claimed === 'yes' ? ymd(x.claimDate) : ''}</td></tr>`).join('');
   const notes = [];
   if (c.lien) notes.push(`${c.lien.holder}로부터 공사대금 ${wonText(c.lien.amount)}의 유치권 신고가 있음. 그 성립 여부는 불분명함.`);
   if (c.share) notes.push(`공유자 ${c.owner}의 지분 ${c.share.den}분의 ${c.share.num} 매각.`);
   if (c.super) notes.push(`지상에 매각에서 제외되는 제시외 건물(${c.super.building}) 소재.`);
   notes.push(...CourtRules.specNotes(c)); // 재매각 특별매각조건 · 공유자 우선매수 안내 (정리본 2026-10-15)
+  // 정리본 2묶음: 실제 명세서처럼 사실만 적는다 (위험 판단은 결과 화면에서)
+  for (const r of c.data.reg) { if (r.type === 'secreg' && r.look && r.claimDate) notes.push(`가등기권자 ${r.holder}로부터 채권계산서 제출(${ymd(r.claimDate)}).`); if (r.type === 'jeonY' && r.claimDate) notes.push(`전세권자 ${r.holder} 배당요구(${ymd(r.claimDate)}).`); }
+  if (c.tomb) notes.push(`지상에 분묘 ${c.tomb.n}기 소재. 분묘기지권 성립 여부 불분명.`);
+  const keep = c.data.reg.filter(r => !r.cancelled && ((r.type === 'inj' && r.demolish) || (['claimreg', 'inj', 'jeonN'].includes(r.type) && firstLive && r.date < firstLive.date))).map(r =>
+    r.type === 'jeonN' ? `을구 ${ymd(r.date)} 전세권설정등기는 말소되지 않고 매수인에게 인수됨.` : r.demolish ? `갑구 ${ymd(r.date)} 가처분등기(건물철거 및 토지인도 청구권 보전)는 매각으로 소멸되지 않음.` : `갑구 ${ymd(r.date)} ${r.type === 'inj' ? '처분금지가처분등기' : '소유권이전청구권가등기'}는 말소되지 않고 매수인에게 인수됨.`);
   return `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>매 각 물 건 명 세 서</h2>
   <table class="kv"><tr><th>사건</th><td>${c.caseNo} 부동산임의경매</td><th>매각물건번호</th><td>1</td></tr>
   <tr><th>작성일자</th><td>${ymd(Engine.addDays(c.saleDate, -14))}</td><th>담임법관(사법보좌관)</th><td>${'김이박'[c.caseNo.charCodeAt(6) % 3]}○○</td></tr>
-  <tr><th>부동산 및 감정평가액<br>최저매각가격의 표시</th><td>별지기재와 같음</td><th>최선순위 설정</th><td>${ymd(firstLive.date)} ${Engine.REG_LABEL[firstLive.type]}</td></tr>
+  <tr><th>부동산 및 감정평가액<br>최저매각가격의 표시</th><td>별지기재와 같음</td><th>최선순위 설정</th><td>${ymd(firstLive.date)} ${Engine.REG_LABEL[firstLive.look || firstLive.type]}</td></tr>
   <tr><th>배당요구종기</th><td colspan="3">${ymd(c.deadline)}</td></tr></table>
   <div class="cap">부동산의 점유자와 점유의 권원, 점유할 수 있는 기간, 차임 또는 보증금에 관한 관계인의 진술 및 임차인이 있는 경우 배당요구 여부와 그 일자, 전입신고일자 또는 사업자등록신청일자와 확정일자의 유무와 그 일자</div>
   <table class="grid"><tr><th>점유자 성명</th><th>점유부분</th><th>정보출처 구분</th><th>점유의 권원</th><th>임대차기간</th><th>보증금</th><th>전입신고일자</th><th>확정일자</th><th>배당요구 여부(일자)</th></tr>
   ${rows || '<tr><td colspan="9">조사된 임차내역 없음</td></tr>'}</table>
   <div class="cap">※ 최선순위 설정일자보다 대항요건을 먼저 갖춘 주택·상가건물 임차인의 임차보증금은 매수인에게 인수되는 경우가 발생할 수 있고, 대항력과 우선변제권이 있는 주택·상가건물 임차인이 배당요구를 하였으나 보증금 전액에 관하여 배당을 받지 아니한 경우에는 배당받지 못한 잔액이 매수인에게 인수되게 됨을 주의하시기 바랍니다.</div>
-  <table class="kv"><tr><th>등기된 부동산에 관한 권리 또는 가처분으로 매각으로 그 효력이 소멸되지 아니하는 것</th><td>&nbsp;</td></tr>
+  <table class="kv"><tr><th>등기된 부동산에 관한 권리 또는 가처분으로 매각으로 그 효력이 소멸되지 아니하는 것</th><td>${keep.join('<br>') || '&nbsp;'}</td></tr>
   <tr><th>매각에 따라 설정된 것으로 보는 지상권의 개요</th><td>&nbsp;</td></tr>
   <tr><th>비고란</th><td>${notes.join('<br>') || '&nbsp;'}</td></tr></table></div>`;
 }
@@ -3589,14 +3693,18 @@ function docRegistry(c, viewDate) {
   const gap = regs.filter(r => r.section === '갑').sort((a, b) => (a.date < b.date ? -1 : 1));
   const eul = regs.filter(r => r.section === '을').sort((a, b) => (a.date < b.date ? -1 : 1));
   const rc = () => `제${R.RI(1000, 99999)}호`;
-  const purpose = r => ({ own: r.shareText ? '소유권일부이전' : '소유권이전', prov: '가압류', seize: '압류', start: '임의경매개시결정', mort: '근저당권설정', jeonY: '전세권설정', jeonN: '전세권설정' })[r.type];
-  const cause = r => ({ own: `${ymd(r.date)} ${r.cause || '매매'}`, prov: `${ymd(Engine.addDays(r.date, -3))} 서울중앙지방법원의 가압류결정`, seize: `${ymd(Engine.addDays(r.date, -1))} 압류(${r.taxNote || '세무'})`, start: `${ymd(Engine.addDays(r.date, -1))} ${courtOf(c).name}의 임의경매개시결정(${c.caseNo})`, mort: `${ymd(r.date)} 설정계약`, jeonY: `${ymd(r.date)} 설정계약`, jeonN: `${ymd(r.date)} 설정계약` })[r.type];
+  const purpose = r => ({ own: r.shareText ? '소유권일부이전' : '소유권이전', prov: '가압류', seize: '압류', start: '임의경매개시결정', mort: '근저당권설정', jeonY: '전세권설정', jeonN: '전세권설정', claimreg: '소유권이전청구권가등기', secreg: r.look ? '소유권이전청구권가등기' : '소유권이전담보가등기', inj: '가처분', lease: '주택임차권' })[r.type];
+  const evNo = (r, k) => `${r.date.slice(0, 4)}${k}${1000 + parseInt(r.date.replace(/-/g, ''), 10) % 8999}`; // 결정 사건번호 (날짜에서 정해 R 순서를 건드리지 않는다)
+  const cause = r => ({ own: `${ymd(r.date)} ${r.cause || '매매'}`, prov: `${ymd(Engine.addDays(r.date, -3))} 서울중앙지방법원의 가압류결정`, seize: `${ymd(Engine.addDays(r.date, -1))} 압류(${r.taxNote || '세무'})`, start: `${ymd(Engine.addDays(r.date, -1))} ${courtOf(c).name}의 임의경매개시결정(${c.caseNo})`, mort: `${ymd(r.date)} 설정계약`, jeonY: `${ymd(r.date)} 설정계약`, jeonN: `${ymd(r.date)} 설정계약`, claimreg: `${ymd(r.date)} 매매예약`, secreg: `${ymd(r.date)} 매매예약`, inj: `${ymd(Engine.addDays(r.date, -3))} ${courtOf(c).name}의 가처분결정(${evNo(r, '카단')})`, lease: `${ymd(Engine.addDays(r.date, -14))} ${courtOf(c).name}의 임차권등기명령(${evNo(r, '카임')})` })[r.type];
   const holder = r => {
     if (r.type === 'own') return `${r.shareText ? r.shareText + '<br>' : ''}소유자 ${r.holder}`;
     if (r.type === 'prov') return `청구금액 ${wonText(r.amount)}<br>채권자 ${r.holder}`;
     if (r.type === 'seize') return `권리자 ${r.holder}${r.amount ? `<br>(체납액 ${wonText(r.amount)})` : ''}`;
     if (r.type === 'start') return `채권자 ${r.holder}`;
     if (r.type === 'mort') return `채권최고액 ${wonText(r.amount)}<br>채무자 ${c.owner}<br>근저당권자 ${r.holder}`;
+    if (r.type === 'claimreg' || r.type === 'secreg') return `가등기권자 ${r.holder}`;
+    if (r.type === 'inj') return `피보전권리 ${r.demolish ? '건물철거 및 토지인도 청구권' : '소유권이전등기청구권'}<br>채권자 ${r.holder}<br>금지사항 매매, 증여, 전세권·저당권·임차권의 설정 기타 일체의 처분행위 금지`;
+    if (r.type === 'lease') return `임차보증금 ${wonText(r.amount)}<br>범위 ${c.type === '근린상가' ? '건물 전부' : '주거용 건물 전부'}<br>주민등록일자 ${ymd(r.move)}<br>점유개시일자 ${ymd(r.move)}<br>확정일자 ${r.fixed ? ymd(r.fixed) : '없음'}<br>임차권자 ${r.holder}`;
     return `전세금 ${wonText(r.amount)}<br>전세권자 ${r.holder}`;
   };
   const rows = (list, sec) => {
@@ -3632,7 +3740,7 @@ function docMoveIn(c, viewDate) {
   const owned = c.data.reg.filter(r => r.type === 'own').slice(-1)[0];
   if (c.occupant.kind === 'owner') rows.push({ name: c.owner, move: owned.date, n: X.ownerFamily });
   if (c.heir) rows.push({ name: c.owner[0] + personNameTail(R), move: Engine.addDays(owned.date, R.RI(0, 30)), n: c.heir.heirs - 1, note: `전 세대주 ${maskName(c.owner)} ${ymd(c.heir.deathDate)} 사망말소` });
-  for (const t of c.data.tenants) rows.push({ name: t.name, move: t.move, n: R.RI(0, 2) });
+  for (const t of c.data.tenants) { const n = R.RI(0, 2); if (!t.leaseReg) rows.push({ name: t.name, move: t.move, n }); } // 임차권등기명령 뒤 이사 나간 임차인은 전입세대열람에 없다
   rows.sort((a, b) => (a.move < b.move ? -1 : 1));
   return `<div class="doc gov"><div class="docHead">전입세대열람 내역(동거인포함)</div>
   <table class="kv"><tr><th>행정기관</th><td>서울특별시 ${c.guName} ${c.dong}</td><th>열람일시</th><td>${ymd(viewDate)}</td></tr>
@@ -3675,6 +3783,7 @@ function siteClues(c) {
   if (c.illegal) out.push({ obj: 'roof', text: `옥상·외벽 확인: ${c.illegal.what} 흔적이 보인다. 외벽 색이 다른 부분이 있다.` });
   else if (c.type !== '토지') out.push({ obj: 'roof', text: '옥상과 외벽에 특별히 달라 보이는 곳은 없다.' });
   if (c.super) out.push({ obj: 'roof', text: `대지 위에 ${c.super.building}이 서 있다. 누군가 쓰고 있는 것 같다.` });
+  if (c.tomb) out.push({ obj: 'roof', text: `대지 한쪽에 봉분 ${c.tomb.n}기와 작은 비석이 있다. 최근에 벌초한 흔적이 있다.` });
   return out;
 }
 function bellTalk(c) {
@@ -3702,6 +3811,8 @@ function bellTalk(c) {
     : t.fixed && !t.claimDate ? R.pick(['확정일자는 받아 놨는데… 법원에서 온 서류는 뭘 내라는 건지 몰라서 아직이에요.', '확정일자는 있어요. 배당요구? 그건 안 했는데… 해야 하는 거예요?'])
     : !t.fixed && t.claimDate ? R.pick(['확정일자요? 그런 건 안 받았는데, 법원에서 온 건 냈어요.', '전입신고는 했는데 확정일자는 안 받았어요. 법원 서류는 냈고요.'])
     : R.pick(['확정일자니 배당요구니 그런 건 잘 몰라요. 월세만 꼬박꼬박 냈는데.', '서류 같은 건 하나도 안 했어요. 집주인이 괜찮다고 해서.']);
+  if (t.corp) return [L(`세입자 ${t.name}`, 'occ_young', `여기 ${t.corp}에서 직원 숙소로 빌린 집이에요. 제가 그 회사 대표라서 ${yr}년부터 제가 살고 있어요. 전입도 제 이름으로 했고요.`, 'surprise'), L(`세입자 ${t.name}`, 'occ_young', `보증금 ${dep}도 회사에 넣었어요. ${claim}`, 'sweat')];
+  if (t.fake) return [L(`세입자 ${t.name}`, 'occ_young', `…세입자 맞아요. ${yr}년부터 살았어요. 보증금은 ${dep}이고요.`, 'sweat'), L(`세입자 ${t.name}`, 'occ_young', '계약서요? 그건… 집주인 형님이 갖고 있어요. 가족끼리라 그냥 돈만 줬어요.', 'sweat')];
   const persona = R.RI(0, 3);
   if (persona === 0) return [L(`세입자 ${t.name}`, 'occ_auntie', `세입자예요. ${yr}년에 들어왔어요. 보증금 ${dep}인데… 그거 다 받을 수 있는 거예요?`, 'sweat'), L(`세입자 ${t.name}`, 'occ_auntie', claim, 'sweat')];
   if (persona === 1) return [L(`세입자 ${t.name}`, 'occ_oldman', `…세 들어 삽니다. ${yr}년부터요. 자세한 건 집주인한테 물어보세요.`, 'anger'), L(`세입자 ${t.name}`, 'occ_oldman', claim, 'silence')];
@@ -4248,6 +4359,7 @@ const Ride = {
 const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
 const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3, 0.6, 2.5];
 // 자리 0~6은 처음부터 있던 자리라 시각 오프셋(k·W/7)과 구 순서((n·7+k)%4)를 바꾸면 이미 가진 집·낸 입찰표의 사건이 달라진다. 그래서 7은 고정(LIVE_BASE)이고 나중에 더한 자리(7, 8…)는 그 사이 중간 시각에 끼운다.
+const LIVE_TRAPS_FROM = Date.UTC(2026, 9, 15, 6, 50); // v84 배포 직후 (UTC)
 const LIVE_BASE = 7;
 function slotOff(k, W) { return k < LIVE_BASE ? Math.round(k * W / LIVE_BASE) : Math.round((2 * (k - LIVE_BASE) * 3 + 1) * W / (2 * LIVE_BASE)); } // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
 const Live = {
@@ -4267,6 +4379,7 @@ const Live = {
     const gu = DRIVE_GUS[(n * LIVE_BASE + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
     const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate: '2025-11-11', year: '2025' }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
     c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
+    if (cyc.t0 >= LIVE_TRAPS_FROM) Generator.applyTraps(c); // 정리본 2묶음 함정은 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
     c.live = cyc; this.closed[c.id] = c;
     return c;
   },
@@ -4607,7 +4720,7 @@ const Live = {
     const L = m.loanState || { bank: 0, savings: 0, extra: 0 };
     const keep = { br: State.bidResult, ph: State.phase, loan: State.loan, ev: State.evict };
     State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won: true }; State.phase = 'won'; State.loan = L; State.evict = E || null; State.saleOverride = O || null;
-    const S = computeSettlement(); State.saleOverride = null; const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
+    const S = settleLabels(computeSettlement(), c); State.saleOverride = null; const a = Engine.analyze(c.data, m.bid); const missed = missedInfo(c); const G = gradeScore(S, c, a, missed);
     State.bidResult = keep.br; State.phase = ['evict', 'forced', 'own'].includes(keep.ph) ? 'investigate' : keep.ph; State.loan = keep.loan; State.evict = keep.ev;
     m.done = true; m.profit = S.profit; m.loan = L.bank + L.savings;
     const already = (E ? (E.moveFee || 0) + (E.forced ? E.forced.cost : 0) + (E.paidAssume || 0) : 0) + (O ? O.repair - O.rentTotal + (O.intPaid || 0) : 0); // 현금에서 이미 나간 돈(명도비·수리비·매달 낸 이자)과 이미 들어온 돈(월세)
@@ -4732,7 +4845,7 @@ const Live = {
       Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 보증금 몰수 (${why || '기한 경과'})`);
       const keep = { br: State.bidResult, ph: State.phase, loan: State.loan };
       State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won: true }; State.phase = 'forfeit'; State.loan = null;
-      const S = computeSettlement(); const G = gradeScore(S, c, Engine.analyze(c.data, m.bid), missedInfo(c));
+      const S = settleLabels(computeSettlement(), c); const G = gradeScore(S, c, Engine.analyze(c.data, m.bid), missedInfo(c));
       State.bidResult = keep.br; State.phase = keep.ph; State.loan = keep.loan;
       this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, forfeit: true, profit: -m.deposit, grade: G.grade, bid: m.bid, winner: '본인', wbid: m.bid });
       Records.add(S, c, G); this.save();
@@ -5063,7 +5176,7 @@ const Game = {
 function startGame(capital, opts = {}) {
   State.capital = capital; State.cash = capital; HUD.setCash(capital, false);
   State.seed = opts.tutorial ? TUT_SEED : (opts.seed || (Date.now() & 0x7fffffff)); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자. 튜토리얼: 늘 같은 연습 물건
-  if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed }); // 채널: 실제 시간으로 돌아가는 세계
+  if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed, traps: !opts.tutorial }); /* 연습 물건엔 등기 함정을 씌우지 않는다 */ // 채널: 실제 시간으로 돌아가는 세계
   $('btnEndDay').hidden = Live.on;
   if (Net.on) { $('mpInfo').hidden = false; document.body.classList.add('netOn'); $('chatLines').innerHTML = Net.hist().slice(-5).map(l => Net.logRow(l, false, true)).join(''); } // 채팅 버튼 대신 왼쪽 입력줄 (v80)
   $('rankBox').hidden = !Live.on; // 채널: 순위판을 왼쪽에 항상 (사용자 요청 2026-10-14)
@@ -6554,8 +6667,24 @@ const CourtRules = {
 /* ===================== 5단계: 결과 화면 · 등급 · 놓친 정보 · 기록 · 단예 한마디 =====================
  * 난이도(★)와 위험 이름은 여기서 처음 공개한다. 모든 숫자는 Engine.analyze()와 §11·§12 공식으로 계산한다.
  */
-const RISK_NAME = r => ({ normal: '후순위 임차인 (전액 배당)', junior: '후순위 임차인 (일부 배당)', senior: '선순위 임차인', missed: '배당요구종기를 넘긴 선순위 임차인', daewi: '대위변제로 말소기준 변경', hidden: '숨은 임차인', lien: '유치권 신고', illegal: '위반건축물', share: '지분 경매', super: '법정지상권 여지', tax: '당해세 압류', heir: '상속인 점유' })[r] || r;
-const STATUS_LABEL = { base: '말소기준', extinguish: '소멸', assume: '인수', fatal: '인수 (치명)', cancelled: '말소됨', owner: '소유권' };
+const RISK_NAME = r => ({ normal: '후순위 임차인 (전액 배당)', junior: '후순위 임차인 (일부 배당)', senior: '선순위 임차인', missed: '배당요구종기를 넘긴 선순위 임차인', daewi: '대위변제로 말소기준 변경', hidden: '숨은 임차인', lien: '유치권 신고', illegal: '위반건축물', share: '지분 경매', super: '법정지상권 여지', tax: '당해세 압류', heir: '상속인 점유', jeonN: '선순위 전세권 (배당요구 안 함 → 인수)', jeonY: '선순위 전세권 (배당요구 → 말소기준)', claimreg: '선순위 매매예약 가등기', fakegd: '담보가등기 (가등기처럼 보이지만 말소기준)', inj: '선순위 처분금지가처분', demolish: '건물철거 가처분 (후순위여도 인수)', leasereg: '임차권등기명령 (이사 나가도 대항력)', sameday: '근저당과 같은 날 전입 (대항력 없음)', corp: '법인 임차인 · 대표이사 거주 (대항력 없음)', fake: '허위 임차인 (임대차 불인정)', tomb: '분묘기지권' })[r] || r;
+/* 정리본 2묶음 위험: 결과 화면에서만 왜 그런지 설명 */
+const TRAP_WHY = {
+  jeonN: '선순위 전세권자가 배당요구를 안 하면 전세권은 말소기준이 못 되고 낙찰자가 전세금을 그대로 떠안는다.',
+  jeonY: '선순위 전세권자가 배당요구하면 그 전세권이 말소기준이 된다. 배당받고 소멸하며, 그 뒤 권리도 모두 지워진다.',
+  claimreg: '말소기준보다 앞선 매매예약 가등기는 소멸하지 않는다. 본등기가 되면 낙찰자는 소유권을 잃을 수 있어, 지키려면 가등기권자와 합의해야 한다.',
+  fakegd: '등기부에는 똑같이 소유권이전청구권가등기로 보여도, 가등기권자가 채권계산서를 냈다면 돈을 받으려는 담보가등기다. 담보가등기는 근저당처럼 말소기준이 되고 배당받고 소멸한다.',
+  inj: '말소기준보다 앞선 처분금지가처분은 소멸하지 않는다. 가처분권자가 본안에서 이기면 낙찰자가 소유권을 잃을 수 있다.',
+  demolish: '토지소유자가 건물철거·토지인도 청구권을 지키려고 한 가처분은 순위가 늦어도 매각으로 소멸하지 않는다. 건물이 철거될 수 있다.',
+  leasereg: '임차권등기명령으로 임차권이 등기되면 이사 가서 전입이 빠져도 대항력과 우선변제권이 그대로 남는다. 전입세대열람만 보면 놓친다.',
+  sameday: '전입신고의 대항력은 다음 날 0시부터 생긴다. 근저당 설정일과 같은 날 전입했다면 근저당보다 늦어서 대항력이 없다.',
+  corp: '중소기업 법인이 직원 숙소로 임차한 집은 직원이 전입하면 법인이 대항력을 얻지만(주택임대차보호법 3조 3항), 대표이사는 직원이 아니라서 대표이사가 전입해도 대항력이 생기지 않는다 (대법원 2023다226866). 겉보기엔 선순위라 다들 피해서 싸게 살 기회였다.',
+  fake: '계약서도 없고 확정일자·배당요구도 없이 소유자 가족이 보증금을 말로만 주장하면 허위·통정 임차인으로 의심할 만하다. 실제로는 소송으로 다퉈야 하지만, 이 게임에서는 임대차가 인정되지 않는 것으로 계산했다.',
+  tomb: '토지에 분묘가 있으면 분묘기지권이 성립할 수 있다. 등기와 상관없이 낙찰자가 그 자리를 못 쓰므로 처분가치가 깎인다.',
+};
+/* 정산서 줄 이름: computeSettlement는 그대로 두고, 새 위험이 있을 때만 보여 주는 이름을 바꾼다 */
+function settleLabels(S, c) { if (!S || !S.lines || !c) return S; const a = S.analysis; for (const l of S.lines) { if (l[0] === '처분가치 (시세)' && c.tomb) l[0] = `처분가치 (시세 ${fmtWon(c.market)} × 0.7, 분묘기지권)`; if (l[0] === '인수액 (임차보증금·전세금)' && a && a.assumeOther) l[0] = '인수액 (임차보증금·전세금·소멸 안 되는 가등기·가처분)'; } return S; }
+const STATUS_LABEL = { lease: '임차권등기', base: '말소기준', extinguish: '소멸', assume: '인수', fatal: '인수 (치명)', cancelled: '말소됨', owner: '소유권' };
 const PLACE_NAME = { spec: '사무실 PC (매각물건명세서)', registry: '등기소', movein: '주민센터', site: '물건 현장', bank: '은행', agent: '중개사무소' };
 
 /* 엔진 기준 적정 입찰가: (처분가치 − 인수액 − 이행강제금) × 0.85 (부대비용·수리·금융비용 약 8% + 목표 수익 7%) */
@@ -6582,6 +6711,17 @@ function keyPlaces(c) {
     if (r === 'heir') need('site', '초인종을 눌러 상속인 여러 명이 살고 있다는 것을 듣지 못했습니다.');
     if (r === 'share') need('registry', `갑구의 "공유자 지분 ${c.share.den}분의 ${c.share.num}" 표시를 보지 못했습니다.`);
     if (r === 'tax') need('registry', '갑구의 당해세 압류를 보지 못했습니다.');
+    const R1 = k => c.data.reg.find(x => x.type === k && (k !== 'inj' || !x.demolish)), dm = c.data.reg.find(x => x.demolish), tt = c.data.tenants[c.data.tenants.length - 1];
+    if (r === 'jeonN' || r === 'jeonY') { const j = R1(r); need('registry', `을구 ${ymd(j.date)} 전세권(${fmtWon(j.amount)})을 보지 못했습니다.`); need('spec', r === 'jeonN' ? '매각물건명세서에 전세권이 매수인에게 인수된다고 적힌 것을 보지 못했습니다.' : `전세권자 ${j.holder}가 배당요구해 전세권이 말소기준이 된 것을 명세서에서 보지 못했습니다.`); }
+    if (r === 'claimreg') need('registry', `갑구 ${ymd(R1('claimreg').date)} 소유권이전청구권가등기(매매예약)를 보지 못했습니다.`);
+    if (r === 'fakegd') { const g = R1('secreg'); need('registry', `갑구 ${ymd(g.date)} 가등기를 보지 못했습니다.`); need('spec', `가등기권자 ${g.holder}의 채권계산서 제출(담보가등기라는 뜻)을 명세서에서 보지 못했습니다.`); }
+    if (r === 'inj') need('registry', `갑구 ${ymd(R1('inj').date)} 처분금지가처분을 보지 못했습니다.`);
+    if (r === 'demolish') need('registry', `갑구 ${ymd(dm.date)} 건물철거·토지인도 청구권 가처분을 보지 못했습니다.`);
+    if (r === 'leasereg') { need('registry', `을구 ${ymd(R1('lease').date)} 주택임차권(${tt.name}, 보증금 ${fmtWon(tt.deposit)})을 보지 못했습니다.`); need('movein', '전입세대열람에 아무도 없다는 것과 을구 임차권등기를 맞춰 보지 못했습니다.'); }
+    if (r === 'sameday') need('movein', `${tt.name}의 전입일(${ymd(tt.move)})이 근저당 설정일과 같은 날이라는 것을 확인하지 못했습니다.`);
+    if (r === 'corp') { need('spec', `임차인이 법인(${tt.corp})이라는 것을 명세서에서 보지 못했습니다.`); need('site', `들어와 사는 ${tt.name}이 그 법인의 대표이사라는 말을 듣지 못했습니다.`); }
+    if (r === 'fake') need('site', `${tt.name}이 계약서도 없이 소유자 가족이라는 말을 듣지 못했습니다.`);
+    if (r === 'tomb') need('site', `대지 위 분묘 ${c.tomb.n}기를 보지 못했습니다.`);
   }
   if (!c.risks.length) need('site', '현장을 보지 않고 입찰했습니다. (이 물건은 깨끗했습니다)');
   return req;
@@ -6658,7 +6798,7 @@ function danyeLine(S, c, G, missed) {
 async function finishGame() {
   if (State.finished) return; State.finished = true;
   Game.busy = true; if (Notebook.open) Notebook.toggle(false);
-  const S = State.settlement = computeSettlement(); const br = State.bidResult;
+  const br = State.bidResult; const S = State.settlement = settleLabels(computeSettlement(), br ? caseById(br.caseId) : null);
   const c = br ? caseById(br.caseId) : (State.target ? caseById(State.target) : null);
   const a = c ? Engine.analyze(c.data, br ? br.bid : c.minPrice) : null;
   const missed = c ? missedInfo(c) : []; State.missed = missed; State.missedCase = c && c.id;
@@ -6682,7 +6822,7 @@ async function finishGame() {
     for (const b of [...br.bids].reverse()) { add(`${b.coowner ? esc(b.label) : b.me ? '본인' : b.friend ? esc(b.name) + ' (친구)' : maskName(b.name)}${b.invalid ? ' (무효)' : ''}${b === br.winner ? (b.coowner ? ' (매수인)' : ' (최고가)') : ''}`, null, b.me ? 'me' : '').querySelector('b').textContent = fmtWon(b.bid); await sleep(150); }
     add(`입찰보증금 ${fmtWon(br.deposit)}`, null).querySelector('b').textContent = '전액 반환'; await sleep(150);
     if (br.why) { const li = add(br.why, null, 'why'); li.querySelector('b').remove(); await sleep(150); } // 절차 때문에 진 이유 (공유자 우선매수·보증금 부족·불허가·차순위)
-  } else for (const [label, v] of S.lines) { if (!v && label !== '인수액 (임차보증금·전세금)') continue; add(label, v); await sleep(150); }
+  } else for (const [label, v] of S.lines) { if (!v && !label.startsWith('인수액')) continue; add(label, v); await sleep(150); }
   // 손익 카운트업 (1초)
   const dur = 1000, t0 = performance.now(); const sum = $('rcSum');
   await new Promise(ok => { const step = () => { const k = Math.min(1, (performance.now() - t0) / dur); const v = Math.round(S.profit * (1 - Math.pow(1 - k, 3))); sum.textContent = (v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v)); if (Math.floor(k * 20) % 2) Sound.play('tick'); if (k < 1) requestAnimationFrame(step); else ok(); }; step(); });
@@ -6709,11 +6849,11 @@ function renderMore(S, c, a, G, missed) {
     const dRows = a.distribution.map((d, i) => `<tr><td>${i + 1}</td><td>${d.label}${d.note ? ` <small>(${d.note})</small>` : ''}</td><td>${ymd(d.date)}</td><td class="num">${fmtWon(d.claim)}</td><td class="num">${fmtWon(d.paid)}</td></tr>`).join('');
     h += `<div class="rSec"><h3>엔진 분석 <small>낙찰가 ${fmtWon(a.bid)} 기준</small></h3>
       <p><b>말소기준권리:</b> ${a.base ? `${ymd(a.base.date)} ${a.base.label} ${a.base.holder || ''}` : '없음'}</p>
-      ${a.fatal.map(f => `<p class="warn">⚠ ${f.note}</p>`).join('')}
+      ${a.fatal.map(f => `<p class="warn">⚠ ${f.note}</p>`).join('')}${c.risks.filter(r => TRAP_WHY[r]).map(r => `<p class="small">📘 ${TRAP_WHY[r]}</p>`).join('')}
       <table class="rt"><tr><th>접수일</th><th>등기목적</th><th>권리자</th><th>금액</th><th>처리</th></tr>${regRows}</table>
       <table class="rt"><tr><th>임차인</th><th>전입</th><th>확정일자</th><th>보증금</th><th>대항력</th><th>배당</th><th>배당액</th><th>인수</th></tr>${tRows}</table>
       <table class="rt"><tr><th>순위</th><th>채권자</th><th>기준일</th><th>채권액</th><th>배당액</th></tr>${dRows}<tr><td colspan="4">잉여금 (소유자 반환)</td><td class="num">${fmtWon(a.surplus)}</td></tr><tr><td colspan="4">검산: Σ배당 + 잉여금 = 낙찰가</td><td class="num">${a.balanced ? '일치' : '불일치'}</td></tr></table>
-      <p><b>낙찰자 인수 총액: ${fmtWon(a.assumeTotal)}</b> <small>(임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)})</small> · 엔진 적정 입찰가 ${fmtWon(fairBid(c))} 안팎</p>
+      <p><b>낙찰자 인수 총액: ${fmtWon(a.assumeTotal)}</b> <small>(임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)}${a.assumeOther ? ` + 가등기·가처분 정리 ${fmtWon(a.assumeOther)}` : ''})</small> · 엔진 적정 입찰가 ${fmtWon(fairBid(c))} 안팎</p>
       <p class="small dim">주의(단순화): 소액임차인 최우선변제, 경매비용 공제, 당해세 이외 조세의 법정기일 비교, 임금채권은 다루지 않습니다. 당해세 압류는 가장 먼저 배당하는 것으로 단순화했습니다.</p></div>`;
     // 놓친 정보
     h += `<div class="rSec"><h3>놓친 정보</h3>${missed.length ? `<ul class="missed">${missed.map(m => `<li><b>${m.place}</b>에 가지 않아 ${escapeHtml(m.text)}</li>`).join('')}</ul>` : '<p>핵심 장소는 다 다녀왔어요.</p>'}</div>`;
@@ -6917,7 +7057,7 @@ const Notebook = {
     if (regDoc) {
       const view = dateOfDay(regDoc.day);
       const live = c.data.reg.filter(r => r.type !== 'own' && (!r.cancelled || (r.daewi && view < r.cancelDate)));
-      regOpts = `<select id="jBase"><option value="">고르세요</option>${live.map(r => { const k = r.date + '|' + r.type; return `<option value="${k}" ${j.base === k ? 'selected' : ''}>${ymd(r.date)} ${Engine.REG_LABEL[r.type]} ${r.holder || ''}</option>`; }).join('')}</select>`;
+      regOpts = `<select id="jBase"><option value="">고르세요</option>${live.map(r => { const k = r.date + '|' + r.type; return `<option value="${k}" ${j.base === k ? 'selected' : ''}>${ymd(r.date)} ${Engine.REG_LABEL[r.look || r.type]} ${r.holder || ''}</option>`; }).join('')}</select>`;
     } else regOpts = '<span class="dim">등기부를 떼야 고를 수 있어요.</span>';
     // 임차인 후보: 명세서·현황조사서·전입세대열람에서 본 사람
     const seen = State.seen[id] || {}; const names = new Set();

@@ -1836,6 +1836,7 @@ Object.assign(FEEL, {
   carEnterDist: 26,
   promptSound: false,     // 상호작용 표시(E)가 뜰 때 소리 (사용자 요청으로 끔)
   pvpDailyCap: 100e4, /* 같은 친구와 하루에 오갈 수 있는 판돈 (가위바위보·격투·대전 테트리스 합산, 사용자 2026-10-15 '하루 한도만') */
+  vipEscapeEvery: 5, /* 이혁진이 돈을 이만큼 주면 도망간다 (10 → 5, 사용자 2026-10-15) */
   vipGift: 1000, vipDuelChance: 0.15, vipDuelStake: 1e7, /* 깜짝 룰렛: 받을 때 15% 확률로 제안, 판돈 천만 원 */ // 이혁진이 말 걸 때마다 주는 돈 (100 → 1000, 사용자 2026-10-15 '천원으로')
   liveSecondMin: 3,       // 채널 차순위매수신고: 최고가매수인 잔금 기한을 기다리는 시간(분)
   fuelDrive: 5000,        // 직접 운전해서 옆 구로 넘어갈 때 주유비(원, ±20%)
@@ -5497,7 +5498,7 @@ function clearEntry(c) {
     if (!ok) o.s = (o.s + o.road.len / 2) % o.road.len;
   }
 }
-/* ---- 이혁진 도망: 100원을 10번 받아 갈 때마다 다른 탈것으로 다른 곳에 가서 내린다 (사용자 2026-10-15: 뛰기 → 자전거 → 차, 그다음은 헬기·우주선 등 창의적으로 돌아가며) ---- */
+/* ---- 이혁진 도망: 돈을 FEEL.vipEscapeEvery(5)번 받아 갈 때마다 다른 탈것으로 다른 곳에 가서 내린다 (사용자 2026-10-15: 뛰기 → 자전거 → 차, 그다음은 헬기·우주선 등 창의적으로 돌아가며) ---- */
 const VIP_ESC = [
   { mode: 'run', sp: 150, how: '뛰어서', say: '아, 오늘은 여기까지! 저 바빠요!', land: '헉헉… 여기까진 못 따라오겠지.' },
   { mode: 'bike', sp: 240, how: '자전거 타고', say: '또 오셨어요? 이번엔 자전거로 갑니다!', land: '휴, 다리 아프다.' },
@@ -5673,8 +5674,8 @@ async function talkWalker(w) {
     const V = [`안녕하세요. 오늘 옷 괜찮죠? 자, 이거 받으세요.`, `또 만났네요. 부지런한 사람은 보기 좋아요. 자, 천 원.`, `여유는 지갑이 아니라 태도에서 나와요. 그래도 커피값에 보태요.`, `서류 꼼꼼히 보는 사람이 결국 이겨요. 응원의 뜻으로.`];
     await Dialog.say([{ name, sprite: 'vip', text: V[(i + State.day + (w.talks || 0)) % V.length] }]);
     w.talks = (w.talks || 0) + 1; State.cash += FEEL.vipGift; HUD.setCash(State.cash); Sound.play('coins'); Toast.show(`${name}에게 ${fmtWon(FEEL.vipGift)}을 받았다.`); if (Net.on) Net.news(`${name}에게 ${fmtWon(FEEL.vipGift)} 받음`); // 채팅에 (사용자 2026-10-15)
-    State.vipTalks = (State.vipTalks || 0) + 1; if (State.vipTalks % 10 === 0) vipEscape(w, State.vipTalks / 10 - 1);
-    else if (VipDuel.canOffer()) { w.ai.t = 99; const played = await VipDuel.offer(w); if (played) { State.vipDuels = (State.vipDuels || 0) + 1; vipEscape(w, Math.floor(State.vipTalks / 10) + State.vipDuels); } } // 깜짝 룰렛 뒤에도 도망 (사용자 2026-10-15) // 10번마다 도망: 뛰어서 → 자전거 → 차 → 킥보드 → 헬기 → 풍선 → 땅굴 → 우주선 → 말 → 로켓 배낭, 다시 처음부터 (사용자 2026-10-15)
+    State.vipTalks = (State.vipTalks || 0) + 1; if (State.vipTalks % FEEL.vipEscapeEvery === 0) vipEscape(w, State.vipTalks / FEEL.vipEscapeEvery - 1);
+    else if (VipDuel.canOffer()) { w.ai.t = 99; const played = await VipDuel.offer(w); if (played) { State.vipDuels = (State.vipDuels || 0) + 1; vipEscape(w, Math.floor(State.vipTalks / FEEL.vipEscapeEvery) + State.vipDuels); } } // 깜짝 룰렛 뒤에도 도망 (사용자 2026-10-15) // 5번마다 도망 (10 → 5, 사용자 2026-10-15): 뛰어서 → 자전거 → 차 → 킥보드 → 헬기 → 풍선 → 땅굴 → 우주선 → 말 → 로켓 배낭, 다시 처음부터 (사용자 2026-10-15)
     VipNet.free(); w.ai.t = 0.3; Game.busy = false; return;
   }
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;

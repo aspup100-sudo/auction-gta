@@ -2856,7 +2856,7 @@ function updateTraffic(dt, z) {
   });
 }
 function drawCarSprite(c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
-  if (col && typeof col === 'object' && col.ride) return drawRide(c, x, y, a, col.ride, speed, col.rider); // 재치 탈것 스킨
+  if (col && typeof col === 'object' && col.ride) return drawRide(c, x, y, a, col.ride, speed, col.rider, col.tag); // 재치 탈것 스킨
   let stripe = null; if (col && typeof col === 'object') { stripe = col.stripe || null; col = col.col; } // 상점 차 스킨: { col, stripe }
   c.save(); c.translate(x, y); c.rotate(a);
   c.fillStyle = 'rgba(0,0,0,.32)'; c.fillRect(-len / 2 + 2, -wid / 2 + 2, len, wid);
@@ -2883,7 +2883,7 @@ function drawSignals(c, z, t) {
 /* ---- 재치 있는 탈것 스킨 (사용자 2026-10-15 '제트기, 자전거, 친구 등에 업히기, 오토바이, 스쿠터, 외발자전거, 의자, 카트, 늑구(늑대), 부캉이(상어)… 재치 있을수록 비싸게') ----
  * 상점 차 스킨에 ride가 있으면 차 대신 이걸 그린다. 모양만 바뀌고 속도·부딪힘은 차와 같다.
  * 위에서 본 모습, 앞이 +x. rider {hair, shirt}가 있으면 위에 탄 내 머리·어깨를 그린다 (주차해 둔 건 빈 채로). */
-function drawRide(c, x, y, a, ride, speed, rider) {
+function drawRide(c, x, y, a, ride, speed, rider, tag) {
   const t = performance.now() / 1000, mv = Math.abs(speed) > 0.5;
   c.save(); c.translate(x, y); c.rotate(a);
   const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
@@ -2902,9 +2902,14 @@ function drawRide(c, x, y, a, ride, speed, rider) {
     case 'wolf': { shadow(12, 5); const st = mv ? Math.sin(t * 14) * 2 : 0; for (const [lx, ly, s] of [[5, -5, st], [5, 4, -st], [-6, -5, -st], [-6, 4, st]]) r(lx + s, ly, 3, 1.5, '#5a5f69'); c.fillStyle = '#8a8f99'; c.beginPath(); c.ellipse(0, 0, 9, 4.5, 0, 0, 7); c.fill(); r(-15, -1 + Math.sin(t * 8) * 1.5, 7, 2.5, '#8a8f99'); circ(10, 0, 3.6, '#9aa0aa'); r(12, -1.5, 4, 3, '#b8bec8'); r(15.5, -0.5, 1, 1, '#111'); r(8, -4.5, 2, 2, '#5a5f69'); r(8, 2.5, 2, 2, '#5a5f69'); r(11, -2, 1, 1, '#ffd84a'); r(11, 1, 1, 1, '#ffd84a'); me(-1); break; }
     case 'shark': { const sw = Math.sin(t * (mv ? 10 : 3)) * 2.5; c.fillStyle = 'rgba(110,190,255,.35)'; c.beginPath(); c.ellipse(0, 0, 16, 8, 0, 0, 7); c.fill(); c.fillStyle = '#5a7890'; c.beginPath(); c.ellipse(1, 0, 12, 4.5, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-10, 0); c.lineTo(-17, -5 + sw); c.lineTo(-15, 0); c.lineTo(-17, 5 + sw); c.closePath(); c.fill(); c.beginPath(); c.moveTo(2, -4); c.lineTo(-3, -9); c.lineTo(-2, -4); c.fill(); c.beginPath(); c.moveTo(2, 4); c.lineTo(-3, 9); c.lineTo(-2, 4); c.fill(); r(6, -3, 6, 6, '#6a8aa4'); r(9, -2.5, 1, 1, '#111'); r(9, 1.5, 1, 1, '#111'); r(11, -1, 2, 2, '#fff'); me(-2); break; }
     case 'jet': { shadow(14, 12); if (mv) { r(-17 - Math.random() * 4, -1.5, 5, 3, '#ffb030'); r(-15, -1, 3, 2, '#fff3a0'); } c.fillStyle = '#c8ccd2'; c.beginPath(); c.moveTo(-3, -2); c.lineTo(-7, -13); c.lineTo(-3, -13); c.lineTo(5, -2); c.lineTo(5, 2); c.lineTo(-3, 13); c.lineTo(-7, 13); c.lineTo(-3, 2); c.fill(); c.beginPath(); c.moveTo(-13, -2); c.lineTo(-16, -6); c.lineTo(-14, -6); c.lineTo(-10, -2); c.lineTo(-10, 2); c.lineTo(-14, 6); c.lineTo(-16, 6); c.lineTo(-13, 2); c.fill(); r(-14, -2, 24, 4, '#e8ebef'); c.beginPath(); c.moveTo(10, -2); c.lineTo(15, 0); c.lineTo(10, 2); c.fill(); r(3, -1.5, 5, 3, '#4aa8ff'); r(-5, -0.5, 8, 1, '#d8323a'); if (rider) circ(5, 0, 1.4, rider.hair); break; }
+    case 'horse': { shadow(12, 5); const st = mv ? Math.sin(t * 16) * 2.5 : 0; for (const [lx, ly, s] of [[5, -5, st], [5, 3.5, -st], [-7, -5, -st], [-7, 3.5, st]]) r(lx + s, ly, 3, 1.5, '#4a2a14'); c.fillStyle = '#9a5a2a'; c.beginPath(); c.ellipse(0, 0, 10, 4.5, 0, 0, 7); c.fill(); r(7, -2, 6, 4, '#9a5a2a'); r(12, -1.5, 4, 3, '#8a4a1e'); r(15, -1, 1, 2, '#3a2010'); r(11, -3, 2, 1.5, '#9a5a2a'); r(11, 1.5, 2, 1.5, '#9a5a2a'); r(3, -1, 9, 2, '#2a1a0e'); r(-15, -1 + Math.sin(t * 9) * 1.5, 6, 2, '#2a1a0e'); r(-4, -4.5, 6, 9, '#6a2a2a'); me(-1); break; }
+    case 'bus': { shadow(16, 6); r(-15, -6, 30, 12, '#3a9a5a'); r(-15, -6, 30, 1.5, '#2a7a44'); r(-15, 4.5, 30, 1.5, '#2a7a44'); r(-12, -4, 22, 8, '#e8ece8'); r(-10, -3, 4, 6, '#c8d0cc'); r(-3, -3, 4, 6, '#c8d0cc'); r(13, -5, 2, 10, '#9ad0ff'); r(15, -5, 1, 2, '#fff3a0'); r(15, 3, 1, 2, '#fff3a0'); r(-15, -5, 1, 2, '#d8323a'); r(-15, 3, 1, 2, '#d8323a'); for (let i = 0; i < 6; i++) { r(-13 + i * 4.5, -6, 3, 1, '#cfe8ff'); r(-13 + i * 4.5, 5, 3, 1, '#cfe8ff'); } if (rider) circ(9, 0, 2.4, rider.hair); break; }
+    case 'train': { shadow(17, 6); if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 3 + k / 3) % 1; c.fillStyle = `rgba(235,235,235,${0.6 * (1 - ph)})`; c.beginPath(); c.arc(12 - ph * 14, Math.sin(k * 2) * 1.5, 1.5 + ph * 3, 0, 7); c.fill(); } r(-17, -5, 16, 10, '#2f6ab0'); r(-17, -1, 16, 2, '#24508a'); for (let i = 0; i < 5; i++) { r(-16 + i * 3, -5, 2, 1, '#cfe8ff'); r(-16 + i * 3, 4, 2, 1, '#cfe8ff'); } r(-1, -1, 2, 2, '#333'); r(1, -5, 15, 10, '#d8323a'); r(1, -1, 15, 2, '#f4f4f4'); r(2, -4, 5, 8, '#15151c'); r(15, -4, 3, 8, '#b02028'); r(17, -1, 1, 2, '#fff3a0'); r(11, -1.5, 3, 3, '#333'); if (rider) circ(4.5, 0, 2.4, rider.hair); break; }
+    case 'wings': { c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(5, 7, 6, 3, 0, 0, 7); c.fill(); const L = 7 + Math.sin(t * (mv ? 14 : 4)) * 1.5; for (const s of [-1, 1]) { c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(-1, s * 2); c.lineTo(-9, s * (4 + L)); c.lineTo(-5, s * (3 + L * 0.6)); c.lineTo(-3, s * (4 + L * 0.8)); c.lineTo(0, s * (3 + L * 0.5)); c.lineTo(2, s * 2); c.closePath(); c.fill(); c.strokeStyle = '#b8c4d8'; c.lineWidth = 0.75; c.stroke(); } me(0); c.strokeStyle = '#ffd84a'; c.lineWidth = 1.2; c.beginPath(); c.arc(0.5, 0, 4.2, 0, 7); c.stroke(); if (mv) r(-8 - Math.random() * 6, Math.random() * 8 - 4, 1, 1, '#fff6c0'); break; }
     default: r(-10, -5, 20, 10, '#888');
   }
   c.restore();
+  if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y + 15); // 업힌 친구 이름 (사용자 2026-10-15)
 }
 
 /* ===================== 서울 지도(월드맵) · 미니맵 · 빠른 이동 ===================== */
@@ -7572,12 +7577,16 @@ const SHOP_ITEMS = {
     { id: 'r_scooter', name: '킥보드', price: 800e4, ride: 'scooter' },
     { id: 'r_moto', name: '오토바이', price: 1500e4, ride: 'moto' },
     { id: 'r_uni', name: '외발자전거', price: 3000e4, ride: 'uni' },
+    { id: 'r_bus', name: '버스', price: 4000e4, ride: 'bus' },
     { id: 'r_cart', name: '마트 카트', price: 5000e4, ride: 'cart' },
     { id: 'r_chair', name: '바퀴 달린 사무실 의자', price: 7000e4, ride: 'chair' },
+    { id: 'r_horse', name: '말', price: 9000e4, ride: 'horse' },
     { id: 'r_piggy', name: '친구 등에 업히기', price: 1e8, ride: 'piggy' },
     { id: 'r_wolf', name: '늑구 (늑대)', price: 1.5e8, ride: 'wolf' },
     { id: 'r_shark', name: '부캉이 (상어)', price: 2e8, ride: 'shark' },
+    { id: 'r_train', name: '기차', price: 2.5e8, ride: 'train' },
     { id: 'r_jet', name: '제트기', price: 3e8, ride: 'jet' },
+    { id: 'r_wings', name: '천사 날개', price: 4e8, ride: 'wings' },
   ],
 };
 const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it);
@@ -7586,7 +7595,7 @@ const Shop = {
   owned() { const w = Store.get('wardrobe', null); return (w && w.owned) || []; },
   has(id) { return this.owned().includes(id); },
   // 차 색: 내 차(기본 은색) / 친구 차(기본 금색). 스킨이 있으면 그 색 (줄무늬 포함)
-  carOf(id, fallback, pal) { const it = id && SHOP_BY_ID[id]; if (it && it.ride) return { ride: it.ride, rider: pal ? Profile.pal(pal) : null }; return it && it.col ? { col: it.col, stripe: it.stripe } : { col: fallback }; },
+  carOf(id, fallback, pal) { const it = id && SHOP_BY_ID[id]; if (it && it.ride) return { ride: it.ride, rider: pal ? Profile.pal(pal) : null, tag: pal && it.ride === 'piggy' ? String(pal.rideName || '').slice(0, 10) : '' }; return it && it.col ? { col: it.col, stripe: it.stripe } : { col: fallback }; },
   myCar(riding) { return this.carOf(Profile.get().car, '#c8ccd2', riding ? Profile.get() : null); },
   open(tab) {
     if (this.open_) return; this.open_ = true; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
@@ -7603,7 +7612,7 @@ const Shop = {
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>
       <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫</button></div>
-      ${isP && p.pet ? `<div class="shTag">명찰 <input id="shTagIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.petName || '')}"><button class="btn gold" id="shTagOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
+      ${isP && p.pet ? `<div class="shTag">명찰 <input id="shTagIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.petName || '')}"><button class="btn gold" id="shTagOk">달기</button></div>` : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">${isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
       <div class="pcBtns"><button class="btn" id="shClose">닫기</button></div></div>`;
     const el = $('shop');
@@ -7613,6 +7622,7 @@ const Shop = {
     el.querySelectorAll('[data-wear]').forEach(b => (b.onclick = () => this.wear(SHOP_BY_ID[b.dataset.wear])));
     el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { Profile.set(isC ? 'outfit' : isP ? 'pet' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
     $('shClose').onclick = () => this.close();
+    if ($('shRideOk')) $('shRideOk').onclick = () => { const v = $('shRideIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('rideName', v); Sound.play('pop'); Toast.show(v ? `'${v}' 등에 업혔어요` : '이름을 뗐어요'); this.render(); }; // 업히기 친구 이름 (사용자 2026-10-15)
     if ($('shTagOk')) $('shTagOk').onclick = () => { const v = $('shTagIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('petName', v); Pets.mineT = -1; Sound.play('pop'); Toast.show(v ? `명찰 '${v}' 달았어요` : '명찰을 뗐어요'); this.render(); }; // 펫 명찰 (친구·여자친구 등, 사용자 2026-10-15)
   },
   preview(cv, it) {
@@ -7645,8 +7655,9 @@ const Pets = {
     let s = this.st[key]; const dt = s ? Math.min(0.1, Math.max(0, t - s.t)) : 0;
     if (!s || Math.hypot(ox - s.x, oy - s.y) > 160) s = this.st[key] = { x: ox - 14, y: oy + 2, face: 1, moving: false, t };
     s.t = t; const dx = ox - s.x, dy = (oy + 2) - s.y, d = Math.hypot(dx, dy);
-    if (d > 16) { const v = Math.min(170, 40 + (d - 16) * 5) * dt; s.x += dx / d * v; s.y += dy / d * v; s.moving = true; if (Math.abs(dx) > 2) s.face = dx > 0 ? 1 : -1; }
-    else s.moving = false;
+    if (d > 16) { const v = Math.min(170, 40 + (d - 16) * 5) * dt; s.x += dx / d * v; s.y += dy / d * v; s.moving = true; s.still = t; if (Math.abs(dx) > 2) s.face = dx > 0 ? 1 : -1; }
+    else { s.moving = false; if (s.still == null) s.still = t; }
+    s.idle = t - s.still; // 가만히 있은 시간 (판다 대나무 등)
     return s;
   },
   mineT: -1, mineK: null,
@@ -7654,12 +7665,12 @@ const Pets = {
   // 그릴 목록에 넣을 펫들: 나(걸을 때) + 보이는 친구(걷는 중이고 펫이 있으면)
   actors(c, vis, t) {
     const out = [], k = this.mine(), P = Game.player;
-    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { const s = this.step('me', P.x, P.y, t), n = this.mineN; out.push({ y: s.y, d: () => this.draw(c, k, s.x, s.y, s.face, s.moving, t, n) }); }
-    for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; const s = this.step('f:' + p.name, p.x, p.y, t), n = String(p.pal.petName || '').slice(0, 10); out.push({ y: s.y, d: () => this.draw(c, pk, s.x, s.y, s.face, s.moving, t, n) }); }
+    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { const s = this.step('me', P.x, P.y, t), n = this.mineN; out.push({ y: s.y, d: () => this.draw(c, k, s.x, s.y, s.face, s.moving, t, n, s.idle) }); }
+    for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; const s = this.step('f:' + p.name, p.x, p.y, t), n = String(p.pal.petName || '').slice(0, 10); out.push({ y: s.y, d: () => this.draw(c, pk, s.x, s.y, s.face, s.moving, t, n, s.idle) }); }
     return out;
   },
   drawFor(c, key, kind, ox, oy, t) { if (!PET_DRAW[kind]) return; const s = this.step(key, ox, oy, t); this.draw(c, kind, s.x, s.y, s.face, s.moving, t); },
-  draw(c, kind, x, y, face, moving, t, tag) {
+  draw(c, kind, x, y, face, moving, t, tag, idle = 0) {
     if (PET_PEOPLE[kind]) { // 사람 펫(친구·여자친구): 플레이어처럼 걷고, 명찰을 달 수 있다
       const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]);
       drawWalker(c, { sprite: sp, x, y, dir: face < 0 ? 1 : 2, frame: moving ? 1 + Math.floor(t * 8) % 4 : 0, moving }, t);
@@ -7672,7 +7683,7 @@ const Pets = {
     c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' ? 6 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill();
     c.scale(face < 0 ? -1 : 1, 1);
     const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
-    f(r, step, t, c, moving);
+    f(r, step, t, c, moving, idle);
     c.restore();
   },
 };
@@ -7691,8 +7702,10 @@ const PET_DRAW = {
   cat(r, s, t) { const B = '#8a8f99', D = '#5a5f69'; r(-4, -5, 8, 3, B); r(-4, -2, 1, 2 - s, D); r(3, -2, 1, 1 + s, D); r(3, -9, 5, 4, B); r(3, -10, 1, 1, B); r(7, -10, 1, 1, B); r(6, -8, 1, 1, '#2a8a3a'); r(4, -8, 1, 1, '#2a8a3a'); r(-5, -10 + (Math.floor(t * 3) % 2), 1, 6, B); r(-6, -11, 1, 1, B); },
   rabbit(r, s, t, c, mv) { const hop = mv && s ? -2 : 0, W = '#f6f6f6', P = '#f2a6b8'; r(-4, -5 + hop, 7, 4, W); r(2, -8 + hop, 4, 4, W); r(2, -13 + hop, 1, 5, W); r(4, -13 + hop, 1, 5, W); r(4, -12 + hop, 1, 3, P); r(5, -7 + hop, 1, 1, '#c03050'); r(-5, -4 + hop, 2, 2, '#e8e8e8'); r(-3, -1 + hop, 2, 1, '#ddd'); r(1, -1 + hop, 2, 1, '#ddd'); },
   monkey(r, s, t) { const B = '#8a5a2e', F = '#e8c79a'; r(-2, -9, 5, 6, B); r(-2, -3, 2, 3 - s, B); r(1, -3, 2, 2 + s, B); r(-3, -14, 7, 5, B); r(-2, -13, 5, 3, F); r(-4, -13, 1, 2, F); r(4, -13, 1, 2, F); r(0, -12, 1, 1, '#111'); r(2, -12, 1, 1, '#111'); r(-4, -7, 2, 1, B); r(-5, -10, 1, 3, B); r(-4, -11, 1, 1, B); r(3, -8 + (Math.floor(t * 4) % 2), 2, 1, B); },
-  penguin(r, s, t, c, mv) { const wob = mv ? (s ? 1 : -1) : 0; c.rotate(wob * 0.12); r(-3, -11, 6, 10, '#1a1c24'); r(-2, -9, 4, 7, '#f6f6f6'); r(3, -9, 2, 1, '#f0a020'); r(1, -10, 1, 1, '#fff'); r(-3, -1, 2, 1, '#f0a020'); r(1, -1, 2, 1, '#f0a020'); r(-4, -8, 1, 4, '#1a1c24'); },
-  panda(r, s, t) { const W = '#f4f4f0', K = '#1a1c24'; r(-6, -7, 11, 5, W); r(-6, -3, 3, 3 - s, K); r(3, -3, 3, 2 + s, K); r(-1, -7, 3, 5, K); r(4, -11, 6, 6, W); r(4, -12, 2, 2, K); r(8, -12, 2, 2, K); r(5, -9, 2, 2, K); r(8, -9, 1, 2, K); r(9, -7, 1, 1, K); r(-7, -6, 1, 2, W); },
+  penguin(r, s, t, c, mv) { if (mv) { /* 따라올 땐 배로 미끄러지고, 서면 선다 (사용자 2026-10-15) */ const K = '#1a1c24'; r(-6, -4, 11, 4, K); r(-5, -1, 10, 1, '#f6f6f6'); r(5, -5, 3, 4, K); r(8, -4, 2, 1, '#f0a020'); r(6, -4, 1, 1, '#fff'); r(-8, -3, 2, 1, '#f0a020'); r(-8, -2, 2, 1, '#f0a020'); r(-1, -5 - s, 3, 1, K); const ph = (t * 6) % 1; r(-12 - ph * 6, -1, 3, 1, 'rgba(255,255,255,.55)'); r(-15 - ph * 6, -3, 2, 1, 'rgba(255,255,255,.35)'); return; } const wob = mv ? (s ? 1 : -1) : 0; c.rotate(wob * 0.12); r(-3, -11, 6, 10, '#1a1c24'); r(-2, -9, 4, 7, '#f6f6f6'); r(3, -9, 2, 1, '#f0a020'); r(1, -10, 1, 1, '#fff'); r(-3, -1, 2, 1, '#f0a020'); r(1, -1, 2, 1, '#f0a020'); r(-4, -8, 1, 4, '#1a1c24'); },
+  panda(r, s, t, c, mv, idle) { const W = '#f4f4f0', K = '#1a1c24';
+    if (mv) { /* 굴러서 따라온다 (사용자 2026-10-15) */ c.save(); c.translate(0, -6); c.rotate(t * 12); c.fillStyle = W; c.beginPath(); c.arc(0, 0, 6, 0, 7); c.fill(); r(-5, -7, 3, 3, K); r(2, -7, 3, 3, K); r(-3, -2, 2, 2, K); r(1, -2, 2, 2, K); r(-1, 1, 2, 1, K); r(-7, 1, 3, 3, K); r(4, 1, 3, 3, K); c.restore(); return; }
+    if (idle > 5) { /* 5초 넘게 서 있으면 앉아서 대나무를 뜯어 먹는다 */ const ch = Math.floor(t * 4) % 2; r(-5, -9, 10, 9, W); r(-3, -6, 6, 5, '#e4e4de'); r(-5, -1, 3, 1, K); r(2, -1, 3, 1, K); r(4, -16 + ch, 1, 12, '#5ab04a'); r(4, -12 + ch, 1, 1, '#3a8a2a'); r(4, -8 + ch, 1, 1, '#3a8a2a'); r(5, -16 + ch, 3, 1, '#6ac05a'); r(5, -14 + ch, 2, 1, '#6ac05a'); r(-6, -8, 2, 4, K); r(2, -8, 3, 2, K); r(-4, -15, 8, 6, W); r(-4, -16, 2, 2, K); r(2, -16, 2, 2, K); r(-3, -13, 2, 2, K); r(1, -13, 2, 2, K); r(-1, -11 + ch, 2, 1, K); return; } r(-6, -7, 11, 5, W); r(-6, -3, 3, 3 - s, K); r(3, -3, 3, 2 + s, K); r(-1, -7, 3, 5, K); r(4, -11, 6, 6, W); r(4, -12, 2, 2, K); r(8, -12, 2, 2, K); r(5, -9, 2, 2, K); r(8, -9, 1, 2, K); r(9, -7, 1, 1, K); r(-7, -6, 1, 2, W); },
   tiger(r, s, t) { const O = '#e8892a', K = '#1a1c24', W = '#f6f0e0'; r(-6, -7, 11, 4, O); r(-4, -7, 1, 4, K); r(-1, -7, 1, 4, K); r(2, -7, 1, 3, K); r(-6, -3, 2, 3 - s, O); r(3, -3, 2, 2 + s, O); r(4, -11, 6, 5, O); r(4, -12, 2, 1, O); r(8, -12, 2, 1, O); r(7, -8, 3, 2, W); r(8, -10, 1, 1, '#2a8a3a'); r(5, -11, 1, 2, K); r(-9, -8 + (Math.floor(t * 5) % 2), 3, 1, O); r(-9, -9, 1, 1, K); },
   giraffe(r, s, t) { const Y = '#f0c050', S = '#a8642a'; r(-4, -8, 1, 8 - s, Y); r(-2, -8, 1, 8, Y); r(2, -8, 1, 8, Y); r(4, -8, 1, 8 - (1 - s), Y); r(-5, -12, 11, 4, Y); r(-3, -11, 2, 2, S); r(1, -12, 2, 2, S); r(4, -10, 1, 1, S); r(3, -23, 3, 11, Y); r(4, -20, 1, 2, S); r(4, -16, 1, 1, S); r(3, -26, 6, 3, Y); r(4, -28, 1, 2, S); r(6, -28, 1, 2, S); r(7, -25, 1, 1, '#111'); r(-6, -12, 1, 3, S); },
   elephant(r, s, t) { const G = '#9aa0aa', D = '#7a808a'; r(-8, -13, 15, 9, G); r(-7, -4, 3, 4 - s, D); r(-2, -4, 3, 4, D); r(3, -4, 3, 4 - (1 - s), D); r(6, -15, 6, 8, G); r(4, -14, 3, 7, D); r(11, -9 + (Math.floor(t * 2) % 2), 2, 7, G); r(10, -8, 2, 1, '#fffef0'); r(9, -12, 1, 1, '#111'); r(-9, -11, 1, 4, D); },

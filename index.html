@@ -452,7 +452,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .short #assetBox, .short #rankWin { max-height:calc(100% - 12px); } .short #assetBox .rcpt, .short #rankWin .rcpt { padding:12px 14px 10px; } .short #assetBox .rcHead, .short #rankWin .rcHead { font-size:18px; } .short #assetBox .ah { margin:6px 0; padding:7px 10px; } .short #assetBox .lvRecent { max-height:120px; }
 #shop { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(640px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #shop.in { transform:translate(-50%, -50%); } #shop .rcpt { width:100%; } #shop .rcHead small { display:block; font:600 13px var(--ui); color:#6a5a3a; margin-top:2px; }
 .shTabs { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; } .shTabs .btn.sel { background:var(--gold); color:#1a1408; }
-.shGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; } .shItem { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; text-align:center; } .shItem.own { border-color:#8fb58f; } .shItem.on { border-color:var(--gold); background:#fff8e3; } .shItem canvas { width:72px; height:48px; image-rendering:pixelated; background:#e2d6bb; border-radius:6px; object-fit:contain; } .shItem b { font-size:12.5px; } .shItem span { font-size:11.5px; color:#6a5a3a; } .shItem .btn { font-size:12px; padding:4px 10px; } .shNote { font-size:12px; color:#555; margin:10px 0 0; }
+#shop .shTag { display:flex; gap:6px; align-items:center; justify-content:center; margin:0 0 8px; font-weight:700; font-size:13px; } #shop .shTag input { width:160px; padding:5px 8px; border:1px solid #c8b88f; border-radius:6px; font:14px var(--ui); } .shGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; } .shItem { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; text-align:center; } .shItem.own { border-color:#8fb58f; } .shItem.on { border-color:var(--gold); background:#fff8e3; } .shItem canvas { width:72px; height:48px; image-rendering:pixelated; background:#e2d6bb; border-radius:6px; object-fit:contain; } .shItem b { font-size:12.5px; } .shItem span { font-size:11.5px; color:#6a5a3a; } .shItem .btn { font-size:12px; padding:4px 10px; } .shNote { font-size:12px; color:#555; margin:10px 0 0; }
 .short #shop { max-height:calc(100% - 8px); } .short #shop .rcpt { padding:10px 12px 8px; } .short .shGrid { grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:5px; } .short .shItem { padding:5px 4px; } .short .shItem canvas { width:54px; height:36px; }
 #installGuide .rcpt { width:100%; } #installGuide .ig { margin:10px 0; padding:10px 12px; border:1px solid #d9d2bd; border-radius:8px; background:#fffdf7; } #installGuide .ig.here { border-color:var(--gold); background:#fff8e3; } #installGuide .ig h3 { margin:0 0 6px; font-size:15px; display:flex; gap:8px; align-items:center; } #installGuide .ig h3 .tagHere { font-size:11px; color:#fff; background:#b8860b; border-radius:10px; padding:1px 8px; font-weight:400; } #installGuide .ig ol { margin:0; padding-left:20px; line-height:1.55; font-size:14px; } #installGuide .ig p { margin:6px 0 0; font-size:12.5px; color:#555; } #installGuide .igLink { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; font-size:13px; } #installGuide .igLink code { background:#0d0f14; color:var(--gold); padding:3px 8px; border-radius:6px; user-select:all; }
 .xClose { position:sticky; top:0; display:block; margin:-4px -6px -28px auto; width:30px; height:30px; border-radius:50%; border:2px solid #fff; background:#14213a; color:#fff; font-size:20px; line-height:26px; text-align:center; padding:0; cursor:pointer; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,.35); font-family:sans-serif; }
@@ -2856,6 +2856,7 @@ function updateTraffic(dt, z) {
   });
 }
 function drawCarSprite(c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
+  if (col && typeof col === 'object' && col.ride) return drawRide(c, x, y, a, col.ride, speed, col.rider); // 재치 탈것 스킨
   let stripe = null; if (col && typeof col === 'object') { stripe = col.stripe || null; col = col.col; } // 상점 차 스킨: { col, stripe }
   c.save(); c.translate(x, y); c.rotate(a);
   c.fillStyle = 'rgba(0,0,0,.32)'; c.fillRect(-len / 2 + 2, -wid / 2 + 2, len, wid);
@@ -2878,6 +2879,32 @@ function drawSignals(c, z, t) {
       c.fillStyle = '#222'; c.fillRect(x - 3, y - 3, 6, 6); c.fillStyle = col; c.fillRect(x - 2, y - 2, 4, 4);
     }
   }
+}
+/* ---- 재치 있는 탈것 스킨 (사용자 2026-10-15 '제트기, 자전거, 친구 등에 업히기, 오토바이, 스쿠터, 외발자전거, 의자, 카트, 늑구(늑대), 부캉이(상어)… 재치 있을수록 비싸게') ----
+ * 상점 차 스킨에 ride가 있으면 차 대신 이걸 그린다. 모양만 바뀌고 속도·부딪힘은 차와 같다.
+ * 위에서 본 모습, 앞이 +x. rider {hair, shirt}가 있으면 위에 탄 내 머리·어깨를 그린다 (주차해 둔 건 빈 채로). */
+function drawRide(c, x, y, a, ride, speed, rider) {
+  const t = performance.now() / 1000, mv = Math.abs(speed) > 0.5;
+  c.save(); c.translate(x, y); c.rotate(a);
+  const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
+  const circ = (X, Y, R, col) => { c.fillStyle = col; c.beginPath(); c.arc(X, Y, R, 0, 7); c.fill(); };
+  const shadow = (W, H) => { c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(2, 2, W, H, 0, 0, 7); c.fill(); };
+  const me = (X = 0, s = 1) => { if (!rider) return; r(X - 2.5 * s, -3.5 * s, 4 * s, 7 * s, rider.shirt); circ(X + 0.5 * s, 0, 2.6 * s, rider.hair); };
+  const wob = Math.sin(t * 9) * (mv ? 1 : 0.3);
+  switch (ride) {
+    case 'bike': shadow(10, 3); r(-10, -1, 6, 2, '#222'); r(4, -1, 6, 2, '#222'); r(-6, -0.5, 12, 1, '#d8323a'); r(5, -5, 1.5, 10, '#444'); me(-1); break;
+    case 'scooter': shadow(9, 3); r(-8, -2, 13, 4, '#3b7dd8'); r(-9, -1, 2, 2, '#222'); r(6, -1, 2, 2, '#222'); r(5, -5, 1.5, 10, '#555'); r(4.5, -5.5, 2.5, 1.5, '#222'); r(4.5, 4, 2.5, 1.5, '#222'); me(-1); break;
+    case 'moto': shadow(12, 4); r(-12, -1.5, 4, 3, '#222'); r(9, -1.5, 4, 3, '#222'); r(-9, -3, 17, 6, '#15151c'); r(-2, -2.5, 6, 5, '#e03a3a'); r(6, -6, 1.5, 12, '#888'); r(-10, 2, 4, 1.5, '#aaa'); if (rider) { r(-4.5, -3.5, 4, 7, rider.shirt); circ(-1.5, 0, 3, '#e03a3a'); r(-0.5, -1, 1.5, 2, '#9ad0ff'); } if (mv) r(-14 - Math.random() * 3, 1.5, 2, 1, 'rgba(160,160,160,.6)'); break;
+    case 'uni': shadow(6, 3); c.save(); c.rotate(wob * 0.12); r(-1, -1, 4, 2, '#222'); if (rider) { r(-1, -9 - wob, 1.5, 6, rider.shirt); r(-1, 3 + wob, 1.5, 6, rider.shirt); } me(0); c.restore(); break;
+    case 'cart': shadow(10, 7); c.strokeStyle = '#b8bec8'; c.lineWidth = 1; c.strokeRect(-7, -6, 14, 12); for (let i = -4; i < 7; i += 3) { c.beginPath(); c.moveTo(i, -6); c.lineTo(i, 6); c.stroke(); } r(-10, -6, 2, 12, '#d8323a'); r(-8, -6, 1, 12, '#888'); r(-7, -7, 2, 1, '#222'); r(5, -7, 2, 1, '#222'); r(-7, 6, 2, 1, '#222'); r(5, 6, 2, 1, '#222'); me(1); break;
+    case 'chair': shadow(8, 8); c.save(); c.rotate(t * (mv ? 6 : 0.5)); for (let k = 0; k < 5; k++) { c.rotate(Math.PI * 2 / 5); r(0, -0.75, 8, 1.5, '#333'); r(7.5, -1.25, 2, 2.5, '#111'); } c.restore(); circ(0, 0, 5.5, '#2b3a6e'); r(-7, -5, 2.5, 10, '#1d2a4a'); me(0, 0.9); break;
+    case 'piggy': { shadow(9, 6); const st = mv ? Math.sin(t * 12) * 2 : 0; r(-1 + st, -5, 4, 2, '#2b3a6e'); r(-1 - st, 3, 4, 2, '#2b3a6e'); r(-4, -6, 8, 12, '#2f7d4f'); circ(4, 0, 3.4, '#3a2a1a'); r(-2, -8, 3, 2, '#f0c8a0'); r(-2, 6, 3, 2, '#f0c8a0'); if (rider) { r(-6, -3.5, 4, 7, rider.shirt); circ(-3, 0, 2.6, rider.hair); r(-1, -4, 4, 1.5, rider.shirt); r(-1, 2.5, 4, 1.5, rider.shirt); } break; }
+    case 'wolf': { shadow(12, 5); const st = mv ? Math.sin(t * 14) * 2 : 0; for (const [lx, ly, s] of [[5, -5, st], [5, 4, -st], [-6, -5, -st], [-6, 4, st]]) r(lx + s, ly, 3, 1.5, '#5a5f69'); c.fillStyle = '#8a8f99'; c.beginPath(); c.ellipse(0, 0, 9, 4.5, 0, 0, 7); c.fill(); r(-15, -1 + Math.sin(t * 8) * 1.5, 7, 2.5, '#8a8f99'); circ(10, 0, 3.6, '#9aa0aa'); r(12, -1.5, 4, 3, '#b8bec8'); r(15.5, -0.5, 1, 1, '#111'); r(8, -4.5, 2, 2, '#5a5f69'); r(8, 2.5, 2, 2, '#5a5f69'); r(11, -2, 1, 1, '#ffd84a'); r(11, 1, 1, 1, '#ffd84a'); me(-1); break; }
+    case 'shark': { const sw = Math.sin(t * (mv ? 10 : 3)) * 2.5; c.fillStyle = 'rgba(110,190,255,.35)'; c.beginPath(); c.ellipse(0, 0, 16, 8, 0, 0, 7); c.fill(); c.fillStyle = '#5a7890'; c.beginPath(); c.ellipse(1, 0, 12, 4.5, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-10, 0); c.lineTo(-17, -5 + sw); c.lineTo(-15, 0); c.lineTo(-17, 5 + sw); c.closePath(); c.fill(); c.beginPath(); c.moveTo(2, -4); c.lineTo(-3, -9); c.lineTo(-2, -4); c.fill(); c.beginPath(); c.moveTo(2, 4); c.lineTo(-3, 9); c.lineTo(-2, 4); c.fill(); r(6, -3, 6, 6, '#6a8aa4'); r(9, -2.5, 1, 1, '#111'); r(9, 1.5, 1, 1, '#111'); r(11, -1, 2, 2, '#fff'); me(-2); break; }
+    case 'jet': { shadow(14, 12); if (mv) { r(-17 - Math.random() * 4, -1.5, 5, 3, '#ffb030'); r(-15, -1, 3, 2, '#fff3a0'); } c.fillStyle = '#c8ccd2'; c.beginPath(); c.moveTo(-3, -2); c.lineTo(-7, -13); c.lineTo(-3, -13); c.lineTo(5, -2); c.lineTo(5, 2); c.lineTo(-3, 13); c.lineTo(-7, 13); c.lineTo(-3, 2); c.fill(); c.beginPath(); c.moveTo(-13, -2); c.lineTo(-16, -6); c.lineTo(-14, -6); c.lineTo(-10, -2); c.lineTo(-10, 2); c.lineTo(-14, 6); c.lineTo(-16, 6); c.lineTo(-13, 2); c.fill(); r(-14, -2, 24, 4, '#e8ebef'); c.beginPath(); c.moveTo(10, -2); c.lineTo(15, 0); c.lineTo(10, 2); c.fill(); r(3, -1.5, 5, 3, '#4aa8ff'); r(-5, -0.5, 8, 1, '#d8323a'); if (rider) circ(5, 0, 1.4, rider.hair); break; }
+    default: r(-10, -5, 20, 10, '#888');
+  }
+  c.restore();
 }
 
 /* ===================== 서울 지도(월드맵) · 미니맵 · 빠른 이동 ===================== */
@@ -4401,7 +4428,7 @@ const Net = {
   drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
-    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441', p.pal), 24, 12, 'car', 1); const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m }, t);
     this.label(c, p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
@@ -6201,7 +6228,7 @@ function drawZone(t) {
   // 신호등 · NPC 차량 · 내 차
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
-  { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); drawCarSprite(ctx, c.x, c.y, c.a, Shop.myCar(), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
+  { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); drawCarSprite(ctx, c.x, c.y, c.a, Shop.myCar(Game.driving), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
@@ -7511,8 +7538,12 @@ const SHOP_ITEMS = {
     { id: 'c_vip', name: 'VIP 블랙', price: 1e8, pal: { shirt: '#15151c', shirt2: '#c9a24a', pants: '#15151c', tie: '#c9a24a' } },
   ],
   pet: [ // 희귀할수록 비싸다 (사용자 2026-10-15). 그림은 pets.js PET_DRAW
+    { id: 'p_mouse', name: '생쥐', price: 100e4, pet: 'mouse' },
+    { id: 'p_beetle', name: '장수풍뎅이', price: 200e4, pet: 'beetle' },
+    { id: 'p_mantis', name: '사마귀', price: 200e4, pet: 'mantis' },
     { id: 'p_dog', name: '강아지', price: 300e4, pet: 'dog' },
     { id: 'p_cat', name: '고양이', price: 300e4, pet: 'cat' },
+    { id: 'p_lizard', name: '도마뱀', price: 400e4, pet: 'lizard' },
     { id: 'p_rabbit', name: '토끼', price: 500e4, pet: 'rabbit' },
     { id: 'p_monkey', name: '원숭이', price: 2000e4, pet: 'monkey' },
     { id: 'p_penguin', name: '펭귄', price: 3000e4, pet: 'penguin' },
@@ -7520,7 +7551,11 @@ const SHOP_ITEMS = {
     { id: 'p_tiger', name: '호랑이', price: 1e8, pet: 'tiger' },
     { id: 'p_giraffe', name: '기린', price: 1.2e8, pet: 'giraffe' },
     { id: 'p_elephant', name: '코끼리', price: 1.5e8, pet: 'elephant' },
+    { id: 'p_buddy', name: '친구 (명찰)', price: 5000e4, pet: 'buddy' },
+    { id: 'p_gf', name: '여자친구 (명찰)', price: 1e8, pet: 'gf' },
+    { id: 'p_bf', name: '남자친구 (명찰)', price: 1e8, pet: 'bf' },
     { id: 'p_dolphin', name: '돌고래', price: 2e8, pet: 'dolphin' },
+    { id: 'p_trex', name: '티라노', price: 5e8, pet: 'trex' },
   ],
   car: [
     { id: 'k_white', name: '흰색', price: 300e4, col: '#f2f2f2' },
@@ -7532,6 +7567,17 @@ const SHOP_ITEMS = {
     { id: 'k_purple', name: '보라 튜닝', price: 2500e4, col: '#6a3fb5', stripe: '#e26a9a' },
     { id: 'k_sky', name: '하늘색 레이싱', price: 3000e4, col: '#5fb4f0', stripe: '#15151c' },
     { id: 'k_gold', name: '금빛 리무진', price: 1e8, col: '#ffd84a', stripe: '#fff6c0' },
+    // 재치 있는 탈것: 모양만 바뀌고 속도는 차와 같다 (사용자 2026-10-15, 재치 있을수록 비싸게). 그림은 vehicle.js drawRide
+    { id: 'r_bike', name: '자전거', price: 500e4, ride: 'bike' },
+    { id: 'r_scooter', name: '킥보드', price: 800e4, ride: 'scooter' },
+    { id: 'r_moto', name: '오토바이', price: 1500e4, ride: 'moto' },
+    { id: 'r_uni', name: '외발자전거', price: 3000e4, ride: 'uni' },
+    { id: 'r_cart', name: '마트 카트', price: 5000e4, ride: 'cart' },
+    { id: 'r_chair', name: '바퀴 달린 사무실 의자', price: 7000e4, ride: 'chair' },
+    { id: 'r_piggy', name: '친구 등에 업히기', price: 1e8, ride: 'piggy' },
+    { id: 'r_wolf', name: '늑구 (늑대)', price: 1.5e8, ride: 'wolf' },
+    { id: 'r_shark', name: '부캉이 (상어)', price: 2e8, ride: 'shark' },
+    { id: 'r_jet', name: '제트기', price: 3e8, ride: 'jet' },
   ],
 };
 const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it);
@@ -7540,8 +7586,8 @@ const Shop = {
   owned() { const w = Store.get('wardrobe', null); return (w && w.owned) || []; },
   has(id) { return this.owned().includes(id); },
   // 차 색: 내 차(기본 은색) / 친구 차(기본 금색). 스킨이 있으면 그 색 (줄무늬 포함)
-  carOf(id, fallback) { const it = id && SHOP_BY_ID[id]; return it && it.col ? { col: it.col, stripe: it.stripe } : { col: fallback }; },
-  myCar() { return this.carOf(Profile.get().car, '#c8ccd2'); },
+  carOf(id, fallback, pal) { const it = id && SHOP_BY_ID[id]; if (it && it.ride) return { ride: it.ride, rider: pal ? Profile.pal(pal) : null }; return it && it.col ? { col: it.col, stripe: it.stripe } : { col: fallback }; },
+  myCar(riding) { return this.carOf(Profile.get().car, '#c8ccd2', riding ? Profile.get() : null); },
   open(tab) {
     if (this.open_) return; this.open_ = true; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
     $('shop').classList.add('in'); this.render();
@@ -7557,7 +7603,7 @@ const Shop = {
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>
       <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫</button></div>
-      <div class="shGrid">${list.map(card).join('')}</div>
+      ${isP && p.pet ? `<div class="shTag">명찰 <input id="shTagIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.petName || '')}"><button class="btn gold" id="shTagOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">${isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
       <div class="pcBtns"><button class="btn" id="shClose">닫기</button></div></div>`;
     const el = $('shop');
@@ -7567,11 +7613,13 @@ const Shop = {
     el.querySelectorAll('[data-wear]').forEach(b => (b.onclick = () => this.wear(SHOP_BY_ID[b.dataset.wear])));
     el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { Profile.set(isC ? 'outfit' : isP ? 'pet' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
     $('shClose').onclick = () => this.close();
+    if ($('shTagOk')) $('shTagOk').onclick = () => { const v = $('shTagIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('petName', v); Pets.mineT = -1; Sound.play('pop'); Toast.show(v ? `명찰 '${v}' 달았어요` : '명찰을 뗐어요'); this.render(); }; // 펫 명찰 (친구·여자친구 등, 사용자 2026-10-15)
   },
   preview(cv, it) {
     const x = cv.getContext('2d'); x.imageSmoothingEnabled = false;
-    if (it.pet) { x.clearRect(0, 0, cv.width, cv.height); const k = ['giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 1 : 1.7; x.save(); x.translate(18, 30); x.scale(k, k); Pets.draw(x, it.pet, 0, 0, 1, false, 0); x.restore(); return; }
+    if (it.pet) { x.clearRect(0, 0, cv.width, cv.height); const k = it.pet === 'trex' ? 0.95 : ['giraffe', 'elephant', 'dolphin', 'buddy', 'gf', 'bf'].includes(it.pet) ? 1.1 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 2.2 : 1.7; x.save(); x.translate(18, 30); x.scale(k, k); Pets.draw(x, it.pet, 0, 0, 1, false, 0); x.restore(); return; }
     if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); x.drawImage(Sprites.sheet(name), 0, 0, 16, 16, 0, 0, 16, 16); } // 정면 서 있는 모습
+    else if (it.ride) { x.clearRect(0, 0, cv.width, cv.height); x.save(); x.scale(0.75, 0.75); drawRide(x, 18.5, 11, 0, it.ride, 0, Profile.pal(Profile.get())); x.restore(); }
     else drawCarSprite(x, 14, 8, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0);
   },
   buy(it) {
@@ -7602,27 +7650,43 @@ const Pets = {
     return s;
   },
   mineT: -1, mineK: null,
-  mine() { const now = performance.now(); if (now - this.mineT > 800) { this.mineT = now; this.mineK = Profile.get().pet || null; } return this.mineK; },
+  mine() { const now = performance.now(); if (now - this.mineT > 800) { this.mineT = now; const p = Profile.get(); this.mineK = p.pet || null; this.mineN = p.petName || ''; } return this.mineK; },
   // 그릴 목록에 넣을 펫들: 나(걸을 때) + 보이는 친구(걷는 중이고 펫이 있으면)
   actors(c, vis, t) {
     const out = [], k = this.mine(), P = Game.player;
-    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { const s = this.step('me', P.x, P.y, t); out.push({ y: s.y, d: () => this.draw(c, k, s.x, s.y, s.face, s.moving, t) }); }
-    for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; const s = this.step('f:' + p.name, p.x, p.y, t); out.push({ y: s.y, d: () => this.draw(c, pk, s.x, s.y, s.face, s.moving, t) }); }
+    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { const s = this.step('me', P.x, P.y, t), n = this.mineN; out.push({ y: s.y, d: () => this.draw(c, k, s.x, s.y, s.face, s.moving, t, n) }); }
+    for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; const s = this.step('f:' + p.name, p.x, p.y, t), n = String(p.pal.petName || '').slice(0, 10); out.push({ y: s.y, d: () => this.draw(c, pk, s.x, s.y, s.face, s.moving, t, n) }); }
     return out;
   },
   drawFor(c, key, kind, ox, oy, t) { if (!PET_DRAW[kind]) return; const s = this.step(key, ox, oy, t); this.draw(c, kind, s.x, s.y, s.face, s.moving, t); },
-  draw(c, kind, x, y, face, moving, t) {
+  draw(c, kind, x, y, face, moving, t, tag) {
+    if (PET_PEOPLE[kind]) { // 사람 펫(친구·여자친구): 플레이어처럼 걷고, 명찰을 달 수 있다
+      const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]);
+      drawWalker(c, { sprite: sp, x, y, dir: face < 0 ? 1 : 2, frame: moving ? 1 + Math.floor(t * 8) % 4 : 0, moving }, t);
+      if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y - 22); return;
+    }
     const f = PET_DRAW[kind]; if (!f) return;
+    if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 23 }[kind] || 15));
     const step = moving ? Math.floor(t * 8) % 2 : 0;
     c.save(); c.translate(Math.round(x), Math.round(y));
-    c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' ? 9 : kind === 'giraffe' ? 6 : 5, 2, 0, 0, 7); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' ? 6 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill();
     c.scale(face < 0 ? -1 : 1, 1);
     const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
     f(r, step, t, c, moving);
     c.restore();
   },
 };
+const PET_PEOPLE = { // 데리고 다니는 사람 (sprites.js 팔레트)
+  buddy: { hair: '#3a2a1a', skin: '#f1c9a5', shirt: '#2f9a5a', shirt2: '#257a48', pants: '#3a3a46', shoe: '#1d1d22' },
+  bf: { hair: '#1e1a18', skin: '#eac2a0', shirt: '#3a6ec8', shirt2: '#2c56a0', pants: '#2a2a34', shoe: '#e8e8e8' },
+  gf: { hair: '#5a3020', skin: '#f6d2b5', shirt: '#e26a9a', shirt2: '#c8507e', pants: '#f1f1f1', shoe: '#c8507e', longHair: true },
+};
 const PET_DRAW = {
+  mouse(r, s, t) { const G = '#a8a4a0'; r(-3, -3, 6, 3, G); r(2, -4, 3, 3, G); r(2, -5, 2, 1, '#e8a0b0'); r(4, -3, 1, 1, '#111'); r(5, -2, 1, 1, '#e8a0b0'); r(-6, -2 + (Math.floor(t * 6) % 2), 3, 1, '#e8a0b0'); r(-2, 0, 1, 1 - s, '#888'); r(1, 0, 1, s, '#888'); },
+  beetle(r, s, t) { const B = '#3a2410', H = '#5a3a1a'; r(-4, -5, 7, 4, B); r(-4, -3, 7, 1, '#2a1808'); r(3, -5, 3, 3, H); r(5, -9, 1, 4, H); r(6, -10, 2, 1, H); r(4, -7, 1, 2, H); r(-3, -1, 1, 1, '#222'); r(0, -1, 1, 1, '#222'); r(-1 + s, -1, 1, 1, '#222'); r(-2, -5, 2, 1, 'rgba(255,255,255,.35)'); },
+  mantis(r, s, t) { const G = '#4ab04a', D = '#2f8a2f'; r(-6, -5, 7, 2, G); r(0, -9, 2, 5, G); r(1, -11, 3, 2, G); r(3, -12, 1, 1, '#ffe060'); r(2, -8, 4, 1, D); r(5, -9 + (Math.floor(t * 3) % 2), 1, 2, D); r(-5, -3, 1, 3 - s, D); r(-2, -3, 1, 2 + s, D); r(-7, -6, 1, 1, G); },
+  lizard(r, s, t) { const G = '#7ab84a', D = '#4a8a2a'; r(-4, -3, 8, 3, G); r(4, -4, 3, 3, G); r(6, -3, 1, 1, '#111'); r(-9, -2 + (Math.floor(t * 4) % 2), 5, 1, G); r(-3, -1 + s, 2, 1, D); r(2, -1 - s, 2, 1, D); r(-2, -3, 1, 1, D); r(1, -3, 1, 1, D); },
+  trex(r, s, t, c, mv) { const G = '#5a9a4a', D = '#3a7a3a', step = mv ? s : 0; r(-8, -16, 12, 8, G); r(2, -24, 4, 10, G); r(3, -28, 10, 6, G); r(10, -23, 3, 1, '#fff'); r(9, -27, 1, 1, '#111'); r(12, -25, 1, 1, D); r(5, -17, 3, 1, D); r(7, -16, 1, 2, D); r(-6, -8, 3, 8 - step, D); r(0, -8, 3, 7 + step, D); r(-16, -14 + (Math.floor(t * 3) % 2), 9, 3, G); r(-19, -13, 4, 2, G); r(-5, -14, 1, 4, D); r(-2, -15, 1, 4, D); },
   dog(r, s, t) { const B = '#b5793a', D = '#7a4a1e'; r(-5, -6, 10, 4, B); r(-5, -2, 2, 2 - s, D); r(3, -2, 2, 1 + s, D); r(4, -10, 5, 5, B); r(4, -11, 2, 3, D); r(8, -7, 2, 2, '#e8c79a'); r(9, -8, 1, 1, '#111'); r(7, -9, 1, 1, '#111'); r(-7, -9 + (Math.floor(t * 10) % 2), 2, 3, B); },
   cat(r, s, t) { const B = '#8a8f99', D = '#5a5f69'; r(-4, -5, 8, 3, B); r(-4, -2, 1, 2 - s, D); r(3, -2, 1, 1 + s, D); r(3, -9, 5, 4, B); r(3, -10, 1, 1, B); r(7, -10, 1, 1, B); r(6, -8, 1, 1, '#2a8a3a'); r(4, -8, 1, 1, '#2a8a3a'); r(-5, -10 + (Math.floor(t * 3) % 2), 1, 6, B); r(-6, -11, 1, 1, B); },
   rabbit(r, s, t, c, mv) { const hop = mv && s ? -2 : 0, W = '#f6f6f6', P = '#f2a6b8'; r(-4, -5 + hop, 7, 4, W); r(2, -8 + hop, 4, 4, W); r(2, -13 + hop, 1, 5, W); r(4, -13 + hop, 1, 5, W); r(4, -12 + hop, 1, 3, P); r(5, -7 + hop, 1, 1, '#c03050'); r(-5, -4 + hop, 2, 2, '#e8e8e8'); r(-3, -1 + hop, 2, 1, '#ddd'); r(1, -1 + hop, 2, 1, '#ddd'); },

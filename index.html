@@ -7828,15 +7828,15 @@ const Shop = {
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
   render() {
     const p = Profile.get(); const list = SHOP_ITEMS[this.tab]; const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx';
-    const wearing = isC ? p.outfit : isP ? (SHOP_ITEMS.pet.find(x => x.pet === p.pet) || {}).id : isF ? p.fx : p.car;
+    const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
     const card = it => {
-      const own = this.has(it.id), on = wearing === it.id;
-      const btn = on ? `<button class="btn" data-off="1">${isC ? '벗기' : isP ? '집에 두기' : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? '데리고 다니기' : isF ? '켜기' : '타기'}</button>` : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
+      const own = this.has(it.id), on = isP ? petOn(it) : wearing === it.id;
+      const btn = on ? `<button class="btn" data-off="${isP ? it.pet : 1}">${isC ? '벗기' : isP ? '집에 두기' : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? (p.pet && p.pet2 ? '바꿔 데려가기' : '데리고 다니기') : isF ? '켜기' : '타기'}</button>` : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
       return `<div class="shItem${on ? ' on' : own ? ' own' : ''}"><canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? '보유' : fmtWon(it.price)}</span>${btn}</div>`;
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>
       <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">✨ 이펙트</button></div>
-      ${isP && p.pet ? `<div class="shTag">명찰 <input id="shTagIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.petName || '')}"><button class="btn gold" id="shTagOk">달기</button></div>` : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
+      ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">그림을 누르면 움직이는 미리보기를 볼 수 있어요. ${isF ? '이펙트는 걸어 다닐 때 내 몸 주변에 보이고, 친구 화면에도 보여요. 산 이펙트는 이 기기에서 계속 가져요.' : isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
       <div class="pcBtns"><button class="btn" id="shClose">닫기</button></div></div>`;
     const el = $('shop');
@@ -7844,10 +7844,10 @@ const Shop = {
     el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
     el.querySelectorAll('[data-buy]').forEach(b => (b.onclick = () => this.buy(SHOP_BY_ID[b.dataset.buy])));
     el.querySelectorAll('[data-wear]').forEach(b => (b.onclick = () => this.wear(SHOP_BY_ID[b.dataset.wear])));
-    el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { Profile.set(isC ? 'outfit' : isP ? 'pet' : isF ? 'fx' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
+    el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { if (isP) this.petOff(b.dataset.off); else Profile.set(isC ? 'outfit' : isF ? 'fx' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
     $('shClose').onclick = () => this.close();
     if ($('shRideOk')) $('shRideOk').onclick = () => { const v = $('shRideIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('rideName', v); Sound.play('pop'); Toast.show(v ? `'${v}' 등에 업혔어요` : '이름을 뗐어요'); this.render(); }; // 업히기 친구 이름 (사용자 2026-10-15)
-    if ($('shTagOk')) $('shTagOk').onclick = () => { const v = $('shTagIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('petName', v); Pets.mineT = -1; Sound.play('pop'); Toast.show(v ? `명찰 '${v}' 달았어요` : '명찰을 뗐어요'); this.render(); }; // 펫 명찰 (친구·여자친구 등, 사용자 2026-10-15)
+    for (const n of ['', '2']) if ($('shTagOk' + n)) $('shTagOk' + n).onclick = () => { const v = $('shTagIn' + n).value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('petName' + n, v); Pets.mineT = -1; Sound.play('pop'); Toast.show(v ? `명찰 '${v}' 달았어요` : '명찰을 뗐어요'); this.render(); }; // 펫 명찰 (친구·여자친구 등, 사용자 2026-10-15) · 두 마리면 따로
   },
   // 칸 그림 = 크게 보기와 같은 그림을 멈춘 모습으로 (사용자 2026-10-15 '화질이 구려, 뭔지 모르겠어'): 160×104 논리 좌표, 캔버스는 화면 픽셀 이상으로 크게 잡는다
   preview(cv, it) {
@@ -7893,7 +7893,8 @@ const Shop = {
     Sound.play('coins'); Toast.show(`${it.name} 샀어요 (${fmtWon(it.price)})`);
     this.wear(it);
   },
-  wear(it) { if (it.fx) { Profile.set('fx', it.id); Pets.mineT = -1; Sound.play('chime'); return this.render(); } if (it.pet) { Profile.set('pet', it.pet); Pets.mineT = -1; Sound.play('chime'); return this.render(); } Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
+  petOff(k) { const p = Profile.get(); if (p.pet === k) { Profile.set('pet', p.pet2 || null); Profile.set('petName', p.pet2 ? p.petName2 || '' : ''); } Profile.set('pet2', null); if (p.pet !== k || p.pet2) Profile.set('petName2', ''); Pets.mineT = -1; },
+  wear(it) { if (it.fx) { Profile.set('fx', it.id); Pets.mineT = -1; Sound.play('chime'); return this.render(); } if (it.pet) { const p = Profile.get(); if (!p.pet) Profile.set('pet', it.pet); else if (!p.pet2) Profile.set('pet2', it.pet); else { const old = SHOP_ITEMS.pet.find(x => x.pet === p.pet2); Profile.set('pet2', it.pet); Profile.set('petName2', ''); Toast.show(`${old ? old.name : '펫'}은 집에 두고 ${it.name}를 데려가요`); } Pets.mineT = -1; Sound.play('chime'); return this.render(); } /* 펫 두 마리까지: 빈 자리에, 꽉 찼으면 두 번째 자리를 바꾼다 */ Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
 };
 
 /* ===================== 펫 (사용자 2026-10-15 '숍에서 펫도 살 수 있게, 돌아다니면 따라오는') =====================
@@ -7915,14 +7916,16 @@ const Pets = {
     return s;
   },
   mineT: -1, mineK: null,
-  mine() { const now = performance.now(); if (now - this.mineT > 800) { this.mineT = now; const p = Profile.get(); this.mineK = p.pet || null; this.mineN = p.petName || ''; this.mineF = p.fx || null; } return this.mineK; },
+  mine() { const now = performance.now(); if (now - this.mineT > 800) { this.mineT = now; const p = Profile.get(); this.mineK = p.pet || null; this.mineN = p.petName || ''; this.mineK2 = (p.pet && p.pet2) || null; this.mineN2 = p.petName2 || ''; this.mineF = p.fx || null; } return this.mineK; },
   // 그릴 목록에 넣을 펫들: 나(걸을 때) + 보이는 친구(걷는 중이고 펫이 있으면)
   actors(c, vis, t) {
     const out = [], k = this.mine(), P = Game.player;
-    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push(this.actor(c, 'me', k, P.x, P.y, t, this.mineN));
-    for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; out.push(this.actor(c, 'f:' + p.name, pk, p.x, p.y, t, String(p.pal.petName || '').slice(0, 10))); }
+    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { out.push(this.actor(c, 'me', k, P.x, P.y, t, this.mineN)); if (this.mineK2) out.push(this.second(c, 'me', this.mineK2, P.x, P.y, t, this.mineN2)); }
+    for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; out.push(this.actor(c, 'f:' + p.name, pk, p.x, p.y, t, String(p.pal.petName || '').slice(0, 10))); if (p.pal.pet2) out.push(this.second(c, 'f:' + p.name, p.pal.pet2, p.x, p.y, t, String(p.pal.petName2 || '').slice(0, 10))); }
     return out;
   },
+  // 두 번째 펫 (사용자 2026-10-15 '펫은 최대 2마리'): 첫 펫 뒤를 졸졸 따라온다. 원숭이는 주인 머리에 타야 하니 주인을 따른다
+  second(c, key, k2, ox, oy, t, n) { const s1 = this.st[key]; const lead = k2 === 'monkey' || !s1 ? [ox, oy] : [s1.x, s1.y]; return this.actor(c, key + '#2', k2, lead[0], lead[1], t, n); },
   actor(c, key, k, ox, oy, t, n) {
     const s = this.step(key, ox, oy, t, k), idle = s.idle || 0;
     if (k === 'monkey') { if (s.ox == null || Math.hypot(ox - s.ox, oy - s.oy) > 0.3) { s.oStill = t; if (s.ox != null && Math.abs(ox - s.ox) > 0.3) s.face = ox > s.ox ? 1 : -1; } s.ox = ox; s.oy = oy; } // 원숭이는 '주인'이 가만히 있은 시간으로 정한다

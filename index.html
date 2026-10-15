@@ -2931,7 +2931,11 @@ function drawRideHD(c, ride, t, mv, still, rd) {
   const sh = (X, Y, rx, ry) => E(X + 3, Y + 4, rx, ry, 'rgba(0,0,0,.26)');
   const wheel = (X, Y, w = 7, h = 3) => { R(X - w / 2, Y - h / 2, w, h, '#18181c'); R(X - w / 2 + 1, Y - h / 2, w - 2, 1, '#3a3a44'); };
   // 위에서 본 타는 사람: 어깨(옷) + 팔(손) + 머리(머리카락, 윤기)
-  const me = (X = 0, k = 1, hands = true) => { if (!rd) return; E(X - 1 * k, 0, 4 * k, 7 * k, rd.shirt); E(X - 2 * k, 0, 2.5 * k, 6 * k, rd.shirt2 || rd.shirt); if (hands) { R(X + 1 * k, -6.5 * k, 5 * k, 2 * k, rd.shirt); R(X + 1 * k, 4.5 * k, 5 * k, 2 * k, rd.shirt); R(X + 6 * k, -6.5 * k, 2 * k, 2 * k, rd.skin); R(X + 6 * k, 4.5 * k, 2 * k, 2 * k, rd.skin); } E(X + 1 * k, 0, 4.5 * k, 4.5 * k, rd.hair); R(X - 1 * k, -2.5 * k, 3 * k, 1.5 * k, 'rgba(255,255,255,.22)'); };
+  const me = (X = 0, k = 1, hands = true) => { if (!rd) return; // 타는 나는 걸어 다닐 때처럼 도트(화면 1픽셀 = 반 픽셀 2칸)로 그린다 (사용자 2026-10-15 '타고 있는 나는 원래 저화질로')
+    const q = n => Math.round(n * k / 2) * 2, x0 = Math.round(X / 2) * 2, B = (dx, dy, w, h, col) => R(x0 + q(dx), q(dy), q(w), q(h), col);
+    B(-6, -6, 6, 12, rd.shirt); B(-4, -8, 4, 16, rd.shirt); B(-6, -4, 2, 8, rd.shirt2 || rd.shirt);
+    if (hands) { B(0, -8, 6, 2, rd.shirt); B(0, 6, 6, 2, rd.shirt); B(6, -8, 2, 2, rd.skin); B(6, 6, 2, 2, rd.skin); }
+    B(-4, -4, 10, 8, rd.hair); B(-2, -6, 6, 12, rd.hair); B(-2, -4, 2, 2, 'rgba(255,255,255,.25)'); };
   const wob = Math.sin(t * 9) * (mv ? 1 : 0.3);
   switch (ride) {
     case 'bike': { sh(0, 0, 22, 5); wheel(-14, 0, 12, 3); wheel(14, 0, 12, 3); L(-14, 0, -2, 0, '#c8202a', 2.5); L(-2, 0, 12, 0, '#e8323a', 2.5); R(-6, -1.5, 6, 3, '#1a1a1a'); R(11, -11, 2.5, 22, '#4a4a52'); R(10, -12, 4, 3, '#18181c'); R(10, 9, 4, 3, '#18181c'); R(13, -1, 2, 2, '#fff3a0'); R(-1, -0.5, 9, 1, '#ff7a80'); me(-2); break; }

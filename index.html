@@ -389,6 +389,20 @@ body:has(#dialog.in) #tutor, .resultOn #tutor, .touchOn.chatOpen #tutor { visibi
 .flip .face { position:absolute; inset:0; backface-visibility:hidden; border-radius:8px; padding:8px 10px; font-size:13px; background:#fff; border:1px solid #c9b98f; }
 .flip .back { transform:rotateY(180deg); } .flip .back.ok { background:#e8f6ec; border-color:#1f8f4e; } .flip .back.no { background:#fbe9e5; border-color:var(--seal); }
 .flip .ox { position:absolute; right:8px; top:4px; font:700 34px var(--serif); } .back.ok .ox { color:#1f8f4e; } .back.no .ox { color:var(--seal); }
+/* 사례 공부 (2026-10-15) */
+#title .studyRow { margin:2px 0; } #title #btnStudy { border-color:var(--gold); color:var(--gold); padding:8px 18px; font-weight:700; } #title #btnStudy small { color:var(--paper); opacity:.75; font-weight:400; margin-left:6px; }
+#studyWin { position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; padding:12px; } #studyWin.in { display:flex; }
+#studyWin .stBox { background:var(--paper); color:#1d1a14; width:min(980px, 100%); height:min(680px, 100%); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.6); font-family:var(--ui); }
+#studyWin .stHead { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#1d1a14; color:var(--gold); } #studyWin .stHead b { font-size:16px; } #studyWin .stHead small { color:var(--paper); opacity:.7; flex:1; } #studyWin .stHead .xClose { position:static; margin:0; flex:none; } #studyWin .stBack { display:none; padding:4px 10px; font-size:13px; }
+#studyWin .stMain { flex:1; display:flex; min-height:0; } #studyWin .stList { width:240px; flex:none; overflow:auto; border-right:1px solid #d9caa5; padding:8px; background:#e8dcc2; }
+#studyWin .stGroup { font-size:11px; font-weight:700; color:#7a6a45; margin:10px 4px 4px; } #studyWin .stItem { display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%; text-align:left; background:none; border:0; border-radius:6px; padding:6px 8px; font:inherit; font-size:13px; color:#1d1a14; cursor:pointer; } #studyWin .stItem:hover { background:rgba(0,0,0,.06); } #studyWin .stItem.on { background:#1d1a14; color:var(--gold); } #studyWin .stItem i { font-style:normal; font-size:11px; color:#1f8f4e; } #studyWin .stItem.on i { color:#9fe0b3; }
+#studyWin .stPractice { flex-direction:column; align-items:flex-start; border:1px dashed #b39a62; margin-bottom:4px; font-weight:700; } #studyWin .stPractice small { font-weight:400; opacity:.7; }
+#studyWin .stBody { flex:1; overflow:auto; padding:14px 18px 24px; font-size:14px; line-height:1.55; } #studyWin .stBody h3 { margin:2px 0 6px; font-family:var(--serif); font-size:20px; } #studyWin .stBody h4 { margin:14px 0 4px; }
+#studyWin .stTag { display:inline-block; font-size:11px; background:#1d1a14; color:var(--gold); border-radius:4px; padding:1px 6px; } #studyWin .stStory { background:#fff8e6; border-left:3px solid var(--gold); padding:8px 10px; border-radius:4px; }
+#studyWin .stQuiz { margin-top:12px; } #studyWin .stQ { margin:10px 0; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,.04); } #studyWin .stQ.ok { background:rgba(31,143,78,.12); } #studyWin .stQ.no { background:rgba(179,57,42,.12); }
+#studyWin .stOpts { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; } #studyWin .stOpts .btn { background:#fff; color:#1d1a14; border:1px solid #c9b88f; padding:5px 10px; font-size:13px; } #studyWin .stOpts .btn.sel { background:#1d1a14; color:var(--gold); } #studyWin .stOpts .btn.right { outline:2px solid #1f8f4e; outline-offset:1px; }
+#studyWin #stCheck { margin-top:6px; } #studyWin #stCheck:disabled { opacity:.45; } #studyWin .stScore { font-size:22px; font-weight:800; color:var(--seal); margin-top:12px; } #studyWin .stScore.ok { color:#1f8f4e; } #studyWin .warn { color:var(--seal); }
+@media (max-width:700px), (max-height:500px) { #studyWin { padding:0; } #studyWin .stBox { border-radius:0; height:100%; } #studyWin .stList { width:100%; border-right:0; } #studyWin .stBody { display:none; } #studyWin.reading .stList { display:none; } #studyWin.reading .stBody { display:block; } #studyWin.reading .stBack { display:inline-block; } }
 .rt { width:100%; border-collapse:collapse; font-size:12px; margin:6px 0 10px; } .rt th, .rt td { border:1px solid #d9caa5; padding:3px 5px; text-align:left; vertical-align:top; } .rt th { background:#f1e9d6; font-weight:500; }
 .rt .num { text-align:right; white-space:nowrap; } .rt tr.struck td { text-decoration:line-through; color:#8a8f96; }
 .rt .st.base { color:var(--navy); font-weight:700; } .rt .st.assume, .rt .st.fatal { color:var(--seal); font-weight:700; } .rt .st.extinguish { color:#1f8f4e; }
@@ -575,6 +589,7 @@ i.rln { font-style:normal; display:inline-block; min-width:16px; text-align:cent
   <div class="tag">걸어서 모으는 정보, 손으로 하는 권리분석</div>
   <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo">혼자 하기<small>자본 골라서 시작</small></button><button class="btn mode" data-mode="modeRoom">친구와 같이 하기<small>방 만들기</small></button><button class="btn mode" data-mode="modeCh">실시간 채널<small>코드 없이 아무나</small></button></div>
   <div id="modeHint">어떻게 할지 먼저 골라 주세요</div>
+  <div class="row studyRow"><button class="btn" id="btnStudy">📚 사례 공부 <small>경매 케이스 문제 풀기</small></button></div>
   <div id="installGate" hidden><b>📲 설치해서 열어야 시작할 수 있어요</b><p>웹 브라우저에서는 둘러보기만 돼요. 아래 "앱으로 설치하는 법"대로 홈 화면(폰)이나 바탕화면(컴퓨터)에 설치한 뒤, 그 아이콘으로 열어 주세요.</p></div>
   <div class="mp nameBox" id="nameBox"><label for="mpName">같이 할 때 내 이름</label><input id="mpName" placeholder="내 이름" maxlength="8"><small id="nameLock"></small><button class="btn" id="btnProfile">내 캐릭터 꾸미기</button></div>
   <div class="mp" id="profileTitle" hidden><div class="mph">내 캐릭터 <small>색을 눌러 고르세요</small></div><div class="profileBox" data-profile></div></div>
@@ -604,6 +619,10 @@ i.rln { font-style:normal; display:inline-block; min-width:16px; text-align:cent
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
 </div>
 
+<div id="studyWin"><div class="stBox">
+  <div class="stHead"><button class="btn stBack" id="stBack">← 목록</button><b>📚 사례 공부</b><small id="stProg"></small><button class="xClose" id="stX" aria-label="닫기">×</button></div>
+  <div class="stMain"><div class="stList" id="stList"></div><div class="stBody" id="stBody"></div></div>
+</div></div>
 <div id="rotate"><div class="ph"></div><b>폰을 가로로 돌려 주세요</b><small>이 게임은 가로 화면에 맞춰져 있어요</small></div>
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
@@ -7845,6 +7864,224 @@ const Fight = {
   },
 };
 
+/* ===================== 사례 공부 (사용자 2026-10-15 '시작 페이지에 경매 케이스 공부할 수 있는 칸') =====================
+ * 시작 화면 '📚 사례 공부'. 사례마다 등기·임차인 표를 보고 세 문제(말소기준 · 대항력 · 인수액)를 푼 뒤 풀이를 본다.
+ * 숫자는 전부 Engine.analyze가 계산한다 (사례 데이터만 여기 적는다). '실전 물건 연습'은 생성기로 새 물건을 만든다.
+ * 설치 안 한 웹 화면(gated)에서도 열린다: 공부는 누구나.
+ */
+const STUDY_LESSONS = (() => {
+  const M = 1e4;
+  const r = (date, type, amt = 0, holder = '', x = {}) => ({ date, type, amount: amt * M, holder, ...x });
+  const t = (name, move, fixed, dep, claimDate, x = {}) => ({ name, move, fixed: fixed || '', deposit: dep * M, claimed: claimDate ? 'yes' : 'no', claimDate: claimDate || '', ...x });
+  const own = (d, h = '오태윤') => r(d, 'own', 0, h), start = d => r(d, 'start', 0, '');
+  const DL = '2025-09-10', ST = '2025-06-20';
+  return [
+    { id: 'base', g: '기초', title: '말소기준권리 찾기', bid: 15000,
+      story: '근저당 하나, 가압류 하나가 있는 평범한 다세대. 세입자는 없다.',
+      data: { deadline: DL, reg: [own('2019-03-02'), r('2020-05-10', 'mort', 12000, '한빛은행'), r('2022-08-01', 'prov', 2000, '(주)다올카드'), start(ST)], tenants: [] },
+      point: '근저당·가압류·압류·담보가등기·경매개시결정·배당요구한 전세권 가운데 가장 빠른 것이 말소기준권리다. 말소기준과 그 뒤의 권리는 매각으로 모두 지워지고, 앞선 권리만 낙찰자가 떠안는다.' },
+    { id: 'senior', g: '기초', title: '선순위 임차인, 전액 배당', bid: 25000,
+      story: '세입자가 근저당보다 먼저 전입했다. 확정일자도 받고 배당요구도 했다.',
+      data: { deadline: DL, reg: [own('2019-01-05'), r('2021-06-18', 'mort', 15600, '새솔은행'), start(ST)], tenants: [t('강민찬', '2020-09-01', '2020-09-01', 15000, '2025-08-01')] },
+      point: '전입(+점유)이 말소기준보다 빠르면 대항력이 있다. 확정일자까지 빠르면 우선변제권도 있어 근저당보다 먼저 배당받는다. 다 받아 가면 낙찰자가 떠안을 돈은 없다.' },
+    { id: 'latefix', g: '기초', title: '선순위인데 확정일자가 늦다', bid: 20000,
+      story: '전입은 근저당보다 빠른데, 확정일자는 근저당 뒤에 받았다.',
+      data: { deadline: DL, reg: [own('2019-04-12'), r('2021-06-18', 'mort', 15600, '푸른은행'), r('2023-11-02', 'prov', 2300, '대한보증(주)'), start(ST)], tenants: [t('이채현', '2020-09-01', '2021-08-10', 15000, '2025-08-01')] },
+      point: '대항력은 전입일로, 배당 순서는 확정일자(와 전입 다음 날 중 늦은 날)로 따진다. 배당 순서가 근저당보다 밀려 덜 받은 보증금은, 대항력이 있으니 낙찰자가 물어 줘야 한다.' },
+    { id: 'missed', g: '기초', title: '배당요구종기를 넘겼다', bid: 25000,
+      story: '선순위 임차인이 배당요구를 했는데, 날짜가 배당요구종기 뒤다.',
+      data: { deadline: '2025-01-15', reg: [own('2020-02-01'), r('2022-05-05', 'mort', 20000, '다온은행'), start('2024-10-02')], tenants: [t('정연우', '2021-01-01', '2021-01-01', 10000, '2025-02-01')] },
+      point: '배당요구종기까지 배당요구를 하지 않으면 배당에서 빠진다. 대항력은 그대로라서 보증금 전액을 낙찰자가 떠안는다.' },
+    { id: 'nofix', g: '기초', title: '확정일자 없는 선순위 임차인', bid: 30000,
+      story: '전입은 가장 빠른데 확정일자를 받지 않았다.',
+      data: { deadline: DL, reg: [own('2018-06-01'), r('2020-01-01', 'mort', 10000, '한결은행'), start(ST)], tenants: [t('고현서', '2019-01-01', '', 7000, '2025-07-01')] },
+      point: '확정일자가 없으면 우선변제권이 없어 배당을 못 받는다. 대신 대항력이 있으니 보증금 전부를 낙찰자가 인수한다.' },
+    { id: 'hidden', g: '기초', title: '명세서에 없는 숨은 임차인', bid: 20000,
+      story: '매각물건명세서엔 임차인이 없다고 나온다. 주민센터 전입세대열람을 떼 보니 근저당보다 먼저 전입한 사람이 있다.',
+      data: { deadline: DL, reg: [own('2018-03-01'), r('2021-02-01', 'mort', 14000, '새솔은행'), start(ST)], tenants: [t('김건명', '2019-07-15', '', 8000, '', { hidden: true })] },
+      point: '서류에 안 보여도 대항력은 있다. 배당요구를 안 했으니 한 푼도 못 받고, 보증금 전부가 낙찰자 몫이 된다. 전입세대열람은 꼭 떼자.' },
+    { id: 'prov', g: '배당', title: '가압류는 나눠 받는다 (안분)', bid: 10000,
+      story: '가압류 → 근저당 → 가압류 순서로 등기돼 있다. 낙찰가로 다 갚을 수 없다.',
+      data: { deadline: DL, reg: [own('2019-05-01'), r('2020-01-01', 'prov', 5000, '(주)한성캐피탈'), r('2021-01-01', 'mort', 5000, '푸른은행'), r('2022-01-01', 'prov', 10000, '대한보증(주)'), start(ST)], tenants: [] },
+      point: '가압류는 우선변제권이 없어서 뒤 채권들과 채권액 비율로 나눠 받는다. 근저당은 자기보다 늦은 가압류에는 앞서므로 그 몫을 흡수한다.' },
+    { id: 'tax', g: '배당', title: '당해세는 가장 먼저', bid: 15000,
+      story: '구청 재산세 압류가 근저당 뒤에 들어왔다.',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2020-01-01', 'mort', 10000, '한빛은행'), r('2024-01-01', 'seize', 1000, '광진구청', { taxNote: '재산세(당해세)' }), start(ST)], tenants: [t('강민찬', '2019-05-05', '2021-02-01', 8000, '2025-07-10')] },
+      point: '그 집에 붙은 재산세 같은 당해세는 등기 날짜와 상관없이 먼저 배당된다. 그만큼 임차인 몫이 줄고, 대항력 있는 임차인이 덜 받은 돈은 낙찰자가 떠안는다.' },
+    { id: 'sameday', g: '날짜', title: '근저당과 같은 날 전입', bid: 10000,
+      story: '전입일과 근저당 설정일이 같은 날이다. 선순위일까?',
+      data: { deadline: DL, reg: [own('2020-03-01'), r('2021-06-18', 'mort', 9000, '다온은행'), start(ST)], tenants: [t('이채현', '2021-06-18', '2021-06-18', 5000, '2025-07-01')] },
+      point: '전입신고의 대항력은 다음 날 0시부터 생긴다. 같은 날 설정된 근저당이 먼저라서 대항력이 없다. 배당은 받지만 못 받은 돈은 낙찰자와 상관없다.' },
+    { id: 'nextday', g: '날짜', title: '전입 다음 날 근저당', bid: 10000,
+      story: '전입 다음 날 근저당이 설정됐다.',
+      data: { deadline: DL, reg: [own('2020-03-01'), r('2021-06-19', 'mort', 9000, '한결은행'), start(ST)], tenants: [t('정연우', '2021-06-18', '2021-06-18', 5000, '2025-07-01')] },
+      point: '전입 다음 날 0시에 대항력이 생기므로, 다음 날 설정된 근저당보다 앞선다. 하루 차이로 결과가 뒤집힌다.' },
+    { id: 'daewi', g: '날짜', title: '대위변제로 말소기준이 바뀌었다', bid: 20000,
+      story: '1순위 소액 근저당이 입찰 며칠 전에 갚아져 말소됐다. 등기부를 다시 떼야 보인다.',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2019-01-01', 'mort', 2000, '한마음금고', { cancelled: true }), r('2021-01-01', 'mort', 15000, '새솔은행'), start(ST)], tenants: [t('고현서', '2020-03-01', '', 10000, '')] },
+      point: '맨 앞 근저당이 사라지면 다음 권리가 말소기준이 된다. 그 사이에 전입한 임차인은 갑자기 선순위가 되어, 보증금을 낙찰자가 떠안는다. 입찰 직전 등기부를 다시 떼는 이유다.' },
+    { id: 'jeonN', g: '등기 함정', title: '선순위 전세권 · 배당요구 안 함', bid: 15000,
+      story: '근저당보다 먼저 전세권이 등기돼 있다. 전세권자는 배당요구를 하지 않았다.',
+      data: { deadline: DL, reg: [own('2017-05-01'), r('2018-03-01', 'jeonN', 12000, '박서윤'), r('2020-02-02', 'mort', 10000, '푸른은행'), start(ST)], tenants: [] },
+      point: '전세권은 배당요구를 해야 말소기준이 된다. 하지 않은 선순위 전세권은 지워지지 않고 낙찰자가 전세금을 인수한다.' },
+    { id: 'jeonY', g: '등기 함정', title: '선순위 전세권 · 배당요구 함', bid: 15000,
+      story: '같은 전세권인데, 이번엔 전세권자가 배당요구를 했다.',
+      data: { deadline: DL, reg: [own('2017-05-01'), r('2018-03-01', 'jeonY', 12000, '박서윤'), r('2020-02-02', 'mort', 10000, '푸른은행'), start(ST)], tenants: [] },
+      point: '배당요구한 선순위 전세권은 말소기준이 된다. 먼저 배당받고 소멸하며, 뒤의 권리도 모두 지워진다.' },
+    { id: 'fakegd', g: '등기 함정', title: '가등기처럼 보이는 담보가등기', bid: 10000,
+      story: '갑구에 "소유권이전청구권가등기"가 가장 빠르다. 그런데 명세서 비고에 "가등기권자 채권계산서 제출"이 있다.',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2019-01-01', 'secreg', 4000, '윤아도', { look: 'claimreg' }), r('2020-01-01', 'mort', 10000, '한빛은행'), start(ST)], tenants: [t('강민찬', '2019-06-01', '2019-06-01', 5000, '2025-07-01')] },
+      point: '돈을 받겠다고 채권계산서를 낸 가등기는 담보가등기다. 근저당처럼 말소기준이 되고 배당받고 소멸한다. 그래서 그 뒤에 전입한 임차인은 대항력이 없다.' },
+    { id: 'claimreg', g: '등기 함정', title: '선순위 매매예약 가등기', bid: 12000,
+      story: '근저당보다 먼저 "매매예약" 가등기가 있다. 가등기권자는 아무 신고도 하지 않았다.',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2019-01-01', 'claimreg', 6000, '조하진'), r('2020-01-01', 'mort', 10000, '한빛은행'), start(ST)], tenants: [] },
+      point: '말소기준보다 앞선 소유권이전청구권 가등기는 지워지지 않는다. 본등기가 되면 낙찰자는 소유권을 잃는다. 지키려면 가등기권자와 합의해야 해서, 이 게임은 그 합의금을 인수액으로 계산한다.',
+      note: '합의금(6,000만 원)은 등기부에 안 나오는 숫자예요. 이 사례에서만 문제를 풀 수 있게 적어 둬요.' },
+    { id: 'inj', g: '등기 함정', title: '선순위 처분금지가처분', bid: 12000,
+      story: '근저당보다 먼저 처분금지가처분이 있다. 피보전권리는 소유권이전등기청구권.',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2019-01-01', 'inj', 5000, '류동은'), r('2020-01-01', 'mort', 10000, '새솔은행'), start(ST)], tenants: [] },
+      point: '말소기준보다 앞선 가처분은 소멸하지 않는다. 가처분권자가 본안에서 이기면 낙찰자의 소유권이 날아간다.', note: '정리 비용(5,000만 원)은 등기부에 안 나오는 숫자예요.' },
+    { id: 'demolish', g: '등기 함정', title: '후순위 건물철거 가처분', bid: 10000,
+      story: '근저당 뒤에 토지소유자의 가처분이 있다. 피보전권리는 "건물철거 및 토지인도 청구권".',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2020-01-01', 'mort', 10000, '다온은행'), r('2022-01-01', 'inj', 3000, '서민아', { demolish: true }), start(ST)], tenants: [] },
+      point: '건물철거·토지인도 청구권을 지키려는 가처분은 순위가 늦어도 매각으로 지워지지 않는다. 후순위라고 안심하면 안 되는 대표 예외다.', note: '정리 비용(3,000만 원)은 등기부에 안 나오는 숫자예요.' },
+    { id: 'leasereg', g: '등기 함정', title: '임차권등기명령 (이사 나간 임차인)', bid: 15000,
+      story: '전입세대열람엔 아무도 없다. 그런데 을구에 "주택임차권"이 남아 있다. 주민등록일자는 근저당보다 빠르다.',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2020-01-01', 'mort', 10000, '한결은행'), r('2023-05-01', 'lease', 8000, '김건명', { move: '2019-01-01', fixed: '2021-01-01' }), start(ST)], tenants: [t('김건명', '2019-01-01', '2021-01-01', 8000, '2023-05-01', { leaseReg: true })] },
+      point: '임차권등기명령으로 등기되면 이사 가서 전입이 빠져도 대항력과 우선변제권이 그대로 남는다. 배당 순서는 확정일자 기준이라 근저당보다 밀리고, 못 받은 돈은 낙찰자가 떠안는다.' },
+    { id: 'corp', g: '임차인 함정', title: '법인 임차인 · 대표이사가 산다', bid: 12000,
+      story: '중소기업 법인이 직원 숙소로 빌린 집. 실제로 들어와 사는 건 그 회사 대표이사이고, 근저당보다 먼저 전입했다.',
+      data: { deadline: DL, reg: [own('2018-01-01'), r('2020-01-01', 'mort', 10000, '푸른은행'), start(ST)], tenants: [t('정연우', '2019-01-01', '2019-01-01', 6000, '2025-07-01', { noDaehang: true, corp: '(주)늘봄산업' })] },
+      point: '법인이 직원 숙소로 빌린 집은 직원이 전입하면 법인이 대항력을 얻는다(주택임대차보호법 3조 3항). 대표이사는 직원이 아니라서 대항력이 생기지 않는다(대법원 2023다226866). 다들 선순위로 보고 피하니 싸게 살 기회다.' },
+  ];
+})();
+
+/* 등기·현장 위험 개념 카드 (숫자 문제 없이 읽기만) */
+const STUDY_CARDS = [
+  { id: 'lien', g: '현장 위험', title: '유치권', body: '공사대금을 못 받은 업체가 건물을 점유하며 버티는 권리. 등기부엔 없고 명세서 비고와 현장 현수막으로 안다. 진짜 유치권이면 낙찰자가 공사대금을 물어 줘야 한다. 점유를 안 하고 있거나 경매개시 뒤에 점유를 시작했다면 성립하지 않는 경우가 많다.', where: '명세서 비고 · 현장 현수막' },
+  { id: 'super', g: '현장 위험', title: '법정지상권', body: '토지만 경매에 나왔는데 그 위에 남의 건물이 서 있는 경우. 건물 주인이 법정지상권을 가지면 낙찰자는 토지를 마음대로 못 쓴다. 명세서의 "제시외 건물"과 현장을 같이 본다.', where: '명세서 비고 · 현장' },
+  { id: 'tomb', g: '현장 위험', title: '분묘기지권', body: '토지에 무덤이 있으면 등기와 상관없이 분묘기지권이 성립할 수 있다. 그 자리는 낙찰자가 못 써서 땅의 가치가 깎인다. 현장에서 봉분·비석·벌초 흔적을 확인한다.', where: '현장 · 명세서 비고' },
+  { id: 'share', g: '현장 위험', title: '지분 경매 · 공유자 우선매수', body: '집 전체가 아니라 1/2, 1/3 지분만 팔린다. 혼자 쓸 수 없어 처분가치가 크게 낮다. 다른 공유자는 매각기일에 최고가와 같은 값으로 우선매수를 신고할 수 있어서(민사집행법 140조), 1등을 해도 빼앗길 수 있다.', where: '등기부 갑구 · 명세서' },
+  { id: 'illegal', g: '현장 위험', title: '위반건축물', body: '옥상 증축, 베란다 확장처럼 허가 없이 고친 부분이 있으면 이행강제금이 매년 나온다. 대출 한도가 줄기도 한다. 건축물대장과 현장 외벽을 본다.', where: '현장 옥상·외벽' },
+  { id: 'heir', g: '현장 위험', title: '상속인 점유', body: '소유자가 돌아가시고 가족 여러 명이 살고 있는 경우. 대항력 문제는 없지만 명도할 상대가 많아 이사비·시간이 더 든다.', where: '전입세대열람(사망말소) · 초인종' },
+  { id: 'fake', g: '임차인 함정', title: '허위·통정 임차인', body: '계약서도 확정일자도 없이 보증금을 말로만 주장하고, 소유자 가족이라는 단서가 보이면 허위 임차인을 의심한다. 실제로는 소송으로 다투지만, 이기면 대항력이 인정되지 않는다.', where: '현황조사서 · 초인종' },
+  { id: 'resale', g: '법정 절차', title: '재매각 사건 보증금 20%', body: '전 낙찰자가 대금을 안 내 다시 나온 물건은 보통 보증금이 최저가의 20%다. 명세서 특별매각조건을 안 보고 10%만 넣으면 입찰이 무효다.', where: '명세서 비고' },
+  { id: 'second', g: '법정 절차', title: '차순위매수신고', body: '2등이고 내 가격이 "1등 가격 − 보증금"보다 높으면 차순위매수신고를 할 수 있다. 1등이 대금을 안 내면 재매각 없이 내가 산다. 그동안 보증금은 묶인다.', where: '개찰 때 집행관' },
+  { id: 'typo', g: '법정 절차', title: '입찰표 착오는 구제 안 됨', body: '0을 하나 더 붙여 써도 그대로 낙찰이다. 대금을 못 내면 보증금을 잃는다. 숫자와 한글 금액을 두 번 확인한다.', where: '입찰표' },
+];
+
+const Study = {
+  open_: false, cur: null, ans: {}, practice: null,
+  done() { const d = Store.get('studyDone', null); return d && typeof d === 'object' ? d : {}; },
+  mark(id, score) { const d = this.done(); d[id] = Math.max(d[id] || 0, score); Store.set('studyDone', d); },
+  open() {
+    if (this.open_) return; this.open_ = true; Sound.init && Sound.init(); Sound.play('paper');
+    $('studyWin').classList.add('in'); this.list(); this.show(this.cur || STUDY_LESSONS[0].id);
+  },
+  close() { if (!this.open_) return; this.open_ = false; $('studyWin').classList.remove('in'); Sound.play('flip'); },
+  list() {
+    const d = this.done(), groups = {};
+    for (const L of STUDY_LESSONS) (groups[L.g] = groups[L.g] || []).push({ id: L.id, title: L.title, mark: d[L.id] ? (d[L.id] >= 3 ? '✓' : `${d[L.id]}/3`) : '' });
+    for (const C of STUDY_CARDS) (groups[C.g] = groups[C.g] || []).push({ id: C.id, title: C.title, mark: d[C.id] ? '✓' : '', card: true });
+    const n = STUDY_LESSONS.filter(L => (d[L.id] || 0) >= 3).length;
+    $('stList').innerHTML = `<button class="stItem stPractice ${this.cur === 'practice' ? 'on' : ''}" data-id="practice">🎲 실전 물건 연습 <small>새 물건으로 무한 연습</small></button>`
+      + Object.entries(groups).map(([g, items]) => `<div class="stGroup">${esc(g)}</div>${items.map(x => `<button class="stItem ${this.cur === x.id ? 'on' : ''}" data-id="${x.id}">${x.card ? '📖 ' : ''}${esc(x.title)}<i>${x.mark}</i></button>`).join('')}`).join('');
+    $('stProg').textContent = `문제 사례 ${n}/${STUDY_LESSONS.length} 완료`;
+    $('stList').querySelectorAll('.stItem').forEach(b => b.onclick = () => { this.show(b.dataset.id); $('studyWin').classList.add('reading'); });
+  },
+  regLabel(r) { return Engine.REG_LABEL[r.look || r.type] || r.type; },
+  // 사례 표: 등기(갑·을 순서 대신 날짜순)와 임차인. 판정은 숨긴다.
+  tables(data, extra = {}) {
+    const regs = data.reg.filter(r => r.type !== 'own' || true).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+    const regRows = regs.map(r => `<tr class="${r.cancelled ? 'struck' : ''}"><td>${ymd(r.date)}</td><td>${this.regLabel(r)}${r.demolish ? '<br><small>건물철거·토지인도 청구권</small>' : r.type === 'inj' ? '<br><small>소유권이전등기청구권</small>' : ''}${r.cancelled ? ' <small>(말소)</small>' : ''}</td><td>${esc(r.holder || '')}${r.taxNote ? ` <small>${r.taxNote}</small>` : ''}</td><td class="num">${r.amount && !['claimreg', 'inj'].includes(r.type) ? fmtWon(r.amount) : r.type === 'start' ? '' : r.type === 'own' ? '' : '—'}</td></tr>`).join('');
+    const tRows = data.tenants.map(x => `<tr><td>${esc(x.corp ? `${x.corp} (대표이사 ${x.name} 거주)` : x.name)}${x.hidden ? ' <small>명세서엔 없음</small>' : ''}${x.leaseReg ? ' <small>이사 나감 · 임차권등기</small>' : ''}${x.fake ? ' <small>계약서 없음 · 소유자 친척이라 진술</small>' : ''}</td><td>${ymd(x.move)}</td><td>${x.fixed ? ymd(x.fixed) : '없음'}</td><td class="num">${fmtWon(x.deposit)}</td><td>${x.claimed === 'yes' ? ymd(x.claimDate) : '안 함'}</td></tr>`).join('');
+    return `<table class="rt"><tr><th>접수일</th><th>권리</th><th>권리자</th><th>금액</th></tr>${regRows}</table>
+      ${data.tenants.length ? `<table class="rt"><tr><th>임차인</th><th>전입</th><th>확정일자</th><th>보증금</th><th>배당요구</th></tr>${tRows}</table>` : '<p class="small dim">임차인 없음</p>'}
+      <p class="small">배당요구종기 ${data.deadline ? ymd(data.deadline) : '—'}${extra.bid ? ` · 낙찰가 ${fmtWon(extra.bid)}로 가정` : ''}</p>`;
+  },
+  // 세 문제: 말소기준 · 임차인별 대항력 · 인수액 (보기는 엔진 답 + 헷갈리는 값)
+  quiz(id, data, bid) {
+    const a = Engine.analyze(data, bid); const live = data.reg.filter(r => r.type !== 'own' && !r.cancelled);
+    const q1 = live.map((r, i) => ({ v: r.date + '|' + r.type, t: `${ymd(r.date)} ${this.regLabel(r)}` }));
+    const deps = data.tenants.reduce((s, x) => s + x.deposit, 0) + data.reg.filter(r => !r.cancelled && ['jeonN', 'jeonY', 'claimreg', 'inj'].includes(r.type)).reduce((s, r) => s + r.amount, 0);
+    const opts = [...new Set([a.assumeTotal, 0, deps, Math.round(a.assumeTotal / 2 / 1e6) * 1e6, a.assumeTotal + 2e7])].filter(v => v >= 0).slice(0, 4).sort((x, y) => x - y);
+    this.ans = { id, a, data, bid, q1, opts, pick: {} };
+    return `<div class="stQ" data-q="base"><b>1. 말소기준권리는?</b><div class="stOpts">${q1.map(o => `<button class="btn" data-v="${o.v}">${o.t}</button>`).join('')}</div></div>
+      ${data.tenants.map((x, i) => `<div class="stQ" data-q="t${i}"><b>2${data.tenants.length > 1 ? '-' + (i + 1) : ''}. ${esc(x.name)}에게 대항력이 있을까?</b><div class="stOpts"><button class="btn" data-v="1">있다</button><button class="btn" data-v="0">없다</button></div></div>`).join('')}
+      <div class="stQ" data-q="assume"><b>${data.tenants.length ? 3 : 2}. 낙찰자가 떠안는 돈(인수액)은?</b><div class="stOpts">${opts.map(v => `<button class="btn" data-v="${v}">${fmtWon(v)}</button>`).join('')}</div></div>
+      <button class="btn gold" id="stCheck" disabled>채점하고 풀이 보기</button>`;
+  },
+  bindQuiz() {
+    const root = $('stBody'); const need = root.querySelectorAll('.stQ').length;
+    root.querySelectorAll('.stQ').forEach(q => q.querySelectorAll('.stOpts .btn').forEach(b => b.onclick = () => {
+      if (this.ans.graded) return; q.querySelectorAll('.btn').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); this.ans.pick[q.dataset.q] = b.dataset.v; Sound.play('tick');
+      $('stCheck').disabled = Object.keys(this.ans.pick).length < need;
+    }));
+    $('stCheck').onclick = () => this.grade();
+  },
+  grade() {
+    const A = this.ans; if (A.graded) return; A.graded = true; const a = A.a; let ok = 0, tot = 0; const root = $('stBody');
+    const mark = (q, good, right) => { const el = root.querySelector(`.stQ[data-q="${q}"]`); el.classList.add(good ? 'ok' : 'no'); el.querySelectorAll('.btn').forEach(b => { if (b.dataset.v === String(right)) b.classList.add('right'); }); tot++; if (good) ok++; };
+    const bk = a.base ? a.base.date + '|' + a.base.type : ''; mark('base', A.pick.base === bk, bk);
+    a.tenants.forEach((x, i) => mark('t' + i, A.pick['t' + i] === (x.daehang ? '1' : '0'), x.daehang ? 1 : 0));
+    mark('assume', Number(A.pick.assume) === a.assumeTotal, a.assumeTotal);
+    const score = ok === tot ? 3 : ok >= tot - 1 ? 2 : ok ? 1 : 0; if (A.id !== 'practice') this.mark(A.id, score); else this.practiceN = (this.practiceN || 0) + 1;
+    Sound.play(ok === tot ? 'chime' : 'paper');
+    const regRows = a.regs.filter(r => r.type !== 'own').map(r => `<tr class="${r.status === 'cancelled' ? 'struck' : ''}"><td>${ymd(r.date)}</td><td>${r.label}${r.look ? ' <small>(등기부엔 가등기로 보임)</small>' : ''}</td><td>${esc(r.holder || '')}</td><td class="st ${r.status}">${STATUS_LABEL[r.status] || r.status}</td></tr>`).join('');
+    const tRows = a.tenants.map(x => `<tr><td>${esc(x.name)}</td><td class="st ${x.daehang ? 'assume' : 'extinguish'}">${x.daehang ? '있음' : '없음'}</td><td>${x.eligible ? '참여' : x.why}</td><td class="num">${fmtWon(x.paid)}</td><td class="num">${fmtWon(x.assumed)}</td></tr>`).join('');
+    const dRows = a.distribution.map((d, i) => `<tr><td>${i + 1}</td><td>${esc(d.label)}${d.note ? ` <small>(${d.note})</small>` : ''}</td><td class="num">${fmtWon(d.claim)}</td><td class="num">${fmtWon(d.paid)}</td></tr>`).join('');
+    const L = STUDY_LESSONS.find(x => x.id === A.id), P = A.id === 'practice' ? this.practice : null;
+    const point = L ? L.point : P ? (P.risks.length ? P.risks.map(rk => `<b>${RISK_NAME(rk)}</b>${TRAP_WHY[rk] ? ' — ' + TRAP_WHY[rk] : ''}`).join('<br>') : '깨끗한 물건이었어요.') : '';
+    $('stAns').innerHTML = `<div class="stScore ${ok === tot ? 'ok' : ''}">${ok}/${tot} 맞음</div>
+      <h4>풀이</h4><p>${point}</p>
+      <table class="rt"><tr><th>접수일</th><th>권리</th><th>권리자</th><th>처리</th></tr>${regRows}</table>
+      ${a.tenants.length ? `<table class="rt"><tr><th>임차인</th><th>대항력</th><th>배당</th><th>배당액</th><th>인수</th></tr>${tRows}</table>` : ''}
+      <table class="rt"><tr><th>순위</th><th>배당받는 사람</th><th>채권액</th><th>배당액</th></tr>${dRows}<tr><td colspan="3">남는 돈 (소유자에게)</td><td class="num">${fmtWon(a.surplus)}</td></tr></table>
+      <p><b>인수액 ${fmtWon(a.assumeTotal)}</b> <small>(임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)}${a.assumeOther ? ` + 가등기·가처분 정리 ${fmtWon(a.assumeOther)}` : ''})</small></p>
+      ${a.fatal.map(f => `<p class="warn">⚠ ${f.note}</p>`).join('')}
+      ${P ? `<p class="small">이 물건 시세 ${fmtWon(P.market)} · 최저가 ${fmtWon(P.minPrice)} · 엔진 적정 입찰가 ${fmtWon(fairBid(P))} 안팎 · 난이도 ${'★'.repeat(P.stars)}</p><button class="btn gold" id="stNext">🎲 다음 물건</button>` : `<button class="btn" id="stRetry">다시 풀기</button>${this.nextId() ? ` <button class="btn gold" id="stNext">다음 사례 →</button>` : ''}`}`;
+    $('stAns').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if ($('stRetry')) $('stRetry').onclick = () => this.show(A.id);
+    if ($('stNext')) $('stNext').onclick = () => this.show(P ? 'practice' : this.nextId());
+    this.list();
+  },
+  nextId() { const all = [...STUDY_LESSONS.map(x => x.id), ...STUDY_CARDS.map(x => x.id)]; const i = all.indexOf(this.cur); return all[i + 1] || null; },
+  // 실전 물건: 생성기로 새 물건 (등기 함정 포함). 표는 조사를 다 마친 상태로 보여 준다.
+  makePractice() {
+    const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) & 0x7fffffff; const R = makeRng(seed); const gu = R.pick(DISTRICTS).id;
+    const c = Generator.makeCase({ R, gu, capital: null, useCapital: false, saleDate: '2025-11-11', year: '2025' }); c.caseNo = c.id = `2025타경${R.RI(10000, 39999)}`; Generator.applyTraps(c); return c;
+  },
+  show(id) {
+    this.cur = id; this.ans = {}; const body = $('stBody');
+    if (id === 'practice') {
+      const c = this.practice = this.makePractice(); const notes = [];
+      if (c.share) notes.push(`지분 ${c.share.den}분의 ${c.share.num} 매각`); if (c.lien) notes.push(`유치권 신고 ${fmtWon(c.lien.amount)} (${esc(c.lien.holder)})`); if (c.super) notes.push(`지상에 제시외 건물(${c.super.building})`); if (c.illegal) notes.push(`현장: ${c.illegal.what}`); if (c.heir) notes.push(`소유자 사망 · 상속인 ${c.heir.heirs}명 거주`); if (c.tomb) notes.push(`현장: 분묘 ${c.tomb.n}기`);
+      for (const r of c.data.reg) { if (r.type === 'secreg' && r.look && r.claimDate) notes.push(`명세서: 가등기권자 ${esc(r.holder)} 채권계산서 제출`); if (r.type === 'jeonY') notes.push(`명세서: 전세권자 ${esc(r.holder)} 배당요구`); }
+      body.innerHTML = `<h3>🎲 실전 물건 연습</h3><p class="stStory">${esc(c.name)} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)}<br><small>조사를 다 마쳤다고 치고, 등기부·명세서·전입세대열람·현장에서 본 것을 표로 모았어요. 최저가에 낙찰받는다고 보고 풀어 보세요.</small></p>
+        ${this.tables(c.data, { bid: c.minPrice })}${notes.length ? `<p class="small">📝 ${notes.join(' · ')}</p>` : ''}${c.data.reg.some(r => ['claimreg', 'inj'].includes(r.type) && !r.cancelled) ? '<p class="small dim">가등기·가처분 정리 비용은 등기부에 안 나와요. 인수 여부만 맞히면 돼요.</p>' : ''}
+        <div class="stQuiz">${this.quiz('practice', c.data, c.minPrice)}</div><div id="stAns"></div>`;
+      this.bindQuiz(); this.list(); body.scrollTop = 0; return;
+    }
+    const L = STUDY_LESSONS.find(x => x.id === id);
+    if (L) {
+      body.innerHTML = `<div class="stTag">${esc(L.g)}</div><h3>${esc(L.title)}</h3><p class="stStory">${esc(L.story)}</p>${this.tables(L.data, { bid: L.bid * 1e4 })}${L.note ? `<p class="small dim">${esc(L.note)}</p>` : ''}
+        <div class="stQuiz">${this.quiz(L.id, L.data, L.bid * 1e4)}</div><div id="stAns"></div>`;
+      this.bindQuiz();
+    } else {
+      const C = STUDY_CARDS.find(x => x.id === id); if (!C) return;
+      body.innerHTML = `<div class="stTag">${esc(C.g)}</div><h3>📖 ${esc(C.title)}</h3><p class="stStory">${esc(C.body)}</p><p class="small">🔎 어디서 확인하나: <b>${esc(C.where)}</b></p>${this.nextId() ? `<button class="btn gold" id="stNext">다음 →</button>` : ''}`;
+      this.mark(C.id, 3); if ($('stNext')) $('stNext').onclick = () => this.show(this.nextId());
+    }
+    this.list(); body.scrollTop = 0;
+  },
+  init() {
+    $('btnStudy').onclick = () => this.open();
+    $('stX').onclick = () => this.close(); $('stBack').onclick = () => $('studyWin').classList.remove('reading');
+    $('studyWin').addEventListener('click', e => { if (e.target.id === 'studyWin') this.close(); });
+    addEventListener('keydown', e => { if (this.open_ && e.key === 'Escape') { e.stopPropagation(); this.close(); } }, true);
+  },
+};
+
 /* ===================== 버튼 위치 조정: 메뉴에서 켜고 조이스틱·버튼을 끌어서 옮긴다 =====================
  * 가로/세로(그리고 폰 가로 .short)마다 따로, 화면 비율로 이 기기에 저장한다. '기본값'이면 CSS 기본 위치로 돌아간다.
  */
@@ -7977,6 +8214,7 @@ const Instance = {
   if (location.hash === '#test') { $('devPage').style.display = 'block'; $('title').style.display = 'none'; devPage(); return; }
   $('lnkTest').onclick = e => { e.preventDefault(); location.hash = '#test'; location.reload(); };
   $('lnkRec').onclick = e => { e.preventDefault(); Sound.init(); Records.show(); };
+  Study.init(); /* 시작 화면 사례 공부 */
   // 홈 화면 설치(PWA): 웹으로 열었을 때만. 파일로 열거나 아티팩트 안이면 조용히 건너뜀.
   try {
     let deferred = null;

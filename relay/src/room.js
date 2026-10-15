@@ -67,7 +67,7 @@ export class RoomLogic {
     if (!name) return; const hasAs = Array.isArray(as); if (typeof cash !== 'number' && typeof pnl !== 'number' && !hasAs) return;
     const e = this.seen[name] || {}; if (typeof cash === 'number') e.cash = cash; if (typeof pnl === 'number') e.pnl = pnl; if (hasAs) e.as = as.slice(0, 10); e.at = this.now(); this.seen[name] = e; this.dirty = true;
   }
-  async close(s) { await this.load(); this.sendPlayers(); if (this.kind === 'room' && s.id === this.hostId) this.broadcast({ t: 'hostgone', from: 'server', name: '서버' }); }
+  async close(s) { await this.load(); this.broadcast({ t: 'players', list: this.players(s), from: 'server', name: '서버' }, s); /* 닫히는 소켓은 목록에서 빼고 보낸다: 나가면 접속 수가 바로 준다 (v79) */ if (this.kind === 'room' && s.id === this.hostId) this.broadcast({ t: 'hostgone', from: 'server', name: '서버' }); }
   // 10초마다: 심장박동(손님이 서버 생사를 안다) + 순위표 나눠 주기 + 오래된 것 정리 + 저장
   async tick() {
     await this.load();

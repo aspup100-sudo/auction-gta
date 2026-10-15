@@ -80,7 +80,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 .lvHead { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; } .lvCh { font:700 16px var(--serif); color:var(--navy); } .lvPill { font-size:11px; padding:2px 8px; border-radius:10px; background:#d9cfb3; color:#5a4a2a; } .lvPill.on { background:#1f7a3a; color:#fff; } .lvSub { font-size:11px; opacity:.6; margin-left:auto; }
 .lvRank { width:100%; border-collapse:collapse; background:#fffaf0; border-radius:8px; overflow:hidden; } .lvRank td { padding:5px 8px; border-top:1px solid #efe6d2; font-size:13px; } .lvRank tr:first-child td { border-top:none; }
 .lvRank .rk { width:30px; text-align:center; } .lvRank .md { display:inline-block; min-width:20px; height:20px; line-height:20px; border-radius:50%; font-weight:700; color:#8b8f99; font-size:12px; } .lvRank .md.r1, .lvRank .md.r2, .lvRank .md.r3 { color:#fff; } .lvRank .md.r1 { background:#d4a62a; } .lvRank .md.r2 { background:#9aa3ad; } .lvRank .md.r3 { background:#b0733d; }
-.lvRank .nm small { font-size:10px; color:#8b8f99; margin-left:4px; } .lvRank tr[data-who] { cursor:pointer; } .lvRank tr.sel td { background:#efe4c4; } .lvRank tr.lvAs td { background:#f6efdc; padding:4px 10px 8px 34px; font-size:12px; border-top:none; } .lvAs .al { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-top:1px dashed #d9cfb3; } .lvAs .al:first-child { border-top:none; } .lvAs .al small { color:#8b8f99; margin-left:4px; } .lvAs .al b { white-space:nowrap; font-weight:600; } .lvAs .al i { font-style:normal; font-size:11px; margin-left:4px; } .lvAs .al i.up { color:#1f7a3a; } .lvAs .al i.down { color:#c0392b; } .lvRank tr.me td { background:#fff3cc; font-weight:700; } .lvRank tr.away td { opacity:.55; }
+.lvRank .nm small { font-size:10px; color:#8b8f99; margin-left:4px; } .onDot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#2ecc71; box-shadow:0 0 4px rgba(46,204,113,.7); margin-right:4px; vertical-align:middle; position:relative; top:-1px; } .onDot.idle { background:#c9a640; box-shadow:none; } .lvRank tr[data-who] { cursor:pointer; } .lvRank tr.sel td { background:#efe4c4; } .lvRank tr.lvAs td { background:#f6efdc; padding:4px 10px 8px 34px; font-size:12px; border-top:none; } .lvAs .al { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-top:1px dashed #d9cfb3; } .lvAs .al:first-child { border-top:none; } .lvAs .al small { color:#8b8f99; margin-left:4px; } .lvAs .al b { white-space:nowrap; font-weight:600; } .lvAs .al i { font-style:normal; font-size:11px; margin-left:4px; } .lvAs .al i.up { color:#1f7a3a; } .lvAs .al i.down { color:#c0392b; } .lvRank tr.me td { background:#fff3cc; font-weight:700; } .lvRank tr.away td { opacity:.55; }
 .lvRank .pn { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; } .lvRank .pn.up, .lvRecent b.up { color:#1f7a3a; } .lvRank .pn.down, .lvRecent b.down { color:#c0392b; } .lvRecent b.dim { color:#8b8f99; font-weight:400; }
 .lvChips, .lvRecent { margin-top:8px; font-size:12px; } .lvChips small, .lvRecent small { display:block; color:#8b8f99; margin-bottom:3px; font-size:11px; } .chip { display:inline-block; background:#fffaf0; border:1px solid #d9cfb3; border-radius:12px; padding:2px 8px; margin:2px 4px 2px 0; }
 .lvRecent div { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-top:1px dashed #d9cfb3; } .lvRecent div:first-of-type { border-top:none; } .lvFoot { margin-top:8px; font-size:11px; opacity:.6; }
@@ -545,7 +545,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   <div id="quest"></div>
   <div id="balanceDue"></div>
   <div id="rankBox" hidden></div>
-  <div class="hudBtns" id="hudBtns"><button class="btn" id="btnChat" hidden title="스페이스 / T">채팅</button><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
+  <div class="hudBtns" id="hudBtns"><button class="btn" id="btnChat" hidden title="Enter / T">채팅</button><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
   <canvas id="radar" width="132" height="132" title="지도 (N · 서울 전체는 M)"></canvas>
   <div id="hudSpeed"></div>
   <div id="roadSign"></div>
@@ -591,7 +591,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>차 타기·내리기</th><td>F (차 옆에서 / 속도 40 이하)</td><td class="tc">F 버튼</td></tr>
       <tr><th>운전</th><td>W 가속 · S 브레이크/후진 · A D 핸들</td><td class="tc">가속·브레이크 버튼으로 전진·후진, 조이스틱은 핸들만</td></tr>
       <tr><th>핸드브레이크</th><td>Space</td><td class="tc">HB 버튼</td></tr>
-      <tr><th>채팅 (같이 하기·채널)</th><td>스페이스(걸을 때) 또는 T, 위쪽 '채팅' 버튼 · Enter 보내기 · Esc 닫기</td><td class="tc">채팅 버튼</td></tr>
+      <tr><th>채팅 (같이 하기·채널)</th><td>Enter 또는 T, 위쪽 '채팅' 버튼 · Enter 보내기 · Esc 닫기</td><td class="tc">채팅 버튼</td></tr>
       <tr><th>내 차</th><td colspan="2">혼자: 사무실 문 앞 · 같이 하기·채널: 사무실 뒤 공용 주차장에 사람마다 한 칸</td></tr>
       <tr><th>서울 지도</th><td>M (차 근처에서 이동 확정)</td><td class="tc">오른쪽 위 둥근 지도 → 서울 전체</td></tr>
       <tr><th>구역 지도(장소 위치)</th><td>N 또는 오른쪽 위 둥근 지도</td><td class="tc">오른쪽 위 둥근 지도</td></tr>
@@ -601,7 +601,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
       <tr><th>서류 같이 보기</th><td colspan="2">사무실 PC → 물건 카드 → 두 서류 같이 보기</td></tr>
       <tr><th>목적지 설정</th><td colspan="2">구역 지도(N)에서 장소 탭 · 서울 지도(M)에서 구 선택 → 목적지로 설정 · 패널 ✕로 끄기</td></tr>
       <tr><th>자고 넘기기</th><td colspan="2">건대 구역 '내 집' 문에서 E</td></tr>
-      <tr><th>채팅(같이 하기)</th><td>스페이스 / T</td><td class="tc">채팅 버튼</td></tr>
+      <tr><th>채팅(같이 하기)</th><td>Enter / T</td><td class="tc">채팅 버튼</td></tr>
       <tr><th>게임장</th><td colspan="2">건대 구역 '게임장' (미니게임 기계 준비 중)</td></tr>
       <tr><th>플레이어 치면</th><td colspan="2">같이 하기에서 내 차로 다른 플레이어를 치면 합의금을 물어줌 · 3번째엔 병원비까지 물어주고 정신과 병동 입원 (채널 60초)</td></tr>
       <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작 · 실시간 채널에선 실제 30초 입원)</td></tr>
@@ -2726,7 +2726,7 @@ const ZoneMap = {
   bindGestures() {
     const el = $('zoneMap');
     el.addEventListener('wheel', e => { if (!this.open) return; e.preventDefault(); this.zoomAt(e.clientX, e.clientY, Math.pow(1.0015, -e.deltaY)); }, { passive: false });
-    el.addEventListener('pointerdown', e => { if (!this.open || e.target.closest('.zh') || e.target.closest('.zl')) return; this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (this.ptrs.size === 1) { this.dragged = false; this.moved = 0; } try { el.setPointerCapture(e.pointerId); } catch (err) {} });
+    el.addEventListener('pointerdown', e => { if (!this.open || e.target.closest('.zh') || e.target.closest('.zl') || e.target.closest('.mapTabs')) return; /* 탭 버튼은 포인터 캡처하면 클릭이 지도 배경으로 가서 안 눌렸다 (v79) */ this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (this.ptrs.size === 1) { this.dragged = false; this.moved = 0; } try { el.setPointerCapture(e.pointerId); } catch (err) {} });
     el.addEventListener('pointermove', e => {
       const p = this.ptrs.get(e.pointerId); if (!p) return; const q = { x: e.clientX, y: e.clientY };
       if (this.ptrs.size === 1) { this.px += q.x - p.x; this.py += q.y - p.y; this.moved += Math.hypot(q.x - p.x, q.y - p.y); if (this.moved > 6) this.dragged = true; if (this.zoom === 1) { this.px = this.py = 0; } this.applyT(); }
@@ -3820,6 +3820,7 @@ const Net = {
       return;
     }
     if (m.t === 'players') { this.handlePlayers(m); return; }
+    if (m.t === 'bye') { const bp = this.players[m.from]; if (bp) bp.gone = true; this.relay(m, conn); this.rosterT = 0; return; } // 나가기 신호: 바로 접속 목록에서 뺀다 (v79)
     const p = this.players[m.from] || (this.players[m.from] = { name: m.name || '친구' }); p.name = m.name || p.name; p.gone = false;
     if (m.t === 'init') { if (!this.host && !this.started && this.mode === 'room') { this.seed = m.seed; this.cap = m.cap; this.started = true; if (typeof startGame === 'function') startGame(m.cap, { seed: m.seed }); } return; }
     this.relay(m, conn);
@@ -3846,7 +3847,7 @@ const Net = {
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
     if (m.t === 'result') { p.result = m; return; }
   },
-  handlePlayers(m) { this.gotPlayers = true; if (Live.on && Live.ready) Live.announce(); for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); },
+  handlePlayers(m) { this.gotPlayers = true; this.rosterT = 0; if (Live.on && Live.ready) Live.announce(); for (const p of m.list) if (p.id !== this.myId) this.players[p.id] = Object.assign(this.players[p.id] || {}, { name: p.name, gone: false }); for (const id in this.players) if (!m.list.some(p => p.id === id)) this.players[id].gone = true; if (this.onStatus) this.onStatus(this.status, this.mode === 'channel' ? this.chText() : `같이 하는 친구: ${this.names().join(', ') || '(아직 없음)'}`); },
 
   /* ---- 게임 안 ---- */
   // 들어오고 나간 사람 알림 (채널·친구 방, 게임 중에만). 사용자 요청 2026-10-14
@@ -3855,8 +3856,8 @@ const Net = {
     for (const id in this.players) { const p = this.players[id]; if (!p.gone && p.last !== undefined && performance.now() - p.last > FEEL.liveGoneSec * 1000) p.gone = true; } // 위치 신호가 오래 끊기면 나간 것으로 (연결 종료 신호가 없는 경우)
     const now = new Set(this.names()); const was = this.roster || new Set();
     if (this.roster && Game.scene !== 'title') {
-      for (const n of now) if (!was.has(n)) { Toast.show(`${n} 님이 들어왔어요`, 2600); Sound.play('blip', 1.3); }
-      for (const n of was) if (!now.has(n)) Toast.show(`${n} 님이 나갔어요`, 2600);
+      for (const n of now) if (!was.has(n)) { this.pushLog(n, '님이 들어왔어요', false, true); Sound.play('blip', 1.3); } // 입장·퇴장은 채팅창에 (사용자 2026-10-15)
+      for (const n of was) if (!now.has(n)) this.pushLog(n, '님이 나갔어요', false, true);
     }
     this.roster = now;
   },
@@ -3979,7 +3980,7 @@ const Net = {
     const st = { open: '연결됨', connecting: '연결 중', lost: '끊김(재연결 중)', error: '오류', off: '' }[this.status] || this.status;
     if (Live.on) return ''; // 채널 현황은 순위 창(RankWin)·내 집 현황(AssetBox)에서 — 메뉴에는 설정만 (사용자 2026-10-14)
     const fr = Object.values(this.players).map(p => `${esc(p.name)}${p.gone ? '(나감)' : ''}${p.day !== undefined ? ` · ${dLabel(p.day)}` : ''}`).join(', ');
-    return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: 스페이스·T 키 또는 채팅 버튼</span>`;
+    return `<b>같이 하는 중</b> · ${this.mode === 'channel' ? `채널 ${this.ch}` : `방 코드 <code>${this.room}</code>`} · ${st}<br>${this.mode === 'channel' ? '같은 채널' : '친구'}: ${fr || '(아직 없음)'}<br><span class="small">채팅: Enter·T 키 또는 채팅 버튼</span>`;
   },
 };
 const GREETS = ['안녕하세요?', '반가워요!', '같이 다닐래요?', '조심히 다니세요'];
@@ -4128,9 +4129,22 @@ const Live = {
 
   /* ---- 저장 (채널별, 이 기기) ---- */
   storeKey() { return 'live' + this.ch; },
-  save() { Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0 }); },
+  save() { try { this.saveInv(); } catch (e) {} Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0 }); },
   saved(ch) { return Store.get('live' + ch, null); },
-  reset(ch) { Store.set('live' + ch, null); },
+  reset(ch) { Store.set('live' + ch, null); Store.set('liveInv' + ch, null); },
+  /* 조사 기록(뗀 서류·현장 메모·수첩·내 판단): 나갔다 와도 남게 채널별로 따로 저장 (사용자 2026-10-15 '나갔다 와도 조사했던거 저장') */
+  invKeep() { const ids = new Set(State.week.cases.map(c => c.id)); for (const key in this.mine) { const [, k, n] = key.split(':').map(Number); ids.add(`2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`); } return ids; },
+  saveInv(force) {
+    if (!this.on || !State.week) return; const ids = this.invKeep(); const pick = o => { const r = {}; for (const id in o || {}) if (ids.has(id)) r[id] = o[id]; return r; };
+    const inv = { docs: State.docs.filter(d => ids.has(d.caseId)), seen: pick(State.seen), clues: pick(State.clues), caseMemo: pick(State.caseMemo), judgment: pick(State.judgment), memo: State.memo || '', target: ids.has(State.target) ? State.target : null };
+    const js = JSON.stringify(inv); if (!force && js === this.invJs) return; this.invJs = js; Store.set('liveInv' + this.ch, inv);
+  },
+  loadInv() {
+    const inv = Store.get('liveInv' + this.ch, null); this.invJs = ''; if (!inv) return;
+    const ids = this.invKeep(); const keep = o => { const r = {}; for (const id in o || {}) if (ids.has(id)) r[id] = o[id]; return r; };
+    State.docs = (inv.docs || []).filter(d => ids.has(d.caseId)).map((d, i) => Object.assign(d, { id: i + 1 })); State.seen = keep(inv.seen); State.clues = keep(inv.clues); State.caseMemo = keep(inv.caseMemo); State.judgment = keep(inv.judgment); State.memo = inv.memo || '';
+    if (inv.target && ids.has(inv.target)) State.target = inv.target;
+  },
 
   /* ---- 시작 ---- */
   start() {
@@ -4143,6 +4157,7 @@ const Live = {
     const cases = []; for (let k = 0; k < FEEL.liveListings; k++) { const cyc = this.cycle(k); cases.push(this.makeCase(k, cyc.n)); }
     State.week = { seed: Net.seed, capital: State.capital, saleDate: '2025-11-11', cases };
     for (const key in this.mine) this.book[key] = this.book[key] || {};
+    State.docs = []; State.seen = {}; State.clues = {}; State.caseMemo = {}; State.judgment = {}; State.memo = ''; State.target = null; if (sv) this.loadInv();
     this.save();
     setTimeout(() => HUD.page(sv ? `채널 ${this.ch} 이어서 한다. 누적 손익 ${(sv.cash - sv.capital >= 0 ? '+' : '−') + fmtWon(Math.abs(sv.cash - sv.capital))}. 물건은 사무실 PC.` : `채널 ${this.ch}다. 1주가 실제 ${FEEL.liveWeekMin}분이고 물건 ${FEEL.liveListings}개가 돌아간다. 입찰은 매각기일 당일 법원에서. 낙찰하면 ${FEEL.livePayMin}분 안에 은행 대출 받고 잔금까지.`), 2500);
   },
@@ -4168,7 +4183,7 @@ const Live = {
     if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) { const k = this.queue.shift(); const m = this.mine[k]; if (m && m.opened && m.phase === 'forced') this.forcedDone(m); else if (m && m.opened) this.forfeitWin(m, '기한 경과'); else this.openResult(k); }
     this.assetTick(dt);
     this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const rb = $('rankBox'); if (!rb.hidden) { const h = this.miniBoard(); if (rb.innerHTML !== h) rb.innerHTML = h; } const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
-    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; for (const p of Object.values(Net.players)) if (!p.gone && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, at: this.now(), as: p.assets || (this.seen[p.name] && this.seen[p.name].as) }; Net.send({ t: 'asset', list: this.assetSummary() }); this.save(); }
+    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; try { this.saveInv(); } catch (e) {} for (const p of Object.values(Net.players)) if (!p.gone && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, at: this.now(), as: p.assets || (this.seen[p.name] && this.seen[p.name].as) }; Net.send({ t: 'asset', list: this.assetSummary() }); this.save(); }
   },
   // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
   roll(k) {
@@ -4541,6 +4556,7 @@ const Live = {
   },
 
   /* ---- 메뉴: 순위판 ---- */
+  onDot(doing) { return `<i class="onDot${doing === '자리 비움' ? ' idle' : ''}"></i>`; }, /* 순위창 접속 표시 초록 점 (v79) */
   board() { // 순위 창 내용 (사용자 2026-10-14: 자본 랭킹 누르면 그것만, 메뉴에는 설정만)
     const all = this.rankRows(); const here = all.filter(r => !r.me && !r.away); const rows = all.slice(0, 30);
     const f = v => fmtWon(v), fp = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v));
@@ -4548,10 +4564,10 @@ const Live = {
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
     const on = this.online();
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · 접속 ${1 + on.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
-      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>접속 안 함</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name)}</td></tr>` : ''}`).join('')}</table>
+      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>접속 안 함</small>' : r.doing ? ` <small>${this.onDot(r.doing)}${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name)}</td></tr>` : ''}`).join('')}</table>
       <div class="lvFoot">사람을 누르면 가진 집·대출이 보여요</div>
       ${all.length > rows.length ? `<div class="lvFoot">외 ${all.length - rows.length}명</div>` : ''}
-      <div class="lvRecent"><small>지금 접속 ${on.length + 1}명 (나 포함)${Net.host ? ' · 내가 방장' : ''}</small>${on.length ? on.map(o => `<div><span>${esc(o.name)}</span><b class="dim">${esc(o.doing)}</b></div>`).join('') : '<div><span>아직 나뿐이에요</span></div>'}</div>`;
+      <div class="lvRecent"><small>지금 접속 ${on.length + 1}명 (나 포함)${Net.host ? ' · 내가 방장' : ''}</small>${on.length ? on.map(o => `<div><span>${esc(o.name)}</span><b class="dim">${this.onDot(o.doing)}${esc(o.doing)}</b></div>`).join('') : '<div><span>아직 나뿐이에요</span></div>'}</div>`;
   },
 };
 /* ---- 내 집·임대 현황 창: HUD의 '내 집 … · 임대 중' 줄을 누르면 (사용자 2026-10-14: 설정으로 들어가지 말고 따로 현황) ---- */
@@ -4595,7 +4611,7 @@ const RankWin = {
   open() { if (this.open_ || !Live.on) return; this.open_ = true; Game.formOpen = true; Sound.play('paper'); $('rankWin').classList.add('in'); this.render(); this.timer = setInterval(() => this.render(), 1000); },
   close() { if (!this.open_) return; this.open_ = false; this.last = ''; Game.formOpen = false; $('rankWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip'); },
   render() {
-    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">자본 순위</div>${Live.board()}<div class="lvFoot">채팅: 스페이스·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
+    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">자본 순위</div>${Live.board()}<div class="lvFoot">채팅: Enter·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
     if (h === this.last) return; this.last = h; $('rankWin').innerHTML = h; // 바뀐 게 없으면 다시 그리지 않는다 (누르는 중에 행이 사라지지 않게)
     for (const id of ['rwClose', 'rwX']) { const b = $(id); if (b) b.onclick = () => this.close(); }
     $('rankWin').querySelectorAll('tr[data-who]').forEach(tr => tr.onclick = () => { const n = tr.dataset.who; this.sel = this.sel === n ? null : n; Sound.play('click'); this.render(); });
@@ -4793,14 +4809,24 @@ async function arriveZone(id, fromGu) {
   const [ex, ey] = best.r.pts[best.i], [nx, ny] = best.r.pts[best.j]; const L = Math.hypot(nx - ex, ny - ey); const ux = (nx - ex) / L, uy = (ny - ey) / L;
   const laneOff = best.r.oneway ? 0 : best.r.width / best.r.lanes * 0.5 * TILE * (best.r.lanes > 2 ? 1.5 : 1);
   Game.car = makeCar((ex + ux * 4) * TILE - uy * laneOff, (ey + uy * 4) * TILE + ux * laneOff, Math.atan2(uy, ux));
-  Game.car.vx = ux * 120; Game.car.vy = uy * 120; Game.car.fineCd = 5; Game.car.hitCd = 1.5; // 진입 직후 신호 과태료·수리비 유예
+  Game.car.vx = ux * 120; Game.car.vy = uy * 120; Game.car.fineCd = 5; Game.car.hitCd = 3; // 진입 직후 신호 과태료·수리비 유예 (v79: 1.5→3초)
   Game.driving = true; Game.player = makeWalker('player', Game.car.x, Game.car.y);
   Skids.length = 0; spawnDecor(); Game.traffic = spawnTraffic(z);
+  clearEntry(Game.car); // 진입한 큰길 앞을 비워 둔다: 화면이 열리기도 전에 앞차를 받던 문제 (사용자 2026-10-15 '다른 지역 넘어갈때 부딪혀')
   Cam.x = Game.car.x; Cam.y = Game.car.y; Cam.zoom = FEEL.zoom * 1.4;
   State.targetPlace = courtPlaceHere() ? 'court' : State.target && z.places.some(p => p.id === 'case:' + State.target) ? 'case:' + State.target : (z.places.some(p => p.id === State.targetPlace) ? State.targetPlace : null);
   Sound.playBgm('town');
   const sign = $('dropSign'); sign.innerHTML = `<b>${z.spec.name}</b><small>${DISTRICT[z.gu].name}${z.spec.court ? '' : ' 일대'}</small>`; sign.classList.remove('in'); void sign.offsetWidth; sign.classList.add('in'); setTimeout(() => sign.classList.remove('in'), 2600);
   Banner.area(...z.spec.dongLabel);
+}
+function clearEntry(c) {
+  const hx = Math.cos(c.a), hy = Math.sin(c.a), R = 70 * TILE;
+  const bad = q => { const dx = q.x - c.x, dy = q.y - c.y, f = dx * hx + dy * hy, side = Math.abs(-dx * hy + dy * hx); return Math.hypot(dx, dy) < 6 * TILE || (f > -4 * TILE && f < R && side < 4 * TILE); };
+  for (const o of Game.traffic) {
+    if (!bad(trafficCarPos(o))) continue;
+    let ok = false; for (let i = 0; i < 12 && !ok; i++) { o.s = Math.random() * o.road.len; const q = trafficCarPos(o); ok = !bad(q) && Math.hypot(q.x - c.x, q.y - c.y) > 30 * TILE; }
+    if (!ok) o.s = (o.s + o.road.len / 2) % o.road.len;
+  }
 }
 function spawnDecor() {
   const z = Game.zone; Game.decor = [];
@@ -5127,7 +5153,8 @@ function update(dt) {
   Net.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt);
   if (Layout.editing) return;
   if (ChatBar.open_) return;
-  const interact = consume('e') || (!Game.driving && (!Net.on || Dialog.open) && consume(' ')) || consume('Enter'); if (Game.driving) Pressed[' '] = false; // 같이 할 때는 스페이스가 채팅 (사용자 2026-10-14)
+  const enterK = consume('Enter'), netEnter = Net.on && enterK && !Dialog.open && !DocViewer.open && !PropertyCard.open_ && !$('caseList').classList.contains('in'); // 같이 할 때는 Enter가 채팅 (사용자 2026-10-15 '엔터 치면 열리는걸로'; 전엔 스페이스)
+  const interact = consume('e') || (!Game.driving && consume(' ')) || (enterK && !netEnter); if (Game.driving) Pressed[' '] = false;
   if (Dialog.open) { if (interact) Dialog.press(); for (const n of ['1', '2', '3', '4']) if (consume(n) && Dialog._choice) Dialog._choice(Number(n) - 1); return; }
   if (consume('m')) SeoulMap.toggle();
   if (SeoulMap.open) { if (consume('Escape')) SeoulMap.toggle(false); return; }
@@ -5144,7 +5171,7 @@ function update(dt) {
   if (MemoPad.open_) { if (consume('Escape')) MemoPad.close(); return; }
   if (PropertyCard.open_) { if (interact || consume('Escape')) PropertyCard.close(); return; }
   if (Notebook.open || Menu.open) return;
-  if (Net.on && (consume('t') || (!Game.driving && consume(' '))) && !Game.busy) { ChatBar.open(); return; }
+  if (Net.on && (consume('t') || netEnter) && !Game.busy) { ChatBar.open(); return; }
   State.clockMin = Math.min(170, State.clockMin + dt * FEEL.clockMinPerSec);
   const p = Game.player;
   const frozen = Game.busy || Game.trans;
@@ -5606,7 +5633,7 @@ async function staffTalk(kind) {
   if (kind === 'bank' && State.phase === 'won') { State.ticket = null; return loanReview(false); }
   if (kind === 'bank' && State.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
   if (kind === 'agent' && Live.on && Live.owned().length) { const r = await Live.agent(); if (r !== 'inv') return; } // 채널: 내 집 임대·매도
-  const greet = { registry: '네, 등기사항증명서 발급이세요?', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
+  const greet = { registry: '네, 등기사항증명서 발급이세요? 관할 상관없이 어느 등기소에서나 떼 드려요.', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
   const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기${slotLabel() ? ` <small>(${slotLabel()})</small>` : ''}`, value: 'inv', disabled: noSlot() }, { label: '그만두기', value: 'no' }]);
   if (pick !== 'inv') return;
   const localGus = [Game.zone.gu, ...(Game.zone.spec.guAlso || [])];
@@ -5616,7 +5643,8 @@ async function staffTalk(kind) {
   if (!(await spendSlot())) return;
   const c = caseById(caseId); const today = dateOfDay(State.day);
   if (kind === 'registry') {
-    await Dialog.say([say('registry', '발급 수수료 1,000원입니다. 잠시만요.')]);
+    const far = !localGus.includes(c.gu); /* 관할 상관없이 어느 등기소에서나 뗄 수 있다 (사용자 2026-10-15 '이거 넣자') */
+    await Dialog.say([say('registry', far ? `${DISTRICT[c.gu].name} 물건이네요. 관할은 ${DISTRICT[c.gu].name.replace('구', '')}등기소지만, 등기부는 관할 상관없이 어느 등기소에서나 떼 드려요. 발급 수수료 1,000원입니다. 잠시만요.` : '발급 수수료 1,000원입니다. 잠시만요. 참고로 등기부는 관할 상관없이 어느 등기소에서나 뗄 수 있어요.')]);
     await issueDoc(caseId, 'registry', `등기사항전부증명서 · ${c.name}`, docRegistry(c, today), { fee: 1000 });
   } else if (kind === 'center') {
     await Dialog.say([say('center', '경매 이해관계인이시죠? 사건번호 확인했습니다. 출력해 드릴게요.')]);

@@ -503,6 +503,44 @@ body:not(.netOn) #chatLog #chatBar { display:none; } #btnChat, #tChat { display:
 #chatHist { position:fixed; inset:0; z-index:60; background:rgba(6,8,12,.6); display:none; align-items:center; justify-content:center; pointer-events:auto; } #chatHist.in { display:flex; }
 #chatHist .chBox { position:relative; width:min(92vw, 520px); max-height:80vh; display:flex; flex-direction:column; gap:6px; background:#141922; border:1px solid #3a4152; border-radius:12px; padding:14px 16px; color:#e8eaf0; }
 #chatHist h3 { margin:0; font-size:15px; } #chatHistList { overflow:auto; flex:1; font-size:13px; line-height:1.55; } #chatHistList div { padding:2px 0; border-bottom:1px solid rgba(255,255,255,.05); } #chatHistList b { color:var(--gold); margin-right:4px; } #chatHistList div.me b { color:#9fe3ff; } #chatHistList div.news { color:#cfd6e4; } #chatHistList div.money b { color:#7fe08a; } #chatHistList div.money.minus b { color:#ff8a7a; } #chatHistList small { color:#7d8494; margin-right:6px; font-variant-numeric:tabular-nums; }
+
+/* 게임장 가위바위보 · 카지노 홀짝 · 이혁진 룰렛 (v81) */
+#rpsWin, #hjWin { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(460px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #rpsWin.in, #hjWin.in { transform:translate(-50%, -50%); } #rpsWin .rcpt, #hjWin .rcpt { width:100%; } #rpsWin .rcHead small, #hjWin .rcHead small { display:block; font:600 13px var(--ui); color:#6a5a3a; margin-top:2px; }
+.mgSec { font-weight:700; font-size:13px; margin:10px 0 5px; color:#3a2e14; } .mgSec small { font-weight:500; color:#6a5a3a; margin-left:6px; }
+.mgRow { display:flex; flex-wrap:wrap; gap:6px; } .mgRow .btn { flex:1 1 auto; min-width:76px; } .mgRow .btn small { display:block; font-size:10px; opacity:.7; } .mgRow .btn.sel, .rpsPick .btn.sel { background:var(--gold); color:#1a1408; }
+.mgNote { font-size:12px; color:#6a5a3a; margin:8px 0 0; line-height:1.5; } .mgMsg { min-height:20px; margin:10px 0 4px; font-size:14px; text-align:center; color:#3a2e14; } .mgMsg.big { font-size:17px; font-weight:700; } .mgMsg.win { color:#1f7a3a; } .mgMsg.lose { color:#c0392b; }
+.rpsBoard { display:flex; align-items:center; justify-content:space-around; margin:12px 0 4px; text-align:center; } .rpsBoard > div { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:110px; } .rpsBoard b { font-size:15px; } .rpsBoard em { font-style:normal; font-weight:800; color:#b8860b; } .rpsBoard .pip { color:#b8860b; letter-spacing:2px; } .rpsBoard .hand { font-size:54px; line-height:1.1; height:64px; } .rpsBoard small { font-size:11px; color:#6a5a3a; height:14px; }
+.mgShake { display:inline-block; font-style:normal; animation:mgShake .33s ease-in-out infinite; } @keyframes mgShake { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-12px) rotate(-8deg) } }
+.rpsPick { display:flex; gap:8px; margin-top:6px; } .rpsPick .btn { flex:1; display:flex; flex-direction:column; align-items:center; padding:8px 4px; font-weight:700; } .rpsPick .btn span { font-size:30px; line-height:1.2; } .rpsPick .btn small { font-size:10px; opacity:.6; }
+#rpsAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:66; background:#fbf8f0; color:#1a1408; border:2px solid var(--gold); border-radius:10px; padding:10px 14px; box-shadow:0 8px 24px rgba(0,0,0,.5); display:flex; flex-direction:column; gap:4px; text-align:center; font-family:var(--ui); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; min-width:240px; } #rpsAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #rpsAsk span { font-size:12px; color:#6a5a3a; } #rpsAsk .bad { color:#c0392b; } #rpsAsk div { display:flex; gap:6px; justify-content:center; margin-top:4px; }
+.hjTable { height:110px; margin:10px 0 4px; background:radial-gradient(ellipse at center, #1f7a4a 0%, #105230 75%); border:4px solid #c9a24a; border-radius:60px; display:flex; align-items:center; justify-content:center; }
+.hjCup { width:64px; height:58px; background:linear-gradient(#8a5030, #5a2e16); border-radius:30px 30px 8px 8px; box-shadow:inset 0 -6px 0 rgba(0,0,0,.25); } .hjCup.shake { animation:hjShake .16s linear infinite; } @keyframes hjShake { 0% { transform:translate(-6px,0) rotate(-6deg) } 50% { transform:translate(6px,-3px) rotate(6deg) } 100% { transform:translate(-6px,0) rotate(-6deg) } }
+.hjDice { display:flex; gap:14px; } .hjDice span { font-size:62px; line-height:1; color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.35); }
+.hjPick { display:flex; gap:10px; margin-top:10px; } .hjPick .btn { flex:1; font-size:22px; font-weight:800; padding:10px 0; color:#fff; } .hjPick .btn small { display:block; font-size:10px; font-weight:500; opacity:.7; } .hjPick .hol { background:#b8323a; } .hjPick .jjak { background:#2f5fb0; } .hjPick .btn:disabled { opacity:.45; }
+i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700; color:#fff; border-radius:9px; padding:0 5px; margin:1px; } i.hj.hol { background:#b8323a; } i.hj.jjak { background:#2f5fb0; }
+#duelDim { position:fixed; inset:0; z-index:29; pointer-events:none; opacity:0; transition:opacity 1.2s ease; background:radial-gradient(ellipse at center, rgba(40,0,0,.35) 0%, rgba(0,0,0,.88) 70%); } #duelDim.in { opacity:1; }
+#duelWin { position:fixed; inset:0; z-index:75; display:none; align-items:center; justify-content:center; background:radial-gradient(ellipse at center, #2a1416 0%, #080506 80%); font-family:var(--ui); color:#e8dcc8; } #duelWin.in { display:flex; }
+#duelWin.hit { animation:duelHit .5s ease-out; } @keyframes duelHit { 0% { background:#fff4e0; transform:translate(8px,-4px) } 20% { transform:translate(-8px,4px) } 40% { transform:translate(5px,0) } 100% { transform:none } }
+.duel { width:min(620px, calc(100% - 24px)); max-height:calc(100% - 16px); overflow:auto; display:flex; flex-direction:column; gap:10px; }
+.dSide { background:rgba(255,255,255,.04); border:1px solid rgba(201,162,74,.35); border-radius:10px; padding:8px 12px; display:flex; flex-wrap:wrap; align-items:center; gap:8px; } .dSide b { font-size:15px; color:#ffd86b; min-width:60px; } .dSide.op b { color:#ff8a7a; }
+.bolts i { font-style:normal; font-size:18px; opacity:.18; filter:grayscale(1); } .bolts i.on { opacity:1; filter:none; text-shadow:0 0 8px #ffd84a; }
+.dItems { display:flex; gap:5px; flex-wrap:wrap; flex:1 1 100%; } .dItem { background:#2a2024; border:1px solid #5a4a3a; color:#e8dcc8; border-radius:8px; padding:3px 7px; font-size:18px; display:flex; flex-direction:column; align-items:center; cursor:pointer; } .dItem small { font-size:10px; } .dItem:disabled { cursor:default; opacity:.75; } .dItem:not(:disabled):hover { border-color:#ffd86b; } .dNone { font-size:11px; opacity:.5; }
+.dTable { background:linear-gradient(#3a4a36, #263222); border:3px solid #4a3a2a; border-radius:10px; padding:10px; text-align:center; } .dTable .gun { width:min(320px, 80%); height:auto; display:block; margin:4px auto; transition:transform .3s; }
+.dShells { min-height:26px; display:flex; justify-content:center; align-items:center; gap:5px; } .sh { display:inline-block; width:10px; height:24px; border-radius:3px 3px 1px 1px; border-bottom:5px solid #c9a24a; } .sh.live { background:#c0302a; } .sh.blank { background:#2f5fb0; } .dLeft { font-size:12px; opacity:.7; }
+.dMsg { min-height:42px; margin:8px 0 4px; font-size:15px; font-weight:700; line-height:1.4; } .dTurn { font-size:12px; color:#ffd86b; }
+.dBtns { display:flex; gap:8px; flex:1 1 100%; } .dBtns .btn { flex:1; padding:10px 4px; font-weight:800; } .dBtns .btn small { display:block; font-size:10px; font-weight:500; opacity:.7; } .dBtns .btn.red { background:#9b1f2a; color:#fff; }
+.dGive { background:none; border:none; color:#a8988a; font-size:11px; text-decoration:underline; cursor:pointer; margin-left:auto; } .dGive:disabled { opacity:.35; cursor:default; }
+.short .rpsBoard .hand { font-size:40px; height:46px; } .short .hjTable { height:80px; } .short .hjDice span { font-size:46px; } .short .dMsg { min-height:30px; font-size:13px; } .short .duel { gap:6px; }
+
+/* 채팅 자동 숨김 (사용자 2026-10-15): 줄은 10초 뒤 사라지고, 입력줄은 Enter나 💬로만 연다 */
+#chatLines div { background:rgba(0,0,0,.3); animation:clFade 10s linear forwards; }
+@keyframes clFade { 0%, 85% { opacity:1; } 99.9% { opacity:0; } 100% { opacity:0; max-height:0; padding:0; margin:0; overflow:hidden; } }
+.chatOpen #chatLines div { animation:none !important; opacity:1; background:rgba(0,0,0,.5); }
+body.netOn:not(.chatOpen) #chatLog #chatBar { display:none; }
+#chatPeek { display:none; pointer-events:auto; margin-top:4px; width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,.25); background:rgba(12,16,26,.55); font-size:15px; line-height:1; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.netOn #chatPeek { display:inline-flex; } .chatOpen #chatPeek { display:none; } .short #chatPeek { width:26px; height:26px; font-size:13px; }
+
+#assetBox .loanSec { border-color:#e0b0a8; background:#fff6f3; } #assetBox .loanRow { display:flex; flex-direction:column; gap:1px; font-size:12px; padding:6px 0 0; margin-top:6px; border-top:1px dashed #e0c8b8; } #assetBox .loanRow b { font-size:13px; } #assetBox .loanRow span { color:#5a4a3a; }
 </style>
 </head>
 <body>
@@ -548,7 +586,7 @@ body:not(.netOn) #chatLog #chatBar { display:none; } #btnChat, #tChat { display:
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
   <div id="tutor"></div>
-  <div id="chatLog"><div id="chatLines" title="눌러서 지난 기록 보기"></div><div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="Enter로 채팅"><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div></div>
+  <div id="chatLog"><div id="chatLines" title="눌러서 지난 기록 보기"></div><button id="chatPeek" title="채팅 (Enter)">💬</button><div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="Enter로 채팅"><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div></div>
   <div id="chatHist"><div class="chBox"><button class="xClose" id="chHistX" aria-label="닫기">×</button><h3>채팅 · 소식 · 내 돈 기록</h3><div id="chatHistList"></div><div class="small dim">최근 300줄까지 남아요. 나갔다 와도 그대로예요.</div></div></div>
   <canvas id="minimap" width="180" height="130" title="서울 지도 (M)"></canvas>
   <div id="hudCash">₩ 0</div>
@@ -652,6 +690,7 @@ body:not(.netOn) #chatLog #chatBar { display:none; } #btnChat, #tChat { display:
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
+<div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
 <div id="assetBox" class="ovl"></div>
 <div id="rankWin" class="ovl"></div>
 <div id="dupGate" class="ovl"></div>
@@ -1406,6 +1445,9 @@ const FEEL = {
   liveMonthMin: 15,       // 실시간 채널: 집을 보유하는 동안 '한 달' = 게임을 켜 둔 실제 몇 분 (월세 입금·이자·보유 개월). 4→15 (사용자 2026-10-14: 월세 방치로 하루 이틀에 1억은 너무 쉽다)
   liveRentYield: 0.045,   // 실시간 채널: 연 임대수익률 → 월세 = 시세 × 이 값 / 12
   liveSaleMin: 3,         // 실시간 채널: 매도 내놓은 뒤 매수 희망자가 나타나기까지 실제 분
+  liveLeaseMonths: 2,     // 임대 계약 기간 (채널 '달'). 실제 2년을 게임에선 짧게 (사용자 2026-10-15 '세입자 찾아가서 나가 달라고')
+  liveNoticeMonths: 0.5,  // 만료 통지 마감: 계약 끝나기 이만큼 전까지 말해야 한다 (실제 2개월 전). 늦으면 묵시적 갱신
+  liveMoveOutSec: 25,     // 이사비 합의 뒤 세입자가 짐 빼는 실제 초
   liveRepairSec: 60,      // 실시간 채널: 수리(인테리어) 공사 실제 초
   liveQuickSale: 0.93,    // 실시간 채널: 급매 가격 비율 (아파트 기준; 종류별은 liveLiq)
   // 실시간 채널: 물건 종류별 유동성 (사용자 2026-10-14 '토지·상가·근생은 잘 안 팔리잖아'): wait = 매수자 기다리는 시간 배수(× liveSaleMin), lo~hi = 매수 희망가 범위(기준값 대비), miss = 한 번 기다려도 손님이 안 오는 확률, quick = 급매 비율, rent = 월세 배수
@@ -1440,7 +1482,7 @@ const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_M
 function saveSettings() { Store.set('settings', Settings); }
 /* 등장인물 이름: 고정. 사용자가 2026-10-14에 정해 준 이름이며 메뉴에서 바꿀 수 없다 (사용자 요청 v36) */
 // [역할 키, 이름, 역할]
-const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '한민경', '등기소 직원'], ['center', '이체은', '주민센터 직원'], ['bank', '조하영', '은행원'], ['savings', '조수민', '저축은행 직원'], ['agent', '김해람', '중개사'], ['court', '이주원', '집행관'], ['arcade', '장우준', '게임장 사장'], ['hospital', '김정윤', '간호사'], ['shop', '이채현', '편집숍 점원'], ['guest', '김건명', '대기 손님'], ['vip', '이혁진', '길에서 만나는 멋쟁이']];
+const CAST_ROLES = [['danye', '단예 선배', '멘토 (사무실)'], ['registry', '한민경', '등기소 직원'], ['center', '이체은', '주민센터 직원'], ['bank', '조하영', '은행원'], ['savings', '조수민', '저축은행 직원'], ['agent', '김해람', '중개사'], ['court', '이주원', '집행관'], ['arcade', '장우준', '게임장 사장'], ['hospital', '김정윤', '간호사'], ['shop', '이채현', '편집숍 점원'], ['guest', '김건명', '대기 손님'], ['vip', '이혁진', '길에서 만나는 멋쟁이'], ['casino', '카지노 딜러', '카지노 딜러']];
 const CAST_DEFAULT = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[1]]));
 const CAST_ROLE = Object.fromEntries(CAST_ROLES.map(r => [r[0], r[2]]));
 function castLabel(k) { const n = castName(k), role = CAST_ROLE[k]; return role && k !== 'danye' && n !== role ? `${n} (${role})` : n; } // 대화창 이름: '한민경 (등기소 직원)'
@@ -1483,7 +1525,7 @@ Object.assign(FEEL, {
   fineSpeed: 40000,       // 보행자 근처 과속
   carEnterDist: 26,
   promptSound: false,     // 상호작용 표시(E)가 뜰 때 소리 (사용자 요청으로 끔)
-  vipGift: 1000,          // 이혁진이 말 걸 때마다 주는 돈 (100 → 1000, 사용자 2026-10-15 '천원으로')
+  vipGift: 1000, vipDuelChance: 0.15, vipDuelStake: 1e7, /* 깜짝 룰렛: 받을 때 15% 확률로 제안, 판돈 천만 원 */ // 이혁진이 말 걸 때마다 주는 돈 (100 → 1000, 사용자 2026-10-15 '천원으로')
   liveSecondMin: 3,       // 채널 차순위매수신고: 최고가매수인 잔금 기한을 기다리는 시간(분)
   fuelDrive: 5000,        // 직접 운전해서 옆 구로 넘어갈 때 주유비(원, ±20%)
   fuelMapBase: 15000,     // 지도에서 눌러 이동할 때 기본 주유비(원)
@@ -1497,6 +1539,7 @@ Object.assign(FEEL, {
   bumpSpeed: 25,          // 이 속도 이상이면 '툭' 접촉음, 70 이상이면 쾅(수리비)
   channelWaitSec: 20,     // 공개 채널 개찰 대기 최대 시간(초)
   chatBubbleTime: 6,      // 말풍선이 머리 위에 떠 있는 시간(초)
+  chatLineSec: 10,        // 피드 한 줄이 떠 있다가 사라지는 시간(초). 입력줄을 열면 다시 다 보인다 (사용자 2026-10-15 '채팅창이 시야를 가린다' → 자동 숨김)
   chatLogTime: 30,        // 왼쪽 위 피드(채팅·플레이어 소식)가 남는 시간(초) · 12→30 (피드로 바뀌며, 2026-10-14)
   settleMin: 300000, settleMax: 1000000, // 걷다가 차에 치였을 때 내가 받는 합의금(원)
   hospitalHits: 3,        // 이 횟수째 치이면 입원 (합의금 대신 입원비를 내고 병원 앞에서 다시 시작)
@@ -1810,7 +1853,8 @@ const ZONE_SPECS = {
       { id: 'center', kind: 'center', name: '화양동 주민센터', near: [90, 147] },
       { id: 'agent', kind: 'agent', name: '건대 공인중개사', near: [210, 129] },
       { id: 'home', kind: 'home', name: '내 집', near: [48, 100] }, // 자고 일어나면 다음 날(또는 매각기일) 아침
-      { id: 'arcade', kind: 'arcade', name: '건대 게임장', near: [66, 132] }, // 미니게임 기계 자리(추후)
+      { id: 'arcade', kind: 'arcade', name: '건대 게임장', near: [66, 132] }, // 가위바위보 기계 (v81)
+      { id: 'casino', kind: 'casino', name: '건대 카지노', near: [78, 134] }, // 게임장 옆, 홀짝 테이블 (사용자 2026-10-15)
       { id: 'hospital', kind: 'hospital', name: '건대병원', near: [232, 150] }, // 차에 여러 번 치이면 여기서 다시 시작
       { id: 'shop', kind: 'shop', name: '건대 편집숍', near: [128, 150] }, // 옷·차 스킨 상점 (사용자 요청 2026-10-14)
     ],
@@ -3006,7 +3050,7 @@ const NavPick = {
     const z = Game.zone; if (!z || Game.scene !== 'zone' || z.spec.court) return;
     const nd = State.navDest, cur = nd ? (nd.place ? 'p:' + nd.place : 'g:' + nd.gu) : '';
     let auto = null; { const keep = State.navDest; State.navDest = null; try { auto = Nav.goalOf(); } catch (e) {} State.navDest = keep; }
-    const ICON = { court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', shop: '🛍️', site: '📍' };
+    const ICON = { court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', shop: '🛍️', casino: '🎲', site: '📍' };
     const btn = (attr, cls, label) => `<button ${attr} class="${cls}">${label}</button>`;
     let h = `<h3><span>어디로 갈까요?<small>누르면 바로 안내</small></span><button class="nx" id="navPickX" title="닫기">✕</button></h3>`;
     if (auto && !cur) h += `<div class="sec">추천</div><div class="grid">${btn('data-auto="1"', 'rec', '★ ' + esc(auto.label))}${btn('data-free="1"', Nav.free ? 'sel' : '', '🚗 그냥 운전하기 <small>목적지 없이</small>')}</div>`;
@@ -3107,6 +3151,14 @@ const INTERIOR_DEFS = {
     '#..A.A.A.A...#',
     '#M.F.......M.#',
     '######D#######' ], npc: { K: 'occ_young' } },
+  casino: { title: '카지노', floor: 'casino', bgm: 'town', tone: 'neon', map: [
+    '##############',
+    '#....K....K..#',
+    '#...OOO..OOO.#',
+    '#............#',
+    '#.SS......SS.#',
+    '#M..........M#',
+    '######D#######' ], npc: { K: 'banker' } },
   shop: { title: '편집숍', floor: 'wood', bgm: 'town', tone: 'neon', map: [
     '############',
     '#J.J.J.J..K#',
@@ -3139,7 +3191,7 @@ const INTERIOR_DEFS = {
     '#.......W..#',
     '#####D######' ], npc: {} },
 };
-const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집', arcade: '게임장', hospital: '병원', shop: '상점' };
+const INTERIOR_KIND_LABEL = { savings: '저축은행', court: '법원', office: '사무실', registry: '등기소', center: '주민센터', agent: '공인중개사', bank: '은행', site: '현장', home: '집', arcade: '게임장', hospital: '병원', shop: '상점', casino: '카지노' };
 // 평일 낮에만 여는 곳
 const WEEKDAY_ONLY = ['registry', 'center', 'bank', 'savings'];
 
@@ -3152,7 +3204,7 @@ function buildInterior(place) {
   let exit = null;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ch = map[y][x];
-    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGXAJV'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
+    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGXAJVO'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
     if (ch === 'D') exit = { tx: x, ty: y };
     if (ch === 'S') objs.push({ type: 'chair', tx: x, ty: y });
     if (ch === 'P') objs.push({ type: 'pc', tx: x, ty: y, label: 'PC' });
@@ -3163,7 +3215,8 @@ function buildInterior(place) {
     if (ch === 'W') objs.push({ type: 'memo', tx: x, ty: y, label: '메모장' });
     if (ch === 'J') objs.push({ type: 'rack', tx: x, ty: y, label: '옷 구경' });
     if (ch === 'V') objs.push({ type: 'carshop', tx: x, ty: y, label: '차 스킨 구경' });
-    if (ch === 'A') objs.push({ type: 'arcade', tx: x, ty: y, label: '게임기', no: objs.filter(o => o.type === 'arcade').length + 1 });
+    if (ch === 'O') objs.push({ type: 'holjjak', tx: x, ty: y, label: '홀짝' });
+    if (ch === 'A') objs.push({ type: 'arcade', tx: x, ty: y, label: '가위바위보', no: objs.filter(o => o.type === 'arcade').length + 1 });
     if (ch === 'U') objs.push({ type: 'roof', tx: x, ty: y, label: cs && cs.type === '토지' ? '둘러보기' : '옥상 계단' });
     if (ch === 'H' && cs && cs.lien) objs.push({ type: 'banner', tx: x, ty: y, label: '현수막' });
     if (def.npc[ch]) npcs.push({ sprite: def.npc[ch], tx: x, ty: y, x: x * TILE + 8, y: y * TILE + 14, dir: 0, role: ch === 'N' ? 'danye' : 'clerk', breath: Math.random() * 2 });
@@ -3175,7 +3228,7 @@ function buildInterior(place) {
   // 대기 손님(장식)
   const chairs = objs.filter(o => o.type === 'chair');
   const guests = [];
-  if (place.kind !== 'office' && place.kind !== 'site' && place.kind !== 'arcade') for (let i = 0; i < Math.min(chairs.length, 2 + Math.floor(Math.random() * 2)); i++) {
+  if (place.kind !== 'office' && place.kind !== 'site' && place.kind !== 'arcade' && place.kind !== 'casino') for (let i = 0; i < Math.min(chairs.length, 2 + Math.floor(Math.random() * 2)); i++) {
     const c = chairs[Math.floor(Math.random() * chairs.length)]; if (c.taken) continue; c.taken = true;
     guests.push({ sprite: ['occ_oldman', 'occ_auntie', 'occ_young', 'walker3'][i % 4], x: c.tx * TILE + 8, y: c.ty * TILE + 14, sit: true, dir: 3 });
   }
@@ -3185,7 +3238,7 @@ function buildInterior(place) {
 
 function drawInterior(ctx, room, t) {
   const { def, W, H, cs } = room;
-  const FLOOR = { wood: ['#7a5536', '#6e4b2f'], marble: ['#d9d6cf', '#cfcbc2'], stone: ['#8d8a84', '#827f79'], grass: ['#7a9a5a', '#729254'], carpet: ['#2b2446', '#272040'] }[def.floor];
+  const FLOOR = { wood: ['#7a5536', '#6e4b2f'], marble: ['#d9d6cf', '#cfcbc2'], stone: ['#8d8a84', '#827f79'], grass: ['#7a9a5a', '#729254'], carpet: ['#2b2446', '#272040'], casino: ['#4a1620', '#40121b'] }[def.floor];
   const WALL = { warm: '#3b2c27', admin: '#2c3a4d', bright: '#e6ebf0', dim: '#3a3a3e', fence: '#6a5a44', neon: '#15122a' }[def.tone];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ch = def.map[y][x], X = x * TILE, Y = y * TILE;
@@ -3233,6 +3286,12 @@ function drawInterior(ctx, room, t) {
       ctx.fillStyle = '#6a6480'; ctx.fillRect(X + 2, Y + 10, 12, 4);
       ctx.fillStyle = '#e8e8f0'; ctx.fillRect(X + 4, Y + 11, 1, 3); ctx.fillStyle = '#ff5a5a'; ctx.fillRect(X + 3, Y + 9, 3, 3);
       ctx.fillStyle = '#ffd84a'; ctx.fillRect(X + 9, Y + 11, 2, 2); ctx.fillStyle = '#4ad0ff'; ctx.fillRect(X + 12, Y + 11, 2, 2);
+    }
+    else if (ch === 'O') { // 홀짝 테이블: 초록 펠트 + 금테, 가운데 칸에 주사위 컵
+      const L = def.map[y][x - 1] === 'O', Rr = def.map[y][x + 1] === 'O';
+      ctx.fillStyle = '#c9a24a'; ctx.fillRect(X, Y + 1, TILE, 14); ctx.fillStyle = '#16603a'; ctx.fillRect(X + (L ? 0 : 2), Y + 3, TILE - (L ? 0 : 2) - (Rr ? 0 : 2), 10);
+      if (L && Rr) { ctx.fillStyle = '#6b3a1e'; ctx.beginPath(); ctx.arc(X + 8, Y + 8, 4, 0, 7); ctx.fill(); ctx.fillStyle = '#8a5030'; ctx.fillRect(X + 6, Y + 4, 4, 2); }
+      else { ctx.fillStyle = '#f2f2f2'; ctx.fillRect(X + (L ? 4 : 7), Y + 6, 3, 3); ctx.fillStyle = '#c0302a'; ctx.fillRect(X + (L ? 5 : 8), Y + 7, 1, 1); }
     }
     else if (ch === 'R') { ctx.fillStyle = '#5a3a28'; ctx.fillRect(X, Y - 4, TILE, 6); ctx.fillStyle = '#ddd'; ctx.fillRect(X + 6, Y + 3, 4, 4); }
   }
@@ -3841,6 +3900,8 @@ const Net = {
     if (m.t === 'init') { if (!this.host && !this.started && this.mode === 'room') { this.seed = m.seed; this.cap = m.cap; this.started = true; if (typeof startGame === 'function') startGame(m.cap, { seed: m.seed }); } return; }
     this.relay(m, conn);
     if (m.t === 'lbid') { Live.onBid(m); return; }
+    if (m.t === 'rps') { Rps.onNet(m, p); return; } // 게임장 가위바위보 (v81)
+    if (m.t === 'vduel') { VipDuel.onNet(m, p); return; } // 이혁진 룰렛: 한 번에 한 사람
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'hosp') { Pvp.onHosp(m, p); return; }
     if (m.t === 'lbook') { Live.onBook(m); return; }
@@ -3925,11 +3986,12 @@ const Net = {
     this.log.push(e); if (this.log.length > 5) this.log.shift();
     const h = this.hist(); h.push(e); if (h.length > 300) h.splice(0, h.length - 300); this.histSave();
     const el = $('chatLines'); if (!el) return;
-    el.innerHTML = this.log.map(l => this.logRow(l)).join(''); $('chatLog').classList.add('in');
+    el.innerHTML = this.log.map(l => this.logRow(l, false, true)).join(''); $('chatLog').classList.add('in');
     clearTimeout(this.logT); if (!document.body.classList.contains('netOn')) this.logT = setTimeout(() => $('chatLog').classList.remove('in'), FEEL.chatLogTime * 1000);
     if (ChatHist.open_) ChatHist.render();
   },
-  logRow(l, t) { return `<div class="${l.me ? 'me' : ''}${l.news ? ' news' : ''}${l.money ? ' money' : ''}${l.minus ? ' minus' : ''}">${t ? `<small>${new Date(l.at).toTimeString().slice(0, 5)}</small>` : ''}<b>${esc(l.name)}</b> ${esc(l.text)}</div>`; },
+  // fade: 피드 줄은 FEEL.chatLineSec 뒤 저절로 사라진다 (다시 그려도 나이만큼 음수 지연을 줘서 이어서 흐려진다, 사용자 2026-10-15 '시야를 가리네')
+  logRow(l, t, fade) { return `<div class="${l.me ? 'me' : ''}${l.news ? ' news' : ''}${l.money ? ' money' : ''}${l.minus ? ' minus' : ''}"${fade ? ` style="animation-duration:${FEEL.chatLineSec}s;animation-delay:-${Math.max(0, (Date.now() - l.at) / 1000).toFixed(1)}s"` : ''}>${t ? `<small>${new Date(l.at).toTimeString().slice(0, 5)}</small>` : ''}<b>${esc(l.name)}</b> ${esc(l.text)}</div>`; },
   // 지난 기록: 채널(또는 방)마다 저장해서 나갔다 와도 남는다
   histKey() { return 'chatHist' + (Live.on ? Live.ch : 'room'); },
   hist() { const k = this.histKey(); if (this._hk !== k) { this._hk = k; this._h = Store.get(k, []) || []; } return this._h; },
@@ -4096,6 +4158,7 @@ const ChatBar = {
     $('chatClose').onclick = () => this.close();
     $('tChat').onclick = () => this.open();
     $('btnChat').onclick = () => this.open();
+    $('chatPeek').onpointerdown = e => e.preventDefault(); $('chatPeek').onclick = () => this.open(); // 입력줄은 평소 숨기고 💬(또는 Enter)로만 연다
     $('chatLines').onclick = () => ChatHist.toggle(true);
     $('chHistX').onclick = () => ChatHist.toggle(false);
     $('chatHist').onclick = e => { if (e.target.id === 'chatHist') ChatHist.toggle(false); };
@@ -4416,6 +4479,42 @@ const Live = {
   owned() { return Object.values(this.mine).filter(m => m.opened && m.won && !m.done && m.phase === 'own'); },
   ownedFor(c) { return this.owned().find(m => m.caseId === c.id) || null; },
   monthMs() { return FEEL.liveMonthMin * 60000; },
+  leaseMs() { return FEEL.liveLeaseMonths * this.monthMs(); },
+  TENANTS: ['강민찬', '이채현', '정연우', '고현서', '김건명'], // 고정 세입자 이름 (generator.js TENANT_NAMES와 같다)
+  // 세입자 성격: 같은 집·같은 세입자면 누구에게나 같다. easy 이사비 2달치 / normal 3달치 / tough 5달치 + 갱신요구권을 쓴다
+  tenantOf(m) { const a = m.asset, c = this.caseFor(this.key(m.k, m.n)); const R = caseRng(c, 1500 + (a.tenantNo || 0)); const kind = R.pick(['easy', 'normal', 'normal', 'tough']); return { name: a.tenant || this.TENANTS[(m.k + (a.tenantNo || 0)) % this.TENANTS.length], kind, months: { easy: 2, normal: 3, tough: 5 }[kind], renew: kind === 'tough' || R.chance(0.3) }; },
+  moveOut(m) {
+    const a = m.asset, nm = m.name.split(' ')[0], who = a.tenant || '세입자';
+    a.rentOn = false; a.leaveAt = undefined; a.leaseEnd = undefined; a.renewUsed = false; a.notice = false; a.renewNo = 0; a.tenantNo = (a.tenantNo || 0) + 1; a.tenant = null;
+    if (Net.on) Net.news(`${nm} 집 세입자 이사 나감`); if (Game.player) { Toast.show(`${who} 이사 나갔어요. ${nm} 집이 비었어요. 이제 수리할 수 있어요.`, 3500); Sound.play('ding'); }
+  },
+  // 임대 중인 집 초인종: 세입자와 이야기 (만료 통지 · 이사비 합의). 사용자 2026-10-15 '임대 그만하고 수리하고 다시 임대할 때 현실처럼'
+  async tenantTalk(m, c) {
+    const a = m.asset, T = this.tenantOf(m); if (!a.tenant) { a.tenant = T.name; this.save(); }
+    const sayT = text => ({ name: `${T.name} (세입자)`, sprite: 'occ_young', voice: 'occ', text });
+    const left = Math.max(0, a.leaseEnd - (a.held || 0)), late = left < FEEL.liveNoticeMonths * this.monthMs(), pay = Math.round(a.rent * T.months / 1e4) * 1e4;
+    if (a.leaveAt !== undefined) {
+      const pick = await Dialog.say([sayT(`짐 정리하고 있어요. ${this.mmss(Math.max(0, a.leaveAt - (a.held || 0)))} 뒤에 나가요.`)], [{ label: '알겠어요', value: 'n' }]); void pick; return;
+    }
+    Sound.play('ding'); await sleep(250);
+    const opts = [];
+    if (!a.notice) opts.push({ label: `계약 끝나면 나가 달라고 하기 <small>만료 통지 · 남은 계약 ${this.mmss(left)}</small>`, value: 'notice' });
+    opts.push({ label: `이사비 주고 일찍 나가 달라고 하기 <small>합의 퇴거</small>`, value: 'deal' }, { label: '그냥 인사만', value: 'n' });
+    const pick = await Dialog.say([sayT(`집주인분이시죠? 무슨 일이세요?${a.notice ? ` 계약 끝나는 날(${this.mmss(left)} 뒤) 나가기로 했잖아요.` : ''}`)], opts);
+    if (pick === 'notice') {
+      if (late) { a.notice = true; a.leaveAt = a.leaseEnd + this.leaseMs(); this.save(); await Dialog.say([sayT('지금 말씀하시면 늦었어요. 계약 끝나기 2개월 전까지는 알려 주셨어야죠.'), sayT(`이번 계약은 그대로 연장돼요(묵시적 갱신). 그다음 계약이 끝나는 날 나갈게요.`), { name: castName('danye'), sprite: 'danye', voice: 'danye', text: `주택임대차보호법 6조. 만료 6개월~2개월 전에 갱신 거절을 안 하면 같은 조건으로 다시 계약한 걸로 봐. 게임에선 계약 끝나기 ${FEEL.liveNoticeMonths}달 전까지야.` }]); return; }
+      if (T.renew && !a.renewUsed) { a.renewUsed = true; a.leaseEnd += this.leaseMs(); this.save(); await Dialog.say([sayT('저 계약갱신요구권 쓸게요. 한 번은 더 살 수 있잖아요.'), sayT('월세도 5% 넘게는 못 올리시는 거 아시죠?'), { name: castName('danye'), sprite: 'danye', voice: 'danye', text: '주택임대차보호법 6조의3. 세입자가 한 번은 갱신을 요구할 수 있고, 집주인이 직접 살거나 재건축하는 것 같은 사유가 아니면 거절 못 해. 수리하려고는 안 돼. 빨리 비우려면 이사비로 합의하는 수밖에.' }]); return; }
+      a.notice = true; a.leaveAt = a.leaseEnd; this.save(); if (Net.on) Net.news(`${m.name.split(' ')[0]} 집 세입자에게 계약 만료 통지`);
+      await Dialog.say([sayT(`알겠어요. 계약 끝나는 날 나갈게요. ${this.mmss(left)} 남았네요. 그때까지 월세는 그대로 낼게요.`)]); return;
+    }
+    if (pick === 'deal') {
+      const ask = await Dialog.say([sayT(T.kind === 'tough' ? `갑자기요? 저도 이사할 집 구해야 하는데… 이사비랑 중개수수료, 월세 ${T.months}달치는 주셔야 해요.` : `이사비 주시면 생각해 볼게요. 월세 ${T.months}달치 정도면 괜찮아요.`), sayT(`${fmtWon(pay)} 주시면 ${FEEL.liveMoveOutSec}초 안에 짐 빼고 나갈게요.`)], [{ label: `${fmtWon(pay)} 주고 합의`, value: 'y', disabled: State.cash < pay }, { label: '너무 비싸요', value: 'n' }]);
+      if (ask !== 'y') { await Dialog.say([sayT('그럼 계약대로 살게요.')]); return; }
+      if (typeof Money !== 'undefined') Money.why(`${T.name} 이사비 합의`); State.cash -= pay; HUD.setCash(State.cash); Sound.play('coins');
+      a.leaveAt = (a.held || 0) + FEEL.liveMoveOutSec * 1000; a.movePay = (a.movePay || 0) + pay; this.save(); if (Net.on) Net.news(`${m.name.split(' ')[0]} 집 세입자와 이사비 ${fmtWon(pay)} 합의`);
+      await Dialog.say([sayT('감사합니다. 바로 짐 쌀게요.'), { name: castName('danye'), sprite: 'danye', voice: 'danye', text: '합의서는 꼭 써 둬. 나가는 날, 이사비 받는 날을 적어 두면 나중에 말이 안 바뀌어.' }]);
+    }
+  },
   payLeft(m) { return Math.max(0, m.payBy - this.now()); },
   prePay(m) { return m.phase === 'won' || m.phase === 'savings' || m.phase === 'pay'; }, // 잔금 전
   heldCases() { return Object.values(this.mine).filter(m => m.opened && m.won && !m.done).map(m => this.caseFor(this.key(m.k, m.n))); },
@@ -4519,6 +4618,11 @@ const Live = {
       a.held += Math.min(Math.max(0, dt), 1) * 1000; // 켜 둔 동안만 흐르는 보유 시간 (잠들었다 깨도 한 번에 1초만)
       const int = this.monthlyInterest(m);
       if (int && a.held >= a.intHeld + this.monthMs()) { a.intHeld += this.monthMs(); a.intPaid += int; State.cash -= int; HUD.setCash(State.cash); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ')[0], amt: -int, cash: State.cash, kind: 'int' }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player) { Toast.show(`대출 이자 ${fmtWon(int)} 빠져나감 (${m.name.split(' ')[0]})`); Sound.play('click'); } }
+      if (a.rentOn) { // 임대 계약: 이사 나가는 날 / 만료 통지 없으면 묵시적 갱신
+        if (a.leaseEnd === undefined) { a.leaseEnd = (a.held || 0) + this.leaseMs(); changed = true; } // 예전 저장분
+        if (a.leaveAt !== undefined && a.held >= a.leaveAt) { this.moveOut(m); changed = true; }
+        else if (a.held >= a.leaseEnd) { a.leaseEnd += this.leaseMs(); a.renewNo = (a.renewNo || 0) + 1; changed = true; if (Game.player) HUD.page(`${m.name.split(' ')[0]} 임대 계약이 그대로 연장됐어요. 만료 전에 아무도 말을 안 해서 묵시적 갱신이에요.`, a.tenant || '세입자'); }
+      }
       if (a.repair === 'doing' && this.now() >= a.repairUntil) { a.repair = 'done'; changed = true; if (Game.player) { Toast.show(`${m.name.split(' ')[0]} 수리 끝 · 집값 +${Math.round((FEEL.liveRepairPremium - 1) * 100)}%, 월세 +10%`, 3000); Sound.play('ding'); } }
       if (a.rentOn && a.held >= (a.rentHeld || 0) + this.monthMs()) { a.rentHeld = (a.rentHeld || 0) + this.monthMs(); a.rentAt = this.now(); a.rentTotal += a.rent; a.rentMonths++; State.cash += a.rent; HUD.setCash(State.cash); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ')[0], amt: a.rent, cash: State.cash }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player) { Toast.show(`월세 입금 ${fmtWon(a.rent)} (${m.name.split(' ')[0]})`); Sound.play('coins'); } }
       const c0 = this.caseFor(this.key(m.k, m.n));
@@ -4533,6 +4637,7 @@ const Live = {
   // 현장: 처음 들어가면 상태가 드러난다 (시드 고정) → 수리
   async home(m, c) {
     const a = m.asset;
+    if (a.rentOn) return this.tenantTalk(m, c); // 세입자가 살고 있으면 초인종 → 세입자 (수리는 비운 뒤에)
     if (!a.cond) {
       a.cond = this.condOf(c); this.save(); const K = this.COND[a.cond];
       Sound.play('door'); await sleep(300);
@@ -4562,14 +4667,16 @@ const Live = {
     }
     if (a.listed) { await Dialog.say([say('agent', `매수자 찾는 중이에요. ${this.mmss(Math.max(0, a.listed + this.saleWaitMs(c) - this.now()))} 뒤에 손님이 ${Q.miss ? `올 수도 있어요. ${c.type}은(는) ${Q.note}` : '올 거예요'}.${a.missNo ? ` (벌써 ${a.missNo}번 허탕)` : ''}`)], [{ label: `급매로 지금 팔기 <small>${fmtWon(quick)}</small>`, value: 'q' }, { label: '매도 취소 <small>매물 내리기</small>', value: 'c' }, { label: '기다리기', value: 'n' }]).then(async p => { if (p === 'q') return this.sold(m, c, quick, true); if (p === 'c') { a.listed = null; a.offer = null; this.save(); await Dialog.say([say('agent', '매물 내렸어요. 다시 팔고 싶으면 또 오세요.')]); } }); return 'done'; }
     const opts = [];
+    if (a.rentOn) opts.push({ label: '임대 그만하기 <small>세입자 내보내기</small>', value: 'stop' });
     if (!a.rentOn) opts.push({ label: `임대 내놓기 <small>월세 ${fmtWon(rent)} · ${FEEL.liveMonthMin}분마다 입금</small>`, value: 'rent' });
     opts.push({ label: `매도 내놓기 <small>기준값의 ${Math.round(Q.lo * 100)}~${Math.round(Q.hi * 100)}% · 매수자 ${waitMin}분${Q.miss ? ` · 허탕 ${Math.round(Q.miss * 100)}%` : ''}</small>`, value: 'sell' });
     opts.push({ label: `급매 <small>${fmtWon(quick)} 바로 (${Math.round(Q.quick * 100)}%)</small>`, value: 'quick' });
     opts.push({ label: '시세 물어보기', value: 'inv' }, { label: '그만두기', value: 'n' });
     const pick = await Dialog.say([say('agent', `${c.name}, 상태 ${K.label}${a.repair === 'done' ? '(수리 끝)' : ''}${a.rentOn ? `, 월세 ${fmtWon(a.rent)} 받는 중` : ''}. ${a.cond !== 'good' && a.repair !== 'done' ? `이 상태면 시세보다 ${Math.round((1 - K.mod) * 100)}% 깎여요. ` : ''}어떻게 할까요?`)], opts);
-    if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); a.rentHeld = a.held || 0; this.save(); Net.news(`${m.name.split(' ')[0]} 집 임대 놓음 · 월세 ${fmtWon(rent)}`); await Dialog.say([say('agent', `세입자 바로 붙였어요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
+    if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); a.rentHeld = a.held || 0; a.leaseEnd = (a.held || 0) + this.leaseMs(); a.notice = false; a.renewUsed = false; a.leaveAt = undefined; a.tenant = this.tenantOf(m).name; this.save(); Net.news(`${m.name.split(' ')[0]} 집 임대 놓음 · 월세 ${fmtWon(rent)}`); await Dialog.say([say('agent', `세입자 바로 붙였어요. ${a.tenant} 씨예요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다.`), say('agent', `계약 기간은 ${FEEL.liveLeaseMonths}달. 수리하거나 직접 쓰려면 세입자가 나가야 하니까, 그땐 집에 가서 직접 이야기하세요. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
     if (pick === 'sell') { a.listed = this.now(); a.missNo = 0; this.save(); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 매물로 내놓음`); await Dialog.say([say('agent', `내놨어요. ${c.type}은(는) ${Q.note}. ${waitMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
     if (pick === 'quick') return this.sold(m, c, quick, true);
+    if (pick === 'stop') { const left = Math.max(0, (a.leaseEnd || 0) - (a.held || 0)); await Dialog.say([say('agent', `세입자분 계약이 ${this.mmss(left)} 남았어요. 집주인이 마음대로 계약을 끝낼 순 없어요.`), say('agent', `집에 가서 ${a.tenant || '세입자'} 씨한테 직접 말씀하세요. 계약 끝나기 ${FEEL.liveNoticeMonths}달 전까지 만료 통지를 하든지, 이사비를 주고 일찍 나가 달라고 합의하든지요.`)]); return 'done'; }
     return pick;
   },
   async sold(m, c, price, quick) {
@@ -4626,7 +4733,7 @@ const Live = {
   },
   rankCls(v) { return v > State.capital ? 'up' : v < State.capital ? 'down' : ''; }, // 시작 자본보다 불었으면 초록, 줄었으면 빨강
   // 지금 접속한 사람이 어디서 뭘 하는지 (pos 메시지로 아는 만큼만). 사용자 요청 2026-10-14: '실시간으로 누가 플레이 중인지'
-  PLACE_KO: { office: '사무실', registry: '등기소', center: '주민센터', bank: '은행', savings: '저축은행', agent: '부동산', court: '법원', hospital: '병원', arcade: '게임장', home: '집', shop: '상점' },
+  PLACE_KO: { office: '사무실', registry: '등기소', center: '주민센터', bank: '은행', savings: '저축은행', agent: '부동산', court: '법원', hospital: '병원', arcade: '게임장', home: '집', shop: '상점', casino: '카지노' },
   guName(z) { if (!z) return ''; if (z.startsWith('court_')) { const ct = COURTS[z.slice(6)]; return ct ? ct.short : '법원'; } const spec = ZONE_SPECS[z]; const gu = spec ? spec.gu : z.startsWith('gu_') ? z.slice(3) : z; return DISTRICT[gu] ? DISTRICT[gu].short : ''; },
   doing(p) {
     if (p.last !== undefined && performance.now() - p.last > FEEL.liveIdleSec * 1000) return '자리 비움';
@@ -4674,21 +4781,34 @@ const AssetBox = {
   render() {
     const L = Live, f = v => fmtWon(v), fp = v => (v >= 0 ? '+' : '−') + fmtWon(Math.abs(v)); const el = $('assetBox'); if (!L.on) { el.innerHTML = `<div class="rcpt"><div class="rcHead">내 집 현황</div><div class="empty">실시간 채널에서만 볼 수 있어요.</div><div class="pcBtns"><button class="btn" id="abClose">닫기</button></div></div>`; this.bind(); return; }
     const homes = L.owned(); const pend = Object.values(L.mine).filter(m => m.opened && m.won && !m.done && m.phase !== 'own');
-    const home = m => { const a = m.asset || {}; const Lo = m.loanState || { bank: 0, savings: 0 }; const loan = (Lo.bank || 0) + (Lo.savings || 0); const nxt = a.rentOn ? Math.max(0, (a.rentHeld || 0) + L.monthMs() - (a.held || 0)) : 0; const mi = L.monthlyInterest(m);
+    const home = m => { const a = m.asset || {}; const Lo = m.loanState || { bank: 0, savings: 0 }; const loan = Debt.loans(m); const nxt = a.rentOn ? Math.max(0, (a.rentHeld || 0) + L.monthMs() - (a.held || 0)) : 0; const mi = L.monthlyInterest(m);
       const tag = a.rentOn ? '<span class="tag">임대 중</span>' : a.offer ? '<span class="tag">매수 희망</span>' : a.listed ? '<span class="tag gray">매수자 찾는 중</span>' : a.repair === 'doing' ? '<span class="tag gray">수리 중</span>' : '<span class="tag gray">비어 있음</span>';
       return `<div class="ah${a.rentOn ? ' rent' : ''}"><h3>${esc(m.name)} ${tag}</h3><div class="kv2">
         <span>낙찰가</span><b>${f(m.bid)}</b>
         <span>상태</span><b>${a.cond ? L.COND[a.cond].label : '미확인 (현장에 들어가 보세요)'}${a.repair === 'done' ? ' · 수리 끝' : a.repair === 'doing' ? ` · 수리 중 ${L.mmss(Math.max(0, a.repairUntil - L.now()))}` : ''}</b>
-        ${a.rentOn ? `<span>월세</span><b class="up">${f(a.rent)} · 다음 입금 ${L.mmss(nxt)}</b><span>받은 월세</span><b>${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b>` : `<span>임대</span><b>안 놓음 · 부동산(${esc(castName('agent'))})에서 임대·매도</b>`}
+        ${a.rentOn ? `<span>월세</span><b class="up">${f(a.rent)} · 다음 입금 ${L.mmss(nxt)}</b><span>받은 월세</span><b>${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b><span>세입자</span><b>${esc(a.tenant || '세입자')} · ${a.leaveAt !== undefined ? `이사 나감 ${L.mmss(Math.max(0, a.leaveAt - (a.held || 0)))} 뒤` : `계약 남은 ${L.mmss(Math.max(0, (a.leaseEnd || 0) - (a.held || 0)))}${a.renewUsed ? ' · 갱신요구권 씀' : ''}`}</b>` : `<span>임대</span><b>안 놓음 · 부동산(${esc(castName('agent'))})에서 임대·매도</b>`}
         ${a.offer ? `<span>매수 희망</span><b class="up">${f(a.offer.price)} · 부동산으로</b>` : a.listed ? `<span>매도</span><b>매수자 찾는 중 ${L.mmss(Math.max(0, a.listed + L.saleWaitMs(L.caseFor(L.key(m.k, m.n))) - L.now()))}${a.missNo ? ` · 허탕 ${a.missNo}번` : ''}</b>` : ''}
-        ${loan ? `<span>대출</span><b class="down">${f(loan)}${Lo.savings ? ` (저축은행 ${f(Lo.savings)} 포함)` : ''} · 매달 이자 ${f(mi)}</b><span>낸 이자</span><b>${f(a.intPaid || 0)}${a.rentOn ? ` · 월세 빼면 한 달 ${(a.rent - mi >= 0 ? '+' : '−') + f(Math.abs(a.rent - mi))}` : ''}</b>` : ''}
+        ${loan ? `<span>대출</span><b class="down">${f(loan)}${Lo.savings ? ` (저축은행 ${f(Lo.savings)} 포함)` : ''}${m.extraLoan ? ` (추가 담보 ${f(m.extraLoan)} 포함)` : ''} · 매달 이자 ${f(mi)}</b><span>낸 이자</span><b>${f(a.intPaid || 0)}${a.rentOn ? ` · 월세 빼면 한 달 ${(a.rent - mi >= 0 ? '+' : '−') + f(Math.abs(a.rent - mi))}` : ''}</b>` : ''}
         <span>보유</span><b>${L.mmss(a.held || 0)} 째 <small>(켜 둔 시간만 · 한 달 = ${FEEL.liveMonthMin}분)</small></b></div></div>`; };
     const pending = m => `<div class="ah"><h3>${esc(m.name)} <span class="tag red">${m.phase === 'forced' ? '강제집행 중' : m.phase === 'evict' ? '명도 중' : '잔금 전'}</span></h3><div class="kv2"><span>낙찰가</span><b>${f(m.bid)}</b>${m.phase === 'forced' ? `<span>정산까지</span><b>${L.mmss(Math.max(0, m.forcedUntil - L.now()))}</b>` : m.phase === 'evict' ? `<span>할 일</span><b>현장 초인종${m.order ? ' · 인도명령 받음' : ''}</b>` : `<span>잔금</span><b class="down">${f(m.bid - m.deposit)} · 기한 ${L.mmss(L.payLeft(m))}</b><span>할 일</span><b>${L.canPay(m) ? '법원에서 잔금 납부' : '은행에서 대출부터'}</b>`}</div></div>`;
     const total = L.rentLog.reduce((s, r) => s + Math.max(0, r.amt), 0), intTot = L.rentLog.reduce((s, r) => s + Math.max(0, -r.amt), 0);
     const bids = Object.keys(L.mine).filter(k => !L.mine[k].opened && !L.mine[k].done).map(k => { const m = L.mine[k], c = L.caseFor(k); return `<span class="chip">${esc(m.name.split(' ').slice(0, 2).join(' '))} · ${f(m.bid)} · 개찰 ${L.mmss(L.left(c))}</span>`; });
     const res = L.results.slice(0, 5).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? (r.profit > 0 ? 'up' : r.profit < 0 ? 'down' : '') : 'dim'}">${r.won ? '낙찰 ' + fp(r.profit) : r.forfeit ? '보증금 몰수 ' + fp(r.profit) : '패찰'}</b></div>`);
+    // 대출 · 이자 현황 (사용자 2026-10-15 '대출 현황, 이자 현황도 볼 수 있으면'): 집마다 경락잔금대출·저축은행·추가 담보대출, 매달 이자, 다음 이자까지, LTV
+    const lrows = Object.values(L.mine).filter(m => m.won && !m.done && Debt.loans(m) > 0).map(m => {
+      const Lo = m.loanState || {}, a = m.asset || {}, tot = Debt.loans(m), mi = L.monthlyInterest(m), own = m.phase === 'own';
+      const nextInt = own && a.held !== undefined ? Math.max(0, (a.intHeld || 0) + L.monthMs() - a.held) : null; let ltv = 0; try { ltv = own ? tot / Debt.value(m) : 0; } catch (e) {}
+      return { m, Lo, a, tot, mi, nextInt, ltv, room: own ? Debt.room(m) : 0 };
+    });
+    const lTot = lrows.reduce((x, r) => x + r.tot, 0), iTot = lrows.reduce((x, r) => x + r.mi, 0), rTot = homes.reduce((x, m) => x + ((m.asset || {}).rentOn ? m.asset.rent : 0), 0), paid = homes.reduce((x, m) => x + ((m.asset || {}).intPaid || 0), 0);
+    const loanSec = lrows.length ? `<div class="ah loanSec"><h3>대출 · 이자 <span class="tag red">총 ${f(lTot)}</span></h3><div class="kv2">
+        <span>금리</span><b>연 ${Math.round(LOAN_RATE * 100)}% · 한 달(${FEEL.liveMonthMin}분)마다 현금에서 빠져요</b>
+        <span>매달 이자</span><b class="down">${f(iTot)}</b>
+        ${rTot ? `<span>월세 − 이자</span><b class="${rTot - iTot >= 0 ? 'up' : 'down'}">${fp(rTot - iTot)} / 달</b>` : ''}
+        <span>지금까지 낸 이자</span><b>${f(paid)}</b></div>
+      ${lrows.map(r => `<div class="loanRow"><b>${esc(r.m.name.split(' ').slice(0, 2).join(' '))}</b><span>${[r.Lo.bank ? `은행 경락잔금 ${f(r.Lo.bank)}` : '', r.Lo.savings ? `저축은행 ${f(r.Lo.savings)}` : '', r.m.extraLoan ? `추가 담보 ${f(r.m.extraLoan)}` : ''].filter(Boolean).join(' · ')}</span><span>합계 ${f(r.tot)} · 이자 ${f(r.mi)}/달${r.nextInt !== null ? ` · 다음 이자 ${L.mmss(r.nextInt)}` : ' · 잔금 내면 이자 시작'}</span>${r.ltv ? `<span>집값 대비 ${Math.round(r.ltv * 100)}% (한도 ${Math.round(Debt.LTV * 100)}%) · 더 빌릴 수 있는 돈 ${f(r.room)}</span>` : ''}</div>`).join('')}</div>` : '';
     el.innerHTML = `<div class="rcpt"><button class="xClose" id="abX" aria-label="닫기">×</button><div class="rcHead">내 집 현황</div><div class="rcSub">채널 ${L.ch} · 보유 ${homes.length}채${pend.length ? ` · 진행 중 ${pend.length}건` : ''} · 월세 누적 ${f(total)}</div>
-      ${homes.map(home).join('')}${pend.map(pending).join('')}
+      ${loanSec}${homes.map(home).join('')}${pend.map(pending).join('')}
       ${!homes.length && !pend.length ? '<div class="empty">아직 내 집이 없어요. 낙찰받고 잔금을 내면 여기에 나와요.</div>' : ''}
       ${bids.length ? `<div class="lvChips"><small>낸 입찰표 (개찰 전)</small>${bids.join('')}</div>` : ''}
       ${L.rentLog.length ? `<div class="lvRecent"><small>입금·이자 내역 · 월세 ${f(total)}${intTot ? ` · 이자 −${f(intTot)}` : ''}</small>${L.rentLog.map(r => `<div><span>${esc(r.at.slice(5))} · ${esc(r.name)}${r.kind === 'int' ? ' 이자' : ' 월세'}</span><b class="${r.amt < 0 ? 'down' : 'up'}">${r.amt < 0 ? '−' : '+'}${f(Math.abs(r.amt))} <small>잔고 ${f(r.cash)}</small></b></div>`).join('')}</div>` : ''}
@@ -4909,7 +5029,7 @@ function startGame(capital, opts = {}) {
   State.seed = opts.tutorial ? TUT_SEED : (opts.seed || (Date.now() & 0x7fffffff)); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자. 튜토리얼: 늘 같은 연습 물건
   if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed }); // 채널: 실제 시간으로 돌아가는 세계
   $('btnEndDay').hidden = Live.on;
-  if (Net.on) { $('mpInfo').hidden = false; document.body.classList.add('netOn'); $('chatLines').innerHTML = Net.hist().slice(-5).map(l => Net.logRow(l)).join(''); } // 채팅 버튼 대신 왼쪽 입력줄 (v80)
+  if (Net.on) { $('mpInfo').hidden = false; document.body.classList.add('netOn'); $('chatLines').innerHTML = Net.hist().slice(-5).map(l => Net.logRow(l, false, true)).join(''); } // 채팅 버튼 대신 왼쪽 입력줄 (v80)
   $('rankBox').hidden = !Live.on; // 채널: 순위판을 왼쪽에 항상 (사용자 요청 2026-10-14)
   Game.zones = {};
   Game.zone = getZone('gwangjin');
@@ -5100,11 +5220,13 @@ async function talkWalker(w) {
   if (Game.busy) return; Game.busy = true;
   const z = Game.zone, p = Game.player; const i = Game.decor.indexOf(w); const name = w.vip ? castName('vip') : WALKER_NAMES[(i < 0 ? 0 : i) % WALKER_NAMES.length];
   w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
-  if (w.vip) { // 이혁진: 말을 걸면 100원을 건넨다 (사용자 요청)
+  if (w.vip && VipDuel.othersBusy()) { await Dialog.say([{ name, sprite: 'vip', text: `지금 ${VipDuel.othersBusy()}님이랑 게임 중이에요. 한 번에 한 분씩만 해요. 이따 봬요.` }]); w.ai.t = 0.3; Game.busy = false; return; }
+  if (w.vip) { // 이혁진: 말을 걸면 천 원을 건넨다 (사용자 요청)
     const V = [`안녕하세요. 오늘 옷 괜찮죠? 자, 이거 받으세요.`, `또 만났네요. 부지런한 사람은 보기 좋아요. 자, 천 원.`, `여유는 지갑이 아니라 태도에서 나와요. 그래도 커피값에 보태요.`, `서류 꼼꼼히 보는 사람이 결국 이겨요. 응원의 뜻으로.`];
     await Dialog.say([{ name, sprite: 'vip', text: V[(i + State.day + (w.talks || 0)) % V.length] }]);
     w.talks = (w.talks || 0) + 1; State.cash += FEEL.vipGift; HUD.setCash(State.cash); Sound.play('coins'); Toast.show(`${name}에게 ${fmtWon(FEEL.vipGift)}을 받았다.`); if (Net.on) Net.news(`${name}에게 ${fmtWon(FEEL.vipGift)} 받음`); // 채팅에 (사용자 2026-10-15)
-    State.vipTalks = (State.vipTalks || 0) + 1; if (State.vipTalks % 10 === 0) vipEscape(w, State.vipTalks / 10 - 1); // 10번마다 도망: 뛰어서 → 자전거 → 차 → 킥보드 → 헬기 → 풍선 → 땅굴 → 우주선 → 말 → 로켓 배낭, 다시 처음부터 (사용자 2026-10-15)
+    State.vipTalks = (State.vipTalks || 0) + 1; if (State.vipTalks % 10 === 0) vipEscape(w, State.vipTalks / 10 - 1);
+    else if (VipDuel.canOffer()) { w.ai.t = 99; const played = await VipDuel.offer(w); if (played) { State.vipDuels = (State.vipDuels || 0) + 1; vipEscape(w, Math.floor(State.vipTalks / 10) + State.vipDuels); } } // 깜짝 룰렛 뒤에도 도망 (사용자 2026-10-15) // 10번마다 도망: 뛰어서 → 자전거 → 차 → 킥보드 → 헬기 → 풍선 → 땅굴 → 우주선 → 말 → 로켓 배낭, 다시 처음부터 (사용자 2026-10-15)
     w.ai.t = 0.3; Game.busy = false; return;
   }
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
@@ -5383,6 +5505,9 @@ function update(dt) {
   if (consume('m')) SeoulMap.toggle();
   if (SeoulMap.open) { if (consume('Escape')) SeoulMap.toggle(false); return; }
   if (ZoneMap.open) { if (consume('Escape') || consume('n')) ZoneMap.toggle(false); return; }
+  if (VipDuel.open_) { if (consume('1')) VipDuel.meShoot('me'); else if (consume('2')) VipDuel.meShoot('op'); return; } // 룰렛: 끝날 때까지 못 나간다
+  if (Rps.open_) { if (consume('Escape')) Rps.close(); else for (const n of ['1', '2', '3']) if (consume(n)) Rps.pick(Number(n) - 1); return; }
+  if (Holjjak.open_) { if (consume('Escape')) Holjjak.close(); else if (consume('1')) Holjjak.play('hol'); else if (consume('2')) Holjjak.play('jjak'); return; }
   if (Shop.open_) { if (consume('Escape')) Shop.close(); return; } // 상점: Esc로 닫힘 (메뉴보다 먼저)
   if (AssetBox.open_) { if (consume('Escape')) AssetBox.close(); return; }
   if (RankWin.open_) { if (consume('Escape')) RankWin.close(); return; }
@@ -5605,7 +5730,7 @@ function drawFlag(c, X, Y, t, pl) {
   if (State.visited[pl.id]) { c.strokeStyle = '#7fe08a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(X + 3, Y - 13); c.lineTo(X + 5, Y - 11); c.lineTo(X + 9, Y - 16); c.stroke(); }
 }
 function drawPlaceIcon(c, X, Y, kind) {
-  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'], arcade: ['#8a3ac0', '겜'], hospital: ['#e0405a', '+'], shop: ['#d94a8a', '숍'] }[kind]; if (!ICON) return;
+  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'], arcade: ['#8a3ac0', '겜'], hospital: ['#e0405a', '+'], shop: ['#d94a8a', '숍'], casino: ['#b01e3a', '카'] }[kind]; if (!ICON) return;
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(X + 1, Y + 1, 8, 0, 7); c.fill();
   c.fillStyle = ICON[0]; c.beginPath(); c.arc(X, Y, 8, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
   c.fillStyle = '#fff'; c.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ICON[1], X, Y + 0.5); c.textBaseline = 'alphabetic';
@@ -5741,7 +5866,7 @@ const Radar = {
       const v = z.at(Math.floor(ptx + (xx - S / 2) / scale), Math.floor(pty + (yy - S / 2) / scale));
       if (v === T.ROAD) { x.fillStyle = '#7d8b84'; x.fillRect(xx, yy, 2, 2); } else if (v === T.ALLEY) { x.fillStyle = '#4c5d55'; x.fillRect(xx, yy, 2, 2); } else if (v === T.BLD) { x.fillStyle = '#26352d'; x.fillRect(xx, yy, 2, 2); }
     }
-    const ICON = { court: '#ffffff', bank: '#2ad06a', savings: '#c8a060', center: '#5aa0ff', agent: '#f0a040', registry: '#9ab0ff', office: '#cdae70', site: '#ff5a4a', shop: '#ff7ac0', home: '#f0c070', arcade: '#c070ff', hospital: '#ff6070' };
+    const ICON = { court: '#ffffff', bank: '#2ad06a', savings: '#c8a060', center: '#5aa0ff', agent: '#f0a040', registry: '#9ab0ff', office: '#cdae70', site: '#ff5a4a', shop: '#ff7ac0', home: '#f0c070', arcade: '#c070ff', hospital: '#ff6070', casino: '#ff4060' };
     for (const pl of z.places) {
       let dx = (pl.door.tx - ptx) * scale, dy = (pl.door.ty - pty) * scale; const d = Math.hypot(dx, dy), R = S / 2 - 7;
       if (d > R) { dx = dx / d * R; dy = dy / d * R; }
@@ -5810,7 +5935,7 @@ async function issueDoc(caseId, kind, title, html, { fee = 0 } = {}) {
 }
 
 const STAFF = { registry: ['등기소 직원', 'clerk', 'clerk'], center: ['주민센터 직원', 'clerk', 'clerk'], bank: ['은행원', 'banker', 'banker'], agent: ['중개사', 'agent', 'agent'], court: ['집행관', 'clerk', 'clerk'], savings: ['저축은행 직원', 'banker', 'banker'] };
-STAFF.arcade = ['게임장 사장', 'occ_young', 'occ']; STAFF.hospital = ['간호사', 'banker', 'banker']; STAFF.shop = ['편집숍 점원', 'occ_young', 'occ'];
+STAFF.arcade = ['게임장 사장', 'occ_young', 'occ']; STAFF.hospital = ['간호사', 'banker', 'banker']; STAFF.shop = ['편집숍 점원', 'occ_young', 'occ']; STAFF.casino = ['카지노 딜러', 'banker', 'banker'];
 const say = (kind, text, extra = {}) => ({ name: castLabel(kind), sprite: STAFF[kind][1], voice: STAFF[kind][2], text, ...extra });
 /* 실내에서 기다리는 손님들: 말을 걸면 그 장소다운 잡담을 한다 (사건 정보는 절대 없음) */
 const GUEST_LINES = {
@@ -5856,7 +5981,8 @@ async function danyeTalk() {
 async function staffTalk(kind) {
   if (kind === 'court') return courtClerk();
   if (kind === 'shop') { const pick = await Dialog.say([say('shop', `어서 오세요. 옷도 있고 차 색도 바꿔 드려요. 지금 ${fmtWon(State.cash)} 있으시네요.`)], [{ label: '옷 보기', value: 'clothes' }, { label: '차 스킨 보기', value: 'car' }, { label: '구경만', value: 'n' }]); if (pick === 'clothes' || pick === 'car') Shop.open(pick); return; }
-  if (kind === 'arcade') { await Dialog.say([say('arcade', '어서 와. 기계는 아직 세팅 중이야.'), say('arcade', '미니게임 들어오면 제일 먼저 알려 줄게. 구경은 마음껏 해.')]); return; }
+  if (kind === 'arcade') { const pick = await Dialog.say([say('arcade', '어서 와. 가위바위보 기계 들어왔어. 3판 2선승이야.'), say('arcade', Net.on ? '같이 온 친구한테 신청해도 되고, 나랑 해도 돼.' : '상대가 없으면 내가 해 줄게.')], [{ label: '사장님이랑 하기', value: 'y' }, { label: '구경만', value: 'n' }]); if (pick === 'y') Rps.open('house'); return; }
+  if (kind === 'casino') { const pick = await Dialog.say([say('casino', '어서 오세요. 홀짝 테이블입니다. 주사위 두 개, 합이 홀이냐 짝이냐.'), say('casino', '맞히시면 건 만큼 드리고, 틀리시면 건 돈은 저희가 가져갑니다.')], [{ label: '홀짝 하기', value: 'y' }, { label: '구경만', value: 'n' }]); if (pick === 'y') Holjjak.open(); return; }
   if (kind === 'hospital') { await Dialog.say([say('hospital', State.hospital ? `또 오셨네요. 이번 주 입원만 ${State.hospital}번째예요.` : '다친 데는 없으시죠?'), say('hospital', `차에 ${FEEL.hospitalHits}번 치이면 바로 입원이에요. 횡단보도 신호 지키세요.`)]); return; }
   if (kind === 'savings' && Live.on && Live.pending()) return Live.bank(true); // 채널: 낙찰 건 대출
   if (kind === 'savings') { if (State.phase === 'savings') return loanReview(true); await Dialog.say([say('savings', '저희 대출 상품은 금리가 좀 높아요. 1금융권 먼저 알아보세요.')]); return; }
@@ -5901,7 +6027,8 @@ async function objectUse(o, kind) {
   if (o.type === 'memo' && Game.room.cs) { MemoPad.open(Game.room.cs); return; } // 메모는 시간이 들지 않는다
   if (o.type === 'rack') { Shop.open('clothes'); return; }
   if (o.type === 'carshop') { Shop.open('car'); return; }
-  if (o.type === 'arcade') { Sound.play('blip', 0.8); await Dialog.say([{ name: `게임기 ${o.no}번`, text: '화면에 "COMING SOON"만 떠 있다. 미니게임은 아직 준비 중이다.' }]); return; }
+  if (o.type === 'arcade') { Sound.play('blip', 0.8); Rps.open(); return; } // 가위바위보 (v81)
+  if (o.type === 'holjjak') { Holjjak.open(); return; }
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
   if (Live.on) { const own = Live.ownedFor(c); if (own) return Live.home(own, c); } // 채널: 내 집 (상태 확인·수리)
@@ -6858,6 +6985,340 @@ const Shop = {
     this.wear(it);
   },
   wear(it) { Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
+};
+
+/* ===================== 게임장 가위바위보 · 카지노 홀짝 (사용자 2026-10-15) =====================
+ * 가위바위보: 건대 게임장 기계에서 3판 2선승. 같은 게임장에 있는 친구(같이 하기·채널)에게 신청하거나 사장 장우준이랑 한다.
+ *   판돈은 재미로(0)·1만·10만·100만. 진 사람이 이긴 사람에게 판돈만큼 준다 (각자 자기 돈만 바꾼다).
+ *   네트워크: {t:'rps', k:'ask'|'ok'|'no'|'pick'|'quit', to, gid, ...}. 중계 서버는 모르는 메시지를 그대로 넘긴다.
+ * 홀짝: 게임장 옆 건대 카지노 테이블. 주사위 두 개 합이 홀인지 짝인지 맞히면 건 돈만큼 받고, 틀리면 잃는다 (1:1).
+ */
+function mgCash(d, label) {
+  if (!d) return;
+  if (Live.on && typeof Money !== 'undefined') Money.why(label);
+  State.cash += d; HUD.setCash(State.cash); if (Live.on) Live.save();
+}
+const RPS_H = [{ k: 'r', ko: '바위', e: '✊' }, { k: 's', ko: '가위', e: '✌️' }, { k: 'p', ko: '보', e: '✋' }];
+const RPS_BY = Object.fromEntries(RPS_H.map(h => [h.k, h]));
+function rpsBeat(a, b) { return a === b ? 0 : (a === 'r' && b === 's') || (a === 's' && b === 'p') || (a === 'p' && b === 'r') ? 1 : -1; }
+const RPS_STAKES = [0, 1e4, 10e4, 100e4];
+
+const Rps = {
+  open_: false, view: 'lobby', vs: 'house', stake: 0, g: null, ask: null, pend: null, timer: null,
+  inArcade() { return Game.scene === 'room' && Game.room && Game.room.place.kind === 'arcade'; },
+  friends() {
+    if (!Net.on || !Game.room) return [];
+    const out = []; for (const id in Net.players) { const p = Net.players[id]; if (p && !p.gone && p.s === 'room' && p.p === Game.room.place.id && p.z === Game.zone.id) out.push({ id, name: p.name }); }
+    return out;
+  },
+  opName() { return this.g ? this.g.name : ''; },
+  open(vs) {
+    if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
+    if (vs) this.vs = vs; if (this.vs !== 'house' && !this.friends().some(f => f.id === this.vs)) this.vs = 'house';
+    if (this.stake > State.cash) this.stake = 0;
+    this.view = 'lobby'; $('rpsWin').classList.add('in'); this.render();
+    clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500);
+  },
+  close() {
+    if (!this.open_) return;
+    if (this.g && this.g.state !== 'done' && this.g.vs !== 'house') { this.send('quit', this.g.vs, { gid: this.g.gid }); Toast.show('가위바위보를 그만뒀어요. 판돈은 그대로예요.'); }
+    if (this.pend) { this.send('no', this.pend.to, { gid: this.pend.gid, why: 'cancel' }); this.pend = null; }
+    this.open_ = false; this.g = null; Game.formOpen = false; $('rpsWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip');
+  },
+  send(k, to, extra) { if (Net.on) Net.send(Object.assign({ t: 'rps', k, to }, extra || {})); },
+  // 상대가 나가거나 응답이 없을 때
+  watch() {
+    if (!this.open_) return;
+    if (this.pend && performance.now() - this.pend.at > 20000) { this.pend = null; this.view = 'lobby'; Sound.play('deny'); this.render('응답이 없어요. 다른 상대를 골라 보세요.'); return; }
+    const g = this.g; if (!g || g.vs === 'house' || g.state === 'done') return;
+    const p = Net.players[g.vs]; if (!p || p.gone) { this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(`${g.name}이(가) 나갔어요. 판돈은 그대로예요.`); }
+    if (this.view === 'lobby') this.render();
+  },
+  start() {
+    if (this.stake > State.cash) { Sound.play('deny'); return this.render('판돈이 내 돈보다 많아요.'); }
+    if (this.vs === 'house') return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: this.stake });
+    const f = this.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; return this.render('그 친구가 게임장에 없어요.'); }
+    const gid = Net.myId + ':' + Date.now().toString(36);
+    this.pend = { gid, to: f.id, name: f.name, stake: this.stake, at: performance.now() };
+    this.send('ask', f.id, { gid, stake: this.stake }); Sound.play('blip'); this.view = 'wait'; this.render();
+  },
+  begin(o) {
+    this.g = Object.assign({ me: 0, op: 0, r: 0, mine: {}, theirs: {}, state: 'pick', hist: [] }, o);
+    this.view = 'match'; Sound.play('ding'); this.render();
+  },
+  pick(i) {
+    const g = this.g; if (!g || this.view !== 'match' || g.state !== 'pick' || g.mine[g.r]) return;
+    const h = RPS_H[i]; if (!h) return; g.mine[g.r] = h.k; Sound.play('click');
+    if (g.vs === 'house') g.theirs[g.r] = RPS_H[Math.floor(Math.random() * 3)].k; // 사장은 무작위
+    else this.send('pick', g.vs, { gid: g.gid, r: g.r, h: h.k });
+    this.check();
+  },
+  check() {
+    const g = this.g; if (!g || g.state !== 'pick') return;
+    const a = g.mine[g.r], b = g.theirs[g.r];
+    if (!a) return this.render(); if (!b) { g.state = 'pick'; return this.render(); }
+    g.state = 'reveal'; this.render(); Sound.play('drum');
+    setTimeout(() => {
+      if (this.g !== g) return;
+      const w = rpsBeat(a, b); if (w > 0) g.me++; else if (w < 0) g.op++;
+      g.hist.push({ a, b, w }); g.last = { a, b, w }; Sound.play(w > 0 ? 'chime' : w < 0 ? 'deny' : 'pop');
+      if (g.me >= 2 || g.op >= 2) return this.finish();
+      g.r++; g.state = 'pick'; this.render(); this.check();
+    }, 1100);
+  },
+  finish() {
+    const g = this.g; g.state = 'done'; const won = g.me > g.op;
+    if (g.stake) mgCash(won ? g.stake : -g.stake, won ? `가위바위보 승 (${g.name})` : `가위바위보 패 (${g.name})`);
+    Sound.play(won ? 'coins' : 'deny');
+    if (Net.on && won && (g.vs !== 'house' || g.stake >= 10e4)) Net.news(`가위바위보로 ${g.name}을(를) 이김${g.stake ? ` · 판돈 ${fmtWon(g.stake)}` : ''}`);
+    this.render();
+  },
+  again() {
+    const g = this.g; if (!g) return; this.vs = g.vs; this.stake = Math.min(g.stake, State.cash) === g.stake ? g.stake : 0; this.g = null; this.start();
+  },
+  // 친구에게서 온 메시지
+  onNet(m, p) {
+    if (m.to !== Net.myId) return; const name = (p && p.name) || m.name || '친구';
+    if (m.k === 'ask') {
+      if (this.g && this.g.state !== 'done') return this.send('no', m.from, { gid: m.gid, why: 'busy' });
+      this.ask = { gid: m.gid, from: m.from, name, stake: Math.max(0, Number(m.stake) || 0) }; this.showAsk(); Sound.play('ding'); return;
+    }
+    if (m.k === 'no') {
+      if (this.ask && this.ask.gid === m.gid) { this.ask = null; this.showAsk(); return; } // 신청한 쪽이 취소
+      if (!this.pend || this.pend.gid !== m.gid) return; this.pend = null; this.view = 'lobby'; Sound.play('deny');
+      return this.render(m.why === 'busy' ? `${name}은(는) 지금 다른 판 중이에요.` : m.why === 'cash' ? `${name}은(는) 판돈이 모자라요.` : `${name}이(가) 안 한대요.`);
+    }
+    if (m.k === 'ok') {
+      if (!this.pend || this.pend.gid !== m.gid) return; const P = this.pend; this.pend = null;
+      if (!this.open_) return this.send('quit', m.from, { gid: m.gid });
+      return this.begin({ gid: P.gid, vs: P.to, name: P.name, stake: P.stake });
+    }
+    const g = this.g; if (!g || g.gid !== m.gid) return;
+    if (m.k === 'pick' && RPS_BY[m.h] && Number.isInteger(m.r) && !g.theirs[m.r]) { g.theirs[m.r] = m.h; if (m.r === g.r) this.check(); else this.render(); return; }
+    if (m.k === 'quit' && g.state !== 'done') { this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(`${name}이(가) 그만뒀어요. 판돈은 그대로예요.`); }
+  },
+  showAsk() {
+    const el = $('rpsAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; }
+    const short = a.stake > State.cash;
+    el.innerHTML = `<b>✊✌️✋ ${esc(a.name)}이(가) 가위바위보 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : ''}<div><button class="btn gold" id="rpsYes" ${short ? 'disabled' : ''}>하기</button><button class="btn" id="rpsNo">안 하기</button></div>`;
+    el.classList.add('in');
+    $('rpsYes').onclick = () => this.accept(); $('rpsNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : 'no' }); this.ask = null; this.showAsk(); };
+    clearTimeout(this.askT); this.askT = setTimeout(() => { if (this.ask === a) { this.ask = null; this.showAsk(); } }, 20000);
+  },
+  accept() {
+    const a = this.ask; if (!a) return; this.ask = null; this.showAsk();
+    if (a.stake > State.cash) return this.send('no', a.from, { gid: a.gid, why: 'cash' });
+    if (Rps.open_ && this.g) this.g = null;
+    if (!this.open_) { this.open_ = true; Game.formOpen = true; $('rpsWin').classList.add('in'); clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500); }
+    this.pend = null; this.send('ok', a.from, { gid: a.gid }); this.begin({ gid: a.gid, vs: a.from, name: a.name, stake: a.stake });
+  },
+  render(msg) {
+    if (!this.open_) return; const el = $('rpsWin'); const head = `<div class="rcHead">가위바위보 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>`;
+    if (this.view === 'lobby' || this.view === 'wait') {
+      const fr = this.friends(); const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>같이 있는 친구</small>` })));
+      const wait = this.view === 'wait';
+      el.innerHTML = `<div class="rcpt">${head}
+        <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
+        ${Net.on && !fr.length ? '<p class="mgNote">친구가 이 게임장에 들어오면 여기에 떠요.</p>' : ''}
+        <div class="mgSec">판돈 <small>진 사람이 이긴 사람에게 줘요</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
+        <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p>
+        <div class="pcBtns">${wait ? '<button class="btn" id="rpsCancel">신청 취소</button>' : '<button class="btn gold" id="rpsGo">시작</button>'}<button class="btn" id="rpsX">닫기</button></div></div>`;
+      el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; Sound.play('click'); this.render(); }));
+      el.querySelectorAll('[data-st]').forEach(b => (b.onclick = () => { this.stake = Number(b.dataset.st); Sound.play('click'); this.render(); }));
+      if ($('rpsGo')) $('rpsGo').onclick = () => this.start();
+      if ($('rpsCancel')) $('rpsCancel').onclick = () => { this.send('no', this.pend.to, { gid: this.pend.gid, why: 'cancel' }); this.pend = null; this.view = 'lobby'; this.render(); };
+      $('rpsX').onclick = () => this.close(); return;
+    }
+    const g = this.g; if (!g) { this.view = 'lobby'; return this.render(msg); }
+    const pips = n => '●'.repeat(n) + '○'.repeat(Math.max(0, 2 - n));
+    const reveal = g.state === 'reveal', done = g.state === 'done', a = g.mine[g.r], b = g.theirs[g.r];
+    const shake = '<i class="mgShake">✊</i>';
+    const myHand = reveal ? shake : !done && a ? RPS_BY[a].e : g.last ? RPS_BY[g.last.a].e : '?';
+    const opHand = reveal ? shake : !done && a ? '?' : g.last ? RPS_BY[g.last.b].e : '?';
+    const line = done ? (g.me > g.op ? `이겼어요! ${g.stake ? `+${fmtWon(g.stake)}` : ''}` : `졌어요. ${g.stake ? `−${fmtWon(g.stake)}` : ''}`)
+      : reveal ? '가위! 바위! 보!' : a ? (g.vs === 'house' ? '' : `골랐어요. ${esc(g.name)} 기다리는 중…`) : g.last ? (g.last.w > 0 ? '이번 판은 내가 이겼다! 다음 판 골라요.' : g.last.w < 0 ? '이번 판은 졌다. 다음 판 골라요.' : '비겼다! 다시 골라요.') : '하나 골라요. (1 바위 · 2 가위 · 3 보)';
+    const opState = g.vs !== 'house' && !reveal && !done ? (b ? '골랐어요' : '고르는 중…') : '';
+    el.innerHTML = `<div class="rcpt">${head}
+      <div class="rpsBoard"><div><b>나</b><span class="pip">${pips(g.me)}</span><div class="hand">${myHand}</div></div><em>VS</em><div><b>${esc(g.name)}</b><span class="pip">${pips(g.op)}</span><div class="hand">${opHand}</div><small>${opState}</small></div></div>
+      <p class="mgMsg big">${line}</p>
+      ${done ? '' : `<div class="rpsPick">${RPS_H.map((h, i) => `<button class="btn" data-h="${i}" ${a || reveal ? 'disabled' : ''}><span>${h.e}</span>${h.ko}<small>${i + 1}</small></button>`).join('')}</div>`}
+      <p class="mgNote">${g.stake ? `판돈 ${fmtWon(g.stake)}` : '판돈 없음 (재미로)'}${g.hist.length ? ` · 지난 판 ${g.hist.map(x => RPS_BY[x.a].e + (x.w > 0 ? '승' : x.w < 0 ? '패' : '무')).join(' ')}` : ''}</p>
+      <div class="pcBtns">${done ? '<button class="btn gold" id="rpsAgain">한 판 더</button>' : ''}<button class="btn" id="rpsX">${done ? '닫기' : '그만하기'}</button></div></div>`;
+    el.querySelectorAll('[data-h]').forEach(btn => (btn.onclick = () => this.pick(Number(btn.dataset.h))));
+    if ($('rpsAgain')) $('rpsAgain').onclick = () => this.again();
+    $('rpsX').onclick = () => this.close();
+  },
+};
+
+const HJ_BETS = [1e4, 10e4, 50e4, 100e4];
+const DIE = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+const Holjjak = {
+  open_: false, bet: 1e4, busy: false, hist: [], last: null,
+  open() {
+    if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
+    if (this.bet > State.cash) this.bet = HJ_BETS.filter(b => b <= State.cash).pop() || HJ_BETS[0];
+    $('hjWin').classList.add('in'); this.render();
+  },
+  close() { if (!this.open_ || this.busy) return; this.open_ = false; Game.formOpen = false; $('hjWin').classList.remove('in'); Sound.play('flip'); },
+  play(side) {
+    if (this.busy) return; if (this.bet > State.cash) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
+    this.busy = true; this.side = side; this.last = null; Sound.play('drum'); this.render();
+    setTimeout(() => {
+      const d1 = 1 + Math.floor(Math.random() * 6), d2 = 1 + Math.floor(Math.random() * 6), sum = d1 + d2, res = sum % 2 ? 'hol' : 'jjak', win = res === side;
+      this.last = { d1, d2, sum, res, win, bet: this.bet }; this.hist.push(res); if (this.hist.length > 14) this.hist.shift(); this.busy = false;
+      mgCash(win ? this.bet : -this.bet, `카지노 홀짝 ${win ? '맞힘' : '틀림'}`); Sound.play(win ? 'coins' : 'deny');
+      if (Net.on && this.bet >= 50e4) Net.news(`카지노 홀짝 ${win ? '맞혀서' : '틀려서'} ${win ? '+' : '−'}${fmtWon(this.bet)}`);
+      if (this.bet > State.cash) this.bet = HJ_BETS.filter(b => b <= State.cash).pop() || HJ_BETS[0];
+      this.render();
+    }, 1300);
+  },
+  render(msg) {
+    if (!this.open_) return; const el = $('hjWin'), L = this.last, ko = s => s === 'hol' ? '홀' : '짝';
+    const cup = this.busy ? '<div class="hjCup shake"></div>' : L ? `<div class="hjDice"><span>${DIE[L.d1]}</span><span>${DIE[L.d2]}</span></div>` : '<div class="hjCup"></div>';
+    const line = this.busy ? `${ko(this.side)}에 ${fmtWon(this.bet)}. 딜러가 컵을 흔든다…` : L ? `합 ${L.sum} · ${ko(L.res)}! ${L.win ? `맞혔어요 +${fmtWon(L.bet)}` : `틀렸어요 −${fmtWon(L.bet)}`}` : msg || '얼마 걸지 고르고 홀이나 짝을 누르세요. (1 홀 · 2 짝)';
+    const none = State.cash < HJ_BETS[0];
+    el.innerHTML = `<div class="rcpt"><div class="rcHead">건대 카지노 · 홀짝 <small>내 돈 ${fmtWon(State.cash)}</small></div>
+      <p class="mgNote">주사위 두 개를 굴려 합이 홀수면 홀, 짝수면 짝. 맞히면 건 돈만큼 받고 틀리면 잃어요.</p>
+      <div class="hjTable">${cup}</div>
+      <p class="mgMsg big ${L ? (L.win ? 'win' : 'lose') : ''}">${line}</p>
+      <div class="mgSec">걸 돈</div><div class="mgRow">${HJ_BETS.map(b => `<button class="btn${this.bet === b ? ' sel' : ''}" data-bet="${b}" ${this.busy || b > State.cash ? 'disabled' : ''}>${fmtWon(b)}</button>`).join('')}</div>
+      <div class="hjPick"><button class="btn hol" data-side="hol" ${this.busy || none ? 'disabled' : ''}>홀<small>1</small></button><button class="btn jjak" data-side="jjak" ${this.busy || none ? 'disabled' : ''}>짝<small>2</small></button></div>
+      <p class="mgNote">${this.hist.length ? `지난 결과 ${this.hist.map(h => `<i class="hj ${h}">${ko(h)}</i>`).join('')}` : `${castName('casino')}: 잃어도 괜찮은 돈만 거세요.`}</p>
+      <div class="pcBtns"><button class="btn" id="hjX" ${this.busy ? 'disabled' : ''}>닫기</button></div></div>`;
+    el.querySelectorAll('[data-bet]').forEach(b => (b.onclick = () => { this.bet = Number(b.dataset.bet); Sound.play('click'); this.render(); }));
+    el.querySelectorAll('[data-side]').forEach(b => (b.onclick = () => this.play(b.dataset.side)));
+    $('hjX').onclick = () => this.close();
+  },
+};
+
+/* ---- 이혁진 깜짝 룰렛 (사용자 2026-10-15): 돈을 받다 보면 가끔 분위기가 갑자기 어두워지며 "저랑 게임 하나 하실래요?"
+ * 벅샷 룰렛처럼 산탄총에 실탄·공포탄을 섞어 넣고 서로 턴을 주고받는다. 자기에게 쏴서 공포탄이면 턴을 한 번 더.
+ * 번개(⚡) 3칸이 다 꺼지면 진다. 진 사람이 이긴 사람에게 FEEL.vipDuelStake(천만 원). 끝나면 이혁진은 또 도망간다.
+ * 한 번에 한 사람만: 채널·같이 하기에서는 {t:'vduel', k:'on'|'off'}로 누가 하고 있는지 알린다. 표현은 기절(번개 꺼짐)까지만. */
+const DUEL_ITEMS = {
+  mag: { e: '🔍', ko: '돋보기', tip: '지금 장전된 탄을 몰래 본다' },
+  can: { e: '🥫', ko: '캔커피', tip: '지금 탄을 빼서 버린다' },
+  candy: { e: '🍬', ko: '사탕', tip: '번개 한 칸 회복' },
+  saw: { e: '🪚', ko: '톱', tip: '다음 한 발이 두 칸' },
+  cuff: { e: '⛓️', ko: '수갑', tip: '상대가 한 턴 쉰다' },
+};
+const VipDuel = {
+  open_: false, busyBy: null, s: null, done: null,
+  wait(ms) { return new Promise(r => setTimeout(r, ms)); },
+  othersBusy() { const b = this.busyBy; return b && Date.now() - b.at < 6 * 60000 ? b.name : ''; },
+  onNet(m, p) { if (m.k === 'on') this.busyBy = { name: (p && p.name) || m.name || '누군가', at: Date.now() }; else if (m.k === 'off') this.busyBy = null; },
+  canOffer() { return !this.open_ && !(typeof Tutorial !== 'undefined' && Tutorial.on) && State.cash >= FEEL.vipDuelStake && !this.othersBusy() && Math.random() < FEEL.vipDuelChance; },
+  dim(on) { $('duelDim').classList.toggle('in', on); },
+  // talkWalker에서 부른다. 끝나면(거절 포함) true면 도망가게 한다
+  async offer(w) {
+    this.dim(true); Sound.play('drum'); await this.wait(900);
+    const name = castName('vip'), stake = fmtWon(FEEL.vipDuelStake);
+    const pick = await Dialog.say([{ name, sprite: 'vip', text: '……' }, { name, sprite: 'vip', text: `돈만 받아 가시니까 재미없죠? 저랑 게임 하나 하실래요?` }, { name, sprite: 'vip', text: `규칙은 간단해요. 총 한 자루, 실탄 몇 발, 공포탄 몇 발. 서로 번갈아 쏘고, 지는 사람이 이긴 사람에게 ${stake}.` }],
+      [{ label: `한다 <small>(지면 ${stake})</small>`, value: 'y' }, { label: '안 한다', value: 'n' }]);
+    if (pick !== 'y') { await Dialog.say([{ name, sprite: 'vip', text: '그래요. 아쉽네요. 마음 바뀌면 또 만나요.' }]); this.dim(false); return false; }
+    if (Net.on) Net.send({ t: 'vduel', k: 'on', z: Game.zone.id });
+    const won = await this.play();
+    if (Net.on) { Net.send({ t: 'vduel', k: 'off' }); Net.news(`${name}이랑 룰렛 게임에서 ${won ? '이겨서' : '져서'} ${won ? '+' : '−'}${stake}`); }
+    await Dialog.say([{ name, sprite: 'vip', text: won ? `하하, 오늘은 제가 졌네요. 약속대로 ${stake}. 다음엔 안 봐줘요.` : `약속은 약속이죠. ${stake} 잘 받겠습니다. 즐거웠어요.` }]);
+    this.dim(false); return true;
+  },
+  play() {
+    return new Promise(res => {
+      this.done = res; this.open_ = true; Game.formOpen = true;
+      this.s = { me: { hp: 3, items: [], cuffed: false, knows: null }, op: { hp: 3, items: [], cuffed: false, knows: null }, shells: [], turn: 'me', saw: false, busy: true, msg: '', load: null, round: 0 };
+      $('duelWin').classList.add('in'); this.reload().then(() => this.myTurn());
+    });
+  },
+  maxHp: 3,
+  async reload() {
+    const S = this.s; S.round++; const total = 2 + Math.floor(Math.random() * 5), live = Math.max(1, Math.min(total - 1, Math.round(total * (0.35 + Math.random() * 0.3))));
+    S.shells = []; for (let i = 0; i < total; i++) S.shells.push(i < live ? 'live' : 'blank');
+    for (let i = S.shells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [S.shells[i], S.shells[j]] = [S.shells[j], S.shells[i]]; }
+    const keys = Object.keys(DUEL_ITEMS), give = who => { for (let k = 0; k < 2 && who.items.length < 4; k++) who.items.push(keys[Math.floor(Math.random() * keys.length)]); };
+    give(S.me); give(S.op); S.me.knows = S.op.knows = null;
+    S.load = { live, blank: total - live }; S.busy = true; Sound.play('drum');
+    this.render(`${S.round > 1 ? '탄이 다 떨어졌다. 다시 장전. ' : ''}실탄 ${live}발 · 공포탄 ${total - live}발. 섞어서 넣는다.`); await this.wait(2200);
+    S.load = null; this.render(); await this.wait(400);
+  },
+  other(who) { return who === 'me' ? 'op' : 'me'; },
+  async shoot(who, target) {
+    const S = this.s; S.busy = true; const shell = S.shells.shift(), dmg = S.saw ? 2 : 1; S.saw = false; S.me.knows = S.op.knows = null;
+    const tName = target === who ? (who === 'me' ? '나에게' : '자기에게') : (target === 'me' ? '나에게' : `${castName('vip')}에게`);
+    this.render(`${who === 'me' ? '내가' : castName('vip') + '이(가)'} 총구를 ${tName} 겨눈다…`); await this.wait(1100);
+    if (shell === 'live') {
+      S[target].hp = Math.max(0, S[target].hp - dmg); Sound.play('slam'); this.flash();
+      this.render(`탕! 실탄. ${target === 'me' ? '내' : castName('vip') + '의'} 번개 ${dmg}칸이 꺼졌다.`); await this.wait(1300);
+      if (S[target].hp <= 0) return this.end(target !== 'me');
+      return this.next(who, true);
+    }
+    Sound.play('click'); this.render(`딸깍. 공포탄.${target === who ? ' 한 번 더 쏠 수 있다.' : ''}`); await this.wait(1000);
+    return this.next(who, target !== who);
+  },
+  async next(who, pass) {
+    const S = this.s;
+    if (!S.shells.length) await this.reload();
+    let turn = who;
+    if (pass) { const o = this.other(who); if (S[o].cuffed) { S[o].cuffed = false; this.render(`${o === 'me' ? '나는' : castName('vip') + '은(는)'} 수갑 때문에 한 턴 쉰다.`); await this.wait(1000); } else turn = o; }
+    S.turn = turn; return turn === 'me' ? this.myTurn() : this.opTurn();
+  },
+  myTurn() { const S = this.s; S.busy = false; this.render(S.me.knows ? `돋보기로 봤다. 이번 탄은 ${S.me.knows === 'live' ? '실탄' : '공포탄'}.` : '내 차례. 누구에게 쏠까?'); },
+  async useItem(who, k) {
+    const S = this.s, me = S[who], i = me.items.indexOf(k); if (i < 0) return false;
+    if (k === 'candy' && me.hp >= this.maxHp) return false; if (k === 'cuff' && S[this.other(who)].cuffed) return false; if (k === 'saw' && S.saw) return false;
+    me.items.splice(i, 1); const nm = who === 'me' ? '나' : castName('vip'); Sound.play('pop');
+    if (k === 'mag') { me.knows = S.shells[0]; this.render(who === 'me' ? `돋보기로 봤다. 이번 탄은 ${S.shells[0] === 'live' ? '실탄' : '공포탄'}.` : `${nm}이(가) 돋보기로 약실을 들여다본다. 웃는다.`); }
+    if (k === 'can') { const sh = S.shells.shift(); S.me.knows = S.op.knows = null; this.render(`${nm}이(가) 캔커피를 마시고 탄을 뺐다. ${sh === 'live' ? '실탄' : '공포탄'}이었다.`); }
+    if (k === 'candy') { me.hp++; Sound.play('heart'); this.render(`${nm}이(가) 사탕을 먹었다. 번개 한 칸 회복.`); }
+    if (k === 'saw') { S.saw = true; this.render(`${nm}이(가) 톱으로 총열을 잘랐다. 다음 한 발은 두 칸.`); }
+    if (k === 'cuff') { S[this.other(who)].cuffed = true; this.render(`${nm}이(가) ${who === 'me' ? castName('vip') + '에게' : '나에게'} 수갑을 채웠다. 한 턴 쉰다.`); }
+    await this.wait(1000);
+    if (!S.shells.length) await this.reload();
+    return true;
+  },
+  async meItem(k) { const S = this.s; if (S.busy || S.turn !== 'me') return; S.busy = true; const ok = await this.useItem('me', k); if (!ok) Sound.play('deny'); S.busy = false; if (S.turn === 'me') this.myTurn(); },
+  meShoot(target) { const S = this.s; if (S.busy || S.turn !== 'me') return; this.shoot('me', target); },
+  // 이혁진 차례: 남은 실탄 비율과 돋보기로 판단
+  async opTurn() {
+    const S = this.s, op = S.op; S.busy = true; this.render(`${castName('vip')}의 차례.`); await this.wait(900);
+    for (let guard = 0; guard < 6; guard++) {
+      const lives = S.shells.filter(x => x === 'live').length, p = lives / S.shells.length;
+      if (op.items.includes('candy') && op.hp < this.maxHp) { await this.useItem('op', 'candy'); continue; }
+      if (!op.knows && p > 0 && p < 1 && op.items.includes('mag')) { await this.useItem('op', 'mag'); continue; }
+      const k = op.knows || (p >= 1 ? 'live' : p <= 0 ? 'blank' : null);
+      if (!k && p < 0.5 && p >= 0.3 && op.items.includes('can')) { await this.useItem('op', 'can'); continue; }
+      const shootMe = k === 'live' || (!k && p >= 0.5);
+      if (shootMe && op.items.includes('cuff') && !S.me.cuffed) { await this.useItem('op', 'cuff'); continue; }
+      if (shootMe && op.items.includes('saw') && !S.saw && (k === 'live' || p > 0.6)) { await this.useItem('op', 'saw'); continue; }
+      break;
+    }
+    const lives = S.shells.filter(x => x === 'live').length, p = lives / S.shells.length, k = op.knows || null;
+    return this.shoot('op', k === 'live' || (!k && p >= 0.5) ? 'me' : 'op');
+  },
+  async forfeit() { const S = this.s; if (!S || S.busy) return; S.busy = true; this.render('총을 내려놓았다. 졌다고 인정한다.'); await this.wait(900); this.end(false); },
+  async end(won) {
+    const S = this.s; S.busy = true; S.over = won ? 'win' : 'lose'; Sound.play(won ? 'chime' : 'deny');
+    this.render(won ? `${castName('vip')}의 번개가 다 꺼졌다. 털썩 주저앉더니… 웃으면서 일어난다. 내가 이겼다!` : '눈앞이 하얘졌다… 정신을 차려 보니 테이블 앞. 내가 졌다.'); await this.wait(2200);
+    mgCash(won ? FEEL.vipDuelStake : -FEEL.vipDuelStake, won ? `${castName('vip')} 룰렛 승` : `${castName('vip')} 룰렛 패`); Sound.play(won ? 'coins' : 'deny');
+    this.open_ = false; Game.formOpen = false; $('duelWin').classList.remove('in'); const d = this.done; this.done = null; this.s = null; if (d) d(won);
+  },
+  flash() { const el = $('duelWin'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); },
+  render(msg) {
+    const S = this.s; if (!S) return; if (msg !== undefined) S.msg = msg; const el = $('duelWin');
+    const bolts = n => `${'<i class="on">⚡</i>'.repeat(n)}${'<i>⚡</i>'.repeat(Math.max(0, this.maxHp - n))}`;
+    const items = (who, mine) => S[who].items.map(k => `<button class="dItem" ${mine ? `data-it="${k}"` : 'disabled'} title="${DUEL_ITEMS[k].tip}">${DUEL_ITEMS[k].e}<small>${DUEL_ITEMS[k].ko}</small></button>`).join('') || '<span class="dNone">아이템 없음</span>';
+    const shells = S.load ? `${'<i class="sh live"></i>'.repeat(S.load.live)}${'<i class="sh blank"></i>'.repeat(S.load.blank)}` : `<span class="dLeft">남은 탄 ${S.shells.length}발</span>`;
+    const myTurn = S.turn === 'me' && !S.busy && !S.over;
+    el.innerHTML = `<div class="duel">
+      <div class="dSide op"><b>${esc(castName('vip'))}${S.op.cuffed ? ' ⛓️' : ''}</b><span class="bolts">${bolts(S.op.hp)}</span><div class="dItems">${items('op', false)}</div></div>
+      <div class="dTable"><svg class="gun${S.saw ? ' sawn' : ''}" viewBox="0 0 220 40"><rect x="8" y="16" width="${S.saw ? 120 : 170}" height="7" rx="2" fill="#3a3a40"/><rect x="${S.saw ? 120 : 170}" y="14" width="22" height="11" rx="2" fill="#5a3a24"/><path d="M${S.saw ? 140 : 190} 14 l26 -2 l4 18 l-30 4 z" fill="#6b4428"/><rect x="${S.saw ? 70 : 100}" y="23" width="28" height="5" rx="2" fill="#2a2a2e"/></svg>
+        <div class="dShells">${shells}</div><p class="dMsg">${esc(S.msg || '')}</p>
+        <div class="dTurn">${S.over ? '' : S.turn === 'me' ? '내 차례' : `${esc(castName('vip'))} 차례`}${S.saw ? ' · 톱 (두 칸)' : ''}</div></div>
+      <div class="dSide me"><b>나${S.me.cuffed ? ' ⛓️' : ''}</b><span class="bolts">${bolts(S.me.hp)}</span><div class="dItems">${items('me', myTurn)}</div>
+        <div class="dBtns"><button class="btn" id="dSelf" ${myTurn ? '' : 'disabled'}>나에게 쏘기<small>공포탄이면 한 번 더</small></button><button class="btn red" id="dOp" ${myTurn ? '' : 'disabled'}>${esc(castName('vip'))}에게 쏘기</button></div>
+        <button class="dGive" id="dGive" ${myTurn ? '' : 'disabled'}>포기하고 ${fmtWon(FEEL.vipDuelStake)} 주기</button></div></div>`;
+    el.querySelectorAll('[data-it]').forEach(b => (b.onclick = () => this.meItem(b.dataset.it)));
+    $('dSelf').onclick = () => this.meShoot('me'); $('dOp').onclick = () => this.meShoot('op'); $('dGive').onclick = () => this.forfeit();
+  },
 };
 
 /* ===================== 버튼 위치 조정: 메뉴에서 켜고 조이스틱·버튼을 끌어서 옮긴다 =====================

@@ -3047,7 +3047,7 @@ const CaseList = {
   openAll() {
     const el = $('caseList'); const cases = [...State.week.cases].sort((a, b) => (DISTRICT[a.gu].row - DISTRICT[b.gu].row) || (DISTRICT[a.gu].col - DISTRICT[b.gu].col));
     State.pcOpened = true; const tut = Tutorial.on && Tutorial.c ? Tutorial.c.id : null; if (tut) cases.sort((a, b) => (b.id === tut) - (a.id === tut)); // 튜토리얼: 연습 물건을 맨 위에
-    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><div class="pcHead">법원경매정보 · 서울 매각기일 ${State.week.saleDate}</div><h3>이번 주 서울 경매 물건 ${cases.length}건</h3><div class="dim">물건을 누르면 기본 정보를 볼 수 있어요. 금테 구는 직접 차로 둘러볼 수 있어요.</div>` +
+    el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><div class="pcHead">법원경매정보 · ${Live.on ? `오늘 ${Live.today()}` : `서울 매각기일 ${State.week.saleDate} · 오늘 ${dateOfDay(State.day)}`}</div><h3>이번 주 서울 경매 물건 ${cases.length}건</h3><div class="dim">물건을 누르면 기본 정보를 볼 수 있어요. 금테 구는 직접 차로 둘러볼 수 있어요.</div>` +
       cases.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.id === tut ? '<em class="tutTag">★ 연습 물건</em>' : ''}${c.cancelled ? '<em class="cancelTag">매각 취소</em>' : ''}${c.name}</b><span>${c.caseNo} · ${DISTRICT[c.gu].name} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)} · 유찰 ${c.failCount}회${State.capital + c.minPrice * 0.8 < c.minPrice ? ' · <em>자본 초과</em>' : ''}</span></div>`).join('') +
       `<button class="btn" id="clClose">닫기</button>`;
     el.classList.add('in'); Sound.play('paper');
@@ -3763,7 +3763,8 @@ const PropertyCard = {
         <tr><th>감정가</th><td>${fmtWon(c.appraisal)}</td></tr>
         <tr><th>최저가</th><td><b>${fmtWon(c.minPrice)}</b></td></tr>
         <tr><th>유찰</th><td>${c.failCount}회</td></tr>
-        <tr><th>매각기일</th><td>${c.saleDate} (D-day)</td></tr>
+        <tr><th>매각기일</th><td>${c.saleDate} (${Live.on && c.live ? (c.closed ? '개찰 끝' : Live.dayLabel(c)) : dLabel()})</td></tr>
+        <tr><th>오늘</th><td>${Live.on ? Live.today() : dateOfDay(State.day)}</td></tr>
         <tr><th>관할 법원</th><td>${COURTS[c.court].name}</td></tr>
       </table>
       <div class="pcBtns">
@@ -4590,6 +4591,9 @@ const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
 const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3, 0.6, 2.5];
 // 자리 0~6은 처음부터 있던 자리라 시각 오프셋(k·W/7)과 구 순서((n·7+k)%4)를 바꾸면 이미 가진 집·낸 입찰표의 사건이 달라진다. 그래서 7은 고정(LIVE_BASE)이고 나중에 더한 자리(7, 8…)는 그 사이 중간 시각에 끼운다.
 const LIVE_TRAPS_FROM = Date.UTC(2026, 9, 15, 6, 50); // v84 배포 직후 (UTC)
+/* 채널 달력 (v94, 사용자 2026-10-15 '지금 몇일인지 모르지않아?'): 게임 하루(= 1주/7)가 지나면 달력도 하루 넘어간다.
+ * 오늘 = 2025-01-01 + ((LIVE_DATES_FROM 날부터 센 일수 + 60) mod 728) → 배포 시각이 2025-03-02, 2년(2025~2026)을 돌고 처음으로 (약 35시간마다). 이 시각 뒤에 시작한 회차의 매각기일은 그 회차 D-day의 날짜 (전엔 모두 2025-11-11 고정 → 그 회차들은 그대로) */
+const LIVE_DATES_FROM = Date.UTC(2026, 9, 15, 11, 40);
 const LIVE_BASE = 7;
 function slotOff(k, W) { return k < LIVE_BASE ? Math.round(k * W / LIVE_BASE) : Math.round((2 * (k - LIVE_BASE) * 3 + 1) * W / (2 * LIVE_BASE)); } // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
 const Live = {
@@ -4607,7 +4611,8 @@ const Live = {
     const cyc = this.cycleAt(k, n);
     const seed = ((this.ch * 1000003 + k * 7919 + n * 104729) ^ 0x3c3c) & 0x7fffffff; const R = makeRng(seed);
     const gu = DRIVE_GUS[(n * LIVE_BASE + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
-    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate: '2025-11-11', year: '2025' }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
+    const saleDate = cyc.t0 >= LIVE_DATES_FROM ? this.calDate(Math.floor(cyc.t0 / this.dayMs() + 0.01) + 6) : '2025-11-11';
+    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025' }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
     c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
     if (cyc.t0 >= LIVE_TRAPS_FROM) Generator.applyTraps(c); // 정리본 2묶음 함정은 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
     c.live = cyc; this.closed[c.id] = c;
@@ -4622,9 +4627,12 @@ const Live = {
   left(c) { return Math.max(0, c.live.tEnd - this.now()); },
   mmss(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; },
   nextOpen() { let best = Infinity, bc = null; for (const c of State.week.cases) { if (c.live && c.live.tEnd - this.now() < best) { best = c.live.tEnd - this.now(); bc = c; } } return { ms: Math.max(0, best), c: bc }; },
+  calDate(g) { const g0 = Math.floor(LIVE_DATES_FROM / this.dayMs()); return Engine.addDays('2025-01-01', (((g - g0 + 60) % 728) + 728) % 728); },
+  today() { return this.calDate(Math.floor(this.now() / this.dayMs())); },
   // 하루 안의 시계: 9:00 → 18:00
   clock() { const f = (this.now() % this.dayMs()) / this.dayMs(); const m = 9 * 60 + Math.floor(f * 9 * 60); const h = Math.floor(m / 60) % 12 || 12; return `${h}:${String(m % 60).padStart(2, '0')}`; },
-  hudText() {
+  hudText() { return `${mdText(this.today())} ${this.hudText0()}`; },
+  hudText0() {
     const live = State.week.cases.filter(c => c.live && !c.closed);
     const pw = this.pending(); if (pw) return pw.phase === 'forced' ? `${this.clock()} · 강제집행 ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))}` : pw.phase === 'evict' ? `${this.clock()} · 명도 중 · 현장으로` : `${this.clock()} · 잔금 기한 ${this.mmss(this.payLeft(pw))} · ${this.payWhere(pw)}`;
     const open = live.filter(c => this.isDday(c)).sort((a, b) => a.live.tEnd - b.live.tEnd)[0];
@@ -4740,7 +4748,7 @@ const Live = {
       c = caseById(id);
     }
     const key = c.live.key, m = this.mine[key];
-    if (!this.bidOpen(c)) { await Dialog.say([say('court', `${c.caseNo} ${c.name}의 매각기일은 ${this.mmss(this.untilDday(c))} 뒤(${this.dayLabel(c)})입니다. 입찰표는 그날 이 법정에서 받습니다. 그때 오세요.`)]); return; }
+    if (!this.bidOpen(c)) { await Dialog.say([say('court', `${c.caseNo} ${c.name}의 매각기일은 ${mdText(c.saleDate)}, ${this.mmss(this.untilDday(c))} 뒤(${this.dayLabel(c)})입니다. 입찰표는 그날 이 법정에서 받습니다. 그때 오세요.`)]); return; }
     if (m) { await Dialog.say([say('court', `${c.caseNo}은(는) 이미 입찰표를 내셨어요 (${fmtWon(m.bid)}). 개찰은 ${this.mmss(this.left(c))} 뒤에 자동으로 열립니다. 결과는 어디 계시든 알려 드려요.`)]); return; }
     const sn = State.seen[c.id] || {}; // 조사를 하나도 안 한 물건은 입찰표를 안 내준다 (조사 미흡 불이익, 사용자 요청 2026-10-14)
     if (!(sn.spec || sn.survey || sn.registry || sn.site || sn.center || sn.agent)) { await Dialog.say([say('court', `${c.caseNo} ${c.name}… 이 물건 서류를 아직 하나도 안 보셨네요. 매각물건명세서나 현황조사서라도 열람하고 오세요. 아무 조사 없이 낸 입찰표는 받지 않습니다.`, { emote: 'silence' })]); return; }
@@ -5290,6 +5298,7 @@ const State = {
 function dateOfDay(d) { return Engine.addDays(GAME_START, d); }
 function weekdayOf(d) { return new Date(dateOfDay(d) + 'T00:00:00Z').getUTCDay(); }
 function isWeekend(d = State.day) { if (Live.on) return false; const w = weekdayOf(d); return w === 0 || w === 6; }
+function mdText(ymd, wd) { const [, m, d] = String(ymd).split('-').map(Number); return `${m}월 ${d}일${wd ? `(${'일월화수목금토'[new Date(ymd + 'T00:00:00Z').getUTCDay()]})` : ''}`; } // 오늘 날짜 표시 (v94)
 function dLabel(d = State.day) { return d >= 7 ? 'D-day' : `D-${7 - d}`; }
 function halfLabel() { return State.evening ? '저녁' : State.half ? '오후' : '오전'; }
 function clockText() {
@@ -6289,7 +6298,7 @@ function draw() {
     const car = Game.driving ? '내리기' : (tg && tg.kind === 'car' ? '타기' : '승하차'); const tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
   }
   $('hudSpeed').textContent = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '';
-  $('hudTime').textContent = Live.on ? Live.hudText() : `${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
+  $('hudTime').textContent = Live.on ? Live.hudText() : `${mdText(dateOfDay(State.day), true)} ${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
   drawHudExtras();
 }
 
@@ -6305,7 +6314,7 @@ function drawHudExtras() {
   const q = $('quest');
   if (!c) { q.classList.remove('in'); return; }
   const prevDone = (prevKey.split('|')[2] || '');
-  q.innerHTML = `<b>★ ${c.name}</b><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>${Live.on && c.live ? `<div style="font-size:11px;opacity:.9">${c.closed ? '개찰 끝' : Live.isDday(c) ? `오늘 매각기일 · 개찰까지 ${Live.mmss(Live.left(c))} · ${COURTS[c.court].name}` : `매각기일까지 ${Live.mmss(Live.untilDday(c))} (${Live.dayLabel(c)}) · ${COURTS[c.court].name}`}${Live.mine[c.live.key] ? ' · 입찰표 냈음' : ''}</div>` : ''}`;
+  q.innerHTML = `<b>★ ${c.name}</b><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>${Live.on && c.live ? `<div style="font-size:11px;opacity:.9">${c.closed ? '개찰 끝' : Live.isDday(c) ? `오늘 매각기일 · 개찰까지 ${Live.mmss(Live.left(c))} · ${COURTS[c.court].name}` : `매각기일까지 ${Live.mmss(Live.untilDday(c))} (${Live.dayLabel(c)} · ${mdText(c.saleDate)}) · ${COURTS[c.court].name}`}${Live.mine[c.live.key] ? ' · 입찰표 냈음' : ''}</div>` : ''}`;
   q.classList.add('in');
 }
 
@@ -7310,7 +7319,8 @@ const Notebook = {
     const tabs = ['수집한 서류', '메모', '내 판단', '놓친 장소'];
     $('nbTabs').innerHTML = tabs.map((t, i) => `<button class="btn ${i === this.tab ? 'on' : ''}" data-i="${i}" ${i === 3 && !State.resultShown ? 'disabled' : ''}>${t}</button>`).join('');
     $('nbTabs').querySelectorAll('.btn').forEach(b => b.onclick = () => { this.saveJudgment(); this.tab = +b.dataset.i; Sound.play('flip'); this.render(); });
-    const body = $('nbBody');
+    const body = $('nbBody'); body.innerHTML = '';
+    try {
     if (this.tab === 0) body.innerHTML = this.docsHtml();
     else if (this.tab === 1) {
       const ids = State.week.cases.filter(c => (State.caseMemo || {})[c.id] || c.id === State.target || State.seen[c.id]).map(c => c.id);
@@ -7324,6 +7334,7 @@ const Notebook = {
     body.querySelectorAll('[data-doc]').forEach(a => a.onclick = () => { const d = State.docs.find(x => x.id === +a.dataset.doc); this.toggle(false); DocViewer.show(d.html, { title: d.title, toNotebook: false }); });
     body.querySelectorAll('[data-both]').forEach(a => a.onclick = () => { const id = a.dataset.both; const s = State.docs.find(x => x.caseId === id && x.kind === 'spec'), v = State.docs.find(x => x.caseId === id && x.kind === 'survey'); this.toggle(false); DocViewer.show(docPair(s.html, v.html), { title: `매각물건명세서 + 현황조사서 · ${caseById(id).name}`, toNotebook: false, wide: true }); });
     if (this.tab === 2) this.bindJudge();
+    } catch (e) { body.innerHTML = '<p class="dim">이 탭을 그리다 문제가 생겼어요. 다른 탭을 눌렀다 다시 와 보세요.</p>'; console.error(e); } // 한 탭이 깨져도 수첩 전체가 멈추지 않게
   },
   missedHtml() {
     if (!State.resultShown) return '<p class="dim">결과 화면을 본 뒤에 열려요.</p>';
@@ -7340,7 +7351,8 @@ const Notebook = {
     if (!ids.length && !(State.fines || []).length) return '<p class="dim">아직 받은 서류가 없어요. 사무실 PC부터 보세요.</p>';
     let h = '';
     for (const id of ids) {
-      const c = caseById(id);
+      // 채널: 회차가 지나 목록에서 빠진 물건의 서류도 있다 (예전엔 여기서 멈춰서 탭을 눌러도 화면이 안 바뀌었다 — 사용자 2026-10-15 '수첩 눌러도 아무것도 없고')
+      const d0 = State.docs.find(x => x.caseId === id), c = caseById(id) || { name: `${(d0 && d0.title.split(' · ')[1]) || '지난 물건'} (지난 회차)`, caseNo: '' };
       h += `<div class="nbCase"><b>${id === State.target ? '★ ' : ''}${c.name}</b><small>${c.caseNo}</small><ul>`;
       for (const d of State.docs.filter(x => x.caseId === id)) h += `<li><a data-doc="${d.id}">${d.title.split(' · ')[0]}</a> <small>${whenLabel(d)}</small></li>`;
       for (const cl of State.clues[id] || []) h += `<li class="clue">현장: ${escapeHtml(cl.text)} <small>${dLabel(cl.day)}</small></li>`;
@@ -7354,7 +7366,7 @@ const Notebook = {
   judgeHtml() {
     const cands = State.week.cases.filter(c => State.seen[c.id] || c.id === State.target);
     if (!cands.length) return '<p class="dim">물건을 하나라도 조사하거나 입찰 대상으로 지정하면 여기서 판단을 적을 수 있어요.</p>';
-    const id = this.jCase && cands.some(c => c.id === this.jCase) ? this.jCase : (State.target || cands[0].id); this.jCase = id;
+    const id = this.jCase && cands.some(c => c.id === this.jCase) ? this.jCase : cands.some(c => c.id === State.target) ? State.target : cands[0].id; this.jCase = id;
     const c = caseById(id); const j = State.judgment[id] || {};
     // 말소기준 후보: 내가 뗀 등기부의 (말소되지 않은) 줄
     const regDoc = [...State.docs].reverse().find(d => d.caseId === id && d.kind === 'registry');

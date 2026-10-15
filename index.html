@@ -566,18 +566,131 @@ em.ttl { font-style:normal; font-size:10px; font-weight:700; margin-left:4px; pa
 .fgQuit { display:block; margin:6px 0 0 auto; background:rgba(255,255,255,.06); color:#ccc; border:1px solid #555; border-radius:6px; font-size:11px; padding:3px 10px; cursor:pointer; }
 #fightAsk { position:fixed; left:50%; bottom:calc(150px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:66; background:#fbf8f0; color:#1a1408; border:2px solid #c0302a; border-radius:10px; padding:10px 14px; box-shadow:0 8px 24px rgba(0,0,0,.5); display:flex; flex-direction:column; gap:4px; text-align:center; font-family:var(--ui); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; min-width:240px; } #fightAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #fightAsk span { font-size:12px; color:#6a5a3a; } #fightAsk .bad { color:#c0392b; } #fightAsk div { display:flex; gap:6px; justify-content:center; margin-top:4px; }
 
-/* 카지노 탭 (v82) */
-.csTabs { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 4px; } .csTabs .btn { flex:1 1 auto; font-size:12px; padding:5px 4px; } .csTabs .btn.sel { background:var(--gold); color:#1a1408; }
-.hjPick .btn.big { font-size:17px; } .hjPick .btn.gold { color:#1a1408; }
-.slotBox { display:flex; justify-content:center; gap:10px; margin:10px 0 4px; padding:12px; background:linear-gradient(#8a1a2a, #5a0f1a); border:4px solid #c9a24a; border-radius:14px; } .slotBox span { width:70px; height:76px; background:#fff; border-radius:8px; font-size:44px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 -6px 10px rgba(0,0,0,.18); } .slotBox span.spin { filter:blur(1.2px); }
-.cardTable { background:radial-gradient(ellipse at center, #1f7a4a 0%, #105230 80%); border:4px solid #c9a24a; border-radius:14px; padding:10px; margin:8px 0 4px; min-height:70px; } .cardTable .mgNote { color:#e8f4ea; } .cRow { display:flex; align-items:center; gap:6px; margin:4px 0; flex-wrap:wrap; } .cRow small { color:#fff; font-weight:700; min-width:58px; font-size:12px; }
-i.card { font-style:normal; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; width:40px; height:56px; background:#fff; color:#15151c; border-radius:5px; font-size:16px; line-height:1; box-shadow:0 2px 0 rgba(0,0,0,.3); } i.card b { font-size:15px; } i.card.red { color:#c0302a; } i.card.back { background:repeating-linear-gradient(45deg, #b8323a 0 4px, #8a1a2a 4px 8px); border:2px solid #fff; }
-.cRow.pk { justify-content:center; } .pkC { background:none; border:none; padding:0 0 2px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; border-radius:6px; } .pkC small { color:#fff; font-size:10px; min-width:0; } .pkC.held i.card { outline:3px solid var(--gold); transform:translateY(-4px); } .pkC.held small { color:#ffd84a; }
-.pkPay { display:flex; flex-wrap:wrap; gap:2px 8px; font-size:11px !important; } .pkPay span.on { color:#ffd84a; font-weight:800; }
-.rlWheel { width:96px; height:96px; margin:8px auto 6px; border-radius:50%; border:6px solid #c9a24a; display:flex; align-items:center; justify-content:center; font-size:34px; font-weight:800; color:#fff; background:#3a2414; box-shadow:inset 0 0 0 6px #5a3a24; } .rlWheel.r { background:#c0302a; } .rlWheel.b { background:#15151c; } .rlWheel.g { background:#1f7a3a; } .rlWheel.spin { animation:rlSpin .2s linear infinite; } @keyframes rlSpin { to { transform:rotate(30deg); } }
-.rlPick .btn { min-width:62px; font-size:12px; padding:5px 4px; } .rlGrid { display:grid; grid-template-columns:repeat(13, 1fr); gap:2px; margin-top:6px; } .rlGrid button { border:none; border-radius:3px; color:#fff; font-size:10px; padding:4px 0; cursor:pointer; } .rlGrid .r { background:#c0302a; } .rlGrid .b { background:#15151c; } .rlGrid .g { background:#1f7a3a; } .rlGrid .sel { outline:2px solid var(--gold); }
-i.rln { font-style:normal; display:inline-block; min-width:16px; text-align:center; font-size:10px; font-weight:700; color:#fff; border-radius:8px; padding:0 3px; margin:1px; } i.rln.r { background:#c0302a; } i.rln.b { background:#15151c; } i.rln.g { background:#1f7a3a; }
-#hjWin { width:min(500px, calc(100% - 24px)); }
+/* 카지노 (v82 → v88 진짜 카지노처럼: 나무 테두리 펠트 테이블, 칩, 슬롯머신 캐비닛, 룰렛 휠·베팅판, 비디오 포커) */
+.csLogo { display:block; letter-spacing:3px; background:linear-gradient(#fff2b8, #e0b43a 55%, #a8701a); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 2px 0 #000); }
+.csTabs { display:flex; flex-wrap:wrap; gap:4px; margin:8px 0 4px; } .csTabs .btn { flex:1 1 auto; font-size:12px; padding:6px 4px; background:linear-gradient(#3a2216, #24140c); border-color:#6a4a24; color:#f3e6c4; } .csTabs .btn.sel { background:linear-gradient(#ffe58a, #c9a24a); color:#1a1408; border-color:#fff2b8; }
+.cs .mgMsg { color:#fff; text-shadow:0 1px 0 #000; min-height:24px; } .cs .mgMsg.win { color:#7fe08a; } .cs .mgMsg.lose { color:#ff8a7a; } .cs .mgNote { color:#bfae88; text-align:center; } .cs .pcBtns { justify-content:center; }
+.hjPick .btn.big { font-size:17px; } .hjPick .btn.gold { color:#1a1408; background:linear-gradient(#ffe58a, #c9a24a); }
+/* 칩 */
+.chips { display:flex; align-items:center; justify-content:center; gap:10px; margin:6px 0 2px; flex-wrap:wrap; } .chipHint { font-size:11px; color:#bfae88; flex-basis:100%; text-align:center; margin-top:-4px; }
+.chip { --c:#ece7da; --s:#2f5fb0; --t:#1a1a1a; position:relative; width:48px; height:48px; border-radius:50%; border:2px solid rgba(0,0,0,.45); padding:0; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-style:normal;
+  background:radial-gradient(circle, var(--c) 0 47%, var(--s) 48% 51%, var(--c) 52% 63%, transparent 64%), repeating-conic-gradient(var(--s) 0 14deg, var(--c) 14deg 45deg); box-shadow:0 3px 0 rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.25); transition:transform .12s, box-shadow .12s; }
+.chip em { font-style:normal; font:800 11px var(--ui); color:var(--t); letter-spacing:-.3px; } .chip.c10 { --c:#c0262a; --s:#fff; --t:#fff; } .chip.c50 { --c:#5a2a8a; --s:#fff; --t:#fff; } .chip.c100 { --c:#18181c; --s:#e0b43a; --t:#ffd86b; }
+.chip.sel { transform:translateY(-6px); box-shadow:0 0 0 3px #ffd86b, 0 8px 0 rgba(0,0,0,.45); } .chip:disabled { opacity:.32; cursor:default; } .chip:not(:disabled):hover { transform:translateY(-3px); } .chip.sel:hover { transform:translateY(-6px); }
+.chip.mini { width:24px; height:24px; border-width:1px; cursor:default; box-shadow:0 2px 0 rgba(0,0,0,.55); } .chip.mini em { font-size:8px; } .chip.won { animation:chipWon .5s ease-in-out infinite alternate; } @keyframes chipWon { to { box-shadow:0 0 0 2px #ffd86b, 0 0 12px #ffd86b; } }
+.stack { display:inline-flex; flex-direction:column; align-items:center; } .stack .chip.mini { margin-top:-19px; } .stack .chip.mini:first-child { margin-top:0; }
+/* 펠트 테이블 */
+.felt { position:relative; margin:8px 0 4px; padding:10px; border-radius:22px; border:9px solid; border-color:#7a4220 #4a2810 #3a1e0c #5a3218; color:#f3f0e0; background:radial-gradient(ellipse at 50% 25%, #2f9a5e 0%, #16683e 55%, #0c4428 100%); box-shadow:inset 0 0 0 2px #c9a24a, inset 0 0 34px rgba(0,0,0,.5), 0 4px 0 rgba(0,0,0,.4); }
+.feltArc, .feltTxt { text-align:center; font:800 13px var(--serif); letter-spacing:3px; color:#ffd86b; text-shadow:0 1px 0 #000; } .feltTxt small { font:600 11px var(--ui); color:rgba(255,255,255,.7); letter-spacing:0; } .feltSub { text-align:center; font-size:10px; color:rgba(255,255,255,.65); margin-top:2px; }
+/* 홀짝 */
+.hjFelt .hjTable { position:relative; height:120px; margin:8px auto 6px; width:80%; background:radial-gradient(ellipse, rgba(255,255,255,.08), transparent 70%); border:2px dashed rgba(255,255,255,.28); border-radius:60px; gap:14px; }
+.hjCup { position:relative; width:70px; height:64px; background:linear-gradient(90deg, #4a2410, #a8683a 40%, #6a3818 75%, #3a1a08); border-radius:34px 34px 10px 10px; box-shadow:inset 0 -8px 0 #c9a24a, 0 6px 8px rgba(0,0,0,.45); } .hjCup::before { content:''; position:absolute; left:50%; top:-10px; width:18px; height:14px; transform:translateX(-50%); background:#c9a24a; border-radius:8px 8px 2px 2px; }
+.hjCup.lift { position:absolute; left:50%; top:6px; animation:cupLift .5s ease-out forwards; } @keyframes cupLift { from { transform:translate(-50%, 22px); } to { transform:translate(70px, -6px) rotate(18deg) scale(.82); opacity:.85; } }
+.hjDice { display:flex; gap:16px; } .die { display:grid; grid-template-columns:repeat(3, 1fr); width:44px; height:44px; padding:6px; box-sizing:border-box; gap:2px; background:linear-gradient(145deg, #fff, #e4e0d8); border-radius:9px; box-shadow:0 4px 0 #b8b2a4, 0 6px 8px rgba(0,0,0,.4); animation:dieIn .45s ease-out both; } .die:nth-child(2) { animation-delay:.08s; } .die b { border-radius:50%; } .die b.on { background:radial-gradient(circle at 35% 35%, #555, #000); } .die:first-child b.on { background:radial-gradient(circle at 35% 35%, #e04a4a, #8a0000); }
+@keyframes dieIn { from { transform:translateY(-30px) rotate(-200deg) scale(.6); opacity:0; } to { transform:none; opacity:1; } }
+.hjSpots { display:flex; gap:12px; margin:4px 6% 2px; } .hjSpots span { flex:1; text-align:center; font:800 22px var(--serif); color:#fff; border:2px solid rgba(255,255,255,.5); border-radius:12px; padding:4px 0; } .hjSpots .hol { background:rgba(184,50,58,.35); } .hjSpots .jjak { background:rgba(47,95,176,.35); } .hjSpots span.on { border-color:#ffd86b; box-shadow:0 0 12px rgba(255,216,107,.7); } .hjSpots .hol.on { background:rgba(184,50,58,.8); } .hjSpots .jjak.on { background:rgba(47,95,176,.8); }
+/* 슬롯머신 캐비닛 */
+.slotCab { margin:8px 0 4px; padding:10px 12px 12px; border-radius:26px 26px 12px 12px; background:linear-gradient(90deg, #5a0810, #c0202e 18%, #e03a44 50%, #c0202e 82%, #5a0810); border:3px solid #e0b43a; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 6px 0 #2a0406, 0 10px 18px rgba(0,0,0,.5); }
+.marquee { display:flex; align-items:center; justify-content:center; gap:4px; padding:6px 8px; border-radius:16px; background:linear-gradient(#2a0408, #0e0204); border:2px solid #e0b43a; } .marquee b { margin:0 8px; font:900 20px Georgia, var(--serif); font-style:italic; letter-spacing:2px; white-space:nowrap; background:linear-gradient(#fff6c8, #ffd23a 50%, #c07a10); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 0 6px rgba(255,200,60,.7)); }
+.marquee i { width:7px; height:7px; flex:none; border-radius:50%; background:#ffe58a; box-shadow:0 0 6px #ffd23a; animation:bulb .9s steps(1) infinite; } .marquee i:nth-child(even) { animation-delay:.45s; } @keyframes bulb { 50% { background:#6a4a10; box-shadow:none; } } .slotCab.big .marquee i { animation-duration:.25s; }
+.slotPay { display:grid; grid-template-columns:repeat(4, 1fr); gap:1px 8px; margin:6px 0; padding:4px 8px; border-radius:6px; background:#160206; border:1px solid #6a1a1a; font-size:11px; color:#ffd86b; } .slotPay span { display:flex; align-items:center; justify-content:space-between; gap:2px; white-space:nowrap; } .slotPay b { color:#fff; } .slotPay .s7 { font-size:12px; text-shadow:none; }
+.slotMid { display:flex; align-items:center; gap:6px; } .reels { position:relative; flex:1; display:flex; gap:6px; padding:6px; border-radius:10px; background:#0e0204; border:3px solid #e0b43a; box-shadow:inset 0 0 14px #000; }
+.reel { position:relative; flex:1; height:192px; overflow:hidden; border-radius:6px; background:linear-gradient(90deg, #cfc8b8, #fff 25%, #fff 75%, #cfc8b8); } .reel::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,.55)); }
+.strip { will-change:transform; } .sym { height:64px; display:flex; align-items:center; justify-content:center; font-size:40px; line-height:1; } .reel.blur .strip { filter:blur(2.4px); } .sym.hit { animation:symHit .45s ease-in-out infinite alternate; } @keyframes symHit { to { transform:scale(1.18); filter:drop-shadow(0 0 8px #ffd23a); } }
+b.s7 { font:900 44px/1 Georgia, serif; font-style:italic; color:#e01a1a; text-shadow:2px 2px 0 #ffd23a, -1px -1px 0 #7a0000; }
+.payline { position:absolute; left:2px; right:2px; top:50%; height:3px; margin-top:-1px; background:rgba(230,20,30,.85); box-shadow:0 0 6px #ff2a2a; z-index:2; pointer-events:none; } .payline::before, .payline::after { content:''; position:absolute; top:-6px; border:7px solid transparent; } .payline::before { left:-6px; border-left-color:#ffd23a; } .payline::after { right:-6px; border-right-color:#ffd23a; }
+.slotCab.won .payline { animation:blink .3s steps(1) infinite; } .slotCab.won .reels { animation:reelGlow .5s ease-in-out infinite alternate; } @keyframes reelGlow { to { box-shadow:inset 0 0 14px #000, 0 0 18px #ffd23a; } } @keyframes blink { 50% { opacity:.2; } }
+.slotCab.big { animation:cabShake .12s linear 8; } @keyframes cabShake { 50% { transform:translateX(3px); } }
+.lever { position:relative; flex:none; width:36px; height:176px; padding:0; border:none; background:none; cursor:pointer; } .lever:disabled { cursor:default; }
+.lever::before { content:''; position:absolute; left:50%; top:22px; bottom:22px; width:9px; margin-left:-4.5px; border-radius:5px; background:linear-gradient(90deg, #7a7a7a, #f4f4f4 45%, #8a8a8a); transform-origin:50% 100%; }
+.lever::after { content:''; position:absolute; left:3px; right:3px; bottom:0; height:30px; border-radius:8px; background:linear-gradient(#5a5a5a, #222); border:2px solid #e0b43a; }
+.lever i { position:absolute; left:50%; top:0; width:32px; height:32px; margin-left:-16px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ff9a9a, #d01818 45%, #6a0000); box-shadow:0 3px 4px rgba(0,0,0,.5); z-index:1; }
+.lever.pull::before { animation:leverRod .7s ease-in-out; } .lever.pull i { animation:leverBall .7s ease-in-out; } @keyframes leverRod { 40% { transform:scaleY(.25); } } @keyframes leverBall { 40% { transform:translateY(98px); } }
+.leds { display:flex; gap:6px; margin-top:8px; } .leds div { flex:1; text-align:center; padding:3px 4px; border-radius:6px; background:#060606; border:2px solid #3a0a0a; } .leds small { display:block; font:700 9px var(--ui); color:#ff9a3a; letter-spacing:1px; } .leds b { font:700 13px ui-monospace, monospace; color:#ff3a2a; text-shadow:0 0 6px rgba(255,60,40,.8); white-space:nowrap; } .leds .w b { color:#3aff6a; text-shadow:0 0 6px rgba(60,255,100,.8); }
+/* 카드 */
+i.card { position:relative; flex:none; font-style:normal; display:inline-flex; align-items:center; justify-content:center; width:48px; height:68px; background:linear-gradient(160deg, #fff, #f2efe6); color:#15151c; border-radius:6px; border:1px solid #bbb; box-shadow:0 3px 5px rgba(0,0,0,.45); line-height:1; }
+i.card.red { color:#c0262a; } i.card .ci { position:absolute; left:4px; top:3px; font:700 11px/1.05 var(--ui); text-align:center; } i.card .ci.rt { left:auto; top:auto; right:4px; bottom:3px; transform:rotate(180deg); } i.card .cc { font-size:26px; } i.card em { font:900 20px Georgia, serif; font-style:normal; padding:3px 5px; border:1.5px solid currentColor; border-radius:3px; background:linear-gradient(#fff8e0, #f0d890); }
+i.card.back { background:repeating-linear-gradient(45deg, #b8202a 0 5px, #8a1018 5px 10px); border:3px solid #fff; box-shadow:inset 0 0 0 2px #8a1018, 0 3px 5px rgba(0,0,0,.45); } i.card.deal { animation:dealIn .38s ease-out both; } @keyframes dealIn { from { transform:translate(70px, -50px) rotate(16deg); opacity:0; } to { transform:none; opacity:1; } }
+.hand { display:flex; gap:5px; flex-wrap:wrap; } .hand i.card:nth-child(2) { animation-delay:.1s; } .hand i.card:nth-child(3) { animation-delay:.05s; }
+.cRow { display:flex; align-items:center; gap:8px; margin:6px 0; } .cRow > small { color:#fff; font-weight:700; min-width:52px; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:2px; } .cRow > small b { background:rgba(0,0,0,.45); color:#ffd86b; border-radius:10px; padding:1px 8px; font-size:15px; } .cRow.dl { border-bottom:1px dashed rgba(255,255,255,.25); padding-bottom:8px; }
+.bjSpot { display:flex; justify-content:center; padding:18px 0 10px; } .betCircle { width:76px; height:76px; flex:none; border:2px solid rgba(255,255,255,.75); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 0 5px rgba(255,255,255,.1); } .betCircle.sm { width:52px; height:52px; margin-left:auto; }
+/* 룰렛 */
+.rlTop { display:flex; gap:10px; align-items:stretch; } .rlWheelBox { position:relative; flex:none; width:168px; height:168px; } .rlWheelBox canvas { width:100%; height:100%; filter:drop-shadow(0 6px 6px rgba(0,0,0,.55)); }
+.rlRes { position:absolute; right:-4px; bottom:-2px; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font:800 19px var(--ui); color:#fff; border:3px solid #ffd86b; box-shadow:0 3px 6px rgba(0,0,0,.6); animation:resPop .4s ease-out; } .rlRes.r { background:#c0262a; } .rlRes.b { background:#141418; } .rlRes.g { background:#1f8a3a; } @keyframes resPop { from { transform:scale(0); } 70% { transform:scale(1.25); } }
+.rlHist { flex:1; display:flex; flex-wrap:wrap; gap:3px; align-content:flex-start; padding:6px; border-radius:8px; background:#070707; border:2px solid #3a2a14; min-width:0; } .rlHist small { flex-basis:100%; font-size:10px; color:#ff9a3a; letter-spacing:1px; } .rlHist span { color:#666; }
+i.rln { font-style:normal; display:inline-block; min-width:20px; text-align:center; font-size:11px; font-weight:700; color:#fff; border-radius:8px; padding:1px 3px; } i.rln.r { background:#c0302a; } i.rln.b { background:#2a2a30; } i.rln.g { background:#1f7a3a; } .rlHist i.rln:first-of-type { font-size:16px; min-width:32px; box-shadow:0 0 0 2px #ffd86b; }
+.rlBoard { margin-top:10px; } .rlNums { display:grid; grid-template-columns:1.1fr repeat(12, 1fr) 1.3fr; grid-template-rows:repeat(3, 32px); border:2px solid rgba(255,255,255,.85); }
+.rc { position:relative; padding:0; margin:0; min-width:0; min-height:28px; border:1px solid rgba(255,255,255,.7); background:transparent; color:#fff; font:700 11px var(--ui); cursor:pointer; } .rc:not(:disabled):hover { filter:brightness(1.3); background-color:rgba(255,255,255,.12); } .rc:disabled { cursor:default; }
+.rc.r { background:#b8202a; } .rc.b { background:#18181c; } .rc.g { background:#1f8a3a; } .rc.zero { grid-row:1 / span 3; border-radius:50% 0 0 50% / 50% 0 0 50%; font-size:15px; } .rc.col { font-size:10px; }
+.rc.hit { box-shadow:inset 0 0 0 3px #ffd86b, 0 0 10px #ffd86b; z-index:1; animation:blink .5s steps(1) 6; }
+.rc .chip.mini { position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); z-index:2; pointer-events:none; }
+.rlDoz, .rlOut { display:grid; margin:0 calc(100% * 1.3 / 14.4) 0 calc(100% * 1.1 / 14.4); } .rlDoz { grid-template-columns:repeat(3, 1fr); } .rlOut { grid-template-columns:repeat(6, 1fr); } .rlDoz .rc, .rlOut .rc { min-height:30px; font-size:11px; }
+i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%); } i.dia.r { background:#d02a30; } i.dia.b { background:#000; }
+/* 비디오 포커 */
+.vpCab { margin:8px 0 4px; padding:8px 10px 10px; border-radius:12px; background:linear-gradient(#0c1e7a, #050c3a); border:4px solid #c9a24a; box-shadow:inset 0 0 20px rgba(0,0,0,.6), 0 4px 0 rgba(0,0,0,.4); color:#fff; }
+.vpTitle { text-align:center; font:900 19px Georgia, serif; letter-spacing:2px; color:#ffd23a; text-shadow:0 2px 0 #a0501a, 0 0 10px rgba(255,210,58,.5); }
+.vpPay { width:100%; border-collapse:collapse; margin:4px 0 6px; font:700 11px ui-monospace, monospace; color:#ffe84a; } .vpPay td { padding:1px 6px; } .vpPay td:nth-child(2) { text-align:center; } .vpPay td:last-child { text-align:right; } .vpPay tr.on { background:#c0262a; color:#fff; animation:blink .4s steps(1) 6; }
+.cRow.pk { justify-content:center; gap:6px; } .pkC { position:relative; background:none; border:none; padding:0 0 2px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; border-radius:6px; } .pkC:disabled { cursor:default; } .pkC small { color:#9fb4ff; font-size:10px; }
+.heldTag { visibility:hidden; font:900 11px var(--ui); letter-spacing:1px; color:#ffe84a; text-shadow:0 0 6px #ffd23a; } .pkC.held .heldTag { visibility:visible; } .pkC.held i.card { outline:3px solid #ffe84a; transform:translateY(-4px); }
+.vpLeds { display:flex; justify-content:space-between; gap:8px; margin-top:6px; padding:4px 8px; border-radius:4px; background:#000; font:700 12px ui-monospace, monospace; color:#ffe84a; }
+/* 폰 가로 화면: 조금 작게 */
+.short .csTabs { margin:4px 0 2px; } .short .csTabs .btn { padding:3px 4px; } .short .felt { padding:6px; margin:5px 0 2px; border-width:6px; }
+.short .reel { height:132px; } .short .sym { height:44px; font-size:28px; } .short b.s7 { font-size:30px; } .short .lever { height:132px; } .short .slotPay { display:none; } .short .marquee b { font-size:15px; } .short .slotCab { padding:6px 8px 8px; }
+.short .chip { width:38px; height:38px; } .short .chip.mini { width:22px; height:22px; } .short .chips { gap:7px; } .short .rlWheelBox { width:118px; height:118px; } .short .rlNums { grid-template-rows:repeat(3, 26px); } .short .rlDoz .rc, .short .rlOut .rc { min-height:24px; }
+.short i.card { width:40px; height:56px; } .short i.card .cc { font-size:20px; } .short i.card em { font-size:15px; } .short .hjFelt .hjTable { height:86px; } .short .vpPay { font-size:10px; } .short .cs .mgMsg { margin:4px 0 2px; } .short .hjPick { margin-top:5px; } .short .hjPick .btn { padding:6px 0; }
+
+/* 게임장 (가위바위보 · 건대 파이터): 네온 오락실 기계처럼 (v88) */
+.rcpt.arcade { position:relative; color:#e8f4ff; border-radius:16px; border:3px solid #2ae0ff; padding:16px 16px 12px; background:repeating-linear-gradient(rgba(255,255,255,.035) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 0%, #2a1458 0%, #0b0820 70%); box-shadow:0 0 18px rgba(42,224,255,.55), inset 0 0 26px rgba(255,42,180,.25), 0 14px 40px rgba(0,0,0,.7); }
+.rcpt.arcade::before { content:'★ 건대 오락실 ★  INSERT COIN'; display:block; text-align:center; font:700 10px var(--ui); letter-spacing:3px; color:#2ae0ff; margin:-6px 0 4px; animation:blink 1.2s steps(1) infinite; }
+.rcpt.arcade .rcHead { font:900 24px var(--ui); letter-spacing:2px; color:#ff4ad8; text-shadow:0 0 8px #ff4ad8, 0 0 22px rgba(255,74,216,.6), 0 2px 0 #3a0030; } .rcpt.arcade .rcHead small { color:#7ae8ff !important; text-shadow:none; letter-spacing:0; }
+.rcpt.arcade .mgSec { color:#ffe84a; } .rcpt.arcade .mgSec small { color:#9aa8d0; } .rcpt.arcade .mgNote { color:#a8b4d8; } .rcpt.arcade .mgNote b { color:#ffe84a; } .rcpt.arcade .mgMsg { color:#fff; } .rcpt.arcade .mgMsg.win { color:#5aff8a; text-shadow:0 0 8px #5aff8a; } .rcpt.arcade .mgMsg.lose { color:#ff6a8a; text-shadow:0 0 8px #ff6a8a; }
+.rcpt.arcade .btn { background:#1a1440; border-color:#5a4aaa; color:#e8f4ff; } .rcpt.arcade .btn small { color:#9aa8d0; opacity:1; } .rcpt.arcade .mgRow .btn.sel, .rcpt.arcade .rpsPick .btn.sel { background:#ffe84a; color:#1a1408; border-color:#fff6a8; } .rcpt.arcade .mgRow .btn.sel small { color:#5a4a10; }
+.rcpt.arcade .btn.gold { background:linear-gradient(#ff5ae0, #b01a90); color:#fff; border-color:#ff9ae8; box-shadow:0 0 12px rgba(255,74,216,.6); }
+.rcpt.arcade .rpsBoard { background:#05030f; border:2px solid #3a2a7a; border-radius:12px; padding:10px 4px; box-shadow:inset 0 0 18px rgba(42,224,255,.2); } .rcpt.arcade .rpsBoard b { color:#fff; } .rcpt.arcade .rpsBoard em { color:#ffe84a; font-size:22px; text-shadow:0 0 10px #ffb02a; } .rcpt.arcade .rpsBoard .pip { color:#ffe84a; text-shadow:0 0 6px #ffb02a; } .rcpt.arcade .rpsBoard small { color:#7ae8ff; }
+.rcpt.arcade .rpsPick .btn { border:2px solid #2ae0ff; box-shadow:0 0 8px rgba(42,224,255,.35); } .rcpt.arcade .rpsPick .btn:not(:disabled):hover { box-shadow:0 0 14px rgba(42,224,255,.8); }
+.short .rcpt.arcade { padding:10px 12px 8px; } .short .rcpt.arcade .rcHead { font-size:18px; }
+
+/* v88 장면 속으로 (사용자 '창이 아니라 그 상황 속에 들어간 것처럼, 몰입할 수 있게'): 카지노 자리 · 오락기 앞이 화면 전체 */
+#hjWin, #rpsWin, #fightWin { left:0; top:0; right:0; bottom:0; width:auto; height:auto; max-height:none; transform:none; box-shadow:none; overflow:hidden; z-index:70; } #hjWin.in, #rpsWin.in, #fightWin.in { transform:none; } #fightWin { z-index:72; }
+.scene { position:absolute; inset:0; display:flex; flex-direction:column; overflow:hidden; font-family:var(--ui); padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); } #hjWin:not(.in), #rpsWin:not(.in), #fightWin:not(.in) { transform:scale(1.06); } /* 들어갈 때 살짝 다가가는 느낌 (렌더마다 다시 뛰지 않게 창 자체에) */
+.cs { color:#f3e6c4; background:radial-gradient(ellipse at 50% 115%, #4a1018 0%, #1e070c 45%, #080305 100%); }
+.csAmb { position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at 18% -8%, rgba(255,200,120,.28), transparent 28%), radial-gradient(circle at 82% -8%, rgba(255,200,120,.22), transparent 28%), radial-gradient(ellipse at 50% 35%, rgba(255,220,150,.1), transparent 55%); }
+.csAmb i { position:absolute; width:140px; height:140px; border-radius:50%; filter:blur(36px); opacity:.35; animation:amb 6s ease-in-out infinite alternate; } .csAmb i:nth-child(1) { left:2%; top:34%; background:#ff2a5a; } .csAmb i:nth-child(2) { right:4%; top:14%; background:#2ad0ff; animation-delay:-2s; } .csAmb i:nth-child(3) { left:38%; bottom:-6%; background:#ffd23a; animation-delay:-4s; } @keyframes amb { to { opacity:.15; transform:translate(20px, -14px); } }
+.csBar { position:relative; flex:none; display:flex; align-items:center; gap:10px; padding:6px 12px; background:linear-gradient(rgba(0,0,0,.65), transparent); } .csBar .csLogo { flex:1; text-align:center; font:700 17px var(--serif); } .csCash { font-size:13px; white-space:nowrap; } .csCash b { color:#ffd86b; }
+.sBack { font-size:13px; padding:5px 10px; background:rgba(0,0,0,.5); border-color:#6a4a24; color:#f3e6c4; white-space:nowrap; }
+.csMain { position:relative; flex:1; min-height:0; display:flex; gap:12px; padding:0 12px 10px; }
+.csStage { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:auto; padding-top:4px; } .csStage > .felt { width:min(100%, 660px); z-index:1; } .csStage > .slotCab { width:min(100%, 470px); } .csStage > .vpCab { width:min(100%, 540px); }
+.csHud { flex:none; width:min(300px, 36vw); display:flex; flex-direction:column; justify-content:center; gap:4px; overflow:auto; padding:4px 2px 4px 10px; border-left:1px solid rgba(201,162,74,.25); background:linear-gradient(90deg, rgba(0,0,0,.25), rgba(0,0,0,.45)); }
+.csHud .csTabs { display:grid; grid-template-columns:repeat(3, 1fr); } .csHud .hjPick { flex-wrap:wrap; gap:6px; margin-top:6px; } .csHud .hjPick .btn { flex:1 1 40%; } .csHud .mgNote { font-size:11px; }
+.cs:not(.t-slot):not(.t-pk) .csHud .mgMsg { display:none; }
+.dealer { position:relative; flex:none; display:flex; flex-direction:column; align-items:center; margin-bottom:-24px; z-index:0; } .dealer canvas { width:124px; height:124px; image-rendering:pixelated; filter:drop-shadow(0 0 22px rgba(255,200,120,.3)); }
+.dName { position:absolute; bottom:28px; font:700 10px var(--ui); color:#ffd86b; background:rgba(0,0,0,.65); border-radius:8px; padding:1px 7px; white-space:nowrap; }
+.bubble { position:absolute; left:calc(50% + 62px); top:8px; width:max-content; max-width:min(250px, 28vw); margin:0; padding:7px 11px; border-radius:12px; background:#fbf8f0; color:#1a1408; font:700 12.5px/1.4 var(--ui); box-shadow:0 4px 10px rgba(0,0,0,.5); animation:bubIn .25s ease-out; } .bubble::before { content:''; position:absolute; left:-7px; top:12px; border:7px solid transparent; border-left:0; border-right-color:#fbf8f0; } .bubble.win { color:#1a7a34; } .bubble.lose { color:#b0301a; } @keyframes bubIn { from { transform:scale(.8); opacity:0; } }
+.rlSide { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; } .rlSide .dealer { flex-direction:row; align-items:flex-start; gap:6px; margin:0; } .rlSide .dealer canvas { width:58px; height:58px; flex:none; } .rlSide .dName { display:none; } .cs .rlSide .bubble { position:relative; left:auto; top:4px; max-width:none; flex:1; width:auto; } .rlSide .rlHist { flex:1; }
+.cs .bjFelt { border-radius:16px 16px 50% 50% / 16px 16px 110px 110px; padding-bottom:28px; } .cs .hjFelt { border-radius:140px / 90px; padding:12px 26px; }
+.arc { color:#e8f4ff; align-items:center; justify-content:center; background:radial-gradient(ellipse at 50% 115%, #3a0e6a 0%, #120828 50%, #050309 100%); }
+.arcAmb { position:absolute; inset:0; pointer-events:none; } .arcAmb::after { content:''; position:absolute; left:-60%; right:-60%; bottom:0; height:42%; transform:perspective(260px) rotateX(62deg); transform-origin:50% 100%; background:repeating-linear-gradient(90deg, rgba(255,74,216,.28) 0 2px, transparent 2px 70px), repeating-linear-gradient(0deg, rgba(42,224,255,.22) 0 2px, transparent 2px 46px); }
+.arcAmb i { position:absolute; bottom:6%; width:min(200px, 20vw); height:72%; border-radius:16px 16px 0 0; background:linear-gradient(90deg, #0e0820, #24164a 50%, #0e0820); filter:brightness(.55) blur(1px); } .arcAmb i::before { content:''; position:absolute; left:12%; right:12%; top:16%; height:34%; border-radius:10px; background:var(--g, #2ae0ff); opacity:.5; box-shadow:0 0 40px var(--g, #2ae0ff); animation:amb 3s ease-in-out infinite alternate; }
+.arcAmb i:nth-child(1) { left:-7vw; --g:#ff4ad8; } .arcAmb i:nth-child(2) { left:12vw; bottom:14%; height:56%; filter:brightness(.4) blur(2px); --g:#ffd23a; } .arcAmb i:nth-child(3) { right:-7vw; --g:#5aff8a; } .arcAmb i:nth-child(4) { right:12vw; bottom:14%; height:56%; filter:brightness(.4) blur(2px); --g:#2ae0ff; }
+.arcCab { position:relative; z-index:1; display:flex; flex-direction:column; width:min(600px, 94vw); max-height:calc(100% - 10px); padding:8px 12px 10px; border-radius:20px 20px 8px 8px; border:3px solid #2ae0ff; background:linear-gradient(90deg, #120a2a, #2a1a5a 12%, #1a1040 88%, #0c0620); box-shadow:0 0 24px rgba(42,224,255,.5), 0 0 70px rgba(255,74,216,.25); }
+.arc.play .arcCab { width:min(860px, 97vw); height:calc(100% - 10px); }
+.arcMarq { flex:none; text-align:center; padding:4px; border-radius:10px; background:linear-gradient(#ff4ad8, #7a1a8a); box-shadow:0 0 18px #ff4ad8, inset 0 0 10px rgba(255,255,255,.5); } .arcMarq b { font:900 20px var(--ui); letter-spacing:3px; color:#fff; text-shadow:0 0 8px #fff, 0 2px 0 #5a0a4a; animation:marq 5s steps(1) infinite; } @keyframes marq { 92% { opacity:1; } 94% { opacity:.3; } 96% { opacity:1; } 98% { opacity:.5; } }
+.arcBezel { flex:1; min-height:0; display:flex; margin:8px 0; padding:12px; border-radius:14px; background:#05030a; box-shadow:inset 0 0 0 3px #222, inset 0 0 20px #000; }
+.arcScreen { position:relative; flex:1; min-height:0; min-width:0; overflow:auto; border-radius:18px / 24px; background:repeating-linear-gradient(rgba(255,255,255,.035) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 40%, #1e1450 0%, #0b0820 75%); box-shadow:inset 0 0 40px rgba(42,224,255,.25); }
+.arc.play .arcScreen { display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000; } .arc.play canvas { display:block; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+.arcScreen .rcpt.arcade { width:100%; max-height:none; overflow:visible; background:transparent; border:none; border-radius:0; box-shadow:none; padding:12px 14px; }
+.arcPanel { flex:none; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; padding:8px 12px; border-radius:6px 6px 14px 14px; background:linear-gradient(#3a2a6a, #1a1036); border-top:3px solid #6a5ac0; }
+.arcPanel .pcBtns { margin:0; justify-content:center; } .arcPanel .btn, .arcPanel .pcBtns .btn { background:#1a1440; border-color:#5a4aaa; color:#e8f4ff; } .arcPanel .btn.gold { background:linear-gradient(#ff5ae0, #b01a90); color:#fff; border-color:#ff9ae8; box-shadow:0 0 12px rgba(255,74,216,.6); }
+.arcPanel .rpsPick { margin:0; gap:14px; } .arcPanel .rpsPick .btn { flex:none; width:76px; height:76px; border-radius:50%; padding:0; justify-content:center; gap:0; border:3px solid rgba(255,255,255,.55); color:#fff; font-size:12px; box-shadow:0 6px 0 rgba(0,0,0,.55), inset 0 -7px 0 rgba(0,0,0,.25), inset 0 5px 8px rgba(255,255,255,.35); }
+.arcPanel .rpsPick .btn span { font-size:26px; line-height:1; } .arcPanel .rpsPick .btn small { font-size:9px; opacity:.8; } .arcPanel .rpsPick .btn:active:not(:disabled) { transform:translateY(5px); box-shadow:0 1px 0 rgba(0,0,0,.55), inset 0 -3px 0 rgba(0,0,0,.25); }
+.arcPanel .rpsPick .ab0 { background:radial-gradient(circle at 40% 30%, #ff7a80, #d0202a); } .arcPanel .rpsPick .ab1 { background:radial-gradient(circle at 40% 30%, #fff08a, #e0a810); color:#2a1a00; } .arcPanel .rpsPick .ab2 { background:radial-gradient(circle at 40% 30%, #8ac8ff, #1a6ae0); } .arcPanel .rpsPick .btn:disabled { opacity:.45; }
+.rpsBoard canvas.pt { width:56px; height:56px; image-rendering:pixelated; border:2px solid #2ae0ff; border-radius:8px; background:#1a1440; box-shadow:0 0 10px rgba(42,224,255,.4); }
+.fgKeys { display:flex; align-items:center; gap:14px; font-size:12px; color:#c8d0f0; } .fgKeys b { color:#ffe84a; } .touchOn .fgKeys { display:none; } .fgKeys .stick { width:30px; height:30px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ff9a9a, #d01818 50%, #6a0000); box-shadow:0 12px 0 -9px #111, 0 14px 0 -6px #333; }
+.arcPanel .fgPad { flex:1; margin:0; } .arcPanel .fgQuit { margin:0; }
+.short .csBar { padding:3px 8px; } .short .csBar .csLogo { font-size:13px; } .short .sBack, .short .csCash { font-size:11px; } .short .csMain { gap:8px; padding:0 8px 6px; } .short .csHud { width:min(250px, 34vw); padding-left:6px; }
+.short .dealer canvas { width:76px; height:76px; } .short .dealer { margin-bottom:-14px; } .short .dName { bottom:16px; } .short .bubble { left:calc(50% + 40px); font-size:11px; padding:5px 9px; } .short .rlSide .dealer canvas { width:40px; height:40px; }
+.short .arcCab { padding:5px 8px 6px; } .short .arcMarq b { font-size:15px; } .short .arcBezel { margin:5px 0; padding:7px; } .short .arcPanel { padding:5px 10px; gap:8px; } .short .arcPanel .rpsPick .btn { width:56px; height:56px; } .short .arcPanel .rpsPick .btn span { font-size:20px; }
+.short .rpsBoard canvas.pt { width:34px; height:34px; } .short .arcScreen .rcHead { font-size:0; } .short .arcScreen .rcHead small { font-size:11px; margin:0; } .short .arcScreen .rcpt.arcade::before { display:none; } .short .arcScreen .rpsBoard .hand { font-size:32px; height:36px; } .short .arcScreen .mgMsg { margin:4px 0 2px; } .short i.card .ci.rt { display:none; } .short .arcScreen .rcpt.arcade { padding:6px 10px; } .short .rcpt.arcade::before { margin:0 0 2px; } .short .rpsBoard { margin:2px 0; padding:2px 4px; } .short .rpsBoard > div { gap:0; }
 </style>
 </head>
 <body>
@@ -7362,12 +7475,12 @@ const Rps = {
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = this.friends(); const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>같이 있는 친구</small>` })));
       const wait = this.view === 'wait';
-      el.innerHTML = `<div class="rcpt">${head}
+      el.innerHTML = arcadeShell('✊ 가위바위보 ✌', `<div class="rcpt arcade">${head}
         <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${Net.on && !fr.length ? '<p class="mgNote">친구가 이 게임장에 들어오면 여기에 떠요.</p>' : ''}
         <div class="mgSec">판돈 <small>진 사람이 이긴 사람에게 줘요</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
-        <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p>
-        <div class="pcBtns">${wait ? '<button class="btn" id="rpsCancel">신청 취소</button>' : '<button class="btn gold" id="rpsGo">시작</button>'}<button class="btn" id="rpsX">닫기</button></div></div>`;
+        <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p></div>`,
+        `<div class="pcBtns">${wait ? '<button class="btn" id="rpsCancel">신청 취소</button>' : '<button class="btn gold" id="rpsGo">START · 시작</button>'}<button class="btn" id="rpsX">← 일어나기</button></div>`);
       el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; Sound.play('click'); this.render(); }));
       el.querySelectorAll('[data-st]').forEach(b => (b.onclick = () => { this.stake = Number(b.dataset.st); Sound.play('click'); this.render(); }));
       if ($('rpsGo')) $('rpsGo').onclick = () => this.start();
@@ -7383,31 +7496,38 @@ const Rps = {
     const line = done ? (g.me > g.op ? `이겼어요! ${g.stake ? `+${fmtWon(g.stake)}` : ''}` : `졌어요. ${g.stake ? `−${fmtWon(g.stake)}` : ''}`)
       : reveal ? '가위! 바위! 보!' : a ? (g.vs === 'house' ? '' : `골랐어요. ${esc(g.name)} 기다리는 중…`) : g.last ? (g.last.w > 0 ? '이번 판은 내가 이겼다! 다음 판 골라요.' : g.last.w < 0 ? '이번 판은 졌다. 다음 판 골라요.' : '비겼다! 다시 골라요.') : '하나 골라요. (1 바위 · 2 가위 · 3 보)';
     const opState = g.vs !== 'house' && !reveal && !done ? (b ? '골랐어요' : '고르는 중…') : '';
-    el.innerHTML = `<div class="rcpt">${head}
-      <div class="rpsBoard"><div><b>나</b><span class="pip">${pips(g.me)}</span><div class="hand">${myHand}</div></div><em>VS</em><div><b>${esc(g.name)}</b><span class="pip">${pips(g.op)}</span><div class="hand">${opHand}</div><small>${opState}</small></div></div>
-      <p class="mgMsg big">${line}</p>
-      ${done ? '' : `<div class="rpsPick">${RPS_H.map((h, i) => `<button class="btn" data-h="${i}" ${a || reveal ? 'disabled' : ''}><span>${h.e}</span>${h.ko}<small>${i + 1}</small></button>`).join('')}</div>`}
-      <p class="mgNote">${g.stake ? `판돈 ${fmtWon(g.stake)}` : '판돈 없음 (재미로)'}${g.hist.length ? ` · 지난 판 ${g.hist.map(x => RPS_BY[x.a].e + (x.w > 0 ? '승' : x.w < 0 ? '패' : '무')).join(' ')}` : ''}</p>
-      <div class="pcBtns">${done ? '<button class="btn gold" id="rpsAgain">한 판 더</button>' : ''}<button class="btn" id="rpsX">${done ? '닫기' : '그만하기'}</button></div></div>`;
+    const opPt = g.vs === 'house' ? 'occ_young' : 'net:' + g.vs;
+    el.innerHTML = arcadeShell('✊ 가위바위보 ✌', `<div class="rcpt arcade">${head}
+      <div class="rpsBoard"><div><canvas class="pt" data-pt="me" width="32" height="32"></canvas><b>나</b><span class="pip">${pips(g.me)}</span><div class="hand">${myHand}</div></div><em>VS</em><div><canvas class="pt" data-pt="${opPt}" width="32" height="32"></canvas><b>${esc(g.name)}</b><span class="pip">${pips(g.op)}</span><div class="hand">${opHand}</div><small>${opState}</small></div></div>
+      <p class="mgMsg big ${done ? (g.me > g.op ? 'win' : 'lose') : ''}">${line}</p>
+      <p class="mgNote">${g.stake ? `판돈 ${fmtWon(g.stake)}` : '판돈 없음 (재미로)'}${g.hist.length ? ` · 지난 판 ${g.hist.map(x => RPS_BY[x.a].e + (x.w > 0 ? '승' : x.w < 0 ? '패' : '무')).join(' ')}` : ''}</p></div>`,
+      `${done ? '' : `<div class="rpsPick">${RPS_H.map((h, i) => `<button class="btn ab${i}" data-h="${i}" ${a || reveal ? 'disabled' : ''}><span>${h.e}</span>${h.ko}<small>${i + 1}</small></button>`).join('')}</div>`}
+      <div class="pcBtns">${done ? '<button class="btn gold" id="rpsAgain">한 판 더</button>' : ''}<button class="btn" id="rpsX">${done ? '← 일어나기' : '그만하기'}</button></div>`);
     el.querySelectorAll('[data-h]').forEach(btn => (btn.onclick = () => this.pick(Number(btn.dataset.h))));
     if ($('rpsAgain')) $('rpsAgain').onclick = () => this.again();
-    $('rpsX').onclick = () => this.close();
+    $('rpsX').onclick = () => this.close(); mgPortraits(el);
   },
 };
 
-/* ---- 건대 카지노 (v81 홀짝 → v82 슬롯머신·블랙잭·룰렛·포커, 사용자 2026-10-15 '카지노 종류로') ----
- * 한 창(#hjWin)에 탭 다섯 개. 거는 돈은 탭끼리 같이 쓴다 (1만·10만·50만·100만, 내 돈 이하).
- * 홀짝 1:1 · 슬롯 3릴(체리 2개 2배 ~ 7 세 개 300배, 환급률 약 98%) · 블랙잭(딜러 17에서 멈춤, 블랙잭 1.5배, 더블)
- * · 룰렛(유럽식 0~36, 색·홀짝·높낮이 1:1, 12구간 2:1, 숫자 하나 35:1) · 비디오 포커(잭스 오어 베터, 5장 받고 버릴 것 골라 한 번 바꾸기). */
+/* ---- 건대 카지노 (v81 홀짝 → v82 슬롯머신·블랙잭·룰렛·포커 → v88 진짜 카지노처럼, 사용자 2026-10-15 '창 예쁘게, 슬롯 현실적으로' + 룰렛 사진 참고) ----
+ * 한 창(#hjWin)에 탭 다섯 개. 칩(1만·10만·50만·100만)은 탭끼리 같이 쓴다.
+ * 홀짝 1:1 · 슬롯 3릴(가운데 줄 하나, 체리 2개 2배 ~ 7 세 개 300배, 환급률 약 98%; 릴이 실제로 굴러가다 차례로 멈춘다)
+ * · 블랙잭(딜러 17에서 멈춤, 블랙잭 1.5배, 더블) · 룰렛(유럽식 0~36 휠과 구슬, 베팅판에 칩 여러 개: 숫자 35:1, 열·12구간 2:1, 나머지 1:1)
+ * · 비디오 포커(잭스 오어 베터 9/6). */
 const HJ_BETS = [1e4, 10e4, 50e4, 100e4];
-const DIE = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-const CASINO_TABS = [['hol', '🎲 홀짝'], ['slot', '🎰 슬롯머신'], ['bj', '🃏 블랙잭'], ['rl', '🎡 룰렛'], ['pk', '♠️ 포커']];
+const CHIP_CLS = { 10000: 'c1', 100000: 'c10', 500000: 'c50', 1000000: 'c100' };
+const chipCls = v => CHIP_CLS[HJ_BETS.filter(b => b <= v).pop() || HJ_BETS[0]]; // 쌓인 금액에서 가장 큰 칩 색
+const chipLabel = v => (v >= 1e4 ? `${v / 1e4}만` : String(v));
+const CASINO_TABS = [['hol', '🎲 홀짝'], ['slot', '🎰 슬롯'], ['bj', '🃏 블랙잭'], ['rl', '🎡 룰렛'], ['pk', '♠ 포커']];
 const SLOT_SYM = [['🍒', 28, 6], ['🍋', 26, 12], ['🔔', 20, 18], ['⭐', 13, 36], ['💎', 9, 80], ['7️⃣', 4, 300]];
+const symHtml = s => (s === '7️⃣' ? '<b class="s7">7</b>' : s);
 const RL_RED = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+const RL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]; // 유럽식 휠 순서
 const PK_PAY = [['로열 스트레이트 플러시', 250], ['스트레이트 플러시', 50], ['포카드', 25], ['풀하우스', 9], ['플러시', 6], ['스트레이트', 4], ['트리플', 3], ['투페어', 2], ['잭 이상 원페어', 1]];
 function cDeck() { const d = []; for (const s of '♠♥♦♣') for (let r = 2; r <= 14; r++) d.push({ r, s }); for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
 function cName(c) { return ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' }[c.r] || String(c.r)); }
-function cHtml(c, hide) { return hide ? '<i class="card back"></i>' : `<i class="card${c.s === '♥' || c.s === '♦' ? ' red' : ''}"><b>${cName(c)}</b>${c.s}</i>`; }
+// 진짜 카드처럼: 양쪽 모서리 숫자·무늬 + 가운데 큰 무늬 (deal: 방금 나온 카드는 미끄러져 들어온다)
+function cHtml(c, hide, deal) { if (hide) return `<i class="card back${deal ? ' deal' : ''}"></i>`; const n = cName(c), red = c.s === '♥' || c.s === '♦'; return `<i class="card${red ? ' red' : ''}${deal ? ' deal' : ''}"><span class="ci">${n}<br>${c.s}</span><span class="cc">${c.r >= 11 && c.r <= 13 ? `<em>${n}</em>` : c.s}</span><span class="ci rt">${n}<br>${c.s}</span></i>`; }
 function bjVal(h) { let v = 0, a = 0; for (const c of h) { v += c.r === 14 ? 11 : Math.min(10, c.r); if (c.r === 14) a++; } while (v > 21 && a) { v -= 10; a--; } return v; }
 function pkRank(h) {
   const rs = h.map(c => c.r).sort((a, b) => a - b), cnt = {}; for (const r of rs) cnt[r] = (cnt[r] || 0) + 1; const v = Object.values(cnt).sort((a, b) => b - a);
@@ -7415,9 +7535,16 @@ function pkRank(h) {
   if (straight && flush) return rs[0] === 10 ? 0 : 1; if (v[0] === 4) return 2; if (v[0] === 3 && v[1] === 2) return 3; if (flush) return 4; if (straight) return 5; if (v[0] === 3) return 6; if (v[0] === 2 && v[1] === 2) return 7;
   if (v[0] === 2) { const pr = Number(Object.keys(cnt).find(k => cnt[k] === 2)); if (pr >= 11) return 8; } return -1;
 }
+// 주사위 눈 (3×3 칸에 점)
+const DIE_PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const dieHtml = n => `<i class="die">${Array.from({ length: 9 }, (_, i) => `<b class="${DIE_PIPS[n].includes(i) ? 'on' : ''}"></b>`).join('')}</i>`;
+const rlCol = n => (n === 0 ? 'g' : RL_RED.includes(n) ? 'r' : 'b');
+
 const Casino = {
-  open_: false, tab: 'hol', bet: 1e4, busy: false,
-  hol: { hist: [], last: null, side: null }, slot: { reels: ['🍒', '🍋', '🔔'], last: null }, bj: null, rl: { pick: 'red', num: 7, last: null, hist: [], spinN: null }, pk: null,
+  open_: false, tab: 'hol', bet: 1e4, busy: false, flash: '',
+  hol: { hist: [], last: null, side: null }, slot: { grid: [['🍋', '🍒', '⭐'], ['🔔', '🍋', '💎'], ['⭐', '🔔', '🍒']], last: null, win: 0 }, bj: null,
+  rl: { bets: {}, lastBets: null, last: null, hist: [], wa: 0, ba: 0, br: 0.84, rolling: false }, pk: null,
+  get reels() { return this.slot.grid.map(g => g[1]); },
   open(tab) {
     if (tab) this.tab = tab; if (this.open_) return this.render(); this.open_ = true; Game.formOpen = true; Sound.play('paper');
     this.fixBet(); $('hjWin').classList.add('in'); this.render();
@@ -7427,47 +7554,65 @@ const Casino = {
   can(n = 1) { return this.bet * n <= State.cash; },
   pay(d, label) { mgCash(d, label); if (Net.on && Math.abs(d) >= 50e4) Net.news(`카지노 ${label} ${d > 0 ? '+' : '−'}${fmtWon(Math.abs(d))}`); },
   locked() { return this.busy || (this.bj && this.bj.state === 'play') || (this.pk && this.pk.state === 'hold'); },
-  key(k) { // 숫자 키: 홀짝 1·2, 슬롯 1, 블랙잭 1 받기 2 멈춤 3 더블, 포커 1~5 고르기
+  key(k) { // 숫자 키: 홀짝 1·2, 슬롯 1, 블랙잭 1 받기 2 멈춤 3 더블, 룰렛 1 돌리기, 포커 1~5 고르기
     if (this.tab === 'hol' && (k === '1' || k === '2')) return this.holPlay(k === '1' ? 'hol' : 'jjak');
     if (this.tab === 'slot' && k === '1') return this.slotSpin();
     if (this.tab === 'bj') { if (!this.bj || this.bj.state !== 'play') { if (k === '1') this.bjDeal(); return; } if (k === '1') this.bjHit(); if (k === '2') this.bjStand(); if (k === '3') this.bjDouble(); return; }
     if (this.tab === 'rl' && k === '1') return this.rlSpin();
-    if (this.tab === 'pk') { if (this.pk && this.pk.state === 'hold' && '12345'.includes(k)) { this.pk.hold[+k - 1] = !this.pk.hold[+k - 1]; Sound.play('click'); return this.render(); } }
+    if (this.tab === 'pk') { if (this.pk && this.pk.state === 'hold' && '12345'.includes(k)) { this.pk.hold[+k - 1] = !this.pk.hold[+k - 1]; Sound.play('click'); return this.render(); } if (k === '1' && (!this.pk || this.pk.state === 'done')) this.pkDeal(); }
   },
-  /* 홀짝 */
+  /* ---------- 홀짝 ---------- */
   holPlay(side) {
     if (this.busy) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
     const H = this.hol; this.busy = true; H.side = side; H.last = null; Sound.play('drum'); this.render();
-    setTimeout(() => { const d1 = 1 + Math.floor(Math.random() * 6), d2 = 1 + Math.floor(Math.random() * 6), sum = d1 + d2, res = sum % 2 ? 'hol' : 'jjak', win = res === side; H.last = { d1, d2, sum, res, win, bet: this.bet }; H.hist.push(res); if (H.hist.length > 14) H.hist.shift(); this.busy = false; this.pay(win ? this.bet : -this.bet, `홀짝 ${win ? '맞힘' : '틀림'}`); Sound.play(win ? 'coins' : 'deny'); this.fixBet(); this.render(); }, 1300);
+    setTimeout(() => { const d1 = 1 + Math.floor(Math.random() * 6), d2 = 1 + Math.floor(Math.random() * 6), sum = d1 + d2, res = sum % 2 ? 'hol' : 'jjak', win = res === side; H.last = { d1, d2, sum, res, win, bet: this.bet }; H.hist.push(res); if (H.hist.length > 14) H.hist.shift(); this.busy = false; this.pay(win ? this.bet : -this.bet, `홀짝 ${win ? '맞힘' : '틀림'}`); Sound.play(win ? 'coins' : 'deny'); this.fixBet(); this.render(); }, 1400);
   },
   holBody() {
     const H = this.hol, L = H.last, ko = s => s === 'hol' ? '홀' : '짝';
-    const cup = this.busy ? '<div class="hjCup shake"></div>' : L ? `<div class="hjDice"><span>${DIE[L.d1]}</span><span>${DIE[L.d2]}</span></div>` : '<div class="hjCup"></div>';
+    const table = this.busy ? '<div class="hjCup shake"></div>' : L ? `<div class="hjCup lift"></div><div class="hjDice">${dieHtml(L.d1)}${dieHtml(L.d2)}</div>` : '<div class="hjCup"></div>';
     const line = this.busy ? `${ko(H.side)}에 ${fmtWon(this.bet)}. 딜러가 컵을 흔든다…` : L ? `합 ${L.sum} · ${ko(L.res)}! ${L.win ? `맞혔어요 +${fmtWon(L.bet)}` : `틀렸어요 −${fmtWon(L.bet)}`}` : '홀이나 짝을 누르세요. (1 홀 · 2 짝)';
-    return { cls: L ? (L.win ? 'win' : 'lose') : '', line, html: `<p class="mgNote">주사위 두 개를 굴려 합이 홀수면 홀, 짝수면 짝. 맞히면 건 돈만큼 받아요.</p><div class="hjTable">${cup}</div>`,
+    return { cls: L ? (L.win ? 'win' : 'lose') : '', line,
+      html: `<div class="felt hjFelt"><div class="feltTxt">홀 · 짝 &nbsp;<small>맞히면 1배</small></div><div class="hjTable">${table}</div><div class="hjSpots"><span class="hol${H.side === 'hol' && (this.busy || L) ? ' on' : ''}">홀</span><span class="jjak${H.side === 'jjak' && (this.busy || L) ? ' on' : ''}">짝</span></div></div>`,
       btns: `<div class="hjPick"><button class="btn hol" data-do="hol" ${this.busy || !this.can() ? 'disabled' : ''}>홀<small>1</small></button><button class="btn jjak" data-do="jjak" ${this.busy || !this.can() ? 'disabled' : ''}>짝<small>2</small></button></div>`,
-      foot: H.hist.length ? `지난 결과 ${H.hist.map(h => `<i class="hj ${h}">${ko(h)}</i>`).join('')}` : '' };
+      foot: H.hist.length ? `지난 결과 ${H.hist.map(h => `<i class="hj ${h}">${ko(h)}</i>`).join('')}` : '주사위 두 개의 합이 홀수면 홀, 짝수면 짝.' };
   },
-  /* 슬롯머신 */
+  /* ---------- 슬롯머신: 릴이 아래로 굴러가다 왼쪽부터 차례로 멈춘다 ---------- */
   slotSym() { let r = Math.random() * 100; for (const s of SLOT_SYM) { if ((r -= s[1]) < 0) return s[0]; } return SLOT_SYM[0][0]; },
   slotSpin() {
     if (this.busy) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
-    const S = this.slot, out = [this.slotSym(), this.slotSym(), this.slotSym()], bet = this.bet; this.busy = true; S.last = null; S.stop = 0; Sound.play('drum');
-    const iv = setInterval(() => { for (let i = S.stop; i < 3; i++) S.reels[i] = SLOT_SYM[Math.floor(Math.random() * 6)][0]; this.render(); }, 80);
-    [700, 1100, 1500].forEach((ms, i) => setTimeout(() => { S.reels[i] = out[i]; S.stop = i + 1; Sound.play('click'); if (i === 2) { clearInterval(iv); this.busy = false;
-      const same = out[0] === out[1] && out[1] === out[2], ch = out.filter(x => x === '🍒').length; const mult = same ? SLOT_SYM.find(s => s[0] === out[0])[2] : ch === 2 ? 2 : 0;
-      S.last = { mult, bet }; this.pay(mult ? bet * (mult - 1) : -bet, mult ? `슬롯 ${mult}배` : '슬롯 꽝'); Sound.play(mult >= 12 ? 'chime' : mult ? 'coins' : 'deny'); this.fixBet(); } this.render(); }, ms));
+    const S = this.slot, bet = this.bet, out = [this.slotSym(), this.slotSym(), this.slotSym()];
+    const next = out.map(m => [this.slotSym(), m, this.slotSym()]); this.busy = true; S.last = null; S.win = 0; this.render();
+    const box = $('hjWin'); const lever = box.querySelector('.lever'); if (lever) { lever.classList.remove('pull'); void lever.offsetWidth; lever.classList.add('pull'); }
+    Sound.play('drum'); const H = (box.querySelector('.sym') || {}).offsetHeight || 64, durs = [1300, 1800, 2300];
+    box.querySelectorAll('.reel').forEach((reel, i) => {
+      const n = 18 + i * 7, filler = Array.from({ length: n }, () => SLOT_SYM[Math.floor(Math.random() * 6)][0]);
+      const syms = [...next[i], ...filler, ...S.grid[i]]; const strip = reel.querySelector('.strip');
+      strip.innerHTML = syms.map(s => `<div class="sym">${symHtml(s)}</div>`).join(''); strip.style.transition = 'none'; strip.style.transform = `translateY(${-(syms.length - 3) * H}px)`; reel.classList.add('blur');
+      void strip.offsetWidth; strip.style.transition = `transform ${durs[i]}ms cubic-bezier(.12,.62,.24,1.04)`; strip.style.transform = 'translateY(0)';
+      setTimeout(() => reel.classList.remove('blur'), durs[i] - 380);
+      setTimeout(() => { Sound.play('click'); S.grid[i] = next[i]; }, durs[i]);
+    });
+    setTimeout(() => {
+      this.busy = false; const same = out[0] === out[1] && out[1] === out[2], ch = out.filter(x => x === '🍒').length; const mult = same ? SLOT_SYM.find(s => s[0] === out[0])[2] : ch === 2 ? 2 : 0;
+      S.last = { mult, bet, out }; S.win = mult ? bet * mult : 0; this.pay(mult ? bet * (mult - 1) : -bet, mult ? `슬롯 ${mult}배` : '슬롯 꽝'); Sound.play(mult >= 12 ? 'chime' : mult ? 'coins' : 'deny'); this.fixBet(); this.render();
+    }, durs[2] + 120);
   },
   slotBody() {
-    const S = this.slot, L = S.last;
-    return { cls: L ? (L.mult ? 'win' : 'lose') : '', line: this.busy ? '돌아가는 중…' : L ? (L.mult ? `${L.mult}배! +${fmtWon(L.bet * (L.mult - 1))}` : `꽝 −${fmtWon(L.bet)}`) : '레버를 당기세요. (1)',
-      html: `<div class="slotBox">${S.reels.map((r, i) => `<span class="${this.busy && i >= (S.stop || 0) ? 'spin' : ''}">${r}</span>`).join('')}</div><p class="mgNote">같은 그림 세 개: ${SLOT_SYM.map(s => `${s[0]} ${s[2]}배`).join(' · ')} · 🍒 두 개 2배 (건 돈 포함)</p>`,
-      btns: `<div class="hjPick"><button class="btn gold big" data-do="spin" ${this.busy || !this.can() ? 'disabled' : ''}>레버 당기기<small>1</small></button></div>`, foot: '' };
+    const S = this.slot, L = S.last, win = L && L.mult, big = win && L.mult >= 18;
+    const hit = (s, j) => win && !this.busy && j === 1 && (L.mult > 2 || s === '🍒');
+    const reels = S.grid.map(g => `<div class="reel"><div class="strip">${g.map((s, j) => `<div class="sym${hit(s, j) ? ' hit' : ''}">${symHtml(s)}</div>`).join('')}</div></div>`).join('');
+    const pays = SLOT_SYM.slice().reverse().map(s => `<span>${symHtml(s[0])}${symHtml(s[0])}${symHtml(s[0])}<b>${s[2]}</b></span>`).join('') + `<span>🍒🍒<b>2</b></span>`;
+    return { cls: L ? (win ? 'win' : 'lose') : '', line: this.busy ? '릴이 돌아간다…' : L ? (win ? `${L.mult}배! +${fmtWon(L.bet * (L.mult - 1))}` : `꽝 −${fmtWon(L.bet)}`) : '레버를 당기세요. (1)',
+      html: `<div class="slotCab${win ? ' won' : ''}${big ? ' big' : ''}"><div class="marquee"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b>SUPER ★ 7</b><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="slotPay">${pays}</div>
+        <div class="slotMid"><div class="reels">${reels}<div class="payline"></div></div><button class="lever" data-do="spin" ${this.busy || !this.can() ? 'disabled' : ''} aria-label="레버 당기기"><i></i></button></div>
+        <div class="leds"><div><small>CREDIT</small><b>${fmtWon(State.cash)}</b></div><div><small>BET</small><b>${fmtWon(this.bet)}</b></div><div class="w"><small>WIN</small><b>${S.win ? fmtWon(S.win) : '—'}</b></div></div></div>`,
+      btns: `<div class="hjPick"><button class="btn gold big" data-do="spin" ${this.busy || !this.can() ? 'disabled' : ''}>SPIN · 레버 당기기<small>1</small></button></div>`, foot: '가운데 빨간 줄에 같은 그림 세 개면 당첨 (배수는 건 돈 포함).' };
   },
-  /* 블랙잭 */
+  /* ---------- 블랙잭 ---------- */
   bjDeal() {
     if (this.locked()) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
-    const d = cDeck(); this.bj = { deck: d, me: [d.pop(), d.pop()], dl: [d.pop(), d.pop()], bet: this.bet, state: 'play', msg: '' }; Sound.play('paper');
+    const d = cDeck(); this.bj = { deck: d, me: [d.pop(), d.pop()], dl: [d.pop(), d.pop()], bet: this.bet, state: 'play', msg: '', shown: { me: 0, dl: 0 } }; Sound.play('paper');
     const B = this.bj; if (bjVal(B.me) === 21 || bjVal(B.dl) === 21) return this.bjEnd();
     this.render();
   },
@@ -7480,65 +7625,135 @@ const Casino = {
     B.w = w; B.msg = m > 21 ? `버스트 (${m}) −${fmtWon(B.bet)}` : w === 1.5 ? `블랙잭! +${fmtWon(B.bet * 1.5)}` : w > 0 ? `${m} 대 ${d > 21 ? '딜러 버스트' : d} · 이겼어요 +${fmtWon(B.bet)}` : w < 0 ? `${m} 대 ${d}${dBJ ? ' (딜러 블랙잭)' : ''} · 졌어요 −${fmtWon(B.bet)}` : `${m} 대 ${d} · 비겼어요 (푸시)`;
     if (w) this.pay(Math.round(B.bet * w), w > 0 ? '블랙잭 승' : '블랙잭 패'); Sound.play(w > 0 ? 'coins' : w < 0 ? 'deny' : 'pop'); this.fixBet(); this.render();
   },
+  chipStack(v) { const out = []; for (const c of [1e6, 5e5, 1e5, 1e4]) { let k = Math.floor(v / c); v -= k * c; while (k-- > 0 && out.length < 8) out.push(`<i class="chip mini ${CHIP_CLS[c]}"></i>`); } return `<span class="stack">${out.join('')}</span>`; },
   bjBody() {
     const B = this.bj, play = B && B.state === 'play';
-    if (!B) return { cls: '', line: '카드를 받으세요. 21에 가까우면 이겨요. (1)', html: '<div class="cardTable"><p class="mgNote">딜러는 16 이하면 더 받고 17부터 멈춰요. 처음 두 장이 21이면 블랙잭(1.5배).</p></div>', btns: `<div class="hjPick"><button class="btn gold big" data-do="deal" ${!this.can() ? 'disabled' : ''}>카드 받기<small>1</small></button></div>`, foot: '' };
+    const felt = inner => `<div class="felt bjFelt"><div class="feltArc">BLACKJACK PAYS 3 TO 2</div><div class="feltSub">딜러는 16 이하면 받고 17에서 멈춤 · INSURANCE 없음</div>${inner}</div>`;
+    if (!B) return { cls: '', line: '칩을 고르고 카드를 받으세요. 21에 가까우면 이겨요. (1)', html: felt(`<div class="bjSpot"><div class="betCircle">${this.chipStack(this.bet)}</div></div>`), btns: `<div class="hjPick"><button class="btn gold big" data-do="deal" ${!this.can() ? 'disabled' : ''}>DEAL · 카드 받기<small>1</small></button></div>`, foot: '' };
+    const sh = B.shown, dlH = B.dl.map((c, i) => cHtml(c, play && i === 1, i >= sh.dl)).join(''), meH = B.me.map((c, i) => cHtml(c, false, i >= sh.me)).join(''); sh.dl = B.dl.length; sh.me = B.me.length;
     return { cls: play ? '' : B.w > 0 ? 'win' : B.w < 0 ? 'lose' : '', line: play ? `내 패 ${bjVal(B.me)} · 받을까요, 멈출까요?` : B.msg,
-      html: `<div class="cardTable"><div class="cRow"><small>딜러 ${play ? '?' : bjVal(B.dl)}</small>${B.dl.map((c, i) => cHtml(c, play && i === 1)).join('')}</div><div class="cRow"><small>나 ${bjVal(B.me)}</small>${B.me.map(c => cHtml(c)).join('')}</div></div>`,
-      btns: play ? `<div class="hjPick"><button class="btn gold" data-do="hit">받기<small>1</small></button><button class="btn" data-do="stand">멈추기<small>2</small></button><button class="btn" data-do="double" ${B.me.length !== 2 || B.bet * 2 > State.cash ? 'disabled' : ''}>더블<small>3 · 두 배 걸고 한 장만</small></button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="deal" ${!this.can() ? 'disabled' : ''}>한 판 더<small>1</small></button></div>`, foot: `판돈 ${fmtWon(B.bet)}` };
+      html: felt(`<div class="cRow dl"><small>딜러 <b>${play ? '?' : bjVal(B.dl)}</b></small><div class="hand">${dlH}</div></div><div class="cRow me"><small>나 <b>${bjVal(B.me)}</b></small><div class="hand">${meH}</div><div class="betCircle sm">${this.chipStack(B.bet)}</div></div>`),
+      btns: play ? `<div class="hjPick"><button class="btn gold" data-do="hit">HIT · 받기<small>1</small></button><button class="btn" data-do="stand">STAND · 멈추기<small>2</small></button><button class="btn" data-do="double" ${B.me.length !== 2 || B.bet * 2 > State.cash ? 'disabled' : ''}>DOUBLE<small>3 · 두 배 걸고 한 장만</small></button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="deal" ${!this.can() ? 'disabled' : ''}>한 판 더<small>1</small></button></div>`, foot: `판돈 ${fmtWon(B.bet)}` };
   },
-  /* 룰렛 */
-  rlWin(p, n) { if (p === 'num') return n === this.rl.num ? 35 : -1; if (n === 0) return -1; const red = RL_RED.includes(n);
-    const ok = { red, black: !red, odd: n % 2 === 1, even: n % 2 === 0, low: n <= 18, high: n >= 19, d1: n <= 12, d2: n > 12 && n <= 24, d3: n > 24 }[p]; return ok ? (p[0] === 'd' ? 2 : 1) : -1; },
+  /* ---------- 룰렛: 휠은 캔버스, 베팅판은 사진처럼 (0 · 3줄 × 12 · 열 2:1 · 12구간 · 1~18/짝/빨강/검정/홀/19~36) ---------- */
+  rlPay(k, n) {
+    if (k[0] === 'n') return Number(k.slice(1)) === n ? 35 : -1; if (n === 0) return -1; const red = RL_RED.includes(n);
+    const ok = { red, black: !red, odd: n % 2 === 1, even: n % 2 === 0, low: n <= 18, high: n >= 19, d1: n <= 12, d2: n > 12 && n <= 24, d3: n > 24, c1: n % 3 === 1, c2: n % 3 === 2, c3: n % 3 === 0 }[k];
+    return ok ? (k[0] === 'd' || k[0] === 'c' ? 2 : 1) : -1;
+  },
+  rlTotal() { return Object.values(this.rl.bets).reduce((s, v) => s + v, 0); },
+  rlPlace(k) { if (this.busy) return; const R = this.rl; if (R.last) { R.last = null; } if (this.rlTotal() + this.bet > State.cash) { Sound.play('deny'); return this.render('칩이 내 돈보다 많아요.'); } R.bets[k] = (R.bets[k] || 0) + this.bet; Sound.play('click'); this.render(); },
+  rlClear() { if (this.busy) return; this.rl.bets = {}; Sound.play('flip'); this.render(); },
+  rlRebet() { if (this.busy || !this.rl.lastBets) return; const t = Object.values(this.rl.lastBets).reduce((s, v) => s + v, 0); if (t > State.cash) { Sound.play('deny'); return this.render('지난 베팅이 내 돈보다 많아요.'); } this.rl.bets = { ...this.rl.lastBets }; Sound.play('click'); this.render(); },
   rlSpin() {
-    if (this.busy) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
-    const R = this.rl, n = Math.floor(Math.random() * 37), bet = this.bet, pick = R.pick; this.busy = true; R.last = null; Sound.play('drum'); let k = 0;
-    const tick = () => { k++; R.spinN = Math.floor(Math.random() * 37); this.render(); if (k < 18) setTimeout(tick, 40 + k * 8); else { R.spinN = null; this.busy = false; const w = this.rlWin(pick, n); R.last = { n, w, bet }; R.hist.push(n); if (R.hist.length > 12) R.hist.shift(); this.pay(w > 0 ? bet * w : -bet, w > 0 ? `룰렛 ${w + 1}배` : '룰렛 빗나감'); Sound.play(w > 0 ? 'coins' : 'deny'); this.fixBet(); this.render(); } };
-    tick();
+    if (this.busy) return; const R = this.rl;
+    if (!this.rlTotal()) { if (R.lastBets) this.rlRebet(); if (!this.rlTotal()) { Sound.play('deny'); return this.render('베팅판에 칩을 먼저 놓으세요.'); } }
+    if (this.rlTotal() > State.cash) { Sound.play('deny'); return this.render('칩이 내 돈보다 많아요.'); }
+    const n = Math.floor(Math.random() * 37), bets = { ...R.bets }; this.busy = true; R.last = null; R.rolling = true; this.render(); Sound.play('drum');
+    const T = 4800, step = Math.PI * 2 / 37, w0 = R.wa, wf = w0 + Math.PI * 2 * (2.5 + Math.random()), target = wf + RL_ORDER.indexOf(n) * step;
+    const b0 = R.ba; let bf = target; while (bf > b0 - Math.PI * 2 * 5) bf -= Math.PI * 2;
+    const t0 = performance.now(), ease = t => 1 - Math.pow(1 - t, 3);
+    const frame = now => {
+      const t = Math.min(1, (now - t0) / T); R.wa = w0 + (wf - w0) * ease(t); R.ba = b0 + (bf - b0) * ease(Math.min(1, t * 1.04));
+      R.br = t < 0.62 ? 0.86 : t < 0.86 ? 0.86 - (t - 0.62) / 0.24 * 0.2 + Math.abs(Math.sin(t * 60)) * 0.03 * (0.86 - t) * 4 : 0.66;
+      this.rlDraw(); if (t < 1) return requestAnimationFrame(frame);
+      R.wa %= Math.PI * 2; R.ba = R.wa + RL_ORDER.indexOf(n) * step; R.br = 0.66; R.rolling = false; this.busy = false;
+      let net = 0; for (const [k, v] of Object.entries(bets)) { const p = this.rlPay(k, n); net += p > 0 ? v * p : -v; }
+      R.last = { n, net, bets }; R.lastBets = bets; R.bets = {}; R.hist.push(n); if (R.hist.length > 14) R.hist.shift();
+      this.pay(net, net > 0 ? '룰렛 당첨' : net < 0 ? '룰렛 빗나감' : '룰렛 본전'); Sound.play(net > 0 ? 'coins' : 'deny'); this.fixBet(); this.render();
+    };
+    requestAnimationFrame(frame);
+  },
+  rlDraw() {
+    const cv = $('rlCanvas'); if (!cv) return; const c = cv.getContext('2d'), S = cv.width, C = S / 2, R = this.rl, step = Math.PI * 2 / 37;
+    c.clearRect(0, 0, S, S);
+    // 나무 테두리와 구슬 트랙
+    let g = c.createRadialGradient(C, C, C * 0.7, C, C, C); g.addColorStop(0, '#6a3a1c'); g.addColorStop(0.6, '#8a5028'); g.addColorStop(1, '#3a1e0c');
+    c.fillStyle = g; c.beginPath(); c.arc(C, C, C - 1, 0, 7); c.fill();
+    c.fillStyle = '#2a1608'; c.beginPath(); c.arc(C, C, C * 0.9, 0, 7); c.fill(); c.fillStyle = '#d8c7a0'; c.beginPath(); c.arc(C, C, C * 0.88, 0, 7); c.fill(); c.fillStyle = '#5a3418'; c.beginPath(); c.arc(C, C, C * 0.8, 0, 7); c.fill();
+    c.save(); c.translate(C, C); c.rotate(R.wa);
+    for (let i = 0; i < 37; i++) { const n = RL_ORDER[i], a = i * step - Math.PI / 2;
+      c.fillStyle = n === 0 ? '#1f8a3a' : RL_RED.includes(n) ? '#c0262a' : '#151518'; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, C * 0.78, a - step / 2, a + step / 2); c.closePath(); c.fill();
+      c.strokeStyle = '#c9a24a'; c.lineWidth = 1; c.stroke();
+      c.save(); c.rotate(i * step); c.fillStyle = '#fff'; c.font = `bold ${Math.round(S * 0.045)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(n), 0, -C * 0.7); c.restore(); }
+    c.fillStyle = '#3a2410'; c.beginPath(); c.arc(0, 0, C * 0.6, 0, 7); c.fill();
+    for (let i = 0; i < 37; i++) { c.save(); c.rotate(i * step + step / 2); c.fillStyle = '#c9a24a'; c.fillRect(-0.6, -C * 0.6, 1.2, C * 0.06); c.restore(); }
+    g = c.createRadialGradient(-C * 0.1, -C * 0.1, 2, 0, 0, C * 0.5); g.addColorStop(0, '#a87a3a'); g.addColorStop(1, '#4a2a10'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, C * 0.5, 0, 7); c.fill();
+    c.strokeStyle = '#e8d080'; c.lineWidth = 3; for (let k = 0; k < 4; k++) { c.save(); c.rotate(k * Math.PI / 2); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -C * 0.4); c.stroke(); c.fillStyle = '#e8d080'; c.beginPath(); c.arc(0, -C * 0.4, 3.5, 0, 7); c.fill(); c.restore(); }
+    c.fillStyle = '#f0e0a0'; c.beginPath(); c.arc(0, 0, C * 0.09, 0, 7); c.fill();
+    c.restore();
+    // 구슬
+    const bx = C + Math.sin(R.ba) * C * R.br, by = C - Math.cos(R.ba) * C * R.br;
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(bx + 1.5, by + 1.5, S * 0.022, 0, 7); c.fill();
+    g = c.createRadialGradient(bx - 2, by - 2, 1, bx, by, S * 0.024); g.addColorStop(0, '#fff'); g.addColorStop(1, '#bbb'); c.fillStyle = g; c.beginPath(); c.arc(bx, by, S * 0.022, 0, 7); c.fill();
   },
   rlBody() {
-    const R = this.rl, L = R.last, col = n => n === 0 ? 'g' : RL_RED.includes(n) ? 'r' : 'b', show = R.spinN !== null ? R.spinN : L ? L.n : null;
-    const P = [['red', '빨강'], ['black', '검정'], ['odd', '홀'], ['even', '짝'], ['low', '1~18'], ['high', '19~36'], ['d1', '1~12'], ['d2', '13~24'], ['d3', '25~36'], ['num', `숫자 ${R.num}`]];
-    const grid = R.pick === 'num' ? `<div class="rlGrid">${Array.from({ length: 37 }, (_, n) => `<button class="${col(n)}${R.num === n ? ' sel' : ''}" data-num="${n}">${n}</button>`).join('')}</div>` : '';
-    return { cls: L ? (L.w > 0 ? 'win' : 'lose') : '', line: this.busy ? '구슬이 굴러간다…' : L ? `${L.n} ${col(L.n) === 'r' ? '빨강' : col(L.n) === 'b' ? '검정' : '(0)'} · ${L.w > 0 ? `맞혔어요 +${fmtWon(L.bet * L.w)}` : `빗나감 −${fmtWon(L.bet)}`}` : '어디에 걸지 고르고 돌리세요. (1)',
-      html: `<div class="rlWheel ${show === null ? '' : col(show)}${this.busy ? ' spin' : ''}">${show === null ? '🎡' : show}</div><div class="mgRow rlPick">${P.map(([k, l]) => `<button class="btn${R.pick === k ? ' sel' : ''}" data-rl="${k}" ${this.busy ? 'disabled' : ''}>${l}<small>${k === 'num' ? '36배' : k[0] === 'd' ? '3배' : '2배'}</small></button>`).join('')}</div>${grid}`,
-      btns: `<div class="hjPick"><button class="btn gold big" data-do="rl" ${this.busy || !this.can() ? 'disabled' : ''}>돌리기<small>1</small></button></div>`,
-      foot: R.hist.length ? `지난 숫자 ${R.hist.map(n => `<i class="rln ${col(n)}">${n}</i>`).join('')}` : '0이 나오면 숫자 0에 건 것 말고는 다 잃어요.' };
+    const R = this.rl, L = R.last, bets = L && !Object.keys(R.bets).length ? L.bets : R.bets, win = k => L && bets === L.bets && this.rlPay(k, L.n) > 0;
+    const chip = k => bets[k] ? `<i class="chip mini ${chipCls(bets[k])}${win(k) ? ' won' : ''}"><em>${chipLabel(bets[k])}</em></i>` : '';
+    const cell = (k, label, cls = '') => `<button class="rc ${cls}${L && k === 'n' + L.n ? ' hit' : ''}" data-b="${k}" ${this.busy ? 'disabled' : ''}>${label}${chip(k)}</button>`;
+    const rows = [3, 2, 1].map(r => Array.from({ length: 12 }, (_, i) => { const n = i * 3 + r; return cell('n' + n, n, rlCol(n)); }).join('') + cell(`c${r === 3 ? 3 : r === 2 ? 2 : 1}`, '2:1', 'col')).join('');
+    const board = `<div class="rlBoard"><div class="rlNums">${cell('n0', '0', 'g zero')}${rows}</div>
+      <div class="rlDoz">${cell('d1', '1st 12')}${cell('d2', '2nd 12')}${cell('d3', '3rd 12')}</div>
+      <div class="rlOut">${cell('low', '1-18')}${cell('even', 'EVEN')}${cell('red', '<i class="dia r"></i>')}${cell('black', '<i class="dia b"></i>')}${cell('odd', 'ODD')}${cell('high', '19-36')}</div></div>`;
+    const tot = this.rlTotal();
+    return { cls: L ? (L.net > 0 ? 'win' : 'lose') : '', line: this.busy ? '구슬이 굴러간다… 노 모어 벳!' : L && !tot ? `${L.n} ${rlCol(L.n) === 'r' ? '빨강' : rlCol(L.n) === 'b' ? '검정' : '(그린 0)'} · ${L.net > 0 ? `당첨 +${fmtWon(L.net)}` : L.net < 0 ? `−${fmtWon(-L.net)}` : '본전'}` : tot ? `베팅 ${fmtWon(tot)} · 돌리세요 (1)` : '칩을 고르고 베팅판을 눌러 놓으세요. 여러 곳에 놓아도 돼요.',
+      html: `<div class="felt rlFelt"><div class="rlTop"><div class="rlWheelBox"><canvas id="rlCanvas" width="220" height="220"></canvas>${L && !this.busy ? `<b class="rlRes ${rlCol(L.n)}">${L.n}</b>` : ''}</div>
+        <div class="rlSide"><div class="dealerSlot"></div><div class="rlHist"><small>지난 숫자</small>${R.hist.slice().reverse().map(n => `<i class="rln ${rlCol(n)}">${n}</i>`).join('') || '<span>—</span>'}</div></div></div>${board}</div>`,
+      btns: `<div class="hjPick"><button class="btn" data-do="rlclear" ${this.busy || !tot ? 'disabled' : ''}>칩 거두기</button><button class="btn" data-do="rlrebet" ${this.busy || tot || !R.lastBets ? 'disabled' : ''}>같은 베팅</button><button class="btn gold big" data-do="rl" ${this.busy ? 'disabled' : ''}>SPIN · 돌리기<small>1</small></button></div>`,
+      foot: '숫자 하나 35배 · 열(2:1)·12구간 2배 · 빨강/검정·홀/짝·1-18/19-36 1배. 0이 나오면 0에 건 것 말고는 다 잃어요.' };
   },
-  /* 비디오 포커 (잭스 오어 베터) */
-  pkDeal() { if (this.locked()) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); } const d = cDeck(); this.pk = { deck: d, hand: [d.pop(), d.pop(), d.pop(), d.pop(), d.pop()], hold: [false, false, false, false, false], bet: this.bet, state: 'hold' }; Sound.play('paper'); this.render(); },
+  /* ---------- 비디오 포커 (잭스 오어 베터) ---------- */
+  pkDeal() { if (this.locked()) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); } const d = cDeck(); this.pk = { deck: d, hand: [d.pop(), d.pop(), d.pop(), d.pop(), d.pop()], hold: [false, false, false, false, false], bet: this.bet, state: 'hold', fresh: [0, 1, 2, 3, 4] }; Sound.play('paper'); this.render(); },
   pkDraw() {
-    const P = this.pk; if (!P || P.state !== 'hold') return; P.hand = P.hand.map((c, i) => P.hold[i] ? c : P.deck.pop()); P.state = 'done'; const r = pkRank(P.hand); P.rank = r; const mult = r >= 0 ? PK_PAY[r][1] : 0;
+    const P = this.pk; if (!P || P.state !== 'hold') return; P.fresh = []; P.hand = P.hand.map((c, i) => { if (P.hold[i]) return c; P.fresh.push(i); return P.deck.pop(); }); P.state = 'done'; const r = pkRank(P.hand); P.rank = r; const mult = r >= 0 ? PK_PAY[r][1] : 0;
     this.pay(mult ? P.bet * (mult - 1) : -P.bet, mult ? `포커 ${PK_PAY[r][0]}` : '포커 족보 없음'); Sound.play(mult >= 4 ? 'chime' : mult > 1 ? 'coins' : mult ? 'pop' : 'deny'); this.fixBet(); this.render();
   },
   pkBody() {
-    const P = this.pk, hold = P && P.state === 'hold';
-    const table = `<p class="mgNote pkPay">${PK_PAY.map(([n, m], i) => `<span class="${P && P.state === 'done' && P.rank === i ? 'on' : ''}">${n} ${m}배</span>`).join('')}</p>`;
-    if (!P) return { cls: '', line: '다섯 장 받고, 남길 카드를 골라 한 번 바꿔요.', html: `<div class="cardTable">${table}</div>`, btns: `<div class="hjPick"><button class="btn gold big" data-do="pkdeal" ${!this.can() ? 'disabled' : ''}>카드 받기</button></div>`, foot: '' };
-    const r = P.rank, mult = P.state === 'done' && r >= 0 ? PK_PAY[r][1] : 0;
-    return { cls: P.state === 'done' ? (mult > 1 ? 'win' : mult ? '' : 'lose') : '', line: hold ? '남길 카드를 누르세요 (1~5). 다 골랐으면 바꾸기.' : r >= 0 ? `${PK_PAY[r][0]}! ${mult > 1 ? `+${fmtWon(P.bet * (mult - 1))}` : '본전'}` : `족보 없음 −${fmtWon(P.bet)}`,
-      html: `<div class="cardTable"><div class="cRow pk">${P.hand.map((c, i) => `<button class="pkC${P.hold[i] ? ' held' : ''}" data-hold="${i}" ${hold ? '' : 'disabled'}>${cHtml(c)}<small>${P.hold[i] ? '남김' : i + 1}</small></button>`).join('')}</div>${table}</div>`,
-      btns: hold ? `<div class="hjPick"><button class="btn gold big" data-do="pkdraw">바꾸기</button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="pkdeal" ${!this.can() ? 'disabled' : ''}>한 판 더</button></div>`, foot: `판돈 ${fmtWon(P.bet)}` };
+    const P = this.pk, hold = P && P.state === 'hold', bet = P ? P.bet : this.bet;
+    const table = `<table class="vpPay">${PK_PAY.map(([n, m], i) => `<tr class="${P && P.state === 'done' && P.rank === i ? 'on' : ''}"><td>${n}</td><td>${m}배</td><td>${fmtWon(bet * m)}</td></tr>`).join('')}</table>`;
+    const cards = P ? P.hand.map((c, i) => `<button class="pkC${P.hold[i] ? ' held' : ''}" data-hold="${i}" ${hold ? '' : 'disabled'}><span class="heldTag">HELD</span>${cHtml(c, false, (P.fresh || []).includes(i))}<small>${i + 1}</small></button>`).join('') : Array.from({ length: 5 }, () => `<span class="pkC">${cHtml(null, true)}</span>`).join('');
+    const r = P && P.rank, mult = P && P.state === 'done' && r >= 0 ? PK_PAY[r][1] : 0; if (P) P.fresh = [];
+    return { cls: P && P.state === 'done' ? (mult > 1 ? 'win' : mult ? '' : 'lose') : '', line: !P ? '다섯 장 받고, 남길 카드를 골라 한 번 바꿔요.' : hold ? '남길 카드를 누르세요 (1~5). 다 골랐으면 DRAW.' : r >= 0 ? `${PK_PAY[r][0]}! ${mult > 1 ? `+${fmtWon(P.bet * (mult - 1))}` : '본전'}` : `족보 없음 −${fmtWon(P.bet)}`,
+      html: `<div class="vpCab"><div class="vpTitle">JACKS OR BETTER</div>${table}<div class="cRow pk">${cards}</div><div class="vpLeds"><span>BET ${fmtWon(bet)}</span><span>CREDIT ${fmtWon(State.cash)}</span></div></div>`,
+      btns: hold ? `<div class="hjPick"><button class="btn gold big" data-do="pkdraw">DRAW · 바꾸기</button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="pkdeal" ${!this.can() ? 'disabled' : ''}>DEAL · ${P ? '한 판 더' : '카드 받기'}<small>1</small></button></div>`, foot: P ? `판돈 ${fmtWon(P.bet)}` : '' };
   },
+  // v88 (사용자 '창이 아니라 그 상황 속에 들어간 것처럼'): 화면 전체가 카지노 테이블 앞 자리. 왼쪽은 테이블·기계와 맞은편 딜러, 오른쪽은 내 칩과 손.
   render(msg) {
     if (!this.open_) return; const el = $('hjWin'), lock = this.locked();
     const B = { hol: () => this.holBody(), slot: () => this.slotBody(), bj: () => this.bjBody(), rl: () => this.rlBody(), pk: () => this.pkBody() }[this.tab]();
-    el.innerHTML = `<div class="rcpt"><div class="rcHead">건대 카지노 <small>내 돈 ${fmtWon(State.cash)}</small></div>
-      <div class="csTabs">${CASINO_TABS.map(([k, l]) => `<button class="btn${this.tab === k ? ' sel' : ''}" data-tab="${k}" ${lock && this.tab !== k ? 'disabled' : ''}>${l}</button>`).join('')}</div>
-      ${B.html}<p class="mgMsg big ${B.cls}">${esc(msg || '') || B.line}</p>
-      <div class="mgSec">걸 돈</div><div class="mgRow">${HJ_BETS.map(b => `<button class="btn${this.bet === b ? ' sel' : ''}" data-bet="${b}" ${lock || b > State.cash ? 'disabled' : ''}>${fmtWon(b)}</button>`).join('')}</div>
-      ${B.btns}<p class="mgNote">${B.foot || `${castName('casino')}: 잃어도 괜찮은 돈만 거세요.`}</p>
-      <div class="pcBtns"><button class="btn" id="hjX" ${lock ? 'disabled' : ''}>닫기</button></div></div>`;
+    const say = esc(msg || '') || B.line, machine = this.tab === 'slot' || this.tab === 'pk';
+    const dealer = machine ? '' : `<div class="dealer"><canvas class="pt" data-pt="dealer" width="32" height="32"></canvas><span class="dName">${castName('casino')}</span><p class="bubble ${msg ? 'lose' : B.cls}">${say}</p></div>`;
+    el.innerHTML = `<div class="scene cs t-${this.tab}"><div class="csAmb"><i></i><i></i><i></i></div>
+      <div class="csBar"><button class="btn sBack" id="hjX" ${lock ? 'disabled' : ''}>← 자리에서 일어나기</button><span class="csLogo">♠ ♥ GRAND 건대 CASINO ♦ ♣</span><span class="csCash">내 돈 <b>${fmtWon(State.cash)}</b></span></div>
+      <div class="csMain"><div class="csStage">${dealer}${B.html}</div>
+      <div class="csHud"><div class="csTabs">${CASINO_TABS.map(([k, l]) => `<button class="btn${this.tab === k ? ' sel' : ''}" data-tab="${k}" ${lock && this.tab !== k ? 'disabled' : ''}>${l}</button>`).join('')}</div>
+      <p class="mgMsg big ${msg ? 'lose' : B.cls}">${say}</p>
+      <div class="chips">${HJ_BETS.map(b => `<button class="chip ${CHIP_CLS[b]}${this.bet === b ? ' sel' : ''}" data-bet="${b}" ${lock || b > State.cash ? 'disabled' : ''}><em>${chipLabel(b)}</em></button>`).join('')}<span class="chipHint">${this.tab === 'rl' ? '칩 고르고 베팅판 누르기' : '걸 칩'}</span></div>
+      ${B.btns}<p class="mgNote">${B.foot || `${castName('casino')}: 잃어도 괜찮은 돈만 거세요.`}</p></div></div></div>`;
     el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
     el.querySelectorAll('[data-bet]').forEach(b => (b.onclick = () => { this.bet = Number(b.dataset.bet); Sound.play('click'); this.render(); }));
-    el.querySelectorAll('[data-rl]').forEach(b => (b.onclick = () => { this.rl.pick = b.dataset.rl; Sound.play('click'); this.render(); }));
-    el.querySelectorAll('[data-num]').forEach(b => (b.onclick = () => { this.rl.num = Number(b.dataset.num); Sound.play('click'); this.render(); }));
+    el.querySelectorAll('[data-b]').forEach(b => (b.onclick = () => this.rlPlace(b.dataset.b)));
     el.querySelectorAll('[data-hold]').forEach(b => (b.onclick = () => { const i = +b.dataset.hold; this.pk.hold[i] = !this.pk.hold[i]; Sound.play('click'); this.render(); }));
-    const act = { hol: () => this.holPlay('hol'), jjak: () => this.holPlay('jjak'), spin: () => this.slotSpin(), deal: () => this.bjDeal(), hit: () => this.bjHit(), stand: () => this.bjStand(), double: () => this.bjDouble(), rl: () => this.rlSpin(), pkdeal: () => this.pkDeal(), pkdraw: () => this.pkDraw() };
+    const act = { hol: () => this.holPlay('hol'), jjak: () => this.holPlay('jjak'), spin: () => this.slotSpin(), deal: () => this.bjDeal(), hit: () => this.bjHit(), stand: () => this.bjStand(), double: () => this.bjDouble(), rl: () => this.rlSpin(), rlclear: () => this.rlClear(), rlrebet: () => this.rlRebet(), pkdeal: () => this.pkDeal(), pkdraw: () => this.pkDraw() };
     el.querySelectorAll('[data-do]').forEach(b => (b.onclick = () => act[b.dataset.do]()));
-    $('hjX').onclick = () => this.close();
+    const slot = el.querySelector('.dealerSlot'), dl = el.querySelector('.dealer'); if (slot && dl) slot.appendChild(dl);
+    $('hjX').onclick = () => this.close(); mgPortraits(el);
+    if (this.tab === 'rl') this.rlDraw();
   },
 };
+// 장면 속 얼굴 (canvas.pt data-pt="이름"): 딜러, 게임장 사장, 나, 친구
+Sprites.setPal('dealer', { hair: '#1a1416', skin: '#f0c8a2', shirt: '#15151c', shirt2: '#2a2a32', pants: '#15151c', shoe: '#111', tie: '#b01a2a' });
+function mgPortraits(el) {
+  el.querySelectorAll('canvas.pt').forEach(cv => {
+    let name = cv.dataset.pt; if (name === 'me') { name = 'pt:me'; Sprites.setPal(name, Profile.pal(Profile.get())); }
+    else if (name.startsWith('net:')) { const p = Net.players[name.slice(4)]; if (p && p.pal) { Sprites.setPal('pt:op', Profile.pal(p.pal)); name = 'pt:op'; } else name = 'walker1'; }
+    const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.clearRect(0, 0, cv.width, cv.height); c.drawImage(Sprites.portrait(name), 0, 0, cv.width, cv.height);
+  });
+}
+// 게임장 오락기 앞 (v88): 화면 전체가 어두운 오락실, 가운데 기계 한 대 — 위 간판, 브라운관 화면, 아래 조작판
+function arcadeShell(title, screen, panel, cls = '') {
+  return `<div class="scene arc ${cls}"><div class="arcAmb"><i></i><i></i><i></i><i></i></div><div class="arcCab"><div class="arcMarq"><b>${title}</b></div><div class="arcBezel"><div class="arcScreen">${screen}</div></div><div class="arcPanel">${panel}</div></div></div>`;
+}
 const Holjjak = { get open_() { return Casino.open_ && Casino.tab === 'hol'; }, open() { Casino.open('hol'); }, close() { Casino.close(); }, play(s) { Casino.tab = 'hol'; Casino.holPlay(s); } }; // 예전 이름 (테스트 호환)
 
 /* ---- 이혁진 깜짝 룰렛 (사용자 2026-10-15): 돈을 받다 보면 가끔 분위기가 갑자기 어두워지며 "저랑 게임 하나 하실래요?"
@@ -7863,13 +8078,13 @@ const Fight = {
     if (!this.open_) return; const el = $('fightWin');
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = Rps.friends(), wait = this.view === 'wait'; const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>같이 있는 친구</small>` })));
-      el.innerHTML = `<div class="rcpt"><div class="rcHead">건대 파이터 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>
+      el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>
         <p class="mgNote">내 캐릭터로 직접 싸워요. <b>A·D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기 · <b>J</b> 주먹 · <b>K</b> 발차기. 터치는 화면 버튼.</p>
         <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${Net.on && !fr.length ? '<p class="mgNote">친구가 이 게임장에 들어오면 여기에 떠요.</p>' : ''}
         <div class="mgSec">판돈 <small>${this.vs === 'house' ? '사장이랑은 재미로만 해요. 판돈은 친구랑 할 때만 걸 수 있어요' : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash || (s && this.vs === 'house') ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
-        <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p>
-        <div class="pcBtns">${wait ? '<button class="btn" id="fgCancel">신청 취소</button>' : '<button class="btn gold" id="fgGo">시작</button>'}<button class="btn" id="fgX">닫기</button></div></div>`;
+        <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p></div>`,
+        `<div class="pcBtns">${wait ? '<button class="btn" id="fgCancel">신청 취소</button>' : '<button class="btn gold" id="fgGo">START · 시작</button>'}<button class="btn" id="fgX">← 일어나기</button></div>`);
       el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; if (this.vs === 'house') this.stake = 0; Sound.play('click'); this.render(); }));
       el.querySelectorAll('[data-st]').forEach(b => (b.onclick = () => { this.stake = Number(b.dataset.st); Sound.play('click'); this.render(); }));
       if ($('fgGo')) $('fgGo').onclick = () => this.start();
@@ -7878,11 +8093,11 @@ const Fight = {
     }
     if (this.view === 'done') {
       const g = this.g, won = g.me.wins > g.op.wins;
-      el.innerHTML = `<div class="rcpt"><div class="rcHead">${won ? '승리!' : '패배'} <small>${g.me.wins} : ${g.op.wins} · ${esc(g.name)}</small></div><p class="mgMsg big ${won ? 'win' : 'lose'}">${won ? `이겼어요!${g.stake ? ` +${fmtWon(g.stake)}` : ''}` : `졌어요.${g.stake ? ` −${fmtWon(g.stake)}` : ''}`}</p><div class="pcBtns"><button class="btn gold" id="fgAgain">한 판 더</button><button class="btn" id="fgX">닫기</button></div></div>`;
+      el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">${won ? 'YOU WIN!' : 'GAME OVER'} <small>${g.me.wins} : ${g.op.wins} · ${esc(g.name)}</small></div><p class="mgMsg big ${won ? 'win' : 'lose'}">${won ? `이겼어요!${g.stake ? ` +${fmtWon(g.stake)}` : ''}` : `졌어요.${g.stake ? ` −${fmtWon(g.stake)}` : ''}`}</p></div>`, '<div class="pcBtns"><button class="btn gold" id="fgAgain">CONTINUE · 한 판 더</button><button class="btn" id="fgX">← 일어나기</button></div>');
       $('fgAgain').onclick = () => { const vs = g.vs, st = g.stake <= State.cash ? g.stake : 0; this.g = null; this.vs = vs; this.stake = st; this.start(); };
       $('fgX').onclick = () => this.close(); return;
     }
-    el.innerHTML = `<div class="fgWrap"><canvas id="fgCv" width="${this.W}" height="${this.H}"></canvas><div class="fgPad"><div><button data-t="left">◀</button><button data-t="up">▲</button><button data-t="right">▶</button><button data-t="block">🛡</button></div><div><button data-t="punchP" class="atk">👊</button><button data-t="kickP" class="atk">🦵</button></div></div><button class="fgQuit" id="fgQuit">그만하기</button></div>`;
+    el.innerHTML = arcadeShell('🥊 건대 파이터', `<canvas id="fgCv" width="${this.W}" height="${this.H}"></canvas>`, `<div class="fgKeys"><i class="stick"></i><span><b>A D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기</span><span><b>J</b> 주먹 · <b>K</b> 발차기</span></div><div class="fgPad"><div><button data-t="left">◀</button><button data-t="up">▲</button><button data-t="right">▶</button><button data-t="block">🛡</button></div><div><button data-t="punchP" class="atk">👊</button><button data-t="kickP" class="atk">🦵</button></div></div><button class="fgQuit" id="fgQuit">그만하기</button>`, 'play');
     el.querySelectorAll('[data-t]').forEach(b => { const k = b.dataset.t; const on = e => { e.preventDefault(); this.touch[k] = true; }, off = e => { e.preventDefault(); if (!k.endsWith('P')) this.touch[k] = false; }; b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); });
     $('fgQuit').onclick = () => this.close();
   },

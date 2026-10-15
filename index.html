@@ -1376,7 +1376,7 @@ const FEEL = {
   dayCardIn: 0.4, dayCardHold: 1.0, dayCardOut: 0.4,
   clockMinPerSec: 1.2,    // 걸어 다니는 동안 시계가 흐르는 속도(분/초, 연출용)
   liveWeekMin: 20,        // 실시간 채널: 1주(D-7→개찰)가 실제 몇 분인지 (사용자 요청 20분)
-  liveListings: 7,        // 실시간 채널: 동시에 돌아가는 물건 수 (서로 어긋나게 → 약 3분마다 매각기일; 사용자 요청 6~7개)
+  liveListings: 9,        // 실시간 채널: 동시에 돌아가는 물건 수 (사용자 2026-10-13 6~7개 → 2026-10-15 '물건 2개 더' 9개; 자리 0~6의 시각·구는 그대로, 7·8은 그 사이에 끼움 → live.js slotOff/LIVE_BASE)
   liveSlots: 0,           // 실시간 채널: 게임 하루에 조사할 수 있는 횟수. 0이면 제한 없음 (2→0, 사용자 2026-10-14 '조사는 횟수 제한 없이')
   liveBidDdayOnly: true,  // 실시간 채널: 입찰표는 매각기일(마지막 날)에만 받는다 (현실대로; false면 개찰 전 아무 때나)
   livePayMin: 10,
@@ -3829,7 +3829,7 @@ const Net = {
     }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
     if (m.t === 'news') { this.pushLog(p.name, String(m.text || '').slice(0, 80), false, true); Sound.play('blip', 1.1); return; }
-    if (m.t === 'asset') { p.assets = Array.isArray(m.list) ? m.list.slice(0, 8) : []; return; } // 상대 자산 요약 (순위 창에서 보여 준다)
+    if (m.t === 'asset') { p.assets = Array.isArray(m.list) ? m.list.slice(0, 10) : []; return; } // 상대 자산 요약 (순위 창에서 보여 준다)
     if (m.t === 'greet') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); if (m.to === this.myId && !m.re) this.onGreet(m, p); return; }
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
@@ -4067,7 +4067,10 @@ const ChatBar = {
  * 물건·경쟁자는 (채널, 물건 자리, 회차)로 정해지는 시드에서 나오므로 누가 언제 들어와도 같다.
  */
 const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
-const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3]; // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
+const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3, 0.6, 2.5];
+// 자리 0~6은 처음부터 있던 자리라 시각 오프셋(k·W/7)과 구 순서((n·7+k)%4)를 바꾸면 이미 가진 집·낸 입찰표의 사건이 달라진다. 그래서 7은 고정(LIVE_BASE)이고 나중에 더한 자리(7, 8…)는 그 사이 중간 시각에 끼운다.
+const LIVE_BASE = 7;
+function slotOff(k, W) { return k < LIVE_BASE ? Math.round(k * W / LIVE_BASE) : Math.round((2 * (k - LIVE_BASE) * 3 + 1) * W / (2 * LIVE_BASE)); } // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
 const Live = {
   on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], rentLog: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0, bdT: 0,
   capOf(ch) { return ch * 1e8; }, // 채널 N = 자본 N억 (사용자 요청)
@@ -4076,13 +4079,13 @@ const Live = {
   now() { return Date.now(); },
   key(k, n) { return `${this.ch}:${k}:${n}`; },
   // 물건 자리 k의 지금 회차
-  cycle(k, t = this.now()) { const W = this.weekMs(), off = Math.round(k * W / FEEL.liveListings); const n = Math.floor((t - off) / W); return this.cycleAt(k, n); },
-  cycleAt(k, n) { const W = this.weekMs(), off = Math.round(k * W / FEEL.liveListings); const t0 = n * W + off; return { k, n, t0, tEnd: t0 + W, key: this.key(k, n) }; },
+  cycle(k, t = this.now()) { const W = this.weekMs(), off = slotOff(k, W); const n = Math.floor((t - off) / W); return this.cycleAt(k, n); },
+  cycleAt(k, n) { const W = this.weekMs(), off = slotOff(k, W); const t0 = n * W + off; return { k, n, t0, tEnd: t0 + W, key: this.key(k, n) }; },
   // 회차의 물건: 시드가 (채널, 자리, 회차)로 정해져 누구에게나 같다
   makeCase(k, n) {
     const cyc = this.cycleAt(k, n);
     const seed = ((this.ch * 1000003 + k * 7919 + n * 104729) ^ 0x3c3c) & 0x7fffffff; const R = makeRng(seed);
-    const gu = DRIVE_GUS[(n * FEEL.liveListings + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
+    const gu = DRIVE_GUS[(n * LIVE_BASE + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
     const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate: '2025-11-11', year: '2025' }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
     c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
     c.live = cyc; this.closed[c.id] = c;
@@ -4229,7 +4232,7 @@ const Live = {
     const out = [];
     for (const k in this.mine) { const m = this.mine[k]; if (m.done) continue; const a = m.asset || {}; const Lo = m.loanState || {}; const loan = (Lo.bank || 0) + (Lo.savings || 0);
       const s = !m.opened ? 'bid' : m.phase === 'own' ? (a.rentOn ? 'rent' : (a.listed || a.offer) ? 'sale' : 'own') : m.phase === 'forced' ? 'forced' : m.phase === 'evict' ? 'evict' : 'pay';
-      const e = { n: m.name.split(' ').slice(0, 2).join(' '), s, b: m.bid }; if (a.rentOn) e.r = a.rent; if (loan) e.l = loan; if (a.cond) e.c = a.cond; out.push(e); if (out.length >= 8) break; }
+      const e = { n: m.name.split(' ').slice(0, 2).join(' '), s, b: m.bid }; if (a.rentOn) e.r = a.rent; if (loan) e.l = loan; if (a.cond) e.c = a.cond; out.push(e); if (out.length >= 10) break; }
     return out;
   },
   assetsOf(name) { if (name === Net.me) return this.assetSummary(); const p = Object.values(Net.players).find(q => q.name === name && !q.gone); if (p && p.assets) return p.assets; const v = this.seen[name]; return v && v.as ? v.as : null; },

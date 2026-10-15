@@ -4510,7 +4510,8 @@ const Live = {
 
   /* ---- 왼쪽 미니 순위판 (항상 보임) ---- */
   rankRows() {
-    const here = Object.values(Net.players).filter(p => !p.gone && this.cashOf(p) !== undefined).map(p => ({ name: p.name, cash: this.cashOf(p), doing: this.doing(p) }));
+    // 접속한 사람은 자본 신호(pos.cs)가 아직 없어도 '접속 중'으로 (전엔 기록된 자본으로 떨어져 '자리 비움'으로 보였다; 사용자 2026-10-15 '접속중인데 들어가면 접속 아닌데')
+    const here = Object.values(Net.players).filter(p => !p.gone && p.name && p.name !== Net.me).map(p => { const c = this.cashOf(p); return { name: p.name, cash: c !== undefined ? c : this.seen[p.name] ? this.cashOf(this.seen[p.name]) : undefined, doing: this.doing(p) }; }).filter(r => r.cash !== undefined);
     const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, cash: this.cashOf(v), away: true })).filter(r => r.cash !== undefined); // 전에 만난 사람(마지막으로 본 자본)
     return [{ name: Net.me, cash: State.cash, me: true, doing: '나' }, ...here, ...away].sort((a, b) => b.cash - a.cash);
   },
@@ -4546,7 +4547,7 @@ const Live = {
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
     const on = this.online();
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · 접속 ${1 + on.length}명</span><span class="lvSub">시작 자본 ${fmtWon(State.capital)} · 내 손익 ${fp(this.pnl())} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
-      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>자리 비움</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name)}</td></tr>` : ''}`).join('')}</table>
+      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${r.me ? ' <small>나</small>' : r.away ? ' <small>접속 안 함</small>' : r.doing ? ` <small>${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.cash)}">${f(r.cash)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name)}</td></tr>` : ''}`).join('')}</table>
       <div class="lvFoot">사람을 누르면 가진 집·대출이 보여요</div>
       ${all.length > rows.length ? `<div class="lvFoot">외 ${all.length - rows.length}명</div>` : ''}
       <div class="lvRecent"><small>지금 접속 ${on.length + 1}명 (나 포함)${Net.host ? ' · 내가 방장' : ''}</small>${on.length ? on.map(o => `<div><span>${esc(o.name)}</span><b class="dim">${esc(o.doing)}</b></div>`).join('') : '<div><span>아직 나뿐이에요</span></div>'}</div>`;

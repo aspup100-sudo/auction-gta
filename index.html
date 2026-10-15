@@ -56,6 +56,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title .mp .chRow { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:6px; } #title .mp .ch { display:inline-flex; flex-direction:column; align-items:center; min-width:72px; padding:7px 10px; line-height:1.15; gap:2px; } #title .mp .ch b { font-size:14px; } #title .mp .ch small { font-size:11px; opacity:.7; } #title .mp .ch.sel { border-color:var(--gold); color:var(--gold); } #title .mp .ch.sel small { opacity:1; }
 /* 제목 화면: 모드(혼자/친구/채널)를 먼저 고르고, 고른 뒤에만 자본·이름·시작 버튼이 보인다 (사용자 2026-10-14: 헷갈리지 않게) */
 #title #capLabel, #title #caps, #title #capRow, #title #nameBox { display:none; } #title.gated #modeRow, #title.gated #modeHint, #title.gated #capLabel, #title.gated #caps, #title.gated #capRow, #title.gated #nameBox, #title.gated .mpWrap, #title.gated #profileTitle { display:none !important; } #title #installGate { max-width:520px; background:rgba(205,174,112,.12); border:1px solid var(--gold); border-radius:10px; padding:10px 16px; color:var(--paper); text-align:center; } #title #installGate b { color:var(--gold); font-size:16px; } #title #installGate p { margin:6px 0 0; font-size:13px; opacity:.85; line-height:1.5; } #title #modeHint { color:var(--paper); opacity:.6; font-size:13px; margin-top:-4px; } #title.modeSolo #modeHint, #title.modeRoom #modeHint, #title.modeCh #modeHint { display:none; }
+#title #tutRow { display:none; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; background:rgba(255,255,255,.06); border:1px solid var(--gold); border-radius:10px; padding:8px 14px; max-width:560px; font-size:14px; cursor:pointer; } #title.modeSolo #tutRow { display:flex; } #tutRow input { width:18px; height:18px; accent-color:var(--gold); } #tutRow small { flex-basis:100%; text-align:center; opacity:.8; font-size:12px; }
 #title.modeSolo #capLabel, #title.modeRoom #capLabel { display:block; } #title.modeSolo #caps, #title.modeRoom #caps { display:flex; } #title.modeSolo #capRow, #title.modeRoom #capRow, #title.modeCh.chOn #capRow { display:flex; } #title.modeRoom #nameBox, #title.modeCh #nameBox { display:flex; }
 #title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title.chOn .mp .ch.sel { cursor:pointer; } #title.chOn .mp .ch.sel::after { content:'다시 누르면 나가기'; font-size:10px; opacity:.7; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
@@ -343,6 +344,11 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #hudSlots small { font-size:11px; color:#fff; text-shadow:0 1px 0 #000, 0 0 3px #000; margin-left:4px; }
 .hudBtns { top:226px !important; }
 #quest { position:absolute; top:92px; left:12px; background:rgba(20,22,28,.85); border:1px solid var(--gold); border-radius:8px; padding:6px 10px; font-size:12px; color:var(--paper); transform:translateX(-120%); transition:transform .25s ease-out; max-width:min(330px, 60vw); }
+#tutor { position:absolute; top:52px; left:50%; transform:translate(-50%, -180%); width:min(400px, 70vw); background:rgba(20,22,28,.92); border:2px solid var(--gold); border-radius:10px; padding:6px 12px; color:var(--paper); font-size:12.5px; line-height:1.35; pointer-events:auto; cursor:pointer; transition:transform .3s ease-out; z-index:11; box-shadow:0 4px 12px rgba(0,0,0,.4); }
+#tutor.in { transform:translate(-50%, 0); } #tutor small { color:var(--gold); font-size:11px; display:block; } #tutor b { display:block; font-size:14px; } #tutor span { opacity:.9; }
+body:has(#dialog.in) #tutor, .resultOn #tutor, .touchOn.chatOpen #tutor { visibility:hidden; }
+.clItem em.tutTag { color:#1a1408; background:var(--gold); border-radius:4px; padding:0 5px; font-style:normal; font-size:11px; margin-right:5px; }
+.tutEnd { background:#fff6d6; border:2px solid var(--gold); } .tutEnd b { display:block; margin-bottom:4px; } .tutEnd p { margin:0; }
 #quest.in { transform:none; } #quest b { color:var(--gold); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .qItems { display:flex; flex-wrap:wrap; gap:3px 10px; margin-top:3px; } .qItems span { opacity:.6; } .qItems span.done { opacity:1; color:#9fe29a; } .qItems span.just { animation:bump .4s ease-out; }
 #balanceDue { top:150px !important; }
@@ -451,6 +457,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #hudSlots { top:158px; right:12px; }
   .short .hudBtns { top:10px !important; right:118px; } .short .hudBtns .btn { padding:5px 8px; font-size:12px; }
   .short #radar { top:10px; left:auto; right:12px; width:96px; height:96px; bottom:auto; }
+  .short #tutor { top:auto; bottom:6px; width:min(330px, 44vw); font-size:11px; padding:4px 10px; transform:translate(-50%, 180%); } .short #tutor.in { transform:translate(-50%, 0); } .short #tutor b { font-size:12px; } .short #tutor.drv { visibility:hidden; } /* 운전 중엔 내비판 자리 */
   .short #quest { top:6px; left:184px; max-width:220px; } .short #balanceDue { top:var(--stackBd, 6px) !important; left:12px; font-size:12px; padding:3px 8px; } /* 왼쪽 위: 순위 → 내 집·잔금 → 채팅 순으로 쌓는다 (boot.js LeftStack) */
   .short #rankBox { top:6px; left:12px; width:164px; font-size:10.5px; line-height:1.3; padding:4px 7px 5px; } .short #rankBox .rbOn { margin-top:3px; padding-top:2px; } /* 매물 카드(60~170px) 아래, 조이스틱(273px~) 위의 빈 자리에 줄인 판으로 (사용자 2026-10-14: 모바일에서 겹친다 / 왼쪽 끝에) */
   .short #stick { width:100px; height:100px; left:20px; bottom:20px; } .short #knob { left:28px; top:28px; width:44px; height:44px; }
@@ -511,6 +518,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   </div>
   </div>
   <div id="capLabel">시작 자본을 고르세요</div>
+  <label id="tutRow"><input type="checkbox" id="tutOn" checked> <b>🎓 처음이에요</b><small>단예 선배가 연습 물건으로 한 바퀴 안내해 줘요. 경매도 게임도 처음이면 켜 두세요.</small></label>
   <div class="caps" id="caps">
     <button class="btn" data-v="50000000">5천만 원</button>
     <button class="btn" data-v="100000000">1억 원</button>
@@ -526,6 +534,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="rotate"><div class="ph"></div><b>폰을 가로로 돌려 주세요</b><small>이 게임은 가로 화면에 맞춰져 있어요</small></div>
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
+  <div id="tutor"></div>
   <div id="chatLog"></div>
   <div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="친구에게 한마디 (Enter 보내기 · Esc 닫기)"><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div>
   <canvas id="minimap" width="180" height="130" title="서울 지도 (M)"></canvas>
@@ -2669,8 +2678,9 @@ function drawMinimap(t) {
 const CaseList = {
   openAll() {
     const el = $('caseList'); const cases = [...State.week.cases].sort((a, b) => (DISTRICT[a.gu].row - DISTRICT[b.gu].row) || (DISTRICT[a.gu].col - DISTRICT[b.gu].col));
+    State.pcOpened = true; const tut = Tutorial.on && Tutorial.c ? Tutorial.c.id : null; if (tut) cases.sort((a, b) => (b.id === tut) - (a.id === tut)); // 튜토리얼: 연습 물건을 맨 위에
     el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><div class="pcHead">법원경매정보 · 서울 매각기일 ${State.week.saleDate}</div><h3>이번 주 서울 경매 물건 ${cases.length}건</h3><div class="dim">물건을 누르면 기본 정보를 볼 수 있어요. 금테 구는 직접 차로 둘러볼 수 있어요.</div>` +
-      cases.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.name}</b><span>${c.caseNo} · ${DISTRICT[c.gu].name} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)} · 유찰 ${c.failCount}회${State.capital + c.minPrice * 0.8 < c.minPrice ? ' · <em>자본 초과</em>' : ''}</span></div>`).join('') +
+      cases.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.id === tut ? '<em class="tutTag">★ 연습 물건</em>' : ''}${c.name}</b><span>${c.caseNo} · ${DISTRICT[c.gu].name} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)} · 유찰 ${c.failCount}회${State.capital + c.minPrice * 0.8 < c.minPrice ? ' · <em>자본 초과</em>' : ''}</span></div>`).join('') +
       `<button class="btn" id="clClose">닫기</button>`;
     el.classList.add('in'); Sound.play('paper');
     el.querySelectorAll('.clItem').forEach(it => it.onclick = () => { el.classList.remove('in'); PropertyCard.open(it.dataset.id); });
@@ -4720,7 +4730,7 @@ const Game = {
 
 function startGame(capital, opts = {}) {
   State.capital = capital; State.cash = capital; HUD.setCash(capital, false);
-  State.seed = opts.seed || (Date.now() & 0x7fffffff); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자
+  State.seed = opts.tutorial ? TUT_SEED : (opts.seed || (Date.now() & 0x7fffffff)); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자. 튜토리얼: 늘 같은 연습 물건
   if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed }); // 채널: 실제 시간으로 돌아가는 세계
   $('btnEndDay').hidden = Live.on;
   if (Net.on) { $('tChat').hidden = false; $('btnChat').hidden = false; $('mpInfo').hidden = false; }
@@ -4738,6 +4748,7 @@ function startGame(capital, opts = {}) {
   if (Net.on && bays.length) { State.carHint = 8; setTimeout(() => Toast.show('내 차는 사무실 뒤 공용 주차장에 있어요. 사람마다 한 칸씩이에요.', 3600), 2600); }
   Game.traffic = spawnTraffic(Game.zone);
   State.targetPlace = 'office';
+  Tutorial.on = false; if (opts.tutorial && !Net.on) Tutorial.start(); // 혼자 하기 '처음이에요': 단예 선배가 한 바퀴 안내 (2026-10-15)
   $('title').classList.add('out'); setTimeout(() => $('title').style.display = 'none', 400);
   $('hud').classList.add('on');
   Game.scene = 'zone'; Sound.playBgm('town');
@@ -5111,7 +5122,7 @@ function update(dt) {
   Game.t += dt;
   HUD.tick(dt);
   if (Game.scene === 'title') return;
-  Net.tick(dt); Live.tick(dt); Pvp.tick(dt);
+  Net.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt);
   if (Layout.editing) return;
   if (ChatBar.open_) return;
   const interact = consume('e') || (!Game.driving && (!Net.on || Dialog.open) && consume(' ')) || consume('Enter'); if (Game.driving) Pressed[' '] = false; // 같이 할 때는 스페이스가 채팅 (사용자 2026-10-14)
@@ -6171,6 +6182,7 @@ function renderMore(S, c, a, G, missed) {
   h += `<details class="rSec"><summary>입찰하지 않은 물건들의 정답 (${others.length}건)</summary><ul class="others">${others.map(x => { const ax = Engine.analyze(x.data, x.minPrice); return `<li><b>${x.name}</b> <small>${x.caseNo}</small><div class="small">${'★'.repeat(x.stars)} · ${x.risks.length ? x.risks.map(r => RISK_NAME(r)).join(', ') : '깨끗한 물건이었다'} · 인수액 ${fmtWon(ax.assumeTotal)} · 적정가 ${fmtWon(fairBid(x))} 안팎 · 최저가 ${fmtWon(x.minPrice)}</div></li>`; }).join('')}</ul></details>`;
   h += `<div class="pcBtns"><button class="btn gold" id="rcAgain">새 게임</button><button class="btn" id="rcNote2">수첩 · 놓친 장소</button><button class="btn" id="rcRec">기록</button></div>`;
   el.innerHTML = h;
+  if (Tutorial.on) Tutorial.result($('result')); // 여기 el은 #rMore (결과 페이지의 아래쪽)라 페이지 전체를 넘긴다
   const px = $('rDanye').getContext('2d'); px.imageSmoothingEnabled = false; px.drawImage(Sprites.portrait('danye'), 0, 0, 48, 48);
   $('rcAgain').onclick = () => { Sound.play('click'); location.reload(); };
   $('rcNote2').onclick = () => { Notebook.tab = 3; Notebook.toggle(true); };
@@ -6201,6 +6213,104 @@ const Records = {
     el.classList.add('in'); Sound.play('paper');
     $('recClose').onclick = () => el.classList.remove('in');
     if ($('recClear')) $('recClear').onclick = () => { Store.set('records', []); this.show(); };
+  },
+};
+
+/* ===================== 튜토리얼: '혼자 하기'를 처음 하는 사람(경매도, 게임도 처음)을 위한 선배 안내 =====================
+ * 사용자 요청 2026-10-15 ('혼자하기는 경매 모르는 사람, 게임 할 줄 모르는 사람을 위해 튜토리얼처럼').
+ * 규칙: 조작법과 일반적인 경매 지식만 설명한다. 연습 물건의 정답(위험·적정가)은 결과 화면 전엔 절대 말하지 않는다.
+ * 단계는 상태(State.seen 등)로 판단하므로 순서를 건너뛰어도 안내 상자는 늘 '아직 안 한 첫 일'을 가리킨다.
+ */
+const TUT_SEED = 205; // 광진구 구의동 해솔아파트 112동 1603호: 후순위 임차인 1명(전액 배당) → 등기부·전입세대·현장을 한 바퀴 돌아보기 좋은 물건
+const Tutorial = {
+  on: false, c: null, list: [], step: -1, told: {}, wait: 0, zoneId: null,
+  keys() {
+    const T = document.body.classList.contains('touchOn');
+    return T ? { move: '왼쪽 조이스틱', moveWith: '왼쪽 조이스틱으로', act: '오른쪽 아래 버튼', car: '승하차 버튼', drive: '가속·브레이크 버튼으로 가고 조이스틱으로 핸들을 꺾어', map: '오른쪽 위 둥근 지도 → "서울 전체"', note: '위쪽 "수첩" 버튼', end: '메뉴 → "오늘 일정 끝내기"', box: '아래쪽 안내 상자' }
+      : { move: 'W A S D (또는 방향키)', moveWith: 'W A S D (또는 방향키)로', act: 'E', car: 'F', drive: 'W 가속 · S 브레이크 · A D 핸들, 내릴 땐 다시 F', map: 'M (서울 지도)', note: 'Tab (수첩)', end: '메뉴(Esc) → "오늘 일정 끝내기"', box: '위쪽 안내 상자' };
+  },
+  start() {
+    const cs = State.week.cases;
+    this.c = cs.find(c => c.gu === 'gwangjin' && c.type === '아파트' && c.risks.length === 1 && c.risks[0] === 'normal') || cs.find(c => c.gu === 'gwangjin') || cs[0];
+    this.on = true; this.step = -1; this.told = {}; this.zoneId = null; this.list = this.build();
+    $('tutor').classList.add('in');
+  },
+  build() {
+    const K = this.keys(), c = this.c, court = COURTS[c.court].name;
+    const seen = () => State.seen[c.id] || {};
+    return [
+      { id: 'pc', title: '사무실 PC 보기', how: `${K.moveWith} 사무실에 들어가 PC 앞에서 ${K.act}`, place: 'office', ok: () => !!State.pcOpened, lines: [
+        '왔어? 나 단예야. 경매도 게임도 처음이라며. 이번 주는 내가 옆에서 한 바퀴 같이 돌게.',
+        `걷는 건 ${K.move}. 문이나 사람 앞에 서면 말풍선이 뜨는데, 그때 ${K.act}를 누르면 들어가거나 말을 걸 수 있어.`,
+        `${K.box}에 지금 할 일이 떠 있어. 상자를 누르면 설명을 다시 들을 수 있고. 먼저 사무실에 들어가서 PC부터 봐.`] },
+      { id: 'target', title: '연습 물건 고르기', how: '목록의 ★ 연습 물건 → "★ 입찰 대상 지정"', place: 'office', ok: () => State.target === c.id, lines: [
+        `목록에 ★ 연습 물건이라고 붙여 놨어. ${c.name}. 그걸 누르고 "★ 입찰 대상 지정"을 눌러.`,
+        '입찰 대상을 정하면 조사 체크리스트가 생기고, 노란 화살표가 다음 갈 곳을 가리켜 줘.'] },
+      { id: 'docs', title: '명세서·현황조사서 읽기', how: 'PC → 연습 물건 카드 → "두 서류 같이 보기" (무료)', place: 'office', ok: () => !!(seen().spec && seen().survey), lines: [
+        '같은 카드에서 "두 서류 같이 보기"를 눌러. 매각물건명세서는 법원이 정리한 요약이고, 현황조사서는 집행관이 직접 가 본 기록이야.',
+        '볼 건 세 가지. 임차인이 신고돼 있나, 보증금이 얼마인가, 배당요구를 했나. PC에서 보는 건 시간이 안 들어.'] },
+      { id: 'registry', title: '등기소에서 등기부 떼기', how: '노란 화살표 따라 등기소 → 직원에게 "조사하기"', place: 'registry', ok: () => !!seen().registry, lines: [
+        '이제 나가서 등기소로 가. 화살표 따라가면 돼. 직원한테 말 걸고 "조사하기"를 누르면 등기부를 떼 줘.',
+        '등기부는 갑구(소유권·압류·가압류)랑 을구(근저당)로 나뉘어. 말소 안 된 것 중 날짜가 제일 빠른 근저당·압류·가압류가 "말소기준권리"야. 그보다 늦은 권리는 낙찰되면 지워져.',
+        '사무실 밖에서 하는 조사는 시간 한 칸(오전·오후)을 써. 매각기일까지 7일이니까 서두르진 마.'] },
+      { id: 'center', title: '주민센터에서 전입세대열람', how: '화살표 따라 주민센터 → "조사하기"', place: 'center', ok: () => !!seen().movein, lines: [
+        '다음은 주민센터. 전입세대열람을 떼면 그 집에 누가 언제 전입했는지 나와. 명세서에 없는 사람이 나오기도 해.',
+        '전입일이 말소기준권리 날짜보다 빠르면 대항력이 있어. 그럼 배당 못 받은 보증금은 낙찰자가 떠안아. 날짜 둘을 꼭 비교해.'] },
+      { id: 'site', title: '현장 가 보기', how: '화살표 따라 그 집으로 → 벽·우편함·현수막 눌러 보고 초인종', place: 'case:' + c.id, ok: () => !!seen().site, lines: [
+        `이번엔 현장. 걸어가도 되고, 차는 차 옆에서 ${K.car}. ${K.drive}.`,
+        '현장에 들어가면 보이는 것들을 다 눌러 봐. 초인종도 눌러서 사는 사람 얘기를 들어. 서류에 없는 게 거기 있을 때가 많아. 처음 둘러볼 때만 시간 한 칸이야.'] },
+      { id: 'bank', title: '은행에서 대출 상담', how: '은행 → 왼쪽 번호표 기계 → 부르면 창구에서 "조사하기"', place: 'bank', ok: () => !!seen().bank, lines: [
+        '은행에서 경락잔금대출을 미리 물어봐. 들어가서 왼쪽 번호표 기계부터 뽑고, 부르면 창구로 가.',
+        '보통 낙찰가의 70~80%까지 빌려줘. 나머지는 내 돈이야. 지금 가진 돈으로 얼마까지 쓸 수 있는지 여기서 가늠해.'] },
+      { id: 'agent', title: '중개사무소에서 시세 묻기', how: '중개사무소 → "조사하기" → 실거래 시세', place: 'agent', ok: () => !!seen().agent, lines: [
+        '중개사무소에 가면 이 동네 실거래 시세를 알려 줘. 나중에 팔 값을 알아야 얼마에 살지 정하지.',
+        '중개사가 소문도 하나 흘릴 거야. 소문은 소문이니까, 믿을지는 네가 확인해.'] },
+      { id: 'judge', title: '수첩에 내 판단 적기', how: `${K.note} → "내 판단" → 적정 입찰가까지 적기`, place: null, ok: () => { const j = State.judgment[c.id]; return !!(j && j.bid); }, lines: [
+        `${K.note}을 열어 "내 판단" 탭을 채워. 말소기준권리, 대항력 있는 임차인, 떠안을 돈, 그리고 적정 입찰가.`,
+        '적정가는 이렇게 잡아. 팔 수 있는 값에서 떠안을 돈을 빼고, 세금·수리·이자 같은 비용이랑 내 수익만큼 더 빼. 정답은 결과 화면에서 같이 맞춰 보자.'] },
+      { id: 'wait', title: '매각기일까지 보내기', how: `내 집(화살표)에서 "매각기일 아침까지 자기" 또는 ${K.end}`, place: 'home', ok: () => State.day >= 7, lines: [
+        `조사 끝났으면 매각기일까지 시간을 보내자. 내 집에 가서 "매각기일 아침까지 자기"를 누르거나, ${K.end}로 하루씩 넘겨.`,
+        '남는 시간에 다른 물건을 구경해도 돼. 대신 이번 주는 연습 물건 하나만 끝까지 가 보자.'] },
+      { id: 'court', title: '법원 가서 입찰하기', how: `${K.map}에서 ${court} → "출발" → 집행관에게 입찰표`, place: 'court', ok: () => !!State.bidResult || State.phase === 'nobid', lines: [
+        `오늘이 매각기일이야. 광진구 물건은 ${court} 관할인데, 법원은 다른 구에 있어. ${K.map}을 열어 법원을 누르고 "출발"하면 차로 가. 차 근처에 있어야 해.`,
+        '법정에서 집행관에게 말 걸면 입찰표를 써. 최저가 이상으로 적고, 보증금은 최저가의 10%야. 한 번 내면 못 바꿔. 수첩에 적어 둔 적정가가 미리 채워져 있어.'] },
+      { id: 'after', title: '낙찰 뒤 절차', how: '은행 대출 → 법원 잔금 → 현장 명도 → 정산', place: null, ok: () => !!State.finished || !!(State.bidResult && !State.bidResult.won), lines: [
+        '낙찰이야! 이제 잔금. 은행에서 경락잔금대출을 받고, 법원에 잔금을 내고, 현장에서 사는 사람과 명도(집 비우기)를 정리하면 정산서가 나와.',
+        '잔금 기한 30일 안에 못 내면 보증금을 날려. 화살표랑 호출 메시지 따라가면 돼.'] },
+    ];
+  },
+  free() {
+    return Game.scene !== 'title' && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !PropertyCard.open_ && !Game.pickerOpen && !DocViewer.open && !MemoPad.open_ && !SeoulMap.open && !ZoneMap.open && !Game.driving && !Game.trans && !(typeof Shop !== 'undefined' && Shop.open_);
+  },
+  tick(dt) {
+    if (!this.on || State.finished) return;
+    const L = this.list; let i = L.findIndex(s => !s.ok()); if (i < 0) return;
+    const ci = L.findIndex(s => s.id === 'court'), ai = L.findIndex(s => s.id === 'after');
+    if (State.bidResult && State.bidResult.won && i < ai) i = ai; else if (State.day >= 7 && i < ci) i = ci; // 매각기일이 되면 남은 조사는 건너뛰고 법원으로
+    if (i !== this.step) { this.step = i; if (!this.told[i]) this.wait = i === 0 ? 3.5 : 1.0; this.render(); this.aim(); }
+    if (Game.zone && Game.zone.id !== this.zoneId) { this.zoneId = Game.zone.id; this.aim(); }
+    $('tutor').classList.toggle('drv', !!Game.driving);
+    if (!this.told[i]) { this.wait -= dt; if (this.wait <= 0 && this.free()) { this.told[i] = true; this.explain(i); } }
+  },
+  aim() { // 노란 화살표를 이번 단계의 장소로
+    const s = this.list[this.step]; if (!s || !s.place || !Game.zone) return;
+    if (s.place === 'court') { if (courtPlaceHere()) State.targetPlace = 'court'; return; }
+    if (Game.zone.places.some(p => p.id === s.place)) State.targetPlace = s.place;
+  },
+  render() {
+    const s = this.list[this.step]; const el = $('tutor'); if (!s) { el.classList.remove('in'); return; }
+    el.innerHTML = `<small>선배 안내 ${this.step + 1}/${this.list.length}</small><b>${s.title}</b><span>${s.how}</span>`; el.classList.add('in');
+  },
+  async explain(i) {
+    const s = this.list[i]; if (!s || !s.lines.length || Game.busy || Dialog.open) return;
+    Game.busy = true;
+    try { await Dialog.say(s.lines.map(t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t }))); } finally { Game.busy = false; }
+  },
+  bind() { $('tutor').addEventListener('click', () => { if (this.on && this.step >= 0 && this.free()) { Sound.play('click'); this.explain(this.step); } }); },
+  result(el) { // 결과 화면 맨 위에 마무리 한마디 + 다음부턴 안내 없이
+    const page = el.querySelector('.rpage'); if (!page) return;
+    page.insertAdjacentHTML('afterbegin', `<div class="rSec tutEnd"><b>🎓 튜토리얼 끝</b><p>결과 보는 법: ★은 이 물건의 난이도(지금 처음 공개), 등급은 수익·판단·조사를 합친 점수, "놓친 정보"는 꼭 갔어야 했던 곳이야. 다음부터는 제목 화면에서 "처음이에요"를 끄고 이번 주 다른 물건에 도전해 봐. 물건마다 숨은 게 달라.</p></div>`);
+    $('tutor').classList.remove('in'); Store.set('tutorialDone', true);
   },
 };
 
@@ -6556,8 +6666,10 @@ const Instance = {
     if (Net.on && Net.mode === 'channel') { cap = Live.capOf(Net.ch); Net.cap = cap; Net.started = true; startGame(cap, { seed: Net.seed }); return; } // 채널 N = 자본 N억 // 채널은 각자 시작, 주는 채널·날짜로 정해진다
     if (Net.on && !Net.host) { Toast.show('방장이 시작하면 같이 시작해요.'); return; }
     if (Net.on && Net.host) { Net.seed = (Date.now() & 0x7fffffff); Net.cap = cap; Net.started = true; Net.send({ t: 'init', seed: Net.seed, cap }); startGame(cap, { seed: Net.seed }); return; }
-    startGame(cap);
+    startGame(cap, { tutorial: $('tutOn').checked });
   };
+  $('tutOn').checked = !Store.get('tutorialDone', false); // 한 번 끝까지 해 본 뒤엔 기본으로 꺼짐
+  Tutorial.bind();
   // 친구와 같이 하기 (방 코드)
   $('mpName').value = Store.get('mpName', '');
   Net.onStatus = (st, text) => {

@@ -7599,7 +7599,7 @@ const Shop = {
     const card = it => {
       const own = this.has(it.id), on = wearing === it.id;
       const btn = on ? `<button class="btn" data-off="1">${isC ? '벗기' : isP ? '집에 두기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? '데리고 다니기' : '칠하기'}</button>` : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
-      return `<div class="shItem${on ? ' on' : own ? ' own' : ''}"><canvas data-prev="${it.id}" width="${isC ? 16 : isP ? 36 : 28}" height="${isP ? 32 : 16}"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isP ? '같이 다니는 중' : '내 차') : own ? '보유' : fmtWon(it.price)}</span>${btn}</div>`;
+      return `<div class="shItem${on ? ' on' : own ? ' own' : ''}"><canvas data-prev="${it.id}" width="${isC ? 16 : isP || it.ride ? 72 : 28}" height="${isP || it.ride ? 48 : 16}"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isP ? '같이 다니는 중' : '내 차') : own ? '보유' : fmtWon(it.price)}</span>${btn}</div>`;
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>
       <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫</button></div>
@@ -7617,9 +7617,9 @@ const Shop = {
   },
   preview(cv, it) {
     const x = cv.getContext('2d'); x.imageSmoothingEnabled = false;
-    if (it.pet) { x.clearRect(0, 0, cv.width, cv.height); const k = it.pet === 'trex' ? 0.95 : ['giraffe', 'elephant', 'dolphin', 'buddy', 'gf', 'bf'].includes(it.pet) ? 1.1 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 2.2 : 1.7; x.save(); x.translate(18, 30); x.scale(k, k); Pets.draw(x, it.pet, 0, 0, 1, false, 0); x.restore(); return; }
+    if (it.pet) { x.clearRect(0, 0, cv.width, cv.height); const k = ['trex', 'giraffe'].includes(it.pet) ? 1 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 3 : 2; x.save(); x.translate(36, it.pet === 'trex' ? 40 : it.pet === 'dolphin' ? 46 : 42); /* 정수 배율로만 그려야 픽셀이 안 뭉개진다 */ x.scale(k, k); Pets.draw(x, it.pet, 0, 0, 1, false, 0); x.restore(); return; }
     if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); x.drawImage(Sprites.sheet(name), 0, 0, 16, 16, 0, 0, 16, 16); } // 정면 서 있는 모습
-    else if (it.ride) { x.clearRect(0, 0, cv.width, cv.height); x.save(); x.scale(0.75, 0.75); drawRide(x, 18.5, 11, 0, it.ride, 0, Profile.pal(Profile.get())); x.restore(); }
+    else if (it.ride) { x.clearRect(0, 0, cv.width, cv.height); x.save(); x.translate(36, 24); x.scale(2, 2); drawRide(x, 0, 0, 0, it.ride, 0, Profile.pal(Profile.get())); x.restore(); } /* 72×48 캔버스에 2배 정수 배율 (화면 크기와 1:1이라 선명) */
     else drawCarSprite(x, 14, 8, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0);
   },
   buy(it) {

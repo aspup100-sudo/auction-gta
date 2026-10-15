@@ -5947,6 +5947,7 @@ function drawRoom(t) {
   for (const n of r.npcs) actors.push({ y: n.y, d: () => drawWalker(ctx, { ...n, frame: 0, moving: false }, t + n.breath, { breath: true }) });
   for (const g of r.guests) if (!g.gone) actors.push({ y: g.y, d: () => drawWalker(ctx, g.walkTo ? g : { ...g, frame: 0, moving: false }, t, { breath: !g.walkTo }) });
   actors.sort((a, b) => a.y - b.y).forEach(a => a.d());
+  drawGameTags(r);
   for (const q of Particles) { ctx.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
   if (r.place.kind === 'bank') {
     const disp = String(r.display || 140).padStart(4, '0'); const X = r.W * TILE / 2 - 22, Y = 1;
@@ -5955,6 +5956,18 @@ function drawRoom(t) {
     if (State.ticket && State.ticket.called) { const n = r.npcs.find(n => n.talk); const bob = Math.sin(t * 5) * 2; ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.moveTo(n.x - 5, n.y + 20 + bob); ctx.lineTo(n.x + 5, n.y + 20 + bob); ctx.lineTo(n.x, n.y + 27 + bob); ctx.fill(); }
   }
   if (Game.excl > 0) { const s = Sprites.emote('excl'); ctx.drawImage(s, Math.round(p.x - 4), Math.round(p.y - 30 - (0.9 - Game.excl) * 6), 8, 8); }
+}
+// 게임장·카지노: 기계·테이블 위에 무슨 게임인지 작은 이름표 (사용자 2026-10-15). 같은 줄에 붙은 같은 게임 칸은 하나로 묶는다
+function drawGameTags(r) {
+  if (!['arcade', 'casino'].includes(r.place.kind)) return;
+  if (!r._tags) { const objs = r.objs.filter(o => ['arcade', 'holjjak', 'casino'].includes(o.type)).sort((a, b) => a.ty - b.ty || a.tx - b.tx); const out = [];
+    for (const o of objs) { const g = out[out.length - 1]; if (g && g.ty === o.ty && g.label === o.label && o.tx === g.x1 + 1 && o.type !== 'arcade') g.x1 = o.tx; else out.push({ ty: o.ty, x0: o.tx, x1: o.tx, label: o.label }); }
+    r._tags = out; }
+  const cas = r.place.kind === 'casino'; /* 카지노는 딜러가 테이블 뒤에 서 있어서 테이블 아래에, 게임기는 촘촘해서 작은 글씨로 위에 */
+  ctx.save(); ctx.font = `bold ${cas ? 6 : 5}px "IBM Plex Sans KR", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const g of r._tags) { const x = (g.x0 + g.x1 + 1) * TILE / 2, y = cas ? (g.ty + 1) * TILE + 4 : g.ty * TILE - 3, w = ctx.measureText(g.label).width + 4;
+    ctx.fillStyle = 'rgba(10,8,20,.72)'; ctx.fillRect(Math.round(x - w / 2), y - 4, Math.round(w), 8); ctx.fillStyle = r.place.kind === 'casino' ? '#ffd84a' : '#8ff0ff'; ctx.fillText(g.label, Math.round(x), y + 0.5); }
+  ctx.restore();
 }
 // 잔금 납부·명도 완료: 열쇠가 머리 위에서 반짝
 function drawKeyIcon(t) {
@@ -7721,7 +7734,7 @@ const Fight = {
   stop(msg) { cancelAnimationFrame(this.raf); this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(msg); },
   start() {
     if (this.stake > State.cash) { Sound.play('deny'); return this.render('판돈이 내 돈보다 많아요.'); }
-    if (this.vs === 'house') return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: this.stake, left: true });
+    if (this.vs === 'house') { this.stake = 0; return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: 0, left: true }); } // 사장이랑은 판돈 없이 (사용자 2026-10-15 '사장이랑 해서 돈 못 따게, 친구랑만')
     const f = Rps.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; return this.render('그 친구가 게임장에 없어요.'); }
     const gid = Net.myId + ':' + Date.now().toString(36);
     this.pend = { gid, to: f.id, name: f.name, stake: this.stake, at: performance.now() };
@@ -7854,10 +7867,10 @@ const Fight = {
         <p class="mgNote">내 캐릭터로 직접 싸워요. <b>A·D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기 · <b>J</b> 주먹 · <b>K</b> 발차기. 터치는 화면 버튼.</p>
         <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${Net.on && !fr.length ? '<p class="mgNote">친구가 이 게임장에 들어오면 여기에 떠요.</p>' : ''}
-        <div class="mgSec">판돈 <small>진 사람이 이긴 사람에게 줘요</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
+        <div class="mgSec">판돈 <small>${this.vs === 'house' ? '사장이랑은 재미로만 해요. 판돈은 친구랑 할 때만 걸 수 있어요' : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash || (s && this.vs === 'house') ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
         <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p>
         <div class="pcBtns">${wait ? '<button class="btn" id="fgCancel">신청 취소</button>' : '<button class="btn gold" id="fgGo">시작</button>'}<button class="btn" id="fgX">닫기</button></div></div>`;
-      el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; Sound.play('click'); this.render(); }));
+      el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; if (this.vs === 'house') this.stake = 0; Sound.play('click'); this.render(); }));
       el.querySelectorAll('[data-st]').forEach(b => (b.onclick = () => { this.stake = Number(b.dataset.st); Sound.play('click'); this.render(); }));
       if ($('fgGo')) $('fgGo').onclick = () => this.start();
       if ($('fgCancel')) $('fgCancel').onclick = () => { this.send('no', this.pend.to, { gid: this.pend.gid, why: 'cancel' }); this.pend = null; this.view = 'lobby'; this.render(); };

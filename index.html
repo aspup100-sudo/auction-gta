@@ -4603,7 +4603,7 @@ const RankWin = {
 };
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
 function noSlot() { return Live.on ? !!FEEL.liveSlots && Live.used >= FEEL.liveSlots : State.evening; }
-function slotLabel() { return Live.on ? (FEEL.liveSlots ? `오늘 남은 조사 ${Math.max(0, FEEL.liveSlots - Live.used)}회` : '횟수 제한 없음') : `시간 1칸: ${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}`; }
+function slotLabel() { return Live.on ? (FEEL.liveSlots ? `오늘 남은 조사 ${Math.max(0, FEEL.liveSlots - Live.used)}회` : '' /* 제한 없으면 아무 말도 안 붙인다 (사용자 2026-10-15) */) : `시간 1칸: ${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}`; }
 
 /* ===================== 메인: 상태 · 입력 · 걷기 · 카메라 · 장면 전환 ===================== */
 const GAME_START = '2025-11-04'; // 화요일 = D-7 → D-3·D-2가 주말
@@ -5460,7 +5460,7 @@ function drawHudExtras() {
   const items = c ? [['명세서', s.spec || s.survey], ['등기부', s.registry], ['전입세대', s.movein], ['현장', s.site], ['은행', s.bank]] : [];
   const key = `${slots}|${c ? c.id : ''}|${items.map(i => +!!i[1]).join('')}|${State.day}|${Live.on ? Math.floor(Live.now() / 1000) : ''}`;
   if (key === _hudKey) return; const prevKey = _hudKey; _hudKey = key;
-  $('hudSlots').innerHTML = (Live.on && !FEEL.liveSlots ? '' : [0, 1].map(i => `<span class="pip ${i < slots ? 'used' : i === slots ? 'now' : ''}"></span>`).join('')) + `<small>${Live.on ? (!FEEL.liveSlots ? '조사 횟수 제한 없음' : Live.used >= FEEL.liveSlots ? `오늘 조사 끝 · 다음 날 ${Live.untilDay()}` : `오늘 남은 조사 ${FEEL.liveSlots - Live.used}`) : State.evening ? '오늘 조사 끝' : `오늘 남은 조사 ${2 - slots}`}</small>`;
+  $('hudSlots').innerHTML = (Live.on && !FEEL.liveSlots ? '' : [0, 1].map(i => `<span class="pip ${i < slots ? 'used' : i === slots ? 'now' : ''}"></span>`).join('')) + `<small>${Live.on ? (!FEEL.liveSlots ? '' : Live.used >= FEEL.liveSlots ? `오늘 조사 끝 · 다음 날 ${Live.untilDay()}` : `오늘 남은 조사 ${FEEL.liveSlots - Live.used}`) : State.evening ? '오늘 조사 끝' : `오늘 남은 조사 ${2 - slots}`}</small>`;
   const q = $('quest');
   if (!c) { q.classList.remove('in'); return; }
   const prevDone = (prevKey.split('|')[2] || '');
@@ -5607,7 +5607,7 @@ async function staffTalk(kind) {
   if (kind === 'bank' && State.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
   if (kind === 'agent' && Live.on && Live.owned().length) { const r = await Live.agent(); if (r !== 'inv') return; } // 채널: 내 집 임대·매도
   const greet = { registry: '네, 등기사항증명서 발급이세요?', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
-  const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기 <small>(${slotLabel()})</small>`, value: 'inv', disabled: noSlot() }, { label: '그만두기', value: 'no' }]);
+  const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기${slotLabel() ? ` <small>(${slotLabel()})</small>` : ''}`, value: 'inv', disabled: noSlot() }, { label: '그만두기', value: 'no' }]);
   if (pick !== 'inv') return;
   const localGus = [Game.zone.gu, ...(Game.zone.spec.guAlso || [])];
   const filter = kind === 'agent' ? (c => localGus.includes(c.gu)) : () => true;
@@ -5647,7 +5647,7 @@ async function objectUse(o, kind) {
   if (c.closed) { await Dialog.say([{ text: '이 물건은 매각이 끝났다. 새 물건은 사무실 PC에서 확인하자.' }]); return; }
   if ((o.type === 'bell' || !Game.room.objs.some(x => x.type === 'bell')) && State.phase === 'evict' && State.bidResult && c.id === State.bidResult.caseId) return evictAtSite(c);
   if (State.siteSession !== c.id) {
-    const pick = await Dialog.say([{ text: `${c.name} 현장이다. 본격적으로 둘러볼까?` }], [{ label: `현장 조사 시작 <small>(${slotLabel()})</small>`, value: 'go', disabled: noSlot() }, { label: '나중에', value: 'no' }]);
+    const pick = await Dialog.say([{ text: `${c.name} 현장이다. 본격적으로 둘러볼까?` }], [{ label: `현장 조사 시작${slotLabel() ? ` <small>(${slotLabel()})</small>` : ''}`, value: 'go', disabled: noSlot() }, { label: '나중에', value: 'no' }]);
     if (pick !== 'go' || !(await spendSlot())) return;
     State.siteSession = c.id; markSeen(c.id, 'site', { day: State.day });
   }

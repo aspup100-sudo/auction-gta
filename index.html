@@ -2596,7 +2596,7 @@ function drawCourtRoof(ctx, b) {
 const Skids = [];
 // 기차 탈것이 지나간 자리에 깔리는 철로 (잠깐 남았다가 서서히 사라진다)
 const Rails = {
-  LIFE: 14, FADE: 4, GAP: 7, pts: [], last: {},
+  LIFE: 3, FADE: 1.5, GAP: 7, pts: [], last: {},
   lay(key, x, y, a, spd) {
     if (spd < 4) return; const now = performance.now() / 1000, L = this.last[key];
     if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;

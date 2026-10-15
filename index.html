@@ -332,7 +332,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .rcpt { width:min(420px, 100%); max-height:100%; overflow:auto; background:#fbf8f0; color:#1a1408; padding:18px 18px 14px; font-family:var(--ui); box-shadow:0 10px 30px rgba(0,0,0,.6); border-radius:2px; }
 .rcHead { font:700 22px var(--serif); text-align:center; } .rcSub { text-align:center; font-size:12.5px; color:#6a5a3a; margin:4px 0 10px; padding-bottom:8px; border-bottom:2px dashed #c9b98f; }
 #rcLines { list-style:none; margin:0; padding:0; } #rcLines li { display:flex; justify-content:space-between; gap:10px; padding:4px 0; font-size:13.5px; animation:rowIn .15s ease-out; } #rcLines li.me { font-weight:700; color:var(--navy); }
-#rcLines b { font-variant-numeric:tabular-nums; white-space:nowrap; }
+#rcLines b { font-variant-numeric:tabular-nums; white-space:nowrap; } #rcLines li.why span { font-size:12.5px; color:#7a4b12; line-height:1.45; } .bfDep { cursor:pointer; display:inline-block; padding:2px 0; } .bfConf { margin:8px 0; padding:8px 10px; border:2px solid #b0402a; border-radius:6px; background:#fff6ee; line-height:1.6; } .bfConf b { color:#b0402a; } .clItem em.cancelTag { color:#fff; background:#8a1f1f; border-radius:4px; padding:0 5px; font-style:normal; font-size:11px; margin-right:5px; }
 .rcTotal { display:flex; justify-content:space-between; align-items:baseline; border-top:2px dashed #c9b98f; margin-top:8px; padding-top:8px; font-weight:700; }
 #rcSum { font-size:24px; font-variant-numeric:tabular-nums; } #rcSum.plus { color:#1f8f4e; } #rcSum.minus { color:var(--seal); }
 .rcNote { font-size:12.5px; color:#6a5a3a; margin-top:6px; min-height:16px; }
@@ -491,6 +491,18 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #mapConfirm { bottom:8px; padding:6px 10px; gap:6px; }
   .short #openBoard { top:6px; max-height:calc(100% - 12px); padding:8px 10px; } .short .obHead { font-size:11.5px; margin-bottom:3px; } .short .obRow { padding:2px 6px; font-size:13px; } .short #obResult { margin-top:5px; line-height:1.4; font-size:12.5px; } .short #obResult .win { font-size:16px; } .short #obResult .lose { font-size:14px; } .short #obResult .btn { margin-top:4px; } /* 폰 가로: 개찰판이 화면을 넘지 않게 줄이고, 넘치면 스크롤 (사용자 2026-10-14 '나가는 것도 잘려 못 나가') */
   .short #menu { width:min(640px, calc(100% - 24px)); padding:12px 16px; } .short #menu h2 { font-size:18px; margin-bottom:8px; } .short .keys { font-size:12px; }
+
+/* v80: 채팅 버튼 대신 왼쪽 피드 밑에 늘 있는 입력줄, 피드를 누르면 지난 기록 (사용자 2026-10-15) */
+.netOn #chatLog { opacity:1; } #chatLines div { pointer-events:auto; cursor:pointer; } #chatLines div.money b { color:#7fe08a; } #chatLines div.money.minus b { color:#ff8a7a; }
+#chatLog #chatBar { position:static; transform:none; opacity:1; visibility:visible; pointer-events:auto; width:min(60vw, 330px); margin-top:4px; display:flex; gap:4px; }
+#chatLog #chatBar input { padding:5px 10px; font-size:13px; border-width:1px; border-radius:8px; background:rgba(12,16,26,.72); } #chatLog #chatBar .btn { padding:4px 9px; font-size:12px; } #chatLog #chatBar #chatClose { display:none; }
+body:not(.netOn) #chatLog #chatBar { display:none; } #btnChat, #tChat { display:none !important; }
+.chatOpen #chatLog #chatBar input { border-color:var(--gold); background:rgba(12,16,26,.95); }
+.touchOn.chatOpen #chatLog #chatBar { position:fixed; left:50%; top:8px; transform:translate(-50%, 0); width:min(92vw, 460px); z-index:40; } .touchOn #chatLog #chatBar input { font-size:16px; }
+.short #chatLog #chatBar { width:min(250px, 46vw); } .short #chatLog #chatBar input { padding:3px 8px; }
+#chatHist { position:fixed; inset:0; z-index:60; background:rgba(6,8,12,.6); display:none; align-items:center; justify-content:center; pointer-events:auto; } #chatHist.in { display:flex; }
+#chatHist .chBox { position:relative; width:min(92vw, 520px); max-height:80vh; display:flex; flex-direction:column; gap:6px; background:#141922; border:1px solid #3a4152; border-radius:12px; padding:14px 16px; color:#e8eaf0; }
+#chatHist h3 { margin:0; font-size:15px; } #chatHistList { overflow:auto; flex:1; font-size:13px; line-height:1.55; } #chatHistList div { padding:2px 0; border-bottom:1px solid rgba(255,255,255,.05); } #chatHistList b { color:var(--gold); margin-right:4px; } #chatHistList div.me b { color:#9fe3ff; } #chatHistList div.news { color:#cfd6e4; } #chatHistList div.money b { color:#7fe08a; } #chatHistList div.money.minus b { color:#ff8a7a; } #chatHistList small { color:#7d8494; margin-right:6px; font-variant-numeric:tabular-nums; }
 </style>
 </head>
 <body>
@@ -536,8 +548,8 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
   <div id="tutor"></div>
-  <div id="chatLog"></div>
-  <div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="친구에게 한마디 (Enter 보내기 · Esc 닫기)"><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div>
+  <div id="chatLog"><div id="chatLines" title="눌러서 지난 기록 보기"></div><div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="Enter로 채팅"><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div></div>
+  <div id="chatHist"><div class="chBox"><button class="xClose" id="chHistX" aria-label="닫기">×</button><h3>채팅 · 소식 · 내 돈 기록</h3><div id="chatHistList"></div><div class="small dim">최근 300줄까지 남아요. 나갔다 와도 그대로예요.</div></div></div>
   <canvas id="minimap" width="180" height="130" title="서울 지도 (M)"></canvas>
   <div id="hudCash">₩ 0</div>
   <div id="hudTime"></div>
@@ -1471,6 +1483,8 @@ Object.assign(FEEL, {
   fineSpeed: 40000,       // 보행자 근처 과속
   carEnterDist: 26,
   promptSound: false,     // 상호작용 표시(E)가 뜰 때 소리 (사용자 요청으로 끔)
+  vipGift: 1000,          // 이혁진이 말 걸 때마다 주는 돈 (100 → 1000, 사용자 2026-10-15 '천원으로')
+  liveSecondMin: 3,       // 채널 차순위매수신고: 최고가매수인 잔금 기한을 기다리는 시간(분)
   fuelDrive: 5000,        // 직접 운전해서 옆 구로 넘어갈 때 주유비(원, ±20%)
   fuelMapBase: 15000,     // 지도에서 눌러 이동할 때 기본 주유비(원)
   fuelMapPerDist: 8000,   // 지도 이동: 구 거리 1칸마다 더 드는 주유비(원)
@@ -2477,7 +2491,7 @@ function updateTraffic(dt, z) {
     car.v += Math.max(-300 * dt, Math.min(120 * dt, target - car.v));
     car.s += car.v * car.dirn * dt;
     // 걷는 중에 달리는 차에 닿으면 치임
-    if (!Game.driving && car.v > FEEL.hitSpeed) { const p = Game.player, q2 = trafficCarPos(car); if (pointInCar(p.x, p.y, q2.x, q2.y, q2.a, car.len / 2 + 3, car.wid / 2 + 3)) hitPlayer(car, q2); }
+    if (!Game.driving && !Ride.with && car.v > FEEL.hitSpeed) { const p = Game.player, q2 = trafficCarPos(car); if (pointInCar(p.x, p.y, q2.x, q2.y, q2.a, car.len / 2 + 3, car.wid / 2 + 3)) hitPlayer(car, q2); }
     if (car.s > r.len + 30) car.s = -30; if (car.s < -30) car.s = r.len + 30;
   });
 }
@@ -2681,7 +2695,7 @@ const CaseList = {
     const el = $('caseList'); const cases = [...State.week.cases].sort((a, b) => (DISTRICT[a.gu].row - DISTRICT[b.gu].row) || (DISTRICT[a.gu].col - DISTRICT[b.gu].col));
     State.pcOpened = true; const tut = Tutorial.on && Tutorial.c ? Tutorial.c.id : null; if (tut) cases.sort((a, b) => (b.id === tut) - (a.id === tut)); // 튜토리얼: 연습 물건을 맨 위에
     el.innerHTML = `<button class="xClose" aria-label="닫기" title="닫기 (Esc)">×</button><div class="pcHead">법원경매정보 · 서울 매각기일 ${State.week.saleDate}</div><h3>이번 주 서울 경매 물건 ${cases.length}건</h3><div class="dim">물건을 누르면 기본 정보를 볼 수 있어요. 금테 구는 직접 차로 둘러볼 수 있어요.</div>` +
-      cases.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.id === tut ? '<em class="tutTag">★ 연습 물건</em>' : ''}${c.name}</b><span>${c.caseNo} · ${DISTRICT[c.gu].name} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)} · 유찰 ${c.failCount}회${State.capital + c.minPrice * 0.8 < c.minPrice ? ' · <em>자본 초과</em>' : ''}</span></div>`).join('') +
+      cases.map(c => `<div class="clItem" data-id="${c.id}"><b>${c.id === tut ? '<em class="tutTag">★ 연습 물건</em>' : ''}${c.cancelled ? '<em class="cancelTag">매각 취소</em>' : ''}${c.name}</b><span>${c.caseNo} · ${DISTRICT[c.gu].name} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)} · 유찰 ${c.failCount}회${State.capital + c.minPrice * 0.8 < c.minPrice ? ' · <em>자본 초과</em>' : ''}</span></div>`).join('') +
       `<button class="btn" id="clClose">닫기</button>`;
     el.classList.add('in'); Sound.play('paper');
     el.querySelectorAll('.clItem').forEach(it => it.onclick = () => { el.classList.remove('in'); PropertyCard.open(it.dataset.id); });
@@ -3230,6 +3244,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const Toast = {
   show(msg, ms = 2200) {
+    if (typeof Money !== 'undefined') Money.lastToast = { text: String(msg), at: performance.now() };
     const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
     $('toasts').appendChild(el); Sound.play('toast');
     requestAnimationFrame(() => el.classList.add('in'));
@@ -3312,7 +3327,7 @@ const Dialog = {
 
 const HUD = {
   _cash: 0, _shown: 0,
-  setCash(v, animate = true) { this._cash = v; if (!animate) this._shown = v; },
+  setCash(v, animate = true) { if (typeof Money !== 'undefined') Money.onSet(v, animate); this._cash = v; if (!animate) this._shown = v; },
   tick(dt) {
     if (this._shown !== this._cash) {
       const d = this._cash - this._shown; const step = Math.sign(d) * Math.max(1000, Math.abs(d) * Math.min(1, dt * 6));
@@ -3444,6 +3459,7 @@ function docSpec(c) {
   if (c.lien) notes.push(`${c.lien.holder}로부터 공사대금 ${wonText(c.lien.amount)}의 유치권 신고가 있음. 그 성립 여부는 불분명함.`);
   if (c.share) notes.push(`공유자 ${c.owner}의 지분 ${c.share.den}분의 ${c.share.num} 매각.`);
   if (c.super) notes.push(`지상에 매각에서 제외되는 제시외 건물(${c.super.building}) 소재.`);
+  notes.push(...CourtRules.specNotes(c)); // 재매각 특별매각조건 · 공유자 우선매수 안내 (정리본 2026-10-15)
   return `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>매 각 물 건 명 세 서</h2>
   <table class="kv"><tr><th>사건</th><td>${c.caseNo} 부동산임의경매</td><th>매각물건번호</th><td>1</td></tr>
   <tr><th>작성일자</th><td>${ymd(Engine.addDays(c.saleDate, -14))}</td><th>담임법관(사법보좌관)</th><td>${'김이박'[c.caseNo.charCodeAt(6) % 3]}○○</td></tr>
@@ -3830,7 +3846,7 @@ const Net = {
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
-      p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; p.last = now;
+      p.z = m.z; p.s = m.s; p.p = m.p; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; p.last = now;
       const moved = gap > 0.02 && p.z === p.lastZ && p.s === p.lastS;
       if (moved && !far(p.tx, p.ty, m.x, m.y)) { p.vx = (m.x - p.tx) / gap; p.vy = (m.y - p.ty) / gap; } else { p.vx = p.vy = 0; }
       if (moved && !far(p.tcx, p.tcy, m.cx, m.cy)) { p.vcx = (m.cx - p.tcx) / gap; p.vcy = (m.cy - p.tcy) / gap; p.vca = angDiff(m.ca, p.tca) / gap; } else { p.vcx = p.vcy = p.vca = 0; }
@@ -3842,7 +3858,7 @@ const Net = {
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
     if (m.t === 'news') { this.pushLog(p.name, String(m.text || '').slice(0, 80), false, true); Sound.play('blip', 1.1); return; }
     if (m.t === 'asset') { p.assets = Array.isArray(m.list) ? m.list.slice(0, 10) : []; return; } // 상대 자산 요약 (순위 창에서 보여 준다)
-    if (m.t === 'greet') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); if (m.to === this.myId && !m.re) this.onGreet(m, p); return; }
+    if (m.t === 'greet') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; } // 예전 버전이 보낸 인사는 말풍선만 (말 걸기 상호작용은 v80에서 뺐다)
     if (m.t === 'bid') { p.bid = { caseId: m.caseId, bid: m.bid }; Toast.show(`${p.name}이(가) 입찰표를 냈다 (금액은 개찰 때)`); return; }
     if (m.t === 'nobid') { p.nobid = true; Toast.show(`${p.name}은(는) 이번 주 입찰 안 함`); return; }
     if (m.t === 'result') { p.result = m; return; }
@@ -3881,7 +3897,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -3905,11 +3921,19 @@ const Net = {
   },
   // 왼쪽 위 피드: 채팅과 플레이어 소식(낙찰·잔금·명도·임대·매도)을 한 상자에 (사용자 2026-10-14 '플레이어 현황이랑 채팅 하나로 묶자')
   pushLog(name, text, me, news) {
-    this.log.push({ name, text, me, news }); if (this.log.length > 5) this.log.shift();
-    const el = $('chatLog'); if (!el) return;
-    el.innerHTML = this.log.map(l => `<div class="${l.me ? 'me' : ''}${l.news ? ' news' : ''}"><b>${esc(l.name)}</b> ${esc(l.text)}</div>`).join(''); el.classList.add('in');
-    clearTimeout(this.logT); this.logT = setTimeout(() => el.classList.remove('in'), FEEL.chatLogTime * 1000);
+    const e = { name, text, me, news: !!news, money: news === 'money' ? 1 : 0, minus: news === 'money' && /−/.test(text) ? 1 : 0, at: Date.now() };
+    this.log.push(e); if (this.log.length > 5) this.log.shift();
+    const h = this.hist(); h.push(e); if (h.length > 300) h.splice(0, h.length - 300); this.histSave();
+    const el = $('chatLines'); if (!el) return;
+    el.innerHTML = this.log.map(l => this.logRow(l)).join(''); $('chatLog').classList.add('in');
+    clearTimeout(this.logT); if (!document.body.classList.contains('netOn')) this.logT = setTimeout(() => $('chatLog').classList.remove('in'), FEEL.chatLogTime * 1000);
+    if (ChatHist.open_) ChatHist.render();
   },
+  logRow(l, t) { return `<div class="${l.me ? 'me' : ''}${l.news ? ' news' : ''}${l.money ? ' money' : ''}${l.minus ? ' minus' : ''}">${t ? `<small>${new Date(l.at).toTimeString().slice(0, 5)}</small>` : ''}<b>${esc(l.name)}</b> ${esc(l.text)}</div>`; },
+  // 지난 기록: 채널(또는 방)마다 저장해서 나갔다 와도 남는다
+  histKey() { return 'chatHist' + (Live.on ? Live.ch : 'room'); },
+  hist() { const k = this.histKey(); if (this._hk !== k) { this._hk = k; this._h = Store.get(k, []) || []; } return this._h; },
+  histSave() { clearTimeout(this._hsT); this._hsT = setTimeout(() => Store.set(this.histKey(), this._h || []), 800); },
   news(text) { if (!this.on || !text) return; this.pushLog(this.me, text, true, true); this.send({ t: 'news', text: String(text).slice(0, 80) }); }, // 내 현황을 채널 모두에게
   sendBid(c, bid) { this.send({ t: 'bid', caseId: c.id, bid }); },
   sendNoBid() { this.send({ t: 'nobid' }); },
@@ -3958,12 +3982,14 @@ const Net = {
   },
   drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
-    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); this.label(c, p.name, p.cx, p.cy - 12); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
+    if (p.dr && p.s === 'zone') { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m }, t);
     this.label(c, p.name, p.x, p.y - 22);
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - 30);
   },
+  idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return null; },
   label(c, name, x, y) { c.fillStyle = 'rgba(0,0,0,.6)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(name).width + 6; c.fillRect(x - w / 2, y - 7, w, 9); c.fillStyle = '#ffd84a'; c.fillText(name, x, y); },
   bubble(c, text, x, y) {
     c.font = '7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center';
@@ -4005,7 +4031,7 @@ const Pvp = {
     if (!Net.on || !Game.driving || Game.busy || Game.scene !== 'zone' || !Game.player) return;
     const c = Game.car; if (c.speed < FEEL.hitSpeed) return;
     for (const id in Net.players) {
-      const p = Net.players[id]; if (p.gone || p.dr || p.x === undefined || p.z !== Game.zone.id || p.s !== 'zone' || performance.now() - p.last > 8000 || (this.cd[id] || 0) > 0) continue;
+      const p = Net.players[id]; if (p.gone || p.dr || p.rd || p.x === undefined || p.z !== Game.zone.id || p.s !== 'zone' || performance.now() - p.last > 8000 || (this.cd[id] || 0) > 0) continue;
       if (!pointInCar(p.x, p.y, c.x, c.y, c.a, 14, 9)) continue;
       this.cd[id] = 4; this.hit(id, p);
     }
@@ -4053,20 +4079,62 @@ const Pvp = {
 function angDiff(a, b) { return ((a - b + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; } // a−b를 −π..π로 (짧은 쪽으로 돌게)
 const ChatBar = {
   open_: false,
-  open() { if (!Net.on || this.open_) return; this.open_ = true; const el = $('chatBar'); el.classList.add('in'); document.body.classList.add('chatOpen'); const inp = $('chatInput'); inp.value = ''; if (document.body.classList.contains('touchOn')) inp.placeholder = '친구에게 한마디'; this.fit(); setTimeout(() => { inp.focus(); this.fit(); }, 30); },
+  // v80: 왼쪽 피드 밑에 늘 있는 입력줄. Enter(또는 T)를 누르거나 입력줄을 누르면 글을 쓴다 (채팅 버튼은 없앴다, 사용자 2026-10-15)
+  open() { if (!Net.on) return; const inp = $('chatInput'); this.focused(); setTimeout(() => inp.focus(), 0); },
+  focused() { this.open_ = true; document.body.classList.add('chatOpen'); $('chatBar').classList.add('in'); this.fit(); },
   close() { this.open_ = false; $('chatBar').classList.remove('in'); document.body.classList.remove('chatOpen'); if (document.activeElement) document.activeElement.blur(); $('chatBar').style.top = ''; this.fit(); scrollTo(0, 0); },
   // 모바일 키보드가 열리면 보이는 영역(visualViewport)이 줄어든다 → 입력줄을 그 영역의 맨 위에 붙인다
   fit() { if (!document.body.classList.contains('touchOn')) return; const vv = window.visualViewport; const el = $('chatBar'); if (!vv || !this.open_) { el.style.top = ''; return; } el.style.top = `${Math.round(vv.offsetTop) + 8}px`; },
-  send() { Net.chat($('chatInput').value); this.close(); },
+  send() { const v = $('chatInput').value; if (v.trim()) Net.chat(v); $('chatInput').value = ''; this.close(); },
   bind() {
     const inp = $('chatInput');
-    inp.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); this.send(); } else if (e.key === 'Escape') { e.preventDefault(); this.close(); } };
+    inp.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); this.send(); } else if (e.key === 'Escape') { e.preventDefault(); inp.value = ''; this.close(); } };
+    inp.addEventListener('focus', () => this.focused());
+    inp.addEventListener('blur', () => { setTimeout(() => { if (document.activeElement !== inp && this.open_) { this.open_ = false; $('chatBar').classList.remove('in'); document.body.classList.remove('chatOpen'); $('chatBar').style.top = ''; } }, 120); if (document.body.classList.contains('touchOn')) setTimeout(() => scrollTo(0, 0), 50); }); // iOS가 입력창 때문에 밀어 둔 화면을 되돌린다
+    $('chatSend').onpointerdown = e => e.preventDefault(); // 보내기를 눌러도 입력줄 포커스가 먼저 풀리지 않게
     $('chatSend').onclick = () => this.send();
     $('chatClose').onclick = () => this.close();
     $('tChat').onclick = () => this.open();
-    $('btnChat').onclick = () => this.open(); // 컴퓨터용 (터치 버튼은 폰에서만 보인다, 사용자 2026-10-14: '컴퓨터에서는 채팅 없는 것 같아')
+    $('btnChat').onclick = () => this.open();
+    $('chatLines').onclick = () => ChatHist.toggle(true);
+    $('chHistX').onclick = () => ChatHist.toggle(false);
+    $('chatHist').onclick = e => { if (e.target.id === 'chatHist') ChatHist.toggle(false); };
     if (window.visualViewport) { visualViewport.addEventListener('resize', () => this.fit()); visualViewport.addEventListener('scroll', () => this.fit()); }
-    inp.addEventListener('blur', () => { if (document.body.classList.contains('touchOn')) setTimeout(() => scrollTo(0, 0), 50); }); // iOS가 입력창 때문에 밀어 둔 화면을 되돌린다
+  },
+};
+const ChatHist = {
+  open_: false,
+  toggle(v) { this.open_ = v; $('chatHist').classList.toggle('in', v); if (v) { Sound.play('paper'); this.render(); } },
+  render() { const h = Net.hist(); const el = $('chatHistList'); el.innerHTML = h.length ? h.map(l => Net.logRow(l, true)).join('') : '<div class="dim">아직 기록이 없어요.</div>'; el.scrollTop = el.scrollHeight; },
+};
+
+/* ===================== 같이 타기: 친구가 운전하는 차에 F로 탄다 (운전자 포함 최대 5명, 사용자 2026-10-15) =====================
+ * 뒷자리에 탄 사람은 조작이 없고, 위치·구역은 운전자 차를 따라간다. 운전자가 내리거나 나가면 같이 내린다.
+ */
+const Ride = {
+  with: null, MAX: 5,
+  count(id) { if (!id) return 0; let n = Ride.with === id ? 1 : 0; for (const q in Net.players) { const o = Net.players[q]; if (!o.gone && o.rd === id) n++; } return n; },
+  near() {
+    if (!Net.on || Ride.with || Game.driving || !Game.zone || Game.scene !== 'zone') return null; const pl = Game.player; let best = null, bd = 40;
+    for (const id in Net.players) { const p = Net.players[id]; if (p.gone || !p.dr || p.s !== 'zone' || p.z !== Game.zone.id || p.cx === undefined) continue; const d = Math.hypot(p.cx - pl.x, p.cy - pl.y); if (d < bd) { bd = d; best = p; best._id = id; } }
+    return best;
+  },
+  board(p) {
+    const id = p._id || Net.idOf(p); if (Ride.count(id) + 1 >= Ride.MAX) { Toast.show(`${p.name} 차는 자리가 없어요 (운전자 포함 최대 ${Ride.MAX}명)`); Sound.play('deny'); return; }
+    Ride.with = id; Sound.play('carDoor'); Toast.show(`${p.name} 차에 탔어요 · F로 내리기`, 2600); Net.news(`${p.name} 차에 같이 탐`); Ride.follow();
+  },
+  follow() {
+    const p = Net.players[Ride.with]; if (!p || p.gone || !p.dr) return Ride.leave(false, p);
+    if (p.s === 'zone' && p.z && Game.zone && p.z !== Game.zone.id) { // 운전자가 옆 구로 넘어갔다: 같이 넘어간다
+      const z = getZone(p.z); Game.zone = z; Skids.length = 0; spawnDecor(); Game.traffic = spawnTraffic(z); Banner.area(...z.spec.dongLabel); Game.zonePos = null;
+    }
+    const pl = Game.player; pl.x = p.cx; pl.y = p.cy; pl.moving = false;
+  },
+  leave(byMe, p) {
+    p = p || Net.players[Ride.with]; const pl = Game.player; Ride.with = null;
+    if (p && p.cx !== undefined) { const a = (p.ca || 0) + Math.PI / 2; pl.x = p.cx + Math.cos(a) * 14; pl.y = p.cy + Math.sin(a) * 14; }
+    const z = Game.zone; if (z && z.at(Math.floor(pl.x / TILE), Math.floor(pl.y / TILE)) === T.BLD && p) { pl.x = p.cx; pl.y = p.cy; }
+    Sound.play('carDoor'); Toast.show(byMe ? '내렸어요.' : `${p ? p.name : '운전자'}이(가) 차에서 내려서 같이 내렸어요.`);
   },
 };
 
@@ -4181,7 +4249,8 @@ const Live = {
     }
     for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && !this.queue.includes(k)) { if (this.prePay(m) && this.now() >= m.payBy) this.queue.push(k); else if (m.phase === 'forced' && this.now() >= m.forcedUntil) this.queue.push(k); } } // 잔금 기한 경과 · 강제집행 완료
     if (this.queue.length && !this.opening && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !ChatBar.open_ && !DocViewer.open && Game.player) { const k = this.queue.shift(); const m = this.mine[k]; if (m && m.opened && m.phase === 'forced') this.forcedDone(m); else if (m && m.opened) this.forfeitWin(m, '기한 경과'); else this.openResult(k); }
-    this.assetTick(dt);
+    this.assetTick(dt); Debt.tick(dt);
+    if (!Game.busy && !Dialog.open && Game.player) for (const k in this.mine) { const m = this.mine[k]; if (m.second && !m.done && !m.won && this.now() >= m.second.until) this.resolveSecond(k); }
     this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const rb = $('rankBox'); if (!rb.hidden) { const h = this.miniBoard(); if (rb.innerHTML !== h) rb.innerHTML = h; } const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
     this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; try { this.saveInv(); } catch (e) {} for (const p of Object.values(Net.players)) if (!p.gone && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, at: this.now(), as: p.assets || (this.seen[p.name] && this.seen[p.name].as) }; Net.send({ t: 'asset', list: this.assetSummary() }); this.save(); }
   },
@@ -4210,7 +4279,7 @@ const Live = {
       const pc = this.caseFor(this.key(pw.k, pw.n));
       if (pc.court === zoneCourt) {
         const pick = await Dialog.say([say('court', `${pc.caseNo} 매수인이시죠. 점유자가 안 나가면 인도명령을 신청하실 수 있습니다. 비용 ${fmtWon(FEEL.liveOrderFee)}. 결정문이 있으면 협상이 수월하고, 그래도 안 나가면 강제집행으로 갑니다.`)], [{ label: '인도명령 신청', value: 'y', disabled: State.cash < FEEL.liveOrderFee }, { label: '다른 사건 입찰', value: 'bid', disabled: !here.length }, { label: '그만두기', value: 'n' }]);
-        if (pick === 'y') { State.cash -= FEEL.liveOrderFee; HUD.setCash(State.cash); Sound.play('coins'); await hitStamp(); pw.order = true; this.save(); await Dialog.say([say('court', `인도명령 결정됐습니다. ${pc.name} 현장에 가서 점유자와 이야기해 보세요.`)]); HUD.page(`인도명령 받았다. ${pc.name} 현장 가서 초인종 눌러.`); return; }
+        if (pick === 'y') { State.cash -= FEEL.liveOrderFee; HUD.setCash(State.cash); Sound.play('coins'); await hitStamp(); pw.order = true; Net.news(`${pw.name.split(' ').slice(0, 2).join(' ')} 인도명령 신청`); this.save(); await Dialog.say([say('court', `인도명령 결정됐습니다. ${pc.name} 현장에 가서 점유자와 이야기해 보세요.`)]); HUD.page(`인도명령 받았다. ${pc.name} 현장 가서 초인종 눌러.`); return; }
         if (pick !== 'bid') return;
       }
     } else if (pw && this.prePay(pw)) {
@@ -4239,14 +4308,14 @@ const Live = {
     const r = await bidForm(c, false); if (!r) return;
     if (this.now() >= c.live.tEnd) { Toast.show('아쉽게도 입찰이 마감됐어요.'); return; }
     await hitStamp(); State.cash -= r.deposit; HUD.setCash(State.cash); Toast.show(`입찰보증금 ${fmtWon(r.deposit)} 납부`);
-    this.mine[key] = { k: c.live.k, n: c.live.n, bid: r.bid, deposit: r.deposit, caseId: c.id, name: c.name, at: this.now() };
+    this.mine[key] = { k: c.live.k, n: c.live.n, bid: r.bid, deposit: r.deposit, rate: r.rate || 0.1, caseId: c.id, name: c.name, at: this.now() };
     this.book[key] = this.book[key] || {}; this.save();
     Net.send({ t: 'lbid', key, bid: r.bid, caseNo: c.caseNo });
     if (!State.target) State.target = c.id;
     await Dialog.say([say('court', `접수했습니다. ${this.mmss(this.left(c))} 뒤 개찰 결과를 알려 드리겠습니다.`)]);
   },
   // 같은 채널 사람들과 입찰표 장부를 맞춘다
-  onBid(m) { if (!this.on) return; const b = this.book[m.key] = this.book[m.key] || {}; const first = !b[m.from]; b[m.from] = { name: m.name, bid: m.bid }; if (first && Game.player) Toast.show(`${m.name}이(가) ${m.caseNo || '사건'}에 입찰표를 냈다`); },
+  onBid(m) { if (!this.on) return; const b = this.book[m.key] = this.book[m.key] || {}; const first = !b[m.from]; b[m.from] = { name: m.name, bid: m.bid }; if (first && Game.player) Net.pushLog(m.name, `${m.caseNo || '사건'}에 입찰표 냈어요`, false, true); }, // 채팅창에 (사용자 2026-10-15 '어떤 플레이어가 무슨 행동하면 채팅에')
   onBook(m) {
     if (!this.on) return;
     for (const key in m.book || {}) { const b = this.book[key] = this.book[key] || {}; for (const id in m.book[key]) if (id !== Net.myId) b[id] = m.book[key][id]; }
@@ -4257,7 +4326,7 @@ const Live = {
   assetSummary() {
     const out = [];
     for (const k in this.mine) { const m = this.mine[k]; if (m.done) continue; const a = m.asset || {}; const Lo = m.loanState || {}; const loan = (Lo.bank || 0) + (Lo.savings || 0);
-      const s = !m.opened ? 'bid' : m.phase === 'own' ? (a.rentOn ? 'rent' : (a.listed || a.offer) ? 'sale' : 'own') : m.phase === 'forced' ? 'forced' : m.phase === 'evict' ? 'evict' : 'pay';
+      const s = !m.opened || m.second ? 'bid' : m.phase === 'own' ? (a.rentOn ? 'rent' : (a.listed || a.offer) ? 'sale' : 'own') : m.phase === 'forced' ? 'forced' : m.phase === 'evict' ? 'evict' : 'pay';
       const e = { n: m.name.split(' ').slice(0, 2).join(' '), s, b: m.bid }; if (a.rentOn) e.r = a.rent; if (loan) e.l = loan; if (a.cond) e.c = a.cond; out.push(e); if (out.length >= 10) break; }
     return out;
   },
@@ -4277,39 +4346,63 @@ const Live = {
     try {
       const c = this.caseFor(key);
       const others = Object.entries(this.book[key] || {}).filter(([id]) => id !== Net.myId).map(([id, b]) => ({ name: b.name, bid: b.bid, me: false, friend: true, id }));
-      const all = [...c.competition.bids.map(b => ({ name: b.name, bid: b.bid, me: false })), ...others, { name: Net.me, bid: m.bid, me: true }];
-      const top = Math.max(...all.map(x => x.bid)); const tops = all.filter(x => x.bid === top);
-      const winner = tops.length > 1 ? [...tops].sort((a, b) => a.name.localeCompare(b.name))[Net.tieIndex(c, tops.length)] : tops[0];
+      const meB = { name: Net.me, bid: m.bid, me: true, invalid: (m.rate || 0.1) < CourtRules.depRate(c) - 1e-9 }; // 재매각 사건 보증금 부족 → 무효 (정리본 2026-10-15)
+      const all = [...c.competition.bids.map(b => ({ name: b.name, bid: b.bid, me: false })), ...others, meB];
+      const pickTop = list => { const top = Math.max(...list.map(x => x.bid)); const tops = list.filter(x => x.bid === top); return tops.length > 1 ? [...tops].sort((a, b) => a.name.localeCompare(b.name))[Net.tieIndex(c, tops.length)] : tops[0]; };
+      const O = CourtRules.open(c, all, pickTop); const winner = O.winner || { name: '유찰', bid: 0 };
       const sorted = [...all].sort((a, b) => a.bid - b.bid || (a === winner ? 1 : b === winner ? -1 : 0));
-      const won = winner.me; const second = all.filter(x => x !== winner).sort((a, b) => b.bid - a.bid)[0];
+      const won = !!winner.me; const second = O.second;
       m.opened = true; m.won = won; delete this.book[key];
+      const why = meB.invalid ? '재매각 사건(보증금 20%)인데 10%만 내서 무효' : O.coowner && meB.bid === O.coowner.bid ? `공유자 ${CourtRules.x(c).coName} 우선매수` : '';
+      if (!won && CourtRules.canSecond(c, O, meB, m.deposit)) {
+        // 차순위매수신고: 하면 보증금이 묶이고, 1등이 잔금 기한을 넘기면 내가 매수인이 된다
+        await this.ceremony(c, sorted, winner, false, m, second, { invalid: meB.invalid, canSecond: true });
+        const pick = await Dialog.say([say('court', `차순위매수신고 하시겠어요? ${fmtWon(m.bid)}은(는) 최고가 ${fmtWon(winner.bid)}에서 보증금 ${fmtWon(m.deposit)}을 뺀 금액보다 높아서 신고할 수 있어요.`), say('court', `신고하면 최고가매수인 잔금 기한(${FEEL.liveSecondMin}분)까지 보증금이 묶입니다. 그 사람이 안 내면 재매각 없이 본인이 매수인이 돼요.`)], [{ label: '차순위매수신고 하기', value: 'y' }, { label: '안 하고 보증금 돌려받기', value: 'n' }]);
+        if (pick === 'y') { m.second = { until: this.now() + FEEL.liveSecondMin * 60000, top: winner.bid }; this.save(); Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 차순위매수신고`); Toast.show('차순위매수신고 접수 · 보증금은 법원에 묶여 있어요'); return; }
+        m.done = true; m.profit = 0; State.cash += m.deposit; HUD.setCash(State.cash); this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, profit: 0, bid: m.bid, winner: winner.name, wbid: winner.bid }); this.save(); Toast.show(`보증금 ${fmtWon(m.deposit)} 반환`); return;
+      }
       if (won) {
         // 낙찰: 현실처럼 은행 대출 → 법원 잔금. 보증금은 법원에 묶여 있고, 기한을 넘기면 몰수 (사용자 요청 2026-10-14)
         m.phase = 'won'; m.loanState = null; m.payBy = this.now() + this.payMs(); State.target = c.id; State.targetPlace = null;
         Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 낙찰 · ${fmtWon(m.bid)}`);
-      } else { m.done = true; m.profit = 0; State.cash += m.deposit; HUD.setCash(State.cash); this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, profit: 0, bid: m.bid, winner: winner.name, wbid: winner.bid }); }
+      } else { m.done = true; m.profit = 0; State.cash += m.deposit; HUD.setCash(State.cash); this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, profit: 0, bid: m.bid, winner: winner.name, wbid: winner.bid, why }); Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 개찰 · 패찰`); }
       this.save();
-      await this.ceremony(c, sorted, winner, won, m, second);
+      await this.ceremony(c, sorted, winner, won, m, second, { invalid: meB.invalid, coowner: O.coowner, why });
     } finally { this.opening = false; Game.busy = false; }
   },
   stamp() { return new Date().toISOString().slice(0, 16).replace('T', ' '); },
-  async ceremony(c, sorted, winner, won, m, second) {
+  // 차순위매수신고 결과: 1등이 잔금 기한을 넘기면 내가 매수인 (사건마다 정해진 확률, 모두 같은 결과)
+  resolveSecond(key) {
+    const m = this.mine[key]; const c = this.caseFor(key); const top = m.second.top; delete m.second;
+    if (CourtRules.x(c).payFail) {
+      m.won = true; m.phase = 'won'; m.loanState = null; m.payBy = this.now() + this.payMs(); m.fromSecond = true; State.target = c.id; State.targetPlace = null;
+      Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 차순위로 낙찰 · ${fmtWon(m.bid)}`); Sound.play('chime');
+      HUD.page(`${c.name} 최고가매수인(${fmtWon(top)})이 잔금을 안 냈대. 차순위인 네가 매수인이야. ${FEEL.livePayMin}분 안에 잔금 ${fmtWon(m.bid - m.deposit)} 내.`, '법원');
+    } else {
+      m.done = true; m.profit = 0; State.cash += m.deposit; HUD.setCash(State.cash);
+      this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: false, profit: 0, bid: m.bid, winner: '최고가매수인', wbid: top, why: '차순위 신고, 1등이 잔금 납부' });
+      HUD.page(`${c.name} 최고가매수인이 잔금을 냈대. 차순위매수신고 보증금 ${fmtWon(m.deposit)} 돌려받았어.`, '법원');
+    }
+    this.save();
+  },
+  async ceremony(c, sorted, winner, won, m, second, X = {}) {
     Sound.play('chime'); HUD.page(`${c.name} 개찰 결과 나왔다.`, '법원');
     const ob = $('openBoard'); ob.innerHTML = `<div class="obHead">${courtOf(c).name} 개찰 · ${c.caseNo} · 최저매각가격 ${fmtWon(c.minPrice)}</div><ol id="obList"></ol><div id="obResult"></div>`; ob.classList.add('in');
     for (let i = 0; i < sorted.length; i++) {
       await sleep(i >= sorted.length - 2 ? 900 : 450);
       const b = sorted[i]; const li = document.createElement('li'); li.className = 'obRow' + (b.me ? ' me' : '');
-      li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(채널)</small>` : maskName(b.name)}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li); ob.scrollTop = ob.scrollHeight;
+      li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(채널)</small>` : maskName(b.name)}${b.invalid ? ' <small>(보증금 부족 · 무효)</small>' : ''}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li); ob.scrollTop = ob.scrollHeight;
       Sound.play('drum'); shake(1.5, 0.1);
     }
     await sleep(400); const res = $('obResult');
+    if (X.coowner) { const li = document.createElement('li'); li.className = 'obRow'; li.innerHTML = `<span>${esc(X.coowner.label)}</span><b>${fmtWon(X.coowner.bid)}</b>`; $('obList').appendChild(li); Sound.play('drum'); await sleep(500); }
     if (won) {
       await hitStamp(); shake(8, 0.3);
       const bal = m.bid - m.deposit;
-      res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b>${fmtWon(m.bid - second.bid)}</b>` : '단독 입찰'}</div><div>잔금 <b>${fmtWon(bal)}</b> · 대금지급기한 <b>${FEEL.livePayMin}분</b></div><div class="small">${State.cash >= bal ? '현금이 충분하니 법원 수납 창구에서 바로 내도 돼요.' : '은행에서 경락잔금대출을 받고 법원에 잔금을 내세요.'} 기한을 넘기면 보증금 ${fmtWon(m.deposit)}을 잃어요.</div>`;
+      res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b>${fmtWon(m.bid - second.bid)}</b>` : '단독 입찰'}</div><div>잔금 <b>${fmtWon(bal)}</b> · 대금지급기한 <b>${FEEL.livePayMin}분</b></div><div class="small">실제로는 매각허가결정(1주) → 확정(1주) → 대금지급기한 통지(보통 1개월) 순서예요. 채널에서는 ${FEEL.livePayMin}분으로 줄였어요.</div><div class="small">${State.cash >= bal ? '현금이 충분하니 법원 수납 창구에서 바로 내도 돼요.' : '은행에서 경락잔금대출을 받고 법원에 잔금을 내세요.'} 기한을 넘기면 보증금 ${fmtWon(m.deposit)}을 잃어요.</div>`;
       const seal = $('bigSeal'); seal.innerHTML = '최고가<br>매수신고인'; seal.className = 'in'; Sound.play('chime'); await sleep(1400); seal.className = '';
     } else {
-      res.innerHTML = `<div class="lose">최고가매수신고인 · ${winner.friend ? esc(winner.name) + ' (채널)' : maskName(winner.name)} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - m.bid)}</b> · 보증금 ${fmtWon(m.deposit)} 반환</div>`;
+      res.innerHTML = `<div class="lose">${winner.coowner ? `매수인 · ${esc(winner.label)}` : `최고가매수신고인 · ${winner.friend ? esc(winner.name) + ' (채널)' : maskName(winner.name)}`} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - m.bid)}</b>${X.canSecond ? ' · <b>차순위매수신고 가능</b>' : ` · 보증금 ${fmtWon(m.deposit)} 반환`}</div>${X.why ? `<div class="small">${esc(X.why)}${X.coowner ? ' · 지분 물건은 다른 공유자가 최고가와 같은 값으로 가져갈 수 있어요 (민사집행법 140조).' : ' · 매각물건명세서 비고란의 특별매각조건을 확인하세요.'}</div>` : ''}`;
       Sound.play('deny'); await sleep(1200);
     }
     res.innerHTML += `<button class="btn gold" id="obNext">${won ? '확인' : '계속'}</button>`; ob.scrollTop = ob.scrollHeight; // 입찰자가 많아 판이 길면 버튼이 보이게 끝으로 (사용자 2026-10-14)
@@ -4345,7 +4438,7 @@ const Live = {
     if (!savings && m.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
     if (savings && m.phase !== 'savings') { await Dialog.say([say('savings', '저희 대출 상품은 금리가 좀 높아요. 1금융권 먼저 알아보세요.')]); return; }
     await this.withWin(m, () => loanReview(savings));
-    if (m.phase === 'pay') { State.targetPlace = null; HUD.page(`잔금 ${fmtWon(m.bid - m.deposit)}은 ${courtOf(c).name} 가서 내. 기한 ${this.mmss(this.payLeft(m))}.`); }
+    if (m.phase === 'pay') { Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 잔금 대출 승인`); State.targetPlace = null; HUD.page(`잔금 ${fmtWon(m.bid - m.deposit)}은 ${courtOf(c).name} 가서 내. 기한 ${this.mmss(this.payLeft(m))}.`); }
   },
   // 법원에 잔금을 냈다: 빈집이면 바로 정산, 점유자가 있으면 명도(협상·인도명령·강제집행)
   async paid(c) {
@@ -4384,7 +4477,7 @@ const Live = {
     m.done = true; m.profit = S.profit; m.loan = L.bank + L.savings;
     const already = (E ? (E.moveFee || 0) + (E.forced ? E.forced.cost : 0) + (E.paidAssume || 0) : 0) + (O ? O.repair - O.rentTotal + (O.intPaid || 0) : 0); // 현금에서 이미 나간 돈(명도비·수리비·매달 낸 이자)과 이미 들어온 돈(월세)
     // 잔금까지 낸 현금 = 시작 − 낙찰가 + 대출 − 이미 낸 명도비. 처분하고 대출을 갚으면 시작 + 손익
-    State.cash += S.profit + m.bid - (L.bank + L.savings) + already; HUD.setCash(State.cash);
+    Money.why(O && O.condLabel === '경매로 넘어감' ? '경매 낙찰대금으로 대출 갚고 남은 돈' : '매도 대금 (대출 상환 뒤)'); State.cash += S.profit + m.bid - (L.bank + L.savings) + already - (m.extraLoan || 0); HUD.setCash(State.cash); // 집 담보 추가 대출도 이때 갚는다
     this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: true, profit: S.profit, grade: G.grade, bid: m.bid, winner: '본인', wbid: m.bid });
     Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 매도 · 손익 ${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}`);
     Records.add(S, c, G); this.save();
@@ -4403,11 +4496,11 @@ const Live = {
   monthlyRent(c, m) { const a = m.asset; return Math.round(c.market * FEEL.liveRentYield / 12 * this.liq(c).rent * (a.cond ? this.COND[a.cond].mod : 1) * (a.repair === 'done' ? 1.1 : 1) / 1e4) * 1e4; },
   heldMs(m) { return (m.asset && m.asset.held) || 0; }, // 보유 시간은 게임을 켜 둔 동안만 흐른다 (사용자 2026-10-14: 방치 월세가 너무 세다)
   heldMonths(m) { return Math.max(1, Math.floor(this.heldMs(m) / this.monthMs())) + (m.evictState && m.evictState.forced ? m.evictState.forced.months : 0); },
-  monthlyInterest(m) { const Lo = m.loanState || {}; const loan = (Lo.bank || 0) + (Lo.savings || 0); return loan ? Math.round(loan * LOAN_RATE / 12) : 0; }, // §11 금융비용과 같은 연 5%, 매달 현금에서 빠진다
+  monthlyInterest(m) { const Lo = m.loanState || {}; const loan = (Lo.bank || 0) + (Lo.savings || 0) + (m.extraLoan || 0); return loan ? Math.round(loan * LOAN_RATE / 12) : 0; }, // §11 금융비용과 같은 연 5%, 매달 현금에서 빠진다
   async takeOver(m, c, E) {
     m.evictState = E || null; m.phase = 'own'; State.phase = 'own'; m.asset = { at: this.now(), held: 0, rentHeld: 0, intHeld: 0, intPaid: 0, cond: null, repair: 'none', rentOn: false, rent: 0, rentTotal: 0, rentMonths: 0, rentAt: 0, listed: null, offer: null }; this.save();
     if (State.target === c.id) { State.target = null; State.targetPlace = null; }
-    Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 집 넘겨받음`);
+    Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 명도 완료 · 집 넘겨받음`);
     await Dialog.say([{ text: `${c.name}, 이제 내 집이다. 안에 들어가 상태를 확인하고, 부동산에 임대나 매도를 내놓자.` }]);
     HUD.page(`내 집이 됐다. 현장 들어가서 상태 보고, 부동산(${castName('agent')})에 임대·매도 내놔. 대출 이자는 매달 현금에서 빠지고, 보유 시간은 게임을 켜 둔 동안만 흐른다.`);
   },
@@ -4450,7 +4543,7 @@ const Live = {
     if (a.repair === 'none') opts.push({ label: `수리하기 <small>${fmtWon(cost)} · 실제 ${FEEL.liveRepairSec}초</small>`, value: 'fix', disabled: State.cash < cost });
     opts.push({ label: '나가기', value: 'n' });
     const pick = await Dialog.say([{ text: `내 집 · 상태 ${K.label}${a.repair === 'done' ? ' (수리 끝)' : a.repair === 'doing' ? ` (수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))})` : ''}${a.rentOn ? ` · 월세 ${fmtWon(a.rent)}` : ''}. ${a.repair === 'done' ? '수리해 두면 매도가 +4%, 월세 +10%.' : '수리하면 매도가 +4%, 월세 +10%가 붙고 상태 할인이 사라진다.'}` }], opts);
-    if (pick === 'fix') { State.cash -= cost; HUD.setCash(State.cash); Sound.play('coins'); a.repair = 'doing'; a.repairUntil = this.now() + FEEL.liveRepairSec * 1000; a.repairCost = cost; this.save(); await Dialog.say([{ text: `인테리어 업체를 불렀다. ${FEEL.liveRepairSec}초 뒤 공사가 끝난다.` }]); }
+    if (pick === 'fix') { State.cash -= cost; HUD.setCash(State.cash); Sound.play('coins'); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 수리 공사 시작`); a.repair = 'doing'; a.repairUntil = this.now() + FEEL.liveRepairSec * 1000; a.repairCost = cost; this.save(); await Dialog.say([{ text: `인테리어 업체를 불렀다. ${FEEL.liveRepairSec}초 뒤 공사가 끝난다.` }]); }
   },
   // 부동산: 임대·매도
   async agent() {
@@ -4475,7 +4568,7 @@ const Live = {
     opts.push({ label: '시세 물어보기', value: 'inv' }, { label: '그만두기', value: 'n' });
     const pick = await Dialog.say([say('agent', `${c.name}, 상태 ${K.label}${a.repair === 'done' ? '(수리 끝)' : ''}${a.rentOn ? `, 월세 ${fmtWon(a.rent)} 받는 중` : ''}. ${a.cond !== 'good' && a.repair !== 'done' ? `이 상태면 시세보다 ${Math.round((1 - K.mod) * 100)}% 깎여요. ` : ''}어떻게 할까요?`)], opts);
     if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); a.rentHeld = a.held || 0; this.save(); Net.news(`${m.name.split(' ')[0]} 집 임대 놓음 · 월세 ${fmtWon(rent)}`); await Dialog.say([say('agent', `세입자 바로 붙였어요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
-    if (pick === 'sell') { a.listed = this.now(); a.missNo = 0; this.save(); await Dialog.say([say('agent', `내놨어요. ${c.type}은(는) ${Q.note}. ${waitMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
+    if (pick === 'sell') { a.listed = this.now(); a.missNo = 0; this.save(); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 매물로 내놓음`); await Dialog.say([say('agent', `내놨어요. ${c.type}은(는) ${Q.note}. ${waitMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
     if (pick === 'quick') return this.sold(m, c, quick, true);
     return pick;
   },
@@ -4492,7 +4585,7 @@ const Live = {
     if (!m || m.done || !this.prePay(m)) return; this.opening = true; Game.busy = true;
     try {
       const c = this.caseFor(this.key(m.k, m.n)); const L = m.loanState || State.loan || { bank: 0, savings: 0, extra: 0 };
-      m.done = true; m.forfeit = true; m.profit = -m.deposit; m.why = why; State.cash -= (L.bank || 0) + (L.savings || 0); HUD.setCash(State.cash);
+      m.done = true; m.forfeit = true; m.profit = -m.deposit; m.why = why; if ((L.bank || 0) + (L.savings || 0)) { Money.why('받았던 경락잔금대출 반환'); State.cash -= (L.bank || 0) + (L.savings || 0); HUD.setCash(State.cash); }
       Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 보증금 몰수 (${why || '기한 경과'})`);
       const keep = { br: State.bidResult, ph: State.phase, loan: State.loan };
       State.bidResult = { caseId: c.id, bid: m.bid, deposit: m.deposit, won: true }; State.phase = 'forfeit'; State.loan = null;
@@ -4620,6 +4713,71 @@ const RankWin = {
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
 function noSlot() { return Live.on ? !!FEEL.liveSlots && Live.used >= FEEL.liveSlots : State.evening; }
 function slotLabel() { return Live.on ? (FEEL.liveSlots ? `오늘 남은 조사 ${Math.max(0, FEEL.liveSlots - Live.used)}회` : '' /* 제한 없으면 아무 말도 안 붙인다 (사용자 2026-10-15) */) : `시간 1칸: ${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}`; }
+
+/* ===================== 내 돈 기록 + 빚 처리 (사용자 2026-10-15) =====================
+ * 채널에서 현금이 바뀔 때마다 이유와 함께 채팅 피드에 '내 돈' 줄을 남긴다 (나만 보임, 피드를 누르면 지난 기록).
+ * 이유는 Money.why(…)로 미리 적거나, 없으면 같은 때 뜬 알림 문구를 쓴다.
+ * 현금이 마이너스면: 보유한 집을 담보로 은행 추가 대출(LTV 한도에서 이미 받은 대출을 뺀 만큼) → 안 되면 집이 경매로 넘어감 → 그래도 모자라면 파산(채널 기록 지우고 처음부터).
+ */
+const Money = {
+  last: null, pend: [], lastToast: null, q: [],
+  why(label) { this.pend.push(label); },
+  onSet(v, animate) {
+    if (!Live.on || animate === false) { this.last = v; return; }
+    if (this.last === null) { this.last = v; return; }
+    const d = v - this.last; this.last = v; if (!d) return;
+    const label = this.pend.shift();
+    if (label) return this.put(label, d, v);
+    const t0 = performance.now(); setTimeout(() => { const t = this.lastToast; this.put(t && Math.abs(t.at - t0) < 1500 ? t.text : '현금 변동', d, v); }, 350);
+  },
+  put(label, d, v) {
+    Net.pushLog('내 돈', `${label} · ${d > 0 ? '+' : '−'}${fmtWon(Math.abs(d))} → ${v < 0 ? '−' : ''}${fmtWon(Math.abs(v))}`, true, 'money');
+  },
+};
+const Debt = {
+  busy: false, cd: 0,
+  LTV: 0.7, // 주택담보대출 한도: 집값의 70% (이미 받은 경락잔금대출을 빼고 남은 만큼만)
+  loans(m) { const L = m.loanState || {}; return (L.bank || 0) + (L.savings || 0) + (m.extraLoan || 0); },
+  value(m) { const c = Live.caseFor(Live.key(m.k, m.n)); return Math.round(Generator.disposalValue(c) * Live.valueMod(m)); },
+  room(m) { return Math.max(0, Math.floor((this.value(m) * this.LTV - this.loans(m)) / 1e5) * 1e5); },
+  tick(dt) {
+    if (!Live.on || this.busy || State.cash >= 0 || Game.busy || Dialog.open || Game.formOpen || !Game.player || Live.opening) return;
+    this.cd -= dt; if (this.cd > 0) return; this.cd = 4; this.resolve();
+  },
+  async resolve() {
+    this.busy = true; Game.busy = true;
+    try {
+      const short = -State.cash; const homes = Live.owned(); const room = homes.reduce((s, m) => s + this.room(m), 0);
+      const opts = [];
+      if (homes.length && room >= short) opts.push({ label: `은행 추가 대출 ${fmtWon(Math.ceil(short / 1e5) * 1e5)} <small>집 담보 · 한도 남은 ${fmtWon(room)}</small>`, value: 'loan' });
+      for (const m of homes) opts.push({ label: `${m.name.split(' ').slice(0, 2).join(' ')} 경매로 넘기기 <small>예상 ${fmtWon(Math.round(this.value(m) * 0.75 / 1e5) * 1e5)}</small>`, value: 'sell:' + Live.key(m.k, m.n) });
+      if (!opts.length) return this.bankrupt(short);
+      const pick = await Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: `현금이 ${fmtWon(short)} 모자라. 이대로면 연체야. 집을 담보로 은행에서 더 빌리거나(집값의 ${Math.round(this.LTV * 100)}%까지, 이미 받은 대출은 빼고), 못 갚으면 집이 경매로 넘어가.`, emote: 'sweat' }], opts);
+      if (pick === 'loan') {
+        let need = Math.ceil(short / 1e5) * 1e5;
+        for (const m of [...homes].sort((a, b) => this.room(b) - this.room(a))) { if (need <= 0) break; const take = Math.min(need, this.room(m)); if (!take) continue; m.extraLoan = (m.extraLoan || 0) + take; need -= take; }
+        const got = Math.ceil(short / 1e5) * 1e5 - need; Money.why('은행 추가 대출 (집 담보)'); State.cash += got; HUD.setCash(State.cash); Sound.play('ding'); Live.save();
+        await Dialog.say([say('bank', `${fmtWon(got)} 승인됐습니다. 집값의 ${Math.round(this.LTV * 100)}% 한도에서 경락잔금대출을 빼고 남은 만큼이에요. 이자는 매달 같이 빠지고, 집을 팔 때 같이 갚으셔야 해요.`)]);
+        Net.news('집 담보로 은행 추가 대출');
+      } else if (pick && pick.startsWith('sell:')) {
+        const m = Live.mine[pick.slice(5)]; const c = Live.caseFor(pick.slice(5)); const price = Math.round(this.value(m) * 0.75 / 1e5) * 1e5;
+        await Dialog.say([{ text: `${c.name}. 대출을 못 갚자 은행이 임의경매를 신청했다. 집은 시세보다 싼 ${fmtWon(price)}에 낙찰됐고, 그 돈으로 대출부터 갚는다.` }]);
+        Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 빚 때문에 경매로 넘어감`);
+        const a = m.asset || {}; Game.busy = false;
+        await Live.settle(m, c, m.evictState, { price, months: Live.heldMonths(m), condLabel: '경매로 넘어감', repair: a.repair === 'done' ? a.repairCost : 0, rent: a.rent || 0, rentMonths: a.rentMonths || 0, rentTotal: a.rentTotal || 0, intPaid: a.intPaid || 0, quick: true });
+        if (State.cash < 0 && !Live.owned().length) return this.bankrupt(-State.cash);
+      }
+    } finally { this.busy = false; Game.busy = false; }
+  },
+  async bankrupt(short) {
+    Sound.play('slam'); shake(6, 0.3);
+    await DocViewer.show(`<div class="doc court"><div class="docHead">서울회생법원</div><h2>파 산 선 고</h2><p>채무자 ${esc(Net.me)}은(는) 현금 ${fmtWon(short)}이 모자라고 처분할 재산(집)이 없어 빚을 갚을 수 없다.</p><p class="small">채널 ${Live.ch} 기록(현금·집·조사 기록)을 지우고 처음부터 다시 시작합니다.</p></div>`, { title: '파산' });
+    Net.news('파산 · 처음부터 다시');
+    Live.reset(Live.ch); Live.on = false; Store.set('chatHist' + Live.ch, []);
+    try { Net.send({ t: 'bye' }); } catch (e) {}
+    setTimeout(() => { if (location.hash) history.replaceState(null, '', location.pathname); location.reload(); }, 600);
+  },
+};
 
 /* ===================== 메인: 상태 · 입력 · 걷기 · 카메라 · 장면 전환 ===================== */
 const GAME_START = '2025-11-04'; // 화요일 = D-7 → D-3·D-2가 주말
@@ -4751,7 +4909,7 @@ function startGame(capital, opts = {}) {
   State.seed = opts.tutorial ? TUT_SEED : (opts.seed || (Date.now() & 0x7fffffff)); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자. 튜토리얼: 늘 같은 연습 물건
   if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed }); // 채널: 실제 시간으로 돌아가는 세계
   $('btnEndDay').hidden = Live.on;
-  if (Net.on) { $('tChat').hidden = false; $('btnChat').hidden = false; $('mpInfo').hidden = false; }
+  if (Net.on) { $('mpInfo').hidden = false; document.body.classList.add('netOn'); $('chatLines').innerHTML = Net.hist().slice(-5).map(l => Net.logRow(l)).join(''); } // 채팅 버튼 대신 왼쪽 입력줄 (v80)
   $('rankBox').hidden = !Live.on; // 채널: 순위판을 왼쪽에 항상 (사용자 요청 2026-10-14)
   Game.zones = {};
   Game.zone = getZone('gwangjin');
@@ -4828,6 +4986,71 @@ function clearEntry(c) {
     if (!ok) o.s = (o.s + o.road.len / 2) % o.road.len;
   }
 }
+/* ---- 이혁진 도망: 100원을 10번 받아 갈 때마다 다른 탈것으로 다른 곳에 가서 내린다 (사용자 2026-10-15: 뛰기 → 자전거 → 차, 그다음은 헬기·우주선 등 창의적으로 돌아가며) ---- */
+const VIP_ESC = [
+  { mode: 'run', sp: 150, how: '뛰어서', say: '아, 오늘은 여기까지! 저 바빠요!', land: '헉헉… 여기까진 못 따라오겠지.' },
+  { mode: 'bike', sp: 240, how: '자전거 타고', say: '또 오셨어요? 이번엔 자전거로 갑니다!', land: '휴, 다리 아프다.' },
+  { mode: 'car', sp: 360, how: '차 타고', say: '이제 진짜 안 돼요. 기사님, 출발해 주세요!', land: '여기서 내릴게요. 감사합니다!', road: true },
+  { mode: 'kick', sp: 280, how: '전동킥보드 타고', say: '공유 킥보드 찍고 갑니다! 헬멧은 썼어요!', land: '반납 완료. 주차 구역 맞죠?' },
+  { mode: 'heli', sp: 420, how: '헬기 타고', say: '헬기 불렀어요. 옥상으로 안 가도 돼요, 여기서 탑니다!', land: '착륙! 바람 때문에 머리가 다 망가졌네.', fly: 34 },
+  { mode: 'balloon', sp: 120, how: '풍선 다발 잡고', say: '풍선 백 개면 사람도 뜬대요. 실험해 볼게요!', land: '어, 내려왔다. 풍선 값이 천 원보다 비싸요.', fly: 26 },
+  { mode: 'tunnel', sp: 200, how: '땅굴 파서', say: '이 밑에 미리 파 둔 길이 있어요. 안녕히!', land: '흙 털고… 짠! 여기서 나왔습니다.', dig: true },
+  { mode: 'ufo', sp: 520, how: '우주선 타고', say: '고향 별에서 데리러 왔어요. 천 원은 지구 기념품으로 드릴게요!', land: '지구 공기 좋네요. 다시 왔습니다.', fly: 44 },
+  { mode: 'horse', sp: 300, how: '말 타고', say: '한강 승마장에서 빌린 말이에요. 이랴!', land: '워워. 말 돌려주러 가야겠다.' },
+  { mode: 'rocket', sp: 600, how: '로켓 배낭 메고', say: '로켓 배낭 시험 비행! 3, 2, 1!', land: '착지 성공. 연료비가 천 원의 십만 배예요.', fly: 38 },
+];
+function vipEscape(w, n) {
+  const z = Game.zone; const K = VIP_ESC[n % VIP_ESC.length]; let best = null;
+  for (let i = 0; i < 400; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) !== (K.road ? T.ROAD : T.WALK)) continue; const d = Math.hypot(x * TILE - w.x, y * TILE - w.y); const pt = { x: x * TILE + 8, y: y * TILE + 8 }; if (d > 50 * TILE && d < 110 * TILE) { best = pt; break; } if (!best) best = pt; }
+  if (!best) return;
+  w.bubble = { text: K.say, t: 2.5 }; w.esc = { K, mode: K.mode, x0: w.x, y0: w.y, tx: best.x, ty: best.y, total: Math.hypot(best.x - w.x, best.y - w.y), sp: K.sp, t: 0, prep: K.mode === 'ufo' || K.dig ? 1.2 : 0.4 };
+  Toast.show(`${castName('vip')}: ${K.say}`, 2800); Sound.play(K.mode === 'car' ? 'horn' : 'pop');
+  if (Net.on) Net.news(`${castName('vip')}이(가) ${K.how} 도망감`);
+}
+function stepEscape(w, dt) {
+  const e = w.esc; e.t += dt; w.moving = false;
+  if (e.out !== undefined) { e.out -= dt; if (e.out <= 0) { w.esc = null; w.ai.t = 0.5; } return; }
+  if (e.prep > 0) { e.prep -= dt; if (e.K.dig && Math.random() < dt * 12) puff(w.x, w.y); return; } // 땅 파기 · 광선 빨려 올라가기
+  const dx = e.tx - w.x, dy = e.ty - w.y, d = Math.hypot(dx, dy); const step = e.sp * dt;
+  if (d <= step || e.t > 14) { w.x = e.tx; w.y = e.ty; e.out = 1.6; w.bubble = { text: e.K.land, t: 2.2 }; Sound.play(e.K.dig ? 'step' : 'carDoor'); if (e.K.dig) for (let i = 0; i < 6; i++) puff(w.x + (Math.random() - 0.5) * 10, w.y); return; }
+  w.x += dx / d * step; w.y += dy / d * step; w.moving = true; w.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0);
+  w.ft = (w.ft || 0) + dt; if (w.ft > 0.08) { w.ft = 0; w.frame = w.frame % 4 + 1; }
+  if ((e.mode === 'run' || e.mode === 'horse') && Math.random() < dt * 8) puff(w.x, w.y);
+  if (e.K.dig && Math.random() < dt * 6) puff(w.x, w.y);
+}
+function drawEscape(c, w, t) {
+  const e = w.esc, K = e.K, a = Math.atan2(e.ty - e.y0, e.tx - e.x0);
+  const prog = e.total ? Math.min(1, Math.max(0, 1 - Math.hypot(e.tx - w.x, e.ty - w.y) / e.total)) : 1;
+  const lift = K.fly ? K.fly * Math.min(1, prog * 5, (1 - prog) * 5) : 0;
+  const label = (y) => { c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, y); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, y); c.restore(); };
+  if (e.out !== undefined) return drawWalker(c, w, t);
+  if (K.mode === 'car') { drawCarSprite(c, w.x, w.y, a, '#151515', 24, 12, 'car', e.sp); return label(w.y - 14); }
+  if (K.dig) { // 땅굴: 파는 동안 가라앉고, 가는 동안은 흙 둔덕만 움직인다
+    c.fillStyle = '#6b5236'; c.beginPath(); c.ellipse(w.x, w.y, 7, 3.5, 0, 0, 7); c.fill();
+    if (e.prep > 0) { c.save(); c.beginPath(); c.rect(w.x - 12, w.y - 40, 24, 40); c.clip(); const sink = (1 - e.prep / 1.2) * 16; const ow = w.y; w.y += sink; drawWalker(c, w, t); w.y = ow; c.restore(); }
+    return label(w.y - 10);
+  }
+  if (K.fly) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(w.x, w.y, 9, 3.5, 0, 0, 7); c.fill(); }
+  const Y = w.y - lift;
+  if (K.mode === 'heli') {
+    c.save(); c.translate(w.x, Y - 6); c.fillStyle = '#1d2a44'; c.beginPath(); c.ellipse(0, 0, 11, 6, 0, 0, 7); c.fill(); c.fillRect(-20, -1.5, 12, 3); c.fillStyle = '#9fd3ff'; c.beginPath(); c.ellipse(5, -1, 4, 3, 0, 0, 7); c.fill();
+    c.strokeStyle = 'rgba(220,230,240,.8)'; c.lineWidth = 1.5; c.rotate(t * 30); c.beginPath(); c.moveTo(-16, 0); c.lineTo(16, 0); c.moveTo(0, -16); c.lineTo(0, 16); c.stroke(); c.restore(); return label(Y - 22);
+  }
+  if (K.mode === 'ufo') {
+    if (e.prep > 0) { const k = 1 - e.prep / 1.2; c.fillStyle = 'rgba(160,255,200,.25)'; c.beginPath(); c.moveTo(w.x - 4, w.y - 50); c.lineTo(w.x + 4, w.y - 50); c.lineTo(w.x + 12, w.y); c.lineTo(w.x - 12, w.y); c.fill(); const ow = w.y; w.y -= k * 30; drawWalker(c, w, t); w.y = ow; }
+    const uy = e.prep > 0 ? w.y - 52 : Y - 10; c.save(); c.translate(w.x, uy); c.fillStyle = '#8f9bb0'; c.beginPath(); c.ellipse(0, 0, 14, 5, 0, 0, 7); c.fill(); c.fillStyle = '#b8f5d0'; c.beginPath(); c.ellipse(0, -3, 6, 4, 0, Math.PI, 0); c.fill();
+    for (let i = 0; i < 4; i++) { c.fillStyle = (Math.floor(t * 6) + i) % 2 ? '#ffd86b' : '#ff6b6b'; c.fillRect(-10 + i * 6, 1, 2, 2); } c.restore(); return label(uy - 10);
+  }
+  if (K.mode === 'balloon') { const ow = w.y; w.y = Y; drawWalker(c, w, t); w.y = ow; const cols = ['#ff6b6b', '#ffd86b', '#7fe08a', '#6bb8ff', '#d98bff']; for (let i = 0; i < 9; i++) { const bx = w.x + Math.cos(i * 0.7) * 7 + Math.sin(t * 2 + i) * 1.5, by = Y - 30 - (i % 3) * 5; c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 0.5; c.beginPath(); c.moveTo(w.x, Y - 14); c.lineTo(bx, by); c.stroke(); c.fillStyle = cols[i % 5]; c.beginPath(); c.ellipse(bx, by, 3, 3.6, 0, 0, 7); c.fill(); } return; }
+  if (K.mode === 'rocket') { const ow = w.y; w.y = Y; drawWalker(c, w, t); w.y = ow; c.fillStyle = Math.floor(t * 20) % 2 ? '#ffb347' : '#ff6b3d'; c.beginPath(); c.moveTo(w.x - 3, Y - 2); c.lineTo(w.x + 3, Y - 2); c.lineTo(w.x, Y + 8 + Math.random() * 4); c.fill(); if (Math.random() < 0.5) puff(w.x, w.y); return; }
+  if (K.mode === 'horse') { c.save(); c.translate(w.x, w.y); c.rotate(a); c.fillStyle = '#7a4b2a'; c.fillRect(-10, -3.5, 20, 7); c.fillRect(8, -2.5, 7, 5); c.fillStyle = '#3a2414'; c.fillRect(-12, -1, 3, 2); c.restore(); const ow = w.y; w.y -= 5; drawWalker(c, w, t); w.y = ow; return; }
+  // 자전거 · 킥보드
+  c.save(); c.translate(w.x, w.y); c.rotate(a); c.strokeStyle = K.mode === 'kick' ? '#7fe08a' : '#d8dde6'; c.lineWidth = 1.5; c.beginPath();
+  if (K.mode === 'kick') { c.moveTo(-6, 0); c.lineTo(6, 0); c.lineTo(7, -6); c.stroke(); c.beginPath(); c.arc(-6, 0.5, 1.8, 0, 7); c.arc(6, 0.5, 1.8, 0, 7); }
+  else { c.arc(-6, 0, 3.5, 0, 7); c.moveTo(9.5, 0); c.arc(6, 0, 3.5, 0, 7); c.moveTo(-6, 0); c.lineTo(0, -2); c.lineTo(6, 0); }
+  c.stroke(); c.restore();
+  drawWalker(c, w, t);
+}
 function spawnDecor() {
   const z = Game.zone; Game.decor = [];
   const walkTiles = []; for (let i = 0; i < 4000 && walkTiles.length < 300; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) === T.WALK) walkTiles.push([x, y]); }
@@ -4867,8 +5090,8 @@ function zoneInteractTarget(fromCar = false) {
     const dx = pl.door.tx * TILE + 8 - p.x, dy = pl.door.ty * TILE + 8 - p.y, d = Math.hypot(dx, dy);
     if (d < bd) { bd = d; best = pl; }
   }
-  if (!fromCar && !best && Net.on) for (const f of Net.visible('zone')) { const q = f.p; if (q.dr) continue; const d = Math.hypot(q.x - p.x, q.y - p.y); if (d < bd) { bd = d; best = q.tg || (q.tg = { kind: 'friend', p: q }); } } // 같은 채널·방 플레이어에게 인사 (사용자 2026-10-14)
-  if (!fromCar && !best) for (const w of Game.decor) { if (w.stun > 0) continue; const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w.tg || (w.tg = { kind: 'walker', w }); } } // 지나가는 행인에게 말 걸기 (같은 객체를 유지해야 prompt가 매 프레임 초기화되지 않는다)
+  /* 플레이어끼리 말 걸기(E)는 뺐다 (사용자 2026-10-15 '플레이어끼리 상호작용하는거 없애자') */
+  if (!fromCar && !best) for (const w of Game.decor) { if (w.stun > 0 || w.esc) continue; const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w.tg || (w.tg = { kind: 'walker', w }); } } // 지나가는 행인에게 말 걸기 (같은 객체를 유지해야 prompt가 매 프레임 초기화되지 않는다)
   return best;
 }
 /* ---- 행인과 잡담: 동네 분위기·날씨·잡담뿐, 물건의 정답(권리·시세)은 절대 말하지 않는다 ---- */
@@ -4878,9 +5101,10 @@ async function talkWalker(w) {
   const z = Game.zone, p = Game.player; const i = Game.decor.indexOf(w); const name = w.vip ? castName('vip') : WALKER_NAMES[(i < 0 ? 0 : i) % WALKER_NAMES.length];
   w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
   if (w.vip) { // 이혁진: 말을 걸면 100원을 건넨다 (사용자 요청)
-    const V = [`안녕하세요. 오늘 옷 괜찮죠? 자, 이거 받으세요.`, `또 만났네요. 부지런한 사람은 보기 좋아요. 자, 100원.`, `여유는 지갑이 아니라 태도에서 나와요. 그래도 커피값에 보태요.`, `서류 꼼꼼히 보는 사람이 결국 이겨요. 응원의 뜻으로.`];
+    const V = [`안녕하세요. 오늘 옷 괜찮죠? 자, 이거 받으세요.`, `또 만났네요. 부지런한 사람은 보기 좋아요. 자, 천 원.`, `여유는 지갑이 아니라 태도에서 나와요. 그래도 커피값에 보태요.`, `서류 꼼꼼히 보는 사람이 결국 이겨요. 응원의 뜻으로.`];
     await Dialog.say([{ name, sprite: 'vip', text: V[(i + State.day + (w.talks || 0)) % V.length] }]);
-    w.talks = (w.talks || 0) + 1; State.cash += 100; HUD.setCash(State.cash); Sound.play('coins'); Toast.show(`${name}에게 100원을 받았다.`);
+    w.talks = (w.talks || 0) + 1; State.cash += FEEL.vipGift; HUD.setCash(State.cash); Sound.play('coins'); Toast.show(`${name}에게 ${fmtWon(FEEL.vipGift)}을 받았다.`); if (Net.on) Net.news(`${name}에게 ${fmtWon(FEEL.vipGift)} 받음`); // 채팅에 (사용자 2026-10-15)
+    State.vipTalks = (State.vipTalks || 0) + 1; if (State.vipTalks % 10 === 0) vipEscape(w, State.vipTalks / 10 - 1); // 10번마다 도망: 뛰어서 → 자전거 → 차 → 킥보드 → 헬기 → 풍선 → 땅굴 → 우주선 → 말 → 로켓 배낭, 다시 처음부터 (사용자 2026-10-15)
     w.ai.t = 0.3; Game.busy = false; return;
   }
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
@@ -4900,7 +5124,7 @@ function roomInteractTarget() {
   const consider = (o, x, y, lim = 24) => { const d = Math.hypot(x - p.x, y - p.y); if (d < bd && d < lim) { bd = d; best = o; } };
   for (const n of r.npcs) if (n.talk) consider({ kind: 'npc', npc: n }, n.x, n.y + (n.role === 'clerk' ? 28 : 0));
   for (const g of r.guests) if (!g.gone && !g.walkTo) consider({ kind: 'guest', guest: g }, g.x, g.y + 8, 20);
-  if (Net.on) for (const f of Net.visible('room')) consider(f.p.tg || (f.p.tg = { kind: 'friend', p: f.p }), f.p.x, f.p.y, 22);
+  /* 방 안에서도 다른 플레이어에게는 말을 걸 수 없다 (v80) */
   for (const o of r.objs) if (o.type !== 'chair') consider({ kind: 'obj', obj: o }, o.tx * TILE + 8, o.ty * TILE + 22);
   // 은행 빈 의자: 바로 옆에 섰을 때만
   if (r.place.kind === 'bank' && !p.sit) for (const o of r.objs) if (o.type === 'chair' && !o.taken) consider({ kind: 'obj', obj: o, label: '앉기' }, o.tx * TILE + 8, o.ty * TILE + 12, 15);
@@ -5010,7 +5234,7 @@ async function hospitalize(opts = {}) {
     await sleep(600); Sound.play('horn'); await sleep(320); Sound.play('horn'); await sleep(320); Sound.play('horn'); // 구급차
     await iris(true);
     const fee = opts.fee !== undefined ? opts.fee : Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000;
-    State.cash -= fee; HUD.setCash(State.cash); State.hits = 0; State.hospital = (State.hospital || 0) + 1;
+    State.cash -= fee; HUD.setCash(State.cash); State.hits = 0; State.hospital = (State.hospital || 0) + 1; if (Net.on) Net.news('차에 치여 병원에 입원');
     const timePassed = !(State.day >= 7 && State.evening); if (timePassed) await advanceSlot(); // 매각기일 저녁엔 더 넘길 시간이 없다
     const h = Game.zone.places.find(x => x.kind === 'hospital');
     if (h) { p.x = h.door.tx * TILE + 8; p.y = h.door.ty * TILE + 8; p.dir = 0; Cam.x = p.x; Cam.y = p.y; }
@@ -5150,7 +5374,7 @@ function update(dt) {
   Game.t += dt;
   HUD.tick(dt);
   if (Game.scene === 'title') return;
-  Net.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt);
+  Net.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); CourtRules.tick();
   if (Layout.editing) return;
   if (ChatBar.open_) return;
   const enterK = consume('Enter'), netEnter = Net.on && enterK && !Dialog.open && !DocViewer.open && !PropertyCard.open_ && !$('caseList').classList.contains('in'); // 같이 할 때는 Enter가 채팅 (사용자 2026-10-15 '엔터 치면 열리는걸로'; 전엔 스페이스)
@@ -5162,6 +5386,7 @@ function update(dt) {
   if (Shop.open_) { if (consume('Escape')) Shop.close(); return; } // 상점: Esc로 닫힘 (메뉴보다 먼저)
   if (AssetBox.open_) { if (consume('Escape')) AssetBox.close(); return; }
   if (RankWin.open_) { if (consume('Escape')) RankWin.close(); return; }
+  if (ChatHist.open_) { if (consume('Escape')) ChatHist.toggle(false); return; }
   if (consume('n') && Game.scene === 'zone' && !Notebook.open && !Menu.open) { ZoneMap.toggle(true); return; }
   if (consume('Tab')) Notebook.toggle();
   if (consume('Escape')) { if (Notebook.open) Notebook.toggle(false); else Menu.toggle(); }
@@ -5192,6 +5417,9 @@ function update(dt) {
       const tg = !frozen && c.speed < 25 ? zoneInteractTarget(true) : null; Game.promptFor(tg);
       if (interact && tg) { if (tg.kind === 'site') PropertyCard.open(tg.caseId); else Toast.show(`${exitWord()} 걸어 들어가세요.`); }
       if (fKey && !frozen) { if (c.speed > 40) Toast.show('차를 세우고 내리세요.'); else exitCar(); }
+    } else if (Ride.with) {
+      Ride.follow(); // 친구 차 뒷자리: 조작 없음, F로 내리기
+      if (fKey && !frozen) Ride.leave(true);
     } else {
       Nav.update(dt);
       stepWalker(p, dt, ix, iy, run, solid, 'asphalt');
@@ -5199,8 +5427,11 @@ function update(dt) {
       const nearCar = Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
       if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
+      const ride = !frozen && Net.on ? Ride.near() : null; // 친구가 운전 중인 차 옆이면 F로 같이 타기 (운전자 포함 최대 5명, 사용자 2026-10-15)
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
+      else if (fKey && ride) Ride.board(ride);
       else if (fKey) Toast.show('차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
+      if (ride && !tg && !nearCar) Game.promptFor(ride.tg || (ride.tg = { kind: 'ride', p: ride }));
     }
     // 도로명 표지판
     let road = null; for (const r of z.roads) for (let i = 0; i < r.pts.length - 1; i++) {
@@ -5247,6 +5478,8 @@ function update(dt) {
 function updateDecor(dt) {
   const z = Game.zone;
   for (const w of Game.decor) {
+    if (w.bubble) { w.bubble.t -= dt; if (w.bubble.t <= 0) w.bubble = null; }
+    if (w.esc) { stepEscape(w, dt); continue; }
     w.hurtCd = Math.max(0, (w.hurtCd || 0) - dt);
     if (w.stun > 0) { w.stun -= dt; w.moving = false; continue; }
     // 내 차에 치임: 튕겨 나가 잠시 쓰러지고, 나는 합의금을 문다
@@ -5312,7 +5545,7 @@ function drawZone(t) {
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
-  const actors = [...Game.decor.map(w => ({ y: w.y, d: () => drawWalker(ctx, w, t) })), ...(Game.driving ? [] : [{ y: Game.player.y, d: () => drawWalker(ctx, Game.player, t) }]),
+  const actors = [...Game.decor.map(w => ({ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else drawWalker(ctx, w, t); if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - 30); } })), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => drawWalker(ctx, Game.player, t) }]),
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
     ...Net.parkedCars().map(p => ({ y: p.cy, d: () => Net.drawParkedCar(ctx, p) })),
     ...Game.cats.map(c => ({ y: c.y, d: () => { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(c.x - 4, c.y + 2, 9, 2); const img = Sprites.cat(c.sit ? 0 : Math.floor(t * 6) % 2); ctx.save(); ctx.translate(c.x, c.y); if (c.vx < 0) ctx.scale(-1, 1); ctx.drawImage(img, -5, -5); ctx.restore(); } }))];
@@ -5414,13 +5647,14 @@ function promptWord(tg) {
   if (tg.kind === 'npc' || tg.kind === 'guest') return '대화';
   if (tg.kind === 'walker') return '말 걸기';
   if (tg.kind === 'friend') return '인사';
+  if (tg.kind === 'ride') return '같이 타기';
   if (tg.kind === 'obj') return tg.label || (tg.obj && tg.obj.label) || '사용';
   if (tg.kind === 'site') return Game.driving ? '물건 보기' : '들어가기';
   return '들어가기';
 }
 function drawPrompt(t) {
   const tg = Game.prompt.target; if (!tg || Game.busy || Dialog.open) return;
-  const touch = document.body.classList.contains('touchOn'); const word = touch ? promptWord(tg) : (tg.kind === 'car' ? 'F' : 'E');
+  const touch = document.body.classList.contains('touchOn'); const word = touch ? promptWord(tg) : (tg.kind === 'car' || tg.kind === 'ride' ? 'F' : 'E');
   const p = Game.player; const k = Math.min(1, Game.prompt.t / FEEL.promptPop); const lift = Game.driving ? 6 : 0;
   const sc = k < 0.6 ? k / 0.6 * 1.15 : 1.15 - (k - 0.6) / 0.4 * 0.15;
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
@@ -5726,28 +5960,38 @@ const targetCase = () => State.target && caseById(State.target);
 /* ---------- 입찰표 ---------- */
 function bidForm(c, practice) {
   return new Promise(res => {
-    const dep = Math.ceil(c.minPrice * 0.1);
+    // 보증금은 입찰자가 직접 고른다: 보통 최저가의 10%, 재매각 사건은 20% (명세서 특별매각조건을 읽어야 안다, 정리본 2026-10-15)
+    const d10 = CourtRules.deposit(c, 0.1), d20 = CourtRules.deposit(c, 0.2);
     const el = $('bidForm');
     el.innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}${practice ? ' · <b class="prac">입찰 연습</b>' : ''}</div><h2>기 일 입 찰 표</h2>
       <table class="kv"><tr><th>사건번호</th><td>${c.caseNo}</td><th>물건번호</th><td>1</td></tr>
       <tr><th>입찰자 성명</th><td colspan="3">본인</td></tr>
       <tr><th>입찰가격</th><td colspan="3"><input id="bfBid" type="number" min="0" step="100000" placeholder="원 단위로 적으세요"><div id="bfBidTxt" class="small"></div></td></tr>
-      <tr><th>보증금액</th><td colspan="3">${fmtWon(dep)} <span class="small">(최저매각가격 ${fmtWon(c.minPrice)}의 10%)</span></td></tr></table>
-      <div class="cap">※ 입찰가격은 최저매각가격 이상이어야 합니다. 한 번 제출한 입찰표는 바꿀 수 없습니다.</div>
-      <div class="pcBtns"><button class="btn gold" id="bfOk">${practice ? '연습 제출' : '입찰표 제출 · 보증금 납부'}</button><button class="btn" id="bfNo">취소</button></div></div>`;
+      <tr><th>보증금액</th><td colspan="3"><label class="bfDep"><input type="radio" name="bfDep" value="0.1" checked> ${fmtWon(d10)} <span class="small">(최저매각가격 ${fmtWon(c.minPrice)}의 10%)</span></label><br><label class="bfDep"><input type="radio" name="bfDep" value="0.2"> ${fmtWon(d20)} <span class="small">(20%, 특별매각조건이 있을 때)</span></label></td></tr></table>
+      <div class="cap">※ 입찰가격은 최저매각가격 이상이어야 합니다. 한 번 제출한 입찰표는 바꿀 수 없고, 금액을 잘못 적어도(착오) 구제되지 않습니다. 보증금이 정해진 금액보다 적으면 입찰은 무효입니다.</div>
+      <div id="bfConfirm"></div>
+      <div class="pcBtns" id="bfBtns"><button class="btn gold" id="bfOk">${practice ? '연습 제출' : '입찰표 제출 · 보증금 납부'}</button><button class="btn" id="bfNo">취소</button></div></div>`;
     el.classList.add('in'); Sound.play('paper'); Game.formOpen = true;
     const j = State.judgment[c.id]; if (j && j.bid) { $('bfBid').value = j.bid; $('bfBidTxt').textContent = fmtWon(j.bid); }
-    $('bfBid').oninput = e => ($('bfBidTxt').textContent = e.target.value ? fmtWon(+e.target.value) : '');
+    $('bfBid').oninput = e => ($('bfBidTxt').textContent = e.target.value ? `${fmtWon(+e.target.value)} · 금 ${CourtRules.hangul(+e.target.value)}원정` : '');
+    if ($('bfBid').value) $('bfBid').oninput({ target: $('bfBid') });
     setTimeout(() => $('bfBid').focus(), 250);
     const close = v => { if (document.activeElement) document.activeElement.blur(); el.classList.remove('in'); Game.formOpen = false; res(v); };
     $('bfNo').onclick = () => close(null);
-    $('bfOk').onclick = () => {
+    const submit = () => {
       const bid = Math.round(+$('bfBid').value);
+      const rate = +(el.querySelector('input[name=bfDep]:checked') || { value: 0.1 }).value; const dep = CourtRules.deposit(c, rate);
       if (!bid || bid < c.minPrice) { Sound.play('deny'); Toast.show(`최저매각가격 ${fmtWon(c.minPrice)} 미만은 무효예요. 다시 적어 주세요.`, 2800); return; }
       if (!practice && State.cash < dep) { Sound.play('deny'); Toast.show(`보증금 ${fmtWon(dep)}이(가) 없어서 입찰할 수 없어요.`, 2800); return; }
       if (!practice && Live.on && State.cash < bid * 0.2) { Sound.play('deny'); Toast.show(`대출 80%를 받아도 현금이 모자라요. 낙찰가의 20%(${fmtWon(Math.ceil(bid * 0.2))}) 이상 있어야 해요.`, 3200); return; } // 채널: 보증금 날리는 입찰은 처음부터 막는다
-      close({ bid, deposit: dep });
+      // 착오 방지: 한글 금액으로 한 번 더 확인 (실제 입찰표도 한 번 내면 못 고친다)
+      Sound.play('paper');
+      $('bfConfirm').innerHTML = `<div class="bfConf"><div>입찰가격 <b>${fmtWon(bid)}</b></div><div class="small">금 ${CourtRules.hangul(bid)}원정 · 최저가의 ${(bid / c.minPrice * 100).toFixed(0)}%</div><div>보증금 <b>${fmtWon(dep)}</b> (${Math.round(rate * 100)}%)</div><div class="small">이대로 내면 고칠 수 없어요. 0 하나 더 붙여도 그 값으로 낙찰돼요.</div></div>`;
+      $('bfBtns').innerHTML = `<button class="btn gold" id="bfYes">${practice ? '이대로 연습 제출' : '이대로 제출'}</button><button class="btn" id="bfFix">고치기</button>`;
+      $('bfYes').onclick = () => close({ bid, deposit: dep, rate });
+      $('bfFix').onclick = () => { $('bfConfirm').innerHTML = ''; $('bfBtns').innerHTML = `<button class="btn gold" id="bfOk2">${practice ? '연습 제출' : '입찰표 제출 · 보증금 납부'}</button><button class="btn" id="bfNo2">취소</button>`; $('bfOk2').onclick = submit; $('bfNo2').onclick = () => close(null); setTimeout(() => $('bfBid').focus(), 50); };
     };
+    $('bfOk').onclick = submit;
   });
 }
 
@@ -5767,10 +6011,11 @@ async function courtClerk() {
   let c = targetCase();
   if (!c) {
     await Dialog.say([say('court', '입찰하실 사건을 수첩에 정하지 않으셨네요. 이 법원 사건 중에서 고르세요.')]);
-    const id = await pickCase(`${COURTS[zoneCourt].name} 매각 사건`, x => x.court === zoneCourt); if (!id) return;
+    const id = await pickCase(`${COURTS[zoneCourt].name} 매각 사건`, x => x.court === zoneCourt && !x.cancelled); if (!id) return;
     State.target = id; c = caseById(id);
   }
   if (c.court !== zoneCourt) { await Dialog.say([say('court', `${c.caseNo}요? 이 사건은 여기서 진행 안 합니다. ${courtOf(c).name}으로 가 보세요.`, { emote: 'surprise' })]); return; }
+  if (c.cancelled) { await Dialog.say([say('court', `${c.caseNo}은(는) 매각기일 전에 ${CourtRules.cancelText(c)}되어 오늘 진행하지 않습니다.`, { emote: 'silence' })]); State.target = null; return; }
   const r = await bidForm(c, false); if (!r) return;
   await hitStamp(); State.cash -= r.deposit; HUD.setCash(State.cash); Toast.show(`입찰보증금 ${fmtWon(r.deposit)} 납부`);
   if (Net.on) { Net.sendBid(c, r.bid); await Net.waitBids(c); } // 친구 입찰표가 모일 때까지(또는 '친구 없이 개찰')
@@ -5780,13 +6025,15 @@ async function courtClerk() {
 /* ---------- 개찰 ---------- */
 async function runOpening(c, r) {
   const comp = [...c.competition.bids.map(b => ({ name: b.name, bid: b.bid, me: false })), ...(Net.on ? Net.friendBids(c) : [])];
-  const all = [...comp, { name: Net.on ? Net.me : '본인', bid: r.bid, me: true }];
-  const top = Math.max(...all.map(x => x.bid)); const tops = all.filter(x => x.bid === top);
+  const meB = { name: Net.on ? Net.me : '본인', bid: r.bid, me: true, invalid: (r.rate || 0.1) < CourtRules.depRate(c) - 1e-9 }; // 재매각 사건에 10%만 넣으면 무효
+  const all = [...comp, meB];
   // 동액: 혼자면 무작위, 같이 하기면 사건 시드로 (양쪽 결과가 같도록 이름순 정렬 뒤 뽑기)
-  const winner = tops.length > 1 ? (Net.on ? [...tops].sort((a, b) => a.name.localeCompare(b.name))[Net.tieIndex(c, tops.length)] : tops[Math.floor(Math.random() * tops.length)]) : tops[0];
+  let tie = false;
+  const pickTop = list => { const top = Math.max(...list.map(x => x.bid)); const tops = list.filter(x => x.bid === top); tie = tops.length > 1; return tops.length > 1 ? (Net.on ? [...tops].sort((a, b) => a.name.localeCompare(b.name))[Net.tieIndex(c, tops.length)] : tops[Math.floor(Math.random() * tops.length)]) : tops[0]; };
+  const O = CourtRules.open(c, all, pickTop); const winner = O.winner;
   const sorted = [...all].sort((a, b) => a.bid - b.bid || (a === winner ? 1 : b === winner ? -1 : 0));
-  const won = winner.me; const second = [...all].filter(x => x !== winner).sort((a, b) => b.bid - a.bid)[0];
-  State.bidResult = { caseId: c.id, bid: r.bid, deposit: r.deposit, won, count: all.length, bids: sorted, winner, second, tie: tops.length > 1 };
+  const won = !!(winner && winner.me); const second = O.second;
+  State.bidResult = { caseId: c.id, bid: r.bid, deposit: r.deposit, won, count: all.length, bids: O.coowner ? [...sorted, O.coowner] : sorted, winner, second, tie, invalid: meB.invalid, coowner: !!O.coowner };
   Game.busy = true;
   Sound.playBgm(null); Sound.ambience(true);
   // 입찰자들이 의자에 앉아 있다
@@ -5802,36 +6049,63 @@ async function runOpening(c, r) {
     await sleep(last2 ? 2000 : 1200);
     if (i === sorted.length - 1) { Sound.ambience(false); $('vignette').classList.add('in'); await sleep(600); }
     const b = sorted[i]; const li = document.createElement('li'); li.className = 'obRow' + (b.me ? ' me' : '');
-    li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(친구)</small>` : maskName(b.name)}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li); ob.scrollTop = ob.scrollHeight;
+    li.innerHTML = `<span>${b.me ? '본인' : b.friend ? `${esc(b.name)} <small>(친구)</small>` : maskName(b.name)}${b.invalid ? ' <small>(보증금 부족 · 무효)</small>' : ''}</span><b>${fmtWon(b.bid)}</b>`; $('obList').appendChild(li); ob.scrollTop = ob.scrollHeight;
     Sound.play('drum'); shake(1.5, 0.1);
   }
   await sleep(500); $('vignette').classList.remove('in');
+  if (meB.invalid) { ob.classList.remove('in'); await Dialog.say([say('court', `본인 입찰표는 매수신청보증금이 부족합니다. 이 사건은 재매각 사건이라 최저매각가격의 10분의 2를 내셔야 해요. 무효로 처리합니다.`, { emote: 'silence' })]); ob.classList.add('in'); }
+  if (O.coowner) { ob.classList.remove('in'); await Dialog.say([say('court', `공유자 ${CourtRules.x(c).coName} 씨가 우선매수신고를 했습니다. 최고가 ${fmtWon(O.coowner.bid)}과 같은 가격으로 공유자에게 매각합니다.`)]); ob.classList.add('in'); }
   const res = $('obResult');
   if (won) {
     await hitStamp(); shake(8, 0.3); Sound.play('stamp');
     for (let i = 0; i < 40; i++) Particles.push({ x: room.W * TILE / 2 + (Math.random() - 0.5) * 60, y: 2 * TILE, vx: (Math.random() - 0.5) * 140, vy: -40 - Math.random() * 90, g: 160, life: 1.6, max: 1.6, col: ['rgba(255,216,74,', 'rgba(205,174,112,', 'rgba(255,240,180,'][i % 3], r: 1.5 + Math.random() * 1.5 });
-    res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b>${fmtWon(r.bid - second.bid)}</b>` : '단독 입찰'}${State.bidResult.tie ? ' · 동액 입찰이라 추첨으로 정함' : ''}</div>`;
+    res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b>${fmtWon(r.bid - second.bid)}</b>` : '단독 입찰'}${tie ? ' · 동액 입찰이라 추첨으로 정함' : ''}</div>`;
     const seal = $('bigSeal'); seal.innerHTML = '최고가<br>매수신고인'; seal.className = 'in'; Sound.play('chime');
     await sleep(1600); seal.className = '';
   } else {
     $('game').classList.add('desat');
-    const g = room.guests.find(x => x.bidder === winner); if (g) { g.sit = false; g.walkTo = { x: room.W * TILE / 2, y: 3 * TILE + 10 }; }
-    res.innerHTML = `<div class="lose">최고가매수신고인 · ${winner.friend ? esc(winner.name) + ' (친구)' : maskName(winner.name)} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - r.bid)}</b></div>`;
+    const g = winner && room.guests.find(x => x.bidder === winner); if (g) { g.sit = false; g.walkTo = { x: room.W * TILE / 2, y: 3 * TILE + 10 }; }
+    res.innerHTML = winner ? `<div class="lose">최고가매수신고인 · ${winner.coowner ? esc(winner.name) + ' (우선매수)' : winner.friend ? esc(winner.name) + ' (친구)' : maskName(winner.name)} (${fmtWon(winner.bid)})</div><div>내 입찰가와의 차이 <b>${fmtWon(winner.bid - r.bid)}</b></div>` : '<div class="lose">유효한 입찰이 없어 유찰</div>';
     await sleep(2200);
   }
   res.innerHTML += `<button class="btn gold" id="obNext">계속</button>`; ob.scrollTop = ob.scrollHeight; // 입찰자가 많아 판이 길면 버튼이 보이게 끝으로 (사용자 2026-10-14)
   await new Promise(ok => ($('obNext').onclick = ok));
   ob.classList.remove('in'); $('game').classList.remove('desat'); Game.courtZoom = null; Sound.playBgm('court');
   Game.busy = false;
-  if (won) {
-    State.phase = 'won';
-    await Dialog.say([say('court', '매각허가결정 후 대금지급기한을 통지합니다. 기한 안에 잔금을 내지 않으면 보증금은 돌려받지 못합니다.')]);
-    State.balanceDue = 30; State.half = 1; State.evening = false; $('balanceDue').textContent = `잔금 ${fmtWon(r.bid - r.deposit)} · 기한 30일`; $('balanceDue').classList.add('in'); HUD.page('낙찰이네. 잔금 기한 30일이다. 은행부터 가.');
-  } else {
-    State.cash += r.deposit; HUD.setCash(State.cash); Toast.show(`보증금 ${fmtWon(r.deposit)} 반환`);
-    State.phase = 'lost'; HUD.page('떨어졌네. 결과 같이 보자.');
-    setTimeout(() => finishGame(), 1200);
+  const br = State.bidResult;
+  // 차순위매수신고: 2등이 (최고가 − 보증금)보다 높게 썼으면 그 자리에서 신고할 수 있다
+  if (!won && CourtRules.canSecond(c, O, meB, r.deposit)) {
+    const pick = await Dialog.say([say('court', `차순위매수신고하실 분 계십니까? 본인이 쓴 ${fmtWon(r.bid)}은(는) 최고가 ${fmtWon(winner.bid)}에서 보증금 ${fmtWon(r.deposit)}을 뺀 금액보다 높아서 신고할 수 있습니다.`), say('court', '신고하시면 최고가매수인이 대금을 낼 때까지 보증금은 돌려드리지 않습니다. 대금을 안 내면 재매각 없이 본인에게 매각을 허가합니다.')], [{ label: '차순위매수신고 하기', value: 'y' }, { label: '안 하고 보증금 돌려받기', value: 'n' }]);
+    if (pick === 'y') {
+      br.secondReport = true; await hitStamp();
+      await iris(true); await sleep(500); await iris(false); Game.trans = null;
+      if (CourtRules.x(c).payFail) {
+        await Dialog.say([{ text: '한 달 뒤. 법원에서 우편이 왔다.' }, say('court', `최고가매수인이 대금지급기한까지 대금을 내지 않았습니다. 차순위매수신고인인 본인에게 매각을 허가합니다. 최고가매수인의 보증금은 몰수되었어요.`)]);
+        br.won = true; br.winner = meB; br.fromSecond = true;
+        return winAfterOpening(c, r);
+      }
+      await Dialog.say([{ text: '한 달 뒤. 법원에서 우편이 왔다.' }, say('court', '최고가매수인이 대금을 다 냈습니다. 차순위매수신고는 효력이 없어졌어요. 묶여 있던 보증금을 돌려드립니다.')]);
+      br.why = '차순위매수신고를 했지만 최고가매수인이 대금을 다 내서 보증금만 돌려받았다.';
+    }
   }
+  if (won) return winAfterOpening(c, r);
+  if (meB.invalid) br.why = '재매각 사건(특별매각조건: 보증금 최저가의 20%)인데 보증금을 10%만 내서 입찰이 무효가 됐다. 매각물건명세서 비고란에 적혀 있었다.';
+  else if (O.coowner && meB.bid === O.coowner.bid) br.why = `최고가를 썼지만 공유자 ${CourtRules.x(c).coName}이(가) 우선매수신고를 해서 같은 가격에 공유자에게 넘어갔다 (민사집행법 140조). 지분 물건은 늘 이럴 수 있다.`;
+  State.cash += r.deposit; HUD.setCash(State.cash); Toast.show(`보증금 ${fmtWon(r.deposit)} 반환`);
+  State.phase = 'lost'; HUD.page(br.why ? '이번엔 절차에서 막혔네. 결과 같이 보자.' : '떨어졌네. 결과 같이 보자.');
+  setTimeout(() => finishGame(), 1200);
+}
+async function winAfterOpening(c, r) {
+  const br = State.bidResult;
+  const ok = await CourtRules.afterWin(c, r.bid);
+  if (!ok) {
+    br.won = false; br.why = '낙찰은 됐지만 법원이 매각불허가결정을 했다 (매각물건명세서의 중대한 하자). 드물지만 이러면 보증금을 돌려받고 끝난다.';
+    State.cash += r.deposit; HUD.setCash(State.cash); Toast.show(`보증금 ${fmtWon(r.deposit)} 반환`);
+    State.phase = 'lost'; HUD.page('불허가라니. 이런 일도 있어. 결과 보자.'); setTimeout(() => finishGame(), 1200); return;
+  }
+  State.phase = 'won';
+  await Dialog.say([say('court', '대금지급기한 통지서 받으셨죠? 기한 안에 잔금을 내지 않으면 보증금은 돌려받지 못합니다.')]);
+  State.balanceDue = 30; State.half = 1; State.evening = false; $('balanceDue').textContent = `잔금 ${fmtWon(r.bid - r.deposit)} · 기한 30일`; $('balanceDue').classList.add('in'); HUD.page(`낙찰${br.fromSecond ? '(차순위)' : ''}이네. 잔금 기한 30일이다. 은행부터 가.`);
 }
 
 /* ---------- 잔금 대출 심사 ---------- */
@@ -5884,7 +6158,7 @@ async function loanReview(savings) {
   if (ok === true || ok === 'partial') {
     await hitStamp(); stamp.className = 'ok'; stamp.textContent = '승인';
     if (savings) L.savings = amount; else L.bank = amount;
-    const from = State.cash; State.cash += amount; HUD.setCash(State.cash); Sound.play('ding');
+    const from = State.cash; Money.why(savings ? '저축은행 대출 입금' : '경락잔금대출 입금'); State.cash += amount; HUD.setCash(State.cash); Sound.play('ding');
     await sleep(1200);
   }
   if (ok === true) {
@@ -5919,7 +6193,8 @@ async function forfeit(c) {
   $('envelope').innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>재 매 각 결 정</h2><p>${c.caseNo} 사건의 매수인이 대금지급기한까지 그 의무를 이행하지 아니하였으므로 재매각을 명한다. 매수인이 낸 매수신청보증금 ${fmtWon(State.bidResult.deposit)}은(는) 반환하지 아니한다.</p></div>`;
   $('balanceDue').classList.add('in', 'over'); Sound.play('coins'); await sleep(2200);
   $('envelope').classList.remove('in'); $('envelope').innerHTML = '';
-  await Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: '그래서 입찰 전에 은행부터 가 보라고 했잖아.', emote: 'silence' }]);
+  const typo = State.bidResult.bid >= c.minPrice * 3; // 0을 하나 더 붙인 것 같은 입찰: 착오는 구제 안 된다 (정리본: 5억 3,200만 → 53억 사례)
+  await Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: typo ? `최저가의 ${Math.round(State.bidResult.bid / c.minPrice)}배를 썼네. 혹시 0 하나 더 붙인 거야? 입찰표 착오는 법원이 구제 안 해줘. 5억 3,200만 원 쓰려다 53억 2,000만 원 적어서 보증금 날린 사람도 있어.` : '그래서 입찰 전에 은행부터 가 보라고 했잖아.', emote: 'silence' }]);
   finishGame();
 }
 
@@ -5931,7 +6206,7 @@ async function payBalance() {
   const bal = State.bidResult.bid - State.bidResult.deposit;
   const pick = await Dialog.say([say('court', `${c.caseNo} 사건 대금 ${fmtWon(bal)} 납부하시겠어요?`)], [{ label: '잔금 납부', value: 'y', disabled: State.cash < bal }, { label: '나중에', value: 'n' }]);
   if (pick !== 'y') { if (State.cash < bal) Toast.show('현금이 모자라요. 은행 대출부터 받으세요.'); return; }
-  State.cash -= bal; HUD.setCash(State.cash); Sound.play('coins');
+  Money.why('잔금 납부'); State.cash -= bal; HUD.setCash(State.cash); Sound.play('coins');
   await hitStamp(); Toast.show('소유권이전등기 촉탁'); Game.keyIcon = 2; Sound.play('key');
   $('balanceDue').classList.remove('in');
   if (Live.on) return Live.paid(c); // 채널: 명도 생략, 바로 정산
@@ -5965,8 +6240,8 @@ async function evictAtSite(c) {
   Sound.play('ding'); await sleep(400); for (let i = 0; i < 3; i++) { Sound.play('step', 'wood'); await sleep(260); } Sound.play('door');
   if (P.kind === 'vacant') { await Dialog.say([{ text: '아무도 살지 않는다. 열쇠공을 불러 문을 열었다.' }]); return evictDone(c, true); }
   if (P.assumed > 0) {
-    await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: `제 보증금 ${fmtWon(P.assumed)} 아직 못 받았어요. 그거 주시기 전엔 못 나가요.`, emote: 'anger' }, { text: '대항력 있는 임차인의 보증금은 낙찰자가 돌려줘야 명도할 수 있다.' }]);
-    E.paidAssume = P.assumed; State.cash -= P.assumed; HUD.setCash(State.cash); Sound.play('coins');
+    await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: `제 보증금 ${fmtWon(P.assumed)} 아직 못 받았어요. 그거 주시기 전엔 못 나가요.`, emote: 'anger' }, { text: `대항력 있는 임차인의 보증금은 낙찰자가 돌려줘야 명도할 수 있다. 낙찰가와 별도로 ${fmtWon(P.assumed)}이 더 나간다 (인수액).` }]);
+    E.paidAssume = P.assumed; Money.why(`인수 보증금 지급 (대항력 있는 임차인 ${P.name}, 낙찰가와 별도)`); State.cash -= P.assumed; HUD.setCash(State.cash); Sound.play('coins');
     await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: '받았으니 이사 날짜 맞춰서 나갈게요.', emote: 'sweat', nod: true }]);
     return evictDone(c, true);
   }
@@ -5989,7 +6264,7 @@ async function evictAtSite(c) {
     gauge = Math.max(3, Math.min(97, 100 - score)); $('epGauge').style.width = gauge + '%';
     await sleep(600);
     if (score >= need) {
-      if (act.type === 'offer') { E.moveFee = act.v; State.cash -= act.v; HUD.setCash(State.cash); Sound.play('coins'); }
+      if (act.type === 'offer') { E.moveFee = act.v; Money.why('이사비'); State.cash -= act.v; HUD.setCash(State.cash); Sound.play('coins'); }
       panel.classList.remove('in'); Game.formOpen = false;
       await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: act.type === 'offer' ? '…그 정도면 날짜 맞춰 나갈게요.' : '그렇게까지 말씀하시니… 알겠어요, 나갈게요.', emote: 'sweat', nod: true }]);
       return evictDone(c, true);
@@ -6001,7 +6276,7 @@ async function evictAtSite(c) {
   Sound.play('slam'); shake(6, 0.3); await sleep(500);
   const R = caseRng(c, 99);
   E.forced = { cost: Math.round(c.appraisal * (P.hard ? R.U(0.04, 0.07) : R.U(0.01, 0.02)) / 1e4) * 1e4, months: R.RI(2, 4) };
-  State.cash -= E.forced.cost; HUD.setCash(State.cash);
+  Money.why('강제집행비 예납'); State.cash -= E.forced.cost; HUD.setCash(State.cash);
   await DocViewer.show(`<div class="doc court"><div class="docHead">${courtOf(c).name} 집행관사무소</div><h2>부 동 산 인 도 강 제 집 행</h2><table class="kv"><tr><th>사건</th><td>${c.caseNo}</td></tr><tr><th>집행비용(예납)</th><td>${fmtWon(E.forced.cost)}</td></tr><tr><th>예상 소요기간</th><td>약 ${E.forced.months}개월</td></tr></table><p class="small">협상이 결렬되어 인도명령에 따른 강제집행을 신청함.</p></div>`, { title: '강제집행 신청' });
   return evictDone(c, false);
 }
@@ -6038,6 +6313,78 @@ function computeSettlement() {
   const profit = lines.reduce((s, l) => s + l[1], 0);
   return { kind: 'won', lines, profit, analysis: a, months, invest: br.bid + a.assumeTotal };
 }
+
+/* ===================== 법정 절차 디테일 (정리본 1묶음, 사용자 2026-10-15) =====================
+ * 공유자 우선매수신고(민집 140조) · 차순위매수신고(114조) · 매각허가결정→확정→대금지급기한
+ * · 재매각 사건 보증금 20% · 입찰표 착오 구제 불가 · 무잉여 취소/취하.
+ * 사건마다 caseRng로 정한다: 같은 물건이면 누구에게나 같은 결과 (채널 개찰도 모두 일치).
+ * 정답 힌트는 없다: 서류(명세서 비고)에 실제처럼 적혀 있을 뿐이고, 왜 그렇게 됐는지는 결과 화면에서 설명한다.
+ */
+const CourtRules = {
+  x(c) {
+    if (c._cr) return c._cr;
+    const R = caseRng(c, 1400);
+    const r = {
+      coowner: R.chance(0.45),                                                // 지분 물건: 다른 공유자가 우선매수신고
+      payFail: R.chance(Math.min(0.45, 0.12 + 0.07 * (c.critical || 0))),     // 최고가매수인 대금 미납 (위험 큰 물건일수록)
+      disallow: R.chance(0.03),                                               // 매각불허가 (명세서 하자 등)
+      resale: R.chance(0.07),                                                 // 재매각 사건 → 보증금 20%
+      cancel: R.chance(0.04) ? { day: R.RI(3, 6), why: R.chance(0.6) ? 'surplus' : 'withdraw' } : null,
+      coName: `${c.owner[0]}○○`,
+    };
+    if (typeof Tutorial !== 'undefined' && Tutorial.on) Object.assign(r, { coowner: false, payFail: false, disallow: false, resale: false, cancel: null }); // 연습 물건은 쉽게
+    if (Live.on) { r.cancel = null; r.disallow = false; } // 채널: 물건이 실제 시간으로 돌아가서 취소·불허가는 뺀다
+    if (!c.share) r.coowner = false;
+    return (c._cr = r);
+  },
+  depRate(c) { return this.x(c).resale ? 0.2 : 0.1; },
+  deposit(c, rate) { return Math.ceil(c.minPrice * rate); },
+  specNotes(c) {
+    const x = this.x(c), out = [];
+    if (x.resale) out.push('재매각 사건임. 특별매각조건: 매수신청보증금은 최저매각가격의 10분의 2.');
+    if (c.share) out.push('공유자는 매각기일까지 최고매수신고가격과 같은 가격으로 우선매수신고를 할 수 있음 (민사집행법 제140조).');
+    return out;
+  },
+  // 개찰: 무효 입찰(보증금 부족) 빼고 최고가를 뽑은 뒤, 지분 물건이면 공유자 우선매수
+  open(c, all, pickTop) {
+    const x = this.x(c); const valid = all.filter(b => !b.invalid);
+    let winner = valid.length ? pickTop(valid) : null, coowner = null;
+    if (winner && x.coowner) { coowner = { name: `공유자 ${x.coName}`, bid: winner.bid, me: false, coowner: true, label: `공유자 ${x.coName} (우선매수)` }; winner = coowner; }
+    const second = coowner ? null : valid.filter(b => b !== winner).sort((a, b) => b.bid - a.bid)[0] || null;
+    return { winner, coowner, second };
+  },
+  // 차순위매수신고 자격: 내가 2등이고 (최고가 − 보증금)을 넘게 썼으며 1등이 사람(친구)이 아닐 때
+  canSecond(c, res, me, deposit) { return !!(res.winner && !res.coowner && !res.winner.me && !res.winner.friend && res.second === me && !me.invalid && me.bid > res.winner.bid - deposit); },
+  hangul(n) {
+    n = Math.round(n); if (!n) return '영';
+    const D = '영일이삼사오육칠팔구', U = ['', '십', '백', '천'], B = ['', '만', '억', '조']; let out = '', i = 0;
+    while (n > 0) { let ch = n % 10000, s = ''; for (let j = 0; ch > 0; j++, ch = Math.floor(ch / 10)) { const d = ch % 10; if (d) s = (d === 1 && j > 0 ? '' : D[d]) + U[j] + s; } if (s) out = s + B[i] + out; n = Math.floor(n / 10000); i++; }
+    return out;
+  },
+  // 낙찰 뒤 서류 흐름: 매각허가결정(1주) → 확정(다시 1주) → 대금지급기한 통지. 드물게 불허가.
+  async afterWin(c, bid) {
+    const x = this.x(c), d1 = Engine.addDays(c.saleDate, 7), d2 = Engine.addDays(c.saleDate, 14), d3 = Engine.addDays(c.saleDate, 44);
+    if (x.disallow) {
+      await DocViewer.show(`<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>매 각 불 허 가 결 정</h2><table class="kv"><tr><th>사건</th><td>${c.caseNo}</td></tr><tr><th>결정일</th><td>${ymd(d1)}</td></tr></table><p>위 사건에 관하여 최고가매수신고인에 대한 매각을 허가하지 아니한다.</p><p class="small">이유: 매각물건명세서 작성에 중대한 하자가 있음 (민사집행법 제121조 제5호). 매수신청보증금은 반환한다.</p></div>`, { title: '매각불허가결정' });
+      return false;
+    }
+    await DocViewer.show(`<div class="doc court"><div class="docHead">${courtOf(c).name}</div><h2>매 각 허 가 결 정</h2><table class="kv"><tr><th>사건</th><td>${c.caseNo}</td></tr><tr><th>매각가격</th><td>${fmtWon(bid)}</td></tr><tr><th>결정일</th><td>${ymd(d1)} (매각기일부터 1주)</td></tr><tr><th>확정일</th><td>${ymd(d2)} (이해관계인 즉시항고 없이 1주 경과)</td></tr><tr><th>대금지급기한</th><td>${ymd(d3)} (확정 뒤 통지, 보통 1개월)</td></tr></table><p class="small">기한까지 대금을 내지 않으면 재매각을 명하고 매수신청보증금은 돌려주지 않는다. 소유권은 등기가 아니라 대금을 다 낸 때 취득한다 (민사집행법 제135조).</p></div>`, { title: '매각허가결정 · 대금지급기한 통지' });
+    return true;
+  },
+  // 무잉여 취소·취하: 혼자 하기에서 그 날이 되면 선배가 알려 주고, 법원은 그 사건 입찰표를 받지 않는다
+  tick() {
+    if (Live.on || !State.week || Game.scene === 'title' || State.finished || State.day >= 7) return;
+    const w = State.week; if (!w._cancels) w._cancels = w.cases.filter(c => this.x(c).cancel);
+    for (const c of w._cancels) {
+      if (c.cancelled || State.day < this.x(c).cancel.day || Game.busy || Dialog.open) continue;
+      c.cancelled = true; const why = this.x(c).cancel.why;
+      HUD.page(`${c.name} 매각 취소됐대. ${why === 'surplus' ? '무잉여라서. 최저가로 팔아도 앞선 채권 갚고 나면 경매 신청한 사람한테 남는 게 없다고 법원이 판단한 거야 (민사집행법 102조).' : '채무자가 빚을 갚아서 신청 채권자가 경매를 취하했어.'}${State.target === c.id ? ' 찍어 둔 물건인데 아깝다. 조사한 시간은 날아갔어. 다른 물건 보자.' : ''}`);
+      if (State.target === c.id) { State.target = null; State.targetPlace = null; }
+      Sound.play('chime');
+    }
+  },
+  cancelText(c) { return this.x(c).cancel && this.x(c).cancel.why === 'surplus' ? '무잉여로 매각 절차 취소' : '채권자 경매 취하'; },
+};
 
 /* ===================== 5단계: 결과 화면 · 등급 · 놓친 정보 · 기록 · 단예 한마디 =====================
  * 난이도(★)와 위험 이름은 여기서 처음 공개한다. 모든 숫자는 Engine.analyze()와 §11·§12 공식으로 계산한다.
@@ -6167,8 +6514,9 @@ async function finishGame() {
   await sleep(400);
   const add = (label, v, cls = '') => { const li = document.createElement('li'); li.className = cls; li.innerHTML = `<span>${label}</span><b>${v === null ? '' : (v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v))}</b>`; $('rcLines').appendChild(li); Sound.play('printer'); return li; };
   if (S.kind === 'lost') {
-    for (const b of [...br.bids].reverse()) { add(`${b.me ? '본인' : b.friend ? esc(b.name) + ' (친구)' : maskName(b.name)}${b === br.winner ? ' (최고가)' : ''}`, null, b.me ? 'me' : '').querySelector('b').textContent = fmtWon(b.bid); await sleep(150); }
+    for (const b of [...br.bids].reverse()) { add(`${b.coowner ? esc(b.label) : b.me ? '본인' : b.friend ? esc(b.name) + ' (친구)' : maskName(b.name)}${b.invalid ? ' (무효)' : ''}${b === br.winner ? (b.coowner ? ' (매수인)' : ' (최고가)') : ''}`, null, b.me ? 'me' : '').querySelector('b').textContent = fmtWon(b.bid); await sleep(150); }
     add(`입찰보증금 ${fmtWon(br.deposit)}`, null).querySelector('b').textContent = '전액 반환'; await sleep(150);
+    if (br.why) { const li = add(br.why, null, 'why'); li.querySelector('b').remove(); await sleep(150); } // 절차 때문에 진 이유 (공유자 우선매수·보증금 부족·불허가·차순위)
   } else for (const [label, v] of S.lines) { if (!v && label !== '인수액 (임차보증금·전세금)') continue; add(label, v); await sleep(150); }
   // 손익 카운트업 (1초)
   const dur = 1000, t0 = performance.now(); const sum = $('rcSum');

@@ -745,7 +745,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .short .csBar { padding:3px 8px; } .short .csBar .csLogo { font-size:13px; } .short .sBack, .short .csCash { font-size:11px; } .short .csMain { gap:8px; padding:0 8px 6px; } .short .csHud { width:min(250px, 34vw); padding-left:6px; }
 .short .dealer canvas { width:76px; height:76px; } .short .dealer { margin-bottom:-14px; } .short .dName { bottom:16px; } .short .bubble { left:calc(50% + 40px); font-size:11px; padding:5px 9px; } .short .rlSide .dealer canvas { width:40px; height:40px; }
 .short .arcCab { padding:5px 8px 6px; } .short .arcMarq b { font-size:15px; } .short .arcBezel { margin:5px 0; padding:7px; } .short .arcPanel { padding:5px 10px; gap:8px; } .short .arcPanel .rpsPick .btn { width:56px; height:56px; } .short .arcPanel .rpsPick .btn span { font-size:20px; }
-.short .rpsBoard canvas.pt { width:34px; height:34px; } .short .arcScreen .rcHead { font-size:0; } .short .arcScreen .rcHead small { font-size:11px; margin:0; } .short .arcScreen .rcpt.arcade::before { display:none; } .short .arcScreen .rpsBoard .hand { font-size:32px; height:36px; } .short .arcScreen .mgMsg { margin:4px 0 2px; } .short i.card .ci.rt { display:none; } .short .arcScreen .rcpt.arcade { padding:6px 10px; } .short .rcpt.arcade::before { margin:0 0 2px; } .short .rpsBoard { margin:2px 0; padding:2px 4px; } .short .rpsBoard > div { gap:0; }
+.short .rpsBoard canvas.pt { width:34px; height:34px; } .short .arcScreen .rcHead, .short .arcScreen .rcpt.arcade .rcHead { font-size:0; } .short .arcScreen .rcHead small { font-size:11px; margin:0; } .short .arcScreen .rcpt.arcade::before { display:none; } .short .arcScreen .rpsBoard .hand { font-size:32px; height:36px; } .short .arcScreen .mgMsg { margin:4px 0 2px; } .short i.card .ci.rt { display:none; } .short .arcScreen .rcpt.arcade { padding:6px 10px; } .short .rcpt.arcade::before { margin:0 0 2px; } .short .rpsBoard { margin:2px 0; padding:2px 4px; } .short .rpsBoard > div { gap:0; }
 </style>
 </head>
 <body>
@@ -7501,13 +7501,14 @@ function rpsBeat(a, b) { return a === b ? 0 : (a === 'r' && b === 's') || (a ===
 const RPS_STAKES = [0, 1e4, 10e4, 100e4];
 
 const Rps = {
-  open_: false, view: 'lobby', vs: 'house', stake: 0, size: 2, g: null, ask: null, pend: null, timer: null,
+  open_: false, view: 'lobby', vs: 'house', stake: 0, size: 1, g: null, ask: null, pend: null, timer: null, // size = 나 포함 인원: 1 장우준이랑 · 2 친구 1명 · 3~4 모집 (사용자 2026-10-15)
   inArcade() { return Game.scene === 'room' && Game.room && Game.room.place.kind === 'arcade'; },
   friends() { return Party.friends(); }, // v90: 밖에 있는 친구도 (here: 같은 가게 안)
   opName() { return this.g ? this.g.name : ''; },
   open(vs) {
     if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
     if (vs) this.vs = vs; if (this.vs !== 'house' && !this.friends().some(f => f.id === this.vs)) this.vs = 'house';
+    if (vs || this.size <= 2) this.size = this.vs === 'house' ? 1 : 2;
     if (this.stake > State.cash) this.stake = 0;
     this.view = 'lobby'; $('rpsWin').classList.add('in'); this.render();
     clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500);
@@ -7524,15 +7525,15 @@ const Rps = {
   watch() {
     if (!this.open_) return;
     if (this.pend && performance.now() - this.pend.at > 20000) { this.pend = null; this.view = 'lobby'; Sound.play('deny'); this.render('응답이 없어요. 다른 상대를 골라 보세요.'); return; }
-    const g = this.g; if (!g || g.vs === 'house' || g.state === 'done') return;
-    const p = Net.players[g.vs]; if (!p || p.gone) { this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(`${g.name}이(가) 나갔어요. 판돈은 그대로예요.`); }
-    if (this.view === 'lobby') this.render();
+    const g = this.g; if (g && g.vs !== 'house' && g.state !== 'done') { const p = Net.players[g.vs]; if (!p || p.gone) { this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(`${g.name}이(가) 나갔어요. 판돈은 그대로예요.`); return; } }
+    const sig = State.cash + '|' + this.friends().map(f => f.id + f.name + f.here).join(','); /* 2인에서 고를 친구 목록이 바뀔 때만 다시 그린다 */
+    if (this.view === 'lobby' && sig !== this.sig) { this.sig = sig; if (this.size === 2 && !this.friends().some(f => f.id === this.vs) && this.friends().length) this.vs = this.friends()[0].id; this.render(); }
   },
   start() {
     if (this.stake > State.cash) { Sound.play('deny'); return this.render('판돈이 내 돈보다 많아요.'); }
     if (this.size > 2) { if (Party.create('rps', this.size, this.stake)) { this.view = 'party'; return this.render(); } return this.render('같이 하기는 채널이나 친구 방에서만 돼요.'); }
-    if (this.vs === 'house') return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: this.stake });
-    const f = this.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; return this.render('그 친구가 지금 접속해 있지 않아요.'); }
+    if (this.size === 1) return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: this.stake });
+    const f = this.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; Sound.play('deny'); return this.render(this.friends().length ? '같이 할 친구를 골라 주세요.' : `접속한 친구가 없어요. 1인으로 하면 ${castName('arcade')}이랑 해요.`); }
     const gid = Net.myId + ':' + Date.now().toString(36);
     this.pend = { gid, to: f.id, name: f.name, stake: this.stake, at: performance.now() };
     this.send('ask', f.id, { gid, stake: this.stake, place: Game.room.place.id }); Sound.play('blip'); this.view = 'wait'; this.render();
@@ -7570,7 +7571,7 @@ const Rps = {
     this.render();
   },
   again() {
-    const g = this.g; if (!g) return; this.vs = g.vs; this.stake = Math.min(g.stake, State.cash) === g.stake ? g.stake : 0; this.g = null; this.start();
+    const g = this.g; if (!g) return; this.vs = g.vs; this.size = g.vs === 'house' ? 1 : 2; this.stake = Math.min(g.stake, State.cash) === g.stake ? g.stake : 0; this.g = null; this.start();
   },
   // 친구에게서 온 메시지
   onNet(m, p) {
@@ -7612,18 +7613,18 @@ const Rps = {
   },
   render(msg) {
     if (!this.open_) return; if (this.view === 'party' || this.view === 'pmatch') return Party.renderRps(msg);
-    const el = $('rpsWin'); const head = `<div class="rcHead">가위바위보 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>`;
+    const el = $('rpsWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view); const head = `<div class="rcHead">가위바위보 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>`;
     if (this.view === 'lobby' || this.view === 'wait') {
-      const fr = this.friends(); const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` })));
+      const fr = this.friends(); const opts = this.size === 1 ? [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }] : fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` }));
       const wait = this.view === 'wait', multi = this.size > 2;
       el.innerHTML = arcadeShell('✊ 가위바위보 ✌', `<div class="rcpt arcade">${head}
-        <div class="mgSec">인원 <small>3명 이상은 판을 만들고 초대장을 보내요</small></div><div class="mgRow">${[2, 3, 4].map(n => `<button class="btn${this.size === n ? ' sel' : ''}" data-sz="${n}" ${wait || (n > 2 && !Net.on) ? 'disabled' : ''}>${n}명<small>${n === 2 ? '1:1' : '모집'}</small></button>`).join('')}</div>
+        <div class="mgSec">인원 <small>${Net.on ? '2인부터는 친구에게 신청하거나 초대장을 보내요' : '친구랑 하기는 채널이나 친구 방에서 돼요'}</small></div><div class="mgRow">${[1, 2, 3, 4].map(n => `<button class="btn${this.size === n ? ' sel' : ''}" data-sz="${n}" ${wait || (n > 1 && !Net.on) ? 'disabled' : ''}>${n}인<small>${n === 1 ? `${castName('arcade')}이랑` : `${n - 1}명 모집`}</small></button>`).join('')}</div>
         ${multi ? '<p class="mgNote">다 같이 내서 두 가지 손만 나오면 진 손을 낸 사람이 탈락해요. 끝까지 남은 한 명이 판돈을 다 가져가요.</p>' : `<div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
-        ${Net.on && !fr.length ? '<p class="mgNote">접속한 친구가 있으면 여기에 떠요. 밖에 있어도 초대장이 가요.</p>' : ''}`}
+        ${this.size === 2 && !fr.length ? '<p class="mgNote">접속한 친구가 있으면 여기에 떠요. 밖에 있어도 초대장이 가요.</p>' : ''}`}
         <div class="mgSec">판돈 <small>${multi ? '탈락한 사람이 우승한 사람에게 줘요' : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
         <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p></div>`,
         `<div class="pcBtns">${wait ? '<button class="btn" id="rpsCancel">신청 취소</button>' : `<button class="btn gold" id="rpsGo">${multi ? '👥 판 만들기' : 'START · 시작'}</button>`}<button class="btn" id="rpsX">← 일어나기</button></div>`);
-      el.querySelectorAll('[data-sz]').forEach(b => (b.onclick = () => { this.size = Number(b.dataset.sz); Sound.play('click'); this.render(); }));
+      el.querySelectorAll('[data-sz]').forEach(b => (b.onclick = () => { this.size = Number(b.dataset.sz); if (this.size === 1) this.vs = 'house'; else if (this.size === 2 && !fr.some(f => f.id === this.vs)) this.vs = fr.length ? fr[0].id : 'house'; Sound.play('click'); this.render(); }));
       el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; Sound.play('click'); this.render(); }));
       el.querySelectorAll('[data-st]').forEach(b => (b.onclick = () => { this.stake = Number(b.dataset.st); Sound.play('click'); this.render(); }));
       if ($('rpsGo')) $('rpsGo').onclick = () => this.start();
@@ -7874,7 +7875,7 @@ const Casino = {
   },
   // v88 (사용자 '창이 아니라 그 상황 속에 들어간 것처럼'): 화면 전체가 카지노 테이블 앞 자리. 왼쪽은 테이블·기계와 맞은편 딜러, 오른쪽은 내 칩과 손.
   render(msg) {
-    if (!this.open_) return; const el = $('hjWin'), lock = this.locked();
+    if (!this.open_) return; const el = $('hjWin'), lock = this.locked(); arcKeep(el, this.tab);
     const B = { hol: () => this.holBody(), slot: () => this.slotBody(), bj: () => this.bjBody(), rl: () => this.rlBody(), pk: () => this.pkBody() }[this.tab]();
     const say = esc(msg || '') || B.line, machine = this.tab === 'slot' || this.tab === 'pk', P = Party.p && PARTY_GAMES[Party.p.game].kind === 'casino' ? Party.p : null, shared = this.tab === 'rl' || this.tab === 'hol';
     const party = P ? Party.seatsHtml() : shared && Net.on ? `<button class="btn ptBtn" data-do="ptnew" ${lock ? 'disabled' : ''}>👥 친구랑 같은 테이블에서 하기</button>` : '';
@@ -7911,6 +7912,13 @@ function mgPortraits(el) {
   });
 }
 // 게임장 오락기 앞 (v88): 화면 전체가 어두운 오락실, 가운데 기계 한 대 — 위 간판, 브라운관 화면, 아래 조작판
+/* 게임장·카지노 창은 다시 그릴 때 innerHTML을 통째로 바꿔서 스크롤이 맨 위로 튀었다 (사용자 2026-10-15 '여기 안내려간다 드레그').
+ * 같은 화면(key)끼리 다시 그릴 때는 스크롤 위치를 그대로 둔다. */
+function arcKeep(el, key) {
+  const same = el._arcKey === key; el._arcKey = key; if (!same) return;
+  const sts = Array.from(el.querySelectorAll('.arcScreen, .csStage, .csHud'), o => o.scrollTop); if (!sts.some(Boolean)) return;
+  queueMicrotask(() => el.querySelectorAll('.arcScreen, .csStage, .csHud').forEach((o, i) => { if (sts[i]) o.scrollTop = sts[i]; }));
+}
 function arcadeShell(title, screen, panel, cls = '') {
   return `<div class="scene arc ${cls}"><div class="arcAmb"><i></i><i></i><i></i><i></i></div><div class="arcCab"><div class="arcMarq"><b>${title}</b></div><div class="arcBezel"><div class="arcScreen">${screen}</div></div><div class="arcPanel">${panel}</div></div></div>`;
 }
@@ -8252,7 +8260,8 @@ const Fight = {
     if (!this.open_) return;
     if (this.pend && performance.now() - this.pend.at > 20000) { this.pend = null; this.view = 'lobby'; Sound.play('deny'); this.render('응답이 없어요.'); return; }
     const g = this.g; if (g && g.vs !== 'house' && g.state !== 'done') { const p = Net.players[g.vs]; if (!p || p.gone || (g.lastRemote && performance.now() - g.lastRemote > 8000)) { this.stop(`${g.name}이(가) 나갔어요. 판돈은 그대로예요.`); return; } }
-    if (this.view === 'lobby') this.render();
+    const sig = State.cash + '|' + Rps.friends().map(f => f.id + f.name + f.here).join(','); /* 친구 목록이나 돈이 바뀔 때만 다시 그린다 (손가락으로 끄는 중에 화면이 바뀌면 스크롤이 끊긴다) */
+    if (this.view === 'lobby' && sig !== this.sig) { this.sig = sig; this.render(); }
   },
   stop(msg) { cancelAnimationFrame(this.raf); this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(msg); },
   start() {
@@ -8385,7 +8394,7 @@ const Fight = {
     this.pend = null; this.send('ok', a.from, { gid: a.gid }); this.begin({ gid: a.gid, vs: a.from, name: a.name, stake: a.stake, left: false });
   },
   render(msg) {
-    if (!this.open_) return; const el = $('fightWin');
+    if (!this.open_) return; const el = $('fightWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view);
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = Rps.friends(), wait = this.view === 'wait'; const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` })));
       el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>

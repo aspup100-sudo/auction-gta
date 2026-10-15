@@ -46,7 +46,7 @@ export class RoomLogic {
         this.broadcast(m, s); // 방장 클라이언트가 init(시드·자본)를 보낸다
       }
       this.sendPlayers();
-      if (this.kind === 'ch') { this.touchSeen(s.name, m.cash, m.pn); try { s.send(JSON.stringify({ t: 'lbook', book: this.book, seen: this.seen, from: 'server', name: '서버' })); } catch (e) {} }
+      if (this.kind === 'ch') { this.touchSeen(s.name, m.cash, m.pn, undefined, m.ea); try { s.send(JSON.stringify({ t: 'lbook', book: this.book, seen: this.seen, from: 'server', name: '서버' })); } catch (e) {} }
       return;
     }
     if (m.t === 'bye') { this.broadcast(m, s); return; }
@@ -55,17 +55,17 @@ export class RoomLogic {
       if (m.t === 'lbid') { if (typeof m.key === 'string' && typeof m.bid === 'number') { const b = this.book[m.key] = this.book[m.key] || {}; b[s.id] = { name: s.name, bid: m.bid, at: this.now() }; this.dirty = true; } this.broadcast(m, s); return; }
       if (m.t === 'lbook') { // 클라이언트의 장부: 본인 것만 믿는다. 순위표는 최신 것으로
         for (const key in m.book || {}) { const e = m.book[key] && m.book[key][s.id]; if (e && typeof e.bid === 'number') { const b = this.book[key] = this.book[key] || {}; if (!b[s.id]) { b[s.id] = { name: s.name, bid: e.bid, at: this.now() }; this.dirty = true; } } }
-        const mine = m.seen && m.seen[s.name]; if (mine) this.touchSeen(s.name, mine.cash, mine.pnl, mine.as);
+        const mine = m.seen && m.seen[s.name]; if (mine) this.touchSeen(s.name, mine.cash, mine.pnl, mine.as, mine.earn);
         return;
       }
-      if (m.t === 'pos') { if (typeof m.cs === 'number') this.touchSeen(s.name, m.cs); else if (typeof m.pn === 'number') this.touchSeen(s.name, undefined, m.pn); }
+      if (m.t === 'pos') { if (typeof m.cs === 'number') this.touchSeen(s.name, m.cs, undefined, undefined, m.ea); else if (typeof m.pn === 'number') this.touchSeen(s.name, undefined, m.pn, undefined, m.ea); }
       if (m.t === 'asset') this.touchSeen(s.name, undefined, undefined, m.list); // 자산 요약: 자리 비운 사람 것도 순위 창에서 보이게 순위표에 같이 둔다
     }
     this.broadcast(m, s);
   }
-  touchSeen(name, cash, pnl, as) {
-    if (!name) return; const hasAs = Array.isArray(as); if (typeof cash !== 'number' && typeof pnl !== 'number' && !hasAs) return;
-    const e = this.seen[name] || {}; if (typeof cash === 'number') e.cash = cash; if (typeof pnl === 'number') e.pnl = pnl; if (hasAs) e.as = as.slice(0, 10); e.at = this.now(); this.seen[name] = e; this.dirty = true;
+  touchSeen(name, cash, pnl, as, earn) { // earn = 경매 차익 + 월세 누적 (순위 점수, v113)
+    if (!name) return; const hasAs = Array.isArray(as); if (typeof cash !== 'number' && typeof pnl !== 'number' && typeof earn !== 'number' && !hasAs) return;
+    const e = this.seen[name] || {}; if (typeof cash === 'number') e.cash = cash; if (typeof pnl === 'number') e.pnl = pnl; if (typeof earn === 'number') e.earn = earn; if (hasAs) e.as = as.slice(0, 10); e.at = this.now(); this.seen[name] = e; this.dirty = true;
   }
   async close(s) { await this.load(); this.broadcast({ t: 'players', list: this.players(s), from: 'server', name: '서버' }, s); /* 닫히는 소켓은 목록에서 빼고 보낸다: 나가면 접속 수가 바로 준다 (v79) */ if (this.kind === 'room' && s.id === this.hostId) this.broadcast({ t: 'hostgone', from: 'server', name: '서버' }); }
   // 10초마다: 심장박동(손님이 서버 생사를 안다) + 순위표 나눠 주기 + 오래된 것 정리 + 저장

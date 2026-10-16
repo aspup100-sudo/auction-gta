@@ -804,6 +804,31 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .pbQuit { grid-column:1 / -1; padding:4px; font-size:12px; background:#3a3a4a; color:#ccc; border-color:#555; } .pbQuit.arm { background:#c03028; color:#fff; } .pbEnd { grid-column:1 / -1; font-size:15px; padding:10px; } .pbEnd small { display:block; font-size:11px; opacity:.8; }
 .short .pbMsg { font-size:12px; min-height:0; padding:6px 10px; line-height:1.4; } .short .pbBot { padding:6px; gap:6px; } .short .pbMoves { gap:4px; } .short .pbMv { padding:3px 20px 3px 8px; border-width:1px; border-left-width:6px; } .short .pbMv b { font-size:12px; } .short .pbQuit { padding:2px; font-size:11px; } .short .pbHud { padding:3px 8px; font-size:11px; border-width:2px; } .short .pbName b { font-size:12px; } .short .pbHud.foe { top:6px; left:8px; } .short .pbHud.me { bottom:6px; right:8px; } .short .pbXp { display:none; }
 .pbBox.rt .pbMsg { min-height:0; font-size:12.5px; padding:6px 10px; } .pbBox.rt .pbMoves { flex:0 0 auto; display:flex; align-items:center; } .pbBox.rt .pbQuit { padding:6px 12px; } .pbBox.rt .pbEnd { padding:8px 14px; }
+/* v156 펫 배틀 게임 고르기 (오버워치 맵 고르기처럼) + 새 미니게임 폰 버튼 */
+.pvBox { width:min(820px, 97vw); max-height:calc(var(--vh, 100vh) - 12px); display:flex; flex-direction:column; gap:8px; padding:12px 14px; background:linear-gradient(180deg, #161a2e, #0c0e1a); border:3px solid #3a4268; border-radius:14px; box-shadow:0 0 0 2px #0a0c16, 0 16px 44px rgba(0,0,0,.7); color:#fff; overflow:auto; }
+.pvHead { display:flex; align-items:center; gap:12px; } .pvHead b { font-size:20px; font-weight:900; letter-spacing:-.5px; } .pvHead span { flex:1; font-size:13px; opacity:.75; } .pvHead i { font-style:normal; font:900 18px var(--ui); min-width:40px; text-align:center; padding:4px 8px; border-radius:20px; background:#e0483a; }
+.pvPets { display:flex; justify-content:space-between; font-size:12.5px; font-weight:700; } .pvPets .me { color:#8ac4ff; } .pvPets .foe { color:#ffa898; } .pvPets small { opacity:.7; }
+.pvGrid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+.pvCard { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:1px; min-height:112px; padding:8px 6px 7px; border-radius:10px; border:2px solid rgba(255,255,255,.12); background:radial-gradient(circle at 50% 30%, var(--c1), var(--c2) 78%); color:#fff; font-family:var(--ui); cursor:pointer; overflow:hidden; text-shadow:0 1px 2px rgba(0,0,0,.7); transition:transform .12s, border-color .12s, filter .12s, opacity .2s; }
+.pvCard::after { content:''; position:absolute; inset:auto 0 0 0; height:58%; background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,0)); pointer-events:none; }
+.pvCard > * { position:relative; z-index:1; } .pvCard em { font-style:normal; font-size:34px; line-height:1; margin-bottom:auto; margin-top:6px; filter:drop-shadow(0 3px 3px rgba(0,0,0,.4)); }
+.pvCard b { font-size:15px; font-weight:900; } .pvCard small { font-size:11px; opacity:.85; } .pvApt { display:flex; flex-direction:column; align-items:center; line-height:1.15; font-size:11px; letter-spacing:1px; } .pvApt .me { font-style:normal; color:#9fd4ff; } .pvApt .foe { font-style:normal; color:#ffb0a0; font-size:9.5px; opacity:.85; }
+.pvCard kbd { position:absolute; left:6px; top:5px; font:700 10px var(--ui); opacity:.6; } .pvCard u { position:absolute; right:6px; top:5px; width:20px; height:20px; border-radius:50%; background:#ffd84a; color:#3a2400; font:900 12px/20px var(--ui); text-decoration:none; text-shadow:none; }
+.pvCard:hover:not(:disabled) { transform:translateY(-2px); filter:brightness(1.12); } .pvCard.on { border-color:#ffd84a; box-shadow:0 0 0 2px #ffd84a, 0 0 18px rgba(255,216,74,.5); } .pvCard:disabled { cursor:default; opacity:.75; }
+.pvFoot { display:flex; align-items:center; gap:8px; } .pvFoot .gold { padding:9px 18px; font-weight:900; } .pvKey { margin-left:auto; font-size:11px; opacity:.6; }
+.pvBox.roll { align-items:stretch; } .pvRow { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; padding:10px 0; }
+.pvCard.big { min-height:170px; cursor:default; opacity:.55; transform:scale(.96); } .pvCard.big em { font-size:44px; margin-top:22px; } .pvCard.big b { font-size:17px; }
+.pvCard.big s { position:absolute; left:0; right:0; top:0; padding:4px 0; text-decoration:none; font:800 11px var(--ui); background:rgba(224,72,58,.85); } .pvCard.big s.me { background:rgba(47,127,224,.9); }
+.pvCard.hot { opacity:1; transform:scale(1.04); border-color:#fff; box-shadow:0 0 0 2px #fff, 0 0 26px rgba(255,255,255,.55); transition:none; }
+.pvCard.win { opacity:1; transform:scale(1.1); border-color:#ffd84a; box-shadow:0 0 0 3px #ffd84a, 0 0 36px rgba(255,216,74,.8); animation:pvWin .7s ease-in-out infinite alternate; z-index:2; } .pvCard.lose { opacity:.25; filter:grayscale(.8); transform:scale(.92); }
+@keyframes pvWin { to { box-shadow:0 0 0 3px #fff2a0, 0 0 52px rgba(255,216,74,1); } }
+.pvMsg { text-align:center; font-size:17px; font-weight:800; min-height:26px; } .pvMsg b { color:#ffd84a; } .pvMsg small { opacity:.7; font-size:12px; }
+.short .pvCard { min-height:84px; } .short .pvCard em { font-size:24px; margin-top:2px; } .short .pvCard.big { min-height:120px; } .short .pvCard.big em { font-size:32px; margin-top:18px; } .short .pvHead b { font-size:16px; } .short .pvHead span { font-size:11.5px; }
+@media (max-width:560px) { .pvGrid { grid-template-columns:repeat(2, 1fr); } .pvRow { grid-template-columns:repeat(2, 1fr); } .pvKey { display:none; } }
+.pbPad.m-balloon .pbStick { display:none; }
+.pbDirs { position:absolute; right:12px; bottom:10px; width:150px; height:150px; pointer-events:auto; } .pbDirs button { position:absolute; width:52px; height:52px; border-radius:12px; border:3px solid #fff; color:#fff; font:900 20px var(--ui); touch-action:none; -webkit-user-select:none; user-select:none; }
+.pbDirs .du { left:49px; top:0; background:rgba(46,192,96,.85); } .pbDirs .dd { left:49px; bottom:0; background:rgba(47,127,224,.85); } .pbDirs .dl { left:0; top:49px; background:rgba(224,160,32,.85); } .pbDirs .dr { right:0; top:49px; background:rgba(224,72,58,.85); } .pbDirs button.dn { transform:scale(.9); filter:brightness(1.3); }
+.short .pbDirs { width:126px; height:126px; right:8px; bottom:6px; } .short .pbDirs button { width:44px; height:44px; font-size:17px; } .short .pbDirs .du, .short .pbDirs .dd { left:41px; } .short .pbDirs .dl, .short .pbDirs .dr { top:41px; }
 .pbPad { display:none; position:absolute; inset:auto 0 0 0; height:100%; pointer-events:none; } .touchOn .pbPad { display:block; }
 .pbStick { position:absolute; left:14px; bottom:14px; width:96px; height:96px; border-radius:50%; background:rgba(255,255,255,.14); border:2px solid rgba(255,255,255,.35); pointer-events:auto; touch-action:none; } .pbStick i { position:absolute; left:50%; top:50%; width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%; background:rgba(255,255,255,.55); }
 .pbPad.m-race .pbStick, .pbPad.m-tug .pbStick { display:none; }
@@ -2959,10 +2984,11 @@ function updateTraffic(dt, z) {
     }
     if (car.jamT > FEEL.npcJamReset) { const pl = Game.player; if (Math.hypot(me.x - pl.x, me.y - pl.y) > 420) { car.s = Math.random() * r.len; car.v = 0; car.jamT = 0; car.waitT = 0; } }
     if (!Game.driving) { const p = Game.player; const dx = p.x - me.x, dy = p.y - me.y; const fwd = dx * Math.cos(me.a) + dy * Math.sin(me.a), side = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a)); if (fwd > 0 && fwd < 40 && side < 10) target = 0; }
+    if (car.halt > 0) { car.halt -= dt; target = 0; } if (car.flee > 0) { car.flee -= dt; target = Math.max(target, car.vmax * 1.4); } // 펫이 화나서 운전자를 혼내는 동안 서 있다가 부리나케 도망 (v156 PetRage)
     car.v += Math.max(-300 * dt, Math.min(120 * dt, target - car.v));
     car.s += car.v * car.dirn * dt;
     // 걷는 중에 달리는 차에 닿으면 치임
-    if (!Game.driving && !Ride.with && car.v > FEEL.hitSpeed) { const p = Game.player, q2 = trafficCarPos(car); if (pointInCar(p.x, p.y, q2.x, q2.y, q2.a, car.len / 2 + 3, car.wid / 2 + 3)) hitPlayer(car, q2); }
+    if (!Game.driving && !Ride.with && car.v > FEEL.hitSpeed) { const p = Game.player, q2 = trafficCarPos(car); if (pointInCar(p.x, p.y, q2.x, q2.y, q2.a, car.len / 2 + 3, car.wid / 2 + 3)) hitPlayer(car, q2); if (typeof PetRage !== 'undefined') PetRage.check(car, q2); }
     if (car.s > r.len + 30) car.s = -30; if (car.s < -30) car.s = r.len + 30;
   });
 }
@@ -6509,6 +6535,7 @@ function update(dt) {
   if (VipDuel.open_) { if (consume('1')) VipDuel.meShoot('me'); else if (consume('2')) VipDuel.meShoot('op'); return; } // 룰렛: 끝날 때까지 못 나간다
   if (Tetris.open_) return; // 테트리스: 키는 Tetris가 먼저 받는다 (v92)
   if (Fight.open_) { if (consume('Escape') && Fight.view !== 'play') Fight.close(); return; } // 격투 게임: 키는 Fight가 직접 읽는다
+  if (PetBattle.open_ && PetVote.on()) { if (consume('Escape')) PetBattle.esc(); else { for (let n = 1; n <= PB_MODES.length; n++) if (consume(String(n))) PetVote.toggle(PB_MODES[n - 1]); if (interact || enterK) PetVote.confirm(); } return; } // 게임 고르기 (v156)
   if (PetBattle.open_) { if (consume('Escape')) PetBattle.esc(); else if (interact && PetBattle.sayNext) PetBattle.sayNext(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) PetBattle.pick(Number(n) - 1); return; } // 펫 배틀 (v147)
   if (Exam.open_) { if (consume('Escape')) Exam.close(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) Exam.answer(Number(n) - 1); return; } // 죽음의 문답 (v136)
   if (Quiz.open_) { if (consume('Escape')) Quiz.close(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) Quiz.answer(Number(n) - 1); return; } // 경매 퀴즈 (v128)
@@ -6616,6 +6643,7 @@ function updateDecor(dt) {
   const z = Game.zone;
   for (const w of Game.decor) {
     if (w.bubble) { w.bubble.t -= dt; if (w.bubble.t <= 0) w.bubble = null; }
+    if (w.rage) continue; // 펫한테 혼나는 운전자 (PetRage가 움직인다)
     if (w.esc) { stepEscape(w, dt); continue; }
     w.hurtCd = Math.max(0, (w.hurtCd || 0) - dt);
     if (w.promo && !(w.stun > 0)) continue; // 편집숍 사장님은 ShopPromo가 움직인다
@@ -6644,7 +6672,7 @@ function updateDecor(dt) {
     stepWalker(w, dt, w.ai.ix * 0.55, w.ai.iy * 0.55, false, (tx, ty) => z.at(tx, ty) === T.BLD, null);
   }
   for (const c of Game.cats) { c.t -= dt; if (c.t <= 0) { c.t = 2 + Math.random() * 4; c.vx = c.sit ? (Math.random() < 0.5 ? -14 : 14) : 0; c.sit = !c.sit; } const nx = c.x + c.vx * dt; if (z.at(Math.floor(nx / TILE), Math.floor(c.y / TILE)) === T.ALLEY) c.x = nx; else c.vx = -c.vx; }
-  updateTraffic(dt, z);
+  updateTraffic(dt, z); if (typeof PetRage !== 'undefined') PetRage.update(dt);
 }
 
 /* ---- 그리기 ---- */
@@ -8624,11 +8652,13 @@ const Pets = {
     if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { out.push(this.actor(c, 'me', k, P.x, P.y, t, this.mineN)); if (this.mineK2) out.push(this.second(c, 'me', this.mineK2, P.x, P.y, t, this.mineN2)); }
     for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; out.push(this.actor(c, 'f:' + p.name, pk, p.x, p.y, t, String(p.pal.petName || '').slice(0, 10))); if (p.pal.pet2) out.push(this.second(c, 'f:' + p.name, p.pal.pet2, p.x, p.y, t, String(p.pal.petName2 || '').slice(0, 10))); }
     if (typeof PetBattle !== 'undefined') PetBattle.actors(c, t, out); // 트레이너 펫 · 투닥투닥
+    if (typeof PetRage !== 'undefined') PetRage.extras(c, out);
     return out.concat(this.extra);
   },
   // 두 번째 펫 (사용자 2026-10-15 '펫은 최대 2마리'): 첫 펫 뒤를 졸졸 따라온다. 원숭이는 주인 머리에 타야 하니 주인을 따른다
   second(c, key, k2, ox, oy, t, n) { const s1 = this.st[key]; const lead = k2 === 'monkey' || !s1 ? [ox, oy] : [s1.x, s1.y]; return this.actor(c, key + '#2', k2, lead[0], lead[1], t, n); },
   actor(c, key, k, ox, oy, t, n) {
+    const s0 = this.st[key]; if (s0 && s0.rage && typeof PetRage !== 'undefined') return PetRage.actor(c, s0, key, k, t, n); // 차에 치여서 화난 중 (v156)
     const s = this.step(key, ox, oy, t, k), idle = s.idle || 0;
     if (k === 'panda') this.fans(c, s, idle, k); // 대나무 먹고 있으면 행인이 '푸바오??' 하며 구경 (사용자 2026-10-16)
     if (k === 'trex') { this.fans(c, s, idle, k); if (!s.moving && idle > 1.5) this.extra.push({ y: s.y + 60, d: () => this.ptero(c, s, idle, t) }); } // 서 있으면 익룡이 머리 위를 빙빙, 행인이 와서 사진 (사용자 2026-10-16)
@@ -9278,6 +9308,69 @@ const Fx = {
   },
 };
 
+/* ===================== 펫이 차에 치이면 화나서 운전자 공격 (v156, 사용자 2026-10-16 'npc 자동차가 펫 치면 펫이 화나서 운전자 공격하자') =====================
+ * 걸어 다닐 때 내 펫(1·2번째)이 달리는 길가 차에 닿으면: 펫이 데굴 날아갔다가 💢 → 차가 서고 운전자가 내린다 → 펫이 운전자를 쫓아다니며 퍽퍽
+ * → 운전자가 "잘못했어요!" 하고 차에 도로 타서 부리나케 도망 → 펫은 '흥!' 하고 다시 주인을 따라온다. 내 화면에서만 (장식). 펫 하나당 4초에 한 번. */
+const PetRage = {
+  list: [], says: [],
+  // '흥!' (다시 따라올 때 잠깐)
+  extras(c, out) { const now = performance.now(); this.says = this.says.filter(q => q.until > now); for (const q of this.says) out.push({ y: q.s.y + 40, d: () => Net.label(c, '흥!', q.s.x, q.s.y - 22) }); },
+  SAY: { hit: ['아이고! 미안해요!', '어어? 뭐야 뭐야!', '헉, 괜찮니?!'], run: ['으악! 살려줘요!', '아야 아야!', '잘못했어요!!', '그만 그만!!'], big: ['공룡이다!!!', '엄마야!!!'], end: ['다시는 안 그럴게요!', '죄송합니다아~!', '운전 조심할게요!!'] },
+  pick(a) { return a[Math.floor(Math.random() * a.length)]; },
+  // updateTraffic에서: 달리는 차가 내 펫에 닿았나
+  check(car, q) {
+    if (Game.driving || Game.scene !== 'zone' || (typeof Ride !== 'undefined' && Ride.with)) return; const now = performance.now();
+    for (const key of ['me', 'me#2']) { const s = Pets.st[key], kind = key === 'me' ? Pets.mineK : Pets.mineK2; if (!s || !kind || s.rage || (s.rageCd || 0) > now) continue;
+      if (Math.hypot(s.x - Game.player.x, s.y - Game.player.y) > 120) continue; // 화면 밖에 남은 옛 위치는 무시
+      if (pointInCar(s.x, s.y, q.x, q.y, q.a, car.len / 2 + 2, car.wid / 2 + 2)) this.hit(car, q, s, key, kind); }
+  },
+  hit(car, q, s, key, kind) {
+    let nx = s.x - q.x, ny = s.y - q.y; const d = Math.hypot(nx, ny) || 1; nx = nx / d * 0.6 + Math.cos(q.a) * 0.8; ny = ny / d * 0.6 + Math.sin(q.a) * 0.8; const L = Math.hypot(nx, ny) || 1;
+    s.rage = { ph: 'fly', t: 0, car, kind, key, x0: s.x, y0: s.y, vx: nx / L * 110, vy: ny / L * 110, h: 0, n: 0, spin: Math.sign(nx || 1) };
+    car.halt = 9; car.v = Math.min(car.v, 18); Sound.play('crash'); shake(4, 0.25); Game.hitstop = 0.04; this.list.push(s);
+    if (!REDUCED_MOTION) for (let i = 0; i < 6; i++) Particles.push({ x: s.x, y: s.y - 6, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 60, g: 220, life: 0.5, max: 0.5, col: 'rgba(255,230,120,', r: 1.5 });
+  },
+  door(car) { const q = trafficCarPos(car), side = car.dirn > 0 ? 1 : -1; return { x: q.x - Math.sin(q.a) * 13 * side, y: q.y + Math.cos(q.a) * 13 * side, q }; },
+  dirOf(dx, dy) { return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0); },
+  end(s, quiet) { const R = s.rage; if (!R) return; if (R.w) { const i = Game.decor.indexOf(R.w); if (i >= 0) Game.decor.splice(i, 1); } if (R.car) R.car.halt = 0; s.rage = null; s.rageCd = performance.now() + 4000; s.still = s.t = performance.now() / 1000; if (!quiet) this.says.push({ s, until: performance.now() + 1400 }); this.list = this.list.filter(x => x !== s); },
+  update(dt) {
+    if (!this.list.length) return; if (Game.scene !== 'zone' || Game.driving) { for (const s of this.list.slice()) this.end(s, true); return; }
+    for (const s of this.list.slice()) { const R = s.rage; if (!R) { this.list = this.list.filter(x => x !== s); continue; } R.t += dt; const car = R.car, alive = Game.traffic.includes(car);
+      if (R.ph === 'fly') { const k = Math.max(0, 1 - R.t / 0.5); s.x += R.vx * k * dt; s.y += R.vy * k * dt; R.h = Math.sin(Math.min(1, R.t / 0.5) * Math.PI) * 12; if (R.t >= 0.5) { R.ph = 'mad'; R.t = 0; R.h = 0; Sound.play('deny'); } continue; }
+      if (R.ph === 'mad') { if (R.t >= 0.7) { if (!alive) { this.end(s); continue; } // 운전자 내림
+          const D = this.door(car), w = makeWalker(['walker1', 'walker2', 'walker3'][Math.floor(Math.random() * 3)], D.x, D.y); w.ai = { t: 999, ix: 0, iy: 0 }; w.rage = true; w.dir = this.dirOf(s.x - w.x, s.y - w.y);
+          w.bubble = { text: this.pick(this.SAY.hit), t: 1.6 }; Game.decor.push(w); R.w = w; R.ph = 'atk'; R.t = 0; Sound.play('carDoor'); car.halt = 9; } continue; }
+      const w = R.w; if (!w || !alive) { this.end(s); continue; }
+      if (R.ph === 'atk') { car.halt = 9; const D = this.door(car);
+        // 운전자: 펫 반대쪽으로 도망 (차 옆을 크게 벗어나진 않는다)
+        let ex = w.x - s.x, ey = w.y - s.y; const ed = Math.hypot(ex, ey) || 1; ex /= ed; ey /= ed; const hx = D.q.x - w.x, hy = D.q.y - w.y, hd = Math.hypot(hx, hy); if (hd > 30) { ex += hx / hd * 1.2; ey += hy / hd * 1.2; }
+        const en = Math.hypot(ex, ey) || 1, wv = 34; w.x += ex / en * wv * dt; w.y += ey / en * wv * dt; w.dir = this.dirOf(ex, ey); w.moving = true; w.ft = (w.ft || 0) + dt; if (w.ft > 0.12) { w.ft = 0; w.frame = (w.frame % 4) + 1; }
+        // 펫: 운전자한테 달려가서 깡충깡충 퍽퍽
+        const sd = s.x < w.x ? -9 : 9, dx = w.x + sd - s.x, dy = w.y + 1 - s.y, d = Math.hypot(dx, dy); s.face = sd < 0 ? 1 : -1; /* 운전자 옆에 붙어서 (둘 다 보이게) */
+        if (d > 3) { const v = Math.min(d, 70 * dt); s.x += dx / d * v; s.y += dy / d * v; s.moving = true; R.h = Math.abs(Math.sin(R.t * 16)) * 2; }
+        else { s.moving = false; R.h = Math.abs(Math.sin(R.t * 11)) * 7; if (R.t - (R.lastHit || 0) > 0.32) { R.lastHit = R.t; R.n++; Sound.play('pop'); R.pow = { x: (s.x + w.x) / 2, y: w.y - 12, t: 0.3 }; if (!REDUCED_MOTION) Particles.push({ x: w.x, y: w.y - 10, vx: (Math.random() - 0.5) * 60, vy: -40, g: 160, life: 0.35, max: 0.35, col: 'rgba(255,240,160,', r: 1.4 }); if (R.n % 3 === 1) w.bubble = { text: this.pick(R.kind === 'trex' || R.kind === 'tiger' || R.kind === 'elephant' ? this.SAY.big.concat(this.SAY.run) : this.SAY.run), t: 1.1 }; } }
+        if (R.pow) { R.pow.t -= dt; if (R.pow.t <= 0) R.pow = null; }
+        if (R.t > 3.4) { R.ph = 'flee'; R.t = 0; w.bubble = { text: this.pick(this.SAY.end), t: 1.8 }; }
+        continue; }
+      if (R.ph === 'flee') { const D = this.door(car), dx = D.x - w.x, dy = D.y - w.y, d = Math.hypot(dx, dy); R.h = 0; s.moving = false;
+        if (d > 2 && R.t < 3) { const v = Math.min(d, 70 * dt); w.x += dx / d * v; w.y += dy / d * v; w.dir = this.dirOf(dx, dy); w.moving = true; w.ft = (w.ft || 0) + dt; if (w.ft > 0.09) { w.ft = 0; w.frame = (w.frame % 4) + 1; } continue; }
+        Sound.play('carDoor'); car.halt = 0; car.flee = 2.5; car.v = Math.max(car.v, 20); setTimeout(() => Sound.play('ignition'), 150); this.end(s); }
+    }
+  },
+  // Pets.actor 대신 그린다 (화난 동안)
+  actor(c, s, key, kind, t, n) {
+    const R = s.rage, x = s.x, y = s.y;
+    return { y, d: () => {
+      if (R.ph === 'fly') { c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, y, 5, 2, 0, 0, 7); c.fill(); c.save(); c.translate(Math.round(x), Math.round(y - R.h)); c.rotate(R.spin * R.t * 12); Pets.draw(c, kind, 0, 0, s.face, false, t, '', 0); c.restore(); return; }
+      Pets.draw(c, kind, x, y - R.h, s.face, !!s.moving, t, '', 0);
+      const top = y - ({ trex: 34, giraffe: 34, elephant: 24 }[kind] || 18) - R.h, sh = R.ph === 'mad' ? Math.sin(t * 40) * 1 : 0;
+      c.save(); c.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText('💢', x + 6 + sh, top); c.restore();
+      if (R.ph === 'mad') Net.label(c, '으르렁!', x, top - 9);
+      if (R.pow) { c.save(); c.globalAlpha = Math.min(1, R.pow.t / 0.15); c.font = '900 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2.5; c.strokeStyle = '#5a1a00'; c.strokeText('퍽!', R.pow.x, R.pow.y - (0.3 - R.pow.t) * 20); c.fillStyle = '#ffd84a'; c.fillText('퍽!', R.pow.x, R.pow.y - (0.3 - R.pow.t) * 20); c.restore(); }
+    } };
+  },
+};
+
 /* ===================== 펫 배틀 (v147, 사용자 2026-10-16 '펫끼리 싸울 수 있게 할까? 포켓몬처럼', 카드에서 '턴제 배틀') =====================
  * 데리고 다니는 첫 번째 펫(Profile.pet)이 나간다. 펫마다 타입 하나 · 기술 4개 · 능력치(체력/공격/방어/스피드)가 있고, 이기면 경험치로 레벨이 오른다 (Store 'petLv').
  * 상대 1) 펫 트레이너: 동네 행인 중 몇 명이 펫을 데리고 다닌다. 말을 걸면 '⚔️ 배틀!' (이기면 상금, 트레이너마다 한 번).
@@ -9456,6 +9549,7 @@ const PetBattle = {
     if (m.k === 'go') { if (!this.wait || this.wait.id !== from || this.open_) return; this.wait = null; const a = this.clean(m.a), b = this.clean(m.b); if (!a || !b) return;
       this.start({ mode: 'net', me: 'b', foe: from, foeName: name, seed: +m.seed >>> 0, a: this.mk(a, name), b: this.mk(b, '나') }); return; }
     const B = this.B; if (!B || B.mode !== 'net' || B.foe !== from) return;
+    if (m.k === 'vt' || m.k === 'vs') { PetVote.onNet(B, m); return; }
     if (m.k === 'ri' || m.k === 'rs' || m.k === 'rx') { PetRT.onNet(B, m); return; }
     if (m.k === 'mv') { const n = +m.n, i = Math.max(0, Math.min(3, +m.i || 0)); (B.picks[n] || (B.picks[n] = {}))[B.me === 'a' ? 'b' : 'a'] = i; B.foeAt = Date.now(); this.maybeRun(); return; }
     if (m.k === 'quit') { if (B.over) return; this.end(B.me, `${name}님이 항복했어요.`); }
@@ -9486,10 +9580,14 @@ const PetBattle = {
   start(o) {
     if (Game.driving && Game.scene === 'zone') exitCar();
     this.B = Object.assign({ n: 0, picks: {}, busy: true, over: false, t0: Date.now(), foeAt: Date.now(), anim: { a: {}, b: {} }, shown: { a: o.a.max, b: o.b.max } }, o, { S: { a: o.a, b: o.b } });
-    if (PetRT.on) { this.B.rtMode = PetRT.pick(this.B); PetRT.begin(this.B); } // v152: 턴제 대신 대전 4종 중 랜덤
-    this.open_ = true; Game.formOpen = true; Sound.play('ding'); this.build(); this.loop();
+    this.open_ = true; Game.formOpen = true; Sound.play('ding');
     const B = this.B, foe = B.S[B.me === 'a' ? 'b' : 'a'], mine = B.S[B.me];
-    if (B.rtMode) { const m = B.rtMode, tch = document.body.classList.contains('touchOn') ? 1 : 0; this.say([`${esc(this.foeHon())}이(가) 대결을 걸어왔다!`, `이번 대결은 <b>${PB_MODE_KO[m]}</b>! ${esc(mine.name)} vs ${esc(foe.name)}`, PB_MODE_HELP[m][tch]], () => { B.busy = false; this.render(); PetRT.go(B); }); return; }
+    if (PetRT.on) { // v152: 턴제 대신 대전 / v156: 둘이 2개씩 고른 4개에서 룰렛 (PetVote, petparty.js)
+      clearInterval(this.tmr); this.tmr = setInterval(() => { if (!this.open_) return clearInterval(this.tmr); this.tick(); }, 300);
+      PetVote.open(B, m => { if (this.B !== B) return; B.rtMode = m; PetRT.begin(B); this.build(); this.loop(); const tch = document.body.classList.contains('touchOn') ? 1 : 0;
+        this.say([`이번 대결은 <b>${PB_MODE_KO[m]}</b>! ${esc(mine.name)} vs ${esc(foe.name)}`, PB_MODE_HELP[m][tch]], () => { B.busy = false; this.render(); PetRT.go(B); }); });
+      return; }
+    this.build(); this.loop();
     this.say([`${esc(this.foeHon())}이(가) 배틀을 걸어왔다!`, `${esc(B.foeName)}은(는) ${esc(foe.name)}을(를) 내보냈다!`, `가랏, ${esc(mine.name)}!`], () => { B.busy = false; B.t0 = Date.now(); this.render(); });
   },
   foeHon() { const B = this.B; return B.foeHon || `${B.foeName}님`; },
@@ -9523,7 +9621,8 @@ const PetBattle = {
   },
   // 끝: win = 이긴 쪽 ('a'|'b')
   end(win, why) {
-    const B = this.B; if (!B || B.over) return; B.over = true; B.busy = true; const won = win === B.me, mine = B.S[B.me], foe = B.S[B.me === 'a' ? 'b' : 'a'];
+    const B = this.B; if (!B || B.over) return; if (B.voting) { B.over = true; Toast.show(why || (win === B.me ? `${B.foeName}님이 그만뒀어요.` : '배틀을 그만뒀어요.')); return this.close(); } // 게임 고르는 중엔 그냥 닫기
+    B.over = true; B.busy = true; const won = win === B.me, mine = B.S[B.me], foe = B.S[B.me === 'a' ? 'b' : 'a'];
     let gain = won ? (B.mode === 'npc' ? 8 + foe.lv * 4 : 6 + foe.lv * 3) : 3; const lines = [];
     if (why) lines.push(esc(why));
     lines.push(won ? `🏆 ${esc(this.foeHon())}에게 이겼다!` : `${esc(mine.name)}이(가) 졌다… 다음엔 꼭!`);
@@ -9534,8 +9633,9 @@ const PetBattle = {
     B.result = { won, lv, xp, up }; Sound.play(won ? 'coins' : 'deny');
     this.say(lines, () => this.render());
   },
-  quit() {
+  quit(now) {
     const B = this.B; if (!B) return; if (B.over) return this.close();
+    if (B.voting) { if (B.mode === 'net') Net.send({ t: 'pb', k: 'quit', to: B.foe }); return this.end(B.me === 'a' ? 'b' : 'a', '배틀을 그만뒀어요.'); }
     if (!B.qArm) { B.qArm = Date.now(); this.render(); return; } // 한 번 더 누르면 항복
     if (B.mode === 'net') Net.send({ t: 'pb', k: 'quit', to: B.foe });
     this.end(B.me === 'a' ? 'b' : 'a', '항복했다…');
@@ -9546,6 +9646,7 @@ const PetBattle = {
   tick() {
     const B = this.B; if (!B || B.over) return; const now = Date.now();
     if (B.mode === 'net') { const f = Net.players[B.foe]; if (!Net.on || !f || f.gone) return this.end(B.me, '상대가 나가 버렸어요.'); }
+    if (B.voting) return PetVote.tick(B);
     if (B.rtMode) { if (B.qArm && now - B.qArm > 4000) { B.qArm = 0; this.render(); } return; } // 대전은 고르기 시간이 없다
     if (B.busy) return; const cur = B.picks[B.n] || {};
     if (cur[B.me] == null && now - B.t0 > 30000) this.pick(Math.floor(Math.random() * 4));
@@ -9622,7 +9723,7 @@ const PetBattle = {
  *   {t:'pb', k:'ri', i:{x,y,an,jn}} b→a (an/jn = 지금까지 누른 횟수라 짧게 톡 눌러도 안 빠진다) · {k:'rs', s} a→b 상태 · {k:'rx', w, s} 끝
  * 트레이너전은 내가 호스트, 상대는 AI. 능력치: 무게(체력+방어) · 힘(공격) · 빠르기(스피드), 레벨이 조금 더한다.
  * 화면은 320×180 논리 좌표. 받은 쪽(b)은 좌우를 뒤집어 그려서 내가 늘 왼쪽(아래)에 있다. 펫 그림은 짝수 배율만. */
-const PB_MODES = ['sumo', 'race', 'tug', 'dodge'];
+const PB_MODES = ['sumo', 'race', 'tug', 'dodge']; // v156: petparty.js가 4종 더 붙인다 (동전 줍기·풍선 빵빵·폭탄 돌리기·순서 외우기)
 const PB_MODE_KO = { sumo: '🥋 펫 스모', race: '🏃 달리기 경주', tug: '🪢 줄다리기', dodge: '🏐 피구' };
 const PB_MODE_HELP = {
   sumo: ['방향키(WASD)로 움직이고 스페이스로 돌진! 원 밖으로 밀어내면 이겨요. 무거운 펫은 잘 안 밀려요.', '왼쪽 조이스틱으로 움직이고 돌진 버튼! 원 밖으로 밀어내면 이겨요.'],
@@ -9634,7 +9735,7 @@ const PB_ACT_KO = { sumo: '돌진', race: '달리기', tug: '당기기', dodge: 
 const pbCl = v => Math.max(-1, Math.min(1, +v || 0));
 
 const PetRT = {
-  on: true, tp: { x: 0, y: 0, an: 0, jn: 0 },
+  on: true, tp: { x: 0, y: 0, an: 0, jn: 0, dq: '' },
   pick(B) { if (B.mode === 'npc') { B.seed = (Math.random() * 2 ** 31) >>> 0; return PB_MODES[Math.floor(Math.random() * PB_MODES.length)]; } return PB_MODES[(B.seed >>> 0) % PB_MODES.length]; },
   st(P) {
     const b = (PB_DEX[P.kind] || PB_DEX.dog).b, f = 1 + (P.lv - 5) * 0.012;
@@ -9642,10 +9743,10 @@ const PetRT = {
   },
   begin(B) {
     const m = B.rtMode; B.host = B.mode === 'npc' || B.me === 'a'; B.mir = B.me === 'b';
-    B.in = { a: { x: 0, y: 0, an: 0, jn: 0 }, b: { x: 0, y: 0, an: 0, jn: 0 } }; B.used = { a: { an: 0, jn: 0 }, b: { an: 0, jn: 0 } };
-    B.loc = { an: 0, jn: 0, pa: false, pj: false }; this.tp = { x: 0, y: 0, an: 0, jn: 0 }; B.sendT = 0; B.lt = 0; B.D = null; B.snd0 = 0;
+    B.in = { a: { x: 0, y: 0, an: 0, jn: 0, ds: 0, dl: '' }, b: { x: 0, y: 0, an: 0, jn: 0, ds: 0, dl: '' } }; B.used = { a: { an: 0, jn: 0, ds: 0 }, b: { an: 0, jn: 0, ds: 0 } };
+    B.loc = { an: 0, jn: 0, pa: false, pj: false, ds: 0, dl: '', pd: {} }; this.tp = { x: 0, y: 0, an: 0, jn: 0, dq: '' }; B.sendT = 0; B.lt = 0; B.D = null; B.snd0 = 0;
     const foeLv = B.S[B.me === 'a' ? 'b' : 'a'].lv, myLv = B.S[B.me].lv; B.ai = { an: 0, jn: 0, t: 0, ty: 90, sk: Math.max(0.45, Math.min(0.9, 0.65 + (foeLv - myLv) * 0.08)) };
-    B.G = Object.assign({ m, ph: 'intro', cd: 3, left: m === 'tug' ? 40 : 60, t: 0, sa: this.st(B.S.a), sb: this.st(B.S.b), snd: 0, sk: 'flip' }, this[m].init(B));
+    B.G = Object.assign({ m, ph: 'intro', cd: 3, left: this[m].T || 60, t: 0, sa: this.st(B.S.a), sb: this.st(B.S.b), snd: 0, sk: 'flip' }, this[m].init(B));
   },
   // 소개 문구가 끝나면 3·2·1 (호스트만 센다. 받은 쪽은 호스트 상태를 그대로 본다)
   go(B) { if (B.host && B.G && B.G.ph === 'intro') { B.G.ph = 'count'; B.G.cd = 3; Sound.play('blip'); } },
@@ -9655,8 +9756,11 @@ const PetRT = {
     if (B.mir) x = -x;
     const act = !!(Keys[' '] || Keys.j), jmp = !!(Keys.w || Keys.ArrowUp || Keys.k);
     if (act && !L.pa) L.an++; if (jmp && !L.pj) L.jn++; L.pa = act; L.pj = jmp; L.an += T.an; L.jn += T.jn; T.an = T.jn = 0;
+    // 방향 누름 (순서 외우기): 새로 누른 방향만 차례로 쌓는다. ds = 지금까지 누른 수, dl = 마지막 8개 (짧게 톡 눌러도 안 빠진다)
+    let nd = T.dq; T.dq = ''; for (const [d, on] of [['u', Keys.w || Keys.ArrowUp], ['r', Keys.d || Keys.ArrowRight], ['d', Keys.s || Keys.ArrowDown], ['l', Keys.a || Keys.ArrowLeft]]) { if (on && !L.pd[d]) nd += d; L.pd[d] = !!on; }
+    if (nd) { L.ds += nd.length; L.dl = (L.dl + nd).slice(-8); }
     const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
-    return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, an: L.an, jn: L.jn };
+    return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, an: L.an, jn: L.jn, ds: L.ds, dl: L.dl };
   },
   frame(c, W, H, t) {
     const B = PetBattle.B; if (!B || !B.G) return; const now = performance.now(), dt = B.lt ? Math.min(0.05, (now - B.lt) / 1000) : 0; B.lt = now;
@@ -9667,7 +9771,7 @@ const PetRT = {
         this.step(B, dt);
         if (B.mode === 'net' && now - B.sendT > 60 && B.G.ph !== 'intro') { B.sendT = now; Net.send({ t: 'pb', k: 'rs', to: B.foe, s: this.pack(B.G) }); }
       } else {
-        const sig = `${me.x},${me.y},${me.an},${me.jn}`; if (B.mode === 'net' && (sig !== B.lastSig || now - B.sendT > 150) && now - B.sendT > 45) { B.sendT = now; B.lastSig = sig; Net.send({ t: 'pb', k: 'ri', to: B.foe, i: me }); }
+        const sig = `${me.x},${me.y},${me.an},${me.jn},${me.ds}`; if (B.mode === 'net' && (sig !== B.lastSig || now - B.sendT > 150) && now - B.sendT > 45) { B.sendT = now; B.lastSig = sig; Net.send({ t: 'pb', k: 'ri', to: B.foe, i: me }); }
         this.guest(B, dt);
       }
     }
@@ -9678,10 +9782,11 @@ const PetRT = {
   },
   step(B, dt) {
     const G = B.G, M = this[G.m];
-    if (G.ph === 'count') { for (const s of ['a', 'b']) { B.used[s].an = B.in[s].an | 0; B.used[s].jn = B.in[s].jn | 0; } const c0 = Math.ceil(G.cd); G.cd -= dt; if (Math.ceil(G.cd) !== c0 && G.cd > 0) { G.snd++; G.sk = 'blip'; } if (G.cd <= 0) { G.ph = 'play'; G.snd++; G.sk = 'ding'; } return; }
+    if (G.ph === 'count') { for (const s of ['a', 'b']) { B.used[s].an = B.in[s].an | 0; B.used[s].jn = B.in[s].jn | 0; B.used[s].ds = B.in[s].ds | 0; } const c0 = Math.ceil(G.cd); G.cd -= dt; if (Math.ceil(G.cd) !== c0 && G.cd > 0) { G.snd++; G.sk = 'blip'; } if (G.cd <= 0) { G.ph = 'play'; G.snd++; G.sk = 'ding'; } return; }
     if (G.ph !== 'play') return;
     const P = {};
-    for (const s of ['a', 'b']) { const i = B.in[s], u = B.used[s], an = i.an | 0, jn = i.jn | 0; P[s] = { x: pbCl(i.x), y: pbCl(i.y), act: Math.min(3, Math.max(0, an - u.an)), jump: Math.min(2, Math.max(0, jn - u.jn)) }; u.an = Math.max(u.an, an); u.jn = Math.max(u.jn, jn); }
+    for (const s of ['a', 'b']) { const i = B.in[s], u = B.used[s], an = i.an | 0, jn = i.jn | 0; const ds = i.ds | 0, nd = Math.min(8, Math.max(0, ds - (u.ds | 0))), dl = String(i.dl || '');
+      P[s] = { x: pbCl(i.x), y: pbCl(i.y), act: Math.min(3, Math.max(0, an - u.an)), jump: Math.min(2, Math.max(0, jn - u.jn)), dirs: nd ? dl.slice(-nd).replace(/[^urdl]/g, '') : '' }; u.an = Math.max(u.an, an); u.jn = Math.max(u.jn, jn); u.ds = Math.max(u.ds | 0, ds); }
     G.t += dt; G.left = Math.max(0, G.left - dt);
     let w = M.step(G, dt, P);
     if (!w && G.left <= 0) { w = M.timeUp(G) || (Math.random() < 0.5 ? 'a' : 'b'); G.why = M.upWhy; }
@@ -9690,7 +9795,7 @@ const PetRT = {
   pack(G) { return JSON.parse(JSON.stringify(G, (k, v) => typeof v === 'number' ? Math.round(v * 10) / 10 : v)); },
   onNet(B, m) {
     if (!B.rtMode) return;
-    if (m.k === 'ri') { if (!B.host) return; const i = m.i || {}; B.in[B.me === 'a' ? 'b' : 'a'] = { x: pbCl(i.x), y: pbCl(i.y), an: Math.max(0, +i.an | 0), jn: Math.max(0, +i.jn | 0) }; B.foeAt = Date.now(); return; }
+    if (m.k === 'ri') { if (!B.host) return; const i = m.i || {}; B.in[B.me === 'a' ? 'b' : 'a'] = { x: pbCl(i.x), y: pbCl(i.y), an: Math.max(0, +i.an | 0), jn: Math.max(0, +i.jn | 0), ds: Math.max(0, +i.ds | 0), dl: String(i.dl || '').slice(-8) }; B.foeAt = Date.now(); return; }
     if (m.k === 'rs' || m.k === 'rx') {
       if (B.host) return; const s = m.s; if (!s || typeof s !== 'object' || s.m !== B.rtMode) return;
       if (!Array.isArray(s.balls)) s.balls = []; B.G = s; B.fresh = true; if (!B.D) B.D = JSON.parse(JSON.stringify(s)); B.foeAt = Date.now();
@@ -9978,7 +10083,7 @@ const PetRT = {
   },
   /* ================= 🪢 줄다리기 ================= */
   tug: {
-    sm: ['r'], upWhy: '시간 끝! 줄을 더 끌어온 쪽이 이겼어요.',
+    T: 40, sm: ['r'], upWhy: '시간 끝! 줄을 더 끌어온 쪽이 이겼어요.',
     init() { return { r: 0, ap: 0, bp: 0, ah: 0, bh: 0, al: -1, bl: -1 }; },
     bar(G, k) { const u = (G.t * 0.95 + (k === 'a' ? 0 : 0.37)) % 1; return u < 0.5 ? u * 2 : 2 - u * 2; }, // 0→1→0 왕복
     zone(G, k) { return Math.abs(this.bar(G, k) - 0.5) < 0.09; },
@@ -10117,13 +10222,425 @@ const PetRT = {
     },
   },
   /* ---- 폰 버튼: 왼쪽 조이스틱 + 오른쪽 버튼 ---- */
-  pad(m) { return `<div class="pbPad m-${m}"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns">${m === 'race' ? '<button class="pbB2" id="pbJmp">점프</button>' : ''}<button class="pbB1" id="pbAct">${PB_ACT_KO[m]}</button></div></div>`; },
+  pad(m) { if (this[m].pad) return this[m].pad(); return `<div class="pbPad m-${m}"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns">${m === 'race' ? '<button class="pbB2" id="pbJmp">점프</button>' : ''}<button class="pbB1" id="pbAct">${PB_ACT_KO[m]}</button></div></div>`; },
   bindPad() {
     const T = this.tp, st = $('pbStick'), nub = $('pbNub');
     if (st) { const mv = e => { const r = st.getBoundingClientRect(), R = r.width / 2; let x = (e.clientX - r.left - R) / R, y = (e.clientY - r.top - R) / R; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; } T.x = x; T.y = y; nub.style.transform = `translate(${x * R * 0.6}px, ${y * R * 0.6}px)`; };
       st.onpointerdown = e => { e.preventDefault(); st.setPointerCapture(e.pointerId); mv(e); }; st.onpointermove = e => { if (st.hasPointerCapture(e.pointerId)) mv(e); };
       st.onpointerup = st.onpointercancel = () => { T.x = T.y = 0; nub.style.transform = ''; }; }
+    document.querySelectorAll('.pbDirs button').forEach(b => { b.onpointerdown = e => { e.preventDefault(); T.dq += b.dataset.d; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => b.classList.remove('dn'); b.onclick = e => e.preventDefault(); });
     for (const [id, key] of [['pbAct', 'an'], ['pbJmp', 'jn']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); T[key]++; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => b.classList.remove('dn'); b.onclick = e => e.preventDefault(); }
+  },
+};
+
+/* ===================== 펫 파티 미니게임 4종 (v156, 사용자 2026-10-16 '마리오 파티에 있는 게임으로 펫 배틀 할까' → 결정 카드 '미니게임 추가') =====================
+ * petrt.js 대전 틀(호스트 계산 · 받은 쪽 입력만 · 320×180 논리 좌표 · 받은 쪽 좌우 뒤집기)에 그대로 끼운다. 이름·그림은 전부 직접 만든 것.
+ *   🪙 동전 줍기: 하늘에서 동전이 떨어진다. 많이 주운 쪽이 이긴다. 돌(그림자 빨간 동그라미)에 맞으면 어질어질 + 동전 흘림, 대시로 들이받으면 상대가 동전을 흘린다.
+ *   🎈 풍선 빵빵: 펌프 연타로 풍선 세 개를 먼저 터뜨리면 이긴다. 안 누르면 바람이 조금씩 샌다.
+ *   💣 폭탄 돌리기: 심지가 다 타기 전에 가까이 가서 넘기기. 터진 쪽이 목숨 하나. 두 번 터지면 진다.
+ *   🧠 순서 외우기: 화살표 순서를 보고 똑같이 누른다. 맞히면 1점, 먼저 맞히면 1점 더. 5판. */
+PB_MODES.push('coins', 'balloon', 'bomb', 'memory');
+Object.assign(PB_MODE_KO, { coins: '🪙 동전 줍기', balloon: '🎈 풍선 빵빵', bomb: '💣 폭탄 돌리기', memory: '🧠 순서 외우기' });
+Object.assign(PB_MODE_HELP, {
+  coins: ['방향키로 돌아다니며 떨어지는 동전을 주워요. 빨간 그림자엔 돌이 떨어져요! 스페이스 = 대시 (부딪히면 상대가 동전을 흘려요).', '조이스틱으로 동전을 주워요. 빨간 그림자는 돌! 대시 버튼으로 들이받으면 상대가 동전을 흘려요.'],
+  balloon: ['스페이스 연타로 펌프질! 풍선 세 개를 먼저 터뜨리면 이겨요. 쉬면 바람이 새요.', '펌프 버튼 연타! 풍선 세 개를 먼저 터뜨리면 이겨요. 쉬면 바람이 새요.'],
+  bomb: ['폭탄을 든 쪽은 상대에게 다가가 스페이스로 넘겨요! 심지가 다 타면 펑. 두 번 터지면 져요.', '폭탄을 들었으면 상대에게 다가가 넘기기 버튼! 심지가 다 타면 펑. 두 번 터지면 져요.'],
+  memory: ['화살표가 켜지는 순서를 외웠다가 방향키로 똑같이 눌러요. 맞히면 1점, 먼저 맞히면 1점 더!', '화살표가 켜지는 순서를 외웠다가 아래 화살표 버튼으로 똑같이 눌러요. 먼저 맞히면 1점 더!'],
+});
+Object.assign(PB_ACT_KO, { coins: '대시', balloon: '펌프', bomb: '넘기기', memory: '' });
+
+const PetParty = {
+  // 두 펫이 같은 판에서 걸어 다니는 종목(동전·폭탄) 공통 이동
+  walk(G, k, p, dt, sp, x0, x1, y0, y1) {
+    G[k + 'x'] = Math.max(x0, Math.min(x1, G[k + 'x'] + p.x * sp * dt)); G[k + 'y'] = Math.max(y0, Math.min(y1, G[k + 'y'] + p.y * sp * dt));
+    if (Math.abs(p.x) > 0.15) G[k + 'f'] = p.x > 0 ? 1 : -1; G[k + 'm'] = Math.hypot(p.x, p.y) > 0.15 ? 1 : 0;
+  },
+  // AI 이동: 목표 쪽으로 (살짝 흔들림)
+  toward(x, y, tx, ty, sk) { const dx = tx - x, dy = ty - y, n = Math.hypot(dx, dy); if (n < 3) return { x: 0, y: 0 }; return { x: dx / n * sk, y: dy / n * sk }; },
+  dizzy(c, V, x, y, t) { const s = V.s; for (let i = 0; i < 3; i++) { const a = t * 6 + i * 2.1; c.fillStyle = '#ffe066'; PetRT.star(c, x + Math.cos(a) * 8 * s, y + Math.sin(a) * 2.5 * s, 2.6 * s, t * 5); } },
+};
+
+Object.assign(PetRT, {
+  /* ================= 🪙 동전 줍기 ================= */
+  coins: {
+    T: 30, sm: ['ax', 'ay', 'bx', 'by', 't'], upWhy: '시간 끝! 동전을 더 많이 모은 쪽이 이겼어요.', FALL: 0.9,
+    init() { return { ax: 110, ay: 118, bx: 210, by: 118, af: 1, bf: -1, am: 0, bm: 0, ac: 0, bc: 0, ad: 0, bd: 0, adt: 0, bdt: 0, az: 0, bz: 0, cs: [], nid: 1, cT: 0.2, gT: 3, rT: 4 }; },
+    drop(G, x, y, v, k, lead) { G.cs.push({ i: G.nid++, x: Math.round(x), y: Math.round(y), t0: G.t - (lead || 0), v, k }); },
+    step(G, dt, P) {
+      const F = this.FALL;
+      for (const k of ['a', 'b']) { const s = G['s' + k], p = P[k], o = k === 'a' ? 'b' : 'a';
+        G[k + 'd'] = Math.max(0, G[k + 'd'] - dt); G[k + 'dt'] = Math.max(0, G[k + 'dt'] - dt); G[k + 'z'] = Math.max(0, G[k + 'z'] - dt);
+        if (G[k + 'z'] > 0) { G[k + 'm'] = 0; continue; }
+        if (p.act && G[k + 'd'] <= 0) { G[k + 'd'] = 1.6; G[k + 'dt'] = 0.28; G.snd++; G.sk = 'flip'; }
+        const dash = G[k + 'dt'] > 0, dx = dash && !p.x && !p.y ? G[k + 'f'] : p.x;
+        PetParty.walk(G, k, { x: dx, y: p.y }, dt, 92 * s.spd * (dash ? 2.4 : 1), 18, 302, 62, 168);
+        if (dash && G[o + 'z'] <= 0 && Math.hypot(G[o + 'x'] - G[k + 'x'], G[o + 'y'] - G[k + 'y']) < 17) { // 들이받기: 상대가 어질어질 + 동전 흘림
+          G[k + 'dt'] = 0; G[o + 'z'] = 0.9 / Math.sqrt(G['s' + o].mass); /* 무거운 펫은 덜 어지럽다 */ const n = Math.min(3, G[o + 'c']); G[o + 'c'] -= n; for (let i = 0; i < n; i++) this.drop(G, G[o + 'x'] + (Math.random() - 0.5) * 50, G[o + 'y'] + (Math.random() - 0.5) * 30, 1, 'c', F - 0.35);
+          G.hx = (G.ax + G.bx) / 2; G.hy = (G.ay + G.by) / 2; G.ht = G.t; G.snd++; G.sk = 'pop'; }
+      }
+      // 떨어뜨리기: 동전 자주, 금화 가끔, 5초부터 돌
+      const land = G.cs.filter(c => G.t - c.t0 >= F && c.k !== 'r').length;
+      if ((G.cT -= dt) <= 0) { G.cT = 0.32 + Math.random() * 0.2; if (land < 12) this.drop(G, 26 + Math.random() * 268, 68 + Math.random() * 96, 1, 'c'); }
+      if ((G.gT -= dt) <= 0) { G.gT = 3 + Math.random() * 2; this.drop(G, 50 + Math.random() * 220, 75 + Math.random() * 80, 5, 'c'); }
+      if (G.t > 5 && (G.rT -= dt) <= 0) { G.rT = 1.4 + Math.random() * 1.2; const k = Math.random() < 0.5 ? 'a' : 'b'; this.drop(G, G[k + 'x'] + (Math.random() - 0.5) * 60, G[k + 'y'] + (Math.random() - 0.5) * 40, 0, 'r'); } // 돌은 펫 근처로
+      G.cs = G.cs.filter(c => {
+        const age = G.t - c.t0; if (age < F) return true;
+        if (c.k === 'r') { if (!c.hit) { c.hit = 1; for (const k of ['a', 'b']) if (Math.hypot(G[k + 'x'] - c.x, G[k + 'y'] - c.y) < 15 && G[k + 'z'] <= 0) { G[k + 'z'] = 1.2 / Math.sqrt(G['s' + k].mass); const n = Math.min(2, G[k + 'c']); G[k + 'c'] -= n; for (let i = 0; i < n; i++) this.drop(G, c.x + (Math.random() - 0.5) * 50, c.y + (Math.random() - 0.5) * 30, 1, 'c', F - 0.3); G.snd++; G.sk = 'crash'; } } return age < F + 0.5; }
+        for (const k of ['a', 'b']) if (G[k + 'z'] <= 0 && Math.hypot(G[k + 'x'] - c.x, G[k + 'y'] - c.y) < 13) { G[k + 'c'] += c.v; G.snd++; G.sk = 'coins'; return false; }
+        return age < F + 7;
+      });
+      return null;
+    },
+    timeUp(G) { return G.ac > G.bc ? 'a' : G.bc > G.ac ? 'b' : null; },
+    ai(G, k, dt, A) {
+      const x = G[k + 'x'], y = G[k + 'y'], o = k === 'a' ? 'b' : 'a', F = this.FALL; A.t -= dt;
+      for (const c of G.cs) if (c.k === 'r' && G.t - c.t0 < F && Math.hypot(c.x - x, c.y - y) < 22 && Math.random() < A.sk + 0.2) { const m = PetParty.toward(c.x, c.y, x, y, 1); return { x: m.x, y: m.y, an: A.an, jn: 0 }; } // 돌 그림자에서 도망
+      let best = null, bv = -1; for (const c of G.cs) { if (c.k === 'r') continue; const left = F - (G.t - c.t0), d = Math.hypot(c.x - x, c.y - y); if (left > 0.6) continue; const v = c.v * 30 / (d + 20); if (v > bv) { bv = v; best = c; } }
+      if (A.t <= 0 && G[k + 'd'] <= 0) { A.t = 0.8 + Math.random(); if (G[o + 'c'] > 0 && Math.hypot(G[o + 'x'] - x, G[o + 'y'] - y) < 40 && Math.random() < A.sk * 0.7) { A.an++; const m = PetParty.toward(x, y, G[o + 'x'], G[o + 'y'], 1); return { x: m.x, y: m.y, an: A.an, jn: 0 }; } }
+      const m = best ? PetParty.toward(x, y, best.x, best.y, 0.55 + A.sk * 0.45) : PetParty.toward(x, y, 160, 115, 0.4); return { x: m.x, y: m.y, an: A.an, jn: 0 };
+    },
+    stat(G, k) { return `🪙 ${G[k + 'c']}`; },
+    watch(G, B, F, dt) {
+      const pv = F.pv; pv.rk = pv.rk || {};
+      for (const k of ['a', 'b']) { const x = G[k + 'x'], y = G[k + 'y'], d = G[k + 'c'] - (pv[k + 'c'] == null ? G[k + 'c'] : pv[k + 'c']);
+        if (d > 0) { PetRT.pop(B, x, y - 30, `+${d}`, '#ffe066', d >= 5 ? 10 : 7.5); PetRT.burst(B, x, y - 12, d >= 5 ? 10 : 4, { k: 'star', col: '#ffe066', v: 50, life: 0.4, sz: 2 }); if (d >= 5) F.ex = Math.max(F.ex, 0.6); }
+        if (d < 0) { PetRT.pop(B, x, y - 30, `${d}`, '#ff8a6a', 8); }
+        if (G[k + 'z'] > 0 && !(pv[k + 'z'] > 0)) { PetRT.stars(B, x, y - 14, 6); PetRT.shake(B, 5); if (k === B.me) F.fl = 0.6; }
+        if (G[k + 'dt'] > 0 && !(pv[k + 'dt'] > 0)) PetRT.dust(B, x, y, 5, G[k + 'f']);
+        if (G[k + 'dt'] > 0) { F.tr[k].push({ x, y, f: G[k + 'f'] }); if (F.tr[k].length > 4) F.tr[k].shift(); } else if (F.tr[k].length) F.tr[k].shift();
+        if (G[k + 'm'] && Math.random() < dt * 6) PetRT.dust(B, x - G[k + 'f'] * 5, y, 1);
+        pv[k + 'c'] = G[k + 'c']; pv[k + 'z'] = G[k + 'z']; pv[k + 'dt'] = G[k + 'dt']; }
+      for (const c of G.cs) if (c.k === 'r' && G.t - c.t0 >= this.FALL && !pv.rk[c.i]) { pv.rk[c.i] = 1; PetRT.burst(B, c.x, c.y, 10, { k: 'sq', col: '#8a8478', v: 70, up: 30, g: 160, life: 0.6, sz: 2 }); PetRT.dust(B, c.x, c.y, 6); PetRT.shake(B, 3); }
+    },
+    draw(c, V, G, B, t, W, H) {
+      const s = V.s, F = PetRT.fxOf(B), Y = V.Y, SX = V.SX, FALL = this.FALL;
+      // 하늘 + 바다 + 모래사장 (보물 해변)
+      let g = c.createLinearGradient(0, 0, 0, Y(48)); g.addColorStop(0, '#5ec0f6'); g.addColorStop(1, '#bfeaff'); c.fillStyle = g; c.fillRect(0, 0, W, Y(48));
+      c.fillStyle = 'rgba(255,255,255,.85)'; for (let i = 0; i < 3; i++) { const x = ((i * 120 + t * 4) % 420) - 50; for (const [dx, dy, r] of [[0, 0, 5], [6, -3, 7], [13, 0, 5]]) { c.beginPath(); c.arc(SX(x + dx), Y(22 + i * 6 + dy), r * s, 0, 7); c.fill(); } }
+      g = c.createLinearGradient(0, Y(40), 0, Y(60)); g.addColorStop(0, '#2a8ad0'); g.addColorStop(1, '#46c0d8'); c.fillStyle = g; c.fillRect(0, Y(40), W, 20 * s);
+      c.fillStyle = 'rgba(255,255,255,.55)'; for (let x = 0; x < 330; x += 22) c.fillRect(SX(x + Math.sin(t * 1.5 + x) * 3), Y(46 + (x / 22 % 3) * 4), 9 * s, Math.max(1, s * 0.8));
+      c.fillStyle = '#f4f0d8'; c.beginPath(); c.moveTo(0, Y(60)); for (let x = 0; x <= 330; x += 8) c.lineTo(SX(x), Y(58 + Math.sin(x / 18 + t * 2) * 1.6)); c.lineTo(W, Y(64)); c.lineTo(0, Y(64)); c.fill();
+      g = c.createLinearGradient(0, Y(60), 0, H); g.addColorStop(0, '#f2dca0'); g.addColorStop(1, '#dcbc78'); c.fillStyle = g; c.fillRect(0, Y(61), W, H - Y(61));
+      const SR = makeRng(77); c.fillStyle = 'rgba(160,120,60,.35)'; for (let i = 0; i < 120; i++) c.fillRect(SX(SR.next() * 320), Y(64 + SR.next() * 116), Math.max(1, Math.round(s * 0.8)), Math.max(1, Math.round(s * 0.8)));
+      for (const [x, y, col] of [[40, 160, '#f6a8b8'], [280, 150, '#fff2e0'], [150, 172, '#f6c8a0'], [250, 72, '#ffd0d8']]) { c.fillStyle = col; c.beginPath(); c.arc(SX(x), Y(y), 2.4 * s, Math.PI, 0); c.fill(); } // 조개껍데기
+      // 야자수 (양쪽 끝)
+      for (const [x, f] of [[6, 1], [314, -1]]) { c.fillStyle = '#8a5a2a'; for (let i = 0; i < 7; i++) c.fillRect(SX(x + f * i * 1.2 - 2), Y(150 - i * 13), 5 * s, 12 * s);
+        c.fillStyle = '#3a9a3a'; for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * 0.7 + Math.sin(t * 1.2 + i) * 0.05; c.save(); c.translate(SX(x + f * 8), Y(64)); c.rotate(a); c.beginPath(); c.ellipse(16 * s, 0, 16 * s, 3.4 * s, 0, 0, 7); c.fill(); c.restore(); } }
+      // 떨어지는 동전·돌: 그림자 먼저
+      for (const q of G.cs) { const u = Math.min(1, (G.t - q.t0) / FALL); if (u >= 1) continue; const X = V.X(q.x), Yq = Y(q.y), rr = (q.k === 'r' ? 7 : q.v > 1 ? 5 : 3.5) * (0.4 + u * 0.6) * s;
+        c.fillStyle = q.k === 'r' ? `rgba(230,40,30,${(0.2 + u * 0.35).toFixed(2)})` : 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(X, Yq + 2 * s, rr * 1.2, rr * 0.45, 0, 0, 7); c.fill();
+        if (q.k === 'r') { c.strokeStyle = `rgba(255,60,40,${(0.5 + Math.sin(t * 16) * 0.3).toFixed(2)})`; c.lineWidth = Math.max(1, s * 0.7); c.beginPath(); c.ellipse(X, Yq + 2 * s, 9 * s, 3.4 * s, 0, 0, 7); c.stroke(); } }
+      const coin = (X, Yc, v, i, spin) => { const r = (v > 1 ? 5.5 : 3.6) * s, w = Math.max(0.25, Math.abs(Math.cos(spin))); c.save(); c.translate(X, Yc); c.scale(w, 1);
+        c.fillStyle = '#b07a10'; c.beginPath(); c.arc(0, r * 0.18, r, 0, 7); c.fill(); g = c.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r); g.addColorStop(0, '#fff6b0'); g.addColorStop(0.6, '#ffd23a'); g.addColorStop(1, '#d89a10'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill();
+        c.strokeStyle = 'rgba(160,100,10,.8)'; c.lineWidth = Math.max(1, s * 0.5); c.beginPath(); c.arc(0, 0, r * 0.68, 0, 7); c.stroke(); if (v > 1 && w > 0.5) { c.fillStyle = '#9a5a00'; c.font = PetRT.font(r * 1.05, 900); c.textAlign = 'center'; c.fillText('5', 0, r * 0.38); } c.restore(); };
+      // 바닥에 떨어진 동전 (곧 사라지는 건 깜빡)
+      for (const q of G.cs) { const age = G.t - q.t0; if (age < FALL || q.k === 'r') continue; if (age > FALL + 5.5 && Math.floor(t * 8) % 2) continue; const X = V.X(q.x), Yq = Y(q.y); c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(X, Yq + 2 * s, (q.v > 1 ? 5 : 3.5) * s, 1.4 * s, 0, 0, 7); c.fill(); coin(X, Yq - (1 + Math.sin(t * 4 + q.i) * 1) * s, q.v, q.i, t * 3 + q.i); }
+      // 돌 (떨어진 뒤 잠깐)
+      for (const q of G.cs) { if (q.k !== 'r') continue; const age = G.t - q.t0; if (age < FALL) continue; const X = V.X(q.x), Yq = Y(q.y); c.globalAlpha = Math.max(0, 1 - (age - FALL) / 0.5); c.fillStyle = '#6a645a'; c.beginPath(); c.ellipse(X, Yq - 3 * s, 8 * s, 6 * s, 0, 0, 7); c.fill(); c.fillStyle = '#8a8478'; c.beginPath(); c.ellipse(X - 2 * s, Yq - 5 * s, 4 * s, 2.6 * s, 0, 0, 7); c.fill(); c.globalAlpha = 1; }
+      // 펫
+      const L = ['a', 'b'].sort((p, q) => G[p + 'y'] - G[q + 'y']);
+      for (const k of L) { const P = B.S[k], x = G[k + 'x'], y = G[k + 'y'], z = G[k + 'z'] > 0;
+        for (const [i, q] of (F.tr[k] || []).entries()) PetRT.pet(c, V, P, q.x, q.y, q.f, true, t, 0.12 + i * 0.07);
+        PetRT.shadow(c, V, x, y, 9, 0.28); if (k === B.me && G.ph === 'play') PetRT.ring(c, V, x, y, 1 - G[k + 'd'] / 1.6, 11);
+        PetRT.pet(c, V, P, x, y, G[k + 'f'], !!G[k + 'm'] && !z, t, 1, null, z ? Math.sin(t * 9) * 0.15 : 0);
+        const ty = PetRT.topY(V, P, y); if (z) PetParty.dizzy(c, V, V.X(x), ty + 2 * s, t);
+        PetRT.nameTag(c, V, k === B.me ? '나' : B.foeName, V.X(x), ty - (z ? 6 * s : 0), k === B.me); }
+      // 하늘에서 떨어지는 중인 동전·돌 (펫 위로)
+      for (const q of G.cs) { const u = (G.t - q.t0) / FALL; if (u >= 1 || u < 0) continue; const X = V.X(q.x), h = (1 - u * u) * 150, Yq = Y(q.y - h);
+        if (q.k === 'r') { c.fillStyle = '#6a645a'; c.beginPath(); c.ellipse(X, Yq - 3 * s, 8 * s, 6 * s, u * 3, 0, 7); c.fill(); c.fillStyle = '#8a8478'; c.beginPath(); c.ellipse(X - 2 * s, Yq - 5 * s, 4 * s, 2.6 * s, 0, 0, 7); c.fill(); }
+        else coin(X, Yq, q.v, q.i, t * 10 + q.i); }
+      PetRT.fxDraw(c, V, B);
+    },
+  },
+
+  /* ================= 🎈 풍선 빵빵 ================= */
+  balloon: {
+    T: 40, sm: ['aa', 'ba'], upWhy: '시간 끝! 풍선을 더 많이 터뜨린 쪽이 이겼어요.', N: 3,
+    init() { return { aa: 0, ba: 0, an: 0, bn: 0, al: -1, bl: -1, ah: 0, bh: 0, aw: 0, bw: 0 }; },
+    step(G, dt, P) {
+      for (const k of ['a', 'b']) {
+        G[k + 'h'] = Math.max(0, G[k + 'h'] - dt); G[k + 'w'] = Math.max(0, G[k + 'w'] - dt);
+        if (G.t - G[k + 'l'] > 0.45) G[k + 'a'] = Math.max(0, G[k + 'a'] - 0.06 * dt); // 쉬면 바람이 샌다
+        for (let i = 0; i < P[k].act; i++) { if (G[k + 'w'] > 0 || G.t - G[k + 'l'] < 0.07) continue; G[k + 'l'] = G.t; G[k + 'h'] = 0.12; G[k + 'a'] += 0.047 * (0.75 + 0.25 * G['s' + k].pow) / (1 + G[k + 'n'] * 0.12);
+          if (G[k + 'a'] >= 1) { G[k + 'a'] = 0; G[k + 'n']++; G[k + 'w'] = 0.7; G.snd++; G.sk = 'crash'; if (G[k + 'n'] >= this.N) return k; } }
+      }
+      return null;
+    },
+    timeUp(G) { return G.an !== G.bn ? (G.an > G.bn ? 'a' : 'b') : G.aa > G.ba ? 'a' : G.ba > G.aa ? 'b' : null; },
+    ai(G, k, dt, A) { A.t -= dt; if (A.t <= 0) { A.an++; A.t = (0.12 + Math.random() * 0.09) / (0.55 + A.sk * 0.5); } return { x: 0, y: 0, an: A.an, jn: 0 }; },
+    stat(G, k) { return '🎈'.repeat(G[k + 'n']) + '·'.repeat(Math.max(0, this.N - G[k + 'n'])); },
+    pad() { return `<div class="pbPad m-balloon"><div class="pbBtns"><button class="pbB1" id="pbAct">펌프</button></div></div>`; },
+    bx(k) { return k === 'a' ? 108 : 212; },
+    watch(G, B, F, dt) {
+      const pv = F.pv;
+      for (const k of ['a', 'b']) { const bx = this.bx(k), r = 7 + G[k + 'a'] * 24;
+        if (G[k + 'h'] > 0 && !(pv[k + 'h'] > 0)) PetRT.burst(B, bx, 154, 2, { k: 'dust', col: '#fff', v: 20, flat: 0.4, life: 0.35, sz: 1.6 });
+        if (G[k + 'n'] > (pv[k + 'n'] || 0)) { const col = k === B.me ? '#4a9aff' : '#ff5a5a', by = 112 - (pv[k + 'r'] || 20); PetRT.burst(B, bx, by, 18, { k: 'conf', col, v: 120, life: 0.8, sz: 2.4, spin: 9, g: 120 }); PetRT.burst(B, bx, by, 8, { k: 'star', col: '#fff6a0', v: 90, life: 0.4, sz: 2.6 }); PetRT.pop(B, bx, by - 6, '빵!', '#fff', 12); PetRT.shake(B, 6); F.ex = Math.max(F.ex, 0.9); }
+        if (G[k + 'a'] > 0.82 && Math.random() < dt * 6) PetRT.sweat(B, bx + (k === 'a' ? -34 : 34), 128);
+        pv[k + 'n'] = G[k + 'n']; pv[k + 'h'] = G[k + 'h']; pv[k + 'r'] = r; }
+    },
+    draw(c, V, G, B, t, W, H) {
+      const s = V.s, F = PetRT.fxOf(B), Y = V.Y, SX = V.SX;
+      // 밤 축제 무대: 보랏빛 하늘 + 전구 줄 + 커튼 + 나무 무대
+      let g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a1a4a'); g.addColorStop(0.6, '#4a2a6a'); g.addColorStop(1, '#2a1838'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+      for (let i = 0; i < 40; i++) { const R = makeRng(i + 3), x = R.next() * 320, y = R.next() * 60; c.fillStyle = `rgba(255,255,255,${(0.3 + Math.sin(t * 2 + i) * 0.25).toFixed(2)})`; c.fillRect(SX(x), Y(y), Math.max(1, s * 0.7), Math.max(1, s * 0.7)); }
+      for (const [x0, x1] of [[0, 46], [274, 320]]) { g = c.createLinearGradient(SX(x0), 0, SX(x1), 0); g.addColorStop(0, '#8a1a2a'); g.addColorStop(0.5, '#c02a3a'); g.addColorStop(1, '#8a1a2a'); c.fillStyle = g; c.fillRect(SX(x0), 0, (x1 - x0) * s, Y(150)); c.fillStyle = 'rgba(0,0,0,.18)'; for (let x = x0 + 4; x < x1; x += 8) c.fillRect(SX(x), 0, 2 * s, Y(150)); }
+      c.fillStyle = '#c02a3a'; for (let x = 0; x < 330; x += 20) { c.beginPath(); c.arc(SX(x + 10), Y(6), 10 * s, 0, Math.PI); c.fill(); }
+      c.strokeStyle = 'rgba(40,30,20,.9)'; c.lineWidth = Math.max(1, s * 0.5); c.beginPath(); for (let x = 0; x <= 320; x += 4) c.lineTo(SX(x), Y(26 + Math.sin(x / 320 * Math.PI) * 9)); c.stroke();
+      for (let x = 8; x < 320; x += 16) { const y = 26 + Math.sin(x / 320 * Math.PI) * 9, on = (Math.floor(t * 4) + x / 16) % 3 < 2; c.fillStyle = ['#ffd84a', '#ff6a8a', '#6ad0ff', '#7cf08a'][(x / 16 | 0) % 4]; c.globalAlpha = on ? 1 : 0.35; c.beginPath(); c.arc(SX(x), Y(y + 3), 2.2 * s, 0, 7); c.fill(); if (on) { c.globalAlpha = 0.2; c.beginPath(); c.arc(SX(x), Y(y + 3), 5 * s, 0, 7); c.fill(); } c.globalAlpha = 1; }
+      PetRT.crowd(c, V, 50, 168, 224, 1, 0, t, F.ex, 61, 9);
+      g = c.createLinearGradient(0, Y(140), 0, Y(166)); g.addColorStop(0, '#b07a44'); g.addColorStop(1, '#7a4a24'); c.fillStyle = g; c.fillRect(SX(40), Y(140), 240 * s, 24 * s); c.fillStyle = '#5a3418'; c.fillRect(SX(40), Y(164), 240 * s, 4 * s);
+      for (let x = 40; x < 280; x += 24) { c.fillStyle = 'rgba(0,0,0,.15)'; c.fillRect(SX(x), Y(140), Math.max(1, s * 0.6), 24 * s); }
+      c.fillStyle = 'rgba(255,240,180,.08)'; c.beginPath(); c.moveTo(SX(160), 0); c.lineTo(SX(80), Y(160)); c.lineTo(SX(240), Y(160)); c.fill(); // 조명
+      for (const k of ['a', 'b']) { const me = k === B.me, col = me ? ['#bfe0ff', '#4a9aff', '#1a5ac0'] : ['#ffd0d0', '#ff5a5a', '#b01a1a'], /* 나는 파랑, 상대는 빨강 */ bx = this.bx(k), dir = k === 'a' ? -1 : 1, px = bx + dir * 34, air = G[k + 'a'], press = G[k + 'h'] > 0;
+        // 터뜨린 풍선 표시 (무대 앞 깃발)
+        for (let i = 0; i < this.N; i++) { const fx = V.X(bx + (i - 1) * 12), on = i < G[k + 'n']; c.fillStyle = on ? col[1] : 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(fx, Y(150), 3.6 * s, 4.4 * s, 0, 0, 7); c.fill(); if (on) { c.fillStyle = '#fff'; c.font = PetRT.font(4.5 * s, 900); c.textAlign = 'center'; c.fillText('✓', fx, Y(151.6)); } }
+        // 펌프: 통 + 손잡이 (누르면 내려간다)
+        const pumpX = bx + dir * 18, hy = press ? 126 : 118;
+        c.fillStyle = '#c0c8d8'; c.fillRect(V.X(pumpX) - 3 * s, Y(124), 6 * s, 16 * s); c.fillStyle = '#8a92a8'; c.fillRect(V.X(pumpX) - 3 * s, Y(124), 1.5 * s, 16 * s);
+        c.fillStyle = '#4a4a5a'; c.fillRect(V.X(pumpX) - 0.8 * s, Y(hy), 1.6 * s, (124 - hy + 2) * s); c.fillStyle = '#222'; c.fillRect(V.X(pumpX) - 6 * s, Y(hy - 2), 12 * s, 3 * s);
+        // 호스 → 풍선 꼭지
+        const r = 7 + air * 24 + (G[k + 'w'] > 0 ? 0 : Math.sin(t * 12) * air * 0.5), by = 112 - r, wob = air > 0.8 ? Math.sin(t * 40) * (air - 0.8) * 6 : 0;
+        c.strokeStyle = '#2a2a34'; c.lineWidth = 1.6 * s; c.beginPath(); c.moveTo(V.X(pumpX), Y(138)); c.quadraticCurveTo(V.X((pumpX + bx) / 2), Y(146), V.X(bx), Y(138)); c.lineTo(V.X(bx), Y(114)); c.stroke();
+        c.fillStyle = '#6a6a7a'; c.fillRect(V.X(bx) - 4 * s, Y(132), 8 * s, 8 * s);
+        if (G[k + 'w'] <= 0) {
+          c.save(); c.translate(V.X(bx) + wob * s, Y(by)); const sq = 1 + Math.sin(t * 20) * 0.02 * air;
+          g = c.createRadialGradient(-r * 0.35 * s, -r * 0.4 * s, r * 0.1 * s, 0, 0, r * s); g.addColorStop(0, col[0]); g.addColorStop(0.55, col[1]); g.addColorStop(1, col[2]); c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, r * s * sq, r * 1.12 * s / sq, 0, 0, 7); c.fill();
+          c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(-r * 0.38 * s, -r * 0.45 * s, r * 0.18 * s, r * 0.3 * s, -0.5, 0, 7); c.fill();
+          c.fillStyle = col[2]; c.beginPath(); c.moveTo(-2 * s, r * 1.1 * s); c.lineTo(2 * s, r * 1.1 * s); c.lineTo(0, r * 1.1 * s + 3 * s); c.fill();
+          if (air > 0.85) { c.strokeStyle = `rgba(255,255,255,${(0.4 + Math.sin(t * 30) * 0.3).toFixed(2)})`; c.lineWidth = Math.max(1, s * 0.6); c.beginPath(); c.ellipse(0, 0, r * s * 1.15, r * 1.25 * s, 0, 0, 7); c.stroke(); }
+          c.restore();
+          // 풍선 크기 눈금 (내 쪽만 자세히)
+          if (me) PetRT.tag(c, `${Math.round(air * 100)}%`, V.X(bx), Y(by) + 3 * s, air > 0.85 ? '#ffe066' : '#fff', 7 * s);
+        }
+        // 펫: 펌프 옆에서 깡충 (누를 때 아래로)
+        const P = B.S[k], py = 140 + (press ? 1.5 : 0); PetRT.shadow(c, V, px, 140, 9, 0.3);
+        PetRT.pet(c, V, P, px, py - (press ? 0 : 3 + Math.abs(Math.sin(t * 6)) * 1), -dir, press, t * (press ? 2 : 0.5), 1, null, press ? V.F(-dir) * 0.12 : 0);
+        PetRT.nameTag(c, V, me ? '나' : B.foeName, V.X(px), PetRT.topY(V, P, py), me); }
+      PetRT.fxDraw(c, V, B);
+    },
+  },
+
+  /* ================= 💣 폭탄 돌리기 ================= */
+  bomb: {
+    T: 60, sm: ['ax', 'ay', 'bx', 'by'], upWhy: '시간 끝! 덜 터진 쪽이 이겼어요.', R: 30,
+    init() { const h = Math.random() < 0.5 ? 'a' : 'b'; return { ax: 100, ay: 116, bx: 220, by: 116, af: 1, bf: -1, am: 0, bm: 0, al: 2, bl: 2, ac: 0, bc: 0, h, fu: 8 + Math.random() * 4, fm: 12, fly: 0, fx: 0, fy: 0, lk: 0, boom: 0, bk: '', rd: 1 }; },
+    step(G, dt, P) {
+      if (G.boom > 0) { G.boom -= dt; if (G.boom <= 0) { // 다음 판: 안 터진 쪽이 폭탄을 들고 시작
+          G.rd++; G.ax = 100; G.ay = 116; G.bx = 220; G.by = 116; G.h = G.bk === 'a' ? 'b' : 'a'; G.fm = 7 + Math.random() * 5; G.fu = G.fm; G.lk = 0.6; G.fly = 0; G.snd++; G.sk = 'blip'; } return null; }
+      G.lk = Math.max(0, G.lk - dt); G.fly = Math.max(0, G.fly - dt * 5);
+      for (const k of ['a', 'b']) { const s = G['s' + k], p = P[k], o = k === 'a' ? 'b' : 'a', hold = G.h === k;
+        G[k + 'c'] = Math.max(0, G[k + 'c'] - dt);
+        PetParty.walk(G, k, p, dt, 96 * s.spd * (hold ? 1.12 : 1), 22, 298, 64, 166);
+        if (p.act && hold && G[k + 'c'] <= 0 && G.lk <= 0 && G.fly <= 0) { G[k + 'c'] = 0.35;
+          if (Math.hypot(G[o + 'x'] - G[k + 'x'], G[o + 'y'] - G[k + 'y']) < this.R) { G.h = o; G.lk = 0.55; G.fly = 1; G.fx = G[k + 'x']; G.fy = G[k + 'y']; G.snd++; G.sk = 'pop'; }
+          else { G.snd++; G.sk = 'flip'; } }
+      }
+      G.fu -= dt;
+      if (G.fu <= 0) { const k = G.h; G[k + 'l']--; G.bk = k; G.boom = 1.8; G.snd++; G.sk = 'crash'; if (G[k + 'l'] <= 0) return k === 'a' ? 'b' : 'a'; }
+      return null;
+    },
+    timeUp(G) { return G.al > G.bl ? 'a' : G.bl > G.al ? 'b' : G.h === 'a' ? 'b' : 'a'; },
+    ai(G, k, dt, A) {
+      const o = k === 'a' ? 'b' : 'a', x = G[k + 'x'], y = G[k + 'y'], ox = G[o + 'x'], oy = G[o + 'y'], d = Math.hypot(ox - x, oy - y); A.t -= dt;
+      if (G.h === k) { const m = PetParty.toward(x, y, ox, oy, 0.6 + A.sk * 0.4); if (d < this.R - 4 && A.t <= 0 && Math.random() < A.sk + 0.25) { A.an++; A.t = 0.3; } return { x: m.x, y: m.y, an: A.an, jn: 0 }; }
+      // 도망: 상대 반대쪽 + 벽에서 떨어지기 + 가끔 방향 바꾸기
+      A.tt = (A.tt || 0) - dt; if (A.tt <= 0) { A.tt = 0.6 + Math.random() * 0.8; A.j = (Math.random() - 0.5) * 1.6; }
+      let mx = (x - ox) / (d || 1), my = (y - oy) / (d || 1); const c = Math.cos(A.j || 0), sn = Math.sin(A.j || 0); [mx, my] = [mx * c - my * sn, mx * sn + my * c];
+      if (x < 50) mx += 0.9; if (x > 270) mx -= 0.9; if (y < 80) my += 0.9; if (y > 150) my -= 0.9; const n = Math.hypot(mx, my) || 1;
+      return { x: mx / n * (0.5 + A.sk * 0.45), y: my / n * (0.5 + A.sk * 0.45), an: A.an, jn: 0 };
+    },
+    stat(G, k) { const n = Math.max(0, G[k + 'l']); return '♥'.repeat(n) + '♡'.repeat(Math.max(0, 2 - n)) + (G.h === k && !G.boom ? ' 💣' : ''); },
+    watch(G, B, F, dt) {
+      const pv = F.pv;
+      if (pv.h && G.h !== pv.h && !(G.boom > 0) && !(pv.boom > 0) && G.fly > 0.5) { const from = pv.h; PetRT.pop(B, G[from + 'x'], G[from + 'y'] - 32, '넘겨!', '#ffe066', 8.5); PetRT.dust(B, G[from + 'x'], G[from + 'y'], 4, G[from + 'f']); F.ex = Math.max(F.ex, 0.5); }
+      if (G.boom > 0 && !(pv.boom > 0)) { const k = G.bk, x = G[k + 'x'], y = G[k + 'y'] - 20; PetRT.burst(B, x, y, 26, { k: 'dust', col: '#ff9a2a', v: 110, life: 0.7, sz: 4, dr: 3 }); PetRT.burst(B, x, y, 18, { k: 'dust', col: '#5a5450', v: 70, up: 20, life: 1.2, sz: 5, dr: 2 }); PetRT.burst(B, x, y, 12, { k: 'star', col: '#fff2a0', v: 140, life: 0.5, sz: 3 }); PetRT.pop(B, x, y - 20, '펑!!', '#ff6a2a', 14); PetRT.shake(B, 14); F.ex = 1; if (k === B.me) F.fl = 1; }
+      if (!(G.boom > 0) && G.fly <= 0) { const k = G.h; if (Math.random() < dt * 30) PetRT.add(B, { k: 'star', x: G[k + 'x'] + G[k + 'f'] * 4 + 5, y: G[k + 'y'] - this.top(B, k) - 9, vx: (Math.random() - 0.5) * 40, vy: -20 - Math.random() * 30, life: 0.3, sz: 1.4, col: Math.random() < 0.5 ? '#ffe066' : '#ff8a2a', dr: 2 }); }
+      for (const k of ['a', 'b']) if (G[k + 'm'] && Math.random() < dt * 6) PetRT.dust(B, G[k + 'x'] - G[k + 'f'] * 5, G[k + 'y'], 1);
+      pv.h = G.h; pv.boom = G.boom;
+    },
+    top(B, k) { const P = B.S[k]; return PetRT.petH(P.kind) * PetRT.petK(P.kind, B.vk || 2) / (B.vs || 2) + 4; }, // 펫 머리 위 (논리 좌표)
+    draw(c, V, G, B, t, W, H) {
+      const s = V.s, F = PetRT.fxOf(B), Y = V.Y, SX = V.SX; B.vk = V.k; B.vs = s;
+      // 성 안뜰: 돌담 + 횃불 + 돌바닥 체크무늬
+      let g = c.createLinearGradient(0, 0, 0, Y(60)); g.addColorStop(0, '#1e2234'); g.addColorStop(1, '#2e3448'); c.fillStyle = g; c.fillRect(0, 0, W, Y(60));
+      for (let r = 0; r < 4; r++) for (let x = (r % 2) * 10 - 10; x < 330; x += 20) { c.fillStyle = (r + x / 20) % 3 < 1 ? '#4a5068' : '#424860'; c.fillRect(SX(x) + 1, Y(22 + r * 9) + 1, 20 * s - 2, 9 * s - 2); }
+      PetRT.crowd(c, V, 0, 18, 324, 1, 0, t, F.ex, 81, 9);
+      for (const x of [40, 120, 200, 280]) { c.fillStyle = '#5a3a1a'; c.fillRect(SX(x - 1.5), Y(38), 3 * s, 12 * s); const fl = 1 + Math.sin(t * 13 + x) * 0.15; c.fillStyle = 'rgba(255,160,40,.18)'; c.beginPath(); c.arc(SX(x), Y(36), 12 * s, 0, 7); c.fill(); c.fillStyle = '#ff8a1a'; c.beginPath(); c.ellipse(SX(x), Y(35), 3 * s, 5 * s * fl, 0, 0, 7); c.fill(); c.fillStyle = '#ffe066'; c.beginPath(); c.ellipse(SX(x), Y(36), 1.5 * s, 2.6 * s * fl, 0, 0, 7); c.fill(); }
+      c.fillStyle = '#2a2e40'; c.fillRect(0, Y(56), W, 4 * s);
+      for (let r = 0; r < 10; r++) for (let q = 0; q < 17; q++) { c.fillStyle = (r + q) % 2 ? '#8a8a98' : '#9a9aa8'; c.fillRect(SX(q * 20 - 10), Y(60 + r * 12), 20 * s, 12 * s); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(SX(q * 20 - 10), Y(60 + r * 12), 20 * s, Math.max(1, s * 0.5)); }
+      g = c.createRadialGradient(SX(160), Y(116), 10 * s, SX(160), Y(116), 160 * s); g.addColorStop(0, 'rgba(255,200,120,.12)'); g.addColorStop(1, 'rgba(0,0,0,.35)'); c.fillStyle = g; c.fillRect(0, Y(60), W, H - Y(60));
+      // 폭탄 심지 (남은 시간은 대충만): 화면 가운데 위
+      const boom = G.boom > 0, k0 = G.h, u = Math.max(0, Math.min(1, G.fu / 12)), hot = G.fu < 2.5 && !boom;
+      // 펫
+      const L = ['a', 'b'].sort((p, q) => G[p + 'y'] - G[q + 'y']);
+      for (const k of L) { const P = B.S[k], x = G[k + 'x'], y = G[k + 'y'], hit = boom && G.bk === k, hold = G.h === k && !boom;
+        PetRT.shadow(c, V, x, y, 9, 0.3);
+        if (hold && k === B.me && G.ph === 'play') { c.strokeStyle = `rgba(255,120,60,${(0.35 + Math.sin(t * 8) * 0.2).toFixed(2)})`; c.lineWidth = Math.max(1, s * 0.8); c.setLineDash([3 * s, 3 * s]); c.beginPath(); c.ellipse(V.X(x), Y(y), this.R * s, this.R * 0.42 * s, 0, 0, 7); c.stroke(); c.setLineDash([]); } // 넘길 수 있는 거리
+        PetRT.pet(c, V, P, x, y, G[k + 'f'], !!G[k + 'm'], t, 1, null, hit ? Math.sin(t * 20) * 0.2 : 0);
+        if (hit) { c.fillStyle = 'rgba(30,24,20,.45)'; c.beginPath(); c.ellipse(V.X(x), Y(y - 8), 10 * s, 9 * s, 0, 0, 7); c.fill(); PetParty.dizzy(c, V, V.X(x), PetRT.topY(V, P, y) + 4 * s, t); }
+        PetRT.nameTag(c, V, k === B.me ? '나' : B.foeName, V.X(x), PetRT.topY(V, P, y) - (hold ? 16 * s : 0), k === B.me); }
+      // 폭탄: 든 펫 머리 위, 넘기는 중이면 포물선
+      if (!boom) { const P = B.S[k0]; let bx = V.X(G[k0 + 'x']), by = PetRT.topY(V, P, G[k0 + 'y']) - 4 * s + Math.sin(t * 6) * s;
+        if (G.fly > 0) { const v = 1 - G.fly, fx = V.X(G.fx), fy = Y(G.fy) - 30 * s; bx = fx + (bx - fx) * v; by = fy + (by - fy) * v - Math.sin(v * Math.PI) * 26 * s; }
+        const r = 7 * s * (hot ? 1 + Math.max(0, Math.sin(t * 20)) * 0.12 : 1);
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(bx + s, by + 1.5 * s, r, 0, 7); c.fill();
+        g = c.createRadialGradient(bx - r * 0.35, by - r * 0.35, r * 0.1, bx, by, r); g.addColorStop(0, hot && Math.floor(t * 10) % 2 ? '#ff6a4a' : '#5a5a6a'); g.addColorStop(1, '#14141c'); c.fillStyle = g; c.beginPath(); c.arc(bx, by, r, 0, 7); c.fill();
+        c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.ellipse(bx - r * 0.35, by - r * 0.4, r * 0.22, r * 0.14, -0.6, 0, 7); c.fill();
+        c.fillStyle = '#3a3a48'; c.fillRect(bx + r * 0.3, by - r * 1.05, 4 * s, 3 * s);
+        const fl = 3 + u * 9; c.strokeStyle = '#c8a060'; c.lineWidth = Math.max(1, s * 0.9); c.beginPath(); c.moveTo(bx + r * 0.5 + 2 * s, by - r * 1.05); c.quadraticCurveTo(bx + r * 0.5 + 6 * s, by - r * 1.05 - fl * 0.6 * s, bx + r * 0.5 + 3 * s + fl * 0.4 * s, by - r * 1.05 - fl * s); c.stroke();
+        const sx2 = bx + r * 0.5 + 3 * s + fl * 0.4 * s, sy2 = by - r * 1.05 - fl * s; c.fillStyle = 'rgba(255,200,80,.4)'; c.beginPath(); c.arc(sx2, sy2, 4 * s, 0, 7); c.fill(); c.fillStyle = '#fff6a0'; PetRT.star(c, sx2, sy2, 2.6 * s, t * 20); }
+      else { const k = G.bk, P = B.S[k], X = V.X(G[k + 'x']), Yb = PetRT.topY(V, P, G[k + 'y']) + 8 * s, e = 1 - G.boom / 1.8; if (e < 0.4) { const rr = (10 + e * 90) * s; g = c.createRadialGradient(X, Yb, 0, X, Yb, rr); g.addColorStop(0, `rgba(255,250,200,${(1 - e * 2.2).toFixed(2)})`); g.addColorStop(0.5, `rgba(255,150,40,${(0.9 - e * 2).toFixed(2)})`); g.addColorStop(1, 'rgba(255,80,20,0)'); c.fillStyle = g; c.beginPath(); c.arc(X, Yb, rr, 0, 7); c.fill(); } }
+      if (boom && G.boom < 1.2) PetRT.tag(c, `${G.rd + 1}번째 폭탄!`, SX(160), Y(100), '#ffe066', 12 * s);
+      PetRT.fxDraw(c, V, B);
+    },
+  },
+
+  /* ================= 🧠 순서 외우기 ================= */
+  memory: {
+    T: 100, sm: [], upWhy: '시간 끝! 점수가 더 높은 쪽이 이겼어요.', RD: 5, ON: 0.5, GAP: 0.18, DIRS: 'urdl',
+    init() { return { rd: 0, sp: 'res', st: 0, seq: '', as: 0, bs: 0, ap: 0, bp: 0, ad: 0, bd: 0, aT: 0, bT: 0, fb: '', ak: '', bk: '', an: 0, bn: 0 }; },
+    lim(G) { return 2.5 + G.seq.length * 0.85; },
+    showT(G) { return 0.7 + G.seq.length * (this.ON + this.GAP); },
+    next(G) { G.rd++; const n = 2 + G.rd; let q = ''; for (let i = 0; i < n; i++) { let d; do d = this.DIRS[Math.random() * 4 | 0]; while (i > 1 && d === q[i - 1] && d === q[i - 2]); q += d; } G.seq = q; G.sp = 'show'; G.st = 0; G.ap = G.bp = 0; G.ad = G.bd = 0; G.aT = G.bT = 0; G.fb = ''; G.snd++; G.sk = 'blip'; },
+    step(G, dt, P) {
+      G.st += dt;
+      if (G.sp === 'res') { if (G.rd === 0 ? G.st > 0.3 : G.st > 1.6) { if (G.rd >= this.RD) return G.as > G.bs ? 'a' : G.bs > G.as ? 'b' : G.aT <= G.bT ? 'a' : 'b'; this.next(G); } return null; }
+      if (G.sp === 'show') { if (G.st >= this.showT(G)) { G.sp = 'input'; G.st = 0; G.snd++; G.sk = 'ding'; } return null; }
+      for (const k of ['a', 'b']) { for (const d of P[k].dirs) { G[k + 'k'] = d; G[k + 'n']++; if (G[k + 'd']) continue;
+          if (d === G.seq[G[k + 'p']]) { G[k + 'p']++; if (G[k + 'p'] >= G.seq.length) { G[k + 'd'] = 1; G[k + 'T'] = Math.round(G.st * 10) / 10; G[k + 's'] += 1; if (!G.fb) { G.fb = k; G[k + 's'] += 1; } G.snd++; G.sk = 'chime'; } }
+          else { G[k + 'd'] = -1; G.snd++; G.sk = 'deny'; } } }
+      if ((G.ad && G.bd) || G.st >= this.lim(G)) { for (const k of ['a', 'b']) if (!G[k + 'd']) G[k + 'd'] = -1; G.sp = 'res'; G.st = 0; }
+      return null;
+    },
+    timeUp(G) { return G.as > G.bs ? 'a' : G.bs > G.as ? 'b' : null; },
+    ai(G, k, dt, A) {
+      A.ds = A.ds || 0; A.dl = A.dl || '';
+      if (G.sp !== 'input' || G[k + 'd']) { A.wait = 0.5 + Math.random() * 0.4; return { x: 0, y: 0, an: 0, jn: 0, ds: A.ds, dl: A.dl }; }
+      A.wait -= dt; if (A.wait <= 0) { A.wait = (0.32 + Math.random() * 0.3) / (0.55 + A.sk * 0.5); const want = G.seq[G[k + 'p']], miss = Math.random() < (1 - A.sk) * 0.05 * G.seq.length; const d = miss ? this.DIRS[(this.DIRS.indexOf(want) + 1 + (Math.random() * 3 | 0)) % 4] : want; A.ds++; A.dl = (A.dl + d).slice(-8); }
+      return { x: 0, y: 0, an: 0, jn: 0, ds: A.ds, dl: A.dl };
+    },
+    stat(G, k) { return `⭐ ${G[k + 's']}점`; },
+    pad() { return `<div class="pbPad m-memory"><div class="pbDirs"><button data-d="u" class="du">▲</button><button data-d="l" class="dl">◀</button><button data-d="r" class="dr">▶</button><button data-d="d" class="dd">▼</button></div></div>`; },
+    lit(G) { if (G.sp !== 'show') return -1; const u = G.st - 0.7; if (u < 0) return -1; const i = Math.floor(u / (this.ON + this.GAP)); return i < G.seq.length && u - i * (this.ON + this.GAP) < this.ON ? i : -1; },
+    watch(G, B, F, dt) {
+      const pv = F.pv, li = this.lit(G), PIT = { u: 1.5, r: 1.25, d: 0.8, l: 1 };
+      if (li >= 0 && (pv.li !== li || pv.lrd !== G.rd)) Sound.play('blip', PIT[G.seq[li]]); pv.li = li; pv.lrd = G.rd;
+      for (const k of ['a', 'b']) { const x = k === 'a' ? 46 : 274;
+        if (G[k + 'd'] && G[k + 'd'] !== pv[k + 'd'] && pv[k + 'drd'] === G.rd) { if (G[k + 'd'] > 0) { PetRT.pop(B, x, 104, G.fb === k ? '+2 먼저!' : '+1', '#7cf08a', 9); PetRT.burst(B, x, 120, 10, { k: 'star', col: '#ffe066', v: 70, life: 0.5, sz: 2.4 }); F.ex = Math.max(F.ex, 0.6); } else { PetRT.pop(B, x, 104, '틀렸다!', '#ff6a5a', 9); if (k === B.me) { F.fl = 0.5; PetRT.shake(B, 4); } } }
+        if (G[k + 'n'] !== pv[k + 'n'] && k === B.me) F.kT = 0.18; pv[k + 'n'] = G[k + 'n']; pv[k + 'd'] = G[k + 'd']; pv[k + 'drd'] = G.rd; }
+      F.kT = Math.max(0, (F.kT || 0) - dt);
+    },
+    draw(c, V, G, B, t, W, H) {
+      const s = V.s, F = PetRT.fxOf(B), Y = V.Y, SX = V.SX, me = B.me;
+      // 퀴즈쇼 무대: 짙은 남색 + 회전 조명 + 반짝이 바닥
+      let g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0e1430'); g.addColorStop(1, '#1e1040'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+      for (let i = 0; i < 6; i++) { const a = Math.sin(t * 0.7 + i * 1.1) * 0.5, x = 20 + i * 56; c.save(); c.translate(SX(x), Y(0)); c.rotate(a); g = c.createLinearGradient(0, 0, 0, 180 * s); g.addColorStop(0, ['rgba(120,160,255,.22)', 'rgba(255,120,200,.2)', 'rgba(255,220,120,.18)'][i % 3]); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(-3 * s, 0); c.lineTo(3 * s, 0); c.lineTo(26 * s, 180 * s); c.lineTo(-26 * s, 180 * s); c.fill(); c.restore(); }
+      PetRT.crowd(c, V, 0, 172, 324, 1, 0, t, F.ex, 51, 9);
+      g = c.createLinearGradient(0, Y(140), 0, Y(170)); g.addColorStop(0, '#3a2a6a'); g.addColorStop(1, '#1a1238'); c.fillStyle = g; c.fillRect(0, Y(140), W, 30 * s);
+      for (let x = 0; x < 330; x += 10) { c.fillStyle = `rgba(255,255,255,${(0.08 + Math.max(0, Math.sin(t * 3 + x)) * 0.12).toFixed(2)})`; c.fillRect(SX(x), Y(146 + (x / 10 % 3) * 7), Math.max(1, s), Math.max(1, s)); }
+      // 가운데 화살표 판 4개 (다이아몬드). 좌우는 뒤집지 않는다 (누르는 방향 그대로)
+      const C = { u: ['#2ec060', '#7cff9a', 160, 70], r: ['#e0483a', '#ff9a8a', 194, 100], d: ['#2f7fe0', '#8ac4ff', 160, 130], l: ['#e0a020', '#ffe07a', 126, 100] }, AR = { u: -Math.PI / 2, r: 0, d: Math.PI / 2, l: Math.PI };
+      const li = this.lit(G), litD = li >= 0 ? G.seq[li] : null, myk = G[me + 'k'], myOn = F.kT > 0 && G.sp === 'input' ? myk : null;
+      c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(SX(160), Y(100), 46 * s, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.15)'; c.lineWidth = Math.max(1, s); c.stroke();
+      for (const d of 'urdl') { const [c0, c1, x, y] = C[d], on = d === litD || d === myOn, sz = 14 * s * (on ? 1.12 : 1); c.save(); c.translate(SX(x), Y(y));
+        if (on) { c.fillStyle = c1; c.globalAlpha = 0.35; c.beginPath(); c.arc(0, 0, sz * 1.6, 0, 7); c.fill(); c.globalAlpha = 1; }
+        c.fillStyle = 'rgba(0,0,0,.4)'; PetRT.rr(c, -sz + s, -sz + 2 * s, sz * 2, sz * 2, 5 * s); c.fill();
+        g = c.createLinearGradient(0, -sz, 0, sz); g.addColorStop(0, on ? '#fff' : c1); g.addColorStop(0.35, on ? c1 : c0); g.addColorStop(1, c0); c.fillStyle = g; c.globalAlpha = on || G.sp !== 'show' ? 1 : 0.55; PetRT.rr(c, -sz, -sz, sz * 2, sz * 2, 5 * s); c.fill(); c.globalAlpha = 1;
+        c.rotate(AR[d]); c.fillStyle = on ? '#fff' : 'rgba(255,255,255,.85)'; c.beginPath(); c.moveTo(8 * s, 0); c.lineTo(-4 * s, -7 * s); c.lineTo(-4 * s, 7 * s); c.closePath(); c.fill(); c.restore(); }
+      // 가운데 안내
+      const msg = G.rd === 0 ? '' : G.sp === 'show' ? `${G.rd}/${this.RD}판 · 잘 봐요! (${G.seq.length}개)` : G.sp === 'input' ? `따라 눌러요! ${Math.max(0, Math.ceil(this.lim(G) - G.st))}초` : G.rd >= this.RD ? '끝!' : '다음 판…';
+      if (msg) PetRT.tag(c, msg, SX(160), Y(53), G.sp === 'input' ? '#ffe066' : '#fff', 8 * s);
+      // 양쪽 선수: 펫 + 진행 점
+      for (const k of ['a', 'b']) { const P = B.S[k], x = k === 'a' ? 46 : 274, y = 140, mine = k === me, dn = G[k + 'd'];
+        PetRT.shadow(c, V, x, y, 10, 0.35); c.fillStyle = mine ? 'rgba(47,127,224,.35)' : 'rgba(224,72,58,.35)'; c.beginPath(); c.ellipse(V.X(x), Y(y), 18 * s, 6 * s, 0, 0, 7); c.fill();
+        const jump = dn > 0 ? Math.abs(Math.sin(t * 8)) * 4 : 0; PetRT.pet(c, V, P, x, y - jump, k === 'a' ? 1 : -1, G.sp === 'input' && !dn, t, 1, null, dn < 0 ? Math.sin(t * 3) * 0.1 : 0);
+        const ty = PetRT.topY(V, P, y - jump); PetRT.nameTag(c, V, mine ? '나' : B.foeName, V.X(x), ty, mine);
+        const n = G.seq.length; if (n && G.sp !== 'show') { const w = 6 * s, X0 = V.X(x) - (n - 1) * w / 2; for (let i = 0; i < n; i++) { const ok = i < G[k + 'p'], bad = dn < 0 && i === G[k + 'p']; c.fillStyle = ok ? '#7cf08a' : bad ? '#ff5a4a' : 'rgba(255,255,255,.25)'; c.beginPath(); c.arc(X0 + i * w, Y(y + 10), 2.2 * s, 0, 7); c.fill(); } }
+        if (dn && G.sp !== 'show') PetRT.tag(c, dn > 0 ? (G.fb === k ? '⭐ 1등!' : '⭕ 정답') : '❌', V.X(x), Y(y + 22), dn > 0 ? '#7cf08a' : '#ff8a7a', 7.5 * s);
+        if (G.sp === 'res' && G.rd > 0 && !mine && G.seq) PetRT.tag(c, '', 0, 0); }
+      // 판이 끝나면 정답 순서 보여 주기
+      if (G.sp === 'res' && G.rd > 0) { const n = G.seq.length, w = 12 * s, X0 = SX(160) - (n - 1) * w / 2, CH = { u: '▲', r: '▶', d: '▼', l: '◀' }; c.fillStyle = 'rgba(0,0,0,.55)'; PetRT.rr(c, X0 - 9 * s, Y(150), n * w + 6 * s, 13 * s, 4 * s); c.fill(); for (let i = 0; i < n; i++) PetRT.tag(c, CH[G.seq[i]], X0 + i * w, Y(160), C[G.seq[i]][1], 8 * s); }
+      PetRT.fxDraw(c, V, B);
+    },
+  },
+});
+
+/* ===================== 게임 고르기 (v156, 사용자 2026-10-16 '각 게임마다 펫을 다르게 하는 게 의미가 있게 … 두 명이 각 두 게임씩 고르게 해서 4개에서 랜덤으로 하나, 오버워치 맵 선택처럼 돌아가다가 하나') =====================
+ * 배틀이 열리면 8종 카드에서 둘이 각자 2개씩 고른다 (같은 걸 둘 다 고르면 그만큼 잘 걸린다). 카드마다 그 게임에서 중요한 능력치와 내 펫·상대 펫 적성 ★.
+ * 네 장이 모이면 하이라이트가 돌다가 천천히 멈춰 한 장이 뽑힌다. 친구전: 각자 {k:'vt', v:[m,m]} → 호스트(a)가 시드로 뽑아 {k:'vs', l:[4], i} → 둘 다 같은 룰렛. */
+const PB_APT = { // 그 게임에서 중요한 능력치 (b = [체력, 공격, 방어, 스피드])
+  sumo: ['무게·힘', b => (b[0] + b[2]) * 0.3 + b[1] * 0.4], race: ['빠르기', b => b[3]], tug: ['힘·무게', b => b[1] * 0.6 + (b[0] + b[2]) * 0.2], dodge: ['빠르기·힘', b => b[3] * 0.6 + b[1] * 0.4],
+  coins: ['빠르기·무게', b => b[3] * 0.7 + (b[0] + b[2]) * 0.15], balloon: ['힘', b => b[1]], bomb: ['빠르기', b => b[3]], memory: ['펫 상관없이 머리로!', null],
+};
+const PB_ART = { sumo: ['#d8a060', '#5a3418'], race: ['#6ac0ff', '#2a6a30'], tug: ['#8ad06a', '#2a5a2a'], dodge: ['#e0a868', '#3e4a68'], coins: ['#ffd84a', '#2a7ac0'], balloon: ['#d06ae0', '#2a1a4a'], bomb: ['#ff8a2a', '#1e2234'], memory: ['#6a8aff', '#1e1040'] };
+const PetVote = {
+  aptRange: null,
+  apt(m, kind) { const A = PB_APT[m]; if (!A || !A[1]) return 3; if (!this.aptRange) this.aptRange = {};
+    let R = this.aptRange[m]; if (!R) { const v = Object.values(PB_DEX).map(d => A[1](d.b)); R = this.aptRange[m] = [Math.min(...v), Math.max(...v)]; }
+    const b = (PB_DEX[kind] || PB_DEX.dog).b; return Math.max(1, Math.min(5, 1 + Math.round(4 * (A[1](b) - R[0]) / ((R[1] - R[0]) || 1)))); },
+  stars(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); },
+  on() { const B = PetBattle.B; return !!(PetBattle.open_ && B && B.voting && B.vote); },
+  name(m) { return PB_MODE_KO[m].replace(/^\S+\s/, ''); },
+  icon(m) { return PB_MODE_KO[m].split(' ')[0]; },
+  clean(v) { const L = (Array.isArray(v) ? v : []).filter(m => PB_MODES.includes(m)).slice(0, 2); while (L.length < 2) L.push(PB_MODES[Math.random() * PB_MODES.length | 0]); return L; },
+  aiVote(P) { return PB_MODES.map(m => [m, this.apt(m, P.kind) + Math.random() * 2.2]).sort((x, y) => y[1] - x[1]).slice(0, 2).map(x => x[0]); },
+  open(B, done) {
+    B.voting = true; B.vote = { sel: [], mine: null, foe: null, ph: 'pick', t0: Date.now(), done };
+    if (B.mode === 'npc') B.vote.foe = this.aiVote(B.S[B.me === 'a' ? 'b' : 'a']);
+    $('pbWin').classList.add('in'); this.render();
+  },
+  owner(B, i) { const k = i < 2 ? 'a' : 'b'; return k === B.me ? '나' : String(B.foeName || '상대'); },
+  render() {
+    const B = PetBattle.B, V = B && B.vote; if (!V) return; const el = $('pbWin'), me = B.S[B.me], foe = B.S[B.me === 'a' ? 'b' : 'a'];
+    if (V.ph === 'pick' || V.ph === 'wait') {
+      const left = Math.max(0, Math.ceil((V.t0 + 15000 - Date.now()) / 1000));
+      el.innerHTML = `<div class="pvBox"><div class="pvHead"><b>🎮 게임 고르기</b><span>${V.ph === 'wait' ? `${esc(B.foeName)}님이 고르는 중…` : '두 개를 골라요. 상대도 두 개를 골라서 넷 중 하나가 뽑혀요!'}</span>${V.ph === 'pick' ? `<i id="pvTime">${left}</i>` : ''}</div>
+        <div class="pvPets"><span class="me">🐾 ${esc(me.name)} <small>Lv.${me.lv}</small></span><span class="foe">${esc(B.foeName)}의 ${esc(foe.name)} <small>Lv.${foe.lv}</small></span></div>
+        <div class="pvGrid">${PB_MODES.map((m, i) => { const n = V.sel.indexOf(m), a = this.apt(m, me.kind), f = this.apt(m, foe.kind), A = PB_ART[m];
+          return `<button class="pvCard${n >= 0 ? ' on' : ''}" data-m="${m}" style="--c1:${A[0]};--c2:${A[1]}" ${V.ph === 'wait' ? 'disabled' : ''}><kbd>${i + 1}</kbd>${n >= 0 ? `<u>${n + 1}</u>` : ''}<em>${this.icon(m)}</em><b>${this.name(m)}</b><small>${PB_APT[m][0]}</small><span class="pvApt"><i class="me" title="내 펫">${this.stars(a)}</i><i class="foe" title="상대 펫">${this.stars(f)}</i></span></button>`; }).join('')}</div>
+        <div class="pvFoot"><button class="btn gold" id="pvOk" ${V.ph === 'wait' || V.sel.length < 2 ? 'disabled' : ''}>${V.ph === 'wait' ? '기다리는 중…' : `✅ 이걸로! (${V.sel.length}/2)`}</button><button class="btn" id="pvQuit">그만두기</button><span class="pvKey">★ 위: 내 펫 · 아래: 상대 펫 적성</span></div></div>`;
+      el.querySelectorAll('.pvCard').forEach(b => (b.onclick = () => this.toggle(b.dataset.m)));
+      $('pvOk').onclick = () => this.confirm(); $('pvQuit').onclick = () => PetBattle.quit(true); return;
+    }
+    // 룰렛
+    el.innerHTML = `<div class="pvBox roll"><div class="pvHead"><b>🎲 뭐가 걸릴까…</b><span>네 장 중에서 하나!</span></div><div class="pvRow">${V.list.map((m, i) => { const A = PB_ART[m];
+      return `<div class="pvCard big" id="pvR${i}" style="--c1:${A[0]};--c2:${A[1]}"><s class="${(i < 2 ? 'a' : 'b') === B.me ? 'me' : 'foe'}">${esc(this.owner(B, i))}의 선택</s><em>${this.icon(m)}</em><b>${this.name(m)}</b><small>${PB_APT[m][0]}</small><span class="pvApt"><i class="me">${this.stars(this.apt(m, me.kind))}</i></span></div>`; }).join('')}</div><div class="pvMsg" id="pvMsg">&nbsp;</div></div>`;
+  },
+  toggle(m) { const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'pick' || !PB_MODES.includes(m)) return; const i = V.sel.indexOf(m); if (i >= 0) V.sel.splice(i, 1); else { if (V.sel.length >= 2) V.sel.shift(); V.sel.push(m); } Sound.play('click'); this.render(); },
+  confirm(auto) {
+    const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'pick') return; if (V.sel.length < 2 && !auto) return;
+    const me = B.S[B.me]; while (V.sel.length < 2) { const best = PB_MODES.filter(m => !V.sel.includes(m)).sort((x, y) => this.apt(y, me.kind) - this.apt(x, me.kind))[0]; V.sel.push(best); }
+    V.mine = V.sel.slice(); V.ph = 'wait'; V.tw = Date.now(); Sound.play('ding'); if (B.mode === 'net') Net.send({ t: 'pb', k: 'vt', to: B.foe, v: V.mine });
+    this.render(); this.check();
+  },
+  check() {
+    const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'wait' || !V.mine || !V.foe || !(B.mode === 'npc' || B.me === 'a')) return;
+    const list = B.me === 'a' ? V.mine.concat(V.foe) : V.foe.concat(V.mine), i = B.mode === 'npc' ? Math.random() * 4 | 0 : (makeRng(((B.seed >>> 0) ^ 0x5bd1e995) >>> 0).next() * 4) | 0;
+    if (B.mode === 'net') Net.send({ t: 'pb', k: 'vs', to: B.foe, l: list, i }); this.roll(list, i);
+  },
+  onNet(B, m) {
+    const V = B.vote; if (!V || !B.voting) return;
+    if (m.k === 'vt') { V.foe = this.clean(m.v); this.check(); return; }
+    if (m.k === 'vs' && B.me === 'b' && V.ph !== 'roll' && V.ph !== 'land') { const l = (Array.isArray(m.l) ? m.l : []).filter(x => PB_MODES.includes(x)); if (l.length !== 4) return; this.roll(l, Math.max(0, Math.min(3, m.i | 0))); }
+  },
+  // 하이라이트가 빙글빙글 돌다가 점점 느려져서 i에서 멈춘다 (양쪽이 같은 순서)
+  roll(list, idx) {
+    const B = PetBattle.B, V = B.vote; V.ph = 'roll'; V.list = list; V.idx = idx; this.render();
+    const N = 4 * 4 + idx, delays = []; for (let s = 0; s <= N; s++) { const u = s / N; delays.push(55 + Math.pow(u, 2.6) * 460); }
+    let s = 0; const hop = () => { if (PetBattle.B !== B || !B.voting) return; const cur = s % 4; for (let j = 0; j < 4; j++) { const e = $('pvR' + j); if (e) e.classList.toggle('hot', j === cur); }
+      Sound.play('tick'); if (s >= N) return this.land(B); setTimeout(hop, delays[s++]); };
+    setTimeout(hop, 400);
+  },
+  land(B) {
+    const V = B.vote, m = V.list[V.idx]; V.ph = 'land'; for (let j = 0; j < 4; j++) { const e = $('pvR' + j); if (e) { e.classList.remove('hot'); e.classList.toggle('win', j === V.idx); e.classList.toggle('lose', j !== V.idx); } }
+    Sound.play('chime'); const msg = $('pvMsg'); if (msg) msg.innerHTML = `이번 대결은 <b>${PB_MODE_KO[m]}</b>! <small>(${esc(this.owner(B, V.idx))}의 선택)</small>`;
+    setTimeout(() => { if (PetBattle.B !== B || !B.voting) return; B.voting = false; const done = V.done; B.vote = null; done(m); }, 1700);
+  },
+  tick(B) {
+    const V = B.vote; if (!V) return; const now = Date.now();
+    if (V.ph === 'pick') { const left = Math.max(0, Math.ceil((V.t0 + 15000 - now) / 1000)), el = $('pvTime'); if (el && el.textContent !== String(left)) el.textContent = left; if (!left) this.confirm(true); return; }
+    if (V.ph === 'wait' && B.mode === 'net') { if (B.me === 'a' && !V.foe && now - V.tw > 20000) { V.foe = this.clean([]); this.check(); } else if (B.me === 'b' && now - V.tw > 30000) PetBattle.end(B.me, '상대가 대답이 없어요.'); }
   },
 };
 

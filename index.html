@@ -7835,8 +7835,8 @@ const Shop = {
   // 차 색: 내 차(기본 은색) / 친구 차(기본 금색). 스킨이 있으면 그 색 (줄무늬 포함)
   carOf(id, fallback, pal) { const it = id && SHOP_BY_ID[id]; if (it && it.ride) return { ride: it.ride, rider: pal ? Profile.pal(pal) : null, tag: pal && it.ride === 'piggy' ? String(pal.rideName || '').slice(0, 10) : '' }; return it && it.col ? { col: it.col, stripe: it.stripe } : { col: fallback }; },
   myCar(riding) { return this.carOf(Profile.get().car, '#c8ccd2', riding ? Profile.get() : null); },
-  open(tab) {
-    if (this.open_) return; this.open_ = true; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
+  open(tab, look) { // look: 가게 밖에서 구경만 (사는 건 편집숍 안에서만, 사용자 2026-10-16)
+    if (this.open_) return; this.open_ = true; this.look = !!look; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
     $('shop').classList.add('in'); this.render();
   },
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
@@ -7846,10 +7846,10 @@ const Shop = {
     const nt = k => SHOP_ITEMS[k].some(it => this.isNew(it)) ? '<i class="shNew">NEW</i>' : '';
     const card = it => {
       const own = this.has(it.id), on = isP ? petOn(it) : wearing === it.id;
-      const btn = on ? `<button class="btn" data-off="${isP ? it.pet : 1}">${isC ? '벗기' : isP ? '집에 두기' : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? (p.pet && p.pet2 ? '바꿔 데려가기' : '데리고 다니기') : isF ? '켜기' : '타기'}</button>` : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
+      const btn = on ? `<button class="btn" data-off="${isP ? it.pet : 1}">${isC ? '벗기' : isP ? '집에 두기' : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? (p.pet && p.pet2 ? '바꿔 데려가기' : '데리고 다니기') : isF ? '켜기' : '타기'}</button>` : this.look ? '<button class="btn" disabled>숍에서 사요</button>' : `<button class="btn ${State.cash >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${State.cash >= it.price ? '' : 'disabled'}>사기</button>`;
       return `<div class="shItem${on ? ' on' : own ? ' own' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? '보유' : fmtWon(it.price)}</span>${btn}</div>`;
     };
-    $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>
+    $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍 <small>내 돈 ${fmtWon(State.cash)}</small></div>${this.look ? '<div class="shNote" style="margin:4px 0 0;text-align:center;font-weight:700;color:#b8282a">구경만 할 수 있어요. 사는 건 건대 편집숍에 직접 가야 해요.</div>' : ''}
       <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">✨ 이펙트${nt('fx')}</button></div>
       ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">그림을 누르면 움직이는 미리보기를 볼 수 있어요. ${isF ? '이펙트는 걸어 다닐 때 내 몸 주변에 보이고, 친구 화면에도 보여요. 산 이펙트는 이 기기에서 계속 가져요.' : isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
@@ -7902,6 +7902,7 @@ const Shop = {
     x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); drawCarSprite(x, 0, 0, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0); x.restore();
   },
   buy(it) {
+    if (this.look) { Toast.show('사는 건 건대 편집숍에 직접 가야 해요'); return; }
     if (this.has(it.id)) return this.wear(it);
     if (State.cash < it.price) { Sound.play('deny'); Toast.show(`돈이 모자라요. ${fmtWon(it.price - State.cash)} 더 필요해요.`); return; }
     State.cash -= it.price; HUD.setCash(State.cash); if (Live.on) Live.save();
@@ -7945,10 +7946,10 @@ const ShopPromo = {
   async talk(w) {
     if (Game.busy) return; Game.busy = true; const name = this.name(), N = Shop.newItems(), what = N.length ? N.map(it => it.name).join(', ') : '새 물건';
     const pick = await Dialog.say([{ name: `${name} (편집숍 사장님)`, sprite: 'clerk', text: `어서 와요! 건대 편집숍 사장 ${name}이에요. 이번에 ${what} 새로 들어왔고, 펫 그림도 싹 바뀌었어요. 나랑 같이 가볼래요?` }], [
-      { label: '따라가기', value: 'go' }, { label: '여기서 바로 보기', value: 'open' }, { label: '다음에요', value: 'no' }]);
+      { label: '따라가기', value: 'go' }, { label: '구경만 할게요', value: 'open' }, { label: '다음에요', value: 'no' }]);
     Game.busy = false;
-    if (pick === 'go') { const path = this.route(w, w.promo.shop); if (path) { w.promo.path = path; w.promo.lt = 0; w.bubble = { text: '좋아요! 따라와요~', t: 2 }; if (typeof State !== 'undefined') State.targetPlace = w.promo.shop.id; } else { w.bubble = { text: '길이 막혔네… 그냥 여기서 보여줄게요!', t: 2 }; Shop.open('clothes'); } }
-    else if (pick === 'open') { const it = N[0]; Shop.open(it ? it.tab : 'clothes'); }
+    if (pick === 'go') { const path = this.route(w, w.promo.shop); if (path) { w.promo.path = path; w.promo.lt = 0; w.bubble = { text: '좋아요! 따라와요~', t: 2 }; if (typeof State !== 'undefined') State.targetPlace = w.promo.shop.id; } else { w.bubble = { text: '길이 막혔네… 숍은 건대 쪽이에요!', t: 2.4 }; } }
+    else if (pick === 'open') { const it = N[0]; Shop.open(it ? it.tab : 'clothes', true); w.bubble = { text: '마음에 들면 숍으로 와요~', t: 2.4 }; }
     else w.bubble = { text: '언제든 놀러 와요~', t: 2.2 };
   },
   // 건물만 피해서 문까지 BFS (플레이어가 걸을 수 있는 칸)

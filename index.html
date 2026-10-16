@@ -866,6 +866,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <label>BGM <input type="range" id="setBgm" min="0" max="1" step="0.1"></label>
   <label>화면 흔들림 <input type="checkbox" id="setShake"></label>
   <label>왼쪽 위 호출기 메시지 <input type="checkbox" id="setPager"></label>
+  <label>콕 알림 (게임이 꺼져 있어도 폰으로) <input type="checkbox" id="setPush"></label>
   <label>텍스트 속도 <select id="setText"><option value="slow">느림</option><option value="normal">보통</option><option value="instant">즉시</option></select></label>
   <details class="keys"><summary>조작키 보기</summary>
     <table>
@@ -1812,7 +1813,7 @@ const Store = {
   get(k, d) { try { const v = localStorage.getItem('auctionGTA.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem('auctionGTA.' + k, JSON.stringify(v)); } catch (e) { /* 저장 실패해도 게임은 계속 */ } },
 };
-const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal', pager: false }, Store.get('settings', {})); // pager: 왼쪽 위 호출기 상자. 기본 꺼짐 (사용자 2026-10-14 '왼쪽 맨 위 단예 저거 없애')
+const Settings = Object.assign({ sfx: 1, bgm: 1, muted: false, shake: !REDUCED_MOTION, textSpeed: 'normal', pager: false, push: true }, Store.get('settings', {})); // pager: 왼쪽 위 호출기 상자. 기본 꺼짐 (사용자 2026-10-14 '왼쪽 맨 위 단예 저거 없애')
 function saveSettings() { Store.set('settings', Settings); }
 /* 등장인물 이름: 고정. 사용자가 2026-10-14에 정해 준 이름이며 메뉴에서 바꿀 수 없다 (사용자 요청 v36) */
 // [역할 키, 이름, 역할]
@@ -4875,12 +4876,24 @@ const PushSub = {
   base() { return (FEEL.relayUrl || '').replace(/^ws/, 'http').replace(/\/+$/, ''); },
   ok() { try { return !!(this.base() && window.isSecureContext && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window); } catch (e) { return false; } },
   iosNeedsHome() { try { return /iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone && !matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; } },
-  on() { try { return this.ok() && Notification.permission === 'granted' && !!Store.get('pushOn', 0); } catch (e) { return false; } },
+  on() { try { return this.ok() && Settings.push !== false && Notification.permission === 'granted' && !!Store.get('pushOn', 0); } catch (e) { return false; } },
+  // 게임 시작 버튼(사용자 동작) 때: 설정에서 끄지 않았으면 알림 허용을 묻고 등록한다
+  auto() {
+    if (Settings.push === false || !this.ok() || this.iosNeedsHome()) return;
+    const name = () => Net.me || Store.get('mpName', '') || '';
+    try { if (Notification.permission === 'default') Promise.resolve(Notification.requestPermission()).then(r => { if (r === 'granted') this.ensure(name()); }).catch(() => {}); else if (Notification.permission === 'granted') this.ensure(name()); } catch (e) {}
+  },
+  // 설정에서 끄기: 이 기기의 푸시 구독을 지운다 (서버 목록은 다음 콕 때 410으로 빠진다)
+  async off() {
+    Store.set('pushOn', 0); Store.set('pushReg', {});
+    try { const reg = await this.reg(); const sub = reg && reg.pushManager && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+    Toast.show('콕 알림을 껐어요. 게임이 꺼져 있을 때는 친구가 찔러도 알림이 안 와요.');
+  },
   async reg() { try { const r = await Promise.race([navigator.serviceWorker.getRegistration(), new Promise(res => setTimeout(() => res(null), 3000))]); return r || null; } catch (e) { return null; } },
   async key() { if (this.k) return this.k; const r = await fetch(this.base() + '/push/key', { cache: 'no-store' }); const j = await r.json(); this.k = j.key; return this.k; },
   bytes(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const r = atob(s); return Uint8Array.from(r, c => c.charCodeAt(0)); },
   async ensure(name) {
-    name = String(name || '').trim(); if (!name || !this.ok() || this.busy) return false;
+    name = String(name || '').trim(); if (!name || !this.ok() || this.busy || Settings.push === false) return false;
     try { if (Notification.permission !== 'granted') return false; } catch (e) { return false; }
     this.busy = true;
     try {
@@ -4903,7 +4916,6 @@ const PushSub = {
     let p = 'default'; try { p = Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission; } catch (e) {}
     if (p !== 'granted') return Toast.show('알림이 꺼져 있어요. 폰 설정에서 이 앱(브라우저) 알림을 허용해 주세요.');
     const ok = await this.ensure(Net.me); Toast.show(ok ? '🔔 이제 게임이 꺼져 있어도 친구가 콕 찌르면 폰으로 알려 줄게요!' : '알림 등록에 실패했어요. 잠시 뒤 다시 눌러 주세요.');
-    if (typeof RankWin !== 'undefined') { RankWin.last = ''; RankWin.open_ && RankWin.render(); }
   },
   async poke(to) {
     if (!this.base()) return { ok: false, why: 'net' };
@@ -4937,14 +4949,14 @@ const Poke = {
     this.from = { id: m.from, name }; this.show();
   },
   // 게임을 켜 둔 채 다른 앱·창을 보고 있으면 기기 알림으로 (사용자 '게임 밖에 나가 있을 때 알림'). 완전히 끈 상태는 푸시 서버가 있어야 해서 아직 안 된다.
-  askPerm() { try { if ('Notification' in window && Notification.permission === 'default') Promise.resolve(Notification.requestPermission()).then(r => { if (r === 'granted') PushSub.ensure(Net.me); }).catch(() => {}); else PushSub.ensure(Net.me); } catch (e) {} },
+  askPerm() { PushSub.auto(); },
   // 접속 안 한 친구: 중계 서버가 그 친구 폰으로 알림을 보낸다 (사용자 2026-10-16 '앱 밖으로 알람이 가서 나랑 놀자는 느낌')
   async sendOff(name) {
     if (!name || name === Net.me) return; if (this.offBusy) return; this.offBusy = true; Sound.play('pop'); this.askPerm();
     const r = await PushSub.poke(name); this.offBusy = false;
     if (r.ok) { Net.pushLog(Net.me, `${name}님 폰으로 "나랑 놀자~" 콕 알림을 보냈어요 👉`, true, true, true); Toast.show(`👉 ${name}님 폰으로 콕 알림을 보냈어요!`); }
     else if (r.why === 'soon') Toast.show(`${name}님은 방금 찔렀어요. ${r.wait || 60}초 뒤에 다시 찔러 주세요.`);
-    else if (r.why === 'none') Toast.show(`${name}님은 아직 콕 알림을 켜지 않았어요. 게임에 들어오면 순위표에서 '🔔 콕 알림 받기'를 눌러 달라고 해 주세요.`);
+    else if (r.why === 'none') Toast.show(`${name}님은 알림을 꺼 뒀거나 아직 허용하지 않아서 폰으로 못 보냈어요.`);
     else if (r.why === 'busy') Toast.show(`${name}님은 지금 콕 알림을 너무 많이 받았어요. 조금 있다 찔러 주세요.`);
     else Toast.show(r.why === 'net' ? '중계 서버에 연결하지 못했어요. 인터넷을 확인해 주세요.' : `${name}님 폰에 알림을 보내지 못했어요.`);
   },
@@ -5625,20 +5637,15 @@ const RankWin = {
     const id = Object.keys(Net.players).find(k => Net.players[k] && !Net.players[k].gone && Net.players[k].name === this.sel);
     return `<div class="rwPoke">${id ? `<button class="btn gold" data-poke="${id}">👉 ${esc(this.sel)}님 콕 찌르기</button>` : PushSub.base() ? `<button class="btn gold" data-pokeoff="${esc(this.sel)}">👉 ${esc(this.sel)}님 콕 찌르기 (폰 알림)</button><small>지금 접속해 있지 않아요. 폰으로 "나랑 놀자~" 알림이 가요.</small>` : `<small>${esc(this.sel)}님은 지금 접속해 있지 않아서 찌를 수 없어요.</small>`}</div>`;
   },
-  // 나도 콕 알림 받기 (게임이 꺼져 있어도 폰으로, v124)
-  pushBar() {
-    if (!PushSub.base() || PushSub.on()) return PushSub.on() ? '<div class="rwPush on">🔔 콕 알림 켜짐 · 게임이 꺼져 있어도 폰으로 와요</div>' : '';
-    return `<div class="rwPush"><button class="btn" id="rwPushOn">🔔 콕 알림 받기</button><small>게임이 꺼져 있어도 친구가 찌르면 폰으로 알려 줘요${PushSub.iosNeedsHome() ? ' (아이폰은 홈 화면에 추가한 앱에서만)' : ''}</small></div>`;
-  },
+
   open() { if (this.open_ || !Live.on) return; this.open_ = true; Game.formOpen = true; Sound.play('paper'); $('rankWin').classList.add('in'); this.render(); this.timer = setInterval(() => this.render(), 1000); },
   close() { if (!this.open_) return; this.open_ = false; this.last = ''; Game.formOpen = false; $('rankWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip'); },
   render() {
-    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">경매 수익 순위</div>${Live.board()}${this.pokeBar()}${this.pushBar()}<div class="lvFoot">채팅: Enter·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
+    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">경매 수익 순위</div>${Live.board()}${this.pokeBar()}<div class="lvFoot">채팅: Enter·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
     if (h === this.last) return; this.last = h; $('rankWin').innerHTML = h; // 바뀐 게 없으면 다시 그리지 않는다 (누르는 중에 행이 사라지지 않게)
     for (const id of ['rwClose', 'rwX']) { const b = $(id); if (b) b.onclick = () => this.close(); }
     $('rankWin').querySelectorAll('[data-poke]').forEach(b => (b.onclick = () => Poke.send(b.dataset.poke)));
     $('rankWin').querySelectorAll('[data-pokeoff]').forEach(b => (b.onclick = () => Poke.sendOff(b.dataset.pokeoff)));
-    { const b = $('rwPushOn'); if (b) b.onclick = () => PushSub.turnOn(); }
     $('rankWin').querySelectorAll('tr[data-who]').forEach(tr => tr.onclick = () => { const n = tr.dataset.who; this.sel = this.sel === n ? null : n; Sound.play('click'); this.render(); });
   },
 };
@@ -10773,7 +10780,7 @@ const Instance = {
     try { const el = document.documentElement; const p = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : Promise.reject(); p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {}); } catch (e) {}
   };
   $('btnStart').onclick = () => {
-    Sound.init(); Sound.play('stamp'); tryLandscape();
+    Sound.init(); Sound.play('stamp'); tryLandscape(); PushSub.auto(); // 게임 시작할 때 알림 허용부터 묻는다 (사용자 2026-10-16 '무조건 시작할 때 알림 받는 걸로')
     const v = Number($('capInput').value); if (v) { if (v < 1e7) { Toast.show('자본은 1천만 원 이상으로 넣어 주세요.'); return; } cap = Math.round(v); }
     if (Net.on && Net.mode === 'channel') { cap = Live.capOf(Net.ch); Net.cap = cap; Net.started = true; startGame(cap, { seed: Net.seed }); return; } // 채널 N = 자본 N억 // 채널은 각자 시작, 주는 채널·날짜로 정해진다
     if (Net.on && !Net.host) { Toast.show('방장이 시작하면 같이 시작해요.'); return; }
@@ -10896,6 +10903,8 @@ const Instance = {
   $('setShake').onchange = e => { Settings.shake = e.target.checked; saveSettings(); };
   $('setPager').checked = !!Settings.pager; document.body.classList.toggle('pagerOn', !!Settings.pager);
   $('setPager').onchange = e => { Settings.pager = e.target.checked; saveSettings(); document.body.classList.toggle('pagerOn', Settings.pager); };
+  $('setPush').checked = Settings.push !== false; // 콕 알림: 처음엔 켜짐, 끄는 건 여기서만 (사용자 2026-10-16)
+  $('setPush').onchange = e => { Settings.push = e.target.checked; saveSettings(); if (Settings.push) PushSub.turnOn(); else PushSub.off(); };
   $('setText').onchange = e => { Settings.textSpeed = e.target.value; saveSettings(); };
   $('rankBox').addEventListener('click', () => { if (!Layout.editing && !Menu.open) RankWin.open(); }); // 미니 순위판 → 자본 순위 창 (사용자 2026-10-14: 누르면 그것만)
   $('rankWin').addEventListener('click', e => { if (e.target.id === 'rankWin') RankWin.close(); });

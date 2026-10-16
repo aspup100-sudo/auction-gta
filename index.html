@@ -754,7 +754,8 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .short .qzQ { font-size:15px; } .short .qz .qzOptBtn { min-height:40px; padding:6px 8px; font-size:12.5px; } .short .qzMid h2 { font-size:24px; } .short .qz .arcMarq { display:none; } .short .qzScr { padding:8px 10px; gap:6px; }
 .qzTag { font-style:normal; padding:1px 7px; border-radius:6px; background:#ff5ae0; color:#fff; font-size:11px; letter-spacing:0; } .qzType { display:flex; gap:8px; } .qzType input { flex:1; min-width:0; padding:10px 12px; border-radius:10px; border:2px solid #2ae0ff; background:#05030f; color:#fff; font:800 17px var(--ui); box-shadow:0 0 8px rgba(42,224,255,.3); outline:none; } .qzType input:focus { box-shadow:0 0 14px rgba(42,224,255,.8); } .qzType input:disabled { opacity:.6; } .qzType .btn { flex:none; padding:0 18px; }
 .qzTries { display:flex; flex-wrap:wrap; gap:5px; } .qzTries span { padding:3px 8px; border-radius:6px; background:#4a0f22; border:1px solid #ff6a8a; color:#ffd8e0; font:700 12px var(--ui); } .qzTries span.me { border-color:#ffe84a; } .qzAns { text-align:center; padding:10px; border-radius:10px; background:#0f4a2a; border:2px solid #5aff8a; color:#d8ffe4; font:700 14px var(--ui); box-shadow:0 0 14px rgba(90,255,138,.5); } .qzAns b { font-size:22px; color:#fff; margin-left:6px; } .qzAns small { display:block; opacity:.8; margin-top:2px; }
-@media (max-width:520px) { .qzOpts { grid-template-columns:1fr; } }
+.qzTag.ox { background:#3ee0f0; color:#05030f; } .qzTag.calc { background:#ffb02a; color:#05030f; } .qz .qzOpts.ox .qzOptBtn { min-height:84px; justify-content:center; font-size:22px; } .qzOpts.ox .qzOptBtn span { flex:none; }
+@media (max-width:520px) { .qzOpts { grid-template-columns:1fr; } .qzOpts.ox { grid-template-columns:1fr 1fr; } }
 .tetOver { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:rgba(5,3,20,.74); color:#fff; text-align:center; padding:12px; } .tetOver[hidden] { display:none; }
 .tetOver h2 { margin:0; font:900 38px var(--ui); letter-spacing:3px; color:#ff5ae0; text-shadow:0 0 16px rgba(255,90,224,.75), 3px 3px 0 #3ee0f0; }
 .tetOver p { margin:0; font:600 14px var(--ui); color:#cfd8ff; } .tetOver p b { color:#ffe84a; font-size:22px; } .tetOver .tetNote { font-size:11px; opacity:.7; }
@@ -9965,7 +9966,8 @@ const Tetris = {
 };
 
 /* ===================== 게임장 경매 퀴즈 (사용자 2026-10-16 '게임장에 경매론 퀴즈, 친구들이랑 같이 참여해서 먼저 답한 사람이 이기는 걸로') =====================
- * 게임장 위 줄 오락기('q'). 한 판 10문제 (객관식 7 + 단답 3), 객관식 15초·단답 20초. 먼저 맞힌 사람이 1점.
+ * 게임장 위 줄 오락기('q'). 한 판 10문제 = 객관식 4 + O/X 2 + 단답 2 + 계산 2 (Quiz.MIX). 먼저 맞힌 사람이 1점.
+ * 시간: 객관식 15초 · O/X 10초 · 단답 20초 · 계산 25초 (Quiz.SECS). 계산 문제는 판마다 숫자가 바뀐다.
  * 객관식은 틀리면 그 문제는 더 못 고른다. 단답은 틀려도 다시 쳐 볼 수 있다 (틀린 답은 모두에게 보인다).
  * 혼자: 장우준 사장이 같이 푼다 (몇 초 뒤에 가끔 틀리며 답한다). 친구랑: Party 'quiz' 2~6명. 판돈은 없다.
  * 같이 할 때 판정은 방장이 한다: 모두 같은 시드로 같은 문제·보기 순서를 만들고, 답은 방장에게 보내 도착한 순서로 정한다.
@@ -9982,7 +9984,7 @@ const QUIZ_BANK = [
   { q: '차순위매수신고를 하려면 내 입찰가가 어떤 조건을 넘어야 할까?', a: ['최고가 입찰액 − 입찰보증금보다 많아야', '최고가 입찰액과 같아야', '최저가보다만 높으면', '감정가보다 높아야'], why: '차순위매수신고는 최고가에서 보증금을 뺀 금액을 넘는 사람만 할 수 있어요.' },
   { q: '매각허가결정이 확정되면 잔금(대금) 지급기한은 보통 언제까지로 정해질까?', a: ['확정일부터 1개월 안', '확정일부터 1주 안', '확정일부터 6개월 안', '기한 없음'], why: '대금지급기한은 매각허가결정 확정일부터 1개월 안으로 정해져요.' },
   { q: '경매로 산 집의 소유권은 언제 낙찰자에게 넘어올까?', a: ['매각대금을 다 낸 때', '낙찰(최고가매수신고)된 날', '소유권이전등기를 마친 날', '명도가 끝난 날'], why: '경매는 법률 규정에 따른 취득이라 등기 전이라도 매각대금을 완납한 때 소유권을 취득해요.' },
-  { q: '대금을 낸 낙찰자가 점유자를 상대로 인도명령을 신청할 수 있는 기간은?', a: ['대금 낸 뒤 6개월 안', '대금 낸 뒤 1개월 안', '대금 낸 뒤 1년 안', '기간 제한 없음'], why: '인도명령은 대금 완납 후 6개월 안에 신청해야 해요. 그 뒤엔 명도소송을 해야 해요.' },
+  { q: '대금을 낸 낙찰자가 점유자를 상대로 인도명령을 신청할 수 있는 기간은?', a: ['대금 낸 뒤 6개월 안', '대금 낸 뒤 1개월 안', '대금 낸 뒤 1년 안', '기간 제한 없음'], why: '인도명령은 대금 완납 후 6개월 안에 신청해야 해요. 그 뒤엔 명도소송을 해야 해요. 낙찰자에게 대항할 수 있는 점유자(선순위 임차인 등)에게는 인도명령을 쓸 수 없어요.' },
   { q: '등기부에 나오지 않아 현장 조사로 확인해야 하는 권리는?', a: ['유치권', '근저당권', '가압류', '전세권'], why: '유치권은 등기 없이 점유로 성립해요. 현수막·점유 상태·유치권 신고를 직접 확인해야 해요.' },
   { q: '같은 사람 소유였던 땅과 건물이 경매로 주인이 달라질 때, 건물을 위해 생길 수 있는 권리는?', a: ['법정지상권', '분묘기지권', '지역권', '유치권'], why: '토지와 건물이 같은 소유자였다가 경매 등으로 달라지면 건물 주인에게 법정지상권이 생길 수 있어요.' },
   { q: '남의 땅에 있는 묘 때문에 생겨서 땅 낙찰자가 함부로 이장하기 어려운 권리는?', a: ['분묘기지권', '법정지상권', '전세권', '임차권'], why: '분묘기지권이 있으면 묘를 함부로 옮길 수 없어요. 임야·토지 경매에서 특히 조심해요.' },
@@ -10012,6 +10014,18 @@ const QUIZ_BANK = [
   { q: '경매에서 감정가는 무엇일까?', a: ['감정평가사가 매긴 가격 (첫 최저가 기준)', '낙찰자가 낼 확정 가격', '시세보다 항상 높은 값', '세금 기준가'], why: '감정가는 첫 회차 최저매각가격의 기준이 될 뿐, 실제 시세와 다를 수 있어요.' },
   { q: '"인수"라는 말의 뜻으로 맞는 것은?', a: ['낙찰자가 그 권리·부담을 떠안는 것', '권리가 매각으로 지워지는 것', '배당을 받는 것', '경매를 취소하는 것'], why: '인수는 낙찰 뒤에도 남아 낙찰자가 책임지는 것, 소멸은 매각으로 지워지는 거예요.' },
   { q: '낙찰 뒤 매각허가결정이 나기까지 보통 걸리는 기간은?', a: ['매각기일부터 1주 정도', '당일 바로', '3개월', '1년'], why: '매각기일부터 보통 1주 뒤 매각결정기일에 허가 여부를 정하고, 1주 더 지나면 확정돼요.' },
+  { q: '근저당권자가 빌려준 돈을 못 받아서 담보로 잡은 집을 경매에 넣는 것은?', a: ['임의경매', '강제경매', '공매', '재매각'], why: '담보권(근저당 등)을 실행하는 경매가 임의경매, 판결문 같은 집행권원으로 하는 경매가 강제경매예요.' },
+  { q: '판결문·공정증서 같은 집행권원을 가지고 채무자 재산을 경매에 넣는 것은?', a: ['강제경매', '임의경매', '공매', '변경'], why: '집행권원이 있는 채권자가 신청하는 경매가 강제경매예요.' },
+  { q: '세금 체납 등으로 국가 기관이 온라인으로 파는 것은 경매와 달리 뭐라고 할까?', a: ['공매', '임의경매', '재매각', '대위변제'], why: '공매는 법원이 아니라 국가 기관이 진행하고, 절차와 명도 방법이 경매와 달라요.' },
+  { q: '낙찰받은 집에서 점유자를 내보내고 집을 넘겨받는 일을 뭐라고 부를까?', a: ['명도', '인수', '배당', '유찰'], why: '명도는 협의(이사비 등)로 끝내는 게 보통이고, 안 되면 인도명령·강제집행으로 가요.' },
+  { q: '등기부 을구에 적히는 권리는?', a: ['근저당권', '가압류', '압류', '소유권이전'], why: '갑구는 소유권과 그것을 묶는 압류·가압류·가처분, 을구는 근저당권·전세권 같은 소유권 외 권리예요.' },
+  { q: '등기부 갑구에 적히는 것은?', a: ['가압류', '근저당권', '전세권', '지역권'], why: '가압류·압류·가처분·경매개시결정은 소유권을 묶는 거라 갑구에 적혀요.' },
+  { q: '유찰 없이 처음 나온 물건(1회차)의 최저매각가격은 보통?', a: ['감정가 그대로 (100%)', '감정가의 80%', '감정가의 50%', '시세의 120%'], why: '첫 회차는 보통 감정가가 최저매각가격이고, 유찰될 때마다 낮아져요.' },
+  { q: '최고가매수신고가 나온 뒤 채권자가 경매 신청을 취하하려면 누구의 동의가 필요할까?', a: ['최고가매수인 (차순위 신고인이 있으면 그 사람도)', '채무자', '감정평가사', '필요 없다'], why: '매수신고가 있은 뒤의 취하는 최고가매수인과 차순위매수신고인의 동의가 있어야 효력이 있어요.' },
+  { q: '후순위 임차인이 경매 전에 선순위 근저당 빚을 대신 갚으면(대위변제) 생길 수 있는 일은?', a: ['임차인이 선순위가 되어 낙찰자가 보증금을 떠안을 수 있다', '경매가 무조건 취소된다', '낙찰가가 두 배가 된다', '아무 변화 없다'], why: '말소기준권리가 사라지면 다음 권리가 기준이 되어 임차인 순위가 바뀔 수 있어요. 잔금 전 등기부를 다시 떼 봐요.' },
+  { q: '체납 관리비가 있는 아파트를 낙찰받으면 낙찰자가 보통 떠안을 수 있는 부분은?', a: ['공용부분 관리비', '전유부분 관리비 전부', '연체료까지 전부', '전혀 없다'], why: '판례상 공용부분 관리비는 낙찰자가 승계할 수 있지만 연체료는 승계되지 않아요. 관리사무소에 미리 물어봐요.' },
+  { q: '입찰 마감 뒤 입찰 봉투는 어떻게 열까?', a: ['입찰자들이 보는 앞에서 바로 연다', '다음 날 몰래 연다', '한 달 뒤 우편으로 알려준다', '추첨으로 몇 개만 연다'], why: '입찰을 마감하면 그 자리에서 공개로 개찰하고 최고가매수인을 부르게 돼요.' },
+  { q: '대금을 낸 뒤 소유권이전등기는 보통 누가 등기소에 부탁(촉탁)할까?', a: ['법원', '전 집주인', '임차인', '감정평가사'], why: '경매는 매수인이 등록면허세 등을 내고 신청하면 법원이 소유권이전·말소등기를 촉탁해요.' },
 ];
 
 // 단답 (사용자 2026-10-16 '퀴즈에 단답도 넣자'): 직접 쳐서 맞힌다. s[0]이 정답, 뒤는 같이 인정하는 말. 띄어쓰기·%·개월 같은 건 빼고 비교한다.
@@ -10020,10 +10034,10 @@ const QUIZ_SHORT = [
   { q: '등기 없이 점유만으로 생겨서, 공사대금 등을 받을 때까지 건물을 붙잡고 있을 수 있는 권리는?', s: ['유치권'], why: '유치권은 등기부에 안 나와요. 현수막·점유 상태·유치권 신고를 현장에서 확인해요.' },
   { q: '같은 사람 소유였던 땅과 건물이 경매로 주인이 달라질 때, 건물 주인에게 생길 수 있는 권리는?', s: ['법정지상권'], why: '토지와 건물이 같은 소유자였다가 경매 등으로 갈라지면 건물을 위해 법정지상권이 생길 수 있어요.' },
   { q: '주택 임차인의 대항요건은 "주택 인도"와 무엇일까?', s: ['전입신고', '주민등록', '전입'], why: '주택은 인도(이사)와 주민등록(전입신고)을 마친 다음 날 0시부터 대항력이 생겨요.' },
-  { q: '대금을 다 낸 낙찰자가 버티는 점유자를 내보내려고, 소송 없이 법원에 신청하는 절차는?', s: ['인도명령', '부동산인도명령'], why: '인도명령은 대금 완납 후 6개월 안에 신청해요. 그 뒤엔 명도소송을 해야 해요.' },
+  { q: '대금을 다 낸 낙찰자가 버티는 점유자를 내보내려고, 소송 없이 법원에 신청하는 절차는?', s: ['인도명령', '부동산인도명령'], why: '인도명령은 대금 완납 후 6개월 안에 신청해요. 그 뒤엔 명도소송을 해야 해요. 낙찰자에게 대항할 수 있는 점유자(선순위 임차인 등)에게는 인도명령을 쓸 수 없어요.' },
   { q: '보통의 기일입찰에서 입찰보증금은 최저매각가격의 몇 %일까? (숫자로)', s: ['10'], why: '내가 쓴 금액이 아니라 최저매각가격의 10%예요 (법원이 따로 정하면 그 금액).' },
   { q: '서울 등 많은 법원에서 한 번 유찰되면 최저매각가격은 보통 몇 % 내려갈까? (숫자로)', s: ['20'], why: '서울 법원들은 보통 20%씩, 일부 지방 법원은 30%씩 낮춰요.' },
-  { q: '대금 낸 뒤 인도명령은 몇 개월 안에 신청해야 할까? (숫자로)', s: ['6'], why: '대금 완납 후 6개월이 지나면 인도명령 대신 명도소송을 해야 해요.' },
+  { q: '대금 낸 뒤 인도명령은 몇 개월 안에 신청해야 할까? (숫자로)', s: ['6'], why: '대금 완납 후 6개월이 지나면 인도명령 대신 명도소송을 해야 해요. 낙찰자에게 대항할 수 있는 점유자(선순위 임차인 등)에게는 인도명령을 쓸 수 없어요.' },
   { q: '매각허가결정이 확정되면 대금 지급기한은 보통 확정일부터 몇 개월 안으로 정해질까? (숫자로)', s: ['1'], why: '대금지급기한은 매각허가결정 확정일부터 1개월 안으로 정해져요.' },
   { q: '임차인이 대항요건에 더해 이것까지 받아 두면 배당에서 순서대로 보증금을 받을 수 있어요(우선변제권). 무엇일까?', s: ['확정일자'], why: '대항요건(인도+전입)에 확정일자를 갖추면 우선변제권이 생겨요.' },
   { q: '최고가 매수인이 잔금을 안 내면 대신 사겠다고, 최고가에서 보증금을 뺀 금액보다 높게 쓴 사람이 하는 신고는?', s: ['차순위매수신고', '차순위매수', '차순위'], why: '차순위매수신고를 해 두면 최고가 매수인이 잔금을 안 낼 때 매각허가를 받을 수 있어요.' },
@@ -10040,6 +10054,62 @@ const QUIZ_SHORT = [
   { q: '불법 증축 같은 위반건축물을 원상복구할 때까지 해마다 나올 수 있는 돈은?', s: ['이행강제금'], why: '위반건축물은 이행강제금이 나오고 대출이 어려울 수 있어요. 건축물대장을 꼭 봐요.' },
   { q: '첫 회차 최저매각가격의 기준이 되는, 감정평가사가 매긴 값은?', s: ['감정가', '감정평가액', '감정가격', '감정평가금액'], why: '감정가는 첫 최저가 기준일 뿐, 실제 시세와 다를 수 있어요.' },
   { q: '그 집에 누가 언제 전입했는지 보려고 주민센터에서 떼는 서류는? (○○○○ 열람)', s: ['전입세대열람', '전입세대열람내역', '전입세대', '전입세대확인서'], why: '전입세대 열람으로 전입 날짜와 세대를 보고 숨은 임차인이나 가짜 임차인을 가려내요.' },
+  { q: '근저당권자가 담보로 잡은 집을 경매에 넣는 것은 ○○경매? (두 글자)', s: ['임의', '임의경매'], why: '담보권 실행은 임의경매, 판결문 같은 집행권원으로 하는 건 강제경매예요.' },
+  { q: '세금 체납 등으로 법원이 아닌 국가 기관이 파는 것을 두 글자로?', s: ['공매'], why: '공매는 절차·명도 방법이 경매와 달라서 따로 공부해야 해요.' },
+  { q: '낙찰받은 집의 점유자를 내보내고 집을 넘겨받는 일을 두 글자로?', s: ['명도'], why: '명도는 협의가 먼저, 안 되면 인도명령·강제집행이에요.' },
+  { q: '등기부에서 압류·가압류·가처분처럼 소유권에 관한 것이 적히는 칸은? (○구)', s: ['갑구', '갑'], why: '갑구는 소유권 관련, 을구는 근저당권·전세권 같은 소유권 외 권리예요.' },
+  { q: '등기부에서 근저당권·전세권처럼 소유권 외의 권리가 적히는 칸은? (○구)', s: ['을구', '을'], why: '을구의 근저당권은 말소기준권리가 되는 경우가 많아요.' },
+  { q: '입찰을 마감하고 입찰 봉투를 공개로 여는 일을 두 글자로?', s: ['개찰'], why: '개찰 뒤 최고가매수인을 부르고, 차순위매수신고할 사람이 있는지 물어봐요.' },
+  { q: '감정가에 비해 얼마에 낙찰됐는지 나타낸 비율을 뭐라고 할까?', s: ['낙찰가율', '매각가율', '낙찰률'], why: '낙찰가율이 높을수록 그 동네·물건에 경쟁이 세다는 뜻이에요.' },
+  { q: '남의 빚을 대신 갚고 그 채권자 자리에 들어가는 것을 네 글자로?', s: ['대위변제'], why: '후순위 임차인이 선순위 근저당을 대위변제하면 순위가 바뀔 수 있어요.' },
+];
+// O/X (사용자 2026-10-16 '퀴즈 더 문제 다양하게'): o가 정답 (true = O)
+const QUIZ_OX = [
+  { q: '입찰보증금은 내가 쓴 입찰가의 10%다.', o: false, why: '입찰가가 아니라 최저매각가격의 10%예요.' },
+  { q: '유치권은 등기부를 떼 봐도 나오지 않는다.', o: true, why: '유치권은 점유로 성립해서 등기부에 안 나와요. 현장 확인이 필요해요.' },
+  { q: '경매로 산 집은 소유권이전등기를 마쳐야 비로소 내 것이 된다.', o: false, why: '경매는 매각대금을 다 낸 때 등기 없이도 소유권을 취득해요.' },
+  { q: '입찰표에 쓴 금액이 틀리면 두 줄 긋고 도장 찍어 고칠 수 있다.', o: false, why: '입찰가격은 고칠 수 없어요. 새 입찰표에 다시 써야 해요.' },
+  { q: '전입신고를 한 그날 바로 대항력이 생긴다.', o: false, why: '인도와 주민등록을 마친 다음 날 0시부터 생겨요.' },
+  { q: '확정일자는 주민센터(행정복지센터)에서 받을 수 있다.', o: true, why: '주민센터, 등기소, 공증인, 온라인으로 받을 수 있어요.' },
+  { q: '가압류도 말소기준권리가 될 수 있다.', o: true, why: '근저당·압류·가압류·담보가등기·경매개시결정등기가 말소기준권리가 될 수 있어요.' },
+  { q: '잔금을 기한 안에 안 내도 입찰보증금은 돌려받는다.', o: false, why: '보증금은 몰수되어 배당재원이 돼요.' },
+  { q: '인도명령은 대금을 낸 뒤 6개월 안에 신청해야 한다.', o: true, why: '6개월이 지나면 명도소송을 해야 해요. 낙찰자에게 대항할 수 있는 점유자(선순위 임차인 등)에게는 인도명령을 쓸 수 없어요.' },
+  { q: '다른 사람 대신 입찰하려면 본인 인감증명서가 필요하다.', o: true, why: '인감이 찍힌 위임장과 인감증명서, 대리인 신분증이 필요해요.' },
+  { q: '감정가는 언제나 시세와 같다.', o: false, why: '감정 시점과 지금 시세가 다를 수 있어서 직접 시세를 조사해야 해요.' },
+  { q: '점유자가 안 나가면 낙찰자가 직접 문을 따고 짐을 빼도 된다.', o: false, why: '범죄가 될 수 있어요. 인도명령·강제집행 같은 법 절차를 써요.' },
+  { q: '같은 최고가를 쓴 사람이 여럿이면 그 사람들끼리 다시 입찰한다.', o: true, why: '추가 입찰을 하고, 그래도 같으면 추첨해요.' },
+  { q: '배당에서는 경매 집행비용이 가장 먼저 나간다.', o: true, why: '집행비용이 가장 먼저, 그다음 최우선변제 등이 순서대로예요.' },
+  { q: '말소기준권리보다 먼저 등기된 가처분은 매각으로 지워진다.', o: false, why: '선순위 가처분은 낙찰자가 떠안아 소유권을 잃을 위험까지 있어요.' },
+  { q: '유찰돼도 다음 회차 최저매각가격은 그대로다.', o: false, why: '유찰되면 보통 20%(일부 법원 30%)씩 낮아져요.' },
+  { q: '배당요구종기가 지나도 언제든 배당요구를 할 수 있다.', o: false, why: '배당요구가 필요한 채권자는 종기까지 해야 배당받을 수 있어요.' },
+  { q: '보증금을 못 받은 임차인이 임차권등기를 마친 뒤 이사 가면 대항력이 유지된다.', o: true, why: '임차권등기가 된 뒤라면 이사 가도 대항력·우선변제권이 유지돼요.' },
+  { q: '불법 증축된 위반건축물은 이행강제금이 나올 수 있다.', o: true, why: '원상복구 전까지 이행강제금이 나올 수 있고 대출도 어려울 수 있어요.' },
+  { q: '법정지상권은 등기부에 없어도 생길 수 있다.', o: true, why: '법정지상권은 법에 따라 생기는 권리라 등기 없이도 성립할 수 있어요. 토지 경매에서 건물을 꼭 봐요.' },
+  { q: '재매각 사건도 입찰보증금은 보통 10% 그대로다.', o: false, why: '재매각은 보통 20%(법원에 따라 30%)로 올라가요.' },
+  { q: '상가 임차인의 대항요건에는 사업자등록 신청이 들어간다.', o: true, why: '상가는 건물 인도와 사업자등록 신청이 대항요건이에요.' },
+  { q: '말소기준권리보다 늦게 전입한 임차인은 낙찰자에게 대항할 수 없다.', o: true, why: '후순위 임차인은 대항력이 없어 배당만 받고 나가야 해요.' },
+  { q: '매각물건명세서는 낙찰받은 사람만 볼 수 있다.', o: false, why: '매각기일 1주 전부터 누구나 볼 수 있어요.' },
+  { q: '농지를 낙찰받으면 농지취득자격증명을 내야 한다.', o: true, why: '기한 안에 못 내면 매각불허가가 되고 보증금을 잃을 수도 있어요.' },
+  { q: '체납 관리비 중 연체료까지 낙찰자가 모두 떠안는다.', o: false, why: '판례상 공용부분 관리비는 승계될 수 있지만 연체료는 승계되지 않아요.' },
+];
+// 계산 (판마다 숫자가 바뀐다): R(시드)로 숫자를 정하고 {q, a:[정답, …오답], why}를 만든다. 금액은 만 원 단위로 떨어지게.
+const quizWon = (n) => fmtWon(Math.round(n / 1e4) * 1e4);
+const QUIZ_CALC = [
+  (R) => { const L = (5 + Math.floor(R.next() * 36)) * 1e7; return { q: `최저매각가격 ${quizWon(L)}인 물건에 보통 기일입찰로 들어가요. 입찰보증금은?`, a: [L * 0.1, L * 0.2, L * 0.05, L * 0.15].map(quizWon), why: `최저매각가격의 10% → ${quizWon(L)} × 10% = ${quizWon(L * 0.1)}` }; },
+  (R) => { const X = (20 + Math.floor(R.next() * 61)) * 1e7, n = R.next() < 0.5 ? 1 : 2, ans = X * 0.8 ** n;
+    const wr = n === 1 ? [X * 0.7, X * 0.64, X] : [X * 0.6, X * 0.49, X * 0.8];
+    return { q: `감정가 ${quizWon(X)}, 유찰되면 20%씩 내려가는 법원이에요. ${n}번 유찰됐다면 이번 최저매각가격은?`, a: [ans].concat(wr).map(quizWon), why: `${quizWon(X)}${' × 0.8'.repeat(n)} = ${quizWon(ans)}${n === 2 ? ' (40% 빼는 게 아니라 20%씩 두 번이에요)' : ''}` }; },
+  (R) => { const L = (5 + Math.floor(R.next() * 36)) * 1e7; return { q: `재매각 사건이라 보증금이 20%로 정해졌어요. 최저매각가격이 ${quizWon(L)}이면 입찰보증금은?`, a: [L * 0.2, L * 0.1, L * 0.3, L * 0.02].map(quizWon), why: `${quizWon(L)} × 20% = ${quizWon(L * 0.2)}` }; },
+  (R) => { const L = (10 + Math.floor(R.next() * 31)) * 1e7, H = L + (5 + Math.floor(R.next() * 26)) * 1e6, ans = H - L * 0.1;
+    return { q: `최저매각가격 ${quizWon(L)}, 최고가가 ${quizWon(H)}이에요. 차순위매수신고를 하려면 내 입찰가가 얼마를 넘어야 할까?`, a: [ans, H - L * 0.2, H, H * 0.9].map(quizWon), why: `최고가 − 입찰보증금(최저가의 10%) = ${quizWon(H)} − ${quizWon(L * 0.1)} = ${quizWon(ans)}` }; },
+  (R) => { const B = (10 + Math.floor(R.next() * 41)) * 1e7, b0 = Math.round(B * (0.2 + R.next() * 0.5) / 1e7) * 1e7, b = b0 * 2 === B ? b0 - 1e7 : b0;
+    return { q: `대항력 있는 선순위 임차인의 보증금이 ${quizWon(B)}인데, 배당에서 ${quizWon(b)}만 받았어요. 낙찰자가 떠안는 돈은?`, a: [quizWon(B - b), quizWon(B), quizWon(b), '0원'], why: `못 받은 보증금은 낙찰자가 인수해요 → ${quizWon(B)} − ${quizWon(b)} = ${quizWon(B - b)}` }; },
+  (R) => { const P = (15 + Math.floor(R.next() * 46)) * 1e7, T = (5 + Math.floor(R.next() * 10)) * 1e7;
+    return { q: `${quizWon(P)}에 낙찰받았는데 선순위 임차인 보증금 ${quizWon(T)}을 떠안아요. 세금·비용 빼고 이 집에 드는 돈은?`, a: [P + T, P, P - T, P + T * 2].map(quizWon), why: `낙찰가 + 인수 보증금 = ${quizWon(P)} + ${quizWon(T)} = ${quizWon(P + T)}. 이 돈이 시세보다 크면 손해예요.` }; },
+  (R) => { const X = (20 + Math.floor(R.next() * 61)) * 1e7, r = 60 + 5 * Math.floor(R.next() * 9), P = X * r / 100, o = [r + 10, r - 10, R.next() < 0.5 ? r + 5 : r - 5];
+    return { q: `감정가 ${quizWon(X)}인 집이 ${quizWon(P)}에 낙찰됐어요. 낙찰가율은?`, a: [r].concat(o).map(x => x + '%'), why: `${quizWon(P)} ÷ ${quizWon(X)} = ${r}%` }; },
+  (R) => { const D = (5 + Math.floor(R.next() * 26)) * 1e7, rt = [3.6, 4.2, 4.8, 6][Math.floor(R.next() * 4)], m = D * rt / 1200;
+    return { q: `잔금 대출 ${quizWon(D)}, 연 이자 ${rt}%예요. 한 달 이자는 얼마쯤일까?`, a: [m, m * 12, m * 2, m * 3].map(quizWon), why: `${quizWon(D)} × ${rt}% ÷ 12개월 = 한 달 ${quizWon(m)} (1년이면 ${quizWon(m * 12)})` }; },
 ];
 const QUIZ_NUM = { 일: '1', 한: '1', 하나: '1', 한개: '1', 육: '6', 여섯: '6', 십: '10', 열: '10', 이십: '20', 스물: '20', 삼십: '30' };
 // 비교용: 띄어쓰기·문장부호, 끝의 %·퍼센트·개월·안 같은 말을 빼고 숫자 말은 숫자로
@@ -10051,7 +10121,7 @@ function quizNorm(t) {
 const quizRight = (Q, t) => { const n = quizNorm(t); return !!n && Q.s.some(x => quizNorm(x) === n); };
 
 const Quiz = {
-  open_: false, N: 10, NS: 3, SEC: 15, SEC_S: 20, REV: 4200, COOL: 1200, state: 'ready', g: null, timer: 0,
+  open_: false, N: 10, MIX: { mc: 4, ox: 2, s: 2, calc: 2 }, SECS: { mc: 15, ox: 10, s: 20, calc: 25 }, REV: 4200, COOL: 1200, state: 'ready', g: null, timer: 0,
   best() { return Store.get('quizBest', 0) || 0; },
   inParty() { return typeof Party !== 'undefined' && Party.on('quiz'); },
   open() {
@@ -10071,15 +10141,20 @@ const Quiz = {
   // 같은 시드면 누구나 같은 문제·같은 보기 순서
   build(seed, order, names) {
     const R = makeRng(seed), mix = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R.next() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-    const ns = Math.min(this.NS, QUIZ_SHORT.length), mc = mix(QUIZ_BANK.map((_, i) => i)).slice(0, this.N - ns), sh = mix(QUIZ_SHORT.map((_, i) => i)).slice(0, ns);
-    const qs = mix(mc.map(i => ({ t: 'mc', i })).concat(sh.map(i => ({ t: 's', i })))), perm = qs.map(() => mix([0, 1, 2, 3]));
+    const M = this.MIX, pick = (t, len) => mix(Array.from({ length: len }, (_, i) => i)).slice(0, Math.min(M[t] || 0, len)).map(i => ({ t, i }));
+    const qs = mix([].concat(pick('mc', QUIZ_BANK.length), pick('ox', QUIZ_OX.length), pick('s', QUIZ_SHORT.length), pick('calc', QUIZ_CALC.length)));
+    // 문제를 미리 다 만든다 (계산 문제 숫자도 같은 시드라 모두 같다). O/X는 보기 순서를 늘 O, X로
+    const Q = qs.map(it => { if (it.t === 'mc') return QUIZ_BANK[it.i]; if (it.t === 's') return QUIZ_SHORT[it.i]; if (it.t === 'calc') return QUIZ_CALC[it.i](R);
+      const x = QUIZ_OX[it.i]; return { q: x.q, a: x.o ? ['⭕ 맞다', '❌ 아니다'] : ['❌ 아니다', '⭕ 맞다'], why: x.why }; });
+    const perm = qs.map(it => it.t === 'ox' ? (QUIZ_OX[it.i].o ? [0, 1] : [1, 0]) : it.t === 's' ? [] : mix([0, 1, 2, 3]));
     const score = {}; for (const id of order) score[id] = 0;
-    return { seed, order, names, qs, perm, i: -1, score, state: 'q', t0: 0, locked: {}, picks: {}, tries: [], winner: null, winText: '', revAt: 0, mine: null, ai: null, cool: 0 };
+    return { seed, order, names, qs, Q, perm, i: -1, score, state: 'q', t0: 0, locked: {}, picks: {}, tries: [], winner: null, winText: '', revAt: 0, mine: null, ai: null, cool: 0 };
   },
-  // 지금 문제 (객관식이면 QUIZ_BANK, 단답이면 QUIZ_SHORT)
-  cur() { const g = this.g, it = g && g.qs[g.i]; return !it ? null : it.t === 's' ? QUIZ_SHORT[it.i] : QUIZ_BANK[it.i]; },
-  isShort() { const g = this.g, it = g && g.qs[g.i]; return !!it && it.t === 's'; },
-  secs() { return this.isShort() ? this.SEC_S : this.SEC; },
+  // 지금 문제 {q, a | s, why}와 종류 (mc · ox · s · calc)
+  cur() { const g = this.g; return g && g.Q[g.i] || null; },
+  kind() { const g = this.g, it = g && g.qs[g.i]; return it ? it.t : ''; },
+  isShort() { return this.kind() === 's'; },
+  secs() { return this.SECS[this.kind()] || 15; },
   nm(id) { const g = this.g; if (id === Net.myId || id === 'me') return '나'; return (g && g.names[id]) || (typeof Party !== 'undefined' ? Party.nm(id) : '친구'); },
   meId() { return this.g && this.g.solo ? 'me' : Net.myId; },
   startSolo() {
@@ -10095,7 +10170,7 @@ const Quiz = {
   begin(order, seed) { const P = Party.p; this.g = this.build(seed, order, Object.assign({}, P ? P.names : {})); this.state = 'play'; Sound.play('chime'); this.next(0); },
   next(i) {
     const g = this.g; if (!g) return; g.i = i; g.state = 'q'; g.t0 = Date.now(); g.locked = {}; g.picks = {}; g.tries = []; g.winner = null; g.winText = ''; g.mine = null; g.revAt = 0; g.cool = 0;
-    if (g.solo) { const R = Math.random, sh = this.isShort(); g.ai = { at: g.t0 + (sh ? 6000 + R() * 11000 : 3500 + R() * 8000), right: R() < (sh ? 0.55 : 0.62) }; }
+    if (g.solo) { const R = Math.random, A = { mc: [3500, 8000, 0.62], ox: [2500, 4500, 0.7], s: [6000, 11000, 0.55], calc: [8000, 12000, 0.5] }[this.kind()] || [3500, 8000, 0.62]; g.ai = { at: g.t0 + A[0] + R() * A[1], right: R() < A[2] }; }
     Sound.play('blip'); this.render();
     if (this.isShort()) { const inp = $('qzIn'); if (inp && !matchMedia('(pointer:coarse)').matches) inp.focus(); }
   },
@@ -10103,7 +10178,7 @@ const Quiz = {
   // 내가 보기를 누름
   answer(k) {
     const g = this.g; if (!g || this.state !== 'play' || g.state !== 'q' || this.isShort()) return; const me = this.meId();
-    if (g.locked[me] || g.mine !== null || k < 0 || k > 3) return;
+    if (g.locked[me] || g.mine !== null || k < 0 || k >= g.perm[g.i].length) return;
     g.mine = k; Sound.play('click');
     if (this.isHost()) this.judge(me, k, g.i); else { Party.send('qa', { gid: Party.p.gid, i: g.i, a: k }); this.render(); }
   },
@@ -10153,7 +10228,7 @@ const Quiz = {
       this.judgeText('house', g.ai.right ? Q.s[0] : others[Math.floor(Math.random() * others.length)].s[0], g.i);
     }
     if (g.solo && g.state === 'q' && g.ai && !g.locked.house && !this.isShort() && now >= g.ai.at) { // 사장님 차례
-      const right = g.perm[g.i].indexOf(0), wrong = [0, 1, 2, 3].filter(x => x !== right && x !== g.picks.me); this.judge('house', g.ai.right ? right : wrong[Math.floor(Math.random() * wrong.length)], g.i);
+      const right = g.perm[g.i].indexOf(0), wrong = g.perm[g.i].map((_, x) => x).filter(x => x !== right && x !== g.picks.me); this.judge('house', g.ai.right ? right : wrong[Math.floor(Math.random() * wrong.length)], g.i);
     }
     if (!this.isHost()) return;
     if (g.state === 'q' && now - g.t0 > this.secs() * 1000) this.timeout(true);
@@ -10166,7 +10241,7 @@ const Quiz = {
   onParty(m, id) {
     if (m.k === 'start') { if (!this.open_) this.open(); return this.begin((m.order || []).map(String), +m.seed >>> 0); }
     const g = this.g; if (!g) return;
-    if (m.k === 'qa') { if (Party.isHost() && g.order.includes(id)) { if (typeof m.tx === 'string') this.judgeText(id, m.tx.slice(0, 30), +m.i); else this.judge(id, Math.max(0, Math.min(3, +m.a || 0)), +m.i); } return; }
+    if (m.k === 'qa') { if (Party.isHost() && g.order.includes(id)) { if (typeof m.tx === 'string') this.judgeText(id, m.tx.slice(0, 30), +m.i); else this.judge(id, Math.max(0, Math.min(g.perm[+m.i] ? g.perm[+m.i].length - 1 : 3, +m.a || 0)), +m.i); } return; }
     if (id !== Party.p.host) return; // 판정은 방장 것만
     const txt = typeof m.tx === 'string' ? m.tx.slice(0, 30) : null;
     if (m.k === 'qwin' && +m.i === g.i && g.state === 'q') return this.win(String(m.id), txt != null ? -1 : +m.a, txt);
@@ -10192,7 +10267,7 @@ const Quiz = {
     if (!this.open_) return; const scr = $('qzScr'), pan = $('qzPan'); if (!scr) return; const g = this.g, P = this.inParty() ? Party.p : null;
     if (this.inParty() && this.state === 'ready') this.state = 'party';
     if (this.state === 'ready') {
-      scr.innerHTML = `<div class="qzMid"><h2>경매 퀴즈</h2><p>한 판 ${this.N}문제 (객관식 ${this.N - this.NS} · 단답 ${this.NS}). 먼저 맞힌 사람이 1점.<br>객관식은 틀리면 그 문제는 끝, 단답은 직접 쳐서 맞히고 틀려도 다시 쳐 볼 수 있어요.</p>
+      scr.innerHTML = `<div class="qzMid"><h2>경매 퀴즈</h2><p>한 판 ${this.N}문제 · 객관식 ${this.MIX.mc} · O/X ${this.MIX.ox} · 단답 ${this.MIX.s} · 계산 ${this.MIX.calc}. 먼저 맞힌 사람이 1점.<br>보기 문제는 틀리면 그 문제는 끝, 단답은 직접 쳐서 맞히고 틀려도 다시 쳐 볼 수 있어요.</p>
         <button class="btn gold" id="qzSolo">혼자 하기 · ${esc(castName('arcade'))} 사장님이랑</button><button class="btn" id="qzVs">👥 친구랑 퀴즈 대결</button>
         <p class="qzNote">혼자 최고 기록 ${this.best()}/${this.N}${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
       pan.innerHTML = '<div class="qzKeys"><span><b>1 2 3 4</b> 보기 고르기 · 단답은 쓰고 <b>Enter</b> · <b>Esc</b> 일어나기</span></div>';
@@ -10229,7 +10304,7 @@ const Quiz = {
     }
     // 문제
     const me = this.meId(), rev = g.state === 'rev', Q = this.cur(), sh = this.isShort();
-    const top = `<div class="qzTop"><span>문제 ${g.i + 1}/${g.qs.length}${sh ? ' · <em class="qzTag">단답</em>' : ''}</span>${rev ? '' : `<b class="qzT">⏱ <span id="qzTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>`}</div>`;
+    const top = `<div class="qzTop"><span>문제 ${g.i + 1}/${g.qs.length}${{ s: ' · <em class="qzTag">단답</em>', ox: ' · <em class="qzTag ox">O/X</em>', calc: ' · <em class="qzTag calc">계산</em>' }[this.kind()] || ''}</span>${rev ? '' : `<b class="qzT">⏱ <span id="qzTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>`}</div>`;
     const res = rev ? (g.winner ? `<div class="qzRes ${g.winner === me ? 'win' : ''}">${g.winner === me ? '🎉 정답! +1점' : `⭕ ${esc(this.nm(g.winner))} 정답 +1점`}</div>` : '<div class="qzRes">⏰ 아무도 못 맞혔어요</div>') : '';
     if (sh) { // 단답: 입력칸 (다시 그려도 쓰던 글자·포커스는 그대로)
       const old = $('qzIn'), val = old ? old.value : '', foc = old && document.activeElement === old;
@@ -10251,8 +10326,8 @@ const Quiz = {
       return `<button class="btn qzOptBtn ${cls}" data-qa="${k}" ${rev || lockMe ? 'disabled' : ''}><i>${k + 1}</i><span>${esc(Q.a[orig])}</span>${picked.length && (rev || g.locked[picked[0]]) ? `<em>${picked.map(id => esc(this.nm(id))).join(' · ')}</em>` : ''}</button>`; };
     const status = rev ? res + `<p class="qzWhy">💡 ${esc(Q.why)}</p>`
       : g.locked[me] ? '<div class="qzRes lose">✗ 틀렸어요. 다른 사람이 맞히는지 지켜봐요</div>' : g.mine !== null ? '<div class="qzRes">답을 보냈어요…</div>' : '';
-    scr.innerHTML = `${top}<div class="qzQ">${esc(Q.q)}</div><div class="qzOpts">${[0, 1, 2, 3].map(opt).join('')}</div>${status}`;
-    pan.innerHTML = this.board() + '<div class="qzKeys"><span><b>1 2 3 4</b> 보기 고르기</span></div>';
+    scr.innerHTML = `${top}<div class="qzQ">${esc(Q.q)}</div><div class="qzOpts${perm.length === 2 ? ' ox' : ''}">${perm.map((_, k) => opt(k)).join('')}</div>${status}`;
+    pan.innerHTML = this.board() + `<div class="qzKeys"><span><b>${perm.map((_, k) => k + 1).join(' ')}</b> 보기 고르기</span></div>`;
     scr.querySelectorAll('[data-qa]').forEach(b => (b.onclick = () => this.answer(+b.dataset.qa)));
     void msg;
   },

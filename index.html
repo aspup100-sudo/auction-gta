@@ -1870,7 +1870,7 @@ const FEEL = {
   liveOfflineMidnight: false, // 자정 컷은 뺐다 (사용자 2026-10-16 '자정 넘길 때 비접속이면 월세 안 받는 거 없애자, 그냥 12시간으로만'). 꺼 둔 동안은 마지막 접속부터 12시간까지만 흐른다
   liveHospitalSec: 10,    // (20→10, 사용자 2026-10-16) 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
   liveAsylumSec: 60,      // 실시간 채널: 정신과 병동 입원 시간(초)
-  punchAsylumHits: 3,     // 때리기 (v139): 사람(플레이어·행인)을 이만큼 때리면 정신과 병동
+  punchAsylumHits: 3,     // 때리기: 맞은 사람 누적이 이 수의 배수가 되면 그 막타를 친 사람이 정신과 병동 (v163)
   punchHospHits: 6,       // 맞은 사람이 누적 이만큼 맞으면 병원 (병원비는 마지막에 때린 사람)
   pvpAsylumHits: 3,       // 같이 하기: 내 차로 다른 플레이어를 이만큼 치면 병원비까지 물어주고 정신과 병동
   // 카메라
@@ -4573,6 +4573,7 @@ const Net = {
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'hosp') { Pvp.onHosp(m, p); return; }
     if (m.t === 'punch') { Punch.onPunch(m, p); return; } // 때리기 (v139)
+    if (m.t === 'pcnt') { Punch.onCnt(m, p); return; } // 맞은 사람 누적 (v163)
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
@@ -4821,7 +4822,7 @@ const Pvp = {
   // 내가 친 사람이 병원에 실려 갔다 → 병원비(아직 안 냈으면)를 물어주고 나도 정신과 병동으로
   onHosp(m, p) {
     if (m.to !== Net.myId || !Game.player) return;
-    if (m.punch) { if (m.fee) { Money.why(`${p.name} 병원비 (때려서)`); State.cash -= m.fee; HUD.setCash(State.cash); if (Live.on) Live.save(); } Toast.show(`${p.name}이(가) 맞다가 병원에 실려 갔다! 마지막에 때린 내가 병원비 ${fmtWon(m.fee)} 냄.`, 3600); return; } // 때리기 (v139)
+    if (m.punch) { if (m.fee) { Money.why(`${p.name} 병원비 (때려서)`); State.cash -= m.fee; HUD.setCash(State.cash); if (Live.on) Live.save(); } Toast.show(`${p.name}이(가) 맞다가 병원에 실려 갔다! 마지막에 때린 내가 병원비 ${fmtWon(m.fee)} 냄.`, 3600); if (m.asy) Punch.toAsylum(p.name, +m.asy, 1200); return; } // 때리기 (v139) · 6대째 막타면 정신과 병동도 (v163)
     if (m.fee) { State.cash -= m.fee; HUD.setCash(State.cash); if (Live.on) Live.save(); }
     Toast.show(`${p.name}이(가) 내 차에 치여 병원에 실려 갔다!${m.fee ? ` 병원비 ${fmtWon(m.fee)} 물어줌.` : ''} 나도 정신과 병동행.`, 3600);
     State.pvp = 0;
@@ -7080,7 +7081,9 @@ const CarSwap = {
 /* ===================== 때리기 (사용자 2026-10-16 '플레이어, NPC 때릴 수 있게. 3번 때리면 정신병원 가는 그 메커니즘 그대로,
  *  맞는 사람은 6번 누적되면 병원, 병원비는 당연히 마지막 때린 사람이 내는 거') =====================
  * 걸어 다니다 사람(다른 플레이어 · 길 가는 행인) 옆에서 G (폰은 👊 버튼). 이혁진·편집숍 사장님은 안 맞는다.
- * 때린 사람: 내가 때린 횟수가 FEEL.punchAsylumHits(3)번이 되면 정신과 병동 (차로 친 것과 같은 asylum).
+ * 정신과 병동 (v163, 사용자 2026-10-16 '내가 3번 치는 걸 세는 게 아니라 맞는 사람이 3번 누적됐을 때, 마지막 막타 친 사람이 정신병원'):
+ *   맞은 사람 쪽 누적이 FEEL.punchAsylumHits(3)의 배수(3·6)가 되는 순간 그 한 대를 친 사람이 간다 (차로 친 것과 같은 asylum).
+ *   플레이어: 맞은 쪽이 {t:'pcnt', to: 때린 사람, n}으로 알려 준다 (6번째는 hosp에 asy:1).
  * 맞은 사람: 누적 FEEL.punchHospHits(6)번이면 구급차로 병원. 병원비는 마지막에 때린 사람이 낸다.
  *   플레이어: {t:'punch', to, x, y} → 맞은 쪽이 센다. 6번째면 {t:'hosp', to: 때린 사람, fee, punch:1} → 때린 사람이 병원비를 낸다.
  *   행인: 내 게임 안에서만 센다. 6번째면 구급차에 실려 가고 병원비는 내가 낸다. */
@@ -7115,17 +7118,22 @@ const Punch = {
     if (t.kind === 'npc') {
       const w = t.w, z = Game.zone, nx = w.x + dx / L * 10, ny = w.y + dy / L * 10; if (z.at(Math.floor(nx / TILE), Math.floor(ny / TILE)) !== T.BLD) { w.x = nx; w.y = ny; }
       w.stun = 0.9; w.hurtCd = 1; w.punched = (w.punched || 0) + 1;
-      if (w.punched >= FEEL.punchHospHits) { // 구급차에 실려 간다 · 병원비는 내가
+      const nth = w.punched; if (w.punched >= FEEL.punchHospHits) { // 구급차에 실려 간다 · 병원비는 내가
         const fee = this.fee(); w.bubble = { text: '으윽… 구급차…', t: 2 }; setTimeout(() => { const i = Game.decor.indexOf(w); if (i >= 0) Game.decor.splice(i, 1); Sound.play('horn'); }, 900);
         Money.why('행인 병원비 (때려서)'); State.cash -= fee; HUD.setCash(State.cash); if (Live.on) Live.save();
         Toast.show(`행인이 ${FEEL.punchHospHits}번 맞고 구급차에 실려 갔어요. 병원비 ${fmtWon(fee)}은 내가 냄`, 3400);
         if (Net.on) Net.news('행인을 때려서 병원에 보냄');
       } else { w.bubble = { text: ['아야!', '왜 때려요!!', '경찰 불러요!', '이 사람이 진짜…', '살려 주세요!'][Math.floor(Math.random() * 5)] + ` (${w.punched}/${FEEL.punchHospHits})`, t: 2 }; w.ai = { t: 2, ix: Math.sign(dx) || 1, iy: Math.sign(dy) }; }
+      if (nth % FEEL.punchAsylumHits === 0) await this.toAsylum('행인', nth); // 행인 누적 3·6대째 막타 → 내가 정신과 병동
+      else if (nth % FEEL.punchAsylumHits === FEEL.punchAsylumHits - 1) HUD.page('이 행인 한 대만 더 맞으면, 그 한 대 친 사람이 정신과 병동 간다.', '알림');
     } else { Net.send({ t: 'punch', to: t.id, x: Math.round(pl.x), y: Math.round(pl.y) }); PetBattle.tukHit(t.p, t.id); } // 둘 다 펫이 있으면 펫끼리 투닥투닥 → 배틀 신청 (v147)
-    // 때린 횟수: 3번째면 정신과 병동
-    State.punch = (State.punch || 0) + 1;
-    if (State.punch >= FEEL.punchAsylumHits) { State.punch = 0; const who = t.kind === 'npc' ? '행인' : t.p.name; await sleep(400); await asylum(who, 0, `사람을 ${FEEL.punchAsylumHits}번이나 때려서`, '주먹 쓰기 전에 마음부터 진정시키세요. 경매는 머리로 하는 거예요.'); }
-    else if (State.punch === FEEL.punchAsylumHits - 1) HUD.page('한 번만 더 사람 때리면 정신과 병동 간다.', '알림');
+  },
+  async toAsylum(who, n, wait = 400) { await sleep(wait); await asylum(who, 0, `${who} 누적 ${n}대째, 그 막타를 내가 쳐서`, '주먹 쓰기 전에 마음부터 진정시키세요. 경매는 머리로 하는 거예요.'); },
+  // 내가 때린 플레이어가 몇 대째 맞았는지 알려 왔다 (맞은 쪽이 센다)
+  onCnt(m, p) {
+    if (m.to !== Net.myId || !Game.player) return; const n = +m.n || 0, who = (p && p.name) || '친구';
+    if (n % FEEL.punchAsylumHits === 0) this.toAsylum(who, n, 200);
+    else if (n % FEEL.punchAsylumHits === FEEL.punchAsylumHits - 1) HUD.page(`${who} 한 대만 더 맞으면, 그 한 대 친 사람이 정신과 병동 간다.`, '알림');
   },
   // 내가 맞았다
   onPunch(m, p) {
@@ -7137,8 +7145,9 @@ const Punch = {
     State.punched = (State.punched || 0) + 1; const n = State.punched;
     if (n >= FEEL.punchHospHits) { // 병원비는 마지막에 때린 사람이
       State.punched = 0; const fee = this.fee(); State.cash += fee; HUD.setCash(State.cash);
-      Net.send({ t: 'hosp', to: m.from, fee, punch: 1 }); hospitalize({ fee, by: p.name, punch: true }); return;
+      Net.send({ t: 'hosp', to: m.from, fee, punch: 1, asy: n % FEEL.punchAsylumHits === 0 ? n : undefined }); hospitalize({ fee, by: p.name, punch: true }); return;
     }
+    Net.send({ t: 'pcnt', to: m.from, n }); // 몇 대째인지 때린 사람에게 (3의 배수면 그 사람이 정신과 병동)
     Toast.show(`👊 ${p.name}에게 맞았다! (${n}/${FEEL.punchHospHits}번 맞으면 병원)`, 2600);
   },
 };

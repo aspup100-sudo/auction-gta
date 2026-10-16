@@ -10855,6 +10855,8 @@ const PetVote = {
  *   네트워크: {t:'rps', k:'ask'|'ok'|'no'|'pick'|'quit', to, gid, ...}. 중계 서버는 모르는 메시지를 그대로 넘긴다.
  * 홀짝: 게임장 옆 건대 카지노 테이블. 주사위 두 개 합이 홀인지 짝인지 맞히면 건 돈만큼 받고, 틀리면 잃는다 (1:1).
  */
+// 카지노·게임장·이혁진 판돈은 번 돈(현금 − 경매 밑천)으로만 건다 (사용자 2026-10-16 '카지노랑 이혁진 게임도 내가 번 돈만')
+function mgFree() { return typeof Shop !== 'undefined' && Shop.spendable ? Shop.spendable() : Math.max(0, State.cash); }
 function mgCash(d, label) {
   if (!d) return;
   if (Live.on && typeof Money !== 'undefined') Money.why(label);
@@ -10889,7 +10891,7 @@ const Rps = {
     if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
     if (vs) this.vs = vs; if (this.vs !== 'house' && !this.friends().some(f => f.id === this.vs)) this.vs = 'house';
     if (vs || this.size <= 2) this.size = this.vs === 'house' ? 1 : 2;
-    if (this.stake > State.cash) this.stake = 0;
+    if (this.stake > mgFree()) this.stake = 0;
     this.view = 'lobby'; $('rpsWin').classList.add('in'); this.render();
     clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500);
   },
@@ -10910,7 +10912,7 @@ const Rps = {
     if (this.view === 'lobby' && sig !== this.sig) { this.sig = sig; if (this.size === 2 && !this.friends().some(f => f.id === this.vs) && this.friends().length) this.vs = this.friends()[0].id; this.render(); }
   },
   start() {
-    if (this.stake > State.cash) { Sound.play('deny'); return this.render('판돈이 내 돈보다 많아요.'); }
+    if (this.stake > mgFree()) { Sound.play('deny'); return this.render('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
     if (this.size > 2) { if (Party.create('rps', this.size, this.stake)) { this.view = 'party'; return this.render(); } return this.render('같이 하기는 채널이나 친구 방에서만 돼요.'); }
     if (this.size === 1) return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: this.stake });
     const f = this.friends().find(x => x.id === this.vs); if (f && this.stake > PvpCap.room(f.name)) { Sound.play('deny'); return this.render(PvpCap.note(f.name)); }
@@ -10952,7 +10954,7 @@ const Rps = {
     this.render();
   },
   again() {
-    const g = this.g; if (!g) return; this.vs = g.vs; this.size = g.vs === 'house' ? 1 : 2; this.stake = Math.min(g.stake, State.cash) === g.stake ? g.stake : 0; this.g = null; this.start();
+    const g = this.g; if (!g) return; this.vs = g.vs; this.size = g.vs === 'house' ? 1 : 2; this.stake = Math.min(g.stake, mgFree()) === g.stake ? g.stake : 0; this.g = null; this.start();
   },
   // 친구에게서 온 메시지
   onNet(m, p) {
@@ -10977,16 +10979,16 @@ const Rps = {
   },
   showAsk() {
     const el = $('rpsAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; }
-    const short = a.stake > State.cash, over = a.stake > PvpCap.room(a.name);
+    const short = a.stake > mgFree(), over = a.stake > PvpCap.room(a.name);
     const away = a.place && !(Game.scene === 'room' && Game.room && Game.room.place.id === a.place);
-    el.innerHTML = `<b>✊✌️✋ ${esc(a.name)}이(가) 가위바위보 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="rpsYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="rpsNo">안 하기</button></div>`;
+    el.innerHTML = `<b>✊✌️✋ ${esc(a.name)}이(가) 가위바위보 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 번 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="rpsYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="rpsNo">안 하기</button></div>`;
     el.classList.add('in');
     $('rpsYes').onclick = () => this.accept(); $('rpsNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : over ? 'cap' : 'no' }); this.ask = null; this.showAsk(); };
     clearTimeout(this.askT); this.askT = setTimeout(() => { if (this.ask === a) { this.ask = null; this.showAsk(); } }, 20000);
   },
   async accept() {
     const a = this.ask; if (!a) return; if (Game.busy) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.'); this.ask = null; this.showAsk();
-    if (a.stake > State.cash) return this.send('no', a.from, { gid: a.gid, why: 'cash' });
+    if (a.stake > mgFree()) return this.send('no', a.from, { gid: a.gid, why: 'cash' });
     if (a.stake > PvpCap.room(a.name)) return this.send('no', a.from, { gid: a.gid, why: 'cap' });
     if (!(await mgGoTo(a.place))) return this.send('no', a.from, { gid: a.gid, why: 'far' }); // v90: 밖에 있으면 게임장으로 바로 간다
     if (Rps.open_ && this.g) this.g = null;
@@ -10995,7 +10997,7 @@ const Rps = {
   },
   render(msg) {
     if (!this.open_) return; if (this.view === 'party' || this.view === 'pmatch') return Party.renderRps(msg);
-    const el = $('rpsWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view); const head = `<div class="rcHead">가위바위보 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>`;
+    const el = $('rpsWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view); const head = `<div class="rcHead">가위바위보 <small>3판 2선승 · 번 돈 ${fmtWon(mgFree())}</small></div>`;
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = this.friends(); const opts = this.size === 1 ? [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }] : fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` }));
       const wait = this.view === 'wait', multi = this.size > 2;
@@ -11004,7 +11006,7 @@ const Rps = {
         <div class="mgSec">인원 <small>${Net.on ? '2인부터는 친구에게 신청하거나 초대장을 보내요' : '친구랑 하기는 채널이나 친구 방에서 돼요'}</small></div><div class="mgRow">${[1, 2, 3, 4].map(n => `<button class="btn${this.size === n ? ' sel' : ''}" data-sz="${n}" ${wait || (n > 1 && !Net.on) ? 'disabled' : ''}>${n}인<small>${n === 1 ? `${castName('arcade')}이랑` : `${n - 1}명 모집`}</small></button>`).join('')}</div>
         ${multi ? '<p class="mgNote">다 같이 내서 두 가지 손만 나오면 진 손을 낸 사람이 탈락해요. 끝까지 남은 한 명이 판돈을 다 가져가요.</p>' : `<div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${this.size === 2 && !fr.length ? '<p class="mgNote">접속한 친구가 있으면 여기에 떠요. 밖에 있어도 초대장이 가요.</p>' : ''}`}
-        <div class="mgSec">판돈 <small>${multi ? `탈락한 사람이 우승한 사람에게 줘요 · 같은 친구와는 하루 ${fmtWon(FEEL.pvpDailyCap)}까지` : fsel ? PvpCap.note(fsel.name) : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash || s > fRoom ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
+        <div class="mgSec">판돈 <small>${multi ? `탈락한 사람이 우승한 사람에게 줘요 · 같은 친구와는 하루 ${fmtWon(FEEL.pvpDailyCap)}까지` : fsel ? PvpCap.note(fsel.name) : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > mgFree() || s > fRoom ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
         <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p></div>`,
         `<div class="pcBtns">${wait ? '<button class="btn" id="rpsCancel">신청 취소</button>' : `<button class="btn gold" id="rpsGo">${multi ? '👥 판 만들기' : 'START · 시작'}</button>`}<button class="btn" id="rpsX">← 일어나기</button></div>`);
       el.querySelectorAll('[data-sz]').forEach(b => (b.onclick = () => { this.size = Number(b.dataset.sz); if (this.size === 1) this.vs = 'house'; else if (this.size === 2 && !fr.some(f => f.id === this.vs)) this.vs = fr.length ? fr[0].id : 'house'; Sound.play('click'); this.render(); }));
@@ -11077,8 +11079,8 @@ const Casino = {
     this.fixBet(); $('hjWin').classList.add('in'); this.render();
   },
   close() { if (!this.open_ || this.busy) return; if (this.bj && this.bj.state === 'play') return this.render('블랙잭 판을 먼저 끝내세요.'); if (this.pk && this.pk.state === 'hold') return this.render('포커 카드를 먼저 바꾸세요.'); if (Party.p && PARTY_GAMES[Party.p.game].kind === 'casino') Party.leave(); this.recruit = false; this.open_ = false; Game.formOpen = false; $('hjWin').classList.remove('in'); Sound.play('flip'); },
-  fixBet() { if (this.bet > State.cash) this.bet = HJ_BETS.filter(b => b <= State.cash).pop() || HJ_BETS[0]; },
-  can(n = 1) { return this.bet * n <= State.cash; },
+  fixBet() { if (this.bet > mgFree()) this.bet = HJ_BETS.filter(b => b <= mgFree()).pop() || HJ_BETS[0]; },
+  can(n = 1) { return this.bet * n <= mgFree(); },
   pay(d, label) { mgCash(d, label); if (Net.on && Math.abs(d) >= 50e4) Net.news(`카지노 ${label} ${d > 0 ? '+' : '−'}${fmtWon(Math.abs(d))}`); },
   locked() { return this.busy || (this.bj && this.bj.state === 'play') || (this.pk && this.pk.state === 'hold'); },
   key(k) { // 숫자 키: 홀짝 1·2, 슬롯 1, 블랙잭 1 받기 2 멈춤 3 더블, 룰렛 1 돌리기, 포커 1~5 고르기
@@ -11090,14 +11092,14 @@ const Casino = {
   },
   /* ---------- 홀짝 ---------- */
   holPlay(side) {
-    if (this.busy) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
+    if (this.busy) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
     const H = this.hol;
     if (Party.on('hol')) { H.side = H.side === side ? null : side; H.last = null; Sound.play('click'); Party.myBet(H.side ? this.bet : 0, H.side || ''); return this.render(); } // 같이 하는 테이블: 골라 두면 방장이 던진다
     H.side = side; this.holRoll(1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6));
   },
   holThrow() { if (this.busy || !Party.on('hol') || !Party.isHost()) return; const d1 = 1 + Math.floor(Math.random() * 6), d2 = 1 + Math.floor(Math.random() * 6); Party.send('dice', { gid: Party.p.gid, d1, d2 }); this.holRoll(d1, d2); },
   holRoll(d1, d2) {
-    if (this.busy) return; const H = this.hol, side = H.side, bet = this.bet, play = !!side && bet <= State.cash; this.busy = true; H.last = null; Sound.play('drum'); this.render();
+    if (this.busy) return; const H = this.hol, side = H.side, bet = this.bet, play = !!side && bet <= mgFree(); this.busy = true; H.last = null; Sound.play('drum'); this.render();
     setTimeout(() => { const sum = d1 + d2, res = sum % 2 ? 'hol' : 'jjak', win = play && res === side; H.last = { d1, d2, sum, res, win, bet, watch: !play }; H.hist.push(res); if (H.hist.length > 14) H.hist.shift(); this.busy = false;
       if (play) { this.pay(win ? bet : -bet, `홀짝 ${win ? '맞힘' : '틀림'}`); Sound.play(win ? 'coins' : 'deny'); } else Sound.play('pop');
       if (Party.on('hol')) { H.side = null; Party.myRes(play ? (win ? bet : -bet) : 0); Party.myBet(0, ''); }
@@ -11116,7 +11118,7 @@ const Casino = {
   /* ---------- 슬롯머신: 릴이 아래로 굴러가다 왼쪽부터 차례로 멈춘다 ---------- */
   slotSym() { let r = Math.random() * 100; for (const s of SLOT_SYM) { if ((r -= s[1]) < 0) return s[0]; } return SLOT_SYM[0][0]; },
   slotSpin() {
-    if (this.busy) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
+    if (this.busy) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
     const S = this.slot, bet = this.bet, out = [this.slotSym(), this.slotSym(), this.slotSym()];
     const next = out.map(m => [this.slotSym(), m, this.slotSym()]); this.busy = true; S.last = null; S.win = 0; this.render();
     const box = $('hjWin'); const lever = box.querySelector('.lever'); if (lever) { lever.classList.remove('pull'); void lever.offsetWidth; lever.classList.add('pull'); }
@@ -11143,18 +11145,18 @@ const Casino = {
       html: `<div class="slotCab${win ? ' won' : ''}${big ? ' big' : ''}"><div class="marquee"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b>SUPER ★ 7</b><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="slotPay">${pays}</div>
         <div class="slotMid"><div class="reels">${reels}<div class="payline"></div></div><button class="lever" data-do="spin" ${this.busy || !this.can() ? 'disabled' : ''} aria-label="레버 당기기"><i></i></button></div>
-        <div class="leds"><div><small>CREDIT</small><b>${fmtWon(State.cash)}</b></div><div><small>BET</small><b>${fmtWon(this.bet)}</b></div><div class="w"><small>WIN</small><b>${S.win ? fmtWon(S.win) : '—'}</b></div></div></div>`,
+        <div class="leds"><div><small>CREDIT</small><b>${fmtWon(mgFree())}</b></div><div><small>BET</small><b>${fmtWon(this.bet)}</b></div><div class="w"><small>WIN</small><b>${S.win ? fmtWon(S.win) : '—'}</b></div></div></div>`,
       btns: `<div class="hjPick"><button class="btn gold big" data-do="spin" ${this.busy || !this.can() ? 'disabled' : ''}>SPIN · 레버 당기기<small>1</small></button></div>`, foot: '가운데 빨간 줄에 같은 그림 세 개면 당첨 (배수는 건 돈 포함).' };
   },
   /* ---------- 블랙잭 ---------- */
   bjDeal() {
-    if (this.locked()) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); }
+    if (this.locked()) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
     const d = cDeck(); this.bj = { deck: d, me: [d.pop(), d.pop()], dl: [d.pop(), d.pop()], bet: this.bet, state: 'play', msg: '', shown: { me: 0, dl: 0 } }; Sound.play('paper');
     const B = this.bj; if (bjVal(B.me) === 21 || bjVal(B.dl) === 21) return this.bjEnd();
     this.render();
   },
   bjHit() { const B = this.bj; if (!B || B.state !== 'play') return; B.me.push(B.deck.pop()); Sound.play('paper'); if (bjVal(B.me) > 21) return this.bjEnd(); if (bjVal(B.me) === 21) return this.bjStand(); this.render(); },
-  bjDouble() { const B = this.bj; if (!B || B.state !== 'play' || B.me.length !== 2 || B.bet * 2 > State.cash) return; B.bet *= 2; B.me.push(B.deck.pop()); Sound.play('paper'); if (bjVal(B.me) > 21) return this.bjEnd(); this.bjStand(); },
+  bjDouble() { const B = this.bj; if (!B || B.state !== 'play' || B.me.length !== 2 || B.bet * 2 > mgFree()) return; B.bet *= 2; B.me.push(B.deck.pop()); Sound.play('paper'); if (bjVal(B.me) > 21) return this.bjEnd(); this.bjStand(); },
   bjStand() { const B = this.bj; if (!B || B.state !== 'play') return; while (bjVal(B.dl) < 17) B.dl.push(B.deck.pop()); this.bjEnd(); },
   bjEnd() {
     const B = this.bj, m = bjVal(B.me), d = bjVal(B.dl), mBJ = m === 21 && B.me.length === 2, dBJ = d === 21 && B.dl.length === 2; B.state = 'done';
@@ -11170,7 +11172,7 @@ const Casino = {
     const sh = B.shown, dlH = B.dl.map((c, i) => cHtml(c, play && i === 1, i >= sh.dl)).join(''), meH = B.me.map((c, i) => cHtml(c, false, i >= sh.me)).join(''); sh.dl = B.dl.length; sh.me = B.me.length;
     return { cls: play ? '' : B.w > 0 ? 'win' : B.w < 0 ? 'lose' : '', line: play ? `내 패 ${bjVal(B.me)} · 받을까요, 멈출까요?` : B.msg,
       html: felt(`<div class="cRow dl"><small>딜러 <b>${play ? '?' : bjVal(B.dl)}</b></small><div class="hand">${dlH}</div></div><div class="cRow me"><small>나 <b>${bjVal(B.me)}</b></small><div class="hand">${meH}</div><div class="betCircle sm">${this.chipStack(B.bet)}</div></div>`),
-      btns: play ? `<div class="hjPick"><button class="btn gold" data-do="hit">HIT · 받기<small>1</small></button><button class="btn" data-do="stand">STAND · 멈추기<small>2</small></button><button class="btn" data-do="double" ${B.me.length !== 2 || B.bet * 2 > State.cash ? 'disabled' : ''}>DOUBLE<small>3 · 두 배 걸고 한 장만</small></button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="deal" ${!this.can() ? 'disabled' : ''}>한 판 더<small>1</small></button></div>`, foot: `판돈 ${fmtWon(B.bet)}` };
+      btns: play ? `<div class="hjPick"><button class="btn gold" data-do="hit">HIT · 받기<small>1</small></button><button class="btn" data-do="stand">STAND · 멈추기<small>2</small></button><button class="btn" data-do="double" ${B.me.length !== 2 || B.bet * 2 > mgFree() ? 'disabled' : ''}>DOUBLE<small>3 · 두 배 걸고 한 장만</small></button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="deal" ${!this.can() ? 'disabled' : ''}>한 판 더<small>1</small></button></div>`, foot: `판돈 ${fmtWon(B.bet)}` };
   },
   /* ---------- 룰렛: 휠은 캔버스, 베팅판은 사진처럼 (0 · 3줄 × 12 · 열 2:1 · 12구간 · 1~18/짝/빨강/검정/홀/19~36) ---------- */
   rlPay(k, n) {
@@ -11179,14 +11181,14 @@ const Casino = {
     return ok ? (k[0] === 'd' || k[0] === 'c' ? 2 : 1) : -1;
   },
   rlTotal() { return Object.values(this.rl.bets).reduce((s, v) => s + v, 0); },
-  rlPlace(k) { if (this.busy) return; const R = this.rl; if (R.last) { R.last = null; } if (this.rlTotal() + this.bet > State.cash) { Sound.play('deny'); return this.render('칩이 내 돈보다 많아요.'); } R.bets[k] = (R.bets[k] || 0) + this.bet; Sound.play('click'); Party.myBet(this.rlTotal()); this.render(); },
+  rlPlace(k) { if (this.busy) return; const R = this.rl; if (R.last) { R.last = null; } if (this.rlTotal() + this.bet > mgFree()) { Sound.play('deny'); return this.render('칩이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); } R.bets[k] = (R.bets[k] || 0) + this.bet; Sound.play('click'); Party.myBet(this.rlTotal()); this.render(); },
   rlClear() { if (this.busy) return; this.rl.bets = {}; Sound.play('flip'); Party.myBet(0); this.render(); },
-  rlRebet() { if (this.busy || !this.rl.lastBets) return; const t = Object.values(this.rl.lastBets).reduce((s, v) => s + v, 0); if (t > State.cash) { Sound.play('deny'); return this.render('지난 베팅이 내 돈보다 많아요.'); } this.rl.bets = { ...this.rl.lastBets }; Sound.play('click'); Party.myBet(this.rlTotal()); this.render(); },
+  rlRebet() { if (this.busy || !this.rl.lastBets) return; const t = Object.values(this.rl.lastBets).reduce((s, v) => s + v, 0); if (t > mgFree()) { Sound.play('deny'); return this.render('지난 베팅이 번 돈보다 많아요.'); } this.rl.bets = { ...this.rl.lastBets }; Sound.play('click'); Party.myBet(this.rlTotal()); this.render(); },
   rlSpin(forced) {
     if (this.busy) return; const R = this.rl, pt = Party.on('rl');
     if (pt && forced === undefined && !Party.isHost()) return this.render('방장이 돌리면 같이 돌아가요.');
     if (!pt && !this.rlTotal()) { if (R.lastBets) this.rlRebet(); if (!this.rlTotal()) { Sound.play('deny'); return this.render('베팅판에 칩을 먼저 놓으세요.'); } }
-    if (this.rlTotal() > State.cash) { if (forced === undefined) { Sound.play('deny'); return this.render('칩이 내 돈보다 많아요.'); } R.bets = {}; }
+    if (this.rlTotal() > mgFree()) { if (forced === undefined) { Sound.play('deny'); return this.render('칩이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); } R.bets = {}; }
     const n = forced !== undefined ? Math.max(0, Math.min(36, Math.floor(forced))) : Math.floor(Math.random() * 37), bets = { ...R.bets };
     if (pt && forced === undefined) Party.send('spin', { gid: Party.p.gid, n }); // 같이 하는 테이블: 같은 숫자가 모두에게 this.busy = true; R.last = null; R.rolling = true; this.render(); Sound.play('drum');
     const T = 4800, step = Math.PI * 2 / 37, w0 = R.wa, wf = w0 + Math.PI * 2 * (2.5 + Math.random()), target = wf + RL_ORDER.indexOf(n) * step;
@@ -11242,7 +11244,7 @@ const Casino = {
       foot: '숫자 하나 35배 · 열(2:1)·12구간 2배 · 빨강/검정·홀/짝·1-18/19-36 1배. 0이 나오면 0에 건 것 말고는 다 잃어요.' };
   },
   /* ---------- 비디오 포커 (잭스 오어 베터) ---------- */
-  pkDeal() { if (this.locked()) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 내 돈보다 많아요.'); } const d = cDeck(); this.pk = { deck: d, hand: [d.pop(), d.pop(), d.pop(), d.pop(), d.pop()], hold: [false, false, false, false, false], bet: this.bet, state: 'hold', fresh: [0, 1, 2, 3, 4] }; Sound.play('paper'); this.render(); },
+  pkDeal() { if (this.locked()) return; if (!this.can()) { Sound.play('deny'); return this.render('건 돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); } const d = cDeck(); this.pk = { deck: d, hand: [d.pop(), d.pop(), d.pop(), d.pop(), d.pop()], hold: [false, false, false, false, false], bet: this.bet, state: 'hold', fresh: [0, 1, 2, 3, 4] }; Sound.play('paper'); this.render(); },
   pkDraw() {
     const P = this.pk; if (!P || P.state !== 'hold') return; P.fresh = []; P.hand = P.hand.map((c, i) => { if (P.hold[i]) return c; P.fresh.push(i); return P.deck.pop(); }); P.state = 'done'; const r = pkRank(P.hand); P.rank = r; const mult = r >= 0 ? PK_PAY[r][1] : 0;
     this.pay(mult ? P.bet * (mult - 1) : -P.bet, mult ? `포커 ${PK_PAY[r][0]}` : '포커 족보 없음'); Sound.play(mult >= 4 ? 'chime' : mult > 1 ? 'coins' : mult ? 'pop' : 'deny'); this.fixBet(); this.render();
@@ -11253,7 +11255,7 @@ const Casino = {
     const cards = P ? P.hand.map((c, i) => `<button class="pkC${P.hold[i] ? ' held' : ''}" data-hold="${i}" ${hold ? '' : 'disabled'}><span class="heldTag">HELD</span>${cHtml(c, false, (P.fresh || []).includes(i))}<small>${i + 1}</small></button>`).join('') : Array.from({ length: 5 }, () => `<span class="pkC">${cHtml(null, true)}</span>`).join('');
     const r = P && P.rank, mult = P && P.state === 'done' && r >= 0 ? PK_PAY[r][1] : 0; if (P) P.fresh = [];
     return { cls: P && P.state === 'done' ? (mult > 1 ? 'win' : mult ? '' : 'lose') : '', line: !P ? '다섯 장 받고, 남길 카드를 골라 한 번 바꿔요.' : hold ? '남길 카드를 누르세요 (1~5). 다 골랐으면 DRAW.' : r >= 0 ? `${PK_PAY[r][0]}! ${mult > 1 ? `+${fmtWon(P.bet * (mult - 1))}` : '본전'}` : `족보 없음 −${fmtWon(P.bet)}`,
-      html: `<div class="vpCab"><div class="vpTitle">JACKS OR BETTER</div>${table}<div class="cRow pk">${cards}</div><div class="vpLeds"><span>BET ${fmtWon(bet)}</span><span>CREDIT ${fmtWon(State.cash)}</span></div></div>`,
+      html: `<div class="vpCab"><div class="vpTitle">JACKS OR BETTER</div>${table}<div class="cRow pk">${cards}</div><div class="vpLeds"><span>BET ${fmtWon(bet)}</span><span>CREDIT ${fmtWon(mgFree())}</span></div></div>`,
       btns: hold ? `<div class="hjPick"><button class="btn gold big" data-do="pkdraw">DRAW · 바꾸기</button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="pkdeal" ${!this.can() ? 'disabled' : ''}>DEAL · ${P ? '한 판 더' : '카드 받기'}<small>1</small></button></div>`, foot: P ? `판돈 ${fmtWon(P.bet)}` : '' };
   },
   // v88 (사용자 '창이 아니라 그 상황 속에 들어간 것처럼'): 화면 전체가 카지노 테이블 앞 자리. 왼쪽은 테이블·기계와 맞은편 딜러, 오른쪽은 내 칩과 손.
@@ -11265,11 +11267,11 @@ const Casino = {
     const recruit = this.recruit && !P ? `<div class="ptPick"><b>몇 명이서 할까요?</b><small>${this.tab === 'rl' ? '룰렛' : '홀짝'} 테이블에 자리를 만들고 친구에게 초대장을 보내요. 방장이 ${this.tab === 'rl' ? '돌리면' : '던지면'} 모두 같은 결과가 나오고, 각자 자기 칩만 정산해요.</small><div>${PARTY_GAMES[this.tab].sizes.map(n => `<button class="btn" data-ptsz="${n}">${n}명</button>`).join('')}</div><button class="btn" data-do="ptcancel">취소</button></div>` : '';
     const dealer = machine ? '' : `<div class="dealer"><canvas class="pt" data-pt="dealer" width="32" height="32"></canvas><span class="dName">${castName('casino')}</span><p class="bubble ${msg ? 'lose' : B.cls}">${say}</p></div>`;
     el.innerHTML = `<div class="scene cs t-${this.tab}"><div class="csAmb"><i></i><i></i><i></i></div>
-      <div class="csBar"><button class="btn sBack" id="hjX" ${lock ? 'disabled' : ''}>← 자리에서 일어나기</button><span class="csLogo">♠ ♥ GRAND 건대 CASINO ♦ ♣</span><span class="csCash">내 돈 <b>${fmtWon(State.cash)}</b></span></div>
+      <div class="csBar"><button class="btn sBack" id="hjX" ${lock ? 'disabled' : ''}>← 자리에서 일어나기</button><span class="csLogo">♠ ♥ GRAND 건대 CASINO ♦ ♣</span><span class="csCash">번 돈 <b>${fmtWon(mgFree())}</b></span></div>
       <div class="csMain"><div class="csStage">${dealer}${B.html}${recruit}</div>
       <div class="csHud"><div class="csTabs">${CASINO_TABS.map(([k, l]) => `<button class="btn${this.tab === k ? ' sel' : ''}" data-tab="${k}" ${(lock || P) && this.tab !== k ? 'disabled' : ''}>${l}</button>`).join('')}</div>${party}
       <p class="mgMsg big ${msg ? 'lose' : B.cls}">${say}</p>
-      <div class="chips">${HJ_BETS.map(b => `<button class="chip ${CHIP_CLS[b]}${this.bet === b ? ' sel' : ''}" data-bet="${b}" ${lock || b > State.cash ? 'disabled' : ''}><em>${chipLabel(b)}</em></button>`).join('')}<span class="chipHint">${this.tab === 'rl' ? '칩 고르고 베팅판 누르기' : '걸 칩'}</span></div>
+      <div class="chips">${HJ_BETS.map(b => `<button class="chip ${CHIP_CLS[b]}${this.bet === b ? ' sel' : ''}" data-bet="${b}" ${lock || b > mgFree() ? 'disabled' : ''}><em>${chipLabel(b)}</em></button>`).join('')}<span class="chipHint">${this.tab === 'rl' ? '칩 고르고 베팅판 누르기' : '걸 칩'}</span></div>
       ${B.btns}<p class="mgNote">${B.foot || `${castName('casino')}: 잃어도 괜찮은 돈만 거세요.`}</p></div></div></div>`;
     el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
     el.querySelectorAll('[data-bet]').forEach(b => (b.onclick = () => { this.bet = Number(b.dataset.bet); Sound.play('click'); this.render(); }));
@@ -11323,7 +11325,7 @@ const VipDuel = {
   wait(ms) { return new Promise(r => setTimeout(r, ms)); },
   othersBusy() { const b = this.busyBy; return b && Date.now() - b.at < 6 * 60000 ? b.name : ''; },
   onNet(m, p) { if (m.k === 'on') this.busyBy = { name: (p && p.name) || m.name || '누군가', at: Date.now() }; else if (m.k === 'off') this.busyBy = null; },
-  canOffer() { return !this.open_ && !(typeof Tutorial !== 'undefined' && Tutorial.on) && State.cash >= FEEL.vipDuelStake && !this.othersBusy() && Math.random() < FEEL.vipDuelChance; },
+  canOffer() { return !this.open_ && !(typeof Tutorial !== 'undefined' && Tutorial.on) && mgFree() >= FEEL.vipDuelStake && !this.othersBusy() && Math.random() < FEEL.vipDuelChance; },
   dim(on) { $('duelDim').classList.toggle('in', on); },
   // talkWalker에서 부른다. 끝나면(거절 포함) true면 도망가게 한다
   async offer(w) {
@@ -11629,7 +11631,7 @@ const Fight = {
   open(vs) {
     if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
     if (vs) this.vs = vs; if (this.vs !== 'house' && !Rps.friends().some(f => f.id === this.vs)) this.vs = 'house';
-    if (this.stake > State.cash) this.stake = 0; this.view = 'lobby'; $('fightWin').classList.add('in'); this.render();
+    if (this.stake > mgFree()) this.stake = 0; this.view = 'lobby'; $('fightWin').classList.add('in'); this.render();
     clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500);
   },
   close() {
@@ -11648,7 +11650,7 @@ const Fight = {
   },
   stop(msg) { cancelAnimationFrame(this.raf); this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(msg); },
   start() {
-    if (this.stake > State.cash) { Sound.play('deny'); return this.render('판돈이 내 돈보다 많아요.'); }
+    if (this.stake > mgFree()) { Sound.play('deny'); return this.render('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
     if (this.vs === 'house') { this.stake = 0; return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: 0, left: true }); } // 사장이랑은 판돈 없이 (사용자 2026-10-15 '사장이랑 해서 돈 못 따게, 친구랑만')
     const f = Rps.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; return this.render('그 친구가 게임장에 없어요.'); }
     if (this.stake > PvpCap.room(f.name)) { Sound.play('deny'); return this.render(PvpCap.note(f.name)); }
@@ -11764,14 +11766,14 @@ const Fight = {
     if (m.k === 'quit' && g.state !== 'done') this.stop(`${name}이(가) 그만뒀어요. 판돈은 그대로예요.`);
   },
   showAsk() {
-    const el = $('fightAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; } const short = a.stake > State.cash, over = a.stake > PvpCap.room(a.name);
+    const el = $('fightAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; } const short = a.stake > mgFree(), over = a.stake > PvpCap.room(a.name);
     const away = a.place && !(Game.scene === 'room' && Game.room && Game.room.place.id === a.place);
-    el.innerHTML = `<b>🥊 ${esc(a.name)}이(가) 격투 게임 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="fgYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="fgNo">안 하기</button></div>`;
+    el.innerHTML = `<b>🥊 ${esc(a.name)}이(가) 격투 게임 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 번 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="fgYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="fgNo">안 하기</button></div>`;
     el.classList.add('in'); $('fgYes').onclick = () => this.accept(); $('fgNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : over ? 'cap' : 'no' }); this.ask = null; this.showAsk(); };
     clearTimeout(this.askT); this.askT = setTimeout(() => { if (this.ask === a) { this.ask = null; this.showAsk(); } }, 20000);
   },
   async accept() {
-    const a = this.ask; if (!a) return; if (Game.busy) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.'); this.ask = null; this.showAsk(); if (a.stake > State.cash) return this.send('no', a.from, { gid: a.gid, why: 'cash' }); if (a.stake > PvpCap.room(a.name)) return this.send('no', a.from, { gid: a.gid, why: 'cap' });
+    const a = this.ask; if (!a) return; if (Game.busy) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.'); this.ask = null; this.showAsk(); if (a.stake > mgFree()) return this.send('no', a.from, { gid: a.gid, why: 'cash' }); if (a.stake > PvpCap.room(a.name)) return this.send('no', a.from, { gid: a.gid, why: 'cap' });
     if (Casino.open_ && Casino.locked()) return this.send('no', a.from, { gid: a.gid, why: 'busy' }); if (Casino.open_) Casino.close(); if (!(await mgGoTo(a.place))) return this.send('no', a.from, { gid: a.gid, why: 'far' });
     if (Rps.open_) Rps.close(); if (Casino.open_) Casino.close();
     if (!this.open_) { this.open_ = true; Game.formOpen = true; $('fightWin').classList.add('in'); clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500); }
@@ -11782,11 +11784,11 @@ const Fight = {
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = Rps.friends(), wait = this.view === 'wait';
       const fsel = this.vs !== 'house' ? fr.find(f => f.id === this.vs) : null, fRoom = fsel ? PvpCap.room(fsel.name) : Infinity; if (!wait && this.stake > fRoom) this.stake = Math.max(...RPS_STAKES.filter(s => s <= fRoom)); const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` })));
-      el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 내 돈 ${fmtWon(State.cash)}</small></div>
+      el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 번 돈 ${fmtWon(mgFree())}</small></div>
         <p class="mgNote">내 캐릭터로 직접 싸워요. <b>A·D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기 · <b>J</b> 주먹 · <b>K</b> 발차기. 터치는 화면 버튼.</p>
         <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${Net.on && !fr.length ? '<p class="mgNote">접속한 친구가 있으면 여기에 떠요. 밖에 있어도 초대장이 가요.</p>' : ''}
-        <div class="mgSec">판돈 <small>${this.vs === 'house' ? '사장이랑은 재미로만 해요. 판돈은 친구랑 할 때만 걸 수 있어요' : fsel ? PvpCap.note(fsel.name) : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > State.cash || s > fRoom || (s && this.vs === 'house') ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
+        <div class="mgSec">판돈 <small>${this.vs === 'house' ? '사장이랑은 재미로만 해요. 판돈은 친구랑 할 때만 걸 수 있어요' : fsel ? PvpCap.note(fsel.name) : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > mgFree() || s > fRoom || (s && this.vs === 'house') ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
         <p class="mgMsg">${wait ? `${esc(this.pend.name)}에게 신청했어요. 대답 기다리는 중…` : esc(msg || '')}</p></div>`,
         `<div class="pcBtns">${wait ? '<button class="btn" id="fgCancel">신청 취소</button>' : '<button class="btn gold" id="fgGo">START · 시작</button>'}<button class="btn" id="fgX">← 일어나기</button></div>`);
       el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; if (this.vs === 'house') this.stake = 0; Sound.play('click'); this.render(); }));
@@ -11798,7 +11800,7 @@ const Fight = {
     if (this.view === 'done') {
       const g = this.g, won = g.me.wins > g.op.wins;
       el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">${won ? 'YOU WIN!' : 'GAME OVER'} <small>${g.me.wins} : ${g.op.wins} · ${esc(g.name)}</small></div><p class="mgMsg big ${won ? 'win' : 'lose'}">${won ? `이겼어요!${g.stake ? ` +${fmtWon(g.stake)}` : ''}` : `졌어요.${g.stake ? ` −${fmtWon(g.stake)}` : ''}`}</p></div>`, '<div class="pcBtns"><button class="btn gold" id="fgAgain">CONTINUE · 한 판 더</button><button class="btn" id="fgX">← 일어나기</button></div>');
-      $('fgAgain').onclick = () => { const vs = g.vs, st = g.stake <= State.cash ? g.stake : 0; this.g = null; this.vs = vs; this.stake = st; this.start(); };
+      $('fgAgain').onclick = () => { const vs = g.vs, st = g.stake <= mgFree() ? g.stake : 0; this.g = null; this.vs = vs; this.stake = st; this.start(); };
       $('fgX').onclick = () => this.close(); return;
     }
     el.innerHTML = arcadeShell('🥊 건대 파이터', `<canvas id="fgCv" width="${this.W}" height="${this.H}"></canvas>`, `<div class="fgKeys"><i class="stick"></i><span><b>A D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기</span><span><b>J</b> 주먹 · <b>K</b> 발차기</span></div><div class="fgPad"><div><button data-t="left">◀</button><button data-t="up">▲</button><button data-t="right">▶</button><button data-t="block">🛡</button></div><div><button data-t="punchP" class="atk">👊</button><button data-t="kickP" class="atk">🦵</button></div></div><button class="fgQuit" id="fgQuit">그만하기</button>`, 'play');
@@ -11974,7 +11976,7 @@ const Tetris = {
     const seats = P.members.map(id => `<li class="${id === Net.myId ? 'me' : ''}">${esc(Party.nm(id))}${id === P.host ? ' <small>방장</small>' : ''}</li>`).join('') + Array.from({ length: Math.max(0, P.size - P.members.length) }, () => '<li class="empty">빈자리 · 모집 중…</li>').join('');
     const fr = host && P.members.length < P.size ? Party.friends().filter(f => !P.members.includes(f.id)) : [];
     const inv = !host || P.members.length >= P.size ? '' : fr.length ? `<div class="tetInv"><small>초대장 보내기 (밖에 있어도 와요)</small>${fr.map(f => `<button class="btn" data-inv="${f.id}" ${P.invited[f.id] ? 'disabled' : ''}>${esc(f.name)} <small>${P.invited[f.id] ? '보냄 ✓' : f.here ? '여기 있음' : '밖에 있음'}</small></button>`).join('')}</div>` : '<p class="tetNote">초대할 수 있는 친구가 없어요. 같은 동네에 접속한 친구만 보여요.</p>';
-    const opts = host ? `<div class="tetOpt"><span>인원</span>${[2, 3, 4].map(n => `<button class="btn${P.size === n ? ' sel' : ''}" data-tsz="${n}" ${n < P.members.length ? 'disabled' : ''}>${n}명</button>`).join('')}</div><div class="tetOpt"><span>판돈</span>${STK.map(v => `<button class="btn${P.stake === v ? ' sel' : ''}" data-tst="${v}" ${v > State.cash || v > PvpCap.roomAll(P.members.filter(id => id !== Net.myId).map(id => Party.nm(id))) ? 'disabled' : ''}>${v ? fmtWon(v) : '없음'}</button>`).join('')}</div>` : `<p>판돈 <b style="font-size:15px">${P.stake ? fmtWon(P.stake) : '없음'}</b></p>`;
+    const opts = host ? `<div class="tetOpt"><span>인원</span>${[2, 3, 4].map(n => `<button class="btn${P.size === n ? ' sel' : ''}" data-tsz="${n}" ${n < P.members.length ? 'disabled' : ''}>${n}명</button>`).join('')}</div><div class="tetOpt"><span>판돈</span>${STK.map(v => `<button class="btn${P.stake === v ? ' sel' : ''}" data-tst="${v}" ${v > mgFree() || v > PvpCap.roomAll(P.members.filter(id => id !== Net.myId).map(id => Party.nm(id))) ? 'disabled' : ''}>${v ? fmtWon(v) : '없음'}</button>`).join('')}</div>` : `<p>판돈 <b style="font-size:15px">${P.stake ? fmtWon(P.stake) : '없음'}</b></p>`;
     return `<h2>VS TETRIS</h2><p>두 줄 이상 지우면 상대에게 회색 줄이 올라가요. 마지막까지 버티면 이겨요.</p><ul class="tetSeats">${seats}</ul>${opts}${inv}
       ${host ? `<button class="btn gold" id="tetStart" ${P.members.length < 2 ? 'disabled' : ''}>START · 대전 시작</button>` : '<p class="tetNote">방장이 시작하면 바로 시작해요.</p>'}<button class="btn" id="tetLeave">${host ? '판 닫기' : '판에서 나가기'}</button>`;
   },
@@ -11989,7 +11991,7 @@ const Tetris = {
   },
   hostStart() {
     const P = Party.p; if (!P || !Party.isHost() || P.members.length < 2) return;
-    if (P.stake > State.cash) { Sound.play('deny'); return Toast.show('판돈이 내 돈보다 많아요.'); }
+    if (P.stake > mgFree()) { Sound.play('deny'); return Toast.show('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
     const order = P.members.slice(), seed = (Math.random() * 2 ** 31) >>> 0; P.started = true;
     Party.send('start', { gid: P.gid, order, seed }); Party.roster(); this.battle(order, seed);
   },
@@ -12895,8 +12897,8 @@ const Party = {
   /* ---- 초대장 카드 ---- */
   showInv() {
     const el = $('partyAsk'), a = this.inv; if (!a) { el.classList.remove('in'); return; }
-    const G = PARTY_GAMES[a.game], short = a.stake > State.cash, over = (a.game === 'rps' || a.game === 'tet') && a.stake > PvpCap.room(a.name), here = Game.scene === 'room' && Game.room && Game.room.place.id === a.place;
-    el.innerHTML = `<i class="tk">🎟 초대장</i><b>${esc(a.name)}이(가) ${esc(a.pname)} ${G.name}에 불렀어요</b><span>${a.size}명 모집 · 지금 ${a.n}명${a.stake ? ` · 판돈 ${fmtWon(a.stake)}` : ''}</span>${short ? '<span class="bad">판돈이 내 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}${here ? '' : '<span class="sm">가기를 누르면 그 가게 안으로 바로 가요.</span>'}<div><button class="btn gold" id="ptYes" ${short || over ? 'disabled' : ''}>가기</button><button class="btn" id="ptNo">거절</button></div>`;
+    const G = PARTY_GAMES[a.game], short = a.stake > mgFree(), over = (a.game === 'rps' || a.game === 'tet') && a.stake > PvpCap.room(a.name), here = Game.scene === 'room' && Game.room && Game.room.place.id === a.place;
+    el.innerHTML = `<i class="tk">🎟 초대장</i><b>${esc(a.name)}이(가) ${esc(a.pname)} ${G.name}에 불렀어요</b><span>${a.size}명 모집 · 지금 ${a.n}명${a.stake ? ` · 판돈 ${fmtWon(a.stake)}` : ''}</span>${short ? '<span class="bad">판돈이 번 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}${here ? '' : '<span class="sm">가기를 누르면 그 가게 안으로 바로 가요.</span>'}<div><button class="btn gold" id="ptYes" ${short || over ? 'disabled' : ''}>가기</button><button class="btn" id="ptNo">거절</button></div>`;
     el.classList.add('in'); $('ptYes').onclick = () => this.accept(); $('ptNo').onclick = () => { this.send('no', { to: a.from, gid: a.gid, why: 'no' }); this.inv = null; this.showInv(); };
     clearTimeout(this.invT); this.invT = setTimeout(() => { if (this.inv === a) { this.inv = null; this.showInv(); } }, 30000);
   },
@@ -12931,7 +12933,7 @@ const Party = {
   /* ---- 여러 명 가위바위보 ---- */
   rpsStart() {
     const P = this.p; if (!P || !this.isHost() || P.members.length < 2) return;
-    for (const id of P.members) if (P.stake && id === Net.myId && P.stake > State.cash) return Rps.render('판돈이 내 돈보다 많아요.');
+    for (const id of P.members) if (P.stake && id === Net.myId && P.stake > mgFree()) return Rps.render('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).');
     P.started = true; const order = P.members.slice(); this.send('start', { gid: P.gid, order }); this.roster(); this.rpsBegin(order);
   },
   rpsBegin(order) {

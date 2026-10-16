@@ -10336,7 +10336,7 @@ const Quiz = {
  * '오른쪽에 게임 하나 더, 시험 전 죽음의 문답. 1대1로만. 경매론 전반 시험 대비 질문지를 준비하고, 내 질문지와 상대 질문지는 다르게.
  *  내가 질문지 중 하나를 골라 보내면 상대가 답해야 돼, 객관식이든 단답이든. 체력 3개가 다 깎일 때까지 돌아가면서 던지고 답하기.'
  * 게임장 오른쪽 벽 기계('d'). 둘 다 질문지 5장을 받는다 (정답이 적혀 있고 나만 본다, 상대 것은 뒷면만).
- * 내 차례: 한 장 골라 객관식이나 단답(어려움)으로 던진다 → 상대가 한 번에 답한다. 틀리거나 시간이 지나면 상대 체력 −1.
+ * 내 차례: 한 장 골라 객관식이나 단답(어려움)으로 던진다 → 상대가 10초 안에 한 번에 답한다 (사용자 '10초 이내에 못 하면 하트 깎이게'). 틀리거나 시간이 지나면 상대 체력 −1.
  * 쓴 질문지는 버리고 한 장 새로 받는다. 차례를 바꿔 가며 누군가 체력 3개를 다 잃으면 끝.
  * 친구랑: Party 'exam' (2명). 판정은 방장이 한다. 친구가 없으면 장우준 사장님이랑 1대1 연습.
  *   {t:'party', k:'start'(order, seed) | 'xpick'(n, c, m) → 방장 | 'xask'(n, c, m) | 'xans'(n, a | tx) → 방장 | 'xres'(n, ok, a | tx, to) | 'xturn'(n)}
@@ -10418,7 +10418,7 @@ const EXAM_BANK = [
 ];
 
 const Exam = {
-  open_: false, hit: null, _foc: false, HAND: 5, HP: 3, PICK: 30, SECS: { mc: 20, s: 30 }, REV: 4500, state: 'ready', g: null, timer: 0, sel: -1,
+  open_: false, hit: null, _foc: false, HAND: 5, HP: 3, PICK: 30, SECS: { mc: 10, s: 10 }, REV: 4500, state: 'ready', g: null, timer: 0, sel: -1,
   inParty() { return typeof Party !== 'undefined' && Party.on('exam'); },
   wins() { return Store.get('examWins', 0) || 0; },
   open() {
@@ -10474,7 +10474,7 @@ const Exam = {
     const g = this.g, h = g.hands[g.asker]; h.splice(h.indexOf(c), 1); h.push(g.deck[g.ptr++ % g.deck.length]); g.used.push(c);
     g.c = c; g.m = m === 's' && EXAM_BANK[c][4] ? 's' : 'mc'; g.phase = 'ans'; g.t0 = Date.now(); g.mine = null;
     const R = makeRng((g.seed ^ (g.n + 1) * 7919) >>> 0), p = [0, 1, 2, 3]; for (let i = 3; i > 0; i--) { const j = Math.floor(R.next() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } g.perm = p;
-    if (g.solo && g.asker === 'me') { const sh = g.m === 's'; g.ai = { at: g.t0 + (sh ? 6000 + Math.random() * 12000 : 3000 + Math.random() * 9000), right: Math.random() < (sh ? 0.45 : 0.6) }; }
+    if (g.solo && g.asker === 'me') { const sh = g.m === 's'; g.ai = { at: g.t0 + (sh ? 4000 + Math.random() * 5500 : 2500 + Math.random() * 6000), right: Math.random() < (sh ? 0.45 : 0.6) }; }
     Sound.play(this.answerer() === this.meId() ? 'deny' : 'blip'); this.render();
     if (g.m === 's' && this.answerer() === this.meId()) { const inp = $('exIn'); if (inp && !matchMedia('(pointer:coarse)').matches) inp.focus(); }
   },
@@ -10550,7 +10550,7 @@ const Exam = {
     if (!this.open_) return; const scr = $('exScr'), pan = $('exPan'); if (!scr) return; const g = this.g, P = this.inParty() ? Party.p : null;
     if (this.inParty() && this.state === 'ready') this.state = 'party';
     if (this.state === 'ready') {
-      scr.innerHTML = `<div class="qzMid"><h2 class="exH">죽음의 문답</h2><p>1대1 시험 대비 문답이에요. 둘 다 정답이 적힌 질문지 ${this.HAND}장을 받아요 (내 질문지는 나만 봐요).<br>내 차례엔 한 장 골라 <b>객관식</b>이나 <b>단답</b>으로 던지고, 상대는 한 번에 답해야 해요.<br>틀리거나 시간이 지나면 체력 −1. 체력 ${'❤️'.repeat(this.HP)}이 먼저 다 깎이면 탈락!</p>
+      scr.innerHTML = `<div class="qzMid"><h2 class="exH">죽음의 문답</h2><p>1대1 시험 대비 문답이에요. 둘 다 정답이 적힌 질문지 ${this.HAND}장을 받아요 (내 질문지는 나만 봐요).<br>내 차례엔 한 장 골라 <b>객관식</b>이나 <b>단답</b>으로 던지고, 상대는 <b>10초 안에</b> 한 번에 답해야 해요.<br>틀리거나 시간이 지나면 체력 −1. 체력 ${'❤️'.repeat(this.HP)}이 먼저 다 깎이면 탈락!</p>
         <button class="btn gold" id="exVs">⚔️ 친구랑 1대1</button><button class="btn" id="exSolo">연습 · ${esc(castName('arcade'))} 사장님이랑 1대1</button>
         <p class="qzNote">친구한테 이긴 횟수 ${this.wins()}번${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
       pan.innerHTML = '<div class="qzKeys"><span>질문지 단원: 경매 절차 · 입찰 실무 · 권리분석 · 임대차 · 배당 · 특수물건 · 대금·명도</span></div>';
@@ -10584,7 +10584,7 @@ const Exam = {
       return;
     }
     const iAsk = g.asker === me, backs = `<div class="exBacks">${esc(this.nm(op))}의 질문지 ${'<i></i>'.repeat(g.hands[op].length)}</div>`;
-    pan.innerHTML = `<div class="qzKeys"><span>${g.phase === 'ans' && !iAsk && g.m === 'mc' ? '<b>1 2 3 4</b> 답 고르기' : g.phase === 'ans' && !iAsk ? '답을 쓰고 <b>Enter</b> · 한 번만 낼 수 있어요' : '체력 3개 · 틀리면 −1'}</span></div>`;
+    pan.innerHTML = `<div class="qzKeys"><span>${g.phase === 'ans' && !iAsk && g.m === 'mc' ? '<b>1 2 3 4</b> 답 고르기' : g.phase === 'ans' && !iAsk ? '답을 쓰고 <b>Enter</b> · 10초 안에 한 번만' : '체력 3개 · 틀리면 −1'}</span></div>`;
     if (g.phase === 'pick') {
       const hand = g.hands[me].map(c => this.card(c, true, iAsk && g.mine === null)).join('');
       scr.innerHTML = `${top}<div class="exSay ${iAsk ? 'go' : ''}">${iAsk ? (g.mine !== null ? '던지는 중…' : '내 차례! 질문지 한 장을 골라 던져요') : `${esc(this.nm(op))}이(가) 질문지를 고르는 중… 내 질문지를 미리 봐 두세요`}</div><div class="exHand">${hand}</div>${backs}`;

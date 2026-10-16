@@ -9076,6 +9076,7 @@ const PB_DEX = {
   trex: { t: 'R', b: [95, 110, 90, 60], m: [['꼬리 휘두르기', 'R', 90, 90], ['공룡 물기', 'N', 85, 95], ['쿵쿵 발구르기', 'R', 60, 100], ['크앙!', 'N', 0, 100, 'atk-']] },
 };
 const PB_STAT = { atk: '공격', def: '방어', spd: '스피드', acc: '명중' };
+const PB_TRAINER_NAMES = ['송정섭', '박동하', '이동호', '박준수', '박도영', '신종칠']; // 사용자가 정해 준 이름 (2026-10-16)
 const PB_TRAINER_SAY = ['펫 배틀 할 사람~?', '눈이 마주쳤으니 배틀이다!', '내 펫 엄청 세요!', '한 판 붙을래요?', '펫 데리고 있죠? 배틀해요!'];
 
 const PetBattle = {
@@ -9127,13 +9128,10 @@ const PetBattle = {
   /* ---- 동네 펫 트레이너 (spawnDecor 끝에서) ---- */
   spawn() {
     const D = Game.decor || [], kinds = Object.keys(PB_DEX), zid = [...String(Game.zone ? Game.zone.id : '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7); let n = 0;
-    for (let i = 0; i < D.length && n < 3; i++) { const w = D[i]; if (i % 5 !== 2 || w.vip || w.promo || w.trainer) continue; const R = makeRng((zid * 131 + i * 977 + (State.day || 0) * 31) >>> 0); const key = 'tr' + zid + ':' + i; w.trainer = { n, kind: kinds[Math.floor(R.next() * R.next() * kinds.length)], off: Math.floor(R.next() * 3) - 1, key, next: 0, done: this.beat().includes(key) }; n++; }
+    for (let i = 0; i < D.length && n < 3; i++) { const w = D[i]; if (i % 5 !== 2 || w.vip || w.promo || w.trainer) continue; const R = makeRng((zid * 131 + i * 977 + (State.day || 0) * 31) >>> 0); const key = 'tr' + zid + ':' + i; w.trainer = { n, z: zid % 6, kind: kinds[Math.floor(R.next() * R.next() * kinds.length)], off: Math.floor(R.next() * 3) - 1, key, next: 0, done: this.beat().includes(key) }; n++; }
   },
-  // 트레이너 이름 (사용자 2026-10-16 '트레이너라고 하지 말고 플레이어 이름으로'): 채널에서 전에 만난 (지금 접속 안 한) 플레이어 이름을 단다. 모자라거나 혼자 하기면 행인 호칭
-  tname(T) {
-    if (T.who) return T.who; let names = []; try { if (Live.on) names = Live.rankRows().filter(r => r.away && r.name).map(r => r.name).sort(); } catch (e) {}
-    const nm = names[T.n] || ''; T.pl = !!nm; T.who = nm || WALKER_NAMES[(T.n * 3 + 2) % WALKER_NAMES.length]; return T.who;
-  },
+  // 트레이너 이름 (사용자 2026-10-16 '트레이너라고 하지 말고, 그냥 사람 이름으로 넣어'): 정해 준 6명 중에서. 동네마다 다른 사람이 나온다 (한 동네에선 안 겹친다)
+  tname(T) { if (T.who) return T.who; T.pl = true; T.who = PB_TRAINER_NAMES[((T.z || 0) + T.n * 5) % PB_TRAINER_NAMES.length]; return T.who; },
   hon(T) { this.tname(T); return T.pl ? `${T.who}님` : T.who; },
   // 오늘(실제 날짜) 이긴 트레이너 (동네를 나갔다 와도 상금은 하루 한 번)
   today() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; },

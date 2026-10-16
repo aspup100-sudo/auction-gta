@@ -7,23 +7,26 @@ export const BOOK_KEEP_MS = 3 * 3600e3;      // 입찰표 장부: 이보다 오�
 export const SEEN_KEEP_MS = 30 * 86400e3;    // 순위표: 30일 동안 안 들어온 사람은 지운다
 export const SEEN_MAX = 300;
 export const TICK_MS = 10000;                // 심장박동·순위표 공유 간격
+export const MINE_MAX = 12000, MINE_LIM = 250; // 석탄 땅굴 (v168): 채널마다 굴 하나. 판 칸('x,y')과 마지막 막장 [x,y,방향]을 들고 있다가 새로 온 광부에게 준다
 
 export class RoomLogic {
   // opts: { kind: 'ch'|'room', key, storage: { get(k), put(k, v) }, sockets: () => [{ ws, id, name, send(str), close() }], now?: () => ms }  (ws = 같은 연결인지 비교용 원본 소켓)
   constructor(opts) {
     this.kind = opts.kind; this.key = opts.key; this.storage = opts.storage; this.sockets = opts.sockets; this.now = opts.now || (() => Date.now());
-    this.book = null; this.seen = null; this.hostId = null; this.dirty = false; this.loaded = null;
+    this.book = null; this.seen = null; this.hostId = null; this.dirty = false; this.loaded = null; this.mcells = null; this.mlast = null; this.mdirty = false;
   }
   async load() {
     if (this.loaded) return this.loaded;
     this.loaded = (async () => {
       this.book = (await this.storage.get('book')) || {}; this.seen = (await this.storage.get('seen')) || {}; this.hostId = (await this.storage.get('hostId')) || null;
+      const mn = await this.storage.get('mine'); this.mcells = new Set(mn && typeof mn.c === 'string' && mn.c ? mn.c.split(';') : []); this.mlast = mn && Array.isArray(mn.l) ? mn.l : null;
     })();
     return this.loaded;
   }
   async persist(force) {
     if (!this.dirty && !force) return; this.dirty = false;
     await this.storage.put('book', this.book); await this.storage.put('seen', this.seen); await this.storage.put('hostId', this.hostId);
+    if (this.mdirty) { this.mdirty = false; await this.storage.put('mine', { c: [...this.mcells].join(';'), l: this.mlast }); }
   }
   // 같은 id가 다시 붙으면(재연결) 먼저 것은 닫는다. 서버는 손님 목록을 소켓에서 바로 읽으므로 따로 들고 있지 않는다.
   async join(s) {
@@ -58,6 +61,13 @@ export class RoomLogic {
         const mine = m.seen && m.seen[s.name]; if (mine) this.touchSeen(s.name, mine.cash, mine.pnl, mine.as, mine.earn);
         return;
       }
+      if (m.t === 'mdig') { // 굴 한 칸(또는 끊긴 동안 판 칸들)을 뚫었다: 새 칸만 저장하고 다른 사람에게 알린다
+        const add = []; if (Array.isArray(m.c)) for (const k of m.c.slice(0, 600)) { if (typeof k !== 'string' || !/^-?\d{1,3},-?\d{1,3}$/.test(k) || this.mcells.has(k) || this.mcells.size >= MINE_MAX) continue; const [x, y] = k.split(',').map(Number); if (Math.abs(x) > MINE_LIM || Math.abs(y) > MINE_LIM) continue; this.mcells.add(k); add.push(k); }
+        const l = Array.isArray(m.l) && m.l.length === 3 && m.l.every(n => Number.isInteger(n) && Math.abs(n) <= MINE_LIM) ? m.l : null; if (l) this.mlast = l;
+        if (add.length || l) { this.mdirty = true; this.dirty = true; this.broadcast({ t: 'mdig', c: add, l, from: s.id, name: s.name }, s); }
+        return;
+      }
+      if (m.t === 'getmine') { try { s.send(JSON.stringify({ t: 'mine', c: [...this.mcells], l: this.mlast, from: 'server', name: '서버' })); } catch (e) {} return; }
       if (m.t === 'pos') { if (typeof m.cs === 'number') this.touchSeen(s.name, m.cs, undefined, undefined, m.ea); else if (typeof m.pn === 'number') this.touchSeen(s.name, undefined, m.pn, undefined, m.ea); }
       if (m.t === 'asset') this.touchSeen(s.name, undefined, undefined, m.list); // 자산 요약: 자리 비운 사람 것도 순위 창에서 보이게 순위표에 같이 둔다
     }

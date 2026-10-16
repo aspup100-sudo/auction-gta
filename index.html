@@ -1867,7 +1867,7 @@ const FEEL = {
   liveOrderFee: 50000,    // 실시간 채널: 인도명령 신청 비용(송달료 등)
   liveOrderEase: 15,      // 실시간 채널: 인도명령을 받아 두면 점유자 경계심(저항)이 이만큼 낮아진다         // 실시간 채널: 낙찰 뒤 잔금(대출→법원 납부) 기한, 실제 분 (현실의 대금지급기한 약 1달 ≒ 반 주)
   liveOfflineMaxHours: 12, // 그리고 마지막 접속부터 12시간이 지나면 거기서도 멈춘다 (사용자 2026-10-16 수정 '12시간 동안 비접속이면')
-  liveOfflineMidnight: true, // 꺼 둔 동안 월세·이자는 다 흐르되, 접속 안 한 채 자정(현실 시간 24시)을 넘기면 그 뒤로 멈춘다 (사용자 2026-10-16, 하루 4달 한도를 바꿈)
+  liveOfflineMidnight: false, // 자정 컷은 뺐다 (사용자 2026-10-16 '자정 넘길 때 비접속이면 월세 안 받는 거 없애자, 그냥 12시간으로만'). 꺼 둔 동안은 마지막 접속부터 12시간까지만 흐른다
   liveHospitalSec: 10,    // (20→10, 사용자 2026-10-16) 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
   liveAsylumSec: 60,      // 실시간 채널: 정신과 병동 입원 시간(초)
   punchAsylumHits: 3,     // 때리기 (v139): 사람(플레이어·행인)을 이만큼 때리면 정신과 병동
@@ -5518,7 +5518,7 @@ const Live = {
     return `내 집 ${nm} · ${a.cond ? this.COND[a.cond].label : '상태 미확인'} · 부동산에 임대·매도`;
   },
   /* 꺼 둔 동안 월세 (사용자 2026-10-16): 임대 중인 집의 보유 시간을 꺼 둔 만큼 앞당긴다 (월세·대출 이자·계약 만료가 같이 흐른다).
-   * 단, 접속 안 한 채 자정(현실 시간 24시)을 넘기거나 마지막 접속부터 FEEL.liveOfflineMaxHours(12)시간이 지나면 거기까지만 친다 (그 뒤로는 월세도 이자도 없다). 임대 안 한 집은 그대로 멈춰 있다. */
+   * 단, 마지막 접속부터 FEEL.liveOfflineMaxHours(12)시간이 지나면 거기까지만 친다 (자정 컷 FEEL.liveOfflineMidnight는 v161부터 꺼 둠) (그 뒤로는 월세도 이자도 없다). 임대 안 한 집은 그대로 멈춰 있다. */
   offline(gap) {
     const rented = this.owned().filter(m => m.asset && m.asset.rentOn); if (!rented.length) return;
     const now = Date.now(), leftAt = now - gap, mid = new Date(leftAt); mid.setHours(24, 0, 0, 0);
@@ -6592,6 +6592,7 @@ function update(dt) {
       const ride = !frozen && Net.on ? Ride.near() : null; // 친구가 운전 중인 차 옆이면 F로 같이 타기 (운전자 포함 최대 5명, 사용자 2026-10-15)
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
       const sw = !frozen && !ride && !nearCar ? CarSwap.near() : null; // 세워 둔 친구 차 · 길가 차 (v138)
+      Game.fOK = nearCar || !!ride || !!sw; // 탈 게 옆에 있을 때만 모바일 승하차 버튼 (v161)
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) { /* 위에서 탔다 */ }
       else if (fKey && ride) Ride.board(ride);
       else if ((fKey || (interact && !tg)) && sw) CarSwap.take(sw);
@@ -6684,8 +6685,14 @@ function updateDecor(dt) {
 function worldToScreen() {
   const sx = Cam.shake > 0 ? (Math.random() - 0.5) * Cam.shakeAmp * (Cam.shake / FEEL.shakeDecay) : 0;
   const sy = Cam.shake > 0 ? (Math.random() - 0.5) * Cam.shakeAmp * (Cam.shake / FEEL.shakeDecay) : 0;
-  ctx.setTransform(DPR * Cam.zoom, 0, 0, DPR * Cam.zoom, DPR * (VW / 2 - Cam.x * Cam.zoom + sx), DPR * (VH / 2 - Cam.y * Cam.zoom + sy));
+  ctx.setTransform(DPR * Cam.zoom, 0, 0, DPR * Cam.zoom, DPR * (VW / 2 - camSnapX() * Cam.zoom + sx), DPR * (VH / 2 - camSnapY() * Cam.zoom + sy));
 }
+// 걸을 땐 카메라를 월드 1픽셀 단위로 맞춘다 (사용자 2026-10-16 '사람 버벅거리는 거 고쳐'): 사람은 정수 픽셀에 그리는데 카메라만 소수점으로 따라오면
+// 매 프레임 화면에서 1픽셀씩 앞뒤로 떨렸다. 차를 몰 땐(차는 소수점으로 부드럽게 그린다) 그대로 둔다.
+function camSmooth() { return Game.scene === 'zone' && (Game.driving || (typeof Ride !== 'undefined' && Ride.with)); }
+function camSnap(c, v) { if (camSmooth()) return c; const o = c - v; return Game.scene === 'zone' && Math.abs(o) < 40 ? Math.round(v) + Math.round(o) : Math.round(c); } // 따라가는 중엔 사람 기준으로 (앞뒤 떨림 없이)
+function camSnapX() { return camSnap(Cam.x, Game.player ? Game.player.x : Cam.x); }
+function camSnapY() { return camSnap(Cam.y, Game.player ? Game.player.y : Cam.y); }
 function roadPoint(r, s) {
   const segs = []; let tot = 0; for (let i = 0; i < r.pts.length - 1; i++) { const L = Math.hypot(r.pts[i + 1][0] - r.pts[i][0], r.pts[i + 1][1] - r.pts[i][1]); segs.push(L); tot += L; }
   let d = Math.max(0, Math.min(1, s)) * tot; for (let i = 0; i < segs.length; i++) { if (d <= segs[i] || i === segs.length - 1) { const k = d / segs[i]; const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1]; return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, ux: (bx - ax) / segs[i], uy: (by - ay) / segs[i] }; } d -= segs[i]; }
@@ -6901,7 +6908,8 @@ function draw() {
   if (document.body.classList.contains('touchOn')) {
     const tg = Game.prompt.target; const act = tg && !Game.busy && !Dialog.open && tg.kind !== 'car' ? promptWord(tg) : '조사';
     const ta = $('tAct'); if (ta.textContent !== act) ta.textContent = act;
-    const car = Game.driving ? '내리기' : (tg && tg.kind === 'car' ? '타기' : '승하차'); const tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
+    const rid = typeof Ride !== 'undefined' && Ride.with, car = Game.driving || rid ? '내리기' : '타기', tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
+    const cv = Game.scene === 'zone' && (Game.driving || !!rid || !!Game.fOK); if (tc.hidden === cv) tc.hidden = !cv; // 아무것도 안 탔고 옆에 탈 것도 없으면 숨긴다 (사용자 2026-10-16 '겹친다 없애자')
     const th = $('tHit'), hit = Game.scene === 'zone' && !Game.driving && !(typeof Ride !== 'undefined' && Ride.with) && !Game.busy && !Dialog.open; if (th.hidden === hit) th.hidden = !hit;
   }
   $('hudSpeed').textContent = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '';

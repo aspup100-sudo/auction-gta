@@ -4497,6 +4497,7 @@ const Net = {
     if (m.t === 'lbid') { Live.onBid(m); return; }
     if (m.t === 'rps') { Rps.onNet(m, p); return; } // 게임장 가위바위보 (v81)
     if (m.t === 'fight') { Fight.onNet(m, p); return; } // 게임장 격투 게임 (v82)
+    if (m.t === 'cbor') { CarSwap.onNet(m, p); return; } // 남의 차 타기 (v138)
     if (m.t === 'party') { Party.onNet(m, p); return; } // 여러 명 모집 · 초대장 (v90)
     if (m.t === 'cbreq' || m.t === 'cback') { ChatBack.onNet(m, p); return; } // 자리 비운 동안의 채팅 (v100)
     if (m.t === 'tip') { Tip.onNet(m, p); return; } // 용돈 1,000원 (v107)
@@ -4508,7 +4509,7 @@ const Net = {
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
-      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bw = m.bw; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
+      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.sk = m.sk; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
       const moved = gap > 0.02 && p.z === p.lastZ && p.s === p.lastS;
       if (moved && !far(p.tx, p.ty, m.x, m.y)) { p.vx = (m.x - p.tx) / gap; p.vy = (m.y - p.ty) / gap; } else { p.vx = p.vy = 0; }
       if (moved && !far(p.tcx, p.tcy, m.cx, m.cy)) { p.vcx = (m.cx - p.tcx) / gap; p.vcy = (m.cy - p.tcy) / gap; p.vca = angDiff(m.ca, p.tca) / gap; } else { p.vcx = p.vcy = p.vca = 0; }
@@ -4560,7 +4561,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos() });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -4641,7 +4642,9 @@ const Net = {
   parkedCars() {
     if (!this.on || !Game.zone) return [];
     const out = [];
-    for (const id in this.players) { const p = this.players[id]; if (p.gone || p.dr || p.cx === undefined || p.z !== Game.zone.id || performance.now() - p.last > FEEL.parkedCarKeepSec * 1000) continue; out.push(p); }
+    for (const id in this.players) { const p = this.players[id]; if (p.gone || p.cx === undefined || p.z !== Game.zone.id || performance.now() - p.last > FEEL.parkedCarKeepSec * 1000) continue;
+      if (p.dr) { if (Array.isArray(p.oc)) out.push({ cx: p.oc[0], cy: p.oc[1], ca: p.oc[2], car: p.car, name: p.name, _id: id }); continue; } // 남의 차를 모는 사람: 세워 둔 자기 차 (v138)
+      if (p.ln) continue; p._id = id; out.push(p); } // 빌려준 차는 모는 사람 차로 그려진다
     return out;
   },
   // 친구 차 속력: 위치 변화로 어림 (탈것 특징 '달릴 때/멈췄을 때'에 쓴다)
@@ -4649,7 +4652,7 @@ const Net = {
   drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
-    if (p.dr && p.s === 'zone') { const fc = Shop.carOf(p.car, '#d9a441', p.pal), fs = this.carSpd(p); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs }), 24, 12, 'car', 1); const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0 }, t);
     this.label(c, p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
@@ -5891,7 +5894,7 @@ function startGame(capital, opts = {}) {
   spawnDecor();
   // 같이 하기·채널: 사람마다 공용 주차장 한 칸씩 (이름으로 정해져 늘 같은 칸). 혼자: 사무실 문 앞 길가
   const bays = parkingBays(Game.zone);
-  Game.car = Net.on && bays.length ? carAtBay(bays, bayIndex(Net.me, bays.length)) : placeCarNear(Game.zone, office.door.tx, office.door.ty); Game.driving = false;
+  CarSwap.reset(); Game.car = Net.on && bays.length ? carAtBay(bays, bayIndex(Net.me, bays.length)) : placeCarNear(Game.zone, office.door.tx, office.door.ty); Game.driving = false;
   if (Net.on && bays.length) { State.carHint = 8; setTimeout(() => Toast.show('내 차는 사무실 뒤 공용 주차장에 있어요. 사람마다 한 칸씩이에요.', 3600), 2600); }
   Game.traffic = spawnTraffic(Game.zone);
   State.targetPlace = 'office';
@@ -6210,6 +6213,7 @@ function checkEdgeExit(dt, z, c) {
     if (e.dx) c.vx = -e.dx * FEEL.edgeBounce; else c.vy = -e.dy * FEEL.edgeBounce; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1;
     return;
   }
+  if (CarSwap.alt) { if (!(Game.edgeBounceCd > 0)) { Game.edgeBounceCd = 2; Toast.show('남의 차로는 다른 구로 못 가요. 내 차로 갈아타세요.'); Sound.play('deny'); } if (e.dx) c.vx = -e.dx * FEEL.edgeBounce; else c.vy = -e.dy * FEEL.edgeBounce; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1; return; }
   driveAcross(to);
 }
 // 걸어서 구역 끝으로 가면: 옆 구는 차로만 넘어간다고 알려 준다 (사용자 요청 2026-10-14 '걸어서 가려고 하면 차를 타야 한다고')
@@ -6358,6 +6362,7 @@ function exitCar() {
   }
   Game.driving = false; Game.player.vx = Game.player.vy = 0; Sound.play('carDoor'); NavPick.close(); Nav.free = false;
   const es = $('edgeSign'); es.classList.remove('in'); es.dataset.k = '';
+  CarSwap.release(); // 남의 차였으면 그 자리에 두고 내 차로 (v138)
 }
 
 /* ---- 시간: 조사하기 1칸 소모 ---- */
@@ -6411,7 +6416,7 @@ function update(dt) {
   Game.t += dt;
   HUD.tick(dt);
   if (Game.scene === 'title') return;
-  Net.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); CourtRules.tick();
+  Net.tick(dt); CarSwap.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); CourtRules.tick();
   if (Layout.editing) return;
   const chat = ChatBar.open_; /* 채팅 치는 동안에도 세상(차·행인·이혁진·내 차 관성)은 계속 돈다. 나만 손을 뗀 상태 (사용자 2026-10-15 '채팅 칠라면 멈추는데 다른사람이랑 달라?') */
   let enterK = false, netEnter = false, interact = false;
@@ -6471,14 +6476,18 @@ function update(dt) {
       Nav.update(dt);
       stepWalker(p, dt, ix, iy, run, solid, 'asphalt');
       if (!frozen) checkEdgeWalk(dt, z, p, ix, iy);
-      const nearCar = Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
+      const nearCar = !CarSwap.lent && Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
       if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'buddy') Pets.tipBuddy(tg); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
       const ride = !frozen && Net.on ? Ride.near() : null; // 친구가 운전 중인 차 옆이면 F로 같이 타기 (운전자 포함 최대 5명, 사용자 2026-10-15)
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
+      const sw = !frozen && !ride && !nearCar ? CarSwap.near() : null; // 세워 둔 친구 차 · 길가 차 (v138)
+      if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) { /* 위에서 탔다 */ }
       else if (fKey && ride) Ride.board(ride);
-      else if (fKey) Toast.show('차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
+      else if (fKey && sw) CarSwap.take(sw);
+      else if (fKey) Toast.show(CarSwap.lent ? `${CarSwap.lent.name}님이 내 차를 몰고 있어요. 돌려줄 때까지 기다리거나 다른 차를 타요.` : '차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
       if (ride && !tg && !nearCar) Game.promptFor(ride.tg || (ride.tg = { kind: 'ride', p: ride }));
+      else if (sw && !tg) Game.promptFor(sw);
     }
     // 도로명 표지판
     let road = null; for (const r of z.roads) for (let i = 0; i < r.pts.length - 1; i++) {
@@ -6592,7 +6601,7 @@ function drawZone(t) {
   // 신호등 · NPC 차량 · 내 차
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
-  { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0 }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
+  if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0 }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
@@ -6716,13 +6725,14 @@ function promptWord(tg) {
   if (tg.kind === 'buddy') return '용돈';
   if (tg.kind === 'friend') return '용돈';
   if (tg.kind === 'ride') return '같이 타기';
+  if (tg.kind === 'swap') return tg.label;
   if (tg.kind === 'obj') return tg.label || (tg.obj && tg.obj.label) || '사용';
   if (tg.kind === 'site') return Game.driving ? '물건 보기' : '들어가기';
   return '들어가기';
 }
 function drawPrompt(t) {
   const tg = Game.prompt.target; if (!tg || Game.busy || Dialog.open) return;
-  const touch = document.body.classList.contains('touchOn'); const word = touch ? promptWord(tg) : (tg.kind === 'car' || tg.kind === 'ride' ? 'F' : 'E');
+  const touch = document.body.classList.contains('touchOn'); const word = touch ? promptWord(tg) : (tg.kind === 'car' || tg.kind === 'ride' || tg.kind === 'swap' ? 'F' : 'E');
   const p = Game.player; const k = Math.min(1, Game.prompt.t / FEEL.promptPop); const lift = Game.driving ? 6 : 0;
   const sc = k < 0.6 ? k / 0.6 * 1.15 : 1.15 - (k - 0.6) / 0.4 * 0.15;
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
@@ -6842,6 +6852,102 @@ function frame(now) {
   update(dt); draw();
   requestAnimationFrame(frame);
 }
+
+/* ===================== 남의 차 타기 (사용자 2026-10-16 '다른 사람 차 탈 수 있게 하자', 카드에서 '둘 다') =====================
+ * 1) 친구가 세워 둔 차: 옆에서 F → 주인 게임이 알아서 대답한다 (주인이 그 차를 타고 있지 않으면 OK). 내가 몰고, 내리면 그 자리에 세워 두고
+ *    주인 화면에서도 차가 그 자리로 옮겨진다. 몰고 있는 동안 주인 화면에서 내 차가 내 친구를 따라 움직인다.
+ * 2) 길가 차 뺏기: 서 있거나 천천히 가는 도로 위 차 옆에서 F → 운전자가 "내 차!!" 하고 내려서 도망가고 내가 그 차를 몬다.
+ *    내리면 그 차는 1분 동안 그 자리에 서 있어서 다시 탈 수 있다.
+ * 내 차는 원래 자리에 그대로 있고, 남의 차로는 다른 구로 못 넘어간다 (내 차가 이 동네에 남아 있으니까).
+ * net {t:'cbor', k:'ask'|'ok'|'no'|'back', to, x, y, a} · pos에 bo(빌린 차 주인) · sk(모는 차 모양) · oc(세워 둔 내 차) · ln(내 차를 빌려줌) */
+const CarSwap = {
+  own: null,    // 남의 차를 모는 동안 세워 둔 내 차
+  alt: null,    // 지금 모는 남의 차 {kind:'friend', owner, name, skin} | {kind:'npc', col, len, wid, vk}
+  lent: null,   // 내 차를 빌려 간 친구 {id, name, miss}
+  pend: null, dumped: [], tgs: new WeakMap(), DUMP_MS: 60000,
+  reset() { this.own = this.alt = this.lent = this.pend = null; this.dumped = []; },
+  myCar() { return this.own || Game.car; },
+  // 걸어 다닐 때 F로 탈 수 있는 남의 차 (가장 가까운 것)
+  near() {
+    if (Game.scene !== 'zone' || Game.driving || Ride.with || !Game.zone) return null; const pl = Game.player; let best = null, bd = FEEL.carEnterDist + 4;
+    const now = performance.now(); this.dumped = this.dumped.filter(d => d.until > now && d.z === Game.zone.id);
+    for (const d of this.dumped) { const dd = Math.hypot(d.x - pl.x, d.y - pl.y); if (dd < bd) { bd = dd; best = { kind: 'dump', ref: d, label: '다시 타기' }; } }
+    if (Net.on) for (const p of Net.parkedCars()) { const dd = Math.hypot(p.cx - pl.x, p.cy - pl.y); if (dd < bd) { bd = dd; best = { kind: 'friend', ref: p, label: '친구 차 몰기' }; } }
+    for (const car of Game.traffic) { if (car.v > 45) continue; const q = trafficCarPos(car), dd = Math.hypot(q.x - pl.x, q.y - pl.y); if (dd < Math.min(bd, 22)) { bd = dd; best = { kind: 'npc', ref: car, q, label: '뺏어 타기' }; } }
+    if (!best) return null; // 프롬프트가 매 프레임 새로 뜨지 않게 같은 차면 같은 대상
+    let tg = this.tgs.get(best.ref); if (!tg) { tg = { kind: 'swap' }; this.tgs.set(best.ref, tg); } return Object.assign(tg, best);
+  },
+  take(sw) {
+    if (sw.kind === 'npc') {
+      const car = sw.ref, q = sw.q, i = Game.traffic.indexOf(car); if (i < 0) return; Game.traffic.splice(i, 1);
+      const side = car.dirn > 0 ? 1 : -1, w = makeWalker(['walker1', 'walker2', 'walker3'][Math.floor(Math.random() * 3)], q.x - Math.sin(q.a) * 14 * side, q.y + Math.cos(q.a) * 14 * side);
+      w.ai = { t: 2.5, ix: Math.sign(w.x - Game.player.x) || 1, iy: Math.sign(w.y - Game.player.y) }; w.bubble = { text: ['야!! 내 차!!', '어어 내 차 어디 가!', '경찰 부를 거예요!!'][Math.floor(Math.random() * 3)], t: 3 }; Game.decor.push(w);
+      Sound.play('horn'); this.board(q, { kind: 'npc', col: car.col, len: car.len, wid: car.wid, vk: car.kind });
+      Toast.show(`🚗 길가 ${car.kind === 'bus' ? '버스' : car.kind === 'taxi' ? '택시' : '차'}를 뺏어 탔어요! F로 내리면 그 자리에 두고 가요. 다른 구로는 못 가요.`, 3600);
+      if (Net.on) Net.news(`길가 ${car.kind === 'bus' ? '버스' : car.kind === 'taxi' ? '택시' : '차'}를 뺏어 탐`);
+      return;
+    }
+    if (sw.kind === 'dump') { const d = sw.ref; this.dumped = this.dumped.filter(x => x !== d); this.board(d, d.alt); Toast.show('세워 둔 차에 다시 탔어요.'); return; }
+    // 친구 차: 주인 게임에 물어본다
+    const p = sw.ref, id = p._id; if (!id) return; if (this.pend) return;
+    this.pend = { id, name: p.name, at: Date.now() }; Net.send({ t: 'cbor', k: 'ask', to: id }); Sound.play('carDoor'); Toast.show(`${p.name}님 차 문 여는 중…`, 1600);
+    setTimeout(() => { if (this.pend && this.pend.id === id) { this.pend = null; Toast.show(`${p.name}님 차 문이 안 열려요. (주인 게임이 대답이 없어요)`); } }, 3000);
+  },
+  board(pos, alt) {
+    this.own = Game.car; this.own.vx = this.own.vy = this.own.speed = 0;
+    Game.car = makeCar(pos.x, pos.y, pos.a); Game.car.hitCd = 1.5; Game.car.fineCd = 3; this.alt = alt; enterCar();
+  },
+  // exitCar 끝에서 부른다: 남의 차는 그 자리에 두고 내 차로 돌아온다
+  release() {
+    if (!this.alt) return; const c = Game.car, alt = this.alt;
+    if (alt.kind === 'friend') { if (Net.on) Net.send({ t: 'cbor', k: 'back', to: alt.owner, x: Math.round(c.x), y: Math.round(c.y), a: Math.round(c.a * 100) / 100 }); Toast.show(`${alt.name}님 차를 여기 세워 뒀어요. 주인 화면에도 이 자리로 옮겨져요.`, 3200); }
+    else this.dumped.push({ x: c.x, y: c.y, a: c.a, alt, z: Game.zone.id, until: performance.now() + this.DUMP_MS });
+    Game.car = this.own; this.own = null; this.alt = null;
+  },
+  onNet(m, p) {
+    if (m.to !== Net.myId) return; const from = m.from, name = (p && p.name) || '친구';
+    if (m.k === 'ask') {
+      if ((Game.driving && !this.alt) || (this.lent && this.lent.id !== from)) return Net.send({ t: 'cbor', k: 'no', to: from, why: Game.driving && !this.alt ? 'driving' : 'lent' });
+      const c = this.myCar(); this.lent = { id: from, name, miss: 0 }; Net.send({ t: 'cbor', k: 'ok', to: from, x: Math.round(c.x), y: Math.round(c.y), a: Math.round(c.a * 100) / 100 });
+      Sound.play('carDoor'); Toast.show(`🔑 ${name}님이 내 차를 몰고 가요. 내리면 그 자리에 세워 둬요.`, 3600); return;
+    }
+    if (m.k === 'ok') {
+      if (!this.pend || this.pend.id !== from) return; this.pend = null;
+      if (Game.driving || Game.scene !== 'zone') return Net.send({ t: 'cbor', k: 'back', to: from, x: +m.x, y: +m.y, a: +m.a });
+      this.board({ x: +m.x, y: +m.y, a: +m.a }, { kind: 'friend', owner: from, name, skin: p && p.car }); Toast.show(`${name}님 차를 몰아요! F로 내리면 그 자리에 세워 둬요.`, 3200); return;
+    }
+    if (m.k === 'no') { if (!this.pend || this.pend.id !== from) return; this.pend = null; Sound.play('deny'); Toast.show(m.why === 'driving' ? `${name}님이 지금 그 차를 타고 있어요.` : `${name}님 차는 다른 사람이 몰고 있어요.`); return; }
+    if (m.k === 'back') {
+      if (!this.lent || this.lent.id !== from) return; const c = this.myCar(); c.x = +m.x; c.y = +m.y; c.a = +m.a; c.vx = c.vy = c.speed = 0; this.lent = null;
+      Toast.show(`🔑 ${name}님이 내 차를 돌려줬어요. 세워 둔 자리로 가서 타요.`, 3600); State.carHint = 6;
+    }
+  },
+  // 내 차를 빌려준 동안: 친구가 모는 대로 내 차 위치를 따라간다. 친구가 사라지면 마지막 자리에 둔다
+  tick(dt) {
+    const L = this.lent; if (!L) return; const b = Net.players[L.id];
+    if (b && !b.gone && b.dr && b.bo === Net.myId && b.cx !== undefined) { const c = this.myCar(); c.x = b.cx; c.y = b.cy; c.a = b.ca; L.miss = 0; return; }
+    L.miss += dt; if (L.miss > 5) { this.lent = null; Toast.show(`🔑 ${L.name}님이 내 차를 두고 갔어요. 마지막 자리에 세워져 있어요.`, 3600); State.carHint = 6; }
+  },
+  // pos에 붙여 보내는 것
+  pos() {
+    const a = this.alt, o = this.own; if (!a && !o && !this.lent) return {};
+    return { bo: a && a.kind === 'friend' ? a.owner : undefined, sk: a ? (a.kind === 'friend' ? { c: a.skin || '' } : { col: a.col, len: a.len, wid: a.wid, k: a.vk }) : undefined, oc: o ? [Math.round(o.x), Math.round(o.y), Math.round(o.a * 100) / 100] : undefined, ln: this.lent ? 1 : undefined };
+  },
+  // 내 차 그리기를 대신하면 true
+  drawMine(ctx) {
+    const c = Game.car;
+    for (const d of this.dumped) if (d.z === Game.zone.id) drawCarSprite(ctx, d.x, d.y, d.a, d.alt.col, d.alt.len, d.alt.wid, d.alt.vk, 0);
+    if (this.own) { const o = this.own; drawCarSprite(ctx, o.x, o.y, o.a, Shop.myCar(false), 24, 12, 'car', 1); ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', o.x, o.y - 10); }
+    if (this.alt) {
+      const a = this.alt, fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a), dir = fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1;
+      if (a.kind === 'npc') drawCarSprite(ctx, c.x, c.y, c.a, a.col, a.len, a.wid, a.vk, dir);
+      else drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(Shop.carOf(a.skin, '#d9a441', Profile.get()), { spd: Math.abs(c.speed) }), 24, 12, 'car', dir);
+      return true;
+    }
+    if (this.lent) { const b = Net.players[this.lent.id]; return !!(b && !b.gone && b.dr && b.bo === Net.myId); } // 친구가 몰고 있으면 친구 차로 그려진다
+    return false;
+  },
+};
 
 /* ===================== 3단계: 장소별 조사하기 =====================
  * 정보는 그 장소에서만 얻는다. 얻은 서류는 수첩에 원문 그대로 쌓인다.

@@ -3,16 +3,26 @@
 import { WebSocketServer } from 'ws';
 import http from 'node:http';
 import { RoomLogic, TICK_MS } from './src/room.js';
+import { handlePush } from './src/push.js';
 
 const port = Number(process.argv[2]) || 8787;
 const rooms = new Map(); // 'ch:1' → { logic, socks: Set }
-const memStore = () => { const m = new Map(); return { async get(k) { return m.get(k); }, async put(k, v) { m.set(k, JSON.parse(JSON.stringify(v))); } }; };
+const memStore = () => { const m = new Map(); return { async get(k) { return m.get(k); }, async put(k, v) { m.set(k, JSON.parse(JSON.stringify(v))); }, async delete(k) { m.delete(k); } }; };
+const pushStore = memStore();
 const roomFor = (kind, key) => {
   const id = kind + ':' + key; if (rooms.has(id)) return rooms.get(id);
   const r = { socks: new Set() }; r.logic = new RoomLogic({ kind, key, storage: memStore(), sockets: () => [...r.socks] });
   r.timer = setInterval(() => r.logic.tick().catch(() => {}), TICK_MS); rooms.set(id, r); return r;
 };
-const server = http.createServer((req, res) => { res.setHeader('access-control-allow-origin', '*'); res.setHeader('content-type', 'text/plain; charset=utf-8'); res.end('auction-gta relay (test) ok'); });
+const server = http.createServer(async (req, res) => {
+  if (req.url.startsWith('/push/')) { // 콕 알림 (src/push.js와 같은 처리, 저장은 메모리)
+    const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': '*' };
+    if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
+    let body = ''; for await (const c of req) body += c;
+    const r = await handlePush(new Request('http://x' + req.url, { method: req.method, body: req.method === 'POST' ? body : undefined }), pushStore, CORS);
+    res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(await r.text());
+  }
+  res.setHeader('access-control-allow-origin', '*'); res.setHeader('content-type', 'text/plain; charset=utf-8'); res.end('auction-gta relay (test) ok'); });
 const wss = new WebSocketServer({ server });
 wss.on('connection', async (ws, req) => {
   const url = new URL(req.url, 'http://x'); const m = url.pathname.match(/^\/(ch|room)\/([A-Za-z0-9_-]{1,16})\/?$/); if (!m) return ws.close(1008, 'bad path');

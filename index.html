@@ -578,7 +578,9 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 #partyAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #partyAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #partyAsk b { font-size:15px; } #partyAsk span { font-size:12px; color:#6a4a1a; } #partyAsk .sm { font-size:11px; opacity:.8; } #partyAsk .bad { color:#c0392b; } #partyAsk div { display:flex; gap:6px; justify-content:center; margin-top:6px; } #partyAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; }
 #pokeAsk { position:fixed; left:50%; bottom:calc(150px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 #pokeAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #pokeAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #pokeAsk b { font-size:15px; } #pokeAsk span { font-size:12px; color:#6a4a1a; } #pokeAsk .sm { font-size:11px; opacity:.8; } #pokeAsk .bad { color:#c0392b; } #pokeAsk div { display:flex; gap:6px; justify-content:center; margin-top:6px; } #pokeAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; }
-#rankWin .rwPoke { display:flex; justify-content:center; margin:8px 0 2px; } #rankWin .rwPoke small { color:#6a5a3a; font-size:12.5px; }
+#rankWin .rwPoke { display:flex; flex-direction:column; align-items:center; gap:4px; margin:8px 0 2px; } #rankWin .rwPoke small { color:#6a5a3a; font-size:12.5px; text-align:center; }
+#rankWin .rwPush { display:flex; flex-direction:column; align-items:center; gap:3px; margin:8px 0 2px; } #rankWin .rwPush small { color:#6a5a3a; font-size:12px; text-align:center; } #rankWin .rwPush.on { color:#2f7a3a; font-size:12.5px; font-weight:700; }
+#title .mp .ch.pokeHere { animation: pokeGlow 0.9s ease-in-out infinite alternate; box-shadow:0 0 0 3px #ffd84a; } @keyframes pokeGlow { from { box-shadow:0 0 0 2px #ffd84a; } to { box-shadow:0 0 0 6px rgba(255,216,74,.35); } } #chStatus .pokeMsg { color:#ffd84a; }
 .pSeats { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 6px; } .pSeat { width:84px; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px; border-radius:10px; background:#05030f; border:2px solid #3a2a7a; } .pSeat canvas, .pCard canvas { width:44px; height:44px; image-rendering:pixelated; border-radius:6px; background:#1a1440; } .pSeat b { font-size:12px; color:#fff; } .pSeat small { font-size:10px; color:#7ae8ff; }
 .pSeat.empty { border-style:dashed; opacity:.7; } .pSeat.empty i { width:44px; height:44px; display:flex; align-items:center; justify-content:center; font-style:normal; font-size:22px; color:#5a4aaa; border-radius:6px; background:#120c30; animation:blink 1.4s steps(1) infinite; }
 .pBoard { display:grid; grid-template-columns:repeat(var(--n, 3), 1fr); gap:8px; margin:8px 0 4px; } .pBoard.n4 { --n:4; } .pBoard.n2 { --n:2; }
@@ -4283,7 +4285,7 @@ const Net = {
       if (!this.gotPlayers) { this.host = true; this.myId = 'host'; }
       this.setStatus('open', this.chText()); return true;
     }
-    if (await this.pickWs()) { if (await this.connectWs('/ch/' + n)) return true; if (!this.on) return false; this.transport = 'peer'; } // 중계 서버가 안 되면 예전 방식(PeerJS)으로
+    if (await this.pickWs()) { if (await this.connectWs('/ch/' + n)) { PushSub.ensure(this.me); return true; } if (!this.on) return false; this.transport = 'peer'; } // 중계 서버가 안 되면 예전 방식(PeerJS)으로
     if (!(await this.loadPeer())) { this.on = false; this.setStatus('error', '연결 모듈을 못 불러왔어요. 인터넷을 확인해 주세요.'); return false; }
     return this.claimChannel();
   },
@@ -4841,6 +4843,59 @@ const Tip = {
   },
 };
 
+/* ---- 콕 알림 받기 (Web Push, 사용자 2026-10-16) ----
+ * 게임이 꺼져 있어도 친구가 찌르면 폰에 알림이 오게, 이 기기의 푸시 구독을 내 이름으로 중계 서버(relay/src/push.js)에 등록한다.
+ * 알림 허용이 된 뒤에만 등록한다 (채널에 들어갈 때, 허용을 누른 직후). 아이폰은 홈 화면에 추가한 앱에서만 된다 (iOS 16.4+). 아티팩트처럼 서비스 워커가 없는 곳은 안 된다. */
+const PushSub = {
+  base() { return (FEEL.relayUrl || '').replace(/^ws/, 'http').replace(/\/+$/, ''); },
+  ok() { try { return !!(this.base() && window.isSecureContext && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window); } catch (e) { return false; } },
+  iosNeedsHome() { try { return /iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone && !matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; } },
+  on() { try { return this.ok() && Notification.permission === 'granted' && !!Store.get('pushOn', 0); } catch (e) { return false; } },
+  async reg() { try { const r = await Promise.race([navigator.serviceWorker.getRegistration(), new Promise(res => setTimeout(() => res(null), 3000))]); return r || null; } catch (e) { return null; } },
+  async key() { if (this.k) return this.k; const r = await fetch(this.base() + '/push/key', { cache: 'no-store' }); const j = await r.json(); this.k = j.key; return this.k; },
+  bytes(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const r = atob(s); return Uint8Array.from(r, c => c.charCodeAt(0)); },
+  async ensure(name) {
+    name = String(name || '').trim(); if (!name || !this.ok() || this.busy) return false;
+    try { if (Notification.permission !== 'granted') return false; } catch (e) { return false; }
+    this.busy = true;
+    try {
+      const reg = await this.reg(); if (!reg || !reg.pushManager) return false;
+      const key = await this.key(); let sub = await reg.pushManager.getSubscription();
+      if (sub && Store.get('pushKey', '') !== key) { try { await sub.unsubscribe(); } catch (e) {} sub = null; } // 서버 키가 바뀌었으면 새로 구독
+      if (!sub) { sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.bytes(key) }); Store.set('pushKey', key); }
+      const j = sub.toJSON(), sig = name + '|' + j.endpoint, day = new Date().toDateString(), done = Store.get('pushReg', {});
+      if (done[sig] !== day) { // 하루 한 번만 다시 알린다
+        const r = await fetch(this.base() + '/push/sub', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, sub: j }) });
+        if (!r.ok) return false; const keep = Object.entries(done).filter(([k]) => !k.startsWith(name + '|')).slice(-9); keep.push([sig, day]); Store.set('pushReg', Object.fromEntries(keep));
+      }
+      Store.set('pushOn', 1); return true;
+    } catch (e) { return false; } finally { this.busy = false; }
+  },
+  // 순위표 '🔔 콕 알림 받기' 버튼
+  async turnOn() {
+    if (!this.ok()) return Toast.show('이 화면에서는 폰 알림을 받을 수 없어요. 게임 주소를 브라우저로 열거나 앱으로 설치해 주세요.');
+    if (this.iosNeedsHome()) return Toast.show('아이폰은 공유 버튼 → 홈 화면에 추가로 설치한 앱에서만 알림을 받을 수 있어요.');
+    let p = 'default'; try { p = Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission; } catch (e) {}
+    if (p !== 'granted') return Toast.show('알림이 꺼져 있어요. 폰 설정에서 이 앱(브라우저) 알림을 허용해 주세요.');
+    const ok = await this.ensure(Net.me); Toast.show(ok ? '🔔 이제 게임이 꺼져 있어도 친구가 콕 찌르면 폰으로 알려 줄게요!' : '알림 등록에 실패했어요. 잠시 뒤 다시 눌러 주세요.');
+    if (typeof RankWin !== 'undefined') { RankWin.last = ''; RankWin.open_ && RankWin.render(); }
+  },
+  async poke(to) {
+    if (!this.base()) return { ok: false, why: 'net' };
+    try { const r = await fetch(this.base() + '/push/poke', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ from: Net.me, to, ch: Live.on ? Live.ch : Net.ch }) }); return await r.json(); } catch (e) { return { ok: false, why: 'net' }; }
+  },
+  // 알림을 눌러 게임을 열었을 때 (주소 ?poke=이름&ch=N, 또는 이미 열린 창에 서비스 워커가 보낸 메시지)
+  arrived(from, ch) {
+    from = String(from || '').replace(/[<>]/g, '').slice(0, 20); ch = Number(ch) || 0; if (!from) return;
+    if (Net.on) { Toast.show(`👉 ${from}님이 콕 찔렀어요! ${ch ? `채널 ${ch}에서 ` : ''}나랑 놀자~`); return; }
+    const t = $('title'); if (!t) return;
+    const mb = document.querySelector('#title .modeRow .mode[data-mode="modeCh"]'); if (mb && !t.classList.contains('modeCh')) mb.click();
+    document.querySelectorAll('#chBox .ch').forEach(b => b.classList.toggle('pokeHere', !!ch && Number(b.dataset.ch) === ch));
+    const st = $('chStatus'); if (st) st.innerHTML = `<b class="pokeMsg">👉 ${esc(from)}님이 콕 찔렀어요! ${ch ? `채널 ${ch}에서 나랑 놀자~ 채널 ${ch}을 눌러 들어가요.` : '나랑 놀자~'}</b>`;
+    Sound.play('ding');
+  },
+};
+
 /* ---- 콕 찌르기 (사용자 2026-10-15 '페이스북 콕 찌르기 같은 거') ----
  * 순위표에서 접속한 친구 이름을 누르고 '👉 콕 찌르기'. 받은 쪽에는 카드가 잠깐 뜨고 바로 되찌를 수 있다. 돈·이동은 없다. {t:'poke', to} */
 const Poke = {
@@ -4857,7 +4912,17 @@ const Poke = {
     this.from = { id: m.from, name }; this.show();
   },
   // 게임을 켜 둔 채 다른 앱·창을 보고 있으면 기기 알림으로 (사용자 '게임 밖에 나가 있을 때 알림'). 완전히 끈 상태는 푸시 서버가 있어야 해서 아직 안 된다.
-  askPerm() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {} },
+  askPerm() { try { if ('Notification' in window && Notification.permission === 'default') Promise.resolve(Notification.requestPermission()).then(r => { if (r === 'granted') PushSub.ensure(Net.me); }).catch(() => {}); else PushSub.ensure(Net.me); } catch (e) {} },
+  // 접속 안 한 친구: 중계 서버가 그 친구 폰으로 알림을 보낸다 (사용자 2026-10-16 '앱 밖으로 알람이 가서 나랑 놀자는 느낌')
+  async sendOff(name) {
+    if (!name || name === Net.me) return; if (this.offBusy) return; this.offBusy = true; Sound.play('pop'); this.askPerm();
+    const r = await PushSub.poke(name); this.offBusy = false;
+    if (r.ok) { Net.pushLog(Net.me, `${name}님 폰으로 "나랑 놀자~" 콕 알림을 보냈어요 👉`, true, true, true); Toast.show(`👉 ${name}님 폰으로 콕 알림을 보냈어요!`); }
+    else if (r.why === 'soon') Toast.show(`${name}님은 방금 찔렀어요. ${r.wait || 60}초 뒤에 다시 찔러 주세요.`);
+    else if (r.why === 'none') Toast.show(`${name}님은 아직 콕 알림을 켜지 않았어요. 게임에 들어오면 순위표에서 '🔔 콕 알림 받기'를 눌러 달라고 해 주세요.`);
+    else if (r.why === 'busy') Toast.show(`${name}님은 지금 콕 알림을 너무 많이 받았어요. 조금 있다 찔러 주세요.`);
+    else Toast.show(r.why === 'net' ? '중계 서버에 연결하지 못했어요. 인터넷을 확인해 주세요.' : `${name}님 폰에 알림을 보내지 못했어요.`);
+  },
   notify(name) {
     try {
       if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
@@ -5514,15 +5579,22 @@ const RankWin = {
   pokeBar() {
     if (!this.sel || this.sel === Net.me) return '';
     const id = Object.keys(Net.players).find(k => Net.players[k] && !Net.players[k].gone && Net.players[k].name === this.sel);
-    return `<div class="rwPoke">${id ? `<button class="btn gold" data-poke="${id}">👉 ${esc(this.sel)}님 콕 찌르기</button>` : `<small>${esc(this.sel)}님은 지금 접속해 있지 않아서 찌를 수 없어요.</small>`}</div>`;
+    return `<div class="rwPoke">${id ? `<button class="btn gold" data-poke="${id}">👉 ${esc(this.sel)}님 콕 찌르기</button>` : PushSub.base() ? `<button class="btn gold" data-pokeoff="${esc(this.sel)}">👉 ${esc(this.sel)}님 콕 찌르기 (폰 알림)</button><small>지금 접속해 있지 않아요. 폰으로 "나랑 놀자~" 알림이 가요.</small>` : `<small>${esc(this.sel)}님은 지금 접속해 있지 않아서 찌를 수 없어요.</small>`}</div>`;
+  },
+  // 나도 콕 알림 받기 (게임이 꺼져 있어도 폰으로, v124)
+  pushBar() {
+    if (!PushSub.base() || PushSub.on()) return PushSub.on() ? '<div class="rwPush on">🔔 콕 알림 켜짐 · 게임이 꺼져 있어도 폰으로 와요</div>' : '';
+    return `<div class="rwPush"><button class="btn" id="rwPushOn">🔔 콕 알림 받기</button><small>게임이 꺼져 있어도 친구가 찌르면 폰으로 알려 줘요${PushSub.iosNeedsHome() ? ' (아이폰은 홈 화면에 추가한 앱에서만)' : ''}</small></div>`;
   },
   open() { if (this.open_ || !Live.on) return; this.open_ = true; Game.formOpen = true; Sound.play('paper'); $('rankWin').classList.add('in'); this.render(); this.timer = setInterval(() => this.render(), 1000); },
   close() { if (!this.open_) return; this.open_ = false; this.last = ''; Game.formOpen = false; $('rankWin').classList.remove('in'); clearInterval(this.timer); Sound.play('flip'); },
   render() {
-    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">경매 수익 순위</div>${Live.board()}${this.pokeBar()}<div class="lvFoot">채팅: Enter·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
+    const h = `<div class="rcpt"><button class="xClose" id="rwX" aria-label="닫기">×</button><div class="rcHead">경매 수익 순위</div>${Live.board()}${this.pokeBar()}${this.pushBar()}<div class="lvFoot">채팅: Enter·T 키 또는 채팅 버튼${Net.transport === 'ws' ? ' · 중계 서버 연결' : ''}</div><div class="pcBtns"><button class="btn" id="rwClose">닫기</button></div></div>`;
     if (h === this.last) return; this.last = h; $('rankWin').innerHTML = h; // 바뀐 게 없으면 다시 그리지 않는다 (누르는 중에 행이 사라지지 않게)
     for (const id of ['rwClose', 'rwX']) { const b = $(id); if (b) b.onclick = () => this.close(); }
     $('rankWin').querySelectorAll('[data-poke]').forEach(b => (b.onclick = () => Poke.send(b.dataset.poke)));
+    $('rankWin').querySelectorAll('[data-pokeoff]').forEach(b => (b.onclick = () => Poke.sendOff(b.dataset.pokeoff)));
+    { const b = $('rwPushOn'); if (b) b.onclick = () => PushSub.turnOn(); }
     $('rankWin').querySelectorAll('tr[data-who]').forEach(tr => tr.onclick = () => { const n = tr.dataset.who; this.sel = this.sel === n ? null : n; Sound.play('click'); this.render(); });
   },
 };
@@ -10403,6 +10475,7 @@ const Instance = {
     const gated = /^https?:$/.test(location.protocol) && !standalone && window === window.top && !/^(127\.0\.0\.1|localhost)$/.test(location.hostname) && !localStorage.getItem('auctionGTA.webOk');
     if (gated) { $('title').classList.add('gated'); document.body.classList.add('gated'); $('installGate').hidden = false; $('btnGuide').classList.add('gold'); }
     if (/^https?:$/.test(location.protocol) && 'serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    try { if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { const d = e.data || {}; if (d.t === 'poke') PushSub.arrived(d.from, d.ch); }); } catch (e) {} // 열린 창에서 콕 알림을 눌렀을 때
   } catch (e) {}
   // 중계 서버 주소: 게임 폴더의 relay-url.txt (배포 워크플로가 써 넣는다) → 없으면 GitHub Pages의 것. 둘 다 없으면 PeerJS로 (사용자 요청 2026-10-14)
   Net.relayReady = (async () => {
@@ -10466,6 +10539,8 @@ const Instance = {
     const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { chReset(b); }
     else if (Net.on && !$('liveReset')) { $('chStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); }
   });
+  // 콕 알림을 눌러 게임을 열면 (?poke=이름&ch=N): 실시간 채널 칸을 펼치고 그 채널을 반짝이게 (사용자 2026-10-16)
+  try { const q = new URLSearchParams(location.search); if (q.get('poke')) { const f = q.get('poke'), c = q.get('ch'); history.replaceState(null, '', location.pathname + location.hash); setTimeout(() => PushSub.arrived(f, c), 300); } } catch (e) {}
   $('mpCreate').onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
     Store.set('mpName', name); $('mpStatus').textContent = '방을 만드는 중…'; $('mpCreate').disabled = true; $('mpJoin').disabled = true;

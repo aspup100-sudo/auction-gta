@@ -2018,7 +2018,7 @@ Object.assign(FEEL, {
   hospitalMin: 3000000, hospitalMax: 5000000, // 입원비(원) · 시간도 1칸 지나간다
   // 석탄 땅굴 (v168, 사용자 2026-10-16): 자금이 시작 자금의 mineFloor(90%)보다 내려가는 만큼의 합의금·병원비는 땅굴 빚. 곡괭이질 한 번마다 돈, 한 칸은 mineHits번에 뚫린다
   mineAllow: 10000000, // v170 (사용자 2026-10-16): 자금과 따로 도는 '땅굴 한도'. 합의금·병원비·수리비·과태료가 이 한도를 깎고, 넘는 만큼이 땅굴 빚. 매각 수익·월세가 번 만큼 다시 채운다
-  mineSwingMin: 20000, mineSwingMax: 50000, mineCoalMin: 50000, mineCoalMax: 120000, mineHits: 3, mineGoldP: 0.004, mineGold: 10000000, mineMore: 10000000, // v170 빚 다 갚고 '더 캐기'로 더 벌 수 있는 한도
+  mineSwingMin: 80000, mineSwingMax: 150000, mineCoalMin: 200000, mineCoalMax: 350000, /* v171 단가 올림 (한도까지 채우려면 오래 걸려서) */ mineHits: 3, mineGoldP: 0.004, mineGold: 10000000, mineMore: 0, // 빚 다 갚고 '더 캐기'로 더 벌 수 있는 한도 (v170 1천만 → 사용자 '500만 원으로' → v171 '경매로만 돈 벌게': 0 = 더 캐기 없음)
   hitKnock: 22,           // 치였을 때 튕겨 나가는 거리(px)
   hitSpeed: 15,           // 이 속도 미만으로 닿으면 치인 것으로 치지 않음
   pedMin: 300000, pedMax: 1000000, // 내 차로 보행자를 쳤을 때 합의금(원)
@@ -2765,24 +2765,25 @@ function drawCourtRoof(ctx, b) {
 
 /* ===================== 운전: 내 차 · NPC 차량 · 신호등 · 스키드 ===================== */
 const Skids = [];
-// 기차 탈것이 지나간 자리에 깔리는 철로. v170 (사용자 2026-10-16 '드리프트 타이어 자국처럼 남게'): 사라지지 않고 스키드처럼 남는다 (구를 옮기면 지워짐, 오래된 것부터 MAX개까지)
+// 기차 탈것이 지나간 자리에 깔리는 철로. v170 (사용자 2026-10-16 '드리프트 타이어 자국처럼 남게') · v171 ('다른 구로 넘어가면 없어지는 게 아니라 시간 지나면 없어지게'):
+// 구마다 남아 있다가 LIFE초 지나면 FADE초 동안 흐려지며 사라진다 (오래된 것부터 MAX개까지)
 const Rails = {
-  LIFE: 1e9, FADE: 1.5, GAP: 7, MAX: 1600, pts: [], last: {},
+  LIFE: 180, FADE: 30, GAP: 7, MAX: 1600, pts: [], last: {},
   lay(key, x, y, a, spd) {
     if (spd < 4) return; const now = performance.now() / 1000, L = this.last[key];
     if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
     const brk = !L || Math.hypot(x - L.x, y - L.y) > 40 || now - L.t > 1.5;
-    const p = { x, y, a, t: now, key, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p;
+    const p = { x, y, a, t: now, key, z: Game.zone && Game.zone.id, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p;
     if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null;
   },
-  clear() { this.pts.length = 0; this.last = {}; },
+  clear() { this.last = {}; }, // 구를 옮겨도 지우지 않는다 (그 구에 남음). 이어 그리기만 끊는다
   draw(c, x0, y0, x1, y1) {
-    const now = performance.now() / 1000; let cut = 0;
+    const now = performance.now() / 1000, zid = Game.zone && Game.zone.id; let cut = 0;
     while (cut < this.pts.length && now - this.pts[cut].t > this.LIFE) cut++;
     if (cut) { this.pts.splice(0, cut); for (const k in this.last) if (now - this.last[k].t > this.LIFE) delete this.last[k]; }
     c.save();
     for (const p of this.pts) {
-      if (p.x < x0 - 20 || p.x > x1 + 20 || p.y < y0 - 20 || p.y > y1 + 20) continue;
+      if (p.z !== zid || p.x < x0 - 20 || p.x > x1 + 20 || p.y < y0 - 20 || p.y > y1 + 20) continue;
       const age = now - p.t, al = Math.min(1, (this.LIFE - age) / this.FADE, age * 4);
       const nx = -Math.sin(p.a), ny = Math.cos(p.a);
       c.globalAlpha = al; c.strokeStyle = '#6a4a2e'; c.lineWidth = 3; c.lineCap = 'butt';
@@ -2862,7 +2863,7 @@ function updateMyCar(dt, z, input) {
   c.vx = nfx * f1 - nfy * lat; c.vy = nfy * f1 + nfx * lat;
   c.speed = Math.hypot(c.vx, c.vy);
   const lateral = Math.abs(-c.vx * nfy + c.vy * nfx);
-  if (lateral > 40 && c.speed > 60) { for (const [px, py] of carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: 0 }); if (Skids.length > 900) Skids.splice(0, Skids.length - 900); if (Math.random() < 0.3) Sound.play('skid'); }
+  if (lateral > 40 && c.speed > 60) { for (const [px, py] of carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); if (Skids.length > 1400) Skids.splice(0, Skids.length - 1400); if (Math.random() < 0.3) Sound.play('skid'); }
   // 이동 + 충돌
   c.hitCd -= dt; c.fineCd -= dt; c.unstickCd = (c.unstickCd || 0) - dt;
   const ox = c.x, oy = c.y;
@@ -3213,6 +3214,9 @@ function drawRide(c, x, y, a, ride, speed, rider, tag) {
   if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y + 15); // 업힌 친구 이름 (사용자 2026-10-15)
 }
 
+// 서울 25개 구 경계 (통계청 2013 행정구역 단순화본 southkorea/seoul-maps → 0~1000 좌표, v171). 한강 중심선·다리는 위경도 근사
+const SEOUL_SHAPE = {"w":1000,"h":822,"gu":{"gangdong":{"p":[832,425,841,426,854,413,928,385,956,367,978,367,985,364,981,374,997,423,995,448,1000,451,1000,470,996,471,990,466,982,471,974,470,959,474,952,471,929,505,928,519,919,530,915,541,910,541,907,556,847,522,856,491,824,476,834,446],"c":[913,453]},"songpa":{"p":[722,531,747,536,798,524,824,476,856,491,847,522,907,556,907,560,899,570,896,581,899,591,909,597,915,597,921,593,948,606,940,635,937,640,925,644,919,672,912,678,901,678,894,687,874,681,875,692,885,700,879,704,870,704,861,699,861,706,854,712,850,696,829,660,830,657,814,633,793,620,740,603,729,592,721,544],"c":[837,592]},"gangnam":{"p":[697,519,722,531,721,544,729,592,740,603,793,620,806,627,823,642,830,657,829,660,854,706,854,712,843,721,841,732,830,723,816,720,809,729,797,731,789,717,773,703,764,689,763,681,749,683,739,689,736,683,730,682,727,686,711,689,709,701,690,701,669,676,661,651,643,654,611,569,603,538,590,523,621,494,633,490,672,509,674,504],"c":[712,615]},"seocho":{"p":[590,523,603,538,611,569,643,654,661,651,669,676,690,701,709,701,711,689,727,686,730,682,736,683,739,689,749,683,763,681,764,689,773,703,789,717,792,723,788,731,789,738,786,739,773,760,773,771,763,776,759,784,741,781,733,783,734,788,740,792,739,797,733,800,732,815,721,818,719,821,700,818,686,822,675,816,673,808,657,792,648,791,646,784,653,774,652,760,648,753,650,738,642,723,645,716,637,710,624,732,601,742,588,742,574,720,570,706,553,707,554,721,546,723,535,733,532,726,534,711,520,689,518,677,521,618,526,607,517,600,515,595,514,571,520,566,532,566,536,569,557,557,576,542],"c":[636,686]},"gwanak":{"p":[518,677,520,689,534,711,532,726,535,733,521,738,516,749,505,756,500,765,477,771,474,785,465,786,463,789,424,795,417,800,415,787,397,771,397,763,378,744,376,738,358,735,354,716,356,712,351,708,343,690,348,687,351,676,346,673,346,665,324,669,322,666,331,652,355,646,364,639,381,637,389,622,410,631,422,631,435,625,452,634,469,627,468,635,472,646,469,657,491,681],"c":[433,706]},"dongjak":{"p":[514,571,515,595,517,600,526,607,521,618,518,677,491,681,469,657,472,646,468,635,469,627,452,634,435,625,422,631,410,631,389,622,381,637,364,639,355,646,331,652,353,618,370,614,384,569,388,568,385,559,400,560,443,547,460,561,477,569],"c":[448,608]},"yeongdeungpo":{"p":[298,456,338,480,406,498,434,526,443,547,400,560,385,559,388,568,384,569,370,614,353,618,331,652,324,650,315,640,308,617,308,585,300,572,274,557,276,531,292,521,295,514,299,515,303,507,302,499,288,467],"c":[347,546]},"geumcheon":{"p":[322,666,324,669,346,665,346,673,351,676,348,687,343,690,351,708,356,712,354,716,358,735,376,738,378,744,392,757,379,768,370,784,366,788,357,788,344,807,329,806,329,800,320,790,319,774,312,771,313,763,309,750,305,752,298,750,297,742,290,739,290,729,296,720,275,689,259,653,272,648,297,669,310,672,320,671],"c":[326,726]},"guro":{"p":[143,582,153,582,171,600,181,595,180,590,191,590,192,583,210,575,217,579,223,577,227,587,233,587,235,591,249,592,256,591,274,557,300,572,308,585,308,617,315,640,324,650,331,652,320,671,310,672,297,669,277,649,272,648,262,651,268,643,265,640,258,642,258,637,246,626,230,638,222,650,216,652,208,662,196,661,194,664,193,685,178,680,169,681,160,675,154,679,137,680,131,673,130,655,132,650,140,644,138,637,118,627,114,619,115,613,121,614,129,611,135,601,138,584],"c":[220,623]},"gangseo":{"p":[222,382,223,397,242,408,298,456,288,467,290,476,287,476,277,463,261,466,253,463,237,452,232,473,236,484,237,517,181,527,166,497,168,493,163,481,157,481,155,474,151,470,148,481,137,484,119,485,109,482,106,477,92,478,83,485,81,493,71,499,69,488,72,482,64,481,64,475,57,473,52,467,36,468,25,460,15,460,0,439,9,439,28,420,28,414,23,404,31,405,37,402,42,395,41,390,43,385,59,373,68,374,69,357,74,356,81,341,86,339,77,310,88,292,97,294,133,333,206,379],"c":[142,423]},"yangcheon":{"p":[137,484,148,481,151,470,155,474,157,481,163,481,168,493,166,497,181,527,237,517,236,484,232,473,237,452,253,463,261,466,277,463,287,476,292,476,302,499,303,507,299,515,295,514,292,521,276,531,271,564,256,591,235,591,233,587,227,587,223,577,217,579,210,575,192,583,191,590,180,590,181,595,171,600,153,582,143,582,139,558,145,548,144,538,152,527,149,518,145,517,136,502],"c":[218,532]},"mapo":{"p":[330,375,327,380,334,386,370,406,384,410,390,416,386,430,411,441,421,437,459,434,463,436,470,430,474,437,470,440,472,452,476,457,463,470,459,481,445,498,431,502,427,518,406,498,338,480,325,474,298,456,242,408,223,397,221,393,222,379,236,376,241,380,246,374,265,367,267,353,280,333,327,378],"c":[346,431]},"seodaemun":{"p":[443,282,449,286,451,292,449,304,452,310,459,311,457,320,462,336,458,352,465,358,451,369,489,420,470,430,463,436,459,434,421,437,411,441,386,430,390,416,384,410,370,406,327,380,353,348,362,349,361,356,376,354,380,344,390,341,392,327,403,316,420,310,424,291,430,291,435,282],"c":[416,374]},"eunpyeong":{"p":[494,208,488,214,465,220,458,229,448,231,447,241,441,252,445,269,443,282,435,282,430,291,424,291,420,310,403,316,392,327,390,341,380,344,376,354,361,356,362,349,353,348,327,378,280,333,287,324,292,324,288,332,292,340,316,340,322,336,320,328,327,320,323,296,328,294,325,267,331,249,340,240,338,233,344,227,345,220,338,208,349,197,347,189,353,172,341,166,343,162,356,171,374,168,392,155,405,153,411,149,419,135,436,128,437,133,445,140,453,139,459,147,461,157,467,160,471,174,477,176,487,189,487,195],"c":[392,246]},"nowon":{"p":[815,243,792,254,767,245,733,258,710,262,661,211,667,205,682,171,693,183,695,167,691,138,679,97,686,50,683,43,692,36,709,38,717,35,728,21,736,21,747,15,757,15,768,33,789,37,792,47,781,67,790,86,791,94,787,106,792,119,791,126,768,138,784,140,787,146,782,155,788,168,820,171,829,184,830,199,827,213,813,224,809,237],"c":[742,148]},"dobong":{"p":[683,43,686,50,679,97,691,138,695,167,693,183,682,171,667,205,661,211,650,195,644,191,640,180,620,162,610,158,599,158,594,154,592,148,599,105,606,95,590,66,582,65,583,20,590,9,596,9,600,1,608,0,615,5,621,6,629,2,639,29,648,28,662,18,671,27,679,22],"c":[639,97]},"gangbuk":{"p":[582,50,582,65,590,66,606,95,599,105,592,148,594,154,599,158,610,158,620,162,640,180,644,191,650,195,654,203,681,232,674,238,650,268,635,278,634,268,625,267,615,272,608,264,587,256,580,242,581,234,562,228,548,215,546,209,541,209,525,195,529,184,522,174,526,167,523,156,513,140,514,135,526,127,534,113,545,110,548,88,542,66,557,53,570,49],"c":[588,174]},"seongbuk":{"p":[502,211,508,205,525,195,541,209,546,209,548,215,562,228,581,234,580,242,587,256,608,264,615,272,625,267,634,268,635,278,650,268,674,238,681,232,710,262,733,258,733,285,730,277,726,278,726,285,710,290,703,303,699,301,686,306,682,302,676,317,659,320,655,332,617,372,614,369,606,370,601,360,597,359,583,365,579,360,576,345,568,339,564,329,541,332,530,328,519,318,518,308,526,307,533,302,528,284,530,261,521,255,512,232,513,218,506,219],"c":[605,288]},"jungnang":{"p":[733,258,767,245,792,254,815,243,828,243,842,252,841,279,845,283,844,292,834,306,845,321,843,324,833,326,826,338,823,352,804,354,807,361,807,371,803,385,780,397,750,390,746,362,732,340,728,317,736,297],"c":[784,312]},"dongdaemun":{"p":[617,372,655,332,659,320,676,317,682,302,686,306,699,301,703,303,710,290,726,285,726,278,730,277,736,297,728,317,732,340,746,362,750,390,734,426,701,418,676,395,663,387,653,387,633,396,618,391],"c":[694,360]},"gwangjin":{"p":[750,390,780,397,803,385,811,393,804,426,832,425,834,446,830,464,798,524,763,533,736,536,697,519,738,428,734,426],"c":[769,467]},"seongdong":{"p":[618,391,633,396,653,387,663,387,676,395,701,418,738,428,697,519,674,504,672,509,633,490,621,494,612,501,597,490,584,488,582,481,585,462,590,461,602,446,603,438,609,434,616,433,618,423,625,417,626,411,618,411],"c":[660,453]},"yongsan":{"p":[582,474,584,488,597,490,612,501,581,532,571,548,536,569,532,566,520,566,514,571,477,569,460,561,443,547,434,526,427,518,431,502,445,498,459,481,463,470,476,457,472,452,480,444,506,447,507,441,515,446,527,445,533,452,539,452,551,465,558,457,572,455,573,468,579,475],"c":[514,509]},"junggu":{"p":[618,391,618,411,626,411,625,417,618,423,616,433,609,434,603,438,602,446,590,461,585,462,582,474,579,475,573,468,572,455,558,457,551,465,539,452,533,452,527,445,515,446,507,441,506,447,480,444,472,452,470,440,474,437,470,430,489,420,482,408,488,401,497,398,535,402,566,397,600,397,611,391],"c":[552,426]},"jongno":{"p":[494,208,502,211,506,219,513,218,512,232,521,255,530,261,528,284,533,302,526,307,518,308,519,318,530,328,541,332,564,329,568,339,576,345,579,360,583,365,597,359,601,360,606,370,614,369,617,372,618,391,611,391,600,397,566,397,535,402,497,398,488,401,482,408,451,369,465,358,458,352,462,336,457,320,459,311,452,310,449,304,451,292,442,279,445,269,441,252,447,241,448,231,458,229,465,220,488,214],"c":[509,323]}},"river":[-17,282,79,333,174,373,246,403,306,454,354,493,413,517,473,550,533,559,581,538,629,514,676,499,724,523,772,508,808,478,844,439,891,403,987,357],"bridges":[{"name":"가양대교","x":217,"y":385},{"name":"양화대교","x":325,"y":469},{"name":"마포대교","x":406,"y":514},{"name":"동작대교","x":509,"y":559},{"name":"한남대교","x":586,"y":529},{"name":"성수대교","x":652,"y":502},{"name":"잠실대교","x":779,"y":499},{"name":"천호대교","x":851,"y":436}]};
+
 /* ===================== 서울 지도(월드맵) · 미니맵 · 빠른 이동 ===================== */
 // 구 → 운전 구역 id. 손으로 만든(또는 OSM) 구역이 있으면 그것, 없으면 절차 생성 구역('gu_구id')이라 모든 구를 운전할 수 있다.
 const ZONE_OF_GU = {};
@@ -3227,11 +3231,14 @@ function fuelCost(mode, d = 1) { const base = mode === 'drive' ? FEEL.fuelDrive 
 
 const SeoulMap = {
   open: false, hover: null, sel: null, anim: null, t: 0,
+  // v171 (사용자 2026-10-16 '서울 지도 이런 식으로, 모양'): 실제 구 경계 모양 (SEOUL_SHAPE). ts = 구 하나 크기쯤 (글자·핀 크기 기준)
   layout(W, H) {
-    const cols = 8, rows = 6; const short = document.body.classList.contains('short'); const pad = short ? 6 : 24;
-    const ts = Math.min((W - pad * 2) / cols, (H - pad * 2 - (short ? 0 : 40)) / rows);
-    const ox = (W - ts * cols) / 2, oy = (H - ts * rows) / 2 + (short ? 0 : 10);
-    return { ts, ox, oy, center: (r, c) => [ox + (c + 0.5) * ts, oy + (r + 0.5) * ts] };
+    const short = document.body.classList.contains('short'), pad = short ? 8 : 24, SH = SEOUL_SHAPE;
+    const k = Math.min((W - pad * 2) / SH.w, (H - pad * 2 - (short ? 0 : 30)) / SH.h), ox = (W - SH.w * k) / 2, oy = (H - SH.h * k) / 2 + (short ? 0 : 8);
+    const L = { k, ox, oy, ts: k * 125, pt: (x, y) => [ox + x * k, oy + y * k] };
+    L.center = id => L.pt(...SH.gu[id].c);
+    if (!this.paths || this.pathsKey !== `${W}x${H}`) { this.pathsKey = `${W}x${H}`; this.paths = {}; for (const id in SH.gu) { const a = SH.gu[id].p, P = new Path2D(); for (let i = 0; i < a.length; i += 2) { const [x, y] = L.pt(a[i], a[i + 1]); i ? P.lineTo(x, y) : P.moveTo(x, y); } P.closePath(); this.paths[id] = P; } }
+    L.paths = this.paths; return L;
   },
   counts() { const m = {}; for (const c of State.week.cases) m[c.gu] = (m[c.gu] || 0) + 1; return m; },
   toggle(v = !this.open) {
@@ -3243,8 +3250,9 @@ const SeoulMap = {
   resize() { const c = $('mapCanvas'); c.width = c.offsetWidth * DPR; c.height = c.offsetHeight * DPR; },
   hit(mx, my) {
     const c = $('mapCanvas'); const L = this.layout(c.width / DPR, c.height / DPR);
-    for (const [id, ct] of Object.entries(COURTS)) { const g = DISTRICT[COURT_GU[id]]; const [x, y] = L.center(g.row, g.col); if (Math.hypot(mx - (x + L.ts * 0.28), my - (y + L.ts * 0.28)) < 12) return { court: id }; }
-    for (const d of DISTRICTS) { const [x, y] = L.center(d.row, d.col); if (Math.abs(mx - x) < L.ts * 0.46 && Math.abs(my - y) < L.ts * 0.46) return { gu: d.id }; }
+    for (const id of Object.keys(COURTS)) { const [x, y] = this.courtAt(L, id); if (Math.hypot(mx - x, my - y) < 13) return { court: id }; }
+    const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0);
+    for (const d of DISTRICTS) if (L.paths[d.id] && x.isPointInPath(L.paths[d.id], mx, my)) return { gu: d.id };
     return null;
   },
   onMove(e) {
@@ -3274,6 +3282,7 @@ const SeoulMap = {
     $('mapDest').onclick = () => { setNavDest({ gu: to, place: h.court ? 'court' : null, label: name }); $('mapConfirm').classList.remove('in'); this.sel = null; this.toggle(false); };
     $('mapGo').onclick = () => this.go(); $('mapCancel').onclick = () => { $('mapConfirm').classList.remove('in'); this.sel = null; };
   },
+  courtAt(L, id) { const [x, y] = L.center(COURT_GU[id]); return [x, y + Math.max(17, L.ts * 0.25)]; }, // 구 이름 바로 아래
   canDepart() {
     if (Game.scene !== 'zone') return '건물 밖으로 나가서 차까지 가세요.';
     if (!Game.driving && Math.hypot(Game.car.x - Game.player.x, Game.car.y - Game.player.y) > 60) return '차까지 걸어가세요.';
@@ -3285,14 +3294,13 @@ const SeoulMap = {
     $('mapConfirm').classList.remove('in'); $('mapHover').classList.remove('in');
     const sel = this.sel; const from = currentGu(); const to = sel.gu || COURT_GU[sel.court];
     const { d, slot } = travelCost(from, to);
-    // 경로: 타일 중심을 잇는 꺾은선, 한강을 건너면 다리 위로
-    const A = DISTRICT[from], B = DISTRICT[to]; const pts = [[A.row, A.col]]; let bridge = null;
+    // 경로: 구 가운데에서 가운데로, 한강을 건너면 가까운 다리 위로 (지도 좌표)
+    const A = DISTRICT[from], B = DISTRICT[to], SH = SEOUL_SHAPE, a = SH.gu[from].c, b = SH.gu[to].c; const pts = [a]; let bridge = null;
     if ((A.row <= 2) !== (B.row <= 2)) {
-      const mid = (A.col + B.col) / 2; bridge = BRIDGES.reduce((a, b) => (Math.abs(b.col - mid) < Math.abs(a.col - mid) ? b : a));
-      const nr = A.row <= 2 ? 2 : 4, fr = A.row <= 2 ? 4 : 2;
-      pts.push([nr, A.col], [nr, bridge.col], [fr, bridge.col], [fr, B.col]);
-    } else pts.push([A.row, B.col]);
-    pts.push([B.row, B.col]);
+      const mx = (a[0] + b[0]) / 2; bridge = SH.bridges.reduce((p, q) => (Math.abs(q.x - mx) < Math.abs(p.x - mx) ? q : p)); const up = A.row <= 2 ? -1 : 1;
+      pts.push([bridge.x, bridge.y + up * 30], [bridge.x, bridge.y - up * 30]);
+    }
+    pts.push(b);
     const dur = Math.min(2500, 1000 + d * 220);
     Sound.play('ignition');
     const fuel = fuelCost('map', d);
@@ -3314,41 +3322,38 @@ const SeoulMap = {
     // 종이 바탕
     x.fillStyle = '#efe6d2'; x.fillRect(0, 0, W, H);
     x.fillStyle = 'rgba(0,0,0,.04)'; for (let i = 0; i < W; i += 6) x.fillRect(i, 0, 1, H);
-    // 한강
-    const ry = L.oy + 3 * ts + ts / 2;
-    x.fillStyle = '#7fb0d8'; x.beginPath(); x.moveTo(0, ry - ts * 0.32);
-    for (let i = 0; i <= W; i += 10) x.lineTo(i, ry - ts * 0.32 + Math.sin(i / 60 + 1) * 6);
-    for (let i = W; i >= 0; i -= 10) x.lineTo(i, ry + ts * 0.32 + Math.sin(i / 50) * 6);
-    x.fill();
-    x.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 40; i++) { const sx = (i * 97 + this.t * 20) % W, sy = ry + Math.sin(i * 3.1) * ts * 0.22; if ((this.t * 2 + i) % 2 < 1) x.fillRect(sx, sy, 6, 1.5); }
-    x.fillStyle = '#4d7da6'; x.font = `600 ${Math.max(11, ts * 0.16)}px "IBM Plex Sans KR"`; x.textAlign = 'left'; x.fillText('한 강', 12, ry + 4);
-    // 다리
-    for (const b of BRIDGES) { const bx = L.ox + (b.col + 0.5) * ts; x.fillStyle = '#9a8f7a'; x.fillRect(bx - 3, ry - ts * 0.42, 6, ts * 0.84); }
-    // 구 타일
-    const cnt = this.counts(); const cur = currentGu();
+    const SH = SEOUL_SHAPE, cnt = this.counts(), cur = currentGu(), hv = this.hover && this.hover.gu;
+    // 서울 그림자 → 구 → 한강 → 다리 (사진처럼 강이 구 위로 흐른다)
+    x.save(); x.translate(4, 6); x.fillStyle = 'rgba(40,30,20,.22)'; for (const id in L.paths) x.fill(L.paths[id]); x.restore();
+    for (const d of DISTRICTS) { const P = L.paths[d.id]; if (!P || d.id === hv) continue; x.fillStyle = TIER_COL[d.tier]; x.fill(P); }
+    x.strokeStyle = 'rgba(239,230,210,.55)'; x.lineWidth = 1.2; x.lineJoin = 'round'; for (const d of DISTRICTS) if (d.id !== hv && L.paths[d.id]) x.stroke(L.paths[d.id]);
+    const rv = SH.river, river = () => { x.beginPath(); for (let i = 0; i < rv.length; i += 2) { const [px, py] = L.pt(rv[i], rv[i + 1]); i ? x.lineTo(px, py) : x.moveTo(px, py); } };
+    x.lineCap = 'round'; river(); x.strokeStyle = '#7fb0d8'; x.lineWidth = Math.max(6, L.k * 22); x.stroke(); river(); x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = Math.max(1, L.k * 4); x.setLineDash([L.k * 14, L.k * 22]); x.lineDashOffset = -this.t * 18; x.stroke(); x.setLineDash([]);
+    { const [lx, ly] = L.pt(rv[0] + 30, rv[1] - 4); x.fillStyle = '#4d7da6'; x.font = `600 ${Math.max(10, L.ts * 0.13)}px "IBM Plex Sans KR"`; x.textAlign = 'left'; x.fillText('한강', lx, ly - L.k * 18); }
+    for (const b of SH.bridges) { const [bx, by] = L.pt(b.x, b.y); x.fillStyle = '#9a8f7a'; x.fillRect(bx - 2, by - L.k * 17, 4, L.k * 34); }
+    // 고른 구는 살짝 들어 올린다
+    if (hv && L.paths[hv]) { x.save(); x.translate(0, -4); x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 10; x.shadowOffsetY = 5; x.fillStyle = TIER_COL[DISTRICT[hv].tier]; x.fill(L.paths[hv]); x.shadowColor = 'transparent'; x.strokeStyle = '#ffd84a'; x.lineWidth = 2.5; x.stroke(L.paths[hv]); x.restore(); }
+    // 구 이름 · 물건 핀 · 지금 위치
     for (const d of DISTRICTS) {
-      let [cx, cy] = L.center(d.row, d.col); const hov = this.hover && this.hover.gu === d.id;
-      const lift = hov ? 4 : 0; const s = ts * 0.9;
-      x.fillStyle = `rgba(0,0,0,${hov ? 0.35 : 0.22})`; rr(x, cx - s / 2 + 3, cy - s / 2 + 4 + (hov ? 3 : 0), s, s, 10); x.fill();
-      x.fillStyle = TIER_COL[d.tier]; rr(x, cx - s / 2, cy - s / 2 - lift, s, s, 10); x.fill();
-      x.fillStyle = '#efe6d2'; x.textAlign = 'center'; x.font = `700 ${Math.max(11, ts * 0.17)}px "IBM Plex Sans KR"`; x.fillText(d.short, cx, cy + 4 - lift);
+      const lift = d.id === hv ? 4 : 0; let [cx, cy] = L.center(d.id); cy -= lift; const fs = Math.max(10, Math.min(15, L.ts * 0.15));
+      x.textAlign = 'center'; x.font = `700 ${fs}px "IBM Plex Sans KR"`; x.lineWidth = 3; x.strokeStyle = 'rgba(20,16,10,.35)'; x.strokeText(d.name, cx, cy + fs * 0.35); x.fillStyle = '#f6efe0'; x.fillText(d.name, cx, cy + fs * 0.35);
       if (cnt[d.id]) {
-        const bounce = hov ? Math.abs(Math.sin(this.t * 8)) * 4 : 0; const px = cx + s * 0.3, py = cy - s * 0.3 - lift - bounce;
-        x.fillStyle = '#b3392a'; x.beginPath(); x.arc(px, py, 9, 0, 7); x.fill(); x.beginPath(); x.moveTo(px - 5, py + 5); x.lineTo(px, py + 13); x.lineTo(px + 5, py + 5); x.fill();
-        x.fillStyle = '#fff'; x.font = 'bold 11px sans-serif'; x.fillText(cnt[d.id], px, py + 4);
+        const bounce = d.id === hv ? Math.abs(Math.sin(this.t * 8)) * 4 : 0; const px = cx + fs * 1.9, py = cy - fs * 1.1 - bounce;
+        x.fillStyle = '#b3392a'; x.beginPath(); x.arc(px, py, 8, 0, 7); x.fill(); x.beginPath(); x.moveTo(px - 4.5, py + 4.5); x.lineTo(px, py + 12); x.lineTo(px + 4.5, py + 4.5); x.fill();
+        x.fillStyle = '#fff'; x.font = 'bold 10px sans-serif'; x.fillText(cnt[d.id], px, py + 3.5);
       }
-      if (d.id === cur && !this.anim && Math.floor(this.t * 3) % 2 === 0) { x.fillStyle = '#ffd84a'; x.beginPath(); x.arc(cx - s * 0.3, cy + s * 0.28 - lift, 6, 0, 7); x.fill(); x.strokeStyle = '#000'; x.lineWidth = 1; x.stroke(); }
+      if (d.id === cur && !this.anim && Math.floor(this.t * 3) % 2 === 0) { x.fillStyle = '#ffd84a'; x.beginPath(); x.arc(cx - fs * 1.9, cy - fs * 0.1, 5.5, 0, 7); x.fill(); x.strokeStyle = '#000'; x.lineWidth = 1; x.stroke(); }
     }
     // 법원 아이콘
-    for (const [id, ct] of Object.entries(COURTS)) {
-      const g = DISTRICT[COURT_GU[id]]; let [cx, cy] = L.center(g.row, g.col); const px = cx + ts * 0.28, py = cy + ts * 0.28 + (this.hover && this.hover.court === id ? -3 : 0);
+    for (const id of Object.keys(COURTS)) {
+      let [px, py] = this.courtAt(L, id); if (this.hover && this.hover.court === id) py -= 3;
       x.fillStyle = '#0f3358'; x.fillRect(px - 10, py - 7, 20, 14); x.fillStyle = '#efe6d2'; x.fillRect(px - 8, py - 3, 16, 2); for (let i = 0; i < 4; i++) x.fillRect(px - 7 + i * 4, py - 1, 2, 6);
       x.strokeStyle = '#efe6d2'; x.lineWidth = 1.5; x.strokeRect(px - 10, py - 7, 20, 14);
     }
     // 이동 애니메이션
     if (this.anim) {
       const a = this.anim; const k = Math.max(0, Math.min(1, (performance.now() - a.t0) / a.dur));
-      const P = a.pts.map(([r, c]) => [L.ox + (c + 0.5) * ts, L.oy + (r + 0.5) * ts]);
+      const P = a.pts.map(([px, py]) => L.pt(px, py));
       let tot = 0; const seg = []; for (let i = 0; i < P.length - 1; i++) { const l = Math.hypot(P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1]); seg.push(l); tot += l; }
       x.strokeStyle = 'rgba(179,57,42,.6)'; x.setLineDash([6, 6]); x.lineWidth = 3; x.beginPath(); P.forEach((p, i) => (i ? x.lineTo(...p) : x.moveTo(...p))); x.stroke(); x.setLineDash([]);
       const ease = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -3359,7 +3364,7 @@ const SeoulMap = {
       if (!pre && Math.random() < 0.6) Particles.push({ x: px - Math.cos(ang) * 12, y: py - Math.sin(ang) * 12, vx: -Math.cos(ang) * 10, vy: -Math.sin(ang) * 10, life: 0.5, max: 0.5, col: 'rgba(120,120,125,', r: 3, map: true });
       for (const q of Particles) if (q.map) { x.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; x.beginPath(); x.arc(q.x, q.y, q.r, 0, 7); x.fill(); }
       drawCarSprite(x, px - (pre ? Math.cos(ang) * 2 : 0), py + rock, ang, '#c8ccd2', 26, 13);
-      if (a.bridge && Math.abs(py - ry) < ts * 0.5) { x.fillStyle = 'rgba(20,22,28,.9)'; const w = x.measureText(a.bridge.name).width + 16; x.fillRect(px - w / 2, py - 34, w, 20); x.fillStyle = '#efe6d2'; x.font = '600 12px "IBM Plex Sans KR"'; x.fillText(a.bridge.name, px, py - 20); }
+      if (a.bridge && Math.hypot(px - L.pt(a.bridge.x, a.bridge.y)[0], py - L.pt(a.bridge.x, a.bridge.y)[1]) < ts * 0.5) { x.fillStyle = 'rgba(20,22,28,.9)'; const w = x.measureText(a.bridge.name).width + 16; x.fillRect(px - w / 2, py - 34, w, 20); x.fillStyle = '#efe6d2'; x.font = '600 12px "IBM Plex Sans KR"'; x.fillText(a.bridge.name, px, py - 20); }
       if (a.slot && !a.flipped && k > 0.5) { a.flipped = true; flipHud(); }
     }
     for (let i = Particles.length - 1; i >= 0; i--) if (Particles[i].map) { const q = Particles[i]; q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; if (q.life <= 0) Particles.splice(i, 1); }
@@ -3371,14 +3376,13 @@ function rr(x, X, Y, w, h, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w
 function drawMinimap(t) {
   const c = $('minimap'); const x = c.getContext('2d'); const W = c.width, H = c.height;
   x.clearRect(0, 0, W, H); x.fillStyle = 'rgba(239,230,210,.92)'; rr(x, 0, 0, W, H, 8); x.fill();
-  const ts = Math.min((W - 10) / 8, (H - 10) / 6), ox = (W - ts * 8) / 2, oy = (H - ts * 6) / 2;
-  const ry = oy + 3.5 * ts; x.fillStyle = '#7fb0d8'; x.fillRect(0, ry - ts * 0.3, W, ts * 0.6);
+  const SH = SEOUL_SHAPE, k = Math.min((W - 8) / SH.w, (H - 14) / SH.h), ox = (W - SH.w * k) / 2, oy = (H - 10 - SH.h * k) / 2 + 1, Q = (px, py) => [ox + px * k, oy + py * k]; // v171: 실제 구 모양
   const cnt = State.week ? SeoulMap.counts() : {}; const cur = currentGu();
-  for (const d of DISTRICTS) {
-    const X = ox + d.col * ts, Y = oy + d.row * ts; x.fillStyle = TIER_COL[d.tier]; x.fillRect(X + 1, Y + 1, ts - 2, ts - 2);
-    if (cnt[d.id]) { x.fillStyle = '#ff5a4a'; x.fillRect(X + ts - 6, Y + 2, 4, 4); }
-    if (d.id === cur && Math.floor(t * 3) % 2 === 0) { x.fillStyle = '#ffd84a'; x.beginPath(); x.arc(X + ts / 2, Y + ts / 2, 3.5, 0, 7); x.fill(); }
-  }
+  for (const d of DISTRICTS) { const g = SH.gu[d.id]; if (!g) continue; x.beginPath(); for (let i = 0; i < g.p.length; i += 2) { const [px, py] = Q(g.p[i], g.p[i + 1]); i ? x.lineTo(px, py) : x.moveTo(px, py); } x.closePath(); x.fillStyle = TIER_COL[d.tier]; x.fill(); x.strokeStyle = 'rgba(239,230,210,.5)'; x.lineWidth = 0.6; x.stroke(); }
+  x.beginPath(); for (let i = 0; i < SH.river.length; i += 2) { const [px, py] = Q(SH.river[i], SH.river[i + 1]); i ? x.lineTo(px, py) : x.moveTo(px, py); } x.strokeStyle = '#7fb0d8'; x.lineWidth = Math.max(2, k * 20); x.lineCap = 'round'; x.lineJoin = 'round'; x.stroke();
+  for (const d of DISTRICTS) { const g = SH.gu[d.id]; if (!g) continue; const [px, py] = Q(...g.c);
+    if (cnt[d.id]) { x.fillStyle = '#ff5a4a'; x.fillRect(px + 2, py - 5, 4, 4); }
+    if (d.id === cur && Math.floor(t * 3) % 2 === 0) { x.fillStyle = '#ffd84a'; x.beginPath(); x.arc(px, py, 3.5, 0, 7); x.fill(); x.strokeStyle = '#000'; x.lineWidth = 0.8; x.stroke(); } }
   x.fillStyle = '#14161c'; x.font = '600 9px "IBM Plex Sans KR"'; x.textAlign = 'right'; x.fillText('M 지도', W - 5, H - 4);
 }
 
@@ -4990,7 +4994,7 @@ const Ride = {
   follow() {
     const p = Net.players[Ride.with]; if (!p || p.gone || !p.dr) return Ride.leave(false, p);
     if (p.s === 'zone' && p.z && Game.zone && p.z !== Game.zone.id) { // 운전자가 옆 구로 넘어갔다: 같이 넘어간다
-      const z = getZone(p.z); Game.zone = z; Skids.length = 0; Rails.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z); Banner.area(...z.spec.dongLabel); Game.zonePos = null;
+      const z = getZone(p.z); Game.zone = z; Rails.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z); Banner.area(...z.spec.dongLabel); Game.zonePos = null;
     }
     const pl = Game.player; pl.x = p.cx; pl.y = p.cy; pl.moving = false;
   },
@@ -6128,7 +6132,7 @@ async function arriveZone(id, fromGu) {
   Game.car = makeCar((ex + ux * 4) * TILE - uy * laneOff, (ey + uy * 4) * TILE + ux * laneOff, Math.atan2(uy, ux));
   Game.car.vx = ux * 120; Game.car.vy = uy * 120; Game.car.fineCd = 5; Game.car.hitCd = 3; // 진입 직후 신호 과태료·수리비 유예 (v79: 1.5→3초)
   Game.driving = true; Game.player = makeWalker('player', Game.car.x, Game.car.y);
-  Skids.length = 0; Rails.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z);
+  Rails.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z);
   clearEntry(Game.car); // 진입한 큰길 앞을 비워 둔다: 화면이 열리기도 전에 앞차를 받던 문제 (사용자 2026-10-15 '다른 지역 넘어갈때 부딪혀')
   Cam.x = Game.car.x; Cam.y = Game.car.y; Cam.zoom = FEEL.zoom * 1.4;
   State.targetPlace = courtPlaceHere() ? 'court' : State.target && z.places.some(p => p.id === 'case:' + State.target) ? 'case:' + State.target : (z.places.some(p => p.id === State.targetPlace) ? State.targetPlace : null);
@@ -6802,11 +6806,12 @@ function drawZone(t) {
   }
   ctx.restore();
   // 스키드 자국
-  ctx.fillStyle = 'rgba(20,20,22,.45)';
-  for (const m of Skids) { if (m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); }
+  { const now = performance.now() / 1000, zid = z.id; while (Skids.length && now - (Skids[0].t || 0) > 180) Skids.shift(); // v171: 구마다 남았다가 3분 지나면 사라진다 (마지막 30초 흐려짐)
+    for (const m of Skids) { if (m.z !== zid || m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillStyle = `rgba(20,20,22,${(0.45 * Math.min(1, (180 - (now - m.t)) / 30)).toFixed(3)})`; ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); } }
   Rails.draw(ctx, x0, y0, x1, y1); // 기차 철로
   Prints.draw(ctx, x0, y0, x1, y1); // 티라노 발자국
   Beach.draw(ctx, x0, y0, x1, y1); // 거북이 모래·물길
+  MineExit.draw(ctx, x0, y0, x1, y1); // 석탄 땅굴 출구 (v171)
   // 신호등 · NPC 차량 · 내 차
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
@@ -6815,7 +6820,7 @@ function drawZone(t) {
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
-  const actors = [...Game.decor.map(w => ({ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else drawWalker(ctx, w, t); if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - 30); } })), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); } }]),
+  const actors = [...Game.decor.map(w => ({ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else drawWalker(ctx, w, t); if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - 30); } })), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { if (!MineExit.drawRise(ctx, () => drawWalker(ctx, Game.player, t))) { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); } } }]),
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
     ...Pets.actors(ctx, Net.visible('zone'), t),
     ...Fx.actors(ctx, Net.visible('zone'), t),
@@ -7293,11 +7298,12 @@ const Mine = {
     if (mp && typeof mp.c === 'string' && mp.c) for (const k of mp.c.split(';')) if (/^-?\d{1,3},-?\d{1,3}$/.test(k)) this.cells.add(k);
     this.last = mp && Array.isArray(mp.l) && mp.l.length === 3 ? mp.l : null;
     this.debt = Store.get('mineDebt' + ch, null); if (this.debt && !(this.debt.owe > 0)) this.debt = null;
-    if (this.debt && this.debt.got >= this.debt.owe) { // 빚은 다 갚고 '더 캐기' 하다 앱을 껐다: 캔 만큼 들고 나온 걸로
-      const D = this.debt, left = Math.max(0, Math.min(D.got, D.owe + FEEL.mineMore) - D.owe); this.debt = null; this.saveDebt();
+    const lm = Store.get('mineLim' + ch, null); this.lim = typeof lm === 'number' && lm >= 0 ? Math.min(FEEL.mineAllow, lm) : FEEL.mineAllow;
+    if (this.debt && this.debt.fill == null) this.debt.fill = Math.max(0, FEEL.mineAllow - this.lim);
+    if (this.debt && this.debt.got >= this.need()) { // 빚은 다 갚고 '더 캐기' 하다 앱을 껐다: 캔 만큼 들고 나온 걸로
+      const D = this.debt, N = this.need(), left = Math.max(0, D.more ? Math.min(D.got, N + FEEL.mineMore) - N : D.got - N); /* 넘친 건 금 몫뿐 (곡괭이질은 남은 돈까지만) */ this.debt = null; this.saveDebt(); this.lim = Math.min(FEEL.mineAllow, this.lim + (D.fill || 0)); this.saveLim();
       if (left > 0) { Money.why(`석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left; HUD.setCash(State.cash); setTimeout(() => { try { Live.save(); } catch (e) {} }, 0); }
     }
-    const lm = Store.get('mineLim' + ch, null); this.lim = typeof lm === 'number' && lm >= 0 ? Math.min(FEEL.mineAllow, lm) : FEEL.mineAllow;
     this.want = performance.now() + 3000; this.gridDirty = true;
     if (!this.iv) this.iv = setInterval(() => { try { this.watch(); } catch (e) {} }, 300);
   },
@@ -7311,7 +7317,9 @@ const Mine = {
     if (!Live.on || !(amt > 0) || this.ch == null) return; const before = this.lim; this.lim = Math.min(FEEL.mineAllow, this.lim + Math.round(amt)); this.saveLim();
     // 따로 표시하지 않는다 (사용자: 돈은 하나로). 다음에 돈이 나갈 때 남은 한도를 알려 준다
   },
-  owed() { const D = this.debt; return D ? Math.max(0, D.owe - D.got) : 0; },
+  // v171 (사용자 '땅굴에서 한도까지 다시 채워야 나오게, 밖에서 천만 원 손해 봤으니까'): 캘 돈 = 못 낸 빚 + 다시 채울 땅굴 한도 (fill). 한도 몫은 자금으로 안 들어오고 한도만 돌아온다 (새 돈이 아님)
+  need(D = this.debt) { return D ? D.owe + (D.fill || 0) : 0; },
+  owed() { const D = this.debt; return D ? Math.max(0, this.need(D) - D.got) : 0; },
 
   /* ---- 돈 내기: 합의금·병원비는 모두 여기로 ----
    * 채널이 아니면 예전처럼 그냥 낸다. 채널에서는 땅굴 한도(lim)만큼은 자금에서 내고, 한도를 넘는 만큼은 땅굴 빚. 낼 때마다 남은 한도를 알려 준다.
@@ -7325,7 +7333,7 @@ const Mine = {
     if (!rest) setTimeout(() => { if (!this.open_) Toast.show(this.lim > 0 ? `⛏ 땅굴 한도 ${fmtWon(this.lim)} 남음 · 이만큼 더 내면 석탄 땅굴` : '⛏ 땅굴 한도를 다 썼다 · 다음에 돈 낼 일이 생기면 바로 석탄 땅굴', 3200); }, 1500);
     if (rest > 0) {
       const D = this.debt || (this.debt = { owe: 0, got: 0, why: [], at: Date.now() });
-      D.owe += rest; D.why.push(label || '합의금'); D.why = D.why.slice(-4); this.saveDebt();
+      D.owe += rest; D.fill = Math.max(0, FEEL.mineAllow - this.lim); D.why.push(label || '합의금'); D.why = D.why.slice(-4); this.saveDebt();
       this.want = performance.now() + (o.after ? 2500 : 900);
       setTimeout(() => { if (!this.open_) HUD.page(`${this.lim > 0 ? '돈이 모자라다' : '땅굴 한도를 넘었다'}. ${label || '합의금'} 중 ${fmtWon(rest)}은 땅굴 빚이다. ${o.after ? '퇴원하면' : '곧'} 석탄 땅굴로 끌려간다.`, '알림'); }, o.after ? 400 : 200);
     }
@@ -7438,7 +7446,7 @@ const Mine = {
     if (Net.on) Net.news(`석탄 땅굴에 끌려감 (빚 ${fmtWon(this.owed())})`);
     this.ph = 'intro'; this.phT = performance.now(); this.fade = 1;
     const D = this.debt, why = D.why.length ? D.why[D.why.length - 1] : '합의금';
-    await this.card(`<p class="mcK">${this.lim > 0 ? '낼 돈이 없다' : '땅굴 한도를 다 썼다'}</p><h3>석탄 땅굴로 끌려간다</h3><p>${this.lim > 0 ? `${esc(why)}을(를) 낼 돈이 모자랐다.` : `${esc(why)}까지 내다가 한도 ${fmtWon(FEEL.mineAllow)}을 넘었다.`}<br>못 낸 돈 <b>${fmtWon(this.owed())}</b>, 이걸 다 캐기 전엔 못 올라온다.</p><p class="mcS">곡괭이질 한 번마다 돈이 쌓인다. 아주 가끔 금이 나온다는 소문이 있다.</p>`, '내려가기', 5200);
+    await this.card(`<p class="mcK">${this.lim > 0 ? '낼 돈이 없다' : '땅굴 한도를 다 썼다'}</p><h3>석탄 땅굴로 끌려간다</h3><p>${this.lim > 0 ? `${esc(why)}을(를) 낼 돈이 모자랐다.` : `${esc(why)}까지 내다가 한도 ${fmtWon(FEEL.mineAllow)}을 넘었다.`}<br>못 낸 돈 <b>${fmtWon(D.owe)}</b>${D.fill ? ` + 다시 채울 땅굴 한도 <b>${fmtWon(D.fill)}</b>` : ''}.<br>합쳐서 <b>${fmtWon(this.owed())}</b>을 다 캐기 전엔 못 올라온다.</p><p class="mcS">곡괭이질 한 번마다 돈이 쌓인다. 아주 가끔 금이 나온다는 소문이 있다.</p>`, '내려가기', 5200);
     this.ph = 'down'; this.phT = performance.now(); Sound.play('cage'); Sound.play('rumble'); this.rumbleIv = setInterval(() => Sound.play('rumble'), 900);
     await this.wait(2900);
     clearInterval(this.rumbleIv); Sound.play('cage'); Sound.play('slam');
@@ -7526,9 +7534,9 @@ const Mine = {
   },
   hud() {
     const D = this.debt; if (!D || !this.el) return; const box = this.el.querySelector('.mnDebt'); if (!box) return;
-    const k = Math.min(1, D.got / D.owe), total = this.cells.size;
-    if (D.more) { const x = Math.max(0, D.got - D.owe), k2 = Math.min(1, x / FEEL.mineMore); box.innerHTML = `<h4>⛏ 석탄 땅굴 · 빚 다 갚음</h4><div class="nums"><span>더 번 돈 <b>${fmtWon(x)}</b></span><span>한도 <b>${fmtWon(FEEL.mineMore)}</b></span></div><div class="bar"><i style="width:${(k2 * 100).toFixed(1)}%"></i></div><small>이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`; const up = this.el.querySelector('.mnUp'); if (up) up.classList.add('on'); return; }
-    box.innerHTML = `<h4>⛏ 석탄 땅굴</h4><div class="nums"><span>캔 돈 <b>${fmtWon(Math.min(D.got, D.owe))}</b></span><span>남은 빚 <b>${fmtWon(this.owed())}</b></span></div><div class="bar"><i style="width:${(k * 100).toFixed(1)}%"></i></div><small>이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`;
+    const N = this.need(D), k = Math.min(1, D.got / N), total = this.cells.size;
+    if (D.more) { const x = Math.max(0, D.got - N), k2 = Math.min(1, x / FEEL.mineMore); box.innerHTML = `<h4>⛏ 석탄 땅굴 · 빚 다 갚음</h4><div class="nums"><span>더 번 돈 <b>${fmtWon(x)}</b></span><span>한도 <b>${fmtWon(FEEL.mineMore)}</b></span></div><div class="bar"><i style="width:${(k2 * 100).toFixed(1)}%"></i></div><small>이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`; const up = this.el.querySelector('.mnUp'); if (up) up.classList.add('on'); return; }
+    box.innerHTML = `<h4>⛏ 석탄 땅굴</h4><div class="nums"><span>캔 돈 <b>${fmtWon(Math.min(D.got, N))}</b></span><span>남은 돈 <b>${fmtWon(this.owed())}</b></span></div><div class="bar"><i style="width:${(k * 100).toFixed(1)}%"></i></div><small>빚 ${fmtWon(D.owe)}${D.fill ? ` + 땅굴 한도 채우기 ${fmtWon(D.fill)}` : ''} · 이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`;
   },
 
   /* ---- 움직이기 ---- */
@@ -7577,7 +7585,7 @@ const Mine = {
     const D = this.debt; if (!D) return;
     const coal = this.isCoal(fx, fy), gold = Math.random() < FEEL.mineGoldP;
     let amt = gold ? FEEL.mineGold : Math.round((coal ? FEEL.mineCoalMin + Math.random() * (FEEL.mineCoalMax - FEEL.mineCoalMin) : FEEL.mineSwingMin + Math.random() * (FEEL.mineSwingMax - FEEL.mineSwingMin)) / 1000) * 1000;
-    const cap = D.owe + FEEL.mineMore; if (D.more) amt = Math.max(0, Math.min(amt, cap - D.got));
+    const N = this.need(D), cap = N + FEEL.mineMore; if (!gold) amt = Math.max(0, Math.min(amt, (D.more ? cap : N) - D.got)); // 곡괭이질은 남은 돈까지만 (땅굴이 새 돈벌이가 되지 않게, v171). 금은 그대로 1천만 원 (사용자 '금은 놔두자')
     D.got += amt; this.swings++; this.saveDebt();
     this.prog[key] = (this.prog[key] || 0) + 1; this.shake = coal ? 0.9 : 0.75; Sound.play('pick'); this.chips(coal, gold); this.spark(coal ? 5 : 9);
     if (gold) { this.goldHit = now; this.goldCell = key; Sound.play('gold'); this.pop(`금이다!! +${fmtWon(amt)}`, 'gold'); this.say('…금이다. 진짜 금이다.', 3600); }
@@ -7589,9 +7597,9 @@ const Mine = {
       for (let i = 0; i < 26; i++) this.dust.push({ x: Math.random(), y: 0.3 + Math.random() * 0.5, vx: (Math.random() - 0.5) * 0.06, vy: -0.01 - Math.random() * 0.03, life: 2 + Math.random() * 2, t: now, r: 2 + Math.random() * 5, big: 1 });
     }
     if (this.swings % 28 === 0 && !gold) { this.tired = now + 1300; Sound.play('breath'); this.say(MINE_SAY.tired, 1600, false); }
-    if (!this.halfSaid && D.got >= D.owe / 2 && D.got < D.owe) { this.halfSaid = true; setTimeout(() => this.open_ && this.say(MINE_SAY.half, 2600), 500); }
+    if (!this.halfSaid && D.got >= N / 2 && D.got < N) { this.halfSaid = true; setTimeout(() => this.open_ && this.say(MINE_SAY.half, 2600), 500); }
     this.hud();
-    if (D.more ? D.got >= cap : D.got >= D.owe) { this.ph = 'wait'; this.hold = false; setTimeout(() => { if (this.ph !== 'wait') return; this.ph = 'play'; if (D.more) this.finish(gold); else this.offer(gold); }, gold ? 2400 : 700); }
+    if (D.more ? D.got >= cap : D.got >= N) { this.ph = 'wait'; this.hold = false; setTimeout(() => { if (this.ph !== 'wait') return; this.ph = 'play'; if (D.more) this.finish(gold); else this.offer(gold); }, gold ? 2400 : 700); }
   },
   pop(text, cls) { const box = this.el.querySelector('.mnPops'); const b = document.createElement('b'); b.className = 'mnPop ' + (cls || ''); b.textContent = text; b.style.left = `${46 + Math.random() * 8}%`; box.appendChild(b); setTimeout(() => b.remove(), cls === 'gold' ? 2600 : 1150); },
   chips(coal, gold) { // 튀는 돌·석탄 조각 (화면 좌표)
@@ -7603,7 +7611,7 @@ const Mine = {
 
   /* ---- 다 갚았다: 나갈지, 천만 원까지 더 캘지 고른다 (v170) ---- */
   offer(gold) {
-    const D = this.debt; if (!D || !this.open_) return; const left = D.got - D.owe;
+    const D = this.debt; if (!D || !this.open_) return; const left = D.got - this.need(D);
     if (left >= FEEL.mineMore) { this.ph = 'play'; return this.finish(gold); }
     this.ph = 'ask'; Sound.play('ding');
     const el = this.el.querySelector('.mnCard');
@@ -7613,11 +7621,12 @@ const Mine = {
     $('mnMore').onclick = () => { el.classList.remove('on'); Sound.play('click'); D.more = true; this.saveDebt(); this.ph = 'play'; this.lastAct = performance.now(); this.hud(); this.say(`좋아, 더 캐. 대신 ${fmtWon(FEEL.mineMore)}까지만이다.`, 3000); };
   },
   async finish(gold) {
-    if (this.ph !== 'play') return; this.ph = 'done'; this.hold = false; const D = this.debt, left = Math.max(0, Math.min(D.got, D.owe + FEEL.mineMore) - D.owe);
+    if (this.ph !== 'play') return; this.ph = 'done'; this.hold = false; const D = this.debt, N = this.need(D), left = Math.max(0, D.more ? Math.min(D.got, N + FEEL.mineMore) - N : D.got - N); /* 넘친 건 금 몫뿐 (곡괭이질은 남은 돈까지만) */
     if (left > 0) { Money.why(`석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left; HUD.setCash(State.cash); }
+    this.lim = Math.min(FEEL.mineAllow, this.lim + (D.fill || 0)); this.saveLim(); // 땅굴 한도도 다시 찼다
     this.debt = null; this.saveDebt(); Live.save(); if (Net.on) Net.news(`석탄 땅굴에서 빚 ${fmtWon(D.owe)} 다 갚고 나옴${gold ? ' (금 캠!)' : ''}`);
     Sound.play('ding'); this.hud();
-    await this.card(`<p class="mcK">${gold ? '금덩이를 캤다' : '마지막 한 삽'}</p><h3>빚 다 갚았다!</h3><table class="mcT"><tr><td>캔 돈</td><td>${fmtWon(D.got)}</td></tr><tr><td>갚은 빚</td><td>−${fmtWon(D.owe)}</td></tr><tr class="sum"><td>들고 나가는 돈</td><td>${left ? '+' + fmtWon(left) : '0원'}</td></tr></table><p class="mcS">곡괭이질 ${this.swings}번 · 뚫은 칸 ${this.dug}. 내가 판 굴은 다음 사람이 이어서 판다.</p>`, '올라가기', 9000);
+    await this.card(`<p class="mcK">${gold ? '금덩이를 캤다' : '마지막 한 삽'}</p><h3>빚 다 갚았다!</h3><table class="mcT"><tr><td>캔 돈</td><td>${fmtWon(D.got)}</td></tr><tr><td>갚은 빚</td><td>−${fmtWon(D.owe)}</td></tr>${D.fill ? `<tr><td>다시 채운 땅굴 한도</td><td>−${fmtWon(D.fill)}</td></tr>` : ''}<tr class="sum"><td>들고 나가는 돈</td><td>${left ? '+' + fmtWon(left) : '0원'}</td></tr></table><p class="mcS">곡괭이질 ${this.swings}번 · 뚫은 칸 ${this.dug}. 내가 판 굴은 다음 사람이 이어서 판다.</p>`, '올라가기', 9000);
     this.ph = 'up'; this.phT = performance.now(); Sound.play('cage'); Sound.playBgm(null); this.rumbleIv = setInterval(() => Sound.play('rumble'), 900);
     await this.wait(2600); clearInterval(this.rumbleIv);
     this.close(left);
@@ -7630,6 +7639,7 @@ const Mine = {
     Game.busy = false; Game.formOpen = false; Sound.playBgm(Game.room ? Game.room.def.bgm : 'town'); Sound.play('chime');
     Toast.show(`석탄 땅굴에서 나왔다${left ? ` · 남은 돈 +${fmtWon(left)}` : ''}`, 3200);
     if (at) {
+      MineExit.add(Game.zone.id, Game.player.x, Game.player.y); Game.busy = true; setTimeout(() => { Game.busy = false; }, MineExit.DUR + 150); // 땅굴 출구를 뚫고 기어 나온다 (v171)
       const sign = $('dropSign'); sign.innerHTML = `<b>${at.where}</b><small>${at.gu} 외진 곳 · 땅굴 비상구</small>`; sign.classList.remove('in'); void sign.offsetWidth; sign.classList.add('in'); setTimeout(() => sign.classList.remove('in'), 3200);
       setTimeout(() => HUD.page(`땅굴 비상구로 나와 보니 ${at.gu} 외진 ${at.where}이다. 내 차는 반장이 근처 길가에 갖다 놨다고 했다.`, '알림'), 1800);
       if (Net.on) Net.news(`석탄 땅굴 비상구로 ${at.gu}에 나옴`);
@@ -7655,11 +7665,11 @@ const Mine = {
     if (typeof Ride !== 'undefined' && Ride.with) Ride.leave(false);
     if (Game.room) { Game.room = null; State.siteSession = null; }
     Game.scene = 'zone'; Game.driving = false; if (typeof CarSwap !== 'undefined') CarSwap.reset(); if (typeof NavPick !== 'undefined') NavPick.close(); if (typeof Nav !== 'undefined') Nav.free = false;
-    Game.zone = z; Game.zonePos = null; Skids.length = 0; Rails.clear(); Prints.clear(); Beach.clear();
+    Game.zone = z; Game.zonePos = null; Rails.clear(); Prints.clear(); Beach.clear();
     const p = Game.player; p.x = best[0] * TILE + 8; p.y = best[1] * TILE + 8; p.vx = p.vy = 0; p.dir = 0; p.sit = false;
     Game.car = placeCarNear(z, best[0], best[1]); spawnDecor(); Game.traffic = spawnTraffic(z);
     Cam.x = p.x; Cam.y = p.y; Game.prompt = { target: null, t: 0 }; $('edgeSign').classList.remove('in');
-    Banner.area(...z.spec.dongLabel);
+    setTimeout(() => { if (Game.zone === z) Banner.area(...z.spec.dongLabel); }, MineExit.DUR); // 기어 나오는 걸 가리지 않게 다 나온 뒤에
     return { gu: DISTRICT[gu].name, where: best[2] === T.PARK ? '공원 구석' : best[2] === T.ALLEY ? '뒷골목' : '길모퉁이' };
   },
 
@@ -7912,6 +7922,61 @@ const Mine = {
     for (const id in this.others) { const o = this.others[id]; c.fillStyle = '#7fd4ff'; c.beginPath(); c.arc(X(o.x - 0.5) + cs / 2, Y(o.y - 0.5) + cs / 2, cs * 0.35, 0, 7); c.fill(); }
     c.translate(S / 2 + cs * 0, S / 2); c.rotate(this.ang); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(cs * 0.7, 0); c.lineTo(-cs * 0.45, -cs * 0.45); c.lineTo(-cs * 0.2, 0); c.lineTo(-cs * 0.45, cs * 0.45); c.closePath(); c.fill();
     c.restore();
+  },
+};
+
+/* v171 (사용자 2026-10-16 '나올 때 땅굴 출구가 만들어져서 나오는 걸로'): 떨어진 자리에 출구 구멍이 뚫리고 사다리로 기어 나온다. 구멍은 그 구에 남는다 (이 기기에서만, 최근 12개) */
+const MineExit = {
+  DUR: 2600, list: [], rise: null,
+  add(z, x, y) {
+    x = Math.round(x); y = Math.round(y) + 3; const now = performance.now();
+    const hd = Math.random() < 0.5 ? -1 : 1, ent = { z, x, y, t: now, s: Math.floor(Math.random() * 1e4), hx: x + hd * (16 + Math.round(Math.random() * 6)), hy: y - 1 + Math.round(Math.random() * 4), hd, hr: hd * (2.2 + Math.random()) };
+    this.list.push(ent); if (this.list.length > 12) this.list.shift();
+    this.rise = { t0: now, x, y, e: ent }; setTimeout(() => { Sound.play('whoosh'); }, this.DUR * 0.72); setTimeout(() => { Sound.play('deny'); Sound.play('step'); }, this.DUR * 0.9); Sound.play('rubble'); shake(5, 0.35);
+    for (let i = 0; i < 26; i++) { const a = -Math.PI * Math.random(), v = 40 + Math.random() * 110; Particles.push({ x: x + (Math.random() - 0.5) * 10, y: y - 2, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, g: 300, life: 0.6 + Math.random() * 0.5, max: 1.1, col: i % 3 ? 'rgba(110,78,44,' : 'rgba(70,64,60,', r: 1 + Math.random() * 1.6 }); }
+    setTimeout(() => Sound.play('pick'), 250); setTimeout(() => Sound.play('step', 'wood'), 600); setTimeout(() => Sound.play('step', 'wood'), 950); setTimeout(() => Sound.play('step'), 1350);
+  },
+  clear() { this.rise = null; },
+  draw(c, x0, y0, x1, y1) {
+    const zid = Game.zone && Game.zone.id; if (!zid) return; const now = performance.now();
+    for (const e of this.list) {
+      if (e.z !== zid || e.x < x0 - 30 || e.x > x1 + 30 || e.y < y0 - 30 || e.y > y1 + 30) continue;
+      const X = e.x, Y = e.y, r = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(X + a, Y + b, w, h); }, H = n => ((Math.sin(e.s * 12.9 + n * 78.2) * 43758.5) % 1 + 1) % 1;
+      // 흩어진 흙 · 깨진 바닥
+      for (let i = 0; i < 16; i++) { const a = H(i) * 6.28, d = 11 + H(i + 20) * 8; r(Math.round(Math.cos(a) * d), Math.round(Math.sin(a) * d * 0.6), 2 + (i % 2), 1 + (i % 3 === 0), i % 3 ? '#6e4e2c' : '#55524e'); }
+      c.strokeStyle = 'rgba(30,28,26,.55)'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i < 5; i++) { const a = H(i + 40) * 6.28; c.moveTo(X + Math.cos(a) * 10, Y + Math.sin(a) * 6); c.lineTo(X + Math.cos(a) * (15 + H(i + 50) * 6), Y + Math.sin(a) * (9 + H(i + 60) * 4)); } c.stroke();
+      // 구멍 (위쪽 벽은 흙빛, 안은 깜깜)
+      const rows = [[-6, 10], [-5, 16], [-4, 20], [-3, 22], [-2, 22], [-1, 22], [0, 20], [1, 18], [2, 14], [3, 8]];
+      for (const [dy, w] of rows) r(-w / 2 - 2, dy, w + 4, 1, '#4a3420');
+      for (const [dy, w] of rows) r(-w / 2, dy, w, 1, dy < -3 ? '#5a3e24' : dy < -1 ? '#2a1c10' : '#0c0806');
+      r(-11, -3, 1, 4, '#7a5a38'); r(10, -3, 1, 4, '#7a5a38'); // 테두리 흙 턱
+      // 나무 틀 · 사다리
+      r(-12, -9, 2, 9, '#7a5430'); r(10, -9, 2, 9, '#7a5430'); r(-12, -10, 24, 2, '#8a6038'); r(-12, -10, 24, 1, '#a87a48');
+      r(-4, -16, 1, 18, '#a07040'); r(3, -16, 1, 18, '#a07040'); for (let k = -15; k < 2; k += 3) r(-4, k, 8, 1, '#c08a50');
+      if (now - e.t > this.DUR * 0.9) this.helmet(c, e.hx, e.hy, e.hr, true); // 벗어 던진 광부 헬멧 (바닥에 뒹군다)
+      // 갓 뚫린 구멍에서 피어오르는 먼지
+      const age = (now - e.t) / 1000; if (age < 4) { const n = 6; for (let i = 0; i < n; i++) { const ph = (age * 0.7 + i / n) % 1, al = (1 - ph) * Math.max(0, 1 - age / 4) * 0.5; c.fillStyle = `rgba(150,128,100,${al.toFixed(2)})`; c.beginPath(); c.arc(X + Math.sin(i * 2.3 + age) * 6, Y - 4 - ph * 22, 3 + ph * 6, 0, 7); c.fill(); } }
+    }
+  },
+  // 광부 헬멧 (노란 안전모 + 앞 랜턴). ground: 바닥에 떨어져 뒹구는 모양
+  helmet(c, x, y, rot, ground) {
+    c.save(); c.translate(Math.round(x), Math.round(y)); c.rotate(rot || 0); const r = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(a, b, w, h); };
+    if (ground) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 2, 6, 2, 0, 0, 7); c.fill(); }
+    r(-4, -4, 8, 1, '#ffe07a'); r(-5, -3, 10, 3, '#f0c020'); r(-1, -4, 2, 4, '#d8a810'); r(-6, 0, 12, 1, '#b88a10'); r(3, -3, 2, 2, '#fff8d0'); r(3, -3, 1, 1, '#fff');
+    c.restore();
+  },
+  // 사다리 타고 기어 오르기 (헬멧 쓴 채로): 구멍 턱 아래는 잘라서 그린다 → 다 올라오면 헬멧을 바닥에 홱 벗어 던진다
+  drawRise(c, fn) {
+    const R = this.rise; if (!R) return false; const k = (performance.now() - R.t0) / this.DUR; if (k >= 1) { this.rise = null; return false; }
+    const p = Game.player, E = R.e; p.vx = p.vy = 0; if (k < 0.15) return true;
+    const e = Math.min(1, (k - 0.15) / 0.45), dy = Math.round((1 - (1 - Math.pow(1 - e, 2))) * 22), bob = e < 1 ? Math.round(Math.abs(Math.sin(e * 9)) * 1.5) : 0;
+    c.save(); c.beginPath(); c.rect(p.x - 40, p.y - 80, 80, R.y - 1 - (p.y - 80) + (e >= 1 ? 30 : 0)); c.clip(); c.translate(0, dy - bob); fn();
+    if (k < 0.72) this.helmet(c, snapPx(c, p.x), snapPx(c, p.y) - 14 - (k > 0.64 ? Math.round((k - 0.64) / 0.08 * 2) : 0), 0); // 쓰고 올라온다 → 던지기 직전 살짝 들어 올림
+    c.restore();
+    if (k >= 0.72 && k < 0.9 && E) { const f = (k - 0.72) / 0.18, sx = p.x, sy = p.y - 16, hx = sx + (E.hx - sx) * f, hy = sy + (E.hy - sy) * f - Math.sin(f * Math.PI) * 14; this.helmet(c, hx, hy, E.hr * f * 2.5); // 휙
+      if (f < 0.5) { c.fillStyle = 'rgba(255,255,255,.75)'; for (let i = 0; i < 3; i++) c.fillRect(Math.round(hx - E.hd * (6 + i * 3)), Math.round(hy - 3 + i * 3), 3, 1); } }
+    if (k >= 0.9 && k < 0.97 && E) { c.fillStyle = 'rgba(160,140,110,.6)'; for (let i = 0; i < 5; i++) c.fillRect(Math.round(E.hx - 6 + i * 3), Math.round(E.hy + 1 - ((k - 0.9) * 60 + i) % 3), 2, 1); } // 툭 떨어진 먼지
+    return true;
   },
 };
 
@@ -9684,14 +9749,14 @@ const Prints = {
     }
   },
 };
-// 거북이 모래·물길 (사용자 2026-10-16 '지나다니면 모래랑 물 기찻길처럼'): 지나간 자리에 모래 띠 + 가운데 물길. v170: 타이어 자국처럼 사라지지 않고 남는다 (구를 옮기면 지워짐, MAX개까지)
+// 거북이 모래·물길 (사용자 2026-10-16 '지나다니면 모래랑 물 기찻길처럼'): 지나간 자리에 모래 띠 + 가운데 물길. v170: 타이어 자국처럼 남는다 · v171: 구마다 남았다가 LIFE초 뒤 흐려지며 사라짐 (MAX개까지)
 const Beach = {
-  LIFE: 1e9, FADE: 1.6, GAP: 4, MAX: 1400, pts: [], last: {},
+  LIFE: 180, FADE: 30, GAP: 4, MAX: 1400, pts: [], last: {},
   lay(key, x, y) { const now = performance.now() / 1000, L = this.last[key]; if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
-    const brk = !L || Math.hypot(x - L.x, y - L.y) > 30 || now - L.t > 1; const p = { x, y: y - 1, t: now, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p; if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null; },
-  clear() { this.pts.length = 0; this.last = {}; },
-  draw(c, x0, y0, x1, y1) { const now = performance.now() / 1000; let cut = 0; while (cut < this.pts.length && now - this.pts[cut].t > this.LIFE) cut++; if (cut) this.pts.splice(0, cut); if (!this.pts.length) return;
-    const segs = []; for (const p of this.pts) { const q = p.prev; if (!q || now - q.t > this.LIFE) continue; if (Math.max(p.x, q.x) < x0 - 12 || Math.min(p.x, q.x) > x1 + 12 || Math.max(p.y, q.y) < y0 - 12 || Math.min(p.y, q.y) > y1 + 12) continue; segs.push([q.x, q.y, p.x, p.y, Math.min(1, (this.LIFE - (now - q.t)) / this.FADE)]); }
+    const brk = !L || Math.hypot(x - L.x, y - L.y) > 30 || now - L.t > 1; const p = { x, y: y - 1, t: now, z: Game.zone && Game.zone.id, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p; if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null; },
+  clear() { this.last = {}; },
+  draw(c, x0, y0, x1, y1) { const now = performance.now() / 1000, zid = Game.zone && Game.zone.id; let cut = 0; while (cut < this.pts.length && now - this.pts[cut].t > this.LIFE) cut++; if (cut) this.pts.splice(0, cut); if (!this.pts.length) return;
+    const segs = []; for (const p of this.pts) { const q = p.prev; if (!q || p.z !== zid || now - q.t > this.LIFE) continue; if (Math.max(p.x, q.x) < x0 - 12 || Math.min(p.x, q.x) > x1 + 12 || Math.max(p.y, q.y) < y0 - 12 || Math.min(p.y, q.y) > y1 + 12) continue; segs.push([q.x, q.y, p.x, p.y, Math.min(1, (this.LIFE - (now - q.t)) / this.FADE)]); }
     this.strip(c, segs, now); },
   // segs: [x0, y0, x1, y1, 굵기 0~1]
   strip(c, segs, now) { if (!segs.length) return; c.save(); c.lineCap = 'round';

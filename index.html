@@ -4461,7 +4461,7 @@ const Net = {
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
-      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
+      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bw = m.bw; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
       const moved = gap > 0.02 && p.z === p.lastZ && p.s === p.lastS;
       if (moved && !far(p.tx, p.ty, m.x, m.y)) { p.vx = (m.x - p.tx) / gap; p.vy = (m.y - p.ty) / gap; } else { p.vx = p.vy = 0; }
       if (moved && !far(p.tcx, p.tcy, m.cx, m.cy)) { p.vcx = (m.cx - p.tcx) / gap; p.vcy = (m.cy - p.tcy) / gap; p.vca = angDiff(m.ca, p.tca) / gap; } else { p.vcx = p.vcy = p.vca = 0; }
@@ -4604,7 +4604,7 @@ const Net = {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
     if (p.dr && p.s === 'zone') { const fc = Shop.carOf(p.car, '#d9a441', p.pal), fs = this.carSpd(p); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs }), 24, 12, 'car', 1); const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
-    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw ? Infinity : 0 }, t);
+    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0 }, t);
     this.label(c, p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - (Titles.of(p.name, p.tt) ? 39 : 30));
   },
@@ -4634,7 +4634,7 @@ const GREET_REPLIES = ['안녕하세요!', '네, 반가워요', '좋아요, 같�
 async function greetFriend(p) {
   if (Game.busy || Dialog.open) return; Game.busy = true;
   try {
-    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 뭐라고 할까?` }], [...GREETS.map(g => ({ label: g, value: g })), { label: '💸 용돈 1,000원 주기', value: '__tip' }, { label: '그냥 지나가기', value: null }]);
+    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 용돈을 주면 큰절을 한다.` }], [{ label: '💸 용돈 1,000원 주기', value: '__tip' }, { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
     if (pick === '__tip') Tip.give(p); else if (pick) Net.greet(p, pick);
   } finally { Game.busy = false; }
 }
@@ -4832,7 +4832,7 @@ const Tip = {
     const id = Net.idOf(p); if (!id) return;
     if (Date.now() - (this.sent[id] || 0) < 5000) return Toast.show(`${p.name}님한테 방금 줬어요. 조금 있다 다시 줄 수 있어요.`);
     if (State.cash < this.AMT) return Toast.show('줄 돈이 없어요.');
-    this.sent[id] = Date.now(); mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id }); Sound.play('coins');
+    this.sent[id] = Date.now(); p.bowT = performance.now() + 2400; /* 준 사람 화면에서도 바로 절하게 */ mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id }); Sound.play('coins');
     Net.myBubble = { text: '옛다 용돈!', t: FEEL.chatBubbleTime }; Net.pushLog(Net.me, `${p.name}님한테 용돈 1,000원을 줬어요 💸`, true, true, true);
   },
   onNet(m, p) {
@@ -6042,7 +6042,8 @@ function zoneInteractTarget(fromCar = false) {
     const dx = pl.door.tx * TILE + 8 - p.x, dy = pl.door.ty * TILE + 8 - p.y, d = Math.hypot(dx, dy);
     if (d < bd) { bd = d; best = pl; }
   }
-  /* 플레이어끼리 말 걸기(E)는 뺐다 (사용자 2026-10-15 '플레이어끼리 상호작용하는거 없애자') */
+  /* 플레이어끼리 말 걸기(E)는 뺐다 (사용자 2026-10-15 '플레이어끼리 상호작용하는거 없애자'). 용돈만 다시 (사용자 2026-10-16 '플레이어한테도 용돈 줄 수 있게 해서 절하게') */
+  if (!fromCar && !best && Net.on) for (const id in Net.players) { const f = Net.players[id]; if (!f || f.gone || f.dr || f.rd || f.x === undefined || f.z !== Game.zone.id || f.s !== 'zone' || performance.now() - (f.last || 0) > 8000) continue; const d = Math.hypot(f.x - p.x, f.y - p.y); if (d < bd) { bd = d; best = f.tg || (f.tg = { kind: 'friend', p: f }); } }
   if (!fromCar && !best) best = Pets.buddyNear(p, bd); // 내 친구 펫: 용돈
   if (!fromCar && !best) for (const w of Game.decor) { if (w.stun > 0 || w.esc) continue; const d = Math.hypot(w.x - p.x, w.y - p.y); if (d < bd) { bd = d; best = w.tg || (w.tg = { kind: 'walker', w }); } } // 지나가는 행인에게 말 걸기 (같은 객체를 유지해야 prompt가 매 프레임 초기화되지 않는다)
   return best;
@@ -6638,7 +6639,7 @@ function promptWord(tg) {
   if (tg.kind === 'npc' || tg.kind === 'guest') return '대화';
   if (tg.kind === 'walker') return '말 걸기';
   if (tg.kind === 'buddy') return '용돈';
-  if (tg.kind === 'friend') return '인사';
+  if (tg.kind === 'friend') return '용돈';
   if (tg.kind === 'ride') return '같이 타기';
   if (tg.kind === 'obj') return tg.label || (tg.obj && tg.obj.label) || '사용';
   if (tg.kind === 'site') return Game.driving ? '물건 보기' : '들어가기';

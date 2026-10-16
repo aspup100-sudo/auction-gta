@@ -802,6 +802,12 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .pbMv { position:relative; text-align:left; display:flex; flex-direction:column; gap:1px; padding:6px 22px 6px 10px; background:#fffbe8; color:#1a1a24; border:2px solid var(--tc); border-left-width:8px; border-radius:8px; font-family:var(--ui); } .pbMv b { font-size:13px; } .pbMv small { font-size:10px; color:#5a5a6a; } .pbMv kbd { position:absolute; right:6px; top:5px; font:700 10px var(--ui); color:#8a8a9a; } .pbMv.sel { background:#ffe890; } .pbMv:disabled { opacity:.55; } .pbMv.sel:disabled { opacity:1; }
 .pbQuit { grid-column:1 / -1; padding:4px; font-size:12px; background:#3a3a4a; color:#ccc; border-color:#555; } .pbQuit.arm { background:#c03028; color:#fff; } .pbEnd { grid-column:1 / -1; font-size:15px; padding:10px; } .pbEnd small { display:block; font-size:11px; opacity:.8; }
 .short .pbMsg { font-size:12px; min-height:0; padding:6px 10px; line-height:1.4; } .short .pbBot { padding:6px; gap:6px; } .short .pbMoves { gap:4px; } .short .pbMv { padding:3px 20px 3px 8px; border-width:1px; border-left-width:6px; } .short .pbMv b { font-size:12px; } .short .pbQuit { padding:2px; font-size:11px; } .short .pbHud { padding:3px 8px; font-size:11px; border-width:2px; } .short .pbName b { font-size:12px; } .short .pbHud.foe { top:6px; left:8px; } .short .pbHud.me { bottom:6px; right:8px; } .short .pbXp { display:none; }
+.pbBox.rt .pbMsg { min-height:0; font-size:12.5px; padding:6px 10px; } .pbBox.rt .pbMoves { flex:0 0 auto; display:flex; align-items:center; } .pbBox.rt .pbQuit { padding:6px 12px; } .pbBox.rt .pbEnd { padding:8px 14px; }
+.pbPad { display:none; position:absolute; inset:auto 0 0 0; height:100%; pointer-events:none; } .touchOn .pbPad { display:block; }
+.pbStick { position:absolute; left:14px; bottom:14px; width:96px; height:96px; border-radius:50%; background:rgba(255,255,255,.14); border:2px solid rgba(255,255,255,.35); pointer-events:auto; touch-action:none; } .pbStick i { position:absolute; left:50%; top:50%; width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%; background:rgba(255,255,255,.55); }
+.pbPad.m-race .pbStick, .pbPad.m-tug .pbStick { display:none; }
+.pbBtns { position:absolute; right:14px; bottom:14px; display:flex; gap:10px; align-items:flex-end; pointer-events:auto; } .pbB1, .pbB2 { width:84px; height:84px; border-radius:50%; border:3px solid #fff; background:rgba(224,58,58,.85); color:#fff; font:800 15px var(--ui); touch-action:none; -webkit-user-select:none; user-select:none; } .pbB2 { width:66px; height:66px; background:rgba(58,120,224,.85); font-size:13px; } .pbB1.dn, .pbB2.dn { transform:scale(.92); filter:brightness(1.2); }
+.short .pbStick { width:80px; height:80px; left:8px; bottom:8px; } .short .pbB1 { width:70px; height:70px; font-size:13px; } .short .pbB2 { width:56px; height:56px; } .short .pbBtns { right:8px; bottom:8px; }
 #pbAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 #pbAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #pbAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #pbAsk b { font-size:15px; } #pbAsk span { font-size:12px; color:#6a4a1a; } #pbAsk .sm { font-size:11px; opacity:.8; } #pbAsk div { display:flex; gap:6px; justify-content:center; margin-top:6px; } #pbAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; } .short #pbAsk { bottom:10px; }
 </style>
@@ -9205,6 +9211,7 @@ const PetBattle = {
     if (m.k === 'go') { if (!this.wait || this.wait.id !== from || this.open_) return; this.wait = null; const a = this.clean(m.a), b = this.clean(m.b); if (!a || !b) return;
       this.start({ mode: 'net', me: 'b', foe: from, foeName: name, seed: +m.seed >>> 0, a: this.mk(a, name), b: this.mk(b, '나') }); return; }
     const B = this.B; if (!B || B.mode !== 'net' || B.foe !== from) return;
+    if (m.k === 'ri' || m.k === 'rs' || m.k === 'rx') { PetRT.onNet(B, m); return; }
     if (m.k === 'mv') { const n = +m.n, i = Math.max(0, Math.min(3, +m.i || 0)); (B.picks[n] || (B.picks[n] = {}))[B.me === 'a' ? 'b' : 'a'] = i; B.foeAt = Date.now(); this.maybeRun(); return; }
     if (m.k === 'quit') { if (B.over) return; this.end(B.me, `${name}님이 항복했어요.`); }
   },
@@ -9226,15 +9233,17 @@ const PetBattle = {
   start(o) {
     if (Game.driving && Game.scene === 'zone') exitCar();
     this.B = Object.assign({ n: 0, picks: {}, busy: true, over: false, t0: Date.now(), foeAt: Date.now(), anim: { a: {}, b: {} }, shown: { a: o.a.max, b: o.b.max } }, o, { S: { a: o.a, b: o.b } });
+    if (PetRT.on) { this.B.rtMode = PetRT.pick(this.B); PetRT.begin(this.B); } // v152: 턴제 대신 대전 4종 중 랜덤
     this.open_ = true; Game.formOpen = true; Sound.play('ding'); this.build(); this.loop();
     const B = this.B, foe = B.S[B.me === 'a' ? 'b' : 'a'], mine = B.S[B.me];
+    if (B.rtMode) { const m = B.rtMode, tch = document.body.classList.contains('touchOn') ? 1 : 0; this.say([`${esc(this.foeHon())}이(가) 대결을 걸어왔다!`, `이번 대결은 <b>${PB_MODE_KO[m]}</b>! ${esc(mine.name)} vs ${esc(foe.name)}`, PB_MODE_HELP[m][tch]], () => { B.busy = false; this.render(); PetRT.go(B); }); return; }
     this.say([`${esc(this.foeHon())}이(가) 배틀을 걸어왔다!`, `${esc(B.foeName)}은(는) ${esc(foe.name)}을(를) 내보냈다!`, `가랏, ${esc(mine.name)}!`], () => { B.busy = false; B.t0 = Date.now(); this.render(); });
   },
   foeHon() { const B = this.B; return B.foeHon || `${B.foeName}님`; },
   side(w) { const B = this.B; return w === B.me ? 'me' : 'foe'; },
   who(w) { const B = this.B, P = B.S[w]; return w === B.me ? esc(P.name) : `상대 ${esc(P.name)}`; },
   pick(i) {
-    const B = this.B; if (!B || B.busy || B.over || !(i >= 0 && i < 4)) return; const n = B.n, cur = B.picks[n] || (B.picks[n] = {}); if (cur[B.me] != null) return;
+    const B = this.B; if (!B || B.rtMode || B.busy || B.over || !(i >= 0 && i < 4)) return; const n = B.n, cur = B.picks[n] || (B.picks[n] = {}); if (cur[B.me] != null) return;
     cur[B.me] = i; Sound.play('click');
     if (B.mode === 'npc') cur[B.me === 'a' ? 'b' : 'a'] = this.aiPick(B.S, B.me === 'a' ? 'b' : 'a');
     else Net.send({ t: 'pb', k: 'mv', to: B.foe, n, i });
@@ -9284,6 +9293,7 @@ const PetBattle = {
   tick() {
     const B = this.B; if (!B || B.over) return; const now = Date.now();
     if (B.mode === 'net') { const f = Net.players[B.foe]; if (!Net.on || !f || f.gone) return this.end(B.me, '상대가 나가 버렸어요.'); }
+    if (B.rtMode) { if (B.qArm && now - B.qArm > 4000) { B.qArm = 0; this.render(); } return; } // 대전은 고르기 시간이 없다
     if (B.busy) return; const cur = B.picks[B.n] || {};
     if (cur[B.me] == null && now - B.t0 > 30000) this.pick(Math.floor(Math.random() * 4));
     else if (B.mode === 'net' && cur[B.me] != null && cur[B.me === 'a' ? 'b' : 'a'] == null && now - Math.max(B.t0, B.foeAt) > 50000) this.end(B.me, '상대가 너무 오래 안 골라서 이겼어요.');
@@ -9292,8 +9302,11 @@ const PetBattle = {
   /* ---- 화면 ---- */
   build() {
     const el = $('pbWin'); el.classList.add('in');
-    el.innerHTML = `<div class="pbBox"><div class="pbScene"><canvas id="pbCv"></canvas><div class="pbHud foe" id="pbHudFoe"></div><div class="pbHud me" id="pbHudMe"></div></div>
+    const R = this.B && this.B.rtMode;
+    el.innerHTML = R ? `<div class="pbBox rt"><div class="pbScene"><canvas id="pbCv"></canvas>${PetRT.pad(R)}</div><div class="pbBot"><div class="pbMsg" id="pbMsg"></div><div class="pbMoves" id="pbMoves"></div></div></div>`
+      : `<div class="pbBox"><div class="pbScene"><canvas id="pbCv"></canvas><div class="pbHud foe" id="pbHudFoe"></div><div class="pbHud me" id="pbHudMe"></div></div>
       <div class="pbBot"><div class="pbMsg" id="pbMsg"></div><div class="pbMoves" id="pbMoves"></div></div></div>`;
+    if (R) PetRT.bindPad();
     clearInterval(this.tmr); this.tmr = setInterval(() => { if (!this.open_) return clearInterval(this.tmr); this.tick(); }, 300);
     this.hud(); this.render();
   },
@@ -9311,6 +9324,8 @@ const PetBattle = {
   render() {
     const B = this.B, el = $('pbMoves'); if (!B || !el) return; const P = B.S[B.me], cur = B.picks[B.n] || {}, foe = B.S[B.me === 'a' ? 'b' : 'a'];
     if (B.over) { if (B.result) { el.innerHTML = `<button class="btn gold pbEnd" id="pbOut">${B.result.won ? '🏆 이겼다! 나가기' : '나가기'} <small>Lv.${B.result.lv} · 경험치 ${B.result.xp}/${this.need(B.result.lv)}</small></button>`; $('pbOut').onclick = () => this.close(); } return; }
+    const qa = B.qArm && Date.now() - B.qArm < 4000, qb = `<button class="btn pbQuit${qa ? ' arm' : ''}" id="pbQuit">${qa ? '정말 항복?' : '🏳️ 항복'}</button>`;
+    if (B.rtMode) { if (!B.busy) this.msg(`<small>${PB_MODE_HELP[B.rtMode][document.body.classList.contains('touchOn') ? 1 : 0]}</small>`); el.innerHTML = qb; $('pbQuit').onclick = () => { if (B.qArm && Date.now() - B.qArm >= 4000) B.qArm = 0; this.quit(); }; return; }
     const wait = B.busy || cur[B.me] != null;
     if (!B.busy) this.msg(cur[B.me] != null ? `${B.mode === 'npc' ? '' : esc(B.foeName) + '님이 고르는 중… '}` : `${esc(P.name)}은(는) 무엇을 할까? <b class="pbT">⏱ <span id="pbTime">30</span></b>`);
     el.innerHTML = P.moves.map(([n, t, pw, acc, fx], i) => { const ty = PB_TYPES[t], e = pw > 0 ? this.eff(t, foe.t) : 1;
@@ -9325,6 +9340,7 @@ const PetBattle = {
     if (cv.width !== W * dpr || cv.height !== H * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
     const B = this.B; if (!B) return; const now = performance.now(), t = now / 1000;
     c.setTransform(dpr, 0, 0, dpr, 0, 0); c.imageSmoothingEnabled = false;
+    if (B.rtMode) { PetRT.frame(c, W, H, t); this.raf = requestAnimationFrame(() => this.loop()); return; }
     const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#8fd0ff'); g.addColorStop(0.55, '#d8f0ff'); g.addColorStop(0.56, '#9ad870'); g.addColorStop(1, '#5aa848'); c.fillStyle = g; c.fillRect(0, 0, W, H);
     c.fillStyle = 'rgba(255,255,255,.75)'; for (const [x, y, r] of [[0.15, 0.14, 22], [0.22, 0.12, 16], [0.62, 0.2, 18], [0.68, 0.18, 24]]) { c.beginPath(); c.arc(((x * W + t * 6) % (W + 60)) - 30, y * H, r, 0, 7); c.fill(); }
     const base = H >= 300 ? 4 : H >= 170 ? 3 : 2, spots = { foe: [Math.round(W * 0.72), Math.round(H * 0.5)], me: [Math.round(W * 0.27), Math.round(H * 0.86)] };
@@ -9344,6 +9360,301 @@ const PetBattle = {
       const o = B.anim[w === 'a' ? 'b' : 'a']; if (A.hit && now - A.hit < 250 && o.mt) { c.fillStyle = PB_TYPES[o.mt][2]; c.globalAlpha = 0.5 * (1 - (now - A.hit) / 250); c.beginPath(); c.arc(x0, y0 - base * 6, base * 12, 0, 7); c.fill(); c.globalAlpha = 1; }
     }
     this.raf = requestAnimationFrame(() => this.loop());
+  },
+};
+
+/* ===================== 펫 대전 4종 (v152, 사용자 2026-10-16 '포켓몬처럼 말고 대전하는 거 없나, 너무 뻔해' → 'a,b,c,d 전부 다 해서 뭐가 걸릴지 랜덤으로') =====================
+ * 배틀이 시작되면 🥋 펫 스모 · 🏃 달리기 경주 · 🪢 줄다리기 · 🏐 피구 중 하나가 걸린다 (친구전은 시드로 정해서 양쪽이 같은 걸 본다).
+ * 실시간: 신청한 쪽(a)이 호스트로 둘 다 계산하고, 받은 쪽(b)은 입력만 보낸다.
+ *   {t:'pb', k:'ri', i:{x,y,an,jn}} b→a (an/jn = 지금까지 누른 횟수라 짧게 톡 눌러도 안 빠진다) · {k:'rs', s} a→b 상태 · {k:'rx', w, s} 끝
+ * 트레이너전은 내가 호스트, 상대는 AI. 능력치: 무게(체력+방어) · 힘(공격) · 빠르기(스피드), 레벨이 조금 더한다.
+ * 화면은 320×180 논리 좌표. 받은 쪽(b)은 좌우를 뒤집어 그려서 내가 늘 왼쪽(아래)에 있다. 펫 그림은 짝수 배율만. */
+const PB_MODES = ['sumo', 'race', 'tug', 'dodge'];
+const PB_MODE_KO = { sumo: '🥋 펫 스모', race: '🏃 달리기 경주', tug: '🪢 줄다리기', dodge: '🏐 피구' };
+const PB_MODE_HELP = {
+  sumo: ['방향키(WASD)로 움직이고 스페이스로 돌진! 원 밖으로 밀어내면 이겨요. 무거운 펫은 잘 안 밀려요.', '왼쪽 조이스틱으로 움직이고 돌진 버튼! 원 밖으로 밀어내면 이겨요.'],
+  race: ['스페이스를 박자 맞춰 눌러 달려요 (너무 빨리 막 누르면 덜 나가요). 허들 앞에서 W(↑)로 점프!', '달리기 버튼을 박자 맞춰 누르고, 허들 앞에서 점프 버튼!'],
+  tug: ['스페이스 연타! 아래 막대가 초록 칸에 있을 때 누르면 세 배로 당겨요.', '당기기 버튼 연타! 막대가 초록 칸에 있을 때 누르면 세 배로 당겨요.'],
+  dodge: ['방향키로 피하고 스페이스로 공을 던져요. 세 번 맞으면 져요.', '조이스틱으로 피하고 던지기 버튼! 세 번 맞으면 져요.'],
+};
+const PB_ACT_KO = { sumo: '돌진', race: '달리기', tug: '당기기', dodge: '던지기' };
+const pbCl = v => Math.max(-1, Math.min(1, +v || 0));
+
+const PetRT = {
+  on: true, tp: { x: 0, y: 0, an: 0, jn: 0 },
+  pick(B) { if (B.mode === 'npc') { B.seed = (Math.random() * 2 ** 31) >>> 0; return PB_MODES[Math.floor(Math.random() * PB_MODES.length)]; } return PB_MODES[(B.seed >>> 0) % PB_MODES.length]; },
+  st(P) {
+    const b = (PB_DEX[P.kind] || PB_DEX.dog).b, f = 1 + (P.lv - 5) * 0.012;
+    return { mass: 0.7 + Math.max(0, Math.min(1, (b[0] + b[2] - 80) / 105)) * 0.8, pow: (0.8 + b[1] / 110 * 0.5) * f, spd: (0.75 + b[3] / 100 * 0.5) * f };
+  },
+  begin(B) {
+    const m = B.rtMode; B.host = B.mode === 'npc' || B.me === 'a'; B.mir = B.me === 'b';
+    B.in = { a: { x: 0, y: 0, an: 0, jn: 0 }, b: { x: 0, y: 0, an: 0, jn: 0 } }; B.used = { a: { an: 0, jn: 0 }, b: { an: 0, jn: 0 } };
+    B.loc = { an: 0, jn: 0, pa: false, pj: false }; this.tp = { x: 0, y: 0, an: 0, jn: 0 }; B.sendT = 0; B.lt = 0; B.D = null; B.snd0 = 0;
+    const foeLv = B.S[B.me === 'a' ? 'b' : 'a'].lv, myLv = B.S[B.me].lv; B.ai = { an: 0, jn: 0, t: 0, ty: 90, sk: Math.max(0.45, Math.min(0.9, 0.65 + (foeLv - myLv) * 0.08)) };
+    B.G = Object.assign({ m, ph: 'intro', cd: 3, left: m === 'tug' ? 40 : 60, t: 0, sa: this.st(B.S.a), sb: this.st(B.S.b), snd: 0, sk: 'flip' }, this[m].init(B));
+  },
+  // 소개 문구가 끝나면 3·2·1 (호스트만 센다. 받은 쪽은 호스트 상태를 그대로 본다)
+  go(B) { if (B.host && B.G && B.G.ph === 'intro') { B.G.ph = 'count'; B.G.cd = 3; Sound.play('blip'); } },
+  // 내 입력 (키보드 + 폰 버튼)
+  read(B) {
+    const T = this.tp, L = B.loc; let x = (Keys.d || Keys.ArrowRight ? 1 : 0) - (Keys.a || Keys.ArrowLeft ? 1 : 0) + T.x, y = (Keys.s || Keys.ArrowDown ? 1 : 0) - (Keys.w || Keys.ArrowUp ? 1 : 0) + T.y;
+    if (B.mir) x = -x;
+    const act = !!(Keys[' '] || Keys.j), jmp = !!(Keys.w || Keys.ArrowUp || Keys.k);
+    if (act && !L.pa) L.an++; if (jmp && !L.pj) L.jn++; L.pa = act; L.pj = jmp; L.an += T.an; L.jn += T.jn; T.an = T.jn = 0;
+    const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
+    return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, an: L.an, jn: L.jn };
+  },
+  frame(c, W, H, t) {
+    const B = PetBattle.B; if (!B || !B.G) return; const now = performance.now(), dt = B.lt ? Math.min(0.05, (now - B.lt) / 1000) : 0; B.lt = now;
+    if (!B.over) {
+      const me = this.read(B), foe = B.me === 'a' ? 'b' : 'a'; B.in[B.me] = me;
+      if (B.host) {
+        if (B.mode === 'npc') B.in[foe] = this[B.G.m].ai(B.G, foe, dt, B.ai);
+        this.step(B, dt);
+        if (B.mode === 'net' && now - B.sendT > 60 && B.G.ph !== 'intro') { B.sendT = now; Net.send({ t: 'pb', k: 'rs', to: B.foe, s: this.pack(B.G) }); }
+      } else {
+        const sig = `${me.x},${me.y},${me.an},${me.jn}`; if (B.mode === 'net' && (sig !== B.lastSig || now - B.sendT > 150) && now - B.sendT > 45) { B.sendT = now; B.lastSig = sig; Net.send({ t: 'pb', k: 'ri', to: B.foe, i: me }); }
+        this.guest(B, dt);
+      }
+    }
+    const G = B.host ? B.G : (B.D || B.G);
+    if (G.snd !== B.snd0) { if (B.snd0 || G.snd) Sound.play(G.sk || 'flip'); B.snd0 = G.snd; }
+    this.draw(c, W, H, B, G, t);
+  },
+  step(B, dt) {
+    const G = B.G, M = this[G.m];
+    if (G.ph === 'count') { for (const s of ['a', 'b']) { B.used[s].an = B.in[s].an | 0; B.used[s].jn = B.in[s].jn | 0; } const c0 = Math.ceil(G.cd); G.cd -= dt; if (Math.ceil(G.cd) !== c0 && G.cd > 0) { G.snd++; G.sk = 'blip'; } if (G.cd <= 0) { G.ph = 'play'; G.snd++; G.sk = 'ding'; } return; }
+    if (G.ph !== 'play') return;
+    const P = {};
+    for (const s of ['a', 'b']) { const i = B.in[s], u = B.used[s], an = i.an | 0, jn = i.jn | 0; P[s] = { x: pbCl(i.x), y: pbCl(i.y), act: Math.min(3, Math.max(0, an - u.an)), jump: Math.min(2, Math.max(0, jn - u.jn)) }; u.an = Math.max(u.an, an); u.jn = Math.max(u.jn, jn); }
+    G.t += dt; G.left = Math.max(0, G.left - dt);
+    let w = M.step(G, dt, P);
+    if (!w && G.left <= 0) { w = M.timeUp(G) || (Math.random() < 0.5 ? 'a' : 'b'); G.why = M.upWhy; }
+    if (w) { G.ph = 'done'; G.win = w; G.snd++; G.sk = 'chime'; if (B.mode === 'net') Net.send({ t: 'pb', k: 'rx', to: B.foe, w, s: this.pack(G) }); setTimeout(() => { if (PetBattle.B === B) PetBattle.end(w, G.why); }, 1100); }
+  },
+  pack(G) { return JSON.parse(JSON.stringify(G, (k, v) => typeof v === 'number' ? Math.round(v * 10) / 10 : v)); },
+  onNet(B, m) {
+    if (!B.rtMode) return;
+    if (m.k === 'ri') { if (!B.host) return; const i = m.i || {}; B.in[B.me === 'a' ? 'b' : 'a'] = { x: pbCl(i.x), y: pbCl(i.y), an: Math.max(0, +i.an | 0), jn: Math.max(0, +i.jn | 0) }; B.foeAt = Date.now(); return; }
+    if (m.k === 'rs' || m.k === 'rx') {
+      if (B.host) return; const s = m.s; if (!s || typeof s !== 'object' || s.m !== B.rtMode) return;
+      if (!Array.isArray(s.balls)) s.balls = []; B.G = s; B.fresh = true; if (!B.D) B.D = JSON.parse(JSON.stringify(s)); B.foeAt = Date.now();
+      if (m.k === 'rx' && !B.over && !B.rxd) { B.rxd = true; const w = m.w === 'a' ? 'a' : 'b'; setTimeout(() => { if (PetBattle.B === B) PetBattle.end(w, s.why); }, 1100); }
+    }
+  },
+  // 받은 쪽: 호스트 상태를 부드럽게 따라간다 (공은 받은 속도로 이어서 움직인다)
+  guest(B, dt) {
+    const S = B.G, D = B.D; if (!D) return; const sm = this[S.m].sm, a = Math.min(1, dt * 16);
+    for (const k in S) { if (k === 'balls') continue; if (sm.includes(k) && typeof D[k] === 'number') D[k] += (S[k] - D[k]) * a; else D[k] = S[k]; }
+    if (B.fresh) { D.balls = (S.balls || []).map(b => Object.assign({}, b)); B.fresh = false; } else for (const b of D.balls || []) { b.x += b.vx * dt; b.y += b.vy * dt; }
+  },
+  /* ---- 그리기 공통 ---- */
+  view(W, H, B) { const s = Math.min(W / 320, H / 180), ox = (W - 320 * s) / 2, oy = (H - 180 * s) / 2, mir = !!B.mir; return { s, ox, oy, mir, k: s >= 2.6 ? 4 : 2, X: x => ox + (mir ? 320 - x : x) * s, Y: y => oy + y * s, F: f => (mir ? -f : f) }; },
+  petK(kind, base) { return Math.max(2, 2 * Math.round(base * (['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 2 : ['trex', 'giraffe', 'elephant'].includes(kind) ? 0.5 : 1) / 2)); },
+  pet(c, V, P, x, y, face, mv, t, al, sx) { // sx: 화면 x를 직접 줄 때
+    const k = this.petK(P.kind, V.k); c.save(); c.globalAlpha = al == null ? 1 : al; c.translate(Math.round(sx != null ? sx : V.X(x)), Math.round(V.Y(y))); c.scale(k, k); Pets.draw(c, P.kind, 0, 0, sx != null ? face : V.F(face), mv, t, '', 0); c.restore();
+  },
+  tag(c, text, x, y, col, size) { c.font = `bold ${size || 11}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(text, x, y); c.fillStyle = col || '#fff'; c.fillText(text, x, y); },
+  draw(c, W, H, B, G, t) {
+    const V = this.view(W, H, B); c.fillStyle = '#1a1d26'; c.fillRect(0, 0, W, H);
+    this[G.m].draw(c, V, G, B, t, W, H);
+    const me = B.me, foe = me === 'a' ? 'b' : 'a', S = B.S, fs = Math.max(11, Math.round(V.s * 6));
+    this.tag(c, PB_MODE_KO[G.m], W / 2, fs + 6, '#ffd84a', fs);
+    if (G.ph === 'play' || G.ph === 'done') this.tag(c, `⏱ ${Math.ceil(G.left)}`, W / 2, fs * 2 + 10, G.left < 10 ? '#ff8a7a' : '#fff', Math.round(fs * 0.85));
+    const lx = 10, rx = W - 10; c.font = `bold ${Math.round(fs * 0.8)}px "IBM Plex Sans KR", sans-serif`;
+    c.textAlign = 'left'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(`나 · ${S[me].name} Lv.${S[me].lv}`, lx, fs + 6); c.fillStyle = '#9fe3ff'; c.fillText(`나 · ${S[me].name} Lv.${S[me].lv}`, lx, fs + 6);
+    c.textAlign = 'right'; c.strokeText(`${B.foeName} · ${S[foe].name} Lv.${S[foe].lv}`, rx, fs + 6); c.fillStyle = '#ffb0a0'; c.fillText(`${B.foeName} · ${S[foe].name} Lv.${S[foe].lv}`, rx, fs + 6);
+    if (G.ph === 'count') this.tag(c, String(Math.max(1, Math.ceil(G.cd))), W / 2, H / 2 + fs, '#fff', fs * 4);
+    else if (G.ph === 'play' && G.t < 0.8) this.tag(c, '시작!', W / 2, H / 2 + fs, '#ffd84a', fs * 3);
+    else if (G.ph === 'done') this.tag(c, G.win === me ? '이겼다!' : '졌다…', W / 2, H / 2 + fs, G.win === me ? '#ffd84a' : '#ff8a7a', fs * 3);
+    else if (G.ph === 'intro' && !B.host && !B.busy) this.tag(c, '상대를 기다리는 중…', W / 2, H / 2, '#fff', fs);
+  },
+  /* ================= 🥋 펫 스모 ================= */
+  sumo: {
+    sm: ['ax', 'ay', 'bx', 'by'], upWhy: '시간 끝! 가운데에 더 가까운 쪽이 이겼어요.',
+    init() { return { ax: 125, ay: 96, bx: 195, by: 96, avx: 0, avy: 0, bvx: 0, bvy: 0, acd: 0, bcd: 0, adt: 0, bdt: 0, af: 1, bf: -1, R: 70, cx: 160, cy: 96, hx: 0, hy: 0, ht: -9 }; },
+    rad(s) { return 8 + s.mass * 5; },
+    step(G, dt, P) {
+      for (const k of ['a', 'b']) {
+        const s = G['s' + k], p = P[k], o = k === 'a' ? 'b' : 'a'; let vx = G[k + 'vx'], vy = G[k + 'vy'];
+        const acc = 170 * s.spd / s.mass; vx += p.x * acc * dt; vy += p.y * acc * dt;
+        G[k + 'cd'] = Math.max(0, G[k + 'cd'] - dt); G[k + 'dt'] = Math.max(0, G[k + 'dt'] - dt);
+        if (p.act && G[k + 'cd'] <= 0) { let dx = p.x, dy = p.y; if (!dx && !dy) { dx = G[o + 'x'] - G[k + 'x']; dy = G[o + 'y'] - G[k + 'y']; } const n = Math.hypot(dx, dy) || 1; vx += dx / n * 120 * s.spd; vy += dy / n * 120 * s.spd; G[k + 'cd'] = 1.5; G[k + 'dt'] = 0.3; G.snd++; G.sk = 'flip'; }
+        const dr = Math.exp(-3 * dt); vx *= dr; vy *= dr; const sp = Math.hypot(vx, vy), mx = (G[k + 'dt'] > 0 ? 170 : 60) * s.spd; if (sp > mx) { vx *= mx / sp; vy *= mx / sp; }
+        G[k + 'vx'] = vx; G[k + 'vy'] = vy; G[k + 'x'] += vx * dt; G[k + 'y'] += vy * dt; if (Math.abs(vx) > 6) G[k + 'f'] = vx > 0 ? 1 : -1;
+      }
+      const ra = this.rad(G.sa), rb = this.rad(G.sb), dx = G.bx - G.ax, dy = G.by - G.ay, d = Math.hypot(dx, dy) || 0.01;
+      if (d < ra + rb) {
+        const nx = dx / d, ny = dy / d, ov = ra + rb - d, ma = G.sa.mass, mb = G.sb.mass;
+        G.ax -= nx * ov * mb / (ma + mb); G.ay -= ny * ov * mb / (ma + mb); G.bx += nx * ov * ma / (ma + mb); G.by += ny * ov * ma / (ma + mb);
+        const rv = (G.bvx - G.avx) * nx + (G.bvy - G.avy) * ny;
+        if (rv < 0) {
+          const j = -(1 + 0.2) * rv / (1 / ma + 1 / mb), ea = G.adt > 0 ? j * 0.45 * G.sa.pow : 0, eb = G.bdt > 0 ? j * 0.45 * G.sb.pow : 0; // 돌진 중이면 더 세게 밀친다
+          G.avx -= nx * (j + eb) / ma; G.avy -= ny * (j + eb) / ma; G.bvx += nx * (j + ea) / mb; G.bvy += ny * (j + ea) / mb;
+          if (j > 40) { G.hx = (G.ax + G.bx) / 2; G.hy = (G.ay + G.by) / 2; G.ht = G.t; G.snd++; G.sk = j > 120 ? 'crash' : 'pop'; }
+        }
+      }
+      const da = Math.hypot(G.ax - G.cx, G.ay - G.cy) - G.R, db = Math.hypot(G.bx - G.cx, G.by - G.cy) - G.R;
+      if (da > 0 || db > 0) return da > db ? 'b' : 'a';
+      return null;
+    },
+    timeUp(G) { return Math.hypot(G.ax - G.cx, G.ay - G.cy) < Math.hypot(G.bx - G.cx, G.by - G.cy) ? 'a' : 'b'; },
+    ai(G, k, dt, A) {
+      const o = k === 'a' ? 'b' : 'a', mx = G[k + 'x'], my = G[k + 'y'], ox = G[o + 'x'], oy = G[o + 'y'], dc = Math.hypot(mx - G.cx, my - G.cy);
+      let x, y; if (dc > G.R * 0.62) { x = G.cx - mx; y = G.cy - my; } else { x = ox - mx + (G.cx - ox) * -0.25; y = oy - my + (G.cy - oy) * -0.25; } // 상대를 바깥쪽으로 미는 방향
+      const n = Math.hypot(x, y) || 1; A.t -= dt;
+      if (A.t <= 0 && G[k + 'cd'] <= 0 && Math.hypot(ox - mx, oy - my) < 52 && dc < G.R * 0.7 && Math.random() < A.sk * 0.6) { A.an++; A.t = 1 + Math.random() * 1.4; }
+      return { x: x / n * A.sk, y: y / n * A.sk, an: A.an, jn: 0 };
+    },
+    draw(c, V, G, B, t) {
+      const s = V.s; c.fillStyle = '#3a2c1e'; c.fillRect(V.ox, V.oy, 320 * s, 180 * s);
+      c.fillStyle = '#c9a46a'; c.fillRect(V.X(G.cx) - (G.R + 16) * s, V.Y(G.cy) - (G.R * 0.62 + 16) * s, (G.R + 16) * 2 * s, (G.R * 0.62 + 16) * 2 * s);
+      c.save(); c.translate(V.X(G.cx), V.Y(G.cy)); c.scale(1, 1); c.fillStyle = '#ddb97a'; c.beginPath(); c.arc(0, 0, G.R * s, 0, 7); c.fill(); c.lineWidth = Math.max(3, 4 * s); c.strokeStyle = '#efe2b0'; c.stroke(); c.lineWidth = 1; c.strokeStyle = 'rgba(120,80,30,.6)'; c.stroke();
+      c.fillStyle = '#fff'; c.fillRect(-12 * s, -3 * s, 2 * s, 6 * s); c.fillRect(10 * s, -3 * s, 2 * s, 6 * s); c.restore();
+      const L = ['a', 'b'].sort((p, q) => G[p + 'y'] - G[q + 'y']);
+      for (const k of L) { const S = B.S[k], x = G[k + 'x'], y = G[k + 'y'], sp = Math.hypot(G[k + 'vx'], G[k + 'vy']), out = Math.hypot(x - G.cx, y - G.cy) > G.R;
+        c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(V.X(x), V.Y(y), PetRT.sumo.rad(G['s' + k]) * s, PetRT.sumo.rad(G['s' + k]) * 0.45 * s, 0, 0, 7); c.fill();
+        if (G[k + 'dt'] > 0) { c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2; for (let i = 0; i < 3; i++) { const yy = V.Y(y) - (4 + i * 5) * s; c.beginPath(); c.moveTo(V.X(x - G[k + 'vx'] * 0.06), yy); c.lineTo(V.X(x - G[k + 'vx'] * 0.16), yy); c.stroke(); } }
+        PetRT.pet(c, V, S, x, y + (out && G.ph === 'done' ? 6 : 0), G[k + 'f'], sp > 15, t);
+        PetRT.tag(c, k === B.me ? '나' : B.foeName, V.X(x), V.Y(y) - 30 * s * 0.6 - 18, k === B.me ? '#9fe3ff' : '#ffb0a0', Math.max(10, Math.round(s * 5)));
+        if (k === B.me && G[k + 'cd'] > 0) { c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(V.X(x) - 12, V.Y(y) + 6, 24, 3); c.fillStyle = '#ffd84a'; c.fillRect(V.X(x) - 12, V.Y(y) + 6, 24 * (1 - G[k + 'cd'] / 1.5), 3); } }
+      if (G.t - G.ht < 0.35) { const u = (G.t - G.ht) / 0.35; c.fillStyle = `rgba(255,230,120,${(1 - u).toFixed(2)})`; c.beginPath(); c.arc(V.X(G.hx), V.Y(G.hy) - 8 * s, (6 + u * 14) * s, 0, 7); c.fill(); PetRT.tag(c, '쿵!', V.X(G.hx), V.Y(G.hy) - (20 + u * 10) * s, '#ff6a4a', Math.round(s * 7)); }
+    },
+  },
+  /* ================= 🏃 달리기 경주 ================= */
+  race: {
+    sm: ['ax', 'bx'], upWhy: '시간 끝! 더 멀리 간 쪽이 이겼어요.',
+    init(B) { const R = makeRng(((B.seed || 1) ^ 0x5bd1e995) >>> 0), h = []; let x = 150; while (x < 900) { h.push(Math.round(x)); x += 105 + R.next() * 75; } return { L: 1000, ax: 0, bx: 0, av: 0, bv: 0, aj: 0, bj: 0, as: 0, bs: 0, al: -1, bl: -1, ak: 0, bk: 0, h }; },
+    step(G, dt, P) {
+      for (const k of ['a', 'b']) {
+        const s = G['s' + k], p = P[k];
+        if (G[k + 's'] > 0) { G[k + 's'] -= dt; G[k + 'v'] = 0; }
+        else {
+          for (let i = 0; i < p.act; i++) { const gap = G.t - G[k + 'l']; G[k + 'l'] = G.t; if (gap > 0.09) G[k + 'v'] = Math.min(230 * s.spd, G[k + 'v'] + 30 * s.spd * (gap > 0.17 && gap < 0.34 ? 1.6 : 1)); } // 박자 맞으면 1.6배
+          if (p.jump && G[k + 'j'] <= 0) { G[k + 'j'] = 0.55; G.snd++; G.sk = 'pop'; }
+        }
+        G[k + 'j'] = Math.max(0, G[k + 'j'] - dt); G[k + 'v'] *= Math.exp(-0.9 * dt);
+        const x0 = G[k + 'x'], nx = x0 + G[k + 'v'] * dt, hi = G.h.findIndex((hx, i) => hx > x0 && hx <= nx && !(G[k + 'k'] & (1 << i)));
+        if (hi >= 0 && G[k + 'j'] <= 0.04) { G[k + 'x'] = G.h[hi] - 4; G[k + 'v'] = 0; G[k + 's'] = 0.8; G[k + 'k'] |= 1 << hi; G.snd++; G.sk = 'crash'; }
+        else G[k + 'x'] = nx;
+      }
+      const fa = G.ax >= G.L, fb = G.bx >= G.L; if (fa || fb) return fa && fb ? (G.ax >= G.bx ? 'a' : 'b') : fa ? 'a' : 'b';
+      return null;
+    },
+    timeUp(G) { return G.ax >= G.bx ? 'a' : 'b'; },
+    ai(G, k, dt, A) {
+      A.t -= dt; if (A.t <= 0 && G[k + 's'] <= 0) { A.an++; A.t = (0.2 + Math.random() * 0.1) / (0.6 + A.sk * 0.5); }
+      const x = G[k + 'x'], nh = G.h.find(hx => hx > x), d = nh != null ? nh - x : 1e9;
+      if (nh != null && A.hd !== nh && d < 18 + G[k + 'v'] * 0.12) { A.hd = nh; if (Math.random() < 0.55 + A.sk * 0.45) A.jn++; }
+      return { x: 0, y: 0, an: A.an, jn: A.jn };
+    },
+    draw(c, V, G, B, t, W, H) {
+      const s = V.s, me = B.me, foe = me === 'a' ? 'b' : 'a';
+      c.fillStyle = '#7cc0f0'; c.fillRect(V.ox, V.oy, 320 * s, 180 * s);
+      // 위: 진행 막대
+      const by = V.oy + 30 * s, bx0 = V.ox + 30 * s, bw = 260 * s; c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(bx0, by, bw, 4 * s);
+      for (const hx of G.h) { c.fillStyle = 'rgba(255,255,255,.6)'; c.fillRect(bx0 + hx / G.L * bw, by - 1, 1.5, 4 * s + 2); }
+      for (const k of [foe, me]) { c.fillStyle = k === me ? '#9fe3ff' : '#ff8a7a'; c.beginPath(); c.arc(bx0 + Math.min(1, G[k + 'x'] / G.L) * bw, by + 2 * s, 3.2 * s, 0, 7); c.fill(); }
+      c.fillStyle = '#fff'; c.fillRect(bx0 + bw, by - 3 * s, 2 * s, 10 * s);
+      // 레인 두 줄 (위 상대, 아래 나)
+      for (const [k, top] of [[foe, 46], [me, 112]]) {
+        const y0 = V.oy + top * s, lh = 62 * s, cam = G[k + 'x'] - 70, X = u => V.ox + (u - cam) * s;
+        c.fillStyle = k === me ? '#5aa848' : '#4e9a40'; c.fillRect(V.ox, y0, 320 * s, lh); c.fillStyle = '#c86a3a'; c.fillRect(V.ox, y0 + lh * 0.55, 320 * s, lh * 0.3);
+        c.fillStyle = 'rgba(255,255,255,.5)'; for (let u = Math.floor(cam / 50) * 50; u < cam + 330; u += 50) c.fillRect(X(u), y0 + lh * 0.55, 1.5, lh * 0.3);
+        const gy = y0 + lh * 0.75;
+        if (G.L > cam - 10 && G.L < cam + 330) { for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#222' : '#fff'; c.fillRect(X(G.L), y0 + lh * 0.55 + i * lh * 0.3 / 8, 4 * s, lh * 0.3 / 8); } PetRT.tag(c, '🏁', X(G.L) + 2 * s, y0 + lh * 0.45, '#fff', Math.round(s * 8)); }
+        G.h.forEach((hx, i) => { if (hx < cam - 10 || hx > cam + 330) return; const down = G[k + 'k'] & (1 << i); c.fillStyle = '#f4f4f4'; if (down) { c.fillRect(X(hx) - 6 * s, gy - 2 * s, 12 * s, 2 * s); } else { c.fillRect(X(hx) - 1 * s, gy - 12 * s, 2 * s, 12 * s); c.fillStyle = '#e03a3a'; c.fillRect(X(hx) - 3 * s, gy - 13 * s, 6 * s, 3 * s); } });
+        const j = G[k + 'j'], jy = j > 0 ? Math.sin(Math.PI * (1 - j / 0.55)) * 22 : 0, P = B.S[k];
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(X(G[k + 'x']), gy, 8 * s * (1 - jy / 50), 2.5 * s, 0, 0, 7); c.fill();
+        const k2 = PetRT.petK(P.kind, V.k); c.save(); c.translate(Math.round(X(G[k + 'x'])), Math.round(gy - jy * s)); if (G[k + 's'] > 0) c.rotate(Math.sin(t * 30) * 0.15); c.scale(k2, k2); Pets.draw(c, P.kind, 0, 0, 1, G[k + 'v'] > 10, t, '', 0); c.restore();
+        if (G[k + 's'] > 0) PetRT.tag(c, '꽈당!', X(G[k + 'x']), gy - 34 * s * 0.7 - 6, '#ff6a4a', Math.round(s * 6));
+        PetRT.tag(c, k === me ? '나' : B.foeName, V.ox + 16 * s, y0 + 12 * s, k === me ? '#9fe3ff' : '#ffb0a0', Math.max(10, Math.round(s * 5)));
+        PetRT.tag(c, `${Math.round(G[k + 'v'])}`, V.ox + 300 * s, y0 + 12 * s, '#fff', Math.max(9, Math.round(s * 4)));
+      }
+    },
+  },
+  /* ================= 🪢 줄다리기 ================= */
+  tug: {
+    sm: ['r'], upWhy: '시간 끝! 줄을 더 끌어온 쪽이 이겼어요.',
+    init() { return { r: 0, ap: 0, bp: 0, ah: 0, bh: 0, al: -1, bl: -1 }; },
+    bar(G, k) { const u = (G.t * 0.95 + (k === 'a' ? 0 : 0.37)) % 1; return u < 0.5 ? u * 2 : 2 - u * 2; }, // 0→1→0 왕복
+    zone(G, k) { return Math.abs(this.bar(G, k) - 0.5) < 0.09; },
+    step(G, dt, P) {
+      for (const k of ['a', 'b']) {
+        G[k + 'p'] = Math.max(0, G[k + 'p'] - dt); G[k + 'h'] = Math.max(0, G[k + 'h'] - dt);
+        for (let i = 0; i < P[k].act; i++) { if (G.t - G[k + 'l'] < 0.065) continue; G[k + 'l'] = G.t; const z = this.zone(G, k), o = k === 'a' ? 'b' : 'a', pw = 0.028 * G['s' + k].pow * (z ? 3 : 1) / Math.sqrt(G['s' + o].mass); G.r += k === 'a' ? -pw : pw; G[k + 'p'] = 0.14; if (z) { G[k + 'h'] = 0.35; G.snd++; G.sk = 'ding'; } }
+      }
+      if (G.r <= -1) return 'a'; if (G.r >= 1) return 'b'; return null;
+    },
+    timeUp(G) { return G.r < 0 ? 'a' : G.r > 0 ? 'b' : null; },
+    ai(G, k, dt, A) {
+      A.t -= dt; const z = this.zone(G, k);
+      if (A.t <= 0) { A.an++; A.t = (0.13 + Math.random() * 0.08) / (0.6 + A.sk * 0.5); if (z && Math.random() < A.sk * 0.5) A.t *= 0.4; }
+      return { x: 0, y: 0, an: A.an, jn: 0 };
+    },
+    draw(c, V, G, B, t) {
+      const s = V.s, me = B.me; c.fillStyle = '#6ab84e'; c.fillRect(V.ox, V.oy, 320 * s, 180 * s); c.fillStyle = '#5aa040'; for (let i = 0; i < 8; i++) c.fillRect(V.ox, V.oy + (40 + i * 16) * s, 320 * s, 8 * s);
+      c.fillStyle = '#6a4a2a'; c.beginPath(); c.ellipse(V.X(160), V.Y(118), 26 * s, 9 * s, 0, 0, 7); c.fill(); c.fillStyle = '#7d5a34'; c.beginPath(); c.ellipse(V.X(160), V.Y(117), 20 * s, 6 * s, 0, 0, 7); c.fill(); // 가운데 진흙
+      c.fillStyle = '#fff'; c.fillRect(V.X(100) - 1, V.Y(100), 2, 30 * s); c.fillRect(V.X(220) - 1, V.Y(100), 2, 30 * s);
+      const ax = 95 + G.r * 62, bx = 225 + G.r * 62, ry = 112;
+      c.strokeStyle = '#c8a050'; c.lineWidth = Math.max(2, 2.4 * s); c.beginPath(); c.moveTo(V.X(ax + 6), V.Y(ry)); c.lineTo(V.X(bx - 6), V.Y(ry)); c.stroke();
+      const mx = 160 + G.r * 62; c.fillStyle = '#e03a3a'; c.fillRect(V.X(mx) - 2 * s, V.Y(ry) - 2, 4 * s, 10 * s);
+      for (const [k, x, f] of [['a', ax, 1], ['b', bx, -1]]) { const lean = G[k + 'p'] > 0 ? -f * 3 : 0; PetRT.pet(c, V, B.S[k], x + lean, ry + 8, -f, G[k + 'p'] > 0, t); if (G[k + 'h'] > 0) PetRT.tag(c, '영차!', V.X(x), V.Y(ry) - 30 * s * 0.8, '#ffd84a', Math.round(s * 6)); PetRT.tag(c, k === me ? '나' : B.foeName, V.X(x), V.Y(ry) + 22 * s, k === me ? '#9fe3ff' : '#ffb0a0', Math.max(10, Math.round(s * 5))); }
+      // 내 타이밍 막대
+      const bw = 140 * s, bx0 = V.ox + 90 * s, by = V.oy + 150 * s, bh = 9 * s; c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(bx0 - 2, by - 2, bw + 4, bh + 4); c.fillStyle = '#e8e2d6'; c.fillRect(bx0, by, bw, bh);
+      c.fillStyle = '#3ad060'; c.fillRect(bx0 + bw * 0.41, by, bw * 0.18, bh); const u = PetRT.tug.bar(G, me); c.fillStyle = '#1a1a24'; c.fillRect(bx0 + bw * u - 2, by - 3, 4, bh + 6);
+      if (G[me + 'h'] > 0) PetRT.tag(c, '×3!', bx0 + bw + 18 * s, by + bh, '#3ad060', Math.round(s * 6));
+    },
+  },
+  /* ================= 🏐 피구 ================= */
+  dodge: {
+    sm: ['ax', 'ay', 'bx', 'by'], upWhy: '시간 끝! 덜 맞은 쪽이 이겼어요.',
+    init() { return { ax: 70, ay: 100, bx: 250, by: 100, al: 3, bl: 3, ac: 0.8, bc: 0.8, ai: 0, bi: 0, af: 1, bf: -1, balls: [] }; },
+    step(G, dt, P) {
+      for (const k of ['a', 'b']) {
+        const s = G['s' + k], p = P[k], o = k === 'a' ? 'b' : 'a', sp = 100 * s.spd;
+        G[k + 'x'] = Math.max(k === 'a' ? 16 : 172, Math.min(k === 'a' ? 148 : 304, G[k + 'x'] + p.x * sp * dt)); G[k + 'y'] = Math.max(52, Math.min(166, G[k + 'y'] + p.y * sp * dt));
+        G[k + 'c'] = Math.max(0, G[k + 'c'] - dt); G[k + 'i'] = Math.max(0, G[k + 'i'] - dt);
+        if (p.act && G[k + 'c'] <= 0) { const dx = G[o + 'x'] - G[k + 'x'], dy = G[o + 'y'] - G[k + 'y'], n = Math.hypot(dx, dy) || 1, v = 190 * (0.8 + 0.2 * s.pow); G.balls.push({ x: G[k + 'x'] + dx / n * 12, y: G[k + 'y'] - 7, vx: dx / n * v, vy: dy / n * v, o: k }); G[k + 'c'] = 1.0; G.snd++; G.sk = 'flip'; }
+      }
+      G.balls = G.balls.filter(b => {
+        b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < -10 || b.x > 330 || b.y < 30 || b.y > 190) return false;
+        const t = b.o === 'a' ? 'b' : 'a'; if (Math.hypot(b.x - G[t + 'x'], b.y - (G[t + 'y'] - 7)) < 10 && G[t + 'i'] <= 0) { G[t + 'l']--; G[t + 'i'] = 0.8; G.snd++; G.sk = 'crash'; return false; }
+        return true;
+      });
+      if (G.al <= 0) return 'b'; if (G.bl <= 0) return 'a'; return null;
+    },
+    timeUp(G) { return G.al > G.bl ? 'a' : G.bl > G.al ? 'b' : null; },
+    ai(G, k, dt, A) {
+      const x = G[k + 'x'], y = G[k + 'y']; let mx = 0, my = 0; A.t -= dt; A.tt = (A.tt || 0) - dt;
+      if (A.tt <= 0) { A.tt = 1.2 + Math.random(); A.ty = 60 + Math.random() * 100; A.tx = k === 'a' ? 40 + Math.random() * 80 : 200 + Math.random() * 80; }
+      my = Math.sign(A.ty - y) * (Math.abs(A.ty - y) > 6 ? 1 : 0); mx = Math.sign((A.tx || x) - x) * (Math.abs((A.tx || x) - x) > 6 ? 0.6 : 0);
+      for (const b of G.balls) { if (b.o === k) continue; const tt = (x - b.x) / (b.vx || 1e-6); if (tt > 0 && tt < 0.9) { const py = b.y + b.vy * tt; if (Math.abs(py - (y - 7)) < 20 && Math.random() < A.sk + 0.1) { my = py > y - 7 ? -1 : 1; if (y < 60) my = 1; if (y > 160) my = -1; } } }
+      if (A.t <= 0 && G[k + 'c'] <= 0) { A.an++; A.t = 0.3 + Math.random() * (1.4 - A.sk); }
+      return { x: mx * A.sk, y: my * Math.min(1, A.sk + 0.2), an: A.an, jn: 0 };
+    },
+    draw(c, V, G, B, t) {
+      const s = V.s, me = B.me; c.fillStyle = '#2a4a7a'; c.fillRect(V.ox, V.oy, 320 * s, 180 * s);
+      c.fillStyle = '#d8a868'; c.fillRect(V.ox + 8 * s, V.oy + 40 * s, 304 * s, 134 * s); c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(V.ox + 10 * s, V.oy + 42 * s, 300 * s, 130 * s);
+      c.fillStyle = '#fff'; c.fillRect(V.ox + 159 * s, V.oy + 42 * s, 2 * s, 130 * s);
+      const L = ['a', 'b'].sort((p, q) => G[p + 'y'] - G[q + 'y']);
+      for (const k of L) { const x = G[k + 'x'], y = G[k + 'y'], hit = G[k + 'i'] > 0; c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(V.X(x), V.Y(y), 9 * s, 3 * s, 0, 0, 7); c.fill();
+        PetRT.pet(c, V, B.S[k], x, y, k === 'a' ? 1 : -1, true, t, hit && Math.floor(t * 12) % 2 ? 0.3 : 1);
+        const hy = V.Y(y) - 30 * s * 0.7 - 10; PetRT.tag(c, '♥'.repeat(Math.max(0, G[k + 'l'])) + '♡'.repeat(Math.max(0, 3 - G[k + 'l'])), V.X(x), hy, '#ff5a7a', Math.max(10, Math.round(s * 5)));
+        PetRT.tag(c, k === me ? '나' : B.foeName, V.X(x), hy - Math.max(11, s * 5.5), k === me ? '#9fe3ff' : '#ffb0a0', Math.max(9, Math.round(s * 4.5)));
+        if (k === me && G[k + 'c'] > 0) { c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(V.X(x) - 12, V.Y(y) + 6, 24, 3); c.fillStyle = '#ffd84a'; c.fillRect(V.X(x) - 12, V.Y(y) + 6, 24 * (1 - G[k + 'c']), 3); } }
+      for (const b of G.balls || []) { c.fillStyle = b.o === me ? '#ffd84a' : '#e84030'; c.beginPath(); c.arc(V.X(b.x), V.Y(b.y), 4 * s, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.7)'; c.fillRect(V.X(b.x) - s, V.Y(b.y) - 2 * s, 1.5 * s, 1.5 * s); }
+    },
+  },
+  /* ---- 폰 버튼: 왼쪽 조이스틱 + 오른쪽 버튼 ---- */
+  pad(m) { return `<div class="pbPad m-${m}"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns">${m === 'race' ? '<button class="pbB2" id="pbJmp">점프</button>' : ''}<button class="pbB1" id="pbAct">${PB_ACT_KO[m]}</button></div></div>`; },
+  bindPad() {
+    const T = this.tp, st = $('pbStick'), nub = $('pbNub');
+    if (st) { const mv = e => { const r = st.getBoundingClientRect(), R = r.width / 2; let x = (e.clientX - r.left - R) / R, y = (e.clientY - r.top - R) / R; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; } T.x = x; T.y = y; nub.style.transform = `translate(${x * R * 0.6}px, ${y * R * 0.6}px)`; };
+      st.onpointerdown = e => { e.preventDefault(); st.setPointerCapture(e.pointerId); mv(e); }; st.onpointermove = e => { if (st.hasPointerCapture(e.pointerId)) mv(e); };
+      st.onpointerup = st.onpointercancel = () => { T.x = T.y = 0; nub.style.transform = ''; }; }
+    for (const [id, key] of [['pbAct', 'an'], ['pbJmp', 'jn']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); T[key]++; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => b.classList.remove('dn'); b.onclick = e => e.preventDefault(); }
   },
 };
 

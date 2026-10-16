@@ -1796,7 +1796,7 @@ const FEEL = {
   liveRepairPremium: 1.04, // 실시간 채널: 수리 뒤 매도가 배수 (월세는 ×1.1)      // 실시간 채널: 강제집행(인도명령 집행)이 끝나기까지 실제 초
   liveOrderFee: 50000,    // 실시간 채널: 인도명령 신청 비용(송달료 등)
   liveOrderEase: 15,      // 실시간 채널: 인도명령을 받아 두면 점유자 경계심(저항)이 이만큼 낮아진다         // 실시간 채널: 낙찰 뒤 잔금(대출→법원 납부) 기한, 실제 분 (현실의 대금지급기한 약 1달 ≒ 반 주)
-  liveOfflineMonthsPerDay: 4, // 꺼 둔 동안 들어오는 월세 한도: 하루에 채널 몇 달치까지 (사용자 2026-10-16 '꺼둬도 임대료가 들어오되 한도'). 대출 이자도 같은 만큼 빠진다
+  liveOfflineMidnight: true, // 꺼 둔 동안 월세·이자는 다 흐르되, 접속 안 한 채 자정(현실 시간 24시)을 넘기면 그 뒤로 멈춘다 (사용자 2026-10-16, 하루 4달 한도를 바꿈)
   liveHospitalSec: 10,    // (20→10, 사용자 2026-10-16) 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
   liveAsylumSec: 60,      // 실시간 채널: 정신과 병동 입원 시간(초)
   pvpAsylumHits: 3,       // 같이 하기: 내 차로 다른 플레이어를 이만큼 치면 병원비까지 물어주고 정신과 병동
@@ -5403,20 +5403,20 @@ const Live = {
     if (a.rentOn) return full ? `내 집 ${nm} · 월세 ${fmtWon(a.rent)} · 다음 입금 ${this.mmss(Math.max(0, (a.rentHeld || 0) + this.monthMs() - (a.held || 0)))}` : `내 집 ${nm} · 임대 중`;
     return `내 집 ${nm} · ${a.cond ? this.COND[a.cond].label : '상태 미확인'} · 부동산에 임대·매도`;
   },
-  /* 꺼 둔 동안 월세 (사용자 2026-10-16 '꺼둬도 임대료가 들어오되 한도를'): 임대 중인 집의 보유 시간을 꺼 둔 만큼 앞당기되
-   * 하루(달력 날짜) 합계 FEEL.liveOfflineMonthsPerDay달치까지만. 그 사이 대출 이자·계약 만료도 같이 흐른다. 임대 안 한 집은 그대로 멈춰 있다. */
+  /* 꺼 둔 동안 월세 (사용자 2026-10-16): 임대 중인 집의 보유 시간을 꺼 둔 만큼 앞당긴다 (월세·대출 이자·계약 만료가 같이 흐른다).
+   * 단, 접속 안 한 채 자정(현실 시간 24시)을 넘기면 자정까지만 친다 (그 뒤로는 월세도 이자도 없다). 임대 안 한 집은 그대로 멈춰 있다. */
   offline(gap) {
-    const rented = this.owned().filter(m => m.asset && m.asset.rentOn); if (!rented.length || !FEEL.liveOfflineMonthsPerDay) return;
-    const day = new Date().toDateString(), key = 'liveOff' + this.ch; let q = Store.get(key, null); if (!q || q.d !== day) q = { d: day, used: 0 };
-    const cap = FEEL.liveOfflineMonthsPerDay * this.monthMs(), credit = Math.min(gap, cap - q.used);
-    if (credit < 1000) { if (gap > this.monthMs()) HUD.page(`꺼 둔 동안 들어오는 월세는 하루 ${FEEL.liveOfflineMonthsPerDay}달치까지예요. 오늘 몫은 다 받았어요. 켜 두면 계속 들어와요.`, '알림'); return; }
-    q.used += credit; Store.set(key, q);
+    const rented = this.owned().filter(m => m.asset && m.asset.rentOn); if (!rented.length) return;
+    const now = Date.now(), leftAt = now - gap, mid = new Date(leftAt); mid.setHours(24, 0, 0, 0);
+    const cut = FEEL.liveOfflineMidnight && now > mid.getTime(), credit = Math.max(0, (cut ? mid.getTime() : now) - leftAt);
+    if (credit < 1000) return;
     const sum = () => this.owned().reduce((t, m) => { const a = m.asset || {}; t.r += a.rentTotal || 0; t.i += a.intPaid || 0; return t; }, { r: 0, i: 0 }), b0 = sum();
     for (const m of rented) m.asset.held = (m.asset.held || 0) + credit;
-    this.quiet = true; try { for (let n = 0; n < 200; n++) this.assetTick(0); } finally { this.quiet = false; }
-    const b1 = sum(), dr = b1.r - b0.r, di = b1.i - b0.i, left = Math.max(0, Math.floor((cap - q.used) / this.monthMs()));
+    this.quiet = true; try { for (let n = 0; n < 2000; n++) { const h = JSON.stringify(rented.map(m => [m.asset.rentHeld, m.asset.intHeld, m.asset.leaseEnd])); this.assetTick(0); if (h === JSON.stringify(rented.map(m => [m.asset.rentHeld, m.asset.intHeld, m.asset.leaseEnd]))) break; } } finally { this.quiet = false; }
+    const b1 = sum(), dr = b1.r - b0.r, di = b1.i - b0.i;
     this.save();
-    if (dr || di) { HUD.page(`자리 비운 동안 월세 ${fmtWon(dr)} 들어왔어요${di ? ` · 대출 이자 −${fmtWon(di)}` : ''}. 꺼 둔 동안 월세는 하루 ${FEEL.liveOfflineMonthsPerDay}달치까지 (오늘 남은 몫 ${left}달).`, '알림'); if (dr) Sound.play('coins'); if (Net.on && dr) Net.news(`자리 비운 동안 월세 ${fmtWon(dr)} 받음`); }
+    const note = cut ? ' 접속 안 한 채 자정을 넘겨서 그 뒤로는 월세·이자가 멈췄어요.' : '';
+    if (dr || di || cut) { HUD.page(`자리 비운 동안 월세 ${fmtWon(dr)} 들어왔어요${di ? ` · 대출 이자 −${fmtWon(di)}` : ''}.${note}`, '알림'); if (dr) Sound.play('coins'); if (Net.on && dr) Net.news(`자리 비운 동안 월세 ${fmtWon(dr)} 받음`); }
   },
   assetTick(dt = 0) {
     for (const m of this.owned()) {

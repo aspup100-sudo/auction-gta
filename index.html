@@ -766,6 +766,8 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .short .qzQ { font-size:15px; } .short .qz .qzOptBtn { min-height:40px; padding:6px 8px; font-size:12.5px; } .short .qzMid h2 { font-size:24px; } .short .qz .arcMarq { display:none; } .short .qzScr { padding:8px 10px; gap:6px; }
 .qzTag { font-style:normal; padding:1px 7px; border-radius:6px; background:#ff5ae0; color:#fff; font-size:11px; letter-spacing:0; } .qzType { display:flex; gap:8px; } .qzType input { flex:1; min-width:0; padding:10px 12px; border-radius:10px; border:2px solid #2ae0ff; background:#05030f; color:#fff; font:800 17px var(--ui); box-shadow:0 0 8px rgba(42,224,255,.3); outline:none; } .qzType input:focus { box-shadow:0 0 14px rgba(42,224,255,.8); } .qzType input:disabled { opacity:.6; } .qzType .btn { flex:none; padding:0 18px; }
 .qzTries { display:flex; flex-wrap:wrap; gap:5px; } .qzTries span { padding:3px 8px; border-radius:6px; background:#4a0f22; border:1px solid #ff6a8a; color:#ffd8e0; font:700 12px var(--ui); } .qzTries span.me { border-color:#ffe84a; } .qzAns { text-align:center; padding:10px; border-radius:10px; background:#0f4a2a; border:2px solid #5aff8a; color:#d8ffe4; font:700 14px var(--ui); box-shadow:0 0 14px rgba(90,255,138,.5); } .qzAns b { font-size:22px; color:#fff; margin-left:6px; } .qzAns small { display:block; opacity:.8; margin-top:2px; }
+.qzWatch { display:flex; flex-direction:column; gap:6px; width:100%; max-width:420px; } .qzWatch .btn { border-color:#7ae8ff; color:#7ae8ff; } .qzWatch .btn small { display:block; color:#cfd8ff; font-size:11px; font-weight:600; }
+.exWatch { text-align:center; font:800 12px var(--ui); color:#7ae8ff; letter-spacing:.5px; } .exEye { font:700 11px var(--ui); color:#7ae8ff; } .qzTag.eye { background:#7ae8ff; color:#05030f; }
 .qzTag.ox { background:#3ee0f0; color:#05030f; } .qz .qzOpts.ox .qzOptBtn { min-height:84px; justify-content:center; font-size:22px; } .qzOpts.ox .qzOptBtn span { flex:none; }
 @media (max-width:520px) { .qzOpts { grid-template-columns:1fr; } .qzOpts.ox { grid-template-columns:1fr 1fr; } }
 .tetOver { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:rgba(5,3,20,.74); color:#fff; text-align:center; padding:12px; } .tetOver[hidden] { display:none; }
@@ -10294,6 +10296,7 @@ const Quiz = {
   open_: false, N: 10, MIX: { mc: 5, ox: 3, s: 2 }, SECS: { mc: 15, ox: 10, s: 20 }, REV: 4200, COOL: 1200, state: 'ready', g: null, timer: 0,
   best() { return Store.get('quizBest', 0) || 0; },
   inParty() { return typeof Party !== 'undefined' && Party.on('quiz'); },
+  watching() { return this.inParty() && !!Party.p.watch; },
   open() {
     if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
     if (!this.inParty()) { this.state = 'ready'; this.g = null; }
@@ -10301,7 +10304,7 @@ const Quiz = {
     el.innerHTML = arcadeShell('🧠 경매 퀴즈', '<div class="qzScr" id="qzScr"></div>', '<div class="qzPan" id="qzPan"></div><button class="btn" id="qzQuit">← 일어나기</button>', 'qz');
     $('qzQuit').onclick = () => this.close();
     clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 200);
-    this.render();
+    if (!this.inParty()) Watch.ask(); this.render();
   },
   close() {
     if (!this.open_) return;
@@ -10347,14 +10350,14 @@ const Quiz = {
   isHost() { return this.g && (this.g.solo || Party.isHost()); },
   // 내가 보기를 누름
   answer(k) {
-    const g = this.g; if (!g || this.state !== 'play' || g.state !== 'q' || this.isShort()) return; const me = this.meId();
+    const g = this.g; if (!g || this.state !== 'play' || g.state !== 'q' || this.isShort() || this.watching()) return; const me = this.meId();
     if (g.locked[me] || g.mine !== null || k < 0 || k >= g.perm[g.i].length) return;
     g.mine = k; Sound.play('click');
     if (this.isHost()) this.judge(me, k, g.i); else { Party.send('qa', { gid: Party.p.gid, i: g.i, a: k }); this.render(); }
   },
   // 단답: 내가 친 답을 낸다 (틀려도 잠깐 뒤 다시 낼 수 있다)
   answerText(t) {
-    const g = this.g; if (!g || this.state !== 'play' || g.state !== 'q' || !this.isShort()) return;
+    const g = this.g; if (!g || this.state !== 'play' || g.state !== 'q' || !this.isShort() || this.watching()) return;
     t = String(t || '').trim().slice(0, 30); if (!quizNorm(t) || g.mine !== null || Date.now() < g.cool) return;
     g.mine = t; Sound.play('click');
     if (this.isHost()) this.judgeText(this.meId(), t, g.i); else { Party.send('qa', { gid: Party.p.gid, i: g.i, tx: t }); this.render(); }
@@ -10386,7 +10389,7 @@ const Quiz = {
     if (g.solo && mine > this.best()) Store.set('quizBest', mine);
     const won = top > 0 && mine === top; Sound.play(won ? 'chime' : 'flip');
     if (won && !g.solo && Net.on) Net.news(`경매 퀴즈 ${g.order.filter(id => (g.score[id] || 0) === top).length > 1 ? '공동 ' : ''}우승 (${mine}/${g.qs.length})`);
-    if (!g.solo && Party.p) Party.p.started = false;
+    if (!g.solo && Party.p && !Party.p.watch) Party.p.started = false;
     this.render();
   },
   tick() {
@@ -10427,7 +10430,22 @@ const Quiz = {
     if (this.state === 'play' && g.state === 'q' && Party.isHost() && g.order.length && g.order.every(x => g.locked[x])) this.timeout(true);
     this.render();
   },
-  partyClosed() { if (this.state === 'play' && this.g && !this.g.solo) { this.state = 'done'; if (this.g) this.g.aborted = true; } else if (this.state === 'party') this.state = 'ready'; if (this.open_) this.render(); },
+  partyClosed(P) { if (P && P.watch) { this.state = 'ready'; this.g = null; return this.open_ && this.render('관전하던 판이 끝났어요.'); } if (this.state === 'play' && this.g && !this.g.solo) { this.state = 'done'; if (this.g) this.g.aborted = true; } else if (this.state === 'party') this.state = 'ready'; if (this.open_) this.render(); },
+  // 관전 (v140): 방장이 지금 판을 보내 주면 같은 시드로 다시 만들고 덮어쓴다
+  snap() {
+    const g = this.g; if (!g || g.solo) return null; const now = Date.now();
+    return { seed: g.seed, order: g.order, names: g.names, i: g.i, score: g.score, st: g.state, el: now - g.t0, rel: g.revAt ? now - g.revAt : 0, locked: g.locked, picks: g.picks, tries: g.tries.slice(-8), winner: g.winner, winText: g.winText, done: this.state === 'done' };
+  },
+  restore(s) {
+    const order = (s.order || []).map(String); if (!order.length) throw new Error('order');
+    const g = this.build(+s.seed >>> 0, order, s.names || {}), now = Date.now(), n = g.qs.length;
+    g.i = Math.max(0, Math.min(n - 1, +s.i || 0)); for (const id in (s.score || {})) g.score[id] = +s.score[id] || 0;
+    g.state = s.st === 'rev' ? 'rev' : 'q'; g.t0 = now - Math.max(0, +s.el || 0); g.revAt = s.rel ? now - +s.rel : 0;
+    for (const id in (s.locked || {})) g.locked[id] = !!s.locked[id]; for (const id in (s.picks || {})) g.picks[id] = +s.picks[id];
+    g.tries = Array.isArray(s.tries) ? s.tries.filter(x => x && typeof x.t === 'string').map(x => ({ id: String(x.id), t: x.t.slice(0, 30) })) : [];
+    g.winner = s.winner ? String(s.winner) : null; g.winText = typeof s.winText === 'string' ? s.winText.slice(0, 30) : '';
+    this.g = g; if (s.done) { this.state = 'done'; g.state = 'end'; } else this.state = 'play'; this.render();
+  },
   board() {
     const g = this.g; if (!g) return '';
     const ids = g.order.concat(Object.keys(g.score).filter(x => !g.order.includes(x))); const rows = ids.slice().sort((a, b) => (g.score[b] || 0) - (g.score[a] || 0));
@@ -10439,12 +10457,14 @@ const Quiz = {
     if (this.state === 'ready') {
       scr.innerHTML = `<div class="qzMid"><h2>경매 퀴즈</h2><p>한 판 ${this.N}문제 · 객관식 ${this.MIX.mc} · O/X ${this.MIX.ox} · 단답 ${this.MIX.s}. 먼저 맞힌 사람이 1점.<br>보기 문제는 틀리면 그 문제는 끝, 단답은 직접 쳐서 맞히고 틀려도 다시 쳐 볼 수 있어요.</p>
         <button class="btn gold" id="qzSolo">혼자 하기 · ${esc(castName('arcade'))} 사장님이랑</button><button class="btn" id="qzVs">👥 친구랑 퀴즈 대결</button>
-        <p class="qzNote">혼자 최고 기록 ${this.best()}/${this.N}${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
+        ${Watch.btns('quiz')}<p class="qzNote">혼자 최고 기록 ${this.best()}/${this.N}${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
       pan.innerHTML = '<div class="qzKeys"><span><b>1 2 3 4</b> 보기 고르기 · 단답은 쓰고 <b>Enter</b> · <b>Esc</b> 일어나기</span></div>';
-      $('qzSolo').onclick = () => this.startSolo();
+      $('qzSolo').onclick = () => this.startSolo(); Watch.bind(scr);
       $('qzVs').onclick = () => { if (!Net.on) { Sound.play('deny'); Toast.show('친구랑 퀴즈는 채널이나 친구 방에서 할 수 있어요.'); return; } if (Party.create('quiz', 2, 0)) { this.state = 'party'; this.render(); } };
       return;
     }
+    const W = this.watching();
+    if (W && !g) { scr.innerHTML = '<div class="qzMid"><h2>관전</h2><p>다음 판을 기다리는 중…</p></div>'; pan.innerHTML = ''; return; }
     if (this.state === 'party') {
       if (!P) { this.state = 'ready'; return this.render(); }
       const host = Party.isHost();
@@ -10465,6 +10485,7 @@ const Quiz = {
       const again = g && (g.solo || (P && Party.isHost() && P.members.length >= 2));
       if (!g || g.aborted) { scr.innerHTML = `<div class="qzMid"><h2>GAME OVER</h2><p>방장이 나가서 판이 끝났어요.</p><button class="btn" id="qzBack">처음으로</button></div>`; pan.innerHTML = ''; $('qzBack').onclick = () => { this.state = 'ready'; this.g = null; this.render(); }; return; }
       const me = this.meId(), top = Math.max(...Object.values(g.score)), tops = Object.keys(g.score).filter(id => g.score[id] === top), won = top > 0 && g.score[me] === top;
+      if (W) { scr.innerHTML = `<div class="qzMid"><h2>${top ? `${tops.map(id => esc(this.nm(id))).join(', ')} ${tops.length > 1 ? '공동 ' : ''}우승!` : '끝'}</h2><p>${top ? `${top}점으로 ${tops.length > 1 ? '공동 ' : ''}우승` : '아무도 못 맞혔어요'} · 👀 관전</p>${this.board()}<p class="qzNote">방장이 한 판 더 시작하면 이어서 볼 수 있어요.</p><button class="btn" id="qzBack">그만 보기</button></div>`; pan.innerHTML = ''; $('qzBack').onclick = () => { Party.leave(true); this.g = null; this.state = 'ready'; this.render(); }; return; }
       scr.innerHTML = `<div class="qzMid"><h2>${won ? (tops.length > 1 ? '공동 우승!' : 'YOU WIN!') : 'GAME OVER'}</h2><p>${top ? `${tops.map(id => esc(this.nm(id))).join(', ')} ${top}점으로 ${tops.length > 1 ? '공동 ' : ''}우승` : '아무도 못 맞혔어요'} · 내 점수 <b>${g.score[me] || 0}</b>/${g.qs.length}</p>${g.solo && (g.score[me] || 0) >= this.best() && g.score[me] ? '<p class="qzNote">🎉 혼자 최고 기록!</p>' : ''}${this.board()}
         ${again ? `<button class="btn gold" id="qzAgain">CONTINUE · 한 판 더</button>` : P ? '<p class="qzNote">방장이 다시 시작하면 바로 시작해요.</p>' : ''}<button class="btn" id="qzBack">${P ? '대기실로' : '처음으로'}</button></div>`;
       pan.innerHTML = '';
@@ -10474,30 +10495,31 @@ const Quiz = {
     }
     // 문제
     const me = this.meId(), rev = g.state === 'rev', Q = this.cur(), sh = this.isShort();
-    const top = `<div class="qzTop"><span>문제 ${g.i + 1}/${g.qs.length}${{ s: ' · <em class="qzTag">단답</em>', ox: ' · <em class="qzTag ox">O/X</em>' }[this.kind()] || ''}</span>${rev ? '' : `<b class="qzT">⏱ <span id="qzTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>`}</div>`;
+    const eye = W ? ' · <em class="qzTag eye">👀 관전 중</em>' : P && P.wn ? ` · <small class="exEye">👀 ${P.wn}명 관전</small>` : '';
+    const top = `<div class="qzTop"><span>문제 ${g.i + 1}/${g.qs.length}${{ s: ' · <em class="qzTag">단답</em>', ox: ' · <em class="qzTag ox">O/X</em>' }[this.kind()] || ''}${eye}</span>${rev ? '' : `<b class="qzT">⏱ <span id="qzTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>`}</div>`;
     const res = rev ? (g.winner ? `<div class="qzRes ${g.winner === me ? 'win' : ''}">${g.winner === me ? '🎉 정답! +1점' : `⭕ ${esc(this.nm(g.winner))} 정답 +1점`}</div>` : '<div class="qzRes">⏰ 아무도 못 맞혔어요</div>') : '';
     if (sh) { // 단답: 입력칸 (다시 그려도 쓰던 글자·포커스는 그대로)
       const old = $('qzIn'), val = old ? old.value : '', foc = old && document.activeElement === old;
       const cool = g.mine === null && Date.now() < g.cool, wait = g.mine !== null;
       const tries = g.tries.length ? `<div class="qzTries">${g.tries.slice(-8).map(x => `<span class="${x.id === me ? 'me' : ''}">✗ ${esc(this.nm(x.id))}: ${esc(x.t)}</span>`).join('')}</div>` : '';
-      const box = rev ? `<div class="qzAns">정답 <b>${esc(Q.s[0])}</b>${g.winner && g.winText && quizNorm(g.winText) !== quizNorm(Q.s[0]) ? ` <small>(${esc(this.nm(g.winner))}: ${esc(g.winText)})</small>` : ''}</div>`
+      const box = W && !rev ? '<div class="exKey">다들 답을 쓰는 중… 정답은 누가 맞히면 공개돼요</div>' : rev ? `<div class="qzAns">정답 <b>${esc(Q.s[0])}</b>${g.winner && g.winText && quizNorm(g.winText) !== quizNorm(Q.s[0]) ? ` <small>(${esc(this.nm(g.winner))}: ${esc(g.winText)})</small>` : ''}</div>`
         : `<form class="qzType" id="qzForm" autocomplete="off"><input id="qzIn" maxlength="30" placeholder="답을 쳐 보세요" enterkeyhint="send" ${wait ? 'disabled' : ''}><button class="btn gold" id="qzSend" ${wait || cool ? 'disabled' : ''}>제출</button></form>`;
       const st = rev ? '' : wait ? '<div class="qzRes">답을 보냈어요…</div>' : cool ? '<div class="qzRes lose">✗ 틀렸어요. 다시 쳐 봐요</div>' : '';
       scr.innerHTML = `${top}<div class="qzQ">${esc(Q.q)}</div>${box}${tries}${st}${res}${rev ? `<p class="qzWhy">💡 ${esc(Q.why)}</p>` : ''}`;
-      pan.innerHTML = this.board() + '<div class="qzKeys"><span>답을 쓰고 <b>Enter</b> · 틀려도 다시 쳐 볼 수 있어요</span></div>';
+      pan.innerHTML = this.board() + (W ? '<div class="qzKeys"><span>👀 관전 중 · <b>Esc</b> 그만 보기</span></div>' : '<div class="qzKeys"><span>답을 쓰고 <b>Enter</b> · 틀려도 다시 쳐 볼 수 있어요</span></div>');
       const inp = $('qzIn'), f = $('qzForm');
       if (inp) { inp.value = wait ? g.mine : val; if (foc || (!wait && old && old.disabled)) { inp.focus(); const n = inp.value.length; inp.setSelectionRange(n, n); } inp.onkeydown = e => { if (e.key === 'Escape') { e.preventDefault(); inp.blur(); } }; }
       if (f) f.onsubmit = e => { e.preventDefault(); const t = inp.value; if (Date.now() < g.cool || !quizNorm(t)) { Sound.play('deny'); return; } this.answerText(t); };
       return;
     }
-    const perm = g.perm[g.i], lockMe = g.locked[me] || g.mine !== null;
+    const perm = g.perm[g.i], lockMe = W || g.locked[me] || g.mine !== null;
     const opt = (k) => { const orig = perm[k], right = orig === 0, picked = Object.keys(g.picks).filter(id => g.picks[id] === k);
       const cls = rev ? (right ? 'ok' : picked.length ? 'bad' : 'dim') : (g.mine === k ? (g.locked[me] ? 'bad' : 'wait') : '');
       return `<button class="btn qzOptBtn ${cls}" data-qa="${k}" ${rev || lockMe ? 'disabled' : ''}><i>${k + 1}</i><span>${esc(Q.a[orig])}</span>${picked.length && (rev || g.locked[picked[0]]) ? `<em>${picked.map(id => esc(this.nm(id))).join(' · ')}</em>` : ''}</button>`; };
     const status = rev ? res + `<p class="qzWhy">💡 ${esc(Q.why)}</p>`
       : g.locked[me] ? '<div class="qzRes lose">✗ 틀렸어요. 다른 사람이 맞히는지 지켜봐요</div>' : g.mine !== null ? '<div class="qzRes">답을 보냈어요…</div>' : '';
     scr.innerHTML = `${top}<div class="qzQ">${esc(Q.q)}</div><div class="qzOpts${perm.length === 2 ? ' ox' : ''}">${perm.map((_, k) => opt(k)).join('')}</div>${status}`;
-    pan.innerHTML = this.board() + `<div class="qzKeys"><span><b>${perm.map((_, k) => k + 1).join(' ')}</b> 보기 고르기</span></div>`;
+    pan.innerHTML = this.board() + (W ? '<div class="qzKeys"><span>👀 관전 중 · <b>Esc</b> 그만 보기</span></div>' : `<div class="qzKeys"><span><b>${perm.map((_, k) => k + 1).join(' ')}</b> 보기 고르기</span></div>`);
     scr.querySelectorAll('[data-qa]').forEach(b => (b.onclick = () => this.answer(+b.dataset.qa)));
     void msg;
   },
@@ -10591,6 +10613,7 @@ const EXAM_BANK = [
 const Exam = {
   open_: false, hit: null, _foc: false, HAND: 5, HP: 3, PICK: 30, SECS: { mc: 10, s: 10 }, REV: 4500, state: 'ready', g: null, timer: 0, sel: -1,
   inParty() { return typeof Party !== 'undefined' && Party.on('exam'); },
+  watching() { return this.inParty() && !!Party.p.watch; },
   wins() { return Store.get('examWins', 0) || 0; },
   open() {
     if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
@@ -10599,7 +10622,7 @@ const Exam = {
     el.innerHTML = arcadeShell('☠️ 시험 전 죽음의 문답', '<div class="qzScr exScr" id="exScr"></div>', '<div class="qzPan" id="exPan"></div><button class="btn" id="exQuit">← 일어나기</button>', 'qz ex');
     $('exQuit').onclick = () => this.close();
     clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 250);
-    this.render();
+    if (!this.inParty()) Watch.ask(); this.render();
   },
   close() {
     if (!this.open_) return;
@@ -10607,7 +10630,7 @@ const Exam = {
     this.open_ = false; Game.formOpen = false; clearInterval(this.timer); $('examWin').classList.remove('in'); Sound.play('flip');
   },
   meId() { return this.g && this.g.solo ? 'me' : Net.myId; },
-  nm(id) { const g = this.g; if (id === this.meId()) return '나'; return (g && g.names[id]) || (typeof Party !== 'undefined' ? Party.nm(id) : '상대'); },
+  nm(id) { const g = this.g; if (id === this.meId() && !this.watching()) return '나'; return (g && g.names[id]) || (typeof Party !== 'undefined' ? Party.nm(id) : '상대'); },
   other(id) { const g = this.g; return g.order[0] === id ? g.order[1] : g.order[0]; },
   isHost() { return this.g && (this.g.solo || Party.isHost()); },
   // 같은 시드면 둘 다 같은 질문지 묶음·같은 패. 남의 패는 화면에 안 보여 줄 뿐
@@ -10673,9 +10696,9 @@ const Exam = {
   },
   finish() {
     const g = this.g; if (!g || g.phase === 'end') return; g.phase = 'end'; this.state = 'done'; const me = this.meId(), won = g.hp[me] > 0;
-    if (won && !g.solo) Store.set('examWins', this.wins() + 1);
+    if (won && !g.solo && !this.watching()) Store.set('examWins', this.wins() + 1);
     if (won && !g.solo && Net.on) Net.news(`시험 전 죽음의 문답에서 ${this.nm(this.other(me))}님을 이겼어요 (남은 체력 ${g.hp[me]})`);
-    if (!g.solo && Party.p) Party.p.started = false; Sound.play(won ? 'chime' : 'deny'); this.render();
+    if (!g.solo && Party.p && !Party.p.watch) Party.p.started = false; Sound.play(won ? 'chime' : 'deny'); this.render();
   },
   tick() {
     if (!this.open_) return; const g = this.g, now = Date.now();
@@ -10710,7 +10733,44 @@ const Exam = {
     for (const id of ids) if (g.order.includes(id)) { g.hp[id] = 0; g.left = id; }
     if (g.left) this.finish();
   },
-  partyClosed() { if (this.state === 'play' && this.g && !this.g.solo) { const me = this.meId(), o = this.other(me); this.g.hp[o] = 0; this.g.left = o; this.finish(); } else if (this.state === 'party') this.state = 'ready'; if (this.open_) this.render(); },
+  partyClosed(P) { if (P && P.watch) { this.state = 'ready'; this.g = null; return this.open_ && this.render('관전하던 판이 끝났어요.'); } if (this.state === 'play' && this.g && !this.g.solo) { const me = this.meId(), o = this.other(me); this.g.hp[o] = 0; this.g.left = o; this.finish(); } else if (this.state === 'party') this.state = 'ready'; if (this.open_) this.render(); },
+  // 관전 (v140): 방장이 지금 판을 통째로 보내 주고, 관전하는 쪽이 같은 시드로 다시 만든 뒤 덮어쓴다
+  snap() {
+    const g = this.g; if (!g || g.solo) return null;
+    return { seed: g.seed, order: g.order, names: g.names, hands: g.hands, ptr: g.ptr, hp: g.hp, n: g.n, phase: g.phase, el: Date.now() - g.t0, c: g.c, m: g.m, perm: g.perm, res: g.res, used: g.used, left: g.left || null };
+  },
+  restore(s) {
+    const order = (s.order || []).map(String); if (order.length !== 2) throw new Error('order');
+    const g = this.build(+s.seed >>> 0, order, s.names || {}), N = EXAM_BANK.length, ok = c => Number.isInteger(c) && c >= 0 && c < N;
+    for (const id of order) { const h = s.hands && s.hands[id]; if (Array.isArray(h) && h.every(ok)) g.hands[id] = h.slice(0, this.HAND); g.hp[id] = Math.max(0, Math.min(this.HP, +(s.hp && s.hp[id]) || 0)); }
+    g.ptr = +s.ptr || g.ptr; g.n = +s.n || 0; g.asker = order[(g.seed + g.n) % 2];
+    g.phase = ['pick', 'ans', 'res', 'end'].includes(s.phase) ? s.phase : 'pick'; g.t0 = Date.now() - Math.max(0, +s.el || 0);
+    g.c = ok(+s.c) ? +s.c : -1; g.m = s.m === 's' ? 's' : 'mc'; g.perm = Array.isArray(s.perm) && s.perm.length === 4 ? s.perm.map(Number) : [0, 1, 2, 3]; g.used = Array.isArray(s.used) ? s.used.filter(ok) : [];
+    if ((g.phase === 'ans' || g.phase === 'res') && g.c < 0) g.phase = 'pick';
+    if (s.res && typeof s.res === 'object') g.res = { n: g.n, ok: !!s.res.ok, to: !!s.res.to, a: +s.res.a, tx: typeof s.res.tx === 'string' ? s.res.tx.slice(0, 30) : '' }; else if (g.phase === 'res') g.phase = 'pick';
+    if (s.left && order.includes(String(s.left))) g.left = String(s.left);
+    this.g = g; this.sel = -1;
+    if (g.phase === 'end') { g.phase = 'res'; this.finish(); } else { this.state = 'play'; this.render(); }
+  },
+  // 관전 화면: 둘 다 이름으로, 누를 수 있는 건 없고, 정답은 결과 때만
+  renderWatch(scr, pan) {
+    const g = this.g, A = g.order[0], B = g.order[1], P = Party.p;
+    const top = `<div class="exTop"><div class="exSide"><b>${esc(this.nm(A))}</b>${this.hearts(A)}</div><div class="exMidT">${g.phase === 'end' ? '끝' : `${g.n + 1}번째 문답`}${g.phase === 'pick' || g.phase === 'ans' ? `<b class="qzT">⏱ <span id="exTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>` : ''}</div><div class="exSide"><b>${esc(this.nm(B))}</b>${this.hearts(B)}</div></div><div class="exWatch">👀 관전 중${P && P.wn > 1 ? ` · 같이 보는 사람 ${P.wn}명` : ''}</div>`;
+    pan.innerHTML = `<div class="qzKeys"><span>👀 관전 중 · 정답은 결과 때 공개돼요 · <b>Esc</b> 그만 보기</span></div>`;
+    if (this.state === 'done') {
+      const win = g.order.find(id => g.hp[id] > 0);
+      scr.innerHTML = `${top}<div class="qzMid"><h2 class="exH">${win ? `${esc(this.nm(win))} 승리!` : '끝'}</h2><p>${g.left ? `${esc(this.nm(g.left))}이(가) 나가서 끝났어요.` : `${g.n + 1}번 문답 만에 승부가 났어요.`}</p><p class="qzNote">방장이 한 판 더 시작하면 이어서 볼 수 있어요.</p><button class="btn" id="exBack">그만 보기</button></div>`;
+      $('exBack').onclick = () => { Party.leave(true); this.g = null; this.state = 'ready'; this.render(); }; return;
+    }
+    const ask = g.asker, ans = this.answerer(), backs = id => `<div class="exBacks">${esc(this.nm(id))}의 질문지 ${'<i></i>'.repeat(g.hands[id].length)}</div>`;
+    if (g.phase === 'pick') { scr.innerHTML = `${top}<div class="exSay">${esc(this.nm(ask))}이(가) ${esc(this.nm(ans))}에게 던질 질문지를 고르는 중…</div>${backs(ask)}${backs(ans)}`; return; }
+    const C = EXAM_BANK[g.c], rev = g.phase === 'res', r = g.res, sh = g.m === 's';
+    let body = '';
+    if (sh) body = rev ? `<div class="qzAns${r.ok ? '' : ' bad'}">정답 <b>${esc(C[4][0])}</b><small>${r.to ? '⏰ 시간 초과' : `${esc(this.nm(ans))}: ${esc(r.tx || '')}`}</small></div>` : `<div class="exKey">${esc(this.nm(ans))}이(가) 답을 쓰는 중…</div>`;
+    else body = `<div class="qzOpts">${[0, 1, 2, 3].map(k => { const orig = g.perm[k], cls = rev ? (orig === 0 ? 'ok' : r.a === k ? 'bad' : 'dim') : ''; return `<button class="btn qzOptBtn ${cls}" disabled><i>${k + 1}</i><span>${esc(C[3][orig])}</span></button>`; }).join('')}</div>${rev ? '' : `<div class="exKey">${esc(this.nm(ans))}이(가) 고르는 중…</div>`}`;
+    const st = rev ? `<div class="qzRes">${r.ok ? `⭕ ${esc(this.nm(ans))} 정답` : `💀 ${esc(this.nm(ans))} ${r.to ? '시간 초과' : '오답'}! 체력 −1`}</div><p class="qzWhy">💡 ${esc(C[5])}</p>` : '';
+    scr.innerHTML = `${top}<div class="exSay">${esc(this.nm(ask))}이(가) ${esc(this.nm(ans))}에게 던진 질문 · ${sh ? '단답' : '객관식'} <em class="qzTag${sh ? '' : ' ox'}">${EXAM_UNITS[C[0]]}</em></div><div class="qzQ">${esc(C[2])}</div>${body}${st}`;
+  },
   hearts(id) { const g = this.g, n = g.hp[id]; return `<span class="exHp${this.hit === id ? ' hit' : ''}">${'❤️'.repeat(n)}${'🖤'.repeat(this.HP - n)}</span>`; },
   card(c, mine, act) {
     const C = EXAM_BANK[c], stars = '★'.repeat(C[1]) + '☆'.repeat(3 - C[1]);
@@ -10723,12 +10783,13 @@ const Exam = {
     if (this.state === 'ready') {
       scr.innerHTML = `<div class="qzMid"><h2 class="exH">죽음의 문답</h2><p>1대1 시험 대비 문답이에요. 둘 다 정답이 적힌 질문지 ${this.HAND}장을 받아요 (내 질문지는 나만 봐요).<br>내 차례엔 한 장 골라 <b>객관식</b>이나 <b>단답</b>으로 던지고, 상대는 <b>10초 안에</b> 한 번에 답해야 해요.<br>틀리거나 시간이 지나면 체력 −1. 체력 ${'❤️'.repeat(this.HP)}이 먼저 다 깎이면 탈락!</p>
         <button class="btn gold" id="exVs">⚔️ 친구랑 1대1</button><button class="btn" id="exSolo">연습 · ${esc(castName('arcade'))} 사장님이랑 1대1</button>
-        <p class="qzNote">친구한테 이긴 횟수 ${this.wins()}번${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
+        ${Watch.btns('exam')}<p class="qzNote">친구한테 이긴 횟수 ${this.wins()}번${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
       pan.innerHTML = '<div class="qzKeys"><span>질문지 단원: 경매 절차 · 입찰 실무 · 권리분석 · 임대차 · 배당 · 특수물건 · 대금·명도</span></div>';
-      $('exSolo').onclick = () => this.startSolo();
+      $('exSolo').onclick = () => this.startSolo(); Watch.bind(scr);
       $('exVs').onclick = () => { if (!Net.on) { Sound.play('deny'); Toast.show('친구랑 1대1은 채널이나 친구 방에서 할 수 있어요.'); return; } if (Party.create('exam', 2, 0)) { this.state = 'party'; this.render(); } };
       return;
     }
+    if (this.watching()) { if (!g) { scr.innerHTML = '<div class="qzMid"><h2 class="exH">관전</h2><p>다음 판을 기다리는 중…</p></div>'; pan.innerHTML = ''; return; } return this.renderWatch(scr, pan); }
     if (this.state === 'party') {
       if (!P) { this.state = 'ready'; return this.render(); }
       const host = Party.isHost(), full = P.members.length >= 2;
@@ -10744,7 +10805,7 @@ const Exam = {
       return;
     }
     const me = this.meId(), op = g ? this.other(me) : null;
-    const top = g ? `<div class="exTop"><div class="exSide me"><b>나</b>${this.hearts(me)}</div><div class="exMidT">${g.phase === 'end' ? '끝' : `${g.n + 1}번째 문답`}${g.phase === 'pick' || g.phase === 'ans' ? `<b class="qzT">⏱ <span id="exTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>` : ''}</div><div class="exSide"><b>${esc(this.nm(op))}</b>${this.hearts(op)}</div></div>` : '';
+    const top = g ? `<div class="exTop"><div class="exSide me"><b>나</b>${this.hearts(me)}</div><div class="exMidT">${g.phase === 'end' ? '끝' : `${g.n + 1}번째 문답`}${g.phase === 'pick' || g.phase === 'ans' ? `<b class="qzT">⏱ <span id="exTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>` : ''}${P && P.wn ? `<small class="exEye">👀 ${P.wn}명 관전</small>` : ''}</div><div class="exSide"><b>${esc(this.nm(op))}</b>${this.hearts(op)}</div></div>` : '';
     if (this.state === 'done') {
       const again = g && (g.solo || (P && Party.isHost() && P.members.length === 2)), won = g && g.hp[me] > 0;
       scr.innerHTML = `${top}<div class="qzMid"><h2 class="exH">${won ? '살아남았다!' : '탈락…'}</h2><p>${g.left ? `${esc(this.nm(g.left))}이(가) 나가서 ${g.left === me ? '졌어요' : '이겼어요'}.` : won ? `${esc(this.nm(op))}의 체력을 다 깎았어요. 시험 준비 끝!` : `체력이 다 깎였어요. ${esc(this.nm(op))} 승리.`} · ${g.n + 1}번 문답</p>
@@ -10831,9 +10892,10 @@ const Party = {
     this.send('inv', { to: id, gid: P.gid, game: P.game, size: P.size, stake: P.stake, place: P.place, pname: Game.room ? Game.room.place.name : '', n: P.members.length });
     this.refresh();
   },
-  roster() { const P = this.p; if (P && this.isHost()) this.send('roster', { gid: P.gid, game: P.game, size: P.size, stake: P.stake, host: P.host, members: P.members, names: P.names, started: P.started }); },
+  roster() { const P = this.p; if (P && this.isHost()) P.wn = Object.keys(P.watchers || {}).length; if (P && this.isHost()) this.send('roster', { gid: P.gid, game: P.game, size: P.size, stake: P.stake, host: P.host, members: P.members, names: P.names, started: P.started, place: P.place, wn: Object.keys(P.watchers || {}).length }); },
   leave(silent) {
     const P = this.p; if (!P) return; this.p = null; clearInterval(this.timer);
+    if (P.watch) { this.send('wbye', { to: P.host, gid: P.gid }); if (!silent) Toast.show('관전을 그만뒀어요.'); return; } // 관전 (v140)
     this.send(P.host === Net.myId ? 'end' : 'leave', { gid: P.gid });
     if (!silent) Toast.show(`같이 하던 ${PARTY_GAMES[P.game].name} 판에서 나왔어요.`);
     if (P.game === 'rps' && Rps.open_ && (Rps.view === 'party' || Rps.view === 'pmatch')) { Rps.view = 'lobby'; Rps.render(); }
@@ -10847,13 +10909,15 @@ const Party = {
     this.timer = setInterval(() => {
       const P = this.p; if (!P || !this.isHost()) return clearInterval(this.timer);
       const gone = P.members.filter(id => id !== Net.myId && (!Net.players[id] || Net.players[id].gone));
+      if (P.watchers) for (const id in P.watchers) if (!Net.players[id] || Net.players[id].gone) { delete P.watchers[id]; this.roster(); this.refresh(); }
       if (gone.length) { P.members = P.members.filter(id => !gone.includes(id)); if (P.g) this.rpsDrop(gone); if (P.game === 'tet') Tetris.drop(gone); if (P.game === 'quiz') Quiz.drop(gone); if (P.game === 'exam') Exam.drop(gone); this.roster(); this.refresh(); }
       const g = P.g; if (g && g.state === 'pick' && Date.now() - g.t0 > 25000) { const cur = g.pk[g.r] || {}, ids = g.alive.filter(id => !cur[id] && id !== Net.myId); if (ids.length) { this.send('kick', { gid: P.gid, r: g.r, ids }); this.rpsKick(g.r, ids); } }
     }, 1000);
   },
-  busyNow() { return VipDuel.open_ || (Quiz.g && Quiz.state === 'play') || (Exam.g && Exam.state === 'play') || (Tetris.b && Tetris.b.state === 'play') || (Fight.open_ && Fight.view === 'play') || (Rps.g && Rps.g.state !== 'done') || !!this.p; },
+  busyNow() { return VipDuel.open_ || (Quiz.g && Quiz.state === 'play') || (Exam.g && Exam.state === 'play') || (Tetris.b && Tetris.b.state === 'play') || (Fight.open_ && Fight.view === 'play') || (Rps.g && Rps.g.state !== 'done') || (!!this.p && !this.p.watch); },
   onNet(m, from) {
     const P = this.p, id = m.from, name = (from && from.name) || '친구';
+    if (['wq', 'wreq', 'wsnap', 'wbye'].includes(m.k)) return Watch.onNet(m, id, name); // 게임장 관전 (v140)
     if (m.k === 'inv') {
       if (m.to !== Net.myId) return; if (this.busyNow()) return this.send('no', { to: id, gid: m.gid, why: 'busy' });
       this.inv = { gid: m.gid, from: id, name, game: PARTY_GAMES[m.game] ? m.game : 'rl', size: +m.size || 2, stake: Math.max(0, +m.stake || 0), place: m.place, pname: String(m.pname || '').slice(0, 30), n: +m.n || 1 }; this.showInv(); Sound.play('ding'); return;
@@ -10866,14 +10930,17 @@ const Party = {
     }
     if (m.k === 'full') { if (m.to !== Net.myId || !this.pend || this.pend.gid !== m.gid) return; this.pend = null; Toast.show('자리가 다 찼거나 이미 시작했어요.'); return; }
     if (m.k === 'roster') {
+      Watch.seen(m);
       const list = Array.isArray(m.members) ? m.members.map(String) : [];
       if (this.pend && this.pend.gid === m.gid && list.includes(Net.myId)) { this.pend = null; this.p = { gid: m.gid, host: m.host, game: m.game, size: +m.size, stake: +m.stake || 0, place: Game.room ? Game.room.place.id : '', members: list, names: m.names || {}, invited: {}, started: !!m.started, bets: {}, res: {}, g: null }; return this.arrive(); }
-      if (!P || P.gid !== m.gid) return; P.members = list; P.names = m.names || P.names;
-      if (!list.includes(Net.myId)) { this.p = null; Toast.show('판에서 빠졌어요.'); return this.closed(P); }
+      if (!P || P.gid !== m.gid) return; P.members = list; P.names = m.names || P.names; P.wn = +m.wn || 0;
+      if (!list.includes(Net.myId) && !P.watch) { this.p = null; Toast.show('판에서 빠졌어요.'); return this.closed(P); }
       if (P.g) this.rpsDrop(P.g.all.filter(x => !list.includes(x))); if (P.game === 'tet' && Tetris.b) Tetris.drop(Tetris.b.order.filter(x => !list.includes(x))); if (P.game === 'quiz' && Quiz.g) Quiz.drop(Quiz.g.order.filter(x => !list.includes(x))); if (P.game === 'exam' && Exam.g) Exam.drop(Exam.g.order.filter(x => !list.includes(x)));
       return this.refresh();
     }
+    if (m.k === 'end') delete Watch.live[m.gid];
     if (!P || P.gid !== m.gid) return;
+    if (P.watch && id !== P.host) return; // 관전하는 사람은 방장이 보내는 진행만 본다
     if (m.k === 'end') { this.p = null; clearInterval(this.timer); Toast.show('방장이 판을 닫았어요.'); return this.closed(P); }
     if (m.k === 'leave') { P.members = P.members.filter(x => x !== id); delete P.bets[id]; Toast.show(`${name}이(가) 나갔어요.`); if (P.g) this.rpsDrop([id]); if (P.game === 'tet') Tetris.drop([id]); if (P.game === 'quiz') Quiz.drop([id]); if (P.game === 'exam') Exam.drop([id]); this.roster(); return this.refresh(); }
     if (P.game === 'tet' && ['start', 'tb', 'atk', 'tko'].includes(m.k)) return Tetris.onParty(m, id);
@@ -10887,7 +10954,7 @@ const Party = {
     if (m.k === 'spin' && P.game === 'rl' && id === P.host && Casino.open_) { if (Casino.tab !== 'rl') { Casino.tab = 'rl'; Casino.render(); } return Casino.rlSpin(+m.n); }
     if (m.k === 'dice' && P.game === 'hol' && id === P.host && Casino.open_) { if (Casino.tab !== 'hol') { Casino.tab = 'hol'; Casino.render(); } return Casino.holRoll(Math.max(1, Math.min(6, +m.d1 || 1)), Math.max(1, Math.min(6, +m.d2 || 1))); }
   },
-  closed(P) { if (P.game === 'exam') return Exam.partyClosed(); if (P.game === 'quiz') return Quiz.partyClosed(); if (P.game === 'tet') return Tetris.partyClosed(); if (P.game === 'rps') { if (Rps.open_) { Rps.view = 'lobby'; Rps.render('판이 끝났어요.'); } } else if (Casino.open_) Casino.render(); },
+  closed(P) { if (P.game === 'exam') return Exam.partyClosed(P); if (P.game === 'quiz') return Quiz.partyClosed(P); if (P.game === 'tet') return Tetris.partyClosed(); if (P.game === 'rps') { if (Rps.open_) { Rps.view = 'lobby'; Rps.render('판이 끝났어요.'); } } else if (Casino.open_) Casino.render(); },
   /* ---- 초대장 카드 ---- */
   showInv() {
     const el = $('partyAsk'), a = this.inv; if (!a) { el.classList.remove('in'); return; }
@@ -10994,6 +11061,57 @@ const Party = {
     if ($('ptGo')) $('ptGo').onclick = () => this.rpsStart();
     $('ptX').onclick = () => { this.leave(true); Rps.view = 'lobby'; Rps.render(); };
     mgPortraits(el);
+  },
+};
+
+/* ===================== 게임장 관전 (v140, 사용자 2026-10-16 '게임장 이거 관전할 수 있게 하자') =====================
+ * 경매 퀴즈 · 죽음의 문답을 같은 게임장 안에 있는 사람이 옆에서 구경한다. 판을 연 방장이 보내는 roster(place 포함)로 진행 중인 판을 알고,
+ * 기계 앞에서 F를 누르면 첫 화면에 '👀 관전하기'가 뜬다. 누르면 방장에게 {k:'wreq'} → 방장이 지금 판 상태 {k:'wsnap', snap}를 보내 주고,
+ * 그다음부터는 방장이 모두에게 보내는 진행 메시지(start · xask · xres · qwin · qnext …)를 그대로 받아 같은 화면을 본다 (아무것도 못 누른다).
+ * Party.p = {..., watch: true}로 끼어 든다: 방장이 아니라서 판정·시간 초과는 안 하고, 판 인원(members)에도 안 들어간다.
+ * 방장 roster의 wn = 관전 인원 → 하는 사람들 화면에 👀 n. 관전 중엔 정답을 결과 때만 보여 준다 (채팅으로 알려 주기 방지).
+ * {k:'wq'} (관전 화면 열 때 · 누구에게나) → 판을 연 방장이 roster를 다시 보낸다. 나가면 {k:'wbye'}. */
+const WATCH_GAMES = { quiz: 1, exam: 1 };
+const Watch = {
+  live: {}, pend: null, timer: null,
+  on() { return !!(Party.p && Party.p.watch); },
+  mod(game) { return game === 'quiz' ? Quiz : game === 'exam' ? Exam : null; },
+  seen(m) { if (!WATCH_GAMES[m.game] || !m.gid) return; this.live[m.gid] = { gid: m.gid, host: String(m.host || ''), game: m.game, members: Array.isArray(m.members) ? m.members.map(String) : [], names: m.names || {}, started: !!m.started, place: String(m.place || ''), at: Date.now() }; const M = this.mod(m.game); if (M && M.open_ && M.state === 'ready') M.render(); },
+  ask() { if (Net.on) Party.send('wq', {}); },
+  // 이 게임장 안에서 지금 하고 있는 판 (방장이 아직 여기 있어야)
+  list(game) {
+    if (!Net.on || Game.scene !== 'room' || !Game.room) return []; const here = Game.room.place.id;
+    return Object.values(this.live).filter(e => { const h = Net.players[e.host]; return e.game === game && e.started && e.place === here && e.host !== Net.myId && !e.members.includes(Net.myId) && h && !h.gone && h.s === 'room' && h.p === here; });
+  },
+  btns(game) { const L = this.list(game); return L.length ? `<div class="qzWatch">${L.map(e => `<button class="btn" data-watch="${esc(e.gid)}">👀 관전하기 <small>${e.members.map(id => esc(e.names[id] || Party.nm(id))).join(game === 'exam' ? ' vs ' : ' · ')}</small></button>`).join('')}</div>` : ''; },
+  bind(el) { el.querySelectorAll('[data-watch]').forEach(b => (b.onclick = () => this.req(b.dataset.watch))); },
+  req(gid) {
+    const e = this.live[gid]; if (!e || this.pend || Party.p) return; this.pend = { gid, host: e.host }; Sound.play('click'); Party.send('wreq', { to: e.host, gid });
+    setTimeout(() => { if (this.pend && this.pend.gid === gid) { this.pend = null; Toast.show('방장이 대답이 없어요.'); } }, 4000);
+  },
+  onNet(m, id, name) {
+    const P = Party.p;
+    if (m.k === 'wq') { if (P && Party.isHost() && WATCH_GAMES[P.game]) Party.roster(); return; }
+    if (m.to !== Net.myId) return;
+    if (m.k === 'wreq') {
+      if (!P || !Party.isHost() || P.gid !== m.gid) return; const M = this.mod(P.game); if (!M) return;
+      (P.watchers || (P.watchers = {}))[id] = name; Party.send('wsnap', { to: id, gid: P.gid, game: P.game, size: P.size, host: P.host, members: P.members, names: P.names, place: P.place, snap: M.snap() });
+      Toast.show(`👀 ${name}이(가) 옆에서 구경해요.`, 2000); Party.roster(); return Party.refresh();
+    }
+    if (m.k === 'wbye') { if (P && Party.isHost() && P.gid === m.gid && P.watchers && P.watchers[id]) { delete P.watchers[id]; Party.roster(); Party.refresh(); } return; }
+    if (m.k === 'wsnap') {
+      if (!this.pend || this.pend.gid !== m.gid || id !== this.pend.host) return; this.pend = null; const M = this.mod(m.game); if (!M || Party.p) return;
+      if (!m.snap) { Party.send('wbye', { to: id, gid: m.gid }); return Toast.show('판이 막 끝났어요. 다음 판이 시작되면 다시 눌러 보세요.'); }
+      Party.p = { gid: m.gid, host: id, game: m.game, size: +m.size || 2, stake: 0, place: String(m.place || ''), members: (m.members || []).map(String), names: m.names || {}, invited: {}, started: true, bets: {}, res: {}, g: null, watch: true, wn: 0 };
+      if (!M.open_) M.open(); try { M.restore(m.snap); } catch (e) { console.warn('watch restore', e); Party.leave(true); M.state = 'ready'; M.g = null; M.render(); return Toast.show('관전 화면을 못 불러왔어요.'); }
+      Sound.play('chime'); Toast.show('👀 관전 중이에요. 일어나면 그만 봐요.', 2400);
+      clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 2000); return;
+    }
+  },
+  // 방장이 사라지면 관전 끝
+  tick() {
+    const P = Party.p; if (!P || !P.watch) return clearInterval(this.timer); const h = Net.players[P.host];
+    if (!Net.on || !h || h.gone) { Party.p = null; clearInterval(this.timer); Toast.show('방장이 나가서 관전이 끝났어요.'); Party.closed(P); }
   },
 };
 

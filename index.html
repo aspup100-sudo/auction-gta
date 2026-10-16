@@ -4659,7 +4659,7 @@ const Net = {
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
-      p.z = m.z; p.s = m.s; p.p = m.p; p.pf = m.pf | 0; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.sk = m.sk; p.hm = Array.isArray(m.hm) ? m.hm.slice(0, 3) : undefined; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
+      p.z = m.z; p.s = m.s; p.p = m.p; p.pf = m.pf | 0; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.kn = m.kn; p.sk = m.sk; p.hm = Array.isArray(m.hm) ? m.hm.slice(0, 3) : undefined; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
       const moved = gap > 0.02 && p.z === p.lastZ && p.s === p.lastS;
       if (moved && !far(p.tx, p.ty, m.x, m.y)) { p.vx = (m.x - p.tx) / gap; p.vy = (m.y - p.ty) / gap; } else { p.vx = p.vy = 0; }
       if (moved && !far(p.tcx, p.tcy, m.cx, m.cy)) { p.vcx = (m.cx - p.tcx) / gap; p.vcy = (m.cy - p.tcy) / gap; p.vca = angDiff(m.ca, p.tca) / gap; } else { p.vcx = p.vcy = p.vca = 0; }
@@ -4717,7 +4717,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), pf: Profile.get().pet === 'penguin' || Profile.get().pet2 === 'penguin' ? PET_FAT.lv(PET_FAT.get()) || undefined : undefined, z: Game.zone.id, s: Mine.open_ ? 'mine' : Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ...MyHome.pos(), ts: Math.round(performance.now()) });
+    this.send({ t: 'pos', pal: Profile.get(), pf: Profile.get().pet === 'penguin' || Profile.get().pet2 === 'penguin' ? PET_FAT.lv(PET_FAT.get()) || undefined : undefined, z: Game.zone.id, s: Mine.open_ ? 'mine' : Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, kn: pl.kneelT > performance.now() ? (pl.kneelN | 0) + 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ...MyHome.pos(), ts: Math.round(performance.now()) });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -4819,9 +4819,10 @@ const Net = {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
     if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
-    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0, punchT: p.punchT, punchHit: p.punchHit }, t);
+    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0, kneelT: p.kn ? Infinity : 0, punchT: p.punchT, punchHit: p.punchHit }, t);
     this.label(c, Friends.has(p.name) ? '🤝 ' + p.name : p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
-    if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - (Titles.of(p.name, p.tt) ? 39 : 30));
+    if (p.kn && !p.bubble) this.bubble(c, KNEEL_SAY[(p.kn - 1) % KNEEL_SAY.length], p.x, p.y - 30); else if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - (Titles.of(p.name, p.tt) ? 39 : 30));
+    if (p.kn && typeof Pets !== 'undefined') Pets.begOn('f:' + p.name, 600); // 친구 펫도 같이 빈다
   },
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return null; },
   // 펫 이름표: 사람 이름표보다 작게 (사용자 2026-10-16 '펫 이름 더 작게')
@@ -6032,6 +6033,7 @@ function drawWalker(c, w, t, opts = {}) {
   const breath = opts.breath ? (Math.sin(t * Math.PI * 2 / FEEL.npcBreathPeriod) > 0.6 ? -1 : 0) : 0;
   c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(w.x, w.y, 5, 2.2, 0, 0, 7); c.fill();
   if (w.bowT && performance.now() < w.bowT) return drawBow(c, w, t); // 용돈 받고 큰절 (v107)
+  if (w.kneelT && performance.now() < w.kneelT) return drawKneel(c, w, t); // 펫 배틀 지고 무릎 꿇고 두 손 들기 (v173)
   if (w.vip) { // 금빛 반짝임 + 이름표: 멀리서도 멋쟁이인 걸 알 수 있게
     c.save(); c.fillStyle = '#ffd86b';
     for (let i = 0; i < 3; i++) { const a = t * 1.6 + i * 2.1, r = 11 + Math.sin(t * 3 + i) * 2, X = w.x + Math.cos(a) * r, Y = w.y - 8 + Math.sin(a) * r * 0.5, sz = 1.2 + (Math.sin(t * 5 + i * 2) + 1) * 0.8; c.beginPath(); c.moveTo(X, Y - sz); c.lineTo(X + sz, Y); c.lineTo(X, Y + sz); c.lineTo(X - sz, Y); c.fill(); }
@@ -6058,6 +6060,20 @@ function drawBow(c, w, t) {
   const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
   r(-7, -4, 6, 4, P.pants); r(-8, -2, 2, 2, P.shoe || '#222'); r(-4, -8 - up, 7, 4, P.shirt); r(-4, -8 - up, 7, 1, P.shirt2 || P.shirt); r(2, -6 - up, 5, 5, P.hair); r(5, -3 - up, 2, 2, P.skin); r(6, -1, 3, 1, P.skin); r(-1, -4 - up, 2, 4 + up, P.shirt);
   c.restore();
+}
+// 무릎 꿇고 두 손 번쩍 (사용자 2026-10-16 '펫 배틀 지면 진 사람이 무릎 꿇고 손 들고 잘못했어요 한 번만 봐주세요'): 앞모습, 팔이 덜덜, 눈물 뚝뚝
+const KNEEL_SAY = ['잘못했어요… 한 번만 봐주세요 ㅠㅠ', '제가 졌습니다… 한 번만 봐주세요!', '잘못했어요! 다시는 안 까불게요 ㅠ'];
+function drawKneel(c, w, t) {
+  const P = Sprites.PAL[w.sprite] || Sprites.PLAYER_DEFAULT, sh = Math.floor(t * 14) % 2, X = snapPx(c, w.x), Y = snapPx(c, w.y);
+  const r = (a, b, W, H, col) => { c.fillStyle = col; c.fillRect(X + a, Y + b, W, H); };
+  r(-5, -2, 4, 2, P.shoe || '#222'); r(1, -2, 4, 2, P.shoe || '#222'); // 꿇은 발바닥
+  r(-5, -5, 10, 3, P.pants); r(-5, -5, 10, 1, P.pants2 || P.pants); // 접은 다리
+  r(-4, -11, 8, 6, P.shirt); r(-4, -11, 8, 1, P.shirt2 || P.shirt); // 몸
+  r(-6 - sh, -19, 2, 9, P.shirt); r(4 + sh, -19, 2, 9, P.shirt); r(-6 - sh, -21, 2, 2, P.skin); r(4 + sh, -21, 2, 2, P.skin); // 번쩍 든 두 팔 (덜덜)
+  r(-3, -17, 6, 6, P.skin); r(-3, -18, 6, 2, P.hair); r(-3, -17, 1, 2, P.hair); r(2, -17, 1, 2, P.hair); // 고개 숙인 얼굴
+  r(-2, -14, 1, 1, '#222'); r(1, -14, 1, 1, '#222'); r(-1, -12, 2, 1, '#8a3a2a'); // 질끈 감은 눈 · 입
+  const tr = (t * 2) % 1; r(-2, -13 + Math.round(tr * 4), 1, 1, '#7fc8ff'); r(1, -13 + Math.round(((t * 2 + 0.5) % 1) * 4), 1, 1, '#7fc8ff'); // 눈물
+  if (Math.floor(t * 2) % 2) { r(6 + sh, -16, 1, 2, '#bfe4ff'); r(-8 - sh, -15, 1, 2, '#bfe4ff'); } // 식은땀
 }
 function dirToward(from, to) { const dx = to.x - from.x, dy = to.y - from.y; return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0); }
 
@@ -6821,7 +6837,7 @@ function drawZone(t) {
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
-  const actors = [...Game.decor.map(w => ({ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else drawWalker(ctx, w, t); if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - 30); } })), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { if (!MineExit.drawRise(ctx, () => drawWalker(ctx, Game.player, t))) { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); } } }]),
+  const actors = [...Game.decor.map(w => ({ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else drawWalker(ctx, w, t); if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - 30); } })), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { if (!MineExit.drawRise(ctx, () => drawWalker(ctx, Game.player, t))) { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); if (Game.player.kneelT > performance.now()) Net.bubble(ctx, Game.player.kneelSay, Game.player.x, Game.player.y - 30); } } }]),
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
     ...Pets.actors(ctx, Net.visible('zone'), t),
     ...Fx.actors(ctx, Net.visible('zone'), t),
@@ -9563,7 +9579,14 @@ const Pets = {
   },
   // 두 번째 펫 (사용자 2026-10-15 '펫은 최대 2마리'): 첫 펫 뒤를 졸졸 따라온다. 원숭이는 주인 머리에 타야 하니 주인을 따른다
   second(c, key, k2, ox, oy, t, n) { const s1 = this.st[key]; const lead = k2 === 'monkey' || !s1 ? [ox, oy] : [s1.x, s1.y]; return this.actor(c, key + '#2', k2, lead[0], lead[1], t, n); },
+  // 펫 배틀 진 쪽 펫도 같이 빈다 (v173): 고개를 꾸벅꾸벅 숙이고 '낑…' (주인 키 'me' · 'f:이름' · 트레이너 키, 두 번째 펫은 #2)
+  beg: {}, begOn(owner, ms) { this.beg[owner] = Math.max(this.beg[owner] || 0, performance.now() + ms); },
+  BEG_SAY: { dog: '낑낑… 봐주세요 멍', cat: '냐앙… 잘못했다냥', penguin: '꽥… 용서해 주세요', monkey: '끼익… 한 번만요', tiger: '어흥… 아니 어흐응…', trex: '크앙… 아니 미안…', turtle: '…(등껍질 속으로)', mouse: '찍… 봐주세요 찍', _: '잘못했어요… 봐주세요' },
   actor(c, key, k, ox, oy, t, n) {
+    { const ow = key.replace(/#2$/, ''); if (this.beg[ow] > performance.now()) { const s = this.step(key, ox, oy, t, k), nod = (t % 1) < 0.5 ? 1 : 0, say = this.BEG_SAY[k] || this.BEG_SAY._;
+      return { y: s.y, d: () => { c.save(); c.translate(s.x, s.y); c.rotate(nod ? 0.32 * (s.face || 1) : 0.08 * (s.face || 1)); c.translate(-s.x, -s.y); this.draw(c, k, s.x, s.y + nod, s.face, false, t, n, 0); c.restore();
+        c.fillStyle = '#9fd8ff'; c.fillRect(Math.round(s.x + 5 * (s.face || 1)), Math.round(s.y - 14 + ((t * 3) % 1) * 3), 1, 2);
+        if (!key.endsWith('#2') && typeof Net !== 'undefined') Net.petLabel(c, say, s.x, s.y + 8); } }; } }
     const s0 = this.st[key]; if (s0 && s0.rage && typeof PetRage !== 'undefined') return PetRage.actor(c, s0, key, k, t, n); // 차에 치여서 화난 중 (v156)
     const s = this.step(key, ox, oy, t, k), idle = s.idle || 0;
     if (k === 'panda') this.fans(c, s, idle, k); // 대나무 먹고 있으면 행인이 '푸바오??' 하며 구경 (사용자 2026-10-16)
@@ -10731,8 +10754,15 @@ const PetBattle = {
     if (won && B.mode === 'net' && Net.on) Net.news(`펫 배틀에서 ${B.foeName}님의 ${foe.name}을(를) 이김 (${mine.name} Lv.${mine.lv})`);
     const L = this.lvs(), cur = this.lvOf(mine.kind); let lv = cur.lv, xp = cur.xp + gain, up = 0; if (lv >= 50) xp = 0; while (lv < 50 && xp >= this.need(lv)) { xp -= this.need(lv); lv++; up++; }
     L[mine.kind] = { lv, xp }; Store.set('petLv', L); lines.push(`${esc(mine.name)}은(는) 경험치 ${gain}을(를) 얻었다!`); if (up) { lines.push(`🎉 ${esc(mine.name)}의 레벨이 ${lv}(으)로 올랐다!`); Sound.play('chime'); }
-    B.result = { won, lv, xp, up }; Sound.play(won ? 'coins' : 'deny');
+    B.result = { won, lv, xp, up }; Sound.play(won ? 'coins' : 'deny'); this.kneel = { won, w: B.mode === 'npc' ? B.w : null }; // 창을 닫으면 진 쪽이 무릎 꿇고 빈다 (v173)
     this.say(lines, () => this.render());
+  },
+  // 진 쪽: 무릎 꿇고 두 손 들고 '잘못했어요, 한 번만 봐주세요' + 펫도 같이 꾸벅꾸벅 (사용자 2026-10-16)
+  beg(K) {
+    const now = performance.now(), D = 4500;
+    if (!K.won) { const p = Game.player; if (!p || Game.scene !== 'zone') return; p.kneelN = Math.floor(Math.random() * KNEEL_SAY.length); p.kneelSay = KNEEL_SAY[p.kneelN]; p.kneelT = now + D; p.vx = p.vy = 0; Pets.begOn('me', D); Sound.play('deny');
+      Game.busy = true; setTimeout(() => { Game.busy = false; }, D); }
+    else if (K.w && K.w.trainer) { const w = K.w; w.kneelT = now + D; w.bubble = { text: KNEEL_SAY[Math.floor(Math.random() * KNEEL_SAY.length)], t: D / 1000 }; if (w.ai) w.ai.t = D / 1000 + 0.5; Pets.begOn(w.trainer.key, D); }
   },
   quit(now) {
     const B = this.B; if (!B) return; if (B.over) return this.close();
@@ -10742,7 +10772,7 @@ const PetBattle = {
     this.end(B.me === 'a' ? 'b' : 'a', '항복했다…');
   },
   esc() { const B = this.B; if (!B) return; if (B.over) this.close(); else this.quit(); },
-  close() { if (!this.open_) return; this.open_ = false; this.B = null; this.sayNext = null; clearTimeout(this.sayT); clearInterval(this.tmr); Game.formOpen = false; $('pbWin').classList.remove('in'); cancelAnimationFrame(this.raf); Sound.play('flip'); },
+  close() { if (!this.open_) return; const K = this.kneel; this.kneel = null; if (K) setTimeout(() => this.beg(K), 250); this.open_ = false; this.B = null; this.sayNext = null; clearTimeout(this.sayT); clearInterval(this.tmr); Game.formOpen = false; $('pbWin').classList.remove('in'); cancelAnimationFrame(this.raf); Sound.play('flip'); },
   // 상대가 사라지거나 너무 오래 안 고르면 / 내가 30초 안 고르면 아무거나
   tick() {
     const B = this.B; if (!B || B.over) return; const now = Date.now();

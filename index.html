@@ -754,7 +754,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .short .qzQ { font-size:15px; } .short .qz .qzOptBtn { min-height:40px; padding:6px 8px; font-size:12.5px; } .short .qzMid h2 { font-size:24px; } .short .qz .arcMarq { display:none; } .short .qzScr { padding:8px 10px; gap:6px; }
 .qzTag { font-style:normal; padding:1px 7px; border-radius:6px; background:#ff5ae0; color:#fff; font-size:11px; letter-spacing:0; } .qzType { display:flex; gap:8px; } .qzType input { flex:1; min-width:0; padding:10px 12px; border-radius:10px; border:2px solid #2ae0ff; background:#05030f; color:#fff; font:800 17px var(--ui); box-shadow:0 0 8px rgba(42,224,255,.3); outline:none; } .qzType input:focus { box-shadow:0 0 14px rgba(42,224,255,.8); } .qzType input:disabled { opacity:.6; } .qzType .btn { flex:none; padding:0 18px; }
 .qzTries { display:flex; flex-wrap:wrap; gap:5px; } .qzTries span { padding:3px 8px; border-radius:6px; background:#4a0f22; border:1px solid #ff6a8a; color:#ffd8e0; font:700 12px var(--ui); } .qzTries span.me { border-color:#ffe84a; } .qzAns { text-align:center; padding:10px; border-radius:10px; background:#0f4a2a; border:2px solid #5aff8a; color:#d8ffe4; font:700 14px var(--ui); box-shadow:0 0 14px rgba(90,255,138,.5); } .qzAns b { font-size:22px; color:#fff; margin-left:6px; } .qzAns small { display:block; opacity:.8; margin-top:2px; }
-.qzTag.ox { background:#3ee0f0; color:#05030f; } .qzTag.calc { background:#ffb02a; color:#05030f; } .qz .qzOpts.ox .qzOptBtn { min-height:84px; justify-content:center; font-size:22px; } .qzOpts.ox .qzOptBtn span { flex:none; }
+.qzTag.ox { background:#3ee0f0; color:#05030f; } .qz .qzOpts.ox .qzOptBtn { min-height:84px; justify-content:center; font-size:22px; } .qzOpts.ox .qzOptBtn span { flex:none; }
 @media (max-width:520px) { .qzOpts { grid-template-columns:1fr; } .qzOpts.ox { grid-template-columns:1fr 1fr; } }
 .tetOver { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:rgba(5,3,20,.74); color:#fff; text-align:center; padding:12px; } .tetOver[hidden] { display:none; }
 .tetOver h2 { margin:0; font:900 38px var(--ui); letter-spacing:3px; color:#ff5ae0; text-shadow:0 0 16px rgba(255,90,224,.75), 3px 3px 0 #3ee0f0; }
@@ -9966,8 +9966,8 @@ const Tetris = {
 };
 
 /* ===================== 게임장 경매 퀴즈 (사용자 2026-10-16 '게임장에 경매론 퀴즈, 친구들이랑 같이 참여해서 먼저 답한 사람이 이기는 걸로') =====================
- * 게임장 위 줄 오락기('q'). 한 판 10문제 = 객관식 4 + O/X 2 + 단답 2 + 계산 2 (Quiz.MIX). 먼저 맞힌 사람이 1점.
- * 시간: 객관식 15초 · O/X 10초 · 단답 20초 · 계산 25초 (Quiz.SECS). 계산 문제는 판마다 숫자가 바뀐다.
+ * 게임장 위 줄 오락기('q'). 한 판 10문제 = 객관식 5 + O/X 3 + 단답 2 (Quiz.MIX). 먼저 맞힌 사람이 1점.
+ * 시간: 객관식 15초 · O/X 10초 · 단답 20초 (Quiz.SECS). 계산 문제는 사용자 2026-10-16 '계산문제는 빼자'로 뺐다.
  * 객관식은 틀리면 그 문제는 더 못 고른다. 단답은 틀려도 다시 쳐 볼 수 있다 (틀린 답은 모두에게 보인다).
  * 혼자: 장우준 사장이 같이 푼다 (몇 초 뒤에 가끔 틀리며 답한다). 친구랑: Party 'quiz' 2~6명. 판돈은 없다.
  * 같이 할 때 판정은 방장이 한다: 모두 같은 시드로 같은 문제·보기 순서를 만들고, 답은 방장에게 보내 도착한 순서로 정한다.
@@ -10092,25 +10092,6 @@ const QUIZ_OX = [
   { q: '농지를 낙찰받으면 농지취득자격증명을 내야 한다.', o: true, why: '기한 안에 못 내면 매각불허가가 되고 보증금을 잃을 수도 있어요.' },
   { q: '체납 관리비 중 연체료까지 낙찰자가 모두 떠안는다.', o: false, why: '판례상 공용부분 관리비는 승계될 수 있지만 연체료는 승계되지 않아요.' },
 ];
-// 계산 (판마다 숫자가 바뀐다): R(시드)로 숫자를 정하고 {q, a:[정답, …오답], why}를 만든다. 금액은 만 원 단위로 떨어지게.
-const quizWon = (n) => fmtWon(Math.round(n / 1e4) * 1e4);
-const QUIZ_CALC = [
-  (R) => { const L = (5 + Math.floor(R.next() * 36)) * 1e7; return { q: `최저매각가격 ${quizWon(L)}인 물건에 보통 기일입찰로 들어가요. 입찰보증금은?`, a: [L * 0.1, L * 0.2, L * 0.05, L * 0.15].map(quizWon), why: `최저매각가격의 10% → ${quizWon(L)} × 10% = ${quizWon(L * 0.1)}` }; },
-  (R) => { const X = (20 + Math.floor(R.next() * 61)) * 1e7, n = R.next() < 0.5 ? 1 : 2, ans = X * 0.8 ** n;
-    const wr = n === 1 ? [X * 0.7, X * 0.64, X] : [X * 0.6, X * 0.49, X * 0.8];
-    return { q: `감정가 ${quizWon(X)}, 유찰되면 20%씩 내려가는 법원이에요. ${n}번 유찰됐다면 이번 최저매각가격은?`, a: [ans].concat(wr).map(quizWon), why: `${quizWon(X)}${' × 0.8'.repeat(n)} = ${quizWon(ans)}${n === 2 ? ' (40% 빼는 게 아니라 20%씩 두 번이에요)' : ''}` }; },
-  (R) => { const L = (5 + Math.floor(R.next() * 36)) * 1e7; return { q: `재매각 사건이라 보증금이 20%로 정해졌어요. 최저매각가격이 ${quizWon(L)}이면 입찰보증금은?`, a: [L * 0.2, L * 0.1, L * 0.3, L * 0.02].map(quizWon), why: `${quizWon(L)} × 20% = ${quizWon(L * 0.2)}` }; },
-  (R) => { const L = (10 + Math.floor(R.next() * 31)) * 1e7, H = L + (5 + Math.floor(R.next() * 26)) * 1e6, ans = H - L * 0.1;
-    return { q: `최저매각가격 ${quizWon(L)}, 최고가가 ${quizWon(H)}이에요. 차순위매수신고를 하려면 내 입찰가가 얼마를 넘어야 할까?`, a: [ans, H - L * 0.2, H, H * 0.9].map(quizWon), why: `최고가 − 입찰보증금(최저가의 10%) = ${quizWon(H)} − ${quizWon(L * 0.1)} = ${quizWon(ans)}` }; },
-  (R) => { const B = (10 + Math.floor(R.next() * 41)) * 1e7, b0 = Math.round(B * (0.2 + R.next() * 0.5) / 1e7) * 1e7, b = b0 * 2 === B ? b0 - 1e7 : b0;
-    return { q: `대항력 있는 선순위 임차인의 보증금이 ${quizWon(B)}인데, 배당에서 ${quizWon(b)}만 받았어요. 낙찰자가 떠안는 돈은?`, a: [quizWon(B - b), quizWon(B), quizWon(b), '0원'], why: `못 받은 보증금은 낙찰자가 인수해요 → ${quizWon(B)} − ${quizWon(b)} = ${quizWon(B - b)}` }; },
-  (R) => { const P = (15 + Math.floor(R.next() * 46)) * 1e7, T = (5 + Math.floor(R.next() * 10)) * 1e7;
-    return { q: `${quizWon(P)}에 낙찰받았는데 선순위 임차인 보증금 ${quizWon(T)}을 떠안아요. 세금·비용 빼고 이 집에 드는 돈은?`, a: [P + T, P, P - T, P + T * 2].map(quizWon), why: `낙찰가 + 인수 보증금 = ${quizWon(P)} + ${quizWon(T)} = ${quizWon(P + T)}. 이 돈이 시세보다 크면 손해예요.` }; },
-  (R) => { const X = (20 + Math.floor(R.next() * 61)) * 1e7, r = 60 + 5 * Math.floor(R.next() * 9), P = X * r / 100, o = [r + 10, r - 10, R.next() < 0.5 ? r + 5 : r - 5];
-    return { q: `감정가 ${quizWon(X)}인 집이 ${quizWon(P)}에 낙찰됐어요. 낙찰가율은?`, a: [r].concat(o).map(x => x + '%'), why: `${quizWon(P)} ÷ ${quizWon(X)} = ${r}%` }; },
-  (R) => { const D = (5 + Math.floor(R.next() * 26)) * 1e7, rt = [3.6, 4.2, 4.8, 6][Math.floor(R.next() * 4)], m = D * rt / 1200;
-    return { q: `잔금 대출 ${quizWon(D)}, 연 이자 ${rt}%예요. 한 달 이자는 얼마쯤일까?`, a: [m, m * 12, m * 2, m * 3].map(quizWon), why: `${quizWon(D)} × ${rt}% ÷ 12개월 = 한 달 ${quizWon(m)} (1년이면 ${quizWon(m * 12)})` }; },
-];
 const QUIZ_NUM = { 일: '1', 한: '1', 하나: '1', 한개: '1', 육: '6', 여섯: '6', 십: '10', 열: '10', 이십: '20', 스물: '20', 삼십: '30' };
 // 비교용: 띄어쓰기·문장부호, 끝의 %·퍼센트·개월·안 같은 말을 빼고 숫자 말은 숫자로
 function quizNorm(t) {
@@ -10121,7 +10102,7 @@ function quizNorm(t) {
 const quizRight = (Q, t) => { const n = quizNorm(t); return !!n && Q.s.some(x => quizNorm(x) === n); };
 
 const Quiz = {
-  open_: false, N: 10, MIX: { mc: 4, ox: 2, s: 2, calc: 2 }, SECS: { mc: 15, ox: 10, s: 20, calc: 25 }, REV: 4200, COOL: 1200, state: 'ready', g: null, timer: 0,
+  open_: false, N: 10, MIX: { mc: 5, ox: 3, s: 2 }, SECS: { mc: 15, ox: 10, s: 20 }, REV: 4200, COOL: 1200, state: 'ready', g: null, timer: 0,
   best() { return Store.get('quizBest', 0) || 0; },
   inParty() { return typeof Party !== 'undefined' && Party.on('quiz'); },
   open() {
@@ -10142,15 +10123,15 @@ const Quiz = {
   build(seed, order, names) {
     const R = makeRng(seed), mix = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R.next() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
     const M = this.MIX, pick = (t, len) => mix(Array.from({ length: len }, (_, i) => i)).slice(0, Math.min(M[t] || 0, len)).map(i => ({ t, i }));
-    const qs = mix([].concat(pick('mc', QUIZ_BANK.length), pick('ox', QUIZ_OX.length), pick('s', QUIZ_SHORT.length), pick('calc', QUIZ_CALC.length)));
-    // 문제를 미리 다 만든다 (계산 문제 숫자도 같은 시드라 모두 같다). O/X는 보기 순서를 늘 O, X로
-    const Q = qs.map(it => { if (it.t === 'mc') return QUIZ_BANK[it.i]; if (it.t === 's') return QUIZ_SHORT[it.i]; if (it.t === 'calc') return QUIZ_CALC[it.i](R);
+    const qs = mix([].concat(pick('mc', QUIZ_BANK.length), pick('ox', QUIZ_OX.length), pick('s', QUIZ_SHORT.length)));
+    // 문제를 미리 다 만든다. O/X는 보기 순서를 늘 O, X로
+    const Q = qs.map(it => { if (it.t === 'mc') return QUIZ_BANK[it.i]; if (it.t === 's') return QUIZ_SHORT[it.i];
       const x = QUIZ_OX[it.i]; return { q: x.q, a: x.o ? ['⭕ 맞다', '❌ 아니다'] : ['❌ 아니다', '⭕ 맞다'], why: x.why }; });
     const perm = qs.map(it => it.t === 'ox' ? (QUIZ_OX[it.i].o ? [0, 1] : [1, 0]) : it.t === 's' ? [] : mix([0, 1, 2, 3]));
     const score = {}; for (const id of order) score[id] = 0;
     return { seed, order, names, qs, Q, perm, i: -1, score, state: 'q', t0: 0, locked: {}, picks: {}, tries: [], winner: null, winText: '', revAt: 0, mine: null, ai: null, cool: 0 };
   },
-  // 지금 문제 {q, a | s, why}와 종류 (mc · ox · s · calc)
+  // 지금 문제 {q, a | s, why}와 종류 (mc · ox · s)
   cur() { const g = this.g; return g && g.Q[g.i] || null; },
   kind() { const g = this.g, it = g && g.qs[g.i]; return it ? it.t : ''; },
   isShort() { return this.kind() === 's'; },
@@ -10170,7 +10151,7 @@ const Quiz = {
   begin(order, seed) { const P = Party.p; this.g = this.build(seed, order, Object.assign({}, P ? P.names : {})); this.state = 'play'; Sound.play('chime'); this.next(0); },
   next(i) {
     const g = this.g; if (!g) return; g.i = i; g.state = 'q'; g.t0 = Date.now(); g.locked = {}; g.picks = {}; g.tries = []; g.winner = null; g.winText = ''; g.mine = null; g.revAt = 0; g.cool = 0;
-    if (g.solo) { const R = Math.random, A = { mc: [3500, 8000, 0.62], ox: [2500, 4500, 0.7], s: [6000, 11000, 0.55], calc: [8000, 12000, 0.5] }[this.kind()] || [3500, 8000, 0.62]; g.ai = { at: g.t0 + A[0] + R() * A[1], right: R() < A[2] }; }
+    if (g.solo) { const R = Math.random, A = { mc: [3500, 8000, 0.62], ox: [2500, 4500, 0.7], s: [6000, 11000, 0.55] }[this.kind()] || [3500, 8000, 0.62]; g.ai = { at: g.t0 + A[0] + R() * A[1], right: R() < A[2] }; }
     Sound.play('blip'); this.render();
     if (this.isShort()) { const inp = $('qzIn'); if (inp && !matchMedia('(pointer:coarse)').matches) inp.focus(); }
   },
@@ -10267,7 +10248,7 @@ const Quiz = {
     if (!this.open_) return; const scr = $('qzScr'), pan = $('qzPan'); if (!scr) return; const g = this.g, P = this.inParty() ? Party.p : null;
     if (this.inParty() && this.state === 'ready') this.state = 'party';
     if (this.state === 'ready') {
-      scr.innerHTML = `<div class="qzMid"><h2>경매 퀴즈</h2><p>한 판 ${this.N}문제 · 객관식 ${this.MIX.mc} · O/X ${this.MIX.ox} · 단답 ${this.MIX.s} · 계산 ${this.MIX.calc}. 먼저 맞힌 사람이 1점.<br>보기 문제는 틀리면 그 문제는 끝, 단답은 직접 쳐서 맞히고 틀려도 다시 쳐 볼 수 있어요.</p>
+      scr.innerHTML = `<div class="qzMid"><h2>경매 퀴즈</h2><p>한 판 ${this.N}문제 · 객관식 ${this.MIX.mc} · O/X ${this.MIX.ox} · 단답 ${this.MIX.s}. 먼저 맞힌 사람이 1점.<br>보기 문제는 틀리면 그 문제는 끝, 단답은 직접 쳐서 맞히고 틀려도 다시 쳐 볼 수 있어요.</p>
         <button class="btn gold" id="qzSolo">혼자 하기 · ${esc(castName('arcade'))} 사장님이랑</button><button class="btn" id="qzVs">👥 친구랑 퀴즈 대결</button>
         <p class="qzNote">혼자 최고 기록 ${this.best()}/${this.N}${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
       pan.innerHTML = '<div class="qzKeys"><span><b>1 2 3 4</b> 보기 고르기 · 단답은 쓰고 <b>Enter</b> · <b>Esc</b> 일어나기</span></div>';
@@ -10304,7 +10285,7 @@ const Quiz = {
     }
     // 문제
     const me = this.meId(), rev = g.state === 'rev', Q = this.cur(), sh = this.isShort();
-    const top = `<div class="qzTop"><span>문제 ${g.i + 1}/${g.qs.length}${{ s: ' · <em class="qzTag">단답</em>', ox: ' · <em class="qzTag ox">O/X</em>', calc: ' · <em class="qzTag calc">계산</em>' }[this.kind()] || ''}</span>${rev ? '' : `<b class="qzT">⏱ <span id="qzTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>`}</div>`;
+    const top = `<div class="qzTop"><span>문제 ${g.i + 1}/${g.qs.length}${{ s: ' · <em class="qzTag">단답</em>', ox: ' · <em class="qzTag ox">O/X</em>' }[this.kind()] || ''}</span>${rev ? '' : `<b class="qzT">⏱ <span id="qzTime">${Math.max(0, Math.ceil((g.t0 + this.secs() * 1000 - Date.now()) / 1000))}</span></b>`}</div>`;
     const res = rev ? (g.winner ? `<div class="qzRes ${g.winner === me ? 'win' : ''}">${g.winner === me ? '🎉 정답! +1점' : `⭕ ${esc(this.nm(g.winner))} 정답 +1점`}</div>` : '<div class="qzRes">⏰ 아무도 못 맞혔어요</div>') : '';
     if (sh) { // 단답: 입력칸 (다시 그려도 쓰던 글자·포커스는 그대로)
       const old = $('qzIn'), val = old ? old.value : '', foc = old && document.activeElement === old;

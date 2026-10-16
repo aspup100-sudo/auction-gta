@@ -4683,6 +4683,8 @@ const Net = {
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - (Titles.of(p.name, p.tt) ? 39 : 30));
   },
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return null; },
+  // 펫 이름표: 사람 이름표보다 작게 (사용자 2026-10-16 '펫 이름 더 작게')
+  petLabel(c, name, x, y) { c.save(); c.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(name).width + 4; c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(x - w / 2, y - 5, w, 6.5); c.fillStyle = '#ffe9a0'; c.fillText(name, x, y); c.restore(); },
   label(c, name, x, y) { c.fillStyle = 'rgba(0,0,0,.6)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(name).width + 6; c.fillRect(x - w / 2, y - 7, w, 9); c.fillStyle = '#ffd84a'; c.fillText(name, x, y); },
   bubble(c, text, x, y) {
     c.font = '7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center';
@@ -8563,7 +8565,7 @@ const Pets = {
   drawFor(c, key, kind, ox, oy, t) { if (!PET_DRAW[kind]) return; const s = this.step(key, ox, oy, t, kind); this.draw(c, kind, s.x, s.y, s.face, s.moving, t); },
   draw(c, kind, x, y, face, moving, t, tag, idle = 0, pose) {
     if (PET_HD[kind]) { // 고화질 사람 펫 (반 픽셀 단위로 그린다: 기본 확대 ×2에서 화면 1픽셀)
-      if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y - (kind === 'kid' ? 18 : 27));
+      if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - (kind === 'kid' ? 18 : 27));
       c.save(); c.translate(Math.round(x), Math.round(y)); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, 5, 2, 0, 0, 7); c.fill(); c.scale(face < 0 ? -0.5 : 0.5, 0.5);
       const h = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
       PET_HD[kind](h, t, moving, idle, c); c.restore(); return;
@@ -8572,10 +8574,10 @@ const Pets = {
       const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]);
       drawWalker(c, { sprite: sp, x, y, dir: face < 0 ? 1 : 2, frame: moving ? 1 + Math.floor(t * 8) % 4 : 0, moving }, t);
       if (moving ? t % 5 < 0.8 : idle > 5) { const X = Math.round(x) + (face < 0 ? -6 : 4), Y = Math.round(y); c.fillStyle = '#f1c9a5'; if (moving) c.fillRect(X, Y - 17 - (Math.floor(t * 8) % 2), 2, 2); else { c.fillStyle = '#1d1d22'; c.fillRect(X - (face < 0 ? -1 : 1), Y - 12, 3, 4); c.fillStyle = '#8ad0ff'; c.fillRect(X - (face < 0 ? -1.5 : 0.5), Y - 11.5, 2, 2.5); } } // 걸을 땐 가끔 손 흔들고, 서 있으면 폰을 본다
-      if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y - 22); return;
+      if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - 22); return;
     }
     const f = PET_DRAW[kind]; if (!f) return;
-    if (tag && typeof Net !== 'undefined') Net.label(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16 }[kind] || 15));
+    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16 }[kind] || 15));
     const step = moving ? Math.floor(t * 8) % 2 : 0;
     c.save(); c.translate(Math.round(x), Math.round(y));
     if (pose !== 'ride' && kind !== 'dolphin' && !((kind === 'mouse' || kind === 'beetle') && !moving && idle > 5)) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' ? 6 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill(); }

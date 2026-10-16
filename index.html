@@ -7885,16 +7885,52 @@ const Shop = {
   bigDraw(it) {
     const cv = $('shBigCv'); if (!cv) return; const S = Math.max(3, Math.min(8, Math.ceil((cv.clientWidth || 640) * (window.devicePixelRatio || 1) / 160))); if (cv.width !== 160 * S) { cv.width = 160 * S; cv.height = 104 * S; } // 화면 픽셀만큼 크게 그려서 반 픽셀 그림까지 또렷하게
     const x = cv.getContext('2d'); x.setTransform(S, 0, 0, S, 0, 0); x.imageSmoothingEnabled = false; const t = performance.now() / 1000, el = (performance.now() - this.bigT0) / 1000;
-    const auto = this.bigMode === 'auto', mv = auto ? el % 9 < 3 : this.bigMode === 'move', since = auto ? (el % 9) - 3 : el; // 자동: 3초 움직이고 6초 멈춤
+    const cyc = it.pet ? 14 : 9, auto = this.bigMode === 'auto', mv = auto ? el % cyc < 3 : this.bigMode === 'move', since = auto ? (el % cyc) - 3 : el; // 자동: 3초 움직이고 6초 멈춤 (펫은 서 있을 때 하는 짓이 많아 11초)
+    this.moveT = mv ? (auto ? el % cyc : el) : 0;
     const idle = mv ? 0 : Math.max(0, since) + 4.4; // 멈추면 금방 '5초 넘게 서 있을 때' 모습이 나온다
     const lb = $('shBigLb'); if (lb) lb.textContent = it.fx ? '걸어 다닐 때 이렇게 보여요' : mv ? (it.ride ? '달리는 중' : '움직이는 중') : (it.pet ? (idle > 5 ? '5초 넘게 서 있으면' : '멈춤') : '멈춤');
     this.paint(x, it, t, mv, idle, false);
+  },
+  // 펫 큰 미리보기 장면 (사용자 2026-10-16 '미리보기에 펫 가졌을 때 나타나는 모습 전부가 안 나타난다'): 게임 속 Pets.actor 동작을 대본으로 다시 보여 준다
+  petScene(x, kind, t, mv, idle, moveT) {
+    const big = ['trex', 'giraffe', 'elephant', 'dolphin'].includes(kind), k = big ? 2 : 3, Hw = 80 / k, now = performance.now();
+    const PX = big ? -Hw + 9 : -15, NX = Hw - 7, petX = big ? (kind === 'trex' ? 4 : 2) : 5; // 나 · 행인 · 펫 자리 (펫 단위 좌표)
+    const sh = n => { Sprites.setPal(n === 'me' ? 'shop:me' : n, n === 'me' ? Profile.pal(Profile.get()) : undefined); return Sprites.sheet(n === 'me' ? 'shop:me' : n); };
+    const person = (n, X, row, fr, rot) => { x.save(); x.translate(X, 0); if (rot) x.rotate(rot); x.fillStyle = 'rgba(0,0,0,.22)'; if (!rot) { x.beginPath(); x.ellipse(0, 0, 5, 1.8, 0, 0, 7); x.fill(); } x.imageSmoothingEnabled = false; x.drawImage(sh(n), fr * 16, row * 16, 16, 16, -8, -16, 16, 16); x.restore(); };
+    const say = (text, X, Y) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.translate((80 + X * k) * S, Math.max(26, 96 + Y * k) * S); x.scale(S * 1.15, S * 1.15); if (typeof Net !== 'undefined') Net.bubble(x, text, 0, 0); x.restore(); };
+    const tag = (text, X, Y) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.translate((80 + X * k) * S, Math.max(14, 96 + Y * k) * S); x.scale(S * 1.2, S * 1.2); if (typeof Net !== 'undefined') Net.label(x, text, 0, 0); x.restore(); };
+    const cam = (X, flash) => { Pets.camera(x, { x: X, y: 0, dir: 1, photo: { flash } }, now); };
+    const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, ph5 = idle - 5;
+    x.save(); x.translate(80, 96); x.scale(k, k);
+    let pet = { x: petX, y: 0, face: 1, mv, idle, pose: undefined, rot: 0, hide: false }, meRow = 2, npc = null, bubbles = [];
+    const flash = now - ((now / 1300 | 0) * 1300); const fl = now - flash;
+    if (kind === 'monkey') { pet.hide = true; if (mv) { person('me', PX, 2, fr); Pets.draw(x, 'monkey', PX, -15, 1, false, t, '', 0, 'ride'); } else { person('me', PX, 0, 0); Pets.draw(x, 'monkey', petX, 0, 1, false, t, '', idle); } x.restore(); return; }
+    if (kind === 'dog' && !mv && ph5 > 0 && ph5 < 1.6) { const a = ph5 / 1.6 * Math.PI * 2; pet.x = PX - Math.cos(a) * 14; pet.y = 2 - Math.sin(a) * 7; pet.face = Math.sin(a) > 0 ? 1 : -1; pet.mv = true; } // 주인 주위를 한 바퀴
+    if (kind === 'trex') { // 발자국 + 익룡 + 사진 찍는 행인 + 크앙
+      for (let i = 0; i < 6; i++) { const X = petX - 8 - i * 9 + (mv ? (t * 30) % 9 : 0), side = i % 2 ? 1 : -1, al = mv ? 1 - i / 7 : Math.max(0, 1 - i / 7 - Math.max(0, idle - 4.4) / 9); if (al > 0) Prints.foot(x, X, 2 + side * 2.5, 0, al); }
+      if (!mv) { Pets.ptero(x, { x: petX, y: 12 }, idle, t); if (idle > 1.2) { npc = { n: 'walker1', X: NX }; cam(NX, fl < 260 ? flash : 0); bubbles.push([['찰칵!', '와 진짜 공룡이다!', '이게 공룡 발자국 화석이야?'][(now / 2600 | 0) % 3], NX, -18]); } if (ph5 > 0 && ph5 % 4 < 1.2) tag('크앙!', petX + 6, -34); } }
+    if (kind === 'tiger' && !mv && ph5 > 0 && ph5 % 4 < 1.2) tag('어흥!', petX + 4, -18);
+    if (kind === 'panda' && !mv && ph5 > 0) { npc = { n: 'walker3', X: NX }; cam(NX, fl < 260 ? flash : 0); bubbles.push([ph5 < 2 ? '푸바오??' : ['푸바오다!!', '찰칵!', '너무 귀여워…'][(now / 2200 | 0) % 3], NX, -18]); }
+    if (kind === 'gf' || kind === 'bf') { if (mv && moveT < 2.2) { bubbles.push(['어디가? 같이가~', petX, -30]); Pets.heart(x, petX + 7, -24 - moveT * 2, 1 - moveT / 2.2, 0.6); }
+      const ph = ph5 % 14; if (!mv && ph5 > 0 && ph < 3.6) { const e = ph < 1 ? ph : ph < 2.6 ? 1 : 3.6 - ph, a = e * e * (3 - 2 * e), kiss = ph >= 1 && ph < 2.6; pet.x = petX + (PX + 7 - petX) * a; pet.face = ph > 2.6 ? 1 : -1; pet.mv = !kiss; pet.idle = kiss ? 0 : idle; if (kiss) { const q = (ph - 1) / 1.6; Pets.heart(x, PX + 3.5, -21 - q * 5, 1 - q * 0.6, 0.8 + q * 0.4); tag('쪽♥', PX + 10, -26); } } }
+    if (kind === 'buddy') { if (mv && moveT > 1 && moveT < 2.4) { pet.rot = Math.min(1, (moveT - 1) / 0.15) * Math.PI / 2; pet.mv = false; bubbles.push(['아야!', petX, -14]); }
+      else if (!mv && idle > 4.6) { const L = Pets.BUDDY_SAY, i = ((idle - 4.6) / 2.8 | 0); if (i % 3 === 2) { npc = { n: 'walker2', X: NX }; bubbles.push(['제 친구 못생겼죠?', petX, -24]); if ((idle - 4.6) % 2.8 > 1.3) bubbles.push(['ㅋㅋㅋ 네', NX, -18]); pet.face = 1; } else bubbles.push([L[i % L.length], petX, -24]); } }
+    if (kind === 'kid' && !mv) { npc = { n: 'walker2', X: NX }; if (ph5 > 0 && ph5 < 2.5) { pet.face = (ph5 / 0.6 | 0) % 2 ? 1 : -1; pet.idle = 0; bubbles.push(['예쁜 누나 어딨지~?', petX, -20]); }
+      else if (ph5 >= 2.5) { const p = ph5, e = p < 4 ? (p - 2.5) / 1.5 : p < 8.5 ? 1 : p < 10 ? 1 - (p - 8.5) / 1.5 : 0, a = e * e * (3 - 2 * e), there = p >= 4 && p < 8.5; pet.x = petX + (NX - 8 - petX) * a; pet.mv = !there && e > 0; pet.face = p < 8.5 ? 1 : -1; pet.idle = 0; if (there) { Pets.heart(x, pet.x + 2, -22 - ((p - 4) * 0.7 % 1) * 8, 1 - (p - 4) * 0.7 % 1, 0.6); if (p < 6.5) bubbles.push(['예쁜 누나~ 나랑 놀아요~', pet.x, -20]); if (p > 5.5) bubbles.push(['어머, 귀여워라~', NX, -18]); } } }
+    if (kind === 'trex' && !mv) meRow = 2; else if (pet.x < PX) meRow = 1;
+    person('me', PX, mv ? 2 : meRow, fr);
+    if (npc) person(npc.n, npc.X, 1, 0);
+    if (!pet.hide) { if (pet.rot) { x.save(); x.translate(pet.x, pet.y); x.rotate(pet.rot); Pets.draw(x, kind, 0, 0, pet.face, false, t, '', 0); x.restore(); } else Pets.draw(x, kind, pet.x, pet.y, pet.face, pet.mv, t, '', pet.idle, pet.pose); }
+    if (npc && (kind === 'trex' || kind === 'panda')) cam(npc.X, fl < 260 ? flash : 0);
+    x.restore();
+    for (const [tx, X, Y] of bubbles) say(tx, X, Y);
   },
   paint(x, it, t, mv, idle, thumb) {
     x.fillStyle = thumb ? '#e2d6bb' : it.ride ? '#5a5d66' : '#cfc6a8'; x.fillRect(0, 0, 160, 104);
     if (thumb) {} else if (it.ride) { x.fillStyle = '#f4f4f4'; const off = mv ? (t * 90) % 40 : 0; for (let X = -40; X < 200; X += 40) x.fillRect(Math.round(X - off), 51, 20, 2); }
     else if (mv) { x.fillStyle = 'rgba(0,0,0,.12)'; const off = (t * 40) % 24; for (let X = -24; X < 184; X += 24) x.fillRect(Math.round(X - off), 92, 10, 2); }
     if (it.ride) { x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); const pal = Profile.pal(Profile.get()); drawRide(x, 0, 0, 0, it.ride, mv ? 80 : 0, pal, it.ride === 'piggy' ? String(Profile.get().rideName || '').slice(0, 10) : ''); x.restore(); return; }
+    if (it.pet && !thumb) return this.petScene(x, it.pet, t, mv, idle, this.moveT || 0); // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
     if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = thumb ? (hd ? 6 : ['trex', 'giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 3 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 8 : 5) : hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 2 : it.pet === 'beetle' ? 3.5 : ['mouse', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, thumb ? 98 : 96); /* 칸 그림은 더 크게 (뭔지 한눈에) */ x.scale(hd ? k / 2 : k, hd ? k / 2 : k); if (it.pet === 'monkey' && !thumb) { /* 원숭이: 내 캐릭터와 같이 — 걸을 땐 머리 위에 타고, 서 있으면 내려와 바나나 */ Sprites.setPal('shop:me', Profile.pal(Profile.get())); const sh = Sprites.sheet('shop:me'); x.imageSmoothingEnabled = false; if (mv) { x.drawImage(sh, (1 + Math.floor(t * 8) % 4) * 16, 32, 16, 16, -8, -16, 16, 16); Pets.draw(x, 'monkey', 0, -15, 1, false, t, '', 0, 'ride'); } else { x.drawImage(sh, 0, 0, 16, 16, -14, -16, 16, 16); Pets.draw(x, 'monkey', 8, 0, 1, false, t, '', idle); } x.restore(); return; }
       Pets.draw(x, it.pet, 0, 0, 1, mv, t, '', idle, it.pet === 'monkey' && mv ? 'ride' : undefined); if (it.pet === 'trex' && !mv && !thumb) Pets.ptero(x, { x: 0, y: 12 }, idle, t); /* 서 있으면 익룡 (미리보기에도) */ x.restore(); return; }
     if (it.fx) { this.fxPrev(x, it, t, thumb ? 3 : 2.5); return; } // 이펙트는 머리 위까지 올라가니 조금 작게
@@ -7924,7 +7960,7 @@ const ShopPromo = {
     this.w = null; const z = Game.zone; if (!z || !z.places || !Shop.newItems().length) return;
     const shop = z.places.find(p => p.kind === 'shop'), office = z.places.find(p => p.id === 'office'); if (!shop || !office) return;
     let best = null, bd = 1e9; for (let dy = -6; dy <= 6; dy++) for (let dx = -8; dx <= 8; dx++) { const tx = office.door.tx + dx, ty = office.door.ty + dy; if (z.at(tx, ty) !== T.WALK) continue; const d = Math.abs(Math.hypot(dx, dy) - 4); if (d < bd) { bd = d; best = [tx, ty]; } }
-    if (!best) return; const w = makeWalker('clerk', best[0] * TILE + 8, best[1] * TILE + 8); w.ai = { t: 999, ix: 0, iy: 0 }; w.promo = { home: [w.x, w.y], next: performance.now() + 1500, i: 0, shop }; Game.decor.push(w); this.w = w;
+    if (!best) return; const w = makeWalker('clerk', best[0] * TILE + 8, best[1] * TILE + 8); w.ai = { t: 999, ix: 0, iy: 0 }; w.promo = { home: [w.x, w.y], base: [w.x, w.y], next: performance.now() + 1500, i: 0, shop }; Game.decor.push(w); this.w = w;
   },
   // 매 프레임 (Pets.actors에서)
   step() {
@@ -7932,13 +7968,17 @@ const ShopPromo = {
     const face = (x, y) => { const fx = x - w.x, fy = y - w.y; w.dir = Math.abs(fx) > Math.abs(fy) ? (fx > 0 ? 2 : 1) : (fy > 0 ? 0 : 3); };
     w.ai.ix = w.ai.iy = 0; w.ai.t = 999;
     if (pr.path) { // 앞장서기
-      if (dP > 70) { w.moving = false; w.frame = 0; face(P.x, P.y); if (now > pr.next) { pr.next = now + 3000; w.bubble = { text: '이쪽이에요~ 따라와요!', t: 2.2 }; } return; }
-      const dt = Math.min(0.05, (now - (pr.lt || now)) / 1000); pr.lt = now; let left = 62 * dt;
+      const dt = Math.min(0.05, (now - (pr.lt || now)) / 1000); pr.lt = now;
+      if (!pr.back && dP > 70) { pr.wait = (pr.wait || 0) + dt; w.moving = false; w.frame = 0; face(P.x, P.y);
+        if (pr.wait > 7 || dP > 260) { this.goHome(w, '안 와요? 다음에 봐요~'); return; } // 안 따라오면 원래 자리로 돌아가 다시 호객 (사용자 2026-10-16)
+        if (now > pr.next) { pr.next = now + 3000; w.bubble = { text: '이쪽이에요~ 따라와요!', t: 2.2 }; } return; }
+      if (!pr.back) pr.wait = 0; let left = 62 * dt;
       while (left > 0 && pr.path.length) { const [tx, ty] = pr.path[0], ex = tx - w.x, ey = ty - w.y, d = Math.hypot(ex, ey); if (d <= left) { w.x = tx; w.y = ty; pr.path.shift(); left -= d; } else { w.x += ex / d * left; w.y += ey / d * left; face(tx, ty); left = 0; } }
       w.moving = true; w.frame = 1 + Math.floor(now / 125) % 4;
-      if (!pr.path.length) { pr.path = null; pr.lt = 0; pr.home = [w.x, w.y]; w.moving = false; w.frame = 0; face(P.x, P.y); w.bubble = { text: '여기예요! 들어가서 구경해요~', t: 3 }; pr.next = now + 6000; }
+      if (!pr.path.length) { pr.path = null; pr.lt = 0; pr.home = [w.x, w.y]; w.moving = false; w.frame = 0; face(P.x, P.y); if (pr.back) { pr.back = false; pr.atShop = 0; pr.next = now + 2000; } else { w.bubble = { text: '여기예요! 들어가서 구경해요~', t: 3 }; pr.next = now + 6000; pr.atShop = now; } }
       return;
     }
+    if (pr.atShop && now - pr.atShop > 15000) { this.goHome(w, '구경 잘 했어요? 저는 다시 홍보하러 가요~'); return; } // 숍 앞에서 조금 기다렸다가 돌아간다
     const hx = pr.home[0] - w.x, hy = pr.home[1] - w.y; if (Math.hypot(hx, hy) > 3) { w.x += hx * 0.05; w.y += hy * 0.05; }
     w.moving = false; w.frame = 0; if (dP < 120) face(P.x, P.y);
     if (now > pr.next && dP < 220 && !(w.bubble)) { const L = this.lines(); pr.next = now + 5500; w.bubble = { text: L[pr.i++ % L.length], t: 3.2 }; }
@@ -7950,8 +7990,9 @@ const ShopPromo = {
     Game.busy = false;
     if (pick === 'go') { const path = this.route(w, w.promo.shop); if (path) { w.promo.path = path; w.promo.lt = 0; w.bubble = { text: '좋아요! 따라와요~', t: 2 }; if (typeof State !== 'undefined') State.targetPlace = w.promo.shop.id; } else { w.bubble = { text: '길이 막혔네… 숍은 건대 쪽이에요!', t: 2.4 }; } }
     else if (pick === 'open') { const it = N[0]; Shop.open(it ? it.tab : 'clothes', true); w.bubble = { text: '마음에 들면 숍으로 와요~', t: 2.4 }; }
-    else w.bubble = { text: '언제든 놀러 와요~', t: 2.2 };
+    else w.bubble = { text: '아쉽다~ 다음에 봐요!', t: 2.2 };
   },
+  goHome(w, msg) { const pr = w.promo, b = pr.base, path = this.route(w, { door: { tx: Math.floor(b[0] / TILE), ty: Math.floor(b[1] / TILE) } }); w.bubble = { text: msg, t: 2.6 }; pr.atShop = 0; pr.wait = 0; if (path) { path.push([b[0], b[1]]); pr.path = path; pr.back = true; pr.lt = 0; } else { w.x = b[0]; w.y = b[1]; pr.home = [b[0], b[1]]; pr.path = null; } },
   // 건물만 피해서 문까지 BFS (플레이어가 걸을 수 있는 칸)
   route(w, pl) {
     const z = Game.zone, W = z.W, H = z.H, sx = Math.floor(w.x / TILE), sy = Math.floor(w.y / TILE), gx = pl.door.tx, gy = pl.door.ty;
@@ -8145,8 +8186,8 @@ const Prints = {
     const p = { x: x - Math.sin(a) * side * 2.5, y: y + 2 + Math.cos(a) * side * 2.5, a, side, t: now }; this.pts.push(p); this.last[key] = Object.assign({}, p, { x, y }); if (this.pts.length > 300) this.pts.shift(); },
   clear() { this.pts.length = 0; this.last = {}; },
   draw(c, x0, y0, x1, y1) { const now = performance.now() / 1000; while (this.pts.length && now - this.pts[0].t > this.LIFE) this.pts.shift();
-    for (const p of this.pts) { if (p.x < x0 - 10 || p.x > x1 + 10 || p.y < y0 - 10 || p.y > y1 + 10) continue; const age = now - p.t; c.save(); c.globalAlpha = 0.55 * Math.min(1, (this.LIFE - age) / this.FADE); c.translate(p.x, p.y); c.rotate(p.a); c.fillStyle = '#4a3c30';
-      c.beginPath(); c.ellipse(-1.2, 0, 2, 1.5, 0, 0, 7); c.fill(); for (const [tx, ty, r] of [[2, -1.7, -0.5], [2.8, 0, 0], [2, 1.7, 0.5]]) { c.beginPath(); c.ellipse(tx, ty, 1.7, 0.6, r, 0, 7); c.fill(); } c.restore(); } },
+    for (const p of this.pts) { if (p.x < x0 - 10 || p.x > x1 + 10 || p.y < y0 - 10 || p.y > y1 + 10) continue; this.foot(c, p.x, p.y, p.a, Math.min(1, (this.LIFE - (now - p.t)) / this.FADE)); } },
+  foot(c, x, y, a, al) { c.save(); c.globalAlpha = 0.55 * al; c.translate(x, y); c.rotate(a); c.fillStyle = '#4a3c30'; c.beginPath(); c.ellipse(-1.2, 0, 2, 1.5, 0, 0, 7); c.fill(); for (const [tx, ty, r] of [[2, -1.7, -0.5], [2.8, 0, 0], [2, 1.7, 0.5]]) { c.beginPath(); c.ellipse(tx, ty, 1.7, 0.6, r, 0, 7); c.fill(); } c.restore(); },
   SAY: ['이게 공룡 발자국 화석이야?', '와 발자국 진짜 크다!', '찰칵! 화석 인증', '여기 공룡 지나갔나 봐…'],
   watch(c) { // 발자국 근처 행인이 멈춰 서서 사진
     if (Game.scene !== 'zone' || !this.pts.length && !(Game.decor || []).some(w => w.photo)) return; const now = performance.now(), D = Game.decor || [];

@@ -5954,13 +5954,13 @@ function drawWalker(c, w, t, opts = {}) {
     for (let i = 0; i < 3; i++) { const a = t * 1.6 + i * 2.1, r = 11 + Math.sin(t * 3 + i) * 2, X = w.x + Math.cos(a) * r, Y = w.y - 8 + Math.sin(a) * r * 0.5, sz = 1.2 + (Math.sin(t * 5 + i * 2) + 1) * 0.8; c.beginPath(); c.moveTo(X, Y - sz); c.lineTo(X + sz, Y); c.lineTo(X, Y + sz); c.lineTo(X - sz, Y); c.fill(); }
     c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 20); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 20); c.restore();
   }
-  Sprites.drawSprite(c, w.sprite, w.dir, w.frame, Math.round(w.x - 8), Math.round(w.y - 15 + bob + breath), 1, w.sit);
+  Sprites.drawSprite(c, w.sprite, w.dir, w.frame, snapPx(c, w.x) - 8, snapPx(c, w.y) - 15 + bob + breath, 1, w.sit);
   if (w.punchT && performance.now() < w.punchT) drawFist(c, w); // 때리기 (v143): 팔을 쭉 뻗은 주먹
 }
 // 주먹 (사용자 2026-10-16 '주먹이 좀 안 보이는데'): 보는 쪽으로 팔이 쭉 나갔다 들어온다. 맞히면 '퍽!'
 function drawFist(c, w) {
   const P = Sprites.PAL[w.sprite] || Sprites.PLAYER_DEFAULT, e = 1 - (w.punchT - performance.now()) / 300, ext = e < 0.25 ? e / 0.25 : e > 0.7 ? Math.max(0, 1 - (e - 0.7) / 0.3) : 1;
-  const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][w.dir] || [1, 0], L = Math.round(3 + ext * 8), sx = Math.round(w.x + vx * 3), sy = Math.round(w.y - 9 + vy * 2), fx = sx + vx * L, fy = sy + vy * L;
+  const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][w.dir] || [1, 0], L = Math.round(3 + ext * 8), sx = snapPx(c, w.x) + vx * 3, sy = snapPx(c, w.y) - 9 + vy * 2, fx = sx + vx * L, fy = sy + vy * L;
   const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
   if (vx) r(Math.min(sx, fx), sy - 1, Math.abs(fx - sx), 3, P.shirt); else r(sx - 1, Math.min(sy, fy), 3, Math.abs(fy - sy), P.shirt); // 팔 (소매)
   r(fx - 3, fy - 3, 6, 6, '#2a1a10'); r(fx - 2, fy - 2, 4, 4, P.skin || '#f1c9a5'); r(fx - 2, fy - 2, 4, 1, 'rgba(255,255,255,.45)'); // 주먹 (테두리 + 살색)
@@ -5971,7 +5971,7 @@ function drawFist(c, w) {
 // 큰절: 무릎 꿇고 엎드려 이마를 바닥에 (옆모습, 보던 쪽으로). 1.2초마다 한 번 꾸벅
 function drawBow(c, w, t) {
   const P = Sprites.PAL[w.sprite] || Sprites.PLAYER_DEFAULT, f = w.dir === 1 ? -1 : 1, up = (t % 1.2) < 0.35 ? 1 : 0;
-  c.save(); c.translate(Math.round(w.x), Math.round(w.y)); c.scale(f, 1);
+  c.save(); c.translate(snapPx(c, w.x), snapPx(c, w.y)); c.scale(f, 1);
   const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
   r(-7, -4, 6, 4, P.pants); r(-8, -2, 2, 2, P.shoe || '#222'); r(-4, -8 - up, 7, 4, P.shirt); r(-4, -8 - up, 7, 1, P.shirt2 || P.shirt); r(2, -6 - up, 5, 5, P.hair); r(5, -3 - up, 2, 2, P.skin); r(6, -1, 3, 1, P.skin); r(-1, -4 - up, 2, 4 + up, P.shirt);
   c.restore();
@@ -6690,14 +6690,17 @@ function updateDecor(dt) {
 function worldToScreen() {
   const sx = Cam.shake > 0 ? (Math.random() - 0.5) * Cam.shakeAmp * (Cam.shake / FEEL.shakeDecay) : 0;
   const sy = Cam.shake > 0 ? (Math.random() - 0.5) * Cam.shakeAmp * (Cam.shake / FEEL.shakeDecay) : 0;
-  ctx.setTransform(DPR * Cam.zoom, 0, 0, DPR * Cam.zoom, DPR * (VW / 2 - camSnapX() * Cam.zoom + sx), DPR * (VH / 2 - camSnapY() * Cam.zoom + sy));
+  const S = DPR * Cam.zoom, e = DPR * (VW / 2 + sx) - camSnapX() * S, f = DPR * (VH / 2 + sy) - camSnapY() * S;
+  ctx.setTransform(S, 0, 0, S, Game.scene === 'zone' ? Math.round(e) : e, Game.scene === 'zone' ? Math.round(f) : f);
 }
-// 걸을 땐 카메라를 월드 1픽셀 단위로 맞춘다 (사용자 2026-10-16 '사람 버벅거리는 거 고쳐'): 사람은 정수 픽셀에 그리는데 카메라만 소수점으로 따라오면
-// 매 프레임 화면에서 1픽셀씩 앞뒤로 떨렸다. 차를 몰 땐(차는 소수점으로 부드럽게 그린다) 그대로 둔다.
-function camSmooth() { return Game.scene === 'zone' && (Game.driving || (typeof Ride !== 'undefined' && Ride.with)); }
-function camSnap(c, v) { if (camSmooth()) return c; const o = c - v; return Game.scene === 'zone' && Math.abs(o) < 40 ? Math.round(v) + Math.round(o) : Math.round(c); } // 따라가는 중엔 사람 기준으로 (앞뒤 떨림 없이)
-function camSnapX() { return camSnap(Cam.x, Game.player ? Game.player.x : Cam.x); }
-function camSnapY() { return camSnap(Cam.y, Game.player ? Game.player.y : Cam.y); }
+// 카메라 (v167, 사용자 2026-10-16 '모바일 걸어다닐 때마다 지진 난 것처럼 화면이 너무 움직여'): v161엔 걸을 때 카메라를 월드 1픽셀(폰에선 기기 6픽셀)씩
+// 끊어 옮겨서 배경 전체가 덜컹거렸다. 이제 카메라는 소수점 그대로 부드럽게 따라가고(화면 이동은 기기 1픽셀 단위로만 반올림),
+// 사람·펫은 월드 정수 대신 기기 픽셀(snapPx)에 맞춰 그린다. 그래서 배경은 미끄러지듯 움직이고 사람도 앞뒤로 떨리지 않는다.
+function camSnap(c) { return Game.scene === 'zone' ? c : Math.round(c); }
+function camSnapX() { return camSnap(Cam.x); }
+function camSnapY() { return camSnap(Cam.y); }
+// 바깥(zone) 메인 화면에서 그릴 땐 기기 픽셀에 맞춘다 (픽셀 아트 크기는 그대로, 위치만 더 촘촘히). 다른 캔버스·실내는 예전처럼 월드 정수
+function snapPx(c, v) { if (c !== ctx || Game.scene !== 'zone') return Math.round(v); const S = DPR * Cam.zoom; return Math.round(v * S) / S; }
 function roadPoint(r, s) {
   const segs = []; let tot = 0; for (let i = 0; i < r.pts.length - 1; i++) { const L = Math.hypot(r.pts[i + 1][0] - r.pts[i][0], r.pts[i + 1][1] - r.pts[i][1]); segs.push(L); tot += L; }
   let d = Math.max(0, Math.min(1, s)) * tot; for (let i = 0; i < segs.length; i++) { if (d <= segs[i] || i === segs.length - 1) { const k = d / segs[i]; const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1]; return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, ux: (bx - ax) / segs[i], uy: (by - ay) / segs[i] }; } d -= segs[i]; }
@@ -6835,7 +6838,7 @@ function drawGameTags(r) {
 // 잔금 납부·명도 완료: 열쇠가 머리 위에서 반짝
 function drawKeyIcon(t) {
   const p = Game.player, k = Game.keyIcon, a = Math.min(1, k / 0.4);
-  ctx.save(); ctx.globalAlpha = a; ctx.translate(Math.round(p.x), Math.round(p.y - 30 - (2 - k) * 4 + Math.sin(t * 6) * 1.5));
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(snapPx(ctx, p.x), snapPx(ctx, p.y - 30 - (2 - k) * 4 + Math.sin(t * 6) * 1.5));
   ctx.fillStyle = '#ffd84a'; ctx.strokeStyle = '#5a4210'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(-4, 0, 3.5, 0, 7); ctx.fill(); ctx.stroke();
   ctx.fillRect(-1, -1, 9, 2); ctx.fillRect(5, 1, 1.5, 3); ctx.fillRect(7.5, 1, 1.5, 2);
@@ -6866,7 +6869,7 @@ function drawPrompt(t) {
   const sc = k < 0.6 ? k / 0.6 * 1.15 : 1.15 - (k - 0.6) / 0.4 * 0.15;
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
   const ps = tg.kind === 'walker' ? (FEEL.promptScaleWalker || 1) : (FEEL.promptScale || 1); // 행인 '말 걸기'는 작게 (사용자: 너무 크다)
-  ctx.save(); ctx.translate(Math.round(p.x), Math.round(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
+  ctx.save(); ctx.translate(snapPx(ctx, p.x), snapPx(ctx, p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
   ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#14161c'; ctx.lineWidth = 1;
   ctx.font = touch ? 'bold 7px "IBM Plex Sans KR", sans-serif' : 'bold 8px sans-serif'; const bw = touch ? Math.max(12, Math.ceil(ctx.measureText(word).width) + 8) : 12;
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-bw / 2, -6, bw, 11, 2) : ctx.rect(-bw / 2, -6, bw, 11); ctx.fill(); ctx.stroke();
@@ -8739,7 +8742,7 @@ const Pets = {
     if (!say && !fall && !tip) return null;
     const face = say && say.to ? (say.to.x > s.x ? 1 : -1) : s.face, hop = tip ? -Math.abs(Math.sin((t - tip.t) * 9)) * 3 : 0;
     return { y: s.y, d: () => {
-      if (fall) { const q = Math.min(1, (t - fall.t) / 0.15); c.save(); c.translate(Math.round(s.x), Math.round(s.y)); c.rotate(q * Math.PI / 2 * (s.face > 0 ? 1 : -1)); this.draw(c, k, 0, 0, s.face, false, t, '', 0); c.restore(); for (let i = 0; i < 3; i++) { const a = t * 5 + i * 2.1; c.fillStyle = '#ffd84a'; c.fillRect(Math.round(s.x + Math.cos(a) * 6) - 0.5, Math.round(s.y - 9 + Math.sin(a) * 2) - 0.5, 1.5, 1.5); } } // 꽈당 + 별
+      if (fall) { const q = Math.min(1, (t - fall.t) / 0.15); c.save(); c.translate(snapPx(c, s.x), snapPx(c, s.y)); c.rotate(q * Math.PI / 2 * (s.face > 0 ? 1 : -1)); this.draw(c, k, 0, 0, s.face, false, t, '', 0); c.restore(); for (let i = 0; i < 3; i++) { const a = t * 5 + i * 2.1; c.fillStyle = '#ffd84a'; c.fillRect(Math.round(s.x + Math.cos(a) * 6) - 0.5, Math.round(s.y - 9 + Math.sin(a) * 2) - 0.5, 1.5, 1.5); } } // 꽈당 + 별
       else this.draw(c, k, s.x, s.y + hop, face, s.moving, t, n, idle);
       if (tip) for (let i = 0; i < 3; i++) { const q = ((t - tip.t) * 0.8 + i / 3) % 1; this.heart(c, s.x - 5 + i * 5, s.y - 26 - q * 10, 1 - q, 0.6); }
       if (typeof Net !== 'undefined') { const tx = tip ? tip.text : say ? say.text : ''; if (tx) Net.bubble(c, tx, s.x, s.y - 24); } } };
@@ -8796,7 +8799,7 @@ const Pets = {
   gull(c, x, y, f, up, t, peck) {
     const W = '#f6f6f2', WS = '#d8dce0', G = '#9aa4b0', GD = '#78828e', K = '#22242a', Y = '#f2c230', R = '#d83a2a', O = '#f0a040', r = (X, Y0, w, h, col) => { c.fillStyle = col; c.fillRect(X, Y0, w, h); };
     c.save(); c.fillStyle = `rgba(0,0,0,${up > 0 ? Math.max(0.06, 0.22 - up / 300).toFixed(2) : 0.22})`; c.beginPath(); c.ellipse(Math.round(x), Math.round(y), up > 0 ? 4 : 3.5, 1.3, 0, 0, 7); c.fill();
-    c.translate(Math.round(x), Math.round(y - up)); c.scale(f, 1);
+    c.translate(snapPx(c, x), snapPx(c, y - up)); c.scale(f, 1);
     if (up > 0) { const fl = Math.floor(t * 9) % 2; // 날갯짓
       r(-4, -3, 8, 2.5, W); r(-3.5, -1, 7, 0.5, WS); r(3, -4.5, 2.5, 2.5, W); r(4.6, -4, 0.6, 0.6, K); r(5.5, -3.6, 2, 0.8, Y); r(6.8, -3.1, 0.6, 0.5, R); r(-6, -3, 2, 1.5, W); r(-6.5, -3, 1, 1, G);
       if (fl) { r(-2, -6, 4, 3, G); r(-3, -8, 3, 2, G); r(-4, -9.5, 2, 1.5, K); r(-1.5, -5.5, 3, 0.5, GD); } else { r(-2, -1, 4, 2.5, G); r(-3, 1, 3, 2, G); r(-4, 2.5, 2, 1.5, K); }
@@ -8814,7 +8817,7 @@ const Pets = {
       const a = t * 1.5 + i * Math.PI, px = s.x + Math.cos(a) * R, oy = Math.sin(a) * 6, py = s.y - 46 + oy - Math.sin(t * 2 + i) * 2, f = Math.sin(a) > 0 ? -1 : 1;
       c.fillStyle = 'rgba(0,0,0,.14)'; c.beginPath(); c.ellipse(Math.round(px), Math.round(s.y + 4 + oy), 5, 1.5, 0, 0, 7); c.fill();
       const B = '#8a5a6a', W = '#a87a8a', fl = Math.floor(t * 7 + i * 3) % 2, r = (X, Y, w, h, col) => { c.fillStyle = col; c.fillRect(X, Y, w, h); };
-      c.save(); c.translate(Math.round(px), Math.round(py)); c.scale(f, 1);
+      c.save(); c.translate(snapPx(c, px), snapPx(c, py)); c.scale(f, 1);
       r(-3, -1, 6, 2, B); r(3, -2, 2, 2, B); r(5, -1, 4, 1, '#e0a040'); r(0, -3, 3, 1, B); r(-1, -4, 1, 1, B); r(4, -2, 1, 1, '#111'); r(-5, 0, 2, 1, B); // 몸·볏·부리
       if (fl) { r(-1, -4, 3, 3, W); r(-4, -6, 4, 2, W); r(-8, -7, 4, 1, W); } else { r(-1, 1, 3, 2, W); r(-4, 2, 4, 1, W); r(-8, 3, 4, 1, W); } // 날갯짓
       c.restore();
@@ -8880,7 +8883,7 @@ const Pets = {
   draw(c, kind, x, y, face, moving, t, tag, idle = 0, pose) {
     if (PET_HD[kind]) { // 고화질 사람 펫 (반 픽셀 단위로 그린다: 기본 확대 ×2에서 화면 1픽셀)
       if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - (kind === 'kid' ? 18 : 27));
-      c.save(); c.translate(Math.round(x), Math.round(y)); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, 5, 2, 0, 0, 7); c.fill(); c.scale(face < 0 ? -0.5 : 0.5, 0.5);
+      c.save(); c.translate(snapPx(c, x), snapPx(c, y)); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, 5, 2, 0, 0, 7); c.fill(); c.scale(face < 0 ? -0.5 : 0.5, 0.5);
       const h = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
       PET_HD[kind](h, t, moving, idle, c); c.restore(); return;
     }
@@ -8893,7 +8896,7 @@ const Pets = {
     const f = PET_DRAW[kind]; if (!f) return; PET_FAT.n = kind === 'penguin' && pose && pose.fat ? pose.fat : 0;
     if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12 }[kind] || 15));
     const step = moving ? Math.floor(t * 8) % 2 : 0;
-    c.save(); c.translate(Math.round(x), Math.round(y));
+    c.save(); c.translate(snapPx(c, x), snapPx(c, y));
     if (pose !== 'ride' && kind !== 'dolphin' && !((kind === 'mouse' || kind === 'beetle') && !moving && idle > 5)) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' || kind === 'turtle' ? 6 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill(); }
     c.scale(face < 0 ? -1 : 1, 1);
     const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
@@ -9016,7 +9019,7 @@ const PET_ACT = {
     const wall = typeof pose === 'number', hx = 9, hy = wall ? pose : 0, p = idle - 5, run = Math.min(1, p / 0.7), G = '#a8a4a0';
     if (wall) { r(hx - 3, hy - 3, 6, 3, '#1a1414'); r(hx - 2, hy - 4, 4, 1, '#1a1414'); r(hx - 3.5, hy - 4, 0.5, 4, 'rgba(255,255,255,.18)'); } // 벽 아래 아치형 쥐구멍
     else { r(hx - 4, -2, 8, 3, '#2a2c30'); r(hx - 4, -2, 8, 0.5, '#5a5e66'); for (let i = 0; i < 4; i++) r(hx - 3.5 + i * 2, -1.5, 1, 2.5, '#0e0f12'); } // 하수구 쇠창살
-    if (run < 1) { const x = hx * run, y = hy * run; c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, y, 3, 1, 0, 0, 7); c.fill(); c.save(); c.translate(Math.round(x), Math.round(y)); f(r, Math.floor(t * 12) % 2, t, c, true); c.restore(); return true; } // 쪼르르 달려가서
+    if (run < 1) { const x = hx * run, y = hy * run; c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(x, y, 3, 1, 0, 0, 7); c.fill(); c.save(); c.translate(snapPx(c, x), snapPx(c, y)); f(r, Math.floor(t * 12) % 2, t, c, true); c.restore(); return true; } // 쪼르르 달려가서
     const pk = (p - 0.7) % 3.4; if (pk > 2.2) { const ey = wall ? hy - 2 : -1.5, up = Math.min(1, (pk - 2.2) * 5) * (pk > 3.1 ? (3.4 - pk) / 0.3 : 1); r(hx - 1.5, ey - up * 1.5, 3, 2 * up, G); r(hx - 1.5, ey - 1 - up * 1.5, 1, 1, '#e8a0b0'); r(hx + 0.5, ey - 1 - up * 1.5, 1, 1, '#e8a0b0'); if (Math.floor(t * 3) % 4) { r(hx - 1, ey - up * 1.5 + 0.5, 0.5, 0.5, '#111'); r(hx + 0.5, ey - up * 1.5 + 0.5, 0.5, 0.5, '#111'); } } // 가끔 고개만 빼꼼
     return true; },
   beetle(r, s, t, c, mv, idle, f) {
@@ -9275,7 +9278,7 @@ const PET_DRAW = {
  * 건대 편집숍 '✨ 이펙트' 탭. Profile.fx = 아이템 id → 걸을 때 내 몸 주변에 그린다. pos.pal로 친구 화면에도 보인다. (x, y)는 발밑.
  */
 // 이펙트는 반 픽셀 단위 + 부드러운 도형으로 그린다 (사용자 2026-10-15 '이펙트도 화질 신경써'): 좌표 1 = 반 픽셀, (0,0) = 발밑
-const FXH = (c, x, y) => { c.translate(Math.round(x), Math.round(y)); c.scale(0.5, 0.5); };
+const FXH = (c, x, y) => { c.translate(snapPx(c, x), snapPx(c, y)); c.scale(0.5, 0.5); };
 const fxStar = (c, X, Y, L, w) => { c.beginPath(); c.moveTo(X, Y - L); c.lineTo(X + w, Y - w); c.lineTo(X + L, Y); c.lineTo(X + w, Y + w); c.lineTo(X, Y + L); c.lineTo(X - w, Y + w); c.lineTo(X - L, Y); c.lineTo(X - w, Y - w); c.closePath(); c.fill(); };
 const fxHeart = (c, X, Y, s) => { c.beginPath(); c.moveTo(X, Y + s * 0.9); c.bezierCurveTo(X - s * 1.7, Y - s * 0.2, X - s * 0.7, Y - s * 1.4, X, Y - s * 0.45); c.bezierCurveTo(X + s * 0.7, Y - s * 1.4, X + s * 1.7, Y - s * 0.2, X, Y + s * 0.9); c.fill(); };
 const fxFlame = (c, X, B, w, h) => { c.beginPath(); c.moveTo(X, B - h); c.quadraticCurveTo(X + w, B - h * 0.4, X + w * 0.6, B); c.quadraticCurveTo(X, B + w * 0.35, X - w * 0.6, B); c.quadraticCurveTo(X - w, B - h * 0.4, X, B - h); c.fill(); };

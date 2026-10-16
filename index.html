@@ -6494,8 +6494,8 @@ function update(dt) {
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) { /* 위에서 탔다 */ }
       else if (fKey && ride) Ride.board(ride);
       else if ((fKey || (interact && !tg)) && sw) CarSwap.take(sw);
-      if (!chat && (consume('g') || consume('ㅎ')) && !frozen) Punch.go(); // 때리기 (v139) · 한글 자판이면 ㅎ
       else if (fKey) Toast.show(CarSwap.lent ? `${CarSwap.lent.name}님이 내 차를 몰고 있어요. 돌려줄 때까지 기다리거나 다른 차를 타요.` : '차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
+      if (!chat && (consume('g') || consume('ㅎ')) && !frozen) Punch.go(); // 때리기 (v139) · 한글 자판이면 ㅎ · 옆에 아무도 없으면 허공에 휘두른다 (v142)
       if (ride && !tg && !nearCar) Game.promptFor(ride.tg || (ride.tg = { kind: 'ride', p: ride }));
       else if (sw && !tg) Game.promptFor(sw);
     }
@@ -6795,7 +6795,7 @@ function draw() {
     const tg = Game.prompt.target; const act = tg && !Game.busy && !Dialog.open && tg.kind !== 'car' ? promptWord(tg) : '조사';
     const ta = $('tAct'); if (ta.textContent !== act) ta.textContent = act;
     const car = Game.driving ? '내리기' : (tg && tg.kind === 'car' ? '타기' : '승하차'); const tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
-    const th = $('tHit'), hit = !!Punch.tg && !Game.busy && !Dialog.open; if (th.hidden === hit) th.hidden = !hit;
+    const th = $('tHit'), hit = Game.scene === 'zone' && !Game.driving && !(typeof Ride !== 'undefined' && Ride.with) && !Game.busy && !Dialog.open; if (th.hidden === hit) th.hidden = !hit;
   }
   $('hudSpeed').textContent = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '';
   $('hudTime').textContent = Live.on ? Live.hudText() : `${mdText(dateOfDay(State.day), true)} ${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
@@ -6983,8 +6983,14 @@ const Punch = {
     if (!REDUCED_MOTION) for (let i = 0; i < 7; i++) Particles.push({ x, y: y - 10, vx: (Math.random() - 0.5) * 140, vy: -30 - Math.random() * 80, g: 240, life: 0.4, max: 0.4, col: 'rgba(255,220,90,', r: 1.6 });
     const pl = Game.player, a = Math.atan2(y - pl.y, x - pl.x); pl.dir = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) < 0 ? 1 : 2) : (Math.sin(a) < 0 ? 3 : 0);
   },
+  // 옆에 아무도 없을 때: 보는 쪽으로 허공에 주먹 (횟수는 안 센다, 사용자 2026-10-16 '그냥 평소에도 G 누를 수 있게')
+  whiff() {
+    const pl = Game.player; if (Game.scene !== 'zone' || Game.driving || !pl) return; this.cd = 0.35; Sound.play('flip');
+    const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][pl.dir] || [1, 0], hx = pl.x + vx * 7, hy = pl.y - 9 + vy * 4;
+    if (!REDUCED_MOTION) for (let i = 0; i < 5; i++) Particles.push({ x: hx, y: hy + (i - 2) * 1.2, vx: vx * (110 + i * 25) + vy * (i - 2) * 20, vy: vy * (110 + i * 25) + vx * (i - 2) * 20, g: 0, life: 0.18, max: 0.18, col: 'rgba(255,255,255,', r: 1.1 });
+  },
   async go() {
-    const t = this.tg || this.target(); if (!t || this.cd > 0) return; this.cd = 0.55; this.pow(t.x, t.y);
+    if (this.cd > 0) return; const t = this.tg || this.target(); if (!t) return this.whiff(); this.cd = 0.55; this.pow(t.x, t.y);
     const pl = Game.player, dx = t.x - pl.x, dy = t.y - pl.y, L = Math.hypot(dx, dy) || 1;
     if (t.kind === 'npc') {
       const w = t.w, z = Game.zone, nx = w.x + dx / L * 10, ny = w.y + dy / L * 10; if (z.at(Math.floor(nx / TILE), Math.floor(ny / TILE)) !== T.BLD) { w.x = nx; w.y = ny; }

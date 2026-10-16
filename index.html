@@ -173,6 +173,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #dlgMore.on { animation:blink .8s steps(2) infinite; }
 @keyframes blink { 0%{opacity:1} 100%{opacity:0} }
 #dlgChoices { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+#dlgChoices.many { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); max-height:min(46vh, 300px); overflow-y:auto; overscroll-behavior:contain; } /* 고를 게 많으면 (펫 고르기 등) 칸으로 */
 .choice { text-align:left; } .choice .k { display:inline-block; width:20px; color:var(--gold); } .choice small { opacity:.6; }
 
 /* 수첩·메뉴 패널 */
@@ -809,7 +810,9 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .pbBtns { position:absolute; right:14px; bottom:14px; display:flex; gap:10px; align-items:flex-end; pointer-events:auto; } .pbB1, .pbB2 { width:84px; height:84px; border-radius:50%; border:3px solid #fff; background:rgba(224,58,58,.85); color:#fff; font:800 15px var(--ui); touch-action:none; -webkit-user-select:none; user-select:none; } .pbB2 { width:66px; height:66px; background:rgba(58,120,224,.85); font-size:13px; } .pbB1.dn, .pbB2.dn { transform:scale(.92); filter:brightness(1.2); }
 .short .pbStick { width:80px; height:80px; left:8px; bottom:8px; } .short .pbB1 { width:70px; height:70px; font-size:13px; } .short .pbB2 { width:56px; height:56px; } .short .pbBtns { right:8px; bottom:8px; }
 #pbAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
+#frAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 #pbAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #pbAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #pbAsk b { font-size:15px; } #pbAsk span { font-size:12px; color:#6a4a1a; } #pbAsk .sm { font-size:11px; opacity:.8; } #pbAsk div { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:6px; } #pbAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; } .short #pbAsk { bottom:10px; }
+#frAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #frAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #frAsk b { font-size:15px; } #frAsk span { font-size:12px; color:#6a4a1a; } #frAsk .sm { font-size:11px; opacity:.8; } #frAsk div { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:6px; } #frAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; } #frAsk { bottom:10px; }
 </style>
 </head>
 <body>
@@ -967,7 +970,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
-<div id="pbWin" class="ovl"></div><div id="pbAsk"></div><div id="examWin" class="ovl"></div><div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
+<div id="pbWin" class="ovl"></div><div id="pbAsk"></div><div id="frAsk"></div><div id="examWin" class="ovl"></div><div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
 <div id="assetBox" class="ovl"></div>
 <div id="rankWin" class="ovl"></div>
 <div id="dupGate" class="ovl"></div>
@@ -3395,6 +3398,7 @@ const ZoneMap = {
       x.translate(cx, cy); x.rotate(Game.car.a); x.fillStyle = '#fff'; x.fillRect(-6, -3.5, 12, 7); x.fillStyle = '#4a90e2'; x.fillRect(-2, -2.5, 4, 5); x.restore();
       x.save(); x.font = 'bold 10px "IBM Plex Sans KR", sans-serif'; x.textAlign = 'center'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.8)'; x.strokeText('내 차', cx, cy - 14); x.fillStyle = '#ffd84a'; x.fillText('내 차', cx, cy - 14); x.restore();
     }
+    Friends.mapDraw(x, P, t); // 친구 위치 (v155)
     // 나
     // 가장자리: 그쪽으로 달리면 나오는 옆 구
     if (!z.spec.court) { x.font = 'bold 11px "IBM Plex Sans KR", sans-serif';
@@ -3973,7 +3977,7 @@ const Dialog = {
       const last = li === lines.length - 1;
       if (last && choices) {
         const pick = await new Promise(res => {
-          $('dlgChoices').innerHTML = '';
+          $('dlgChoices').innerHTML = ''; $('dlgChoices').classList.toggle('many', choices.length > 7);
           choices.forEach((c, i) => {
             const b = document.createElement('button'); b.className = 'btn choice'; b.innerHTML = `<span class="k">${i + 1}</span>${c.label}`;
             if (c.disabled) b.disabled = true;
@@ -4531,6 +4535,7 @@ const Net = {
     if (m.t === 'rps') { Rps.onNet(m, p); return; } // 게임장 가위바위보 (v81)
     if (m.t === 'fight') { Fight.onNet(m, p); return; } // 게임장 격투 게임 (v82)
     if (m.t === 'pb') { PetBattle.onNet(m, p); return; } // 펫 배틀 (v147)
+    if (m.t === 'fr') { Friends.onNet(m, p); return; } // 친구 신청 (v155)
     if (m.t === 'cbor') { CarSwap.onNet(m, p); return; } // 남의 차 타기 (v138)
     if (m.t === 'party') { Party.onNet(m, p); return; } // 여러 명 모집 · 초대장 (v90)
     if (m.t === 'cbreq' || m.t === 'cback') { ChatBack.onNet(m, p); return; } // 자리 비운 동안의 채팅 (v100)
@@ -4544,7 +4549,7 @@ const Net = {
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
-      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.sk = m.sk; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
+      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.sk = m.sk; p.hm = Array.isArray(m.hm) ? m.hm.slice(0, 3) : undefined; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
       const moved = gap > 0.02 && p.z === p.lastZ && p.s === p.lastS;
       if (moved && !far(p.tx, p.ty, m.x, m.y)) { p.vx = (m.x - p.tx) / gap; p.vy = (m.y - p.ty) / gap; } else { p.vx = p.vy = 0; }
       if (moved && !far(p.tcx, p.tcy, m.cx, m.cy)) { p.vcx = (m.cx - p.tcx) / gap; p.vcy = (m.cy - p.tcy) / gap; p.vca = angDiff(m.ca, p.tca) / gap; } else { p.vcx = p.vcy = p.vca = 0; }
@@ -4602,7 +4607,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ts: Math.round(performance.now()) });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ...MyHome.pos(), ts: Math.round(performance.now()) });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -4705,7 +4710,7 @@ const Net = {
     if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0, punchT: p.punchT, punchHit: p.punchHit }, t);
-    this.label(c, p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
+    this.label(c, Friends.has(p.name) ? '🤝 ' + p.name : p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - (Titles.of(p.name, p.tt) ? 39 : 30));
   },
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return null; },
@@ -4736,8 +4741,8 @@ const GREET_REPLIES = ['안녕하세요!', '네, 반가워요', '좋아요, 같�
 async function greetFriend(p) {
   if (Game.busy || Dialog.open) return; Game.busy = true;
   try {
-    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 용돈을 주면 큰절을 한다.` }], [{ label: '💸 용돈 1,000원 주기', value: '__tip' }, ...(PetBattle.myPet() && PetBattle.hasPet(p) ? [{ label: '⚔️ 펫 배틀 신청', value: '__pb' }] : []), { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
-    if (pick === '__tip') Tip.give(p); else if (pick === '__pb') PetBattle.ask(p); else if (pick) Net.greet(p, pick);
+    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 용돈을 주면 큰절을 한다.` }], [{ label: '💸 용돈 1,000원 주기', value: '__tip' }, ...(PetBattle.myPet() && PetBattle.hasPet(p) ? [{ label: '⚔️ 펫 배틀 신청', value: '__pb' }] : []), Friends.has(p.name) ? { label: '🤝 친구 끊기', value: '__unfr' } : { label: '🤝 친구 신청 (서로 위치 보기)', value: '__fr' }, { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
+    if (pick === '__tip') Tip.give(p); else if (pick === '__pb') setTimeout(() => PetBattle.ask(p), 60); /* 펫 고르기 창이 뜰 수 있어 인사 창이 닫힌 뒤 */ else if (pick === '__fr') Friends.ask(p); else if (pick === '__unfr') Friends.unfriend(p); else if (pick) Net.greet(p, pick);
   } finally { Game.busy = false; }
 }
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -5634,7 +5639,7 @@ const Live = {
     if (p.z === undefined) return '접속 중';
     return `${p.dr ? '운전 중' : '걷는 중'}${this.guName(p.z) ? ' · ' + this.guName(p.z) : ''}`;
   },
-  online() { return Object.values(Net.players).filter(p => Net.inGame(p)).map(p => ({ name: p.name, doing: this.doing(p) })); },
+  online() { return Object.values(Net.players).filter(p => Net.inGame(p)).map(p => ({ name: p.name, doing: this.doing(p), fr: Friends.has(p.name) })).sort((a, b) => (b.fr ? 1 : 0) - (a.fr ? 1 : 0)); }, // 친구 먼저 (v155)
   miniBoard() {
     const rows = this.rankRows(); const f = v => this.earnTxt(v), cls = v => this.rankCls(v);
     const myIdx = rows.findIndex(r => r.me); const show = rows.slice(0, 4); if (myIdx >= 4) { show.length = 3; show.push(rows[myIdx]); }
@@ -5644,7 +5649,7 @@ const Live = {
       const top = rows[0], me = rows[myIdx], second = rows[1]; const pick = top ? (me && me !== top ? [top, me] : [top, second].filter(Boolean)) : [];
       return `<div class="rbHead"><span>경매 수익 순위 · 채널 ${this.ch}</span><span>${myIdx >= 0 ? `내 ${myIdx + 1}위/` : ''}${rows.length}명</span></div>${pick.map(row).join('')}<div class="rbOn">지금 접속 ${on.length + 1}명${Net.status !== 'open' ? `<span class="rbBad">${Net.status === 'connecting' ? '연결 중…' : '연결 끊김 · 다시 잇는 중'}</span>` : ''} <small>· 전체 보기 ▸</small></div>`;
     }
-    const who = on.slice(0, 4).map(o => `<div class="rbWho"><i class="dot${o.doing === '자리 비움' ? ' idle' : ''}"></i><span class="nm">${esc(o.name)}</span><small>${esc(o.doing)}</small></div>`).join('');
+    const who = on.slice(0, 4).map(o => `<div class="rbWho"><i class="dot${o.doing === '자리 비움' ? ' idle' : ''}"></i><span class="nm">${o.fr ? '🤝 ' : ''}${esc(o.name)}</span><small>${esc(o.doing)}</small></div>`).join('');
     return `<div class="rbHead"><span>경매 수익 순위 · 채널 ${this.ch}</span><span>${rows.length}명</span></div>${show.map(row).join('')}${rows.length > show.length ? `<div class="rbMore">전체 보기 ▸</div>` : ''}<div class="rbOn">지금 접속 ${on.length + 1}명 <small>(나 포함)</small>${Net.status !== 'open' ? `<span class="rbBad">${Net.status === 'connecting' ? '연결 중…' : '연결 끊김 · 다시 잇는 중'}</span>` : Net.host ? '<small class="rbHost">· 내가 방장</small>' : ''}</div>${who}${on.length > 4 ? `<div class="rbMore">외 ${on.length - 4}명</div>` : on.length ? '' : '<div class="rbWho"><small>아직 나뿐이에요</small></div>'}`;
   },
 
@@ -6322,6 +6327,7 @@ async function driveAcross(toGu) {
 async function homeDoor() {
   if (Game.busy) return; Game.busy = true;
   try {
+    if (Live.on && MyHome.get()) { await MyHome.door(); return; }
     if (Live.on) { await Dialog.say([{ name: '내 집', text: `집이다. 채널에서는 시간이 실제로 흘러서 잠으로 건너뛸 수 없다. 다음 날까지 ${Live.untilDay()}, 다음 개찰까지 ${Live.mmss(Live.nextOpen().ms)}.` }]); return; }
     const left = 7 - State.day;
     if (left <= 0) { await Dialog.say([{ name: '내 집', text: State.phase === 'dday' ? '오늘이 매각기일이다. 지금 자면 입찰은 못 한다. 법원부터 가자.' : '낙찰 뒤 절차(대출·잔금·명도)가 남았다. 잘 때가 아니다.' }]); return; }
@@ -6528,6 +6534,7 @@ function update(dt) {
   const [ix, iy] = frozen ? [0, 0] : readMove();
   const run = (Keys.Shift || !!Touch.run) && !(Net.on && Net.mode === 'channel'); // 채널에서는 달리기 없음(차를 타게)
   if (Game.scene === 'zone') {
+    MyHome.sync(); // 채널: 원래 '내 집' 빼고, 산 집만 (v155)
     const z = Game.zone;
     const solid = (tx, ty) => z.at(tx, ty) === T.BLD;
     const fKey = !chat && consume('f');
@@ -6718,6 +6725,7 @@ function drawZone(t) {
     ctx.globalAlpha = a; ctx.fillStyle = pl.kind === 'site' ? 'rgba(80,16,12,.85)' : 'rgba(15,20,30,.85)'; ctx.fillRect(X - w / 2, Y - 10, w, 11);
     ctx.fillStyle = '#efe6d2'; ctx.fillText(label, X, Y - 2); ctx.globalAlpha = 1;
   }
+  MyHome.drawFriends(ctx, p); Friends.edge(ctx, x0 + 40, y0 + 40, x1 - 40, y1 - 40); // 친구네 집 이름표 · 화면 밖 친구 화살표 (v155)
 }
 function targetPos() {
   const z = Game.zone; if (!State.targetPlace) return null;
@@ -6906,6 +6914,7 @@ const Radar = {
     if (Game.driving) { x.fillStyle = 'rgba(63,169,255,.95)'; for (const [tx, ty] of Nav.path) { const dx = (tx + 0.5 - ptx) * scale, dy = (ty + 0.5 - pty) * scale; if (Math.hypot(dx, dy) < S / 2 - 4) x.fillRect(S / 2 + dx - 1, S / 2 + dy - 1, 2, 2); } }
     if (!Game.driving) edge(Game.car.x, Game.car.y, '#ffffff', 3);
     const tp = targetPos(); if (tp) edge(tp.door.tx * TILE, tp.door.ty * TILE, '#ffd84a', 4);
+    Friends.radar(x, S, ptx, pty, scale); // 친구 위치 (v155)
     x.restore();
     x.fillStyle = '#fff'; x.beginPath(); const a = Game.driving ? Game.car.a : [Math.PI / 2, Math.PI, 0, -Math.PI / 2][p.dir]; x.moveTo(S / 2 + Math.cos(a) * 6, S / 2 + Math.sin(a) * 6); x.lineTo(S / 2 + Math.cos(a + 2.4) * 4, S / 2 + Math.sin(a + 2.4) * 4); x.lineTo(S / 2 + Math.cos(a - 2.4) * 4, S / 2 + Math.sin(a - 2.4) * 4); x.fill();
     x.strokeStyle = 'rgba(205,174,112,.8)'; x.lineWidth = 3; x.beginPath(); x.arc(S / 2, S / 2, S / 2 - 2, 0, 7); x.stroke();
@@ -7184,7 +7193,7 @@ async function staffTalk(kind) {
   if (kind === 'bank' && Live.on && Live.pending()) { State.ticket = null; return Live.bank(false); } // 채널: 낙찰 건 경락잔금대출
   if (kind === 'bank' && State.phase === 'won') { State.ticket = null; return loanReview(false); }
   if (kind === 'bank' && State.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
-  if (kind === 'agent' && Live.on && Live.owned().length) { const r = await Live.agent(); if (r !== 'inv') return; } // 채널: 내 집 임대·매도
+  if (kind === 'agent' && Live.on) { const r = await MyHome.agentMenu(); if (r !== 'inv') return; } // 채널: 내 집 사기·팔기 (v155) / 낙찰받은 집 임대·매도
   const greet = { registry: '네, 등기사항증명서 발급이세요? 관할 상관없이 어느 등기소에서나 떼 드려요.', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
   const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기${slotLabel() ? ` <small>(${slotLabel()})</small>` : ''}`, value: 'inv', disabled: noSlot() }, { label: '그만두기', value: 'no' }]);
   if (pick !== 'inv') return;
@@ -8442,6 +8451,153 @@ const ShopPromo = {
   },
 };
 
+/* ===================== 내 집 사기 (v155, 사용자 2026-10-16 '플레이어 각자 공인중개에서 매매해서 자기 집 생기게 하자, 수익으로' + '원래 있던 집 없애자') =====================
+ * 채널에서는 처음부터 있던 '내 집'이 없다. 어느 구든 공인중개사에서 매물을 골라 번 돈(현금 − 경매 밑천)으로 산다 (한 번에 한 채).
+ * 산 집은 그 구역 건물 하나가 '내 집'이 되고, 지도·내비·레이더에 뜬다. 되팔면 산 값의 90% (세금·수수료).
+ * 저장: Store 'myHome'+채널 {type, z, b(건물 번호), name, price, at}. 친구 화면에는 pos.hm [z, b, type]으로 'OO네 집' 이름표가 뜬다.
+ * 혼자 하기는 원래대로 (내 집에서 자고 일어나야 날짜가 넘어가니까). */
+const HOME_TYPES = [
+  { id: 'oneroom', name: '원룸', price: 5000e4, minA: 9, maxA: 30, names: ['청춘원룸', '햇살하우스', '새봄원룸'], unit: n => `${2 + n % 3}0${1 + n % 4}호` },
+  { id: 'villa', name: '빌라', price: 1.2e8, minA: 12, maxA: 40, names: ['푸른빌라', '은행나무빌라', '다솜빌라'], unit: n => `${1 + n % 4}0${1 + n % 3}호` },
+  { id: 'apt', name: '아파트', price: 3e8, minA: 25, maxA: 999, names: ['푸른숲아파트', '한빛마을아파트', '느티마을아파트'], unit: n => `${101 + n % 5}동 ${7 + n % 12}0${1 + n % 4}호` },
+  { id: 'house', name: '단독주택', price: 6e8, minA: 16, maxA: 60, names: ['마당 있는 단독주택', '2층 단독주택', '정원 단독주택'], unit: () => '' },
+  { id: 'pent', name: '펜트하우스', price: 12e8, minA: 30, maxA: 999, names: ['스카이팰리스', '구름위 레지던스', '하늘정원타워'], unit: () => '꼭대기층' },
+];
+const MyHome = {
+  key() { return 'myHome' + (Live.ch || 0); },
+  get() { const h = Store.get(this.key(), null); return h && typeof h === 'object' && this.type(h) ? h : null; },
+  type(h) { return HOME_TYPES.find(t => t.id === (h && h.type)) || null; },
+  sig: '',
+  // 구역 장소 목록 맞추기: 채널이면 원래 '내 집'을 빼고, 산 집이 이 구역이면 그 건물을 '내 집'으로
+  sync(force) {
+    const z = Game.zone; if (!z || !z.places) return; const h = Live.on ? this.get() : null, sig = `${Live.on}|${Live.ch}|${z.id}|${h ? h.z + ':' + h.b : ''}`;
+    if (!force && sig === this.sig && z._homeSig === sig) return; this.sig = z._homeSig = sig;
+    if (z._home0 === undefined) z._home0 = z.places.find(p => p.id === 'home') || null;
+    for (let i = z.places.length - 1; i >= 0; i--) if (z.places[i].id === 'home' || z.places[i].id === 'myhome') z.places.splice(i, 1);
+    if (!Live.on) { if (z._home0) z.places.push(z._home0); return; }
+    if (!h || h.z !== z.id) return; const b = z.buildings[h.b], door = b && z.doorOf(b); if (!door) return;
+    b.place = 'myhome'; z.places.push({ id: 'myhome', kind: 'home', name: `내 집 · ${this.type(h).name}`, building: b.id, door });
+  },
+  // 이 구역 매물: 집 종류마다 하나씩 (구역·종류로 정해서 다시 와도 같은 건물)
+  listings() {
+    const z = Game.zone; if (!z) return []; const used = new Set(z.places.map(p => p.building)), hz = [...String(z.id)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+    return HOME_TYPES.map((T, i) => { const R = makeRng((hz + i * 977 + (Live.ch || 0) * 31) >>> 0), near = [R.next() * z.W * 0.8 + z.W * 0.1, R.next() * z.H * 0.8 + z.H * 0.1];
+      let best = null, bd = 1e9; for (const b of z.buildings) { const A = b.w * b.h; if (used.has(b.id) || b.place || A < T.minA || A > T.maxA) continue; const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]); if (d < bd && z.doorOf(b)) { bd = d; best = b; } }
+      if (!best) return null; used.add(best.id); const n = (R.next() * 1000) | 0, unit = T.unit(n); return { T, b: best.id, name: `${T.names[n % T.names.length]}${unit ? ' ' + unit : ''}`, price: T.price }; }).filter(Boolean);
+  },
+  spendable() { return typeof Shop !== 'undefined' && Shop.spendable ? Shop.spendable() : Math.max(0, State.cash - (State.capital || 0)); },
+  // 부동산에서 (채널): 내 집 사기·팔기 / 낙찰받은 집 임대·매도 / 시세 물어보기
+  async agentMenu() {
+    const h = this.get(), owned = Live.owned().length, sp = this.spendable();
+    const opts = [h ? { label: `🏡 내 집 (${this.type(h).name}) 보기·팔기`, value: 'mine' } : { label: `🏡 내 집 사기 <small>(번 돈 ${fmtWon(sp)})</small>`, value: 'buy' }];
+    if (owned) opts.push({ label: '🔑 낙찰받은 집 임대·매도', value: 'auc' });
+    opts.push({ label: '🔎 경매 물건 시세 물어보기', value: 'inv' }, { label: '그만두기', value: null });
+    const pick = await Dialog.say([say('agent', h ? `어서 와요. ${h.name} 사장님이시네! 무슨 일이에요?` : '어서 와요. 집 보러 왔어요? 경매 물건 시세도 알려 드려요.')], opts);
+    if (pick === 'auc') return Live.agent();
+    if (pick === 'buy') { await this.buy(); return 'done'; }
+    if (pick === 'mine') { await this.mine(); return 'done'; }
+    return pick === 'inv' ? 'inv' : 'done';
+  },
+  async buy() {
+    const L = this.listings(), sp = this.spendable(); if (!L.length) { await Dialog.say([say('agent', '지금 이 동네엔 나온 집이 없네요. 다른 구 부동산에도 가 봐요.')]); return; }
+    const pick = await Dialog.say([say('agent', `이 동네 매물이에요. 경매 밑천은 못 쓰고, 번 돈으로만 살 수 있어요. 지금 번 돈 ${fmtWon(sp)}.`)],
+      [...L.map((x, i) => ({ label: `${x.T.name} · ${x.name} <small>${fmtWon(x.price)}</small>`, value: 'h' + i, disabled: x.price > sp })), { label: '다음에 올게요', value: null }]);
+    if (!pick) return; const x = L[+pick.slice(1)]; if (!x) return;
+    const ok = await Dialog.say([say('agent', `${x.name} (${x.T.name}), ${fmtWon(x.price)}. 계약하면 번 돈이 ${fmtWon(sp - x.price)} 남아요. 도장 찍을까요?`)], [{ label: '✍️ 계약하기', value: 'y' }, { label: '조금 더 생각해 볼게요', value: null }]);
+    if (ok !== 'y') return; if (this.get()) return; if (this.spendable() < x.price) { Sound.play('deny'); Toast.show('번 돈이 모자라요.'); return; }
+    if (typeof Money !== 'undefined') Money.why(`내 집 매매 (${x.T.name})`); State.cash -= x.price; HUD.setCash(State.cash); Sound.play('coins');
+    Store.set(this.key(), { type: x.T.id, z: Game.zone.id, b: x.b, name: x.name, price: x.price, at: Date.now() }); if (Live.on) Live.save(); this.sync(true); Game.zone.chunks.clear();
+    State.targetPlace = 'myhome'; if (typeof Net !== 'undefined' && Net.news) Net.news(`${Net.me || '누군가'}님이 ${x.T.name}을(를) 샀다! 🏡`);
+    await Dialog.say([say('agent', `축하해요! 이제 ${x.name}이(가) 사장님 집이에요. 지도에 '내 집'으로 표시해 뒀어요.`)]);
+    HUD.page(`🏡 내 집이 생겼다! ${x.name} (${x.T.name}). 지도에 노란 화살표로 표시했다.`, '알림');
+  },
+  sellPrice(h) { return Math.round(h.price * 0.9 / 1e5) * 1e5; },
+  async mine() {
+    const h = this.get(); if (!h) return; const T = this.type(h), here = h.z === Game.zone.id, gu = Live.guName(h.z) || '다른 구';
+    const pick = await Dialog.say([say('agent', `${h.name} (${T.name}), ${fmtWon(h.price)}에 사셨죠${here ? '' : ` · ${gu}`}. 파시면 세금·수수료 빼고 ${fmtWon(this.sellPrice(h))} 받아요. 팔고 나서 다른 집을 살 수 있어요.`)], [{ label: '🏷️ 내 집 팔기', value: 'sell' }, ...(here ? [{ label: '📍 지도에 표시해 주세요', value: 'nav' }] : []), { label: '그냥 둘게요', value: null }]);
+    if (pick === 'nav') { State.targetPlace = 'myhome'; Toast.show('내 집을 지도에 표시했어요.'); return; }
+    if (pick !== 'sell') return;
+    const sure = await Dialog.say([say('agent', `정말 파실 거예요? ${fmtWon(this.sellPrice(h))} 받고 '내 집'이 없어져요.`)], [{ label: '🏷️ 팔기', value: 'y' }, { label: '안 팔래요', value: null }]);
+    if (sure !== 'y' || !this.get()) return; const got = this.sellPrice(h);
+    if (typeof Money !== 'undefined') Money.why(`내 집 매도 (${T.name})`); State.cash += got; HUD.setCash(State.cash); Sound.play('coins'); Store.set(this.key(), null); if (Live.on) Live.save();
+    if (State.targetPlace === 'myhome') State.targetPlace = null; this.sync(true); Game.zone.chunks.clear();
+    await Dialog.say([say('agent', `팔렸어요! ${fmtWon(got)} 들어갔어요. 다음에 또 좋은 집 보러 와요.`)]);
+  },
+  // 내 집 문 앞 (채널)
+  async door() {
+    const h = this.get(), T = this.type(h); if (!h) return;
+    const pick = await Dialog.say([{ name: '내 집', text: `내 ${T.name}이다! ${h.name}. ${fmtWon(h.price)}에 샀다. 채널에서는 시간이 실제로 흘러서 잠으로 건너뛸 수는 없다.` }], [{ label: '🛋️ 잠깐 쉬다 가기', value: 'rest' }, { label: '그냥 나가기', value: null }]);
+    if (pick !== 'rest') return; State.hits = 0; State.punched = 0; Sound.play('chime'); Toast.show('내 집 소파에서 푹 쉬었다. 다친 데가 다 나았다.');
+  },
+  pos() { const h = Live.on ? this.get() : null; return h ? { hm: [h.z, h.b, h.type] } : {}; },
+  // 친구들 집: 'OO네 집' 이름표 (그 사람 pos.hm)
+  drawFriends(c, p) {
+    if (!Net.on || !Live.on) return; const z = Game.zone;
+    for (const id in Net.players) { const f = Net.players[id]; const hm = f && Array.isArray(f.hm) ? f.hm : null; if (!hm || hm[0] !== z.id) continue; const b = z.buildings[+hm[1]]; if (!b) continue; const T = HOME_TYPES.find(t => t.id === hm[2]);
+      const X = (b.x + b.w / 2) * TILE, Y = (b.y + b.h) * TILE + 12, /* 건물 앞(문 쪽) */ d = Math.hypot(X - p.x, Y - p.y); if (d > 260) continue;
+      const label = `🏡 ${f.name}네 ${T ? T.name : '집'}`; c.font = '600 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(label).width + 8; c.globalAlpha = Math.max(0.35, Math.min(1, (260 - d) / 80));
+      c.fillStyle = 'rgba(40,70,30,.88)'; c.fillRect(X - w / 2, Y - 10, w, 11); c.fillStyle = '#e8ffd8'; c.fillText(label, X, Y - 2); c.globalAlpha = 1; }
+  },
+};
+
+/* ===================== 친구 (v155, 사용자 2026-10-16 '친구 추가하면 서로 위치 보이게 하자') =====================
+ * 친구 화면 인사(F/E 옆 플레이어) → '🤝 친구 신청' → 상대가 수락하면 둘 다 이름으로 저장 (Store 'friends').
+ * 친구끼리는: 레이더·큰 지도(M)에 위치 점 + 이름, 같은 구에서 화면 밖이면 가장자리 화살표와 거리, 다른 구면 접속 목록에 어디 있는지.
+ * net {t:'fr', k:'ask'|'ok'|'no'|'del', to} */
+const Friends = {
+  pend: null, inv: null,
+  list() { const v = Store.get('friends', []); return Array.isArray(v) ? v.filter(n => typeof n === 'string' && n).slice(0, 60) : []; },
+  has(name) { return !!name && this.list().includes(name); },
+  add(name) { const L = this.list(); if (!L.includes(name)) { L.push(String(name).slice(0, 16)); Store.set('friends', L); } },
+  remove(name) { Store.set('friends', this.list().filter(n => n !== name)); },
+  ask(p) {
+    const id = Net.idOf(p); if (!id || !p.name) return; if (this.has(p.name)) { Toast.show(`${p.name}님은 이미 친구예요.`); return; }
+    this.pend = { id, name: p.name }; Net.send({ t: 'fr', k: 'ask', to: id }); Sound.play('blip'); Toast.show(`${p.name}님에게 친구 신청을 보냈어요…`, 2400);
+    setTimeout(() => { if (this.pend && this.pend.id === id) { this.pend = null; Toast.show(`${p.name}님이 대답이 없어요.`); } }, 20000);
+  },
+  unfriend(p) { const id = Net.idOf(p); this.remove(p.name); if (id) Net.send({ t: 'fr', k: 'del', to: id }); Toast.show(`${p.name}님과 친구를 끊었어요.`); },
+  onNet(m, p) {
+    if (m.to !== Net.myId) return; const name = p && p.name; if (!name) return;
+    if (m.k === 'ask') { if (this.has(name)) { Net.send({ t: 'fr', k: 'ok', to: m.from }); return; } this.inv = { from: m.from, name }; this.showInv(); Sound.play('ding'); return; }
+    if (m.k === 'ok') { if (!(this.pend && this.pend.id === m.from) && !this.has(name)) return; this.pend = null; if (!this.has(name)) { this.add(name); Sound.play('chime'); Toast.show(`🤝 ${name}님과 친구가 됐어요! 이제 서로 위치가 보여요.`, 3200); } return; }
+    if (m.k === 'no') { if (this.pend && this.pend.id === m.from) { this.pend = null; Sound.play('deny'); Toast.show(`${name}님이 친구 신청을 거절했어요.`); } return; }
+    if (m.k === 'del') { if (this.has(name)) { this.remove(name); Toast.show(`${name}님이 친구를 끊었어요.`); } }
+  },
+  showInv() {
+    const el = $('frAsk'), a = this.inv; if (!el) return; if (!a) { el.classList.remove('in'); return; }
+    el.innerHTML = `<i class="tk">🤝 친구 신청</i><b>${esc(a.name)}님이 친구 신청을 했어요!</b><span class="sm">친구가 되면 서로 위치가 지도와 레이더에 보여요.</span><div><button class="btn gold" id="frYes">🤝 수락</button><button class="btn" id="frNo">거절</button></div>`;
+    el.classList.add('in'); $('frYes').onclick = () => { const x = this.inv; if (!x) return; this.inv = null; this.showInv(); this.add(x.name); Net.send({ t: 'fr', k: 'ok', to: x.from }); Sound.play('chime'); Toast.show(`🤝 ${x.name}님과 친구가 됐어요! 이제 서로 위치가 보여요.`, 3200); };
+    $('frNo').onclick = () => { const x = this.inv; if (!x) return; this.inv = null; this.showInv(); Net.send({ t: 'fr', k: 'no', to: x.from }); };
+    clearTimeout(this.invT); this.invT = setTimeout(() => { if (this.inv === a) { this.inv = null; this.showInv(); } }, 20000);
+  },
+  // 지금 접속한 친구들 (위치 = 운전 중이면 차 위치)
+  online() { if (!Net.on) return []; const L = this.list(); if (!L.length) return []; const out = []; for (const id in Net.players) { const f = Net.players[id]; if (!f || !f.name || !L.includes(f.name) || !Net.inGame(f) || f.x === undefined) continue; const dr = f.dr && f.s === 'zone' && f.cx !== undefined; out.push({ f, name: f.name, z: f.z, s: f.s, x: dr ? f.cx : f.x, y: dr ? f.cy : f.y }); } return out; },
+  here() { const z = Game.zone; return z ? this.online().filter(o => o.z === z.id) : []; },
+  // 레이더 (game.js Radar): 초록 점, 멀면 가장자리
+  radar(x, S, ptx, pty, scale) {
+    for (const o of this.here()) { let dx = (o.x / TILE - ptx) * scale, dy = (o.y / TILE - pty) * scale; const d = Math.hypot(dx, dy), R = S / 2 - 7, out = d > R; if (out) { dx = dx / d * R; dy = dy / d * R; }
+      x.fillStyle = '#7cf08a'; x.strokeStyle = '#0a2a10'; x.lineWidth = 1.5; x.beginPath(); x.arc(S / 2 + dx, S / 2 + dy, out ? 3 : 4, 0, 7); x.fill(); x.stroke(); }
+  },
+  // 큰 지도 (M)
+  mapDraw(x, P, t) {
+    x.save(); x.font = 'bold 11px "IBM Plex Sans KR", sans-serif'; x.textAlign = 'center';
+    for (const o of this.here()) { const X = o.x / TILE * P, Y = o.y / TILE * P; x.fillStyle = 'rgba(124,240,138,.3)'; x.beginPath(); x.arc(X, Y, 9 + Math.sin(t * 4) * 2, 0, 7); x.fill(); x.fillStyle = '#7cf08a'; x.beginPath(); x.arc(X, Y, 5, 0, 7); x.fill(); x.strokeStyle = '#0a2a10'; x.lineWidth = 1.5; x.stroke();
+      const lb = `🤝 ${o.name}${o.s === 'room' ? ' (건물 안)' : ''}`; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.8)'; x.strokeText(lb, X, Y - 12); x.fillStyle = '#b8ffc0'; x.fillText(lb, X, Y - 12); }
+    const away = this.online().filter(o => o.z !== Game.zone.id); if (away.length) { const txt = '🤝 ' + away.map(o => `${o.name} · ${Live.guName(o.z) || '다른 곳'}`).join('   '); x.font = 'bold 11px "IBM Plex Sans KR", sans-serif'; x.textAlign = 'left'; const w = x.measureText(txt).width + 10; x.fillStyle = 'rgba(10,30,14,.8)'; x.fillRect(6, 26, w, 16); x.fillStyle = '#b8ffc0'; x.fillText(txt, 11, 38); }
+    x.restore();
+  },
+  // 거리 화면: 화면 밖 친구 쪽 가장자리 화살표 + 이름·거리 (vx0..vy1 = 보이는 월드 범위)
+  edge(c, vx0, vy0, vx1, vy1) {
+    const p = Game.player, me = Game.driving ? Game.car : p; if (!me) return;
+    for (const o of this.here()) { if (o.x > vx0 && o.x < vx1 && o.y > vy0 && o.y < vy1) continue;
+      const cx = (vx0 + vx1) / 2, cy = (vy0 + vy1) / 2, dx = o.x - cx, dy = o.y - cy, hw = (vx1 - vx0) / 2 - 18, hh = (vy1 - vy0) / 2 - 18, k = Math.min(hw / Math.abs(dx || 1e-6), hh / Math.abs(dy || 1e-6)), X = cx + dx * k, Y = cy + dy * k, a = Math.atan2(dy, dx);
+      const m = Math.round(Math.hypot(o.x - me.x, o.y - me.y) / TILE * 4);
+      c.save(); c.translate(Math.round(X), Math.round(Y)); c.fillStyle = 'rgba(10,40,16,.85)'; c.beginPath(); c.arc(0, 0, 8, 0, 7); c.fill(); c.rotate(a); c.fillStyle = '#7cf08a'; c.beginPath(); c.moveTo(7, 0); c.lineTo(-3, -4.5); c.lineTo(-3, 4.5); c.closePath(); c.fill(); c.restore();
+      const lb = `${o.name} ${m >= 1000 ? (m / 1000).toFixed(1) + 'km' : m + 'm'}`; c.font = '600 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(lb).width + 6, ly = Y + (Y > cy ? -14 : 16);
+      c.fillStyle = 'rgba(10,40,16,.85)'; c.fillRect(Math.round(X - w / 2), Math.round(ly - 7), w, 9); c.fillStyle = '#b8ffc0'; c.fillText(lb, X, ly); }
+  },
+};
+
 /* ===================== 펫 (사용자 2026-10-15 '숍에서 펫도 살 수 있게, 돌아다니면 따라오는') =====================
  * 건대 편집숍 '🐾 펫' 탭에서 산다 (SHOP_ITEMS.pet). 데리고 다니는 펫은 Profile.pet → pos.pal로 친구 화면에도 보인다.
  * 걸을 때만 뒤에서 따라오고, 차를 타면 차 안에 있다(안 그린다). 희귀한 동물일수록 비싸다.
@@ -9169,9 +9325,12 @@ const PetBattle = {
   need(lv) { return 10 + lv * 6; },
   myPet(n) { const P = Profile.get(), k = n === 2 ? (P.pet && P.pet2) : P.pet; if (!k || !PB_DEX[k]) return null; return { kind: k, lv: this.lvOf(k).lv, name: String((n === 2 ? P.petName2 : P.petName) || '').slice(0, 10) }; },
   ro(w) { const c = w.charCodeAt(w.length - 1) - 0xAC00; if (c < 0 || c > 11171) return w + '로'; const j = c % 28; return w + (j === 0 || j === 8 ? '로' : '으로'); }, // 펭귄으로 · 강아지로
-  myPets() { return [this.myPet(1), this.myPet(2)].filter(Boolean); },
+  // 가진 펫 전부 (사용자 2026-10-16 '가지고 있는 펫 중에 고를 수 있게'): 데리고 다니는 펫(이름 있음) 먼저, 그다음 편집숍에서 산 나머지
+  myPets() { const L = [this.myPet(1), this.myPet(2)].filter(Boolean), seen = new Set(L.map(x => x.kind));
+    for (const it of SHOP_ITEMS.pet || []) { const k = it.pet; if (!k || seen.has(k) || !PB_DEX[k] || !Shop.has(it.id)) continue; seen.add(k); L.push({ kind: k, lv: this.lvOf(k).lv, name: '' }); }
+    return L; },
   petLabel(x) { return x.name ? `${x.name} (${this.kindName(x.kind)} Lv.${x.lv})` : `${this.kindName(x.kind)} Lv.${x.lv}`; },
-  // 펫이 두 마리면 어느 펫으로 싸울지 고른다 (사용자 2026-10-16 '2마리면 선택할 수 있게, 처음에'). 한 마리면 바로 그 펫, 그만두면 null
+  // 펫이 여러 마리면 어느 펫으로 싸울지 고른다 (사용자 2026-10-16 '2마리면 선택할 수 있게' → '가지고 있는 펫 중에'). 한 마리면 바로 그 펫, 그만두면 null
   async choosePet(sp, who) {
     const L = this.myPets(); if (L.length < 2) return L[0] || null;
     const pick = await Dialog.say([{ name: who || '펫 배틀', sprite: sp, text: '어느 펫으로 싸울까요?' }], [...L.map((x, i) => ({ label: `🐾 ${this.petLabel(x)}`, value: 'p' + i })), { label: '그만둘래요', value: null }]);
@@ -9277,13 +9436,13 @@ const PetBattle = {
     const id = Net.idOf(p); if (!id) return; if (!(p.pal && p.pal.pet)) { Toast.show(`${p.name}님은 펫을 안 데리고 있어요.`); return; }
     let mine = this.myPet(1); if (this.myPets().length > 1) { if (Game.busy || Dialog.open) return; Game.busy = true; try { mine = await this.choosePet(); } finally { Game.busy = false; } if (!mine || this.open_ || this.pend) return; }
     this.pend = { id, name: p.name, at: Date.now(), pet: mine }; Net.send({ t: 'pb', k: 'ask', to: id, pet: mine, tuk: tuk ? 1 : undefined }); Sound.play('blip'); Toast.show(tuk ? `펫끼리 투닥투닥! ${p.name}님에게 펫 배틀을 걸었어요…` : `${p.name}님에게 펫 배틀을 신청했어요…`, 2400);
-    setTimeout(() => { if (this.pend && this.pend.id === id) { this.pend = null; Toast.show(`${p.name}님이 대답이 없어요.`); } }, 20000);
+    setTimeout(() => { if (this.pend && this.pend.id === id) { this.pend = null; Toast.show(`${p.name}님이 대답이 없어요.`); } }, 40000);
   },
   clean(x) { return x && PB_DEX[x.kind] ? { kind: x.kind, lv: Math.max(1, Math.min(50, +x.lv || 5)), name: String(x.name || '').replace(/[<>]/g, '').slice(0, 10) } : null; },
   onNet(m, p) {
     if (m.to !== Net.myId) return; const from = m.from, name = (p && p.name) || '친구';
     if (m.k === 'ask') {
-      const theirs = this.clean(m.pet), mine = this.myPet(); if (!theirs) return;
+      const theirs = this.clean(m.pet), mine = this.myPets()[0]; if (!theirs) return;
       if (this.open_ || Game.busy || Dialog.open || this.inv || (Game.formOpen && !Shop.open_)) return Net.send({ t: 'pb', k: 'no', to: from, why: 'busy' });
       if (!mine) return Net.send({ t: 'pb', k: 'no', to: from, why: 'nopet' });
       this.inv = { from, name, pet: theirs, tuk: !!m.tuk }; this.showInv(); Sound.play('ding'); return;
@@ -9304,9 +9463,17 @@ const PetBattle = {
   showInv() {
     const el = $('pbAsk'), a = this.inv; if (!a) { el.classList.remove('in'); return; }
     const ty = PB_TYPES[PB_DEX[a.pet.kind].t], L = this.myPets();
-    el.innerHTML = `<i class="tk">⚔️ 펫 배틀 신청</i><b>${a.tuk ? `${esc(a.name)}님이 때려서 펫끼리 투닥투닥! 배틀로 끝장 볼까요?` : `${esc(a.name)}님이 펫 배틀을 걸어왔어요!`}</b><span>${esc(a.name)}의 ${esc(a.pet.name || this.kindName(a.pet.kind))}${a.pet.name ? ` (${this.kindName(a.pet.kind)})` : ''} Lv.${a.pet.lv} · ${ty[1]} ${ty[0]} 타입</span><span class="sm">판돈 없이 펫 실력으로만 겨뤄요.</span><div>${L.length > 1 ? L.map((x, i) => `<button class="btn gold pbYesN" data-i="${i}">⚔️ ${esc(this.ro(x.name || this.kindName(x.kind)))}</button>`).join('') : `<button class="btn gold" id="pbYes">⚔️ ${a.tuk ? '붙자!' : '받아들이기'}</button>`}<button class="btn" id="pbNo">${a.tuk ? '참는다' : '거절'}</button></div>`;
-    el.classList.add('in'); if ($('pbYes')) $('pbYes').onclick = () => this.accept(); el.querySelectorAll('.pbYesN').forEach(b => { b.onclick = () => this.accept(L[+b.dataset.i]); }); // 펫이 두 마리면 고르는 버튼 $('pbNo').onclick = () => { Net.send({ t: 'pb', k: 'no', to: a.from, why: 'no' }); this.inv = null; this.showInv(); };
+    el.innerHTML = `<i class="tk">⚔️ 펫 배틀 신청</i><b>${a.tuk ? `${esc(a.name)}님이 때려서 펫끼리 투닥투닥! 배틀로 끝장 볼까요?` : `${esc(a.name)}님이 펫 배틀을 걸어왔어요!`}</b><span>${esc(a.name)}의 ${esc(a.pet.name || this.kindName(a.pet.kind))}${a.pet.name ? ` (${this.kindName(a.pet.kind)})` : ''} Lv.${a.pet.lv} · ${ty[1]} ${ty[0]} 타입</span><span class="sm">판돈 없이 펫 실력으로만 겨뤄요.</span><div>${L.length > 1 ? `<button class="btn gold" id="pbYes">⚔️ 펫 고르고 ${a.tuk ? '붙자!' : '받기'}</button>` : `<button class="btn gold" id="pbYes">⚔️ ${a.tuk ? '붙자!' : '받아들이기'}</button>`}<button class="btn" id="pbNo">${a.tuk ? '참는다' : '거절'}</button></div>`;
+    el.classList.add('in'); $('pbYes').onclick = () => (L.length > 1 ? this.pickAccept() : this.accept()); /* 펫이 여러 마리면 고르고 받기 */ $('pbNo').onclick = () => { Net.send({ t: 'pb', k: 'no', to: a.from, why: 'no' }); this.inv = null; this.showInv(); };
     clearTimeout(this.invT); this.invT = setTimeout(() => { if (this.inv === a) { this.inv = null; this.showInv(); } }, 20000);
+  },
+  // 신청 카드에서 펫 고르기: 카드는 잠깐 숨기고 대화창으로 고른 뒤 받는다
+  async pickAccept() {
+    const a = this.inv; if (!a) return; if (Game.busy || Dialog.open || (Game.formOpen && !Shop.open_) || this.open_) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.');
+    clearTimeout(this.invT); $('pbAsk').classList.remove('in'); Game.busy = true; let mine = null;
+    try { mine = await this.choosePet(null, `${a.name}님과 배틀`); } finally { Game.busy = false; }
+    if (this.inv !== a) return; if (!mine) { Net.send({ t: 'pb', k: 'no', to: a.from, why: 'no' }); this.inv = null; this.showInv(); return; }
+    this.accept(mine);
   },
   accept(pick) {
     const a = this.inv; if (!a) return; const mine = pick || this.myPet(1);

@@ -736,6 +736,23 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .arcPanel .fgPad { flex:1; margin:0; } .arcPanel .fgQuit { margin:0; }
 /* 테트리스 (v92) */
 #tetWin { left:0; top:0; right:0; bottom:0; z-index:72; } #tetWin:not(.in) { transform:scale(1.06); }
+#quizWin { left:0; top:0; right:0; bottom:0; z-index:72; } #quizWin:not(.in) { transform:scale(1.06); }
+.qzScr { padding:14px 16px; display:flex; flex-direction:column; gap:10px; min-height:100%; box-sizing:border-box; }
+.qzMid { display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; margin:auto 0; }
+.qzMid h2 { margin:0; font:900 34px var(--ui); letter-spacing:3px; color:#ff5ae0; text-shadow:0 0 16px rgba(255,90,224,.75), 3px 3px 0 #3ee0f0; }
+.qzMid p { margin:0; font:600 14px var(--ui); color:#cfd8ff; } .qzMid p b { color:#ffe84a; font-size:20px; } .qzNote { font-size:12px !important; opacity:.75; }
+.qz .btn { background:#1a1440; border-color:#5a4aaa; color:#e8f4ff; } .qz .btn.gold { background:linear-gradient(#ff5ae0, #b01a90); color:#fff; border-color:#ff9ae8; box-shadow:0 0 12px rgba(255,74,216,.6); } .qzMid > .btn { min-width:220px; justify-content:center; } .qz .btn.sel { background:#3ee0f0; color:#05030f; border-color:#bff6ff; }
+.qzSeats { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:460px; } .qzSeats li { padding:5px 12px; border-radius:8px; background:rgba(106,90,192,.3); border:1px solid #6a5ac0; font:700 13px var(--ui); color:#fff; } .qzSeats li.me { border-color:#ffe84a; color:#ffe84a; } .qzSeats li.empty { opacity:.5; font-weight:500; }
+.qzOpt, .qzInv { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; max-width:480px; } .qzOpt span { font:700 12px var(--ui); color:#9fb0ff; } .qzOpt .btn, .qzInv .btn { padding:5px 10px; font-size:12px; } .qzInv > small { width:100%; color:#9fb0ff; font-size:11px; } .qzInv .btn small { opacity:.7; font-size:10px; margin-left:3px; }
+.qzTop { display:flex; justify-content:space-between; align-items:center; font:800 13px var(--ui); color:#7ae8ff; letter-spacing:1px; } .qzT { font:900 20px var(--ui); color:#ffe84a; text-shadow:0 0 8px #ffb02a; } .qzT .low { color:#ff6a8a; text-shadow:0 0 8px #ff3a6a; }
+.qzQ { font:800 19px/1.45 var(--ui); color:#fff; text-shadow:0 0 6px rgba(122,232,255,.35); padding:4px 2px; word-break:keep-all; }
+.qzOpts { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .qz .qzOptBtn { display:flex; align-items:center; gap:8px; text-align:left; justify-content:flex-start; padding:10px 12px; min-height:54px; font:700 14px/1.35 var(--ui); border:2px solid #2ae0ff; box-shadow:0 0 8px rgba(42,224,255,.3); position:relative; word-break:keep-all; } .qzOptBtn i { flex:none; width:24px; height:24px; border-radius:50%; background:#2ae0ff; color:#05030f; font:900 13px/24px var(--ui); text-align:center; font-style:normal; } .qzOptBtn span { flex:1; } .qzOptBtn em { position:absolute; right:6px; bottom:-8px; font:700 10px var(--ui); font-style:normal; background:#05030f; border:1px solid currentColor; border-radius:6px; padding:1px 5px; }
+.qz .qzOptBtn:not(:disabled):hover { box-shadow:0 0 14px rgba(42,224,255,.8); } .qz .qzOptBtn:disabled { opacity:1; cursor:default; } .qz .qzOptBtn.ok { background:#0f4a2a; border-color:#5aff8a; color:#d8ffe4; box-shadow:0 0 14px rgba(90,255,138,.6); } .qz .qzOptBtn.ok i { background:#5aff8a; } .qz .qzOptBtn.bad { background:#4a0f22; border-color:#ff6a8a; color:#ffd8e0; } .qz .qzOptBtn.bad i { background:#ff6a8a; } .qz .qzOptBtn.dim { opacity:.45; } .qz .qzOptBtn.wait { border-color:#ffe84a; box-shadow:0 0 12px rgba(255,232,74,.6); }
+.qzRes { text-align:center; font:900 18px var(--ui); color:#fff; } .qzRes.win { color:#5aff8a; text-shadow:0 0 10px #5aff8a; } .qzRes.lose { color:#ff6a8a; font-size:14px; } .qzWhy { margin:0; padding:8px 10px; border-radius:8px; background:rgba(42,224,255,.08); border:1px solid rgba(42,224,255,.35); font:600 13px/1.5 var(--ui); color:#cfe8ff; word-break:keep-all; }
+.qz .arcPanel { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; } .qzPan { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; } .qzKeys { font:600 11px var(--ui); color:#9aa8d0; } .qzKeys b { color:#ffe84a; }
+.qzBoard { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; } .qzBoard li { display:flex; gap:8px; align-items:center; padding:4px 10px; border-radius:8px; background:rgba(106,90,192,.3); border:1px solid #6a5ac0; font:700 12.5px var(--ui); color:#fff; } .qzBoard li b { color:#ffe84a; font-size:15px; } .qzBoard li.me { border-color:#ffe84a; } .qzBoard li.gone { opacity:.45; } .qzBoard .x { color:#ff6a8a; font-style:normal; } .qzBoard .o { font-style:normal; }
+.short .qzQ { font-size:15px; } .short .qz .qzOptBtn { min-height:40px; padding:6px 8px; font-size:12.5px; } .short .qzMid h2 { font-size:24px; } .short .qz .arcMarq { display:none; } .short .qzScr { padding:8px 10px; gap:6px; }
+@media (max-width:520px) { .qzOpts { grid-template-columns:1fr; } }
 .tetOver { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:rgba(5,3,20,.74); color:#fff; text-align:center; padding:12px; } .tetOver[hidden] { display:none; }
 .tetOver h2 { margin:0; font:900 38px var(--ui); letter-spacing:3px; color:#ff5ae0; text-shadow:0 0 16px rgba(255,90,224,.75), 3px 3px 0 #3ee0f0; }
 .tetOver p { margin:0; font:600 14px var(--ui); color:#cfd8ff; } .tetOver p b { color:#ffe84a; font-size:22px; } .tetOver .tetNote { font-size:11px; opacity:.7; }
@@ -907,7 +924,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
-<div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
+<div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
 <div id="assetBox" class="ovl"></div>
 <div id="rankWin" class="ovl"></div>
 <div id="dupGate" class="ovl"></div>
@@ -3626,7 +3643,7 @@ const INTERIOR_DEFS = {
     '####D#####' ], npc: { K: 'banker' } },
   arcade: { title: '게임장', floor: 'carpet', bgm: 'town', tone: 'neon', map: [
     '##############',
-    '#K...t.t.A.A.#',
+    '#K.q.t.t.A.A.#',
     '#CC..........#',
     '#..A.A.A.A...#',
     '#............#',
@@ -3691,7 +3708,7 @@ function buildInterior(place) {
   let exit = null;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const ch = map[y][x];
-    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGXAJVOZEIYtnwpx'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
+    if (ch === 'X' && !(cs && cs.super)) { /* 빈 땅은 지나갈 수 있음 */ } else if ('#CPTBMQLFGXAJVOZEIYtnwpxq'.includes(ch) || (ch === 'H' && cs && cs.lien)) solid[y * W + x] = 1;
     if (ch === 'D') exit = { tx: x, ty: y };
     if (ch === 'S') objs.push({ type: 'chair', tx: x, ty: y });
     if (ch === 'P') objs.push({ type: 'pc', tx: x, ty: y, label: 'PC' });
@@ -3707,7 +3724,8 @@ function buildInterior(place) {
     if (ch === 'O') objs.push({ type: 'holjjak', tx: x, ty: y, label: '홀짝' });
     if (ch === 'Z' || ch === 'E' || ch === 'I' || ch === 'Y') objs.push({ type: 'casino', tx: x, ty: y, game: { Z: 'bj', E: 'rl', I: 'pk', Y: 'slot' }[ch], label: { Z: '블랙잭', E: '룰렛', I: '포커', Y: '슬롯머신' }[ch] });
     if (ch === 't') objs.push({ type: 'arcade', tx: x, ty: y, label: '테트리스', game: 'tetris' }); // v92
-    if (ch === 'A') { const no = objs.filter(o => o.type === 'arcade' && o.game !== 'tetris').length + 1; objs.push({ type: 'arcade', tx: x, ty: y, label: no >= 7 ? '격투 게임' : '가위바위보', no, game: no >= 7 ? 'fight' : 'rps' }); } // 아래 줄 4대는 건대 파이터 (v82)
+    if (ch === 'q') objs.push({ type: 'arcade', tx: x, ty: y, label: '경매 퀴즈', game: 'quiz' }); // v128
+    if (ch === 'A') { const no = objs.filter(o => o.type === 'arcade' && (o.game === 'rps' || o.game === 'fight')).length + 1; objs.push({ type: 'arcade', tx: x, ty: y, label: no >= 7 ? '격투 게임' : '가위바위보', no, game: no >= 7 ? 'fight' : 'rps' }); } // 아래 줄 4대는 건대 파이터 (v82)
     if (ch === 'U') objs.push({ type: 'roof', tx: x, ty: y, label: cs && cs.type === '토지' ? '둘러보기' : '옥상 계단' });
     if (ch === 'H' && cs && cs.lien) objs.push({ type: 'banner', tx: x, ty: y, label: '현수막' });
     if (def.npc[ch]) npcs.push({ sprite: def.npc[ch], tx: x, ty: y, x: x * TILE + 8, y: y * TILE + 14, dir: 0, role: ch === 'N' ? 'danye' : 'clerk', breath: Math.random() * 2 });
@@ -3801,6 +3819,12 @@ function drawInterior(ctx, room, t) {
       for (let i = 0; i < 5; i++) { ctx.fillStyle = cols[(i + x) % 5]; ctx.fillRect(X + 3 + i * 2, Y + 7 - (i % 2), 2, 2 + (i % 2)); }
       const fy = Math.floor(t * 4 + x) % 5; ctx.fillStyle = cols[Math.floor(t / 1.25 + x) % 5]; ctx.fillRect(X + 6, Y + 1 + fy, 4, 2); ctx.fillRect(X + 8, Y + 1 + fy - 2, 2, 2);
       ctx.fillStyle = '#6a6480'; ctx.fillRect(X + 2, Y + 10, 12, 4); ctx.fillStyle = '#ff5a5a'; ctx.fillRect(X + 3, Y + 9, 3, 3); ctx.fillStyle = '#4ad0ff'; ctx.fillRect(X + 10, Y + 11, 2, 2); ctx.fillStyle = '#ffd84a'; ctx.fillRect(X + 12, Y + 11, 2, 2);
+    }
+    else if (ch === 'q') { // 경매 퀴즈 기계 (v128): 금색 머리판 + 화면에 깜빡이는 물음표 + 보기 버튼 네 개
+      ctx.fillStyle = '#1c1a2e'; ctx.fillRect(X + 1, Y - 2, 14, 18); ctx.fillStyle = '#ffd84a'; ctx.fillRect(X + 1, Y - 2, 14, 2);
+      ctx.fillStyle = '#0a1a3a'; ctx.fillRect(X + 3, Y + 1, 10, 8); const on = Math.floor(t * 2 + x) % 2;
+      ctx.fillStyle = on ? '#ffe84a' : '#7ae8ff'; ctx.fillRect(X + 6, Y + 2, 4, 1); ctx.fillRect(X + 9, Y + 3, 1, 2); ctx.fillRect(X + 7, Y + 5, 2, 1); ctx.fillRect(X + 7, Y + 7, 2, 1);
+      ctx.fillStyle = '#6a6480'; ctx.fillRect(X + 2, Y + 10, 12, 4); const bc = ['#ff5a5a', '#4ad0ff', '#5ce06a', '#ffd84a']; for (let i = 0; i < 4; i++) { ctx.fillStyle = bc[i]; ctx.fillRect(X + 3 + i * 3, Y + 11, 2, 2); }
     }
     else if (ch === 'A') { // 게임기: 몸통·화면(색이 천천히 바뀜)·조이스틱·버튼
       const hue = ((x * 53 + y * 17) + t * 40) % 360;
@@ -6372,6 +6396,7 @@ function update(dt) {
   if (VipDuel.open_) { if (consume('1')) VipDuel.meShoot('me'); else if (consume('2')) VipDuel.meShoot('op'); return; } // 룰렛: 끝날 때까지 못 나간다
   if (Tetris.open_) return; // 테트리스: 키는 Tetris가 먼저 받는다 (v92)
   if (Fight.open_) { if (consume('Escape') && Fight.view !== 'play') Fight.close(); return; } // 격투 게임: 키는 Fight가 직접 읽는다
+  if (Quiz.open_) { if (consume('Escape')) Quiz.close(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) Quiz.answer(Number(n) - 1); return; } // 경매 퀴즈 (v128)
   if (Rps.open_) { if (consume('Escape')) Rps.close(); else for (const n of ['1', '2', '3']) if (consume(n)) Rps.pick(Number(n) - 1); return; }
   if (Casino.open_) { if (consume('Escape')) Casino.close(); else for (const n of ['1', '2', '3', '4', '5']) if (consume(n)) Casino.key(n); return; }
   if (Shop.open_) { if (consume('Escape')) { if (Shop.bigIt && $('shBigX')) $('shBigX').click(); else Shop.close(); } return; } // 상점: Esc로 닫힘 (메뉴보다 먼저)
@@ -6917,7 +6942,7 @@ async function objectUse(o, kind) {
   if (o.type === 'carshop') { Shop.open('car'); return; }
   if (o.type === 'petshop') { Shop.open('pet'); return; }
   if (o.type === 'fxshop') { Shop.open('fx'); return; }
-  if (o.type === 'arcade') { Sound.play('blip', 0.8); if (o.game === 'fight') Fight.open(); else if (o.game === 'tetris') Tetris.open(); else Rps.open(); return; } // 가위바위보 (v81) · 격투 게임 (v82)
+  if (o.type === 'arcade') { Sound.play('blip', 0.8); if (o.game === 'fight') Fight.open(); else if (o.game === 'tetris') Tetris.open(); else if (o.game === 'quiz') Quiz.open(); else Rps.open(); return; } // 가위바위보 (v81) · 격투 게임 (v82)
   if (o.type === 'holjjak') { Casino.open('hol'); return; }
   if (o.type === 'casino') { Casino.open(o.game); return; } // 슬롯머신·블랙잭·룰렛·포커 (v82)
   // 현장: 처음 살펴볼 때 시간 1칸
@@ -9928,6 +9953,220 @@ const Tetris = {
   },
 };
 
+/* ===================== 게임장 경매 퀴즈 (사용자 2026-10-16 '게임장에 경매론 퀴즈, 친구들이랑 같이 참여해서 먼저 답한 사람이 이기는 걸로') =====================
+ * 게임장 위 줄 오락기('q'). 한 판 10문제, 문제마다 15초. 먼저 맞힌 사람이 1점. 틀리면 그 문제는 더 못 고른다.
+ * 혼자: 장우준 사장이 같이 푼다 (몇 초 뒤에 가끔 틀리며 답한다). 친구랑: Party 'quiz' 2~6명. 판돈은 없다.
+ * 같이 할 때 판정은 방장이 한다: 모두 같은 시드로 같은 문제·보기 순서를 만들고, 답은 방장에게 보내 도착한 순서로 정한다.
+ *   {t:'party', k:'start'(order, seed) | 'qa'(i, a) → 방장 | 'qwin'(i, id, a) | 'qx'(i, id, a) | 'qto'(i) | 'qnext'(i) | 'qend'(score)}
+ * 문제는 데이터만 (a[0]이 정답, 보기 순서는 판마다 섞는다). */
+const QUIZ_BANK = [
+  { q: '경매에서 낙찰 뒤 어떤 권리가 지워지고 어떤 권리가 남는지 가르는 기준 권리는?', a: ['말소기준권리', '최선순위 지상권', '가장 늦은 가압류', '임차권등기'], why: '말소기준권리(근저당·압류·가압류·담보가등기·경매개시결정 등 중 가장 빠른 것)보다 뒤의 권리는 대부분 지워지고, 앞선 권리는 낙찰자가 떠안을 수 있어요.' },
+  { q: '다음 중 말소기준권리가 될 수 있는 것은?', a: ['근저당권', '지역권', '등기 안 된 임차권', '유치권'], why: '근저당권·저당권, 압류·가압류, 담보가등기, 경매개시결정등기 등이 말소기준권리가 될 수 있어요.' },
+  { q: '주택 임차인이 전입신고하고 이사(점유)까지 마쳤다. 대항력은 언제 생길까?', a: ['다음 날 0시', '전입신고한 그 순간', '확정일자 받은 날', '계약서 쓴 날'], why: '주택임대차보호법상 대항력은 주택 인도와 주민등록을 마친 다음 날 0시부터 생겨요.' },
+  { q: '임차인이 경매 배당에서 순서대로 보증금을 받으려면(우선변제권) 대항요건과 함께 무엇이 필요할까?', a: ['확정일자', '임차권등기', '공증', '집주인 동의서'], why: '대항요건(인도+전입)에 확정일자까지 갖추면 우선변제권이 생겨 순서대로 배당받아요.' },
+  { q: '보통의 기일입찰에서 입찰보증금은 얼마일까?', a: ['최저매각가격의 10%', '입찰가의 10%', '감정가의 20%', '최저매각가격의 5%'], why: '입찰보증금은 내가 쓴 금액이 아니라 최저매각가격의 10%예요 (법원이 따로 정하면 그 금액).' },
+  { q: '낙찰자가 잔금을 안 내서 다시 경매(재매각)할 때 입찰보증금은 보통 얼마로 오를까?', a: ['최저매각가격의 20%', '그대로 10%', '최저매각가격의 50%', '감정가 전액'], why: '재매각 사건은 보통 보증금이 20%(법원에 따라 30%)로 올라가요. 물건명세서 특별매각조건을 꼭 확인해요.' },
+  { q: '낙찰받고 잔금을 기한 안에 안 내면 입찰보증금은?', a: ['돌려받지 못하고 배당할 돈에 들어간다', '전액 돌려받는다', '절반만 돌려받는다', '다음 경매 때 쓸 수 있다'], why: '잔금을 안 내면 보증금은 몰수되어 배당재원이 돼요. 재매각에 다시 들어갈 수도 없어요.' },
+  { q: '차순위매수신고를 하려면 내 입찰가가 어떤 조건을 넘어야 할까?', a: ['최고가 입찰액 − 입찰보증금보다 많아야', '최고가 입찰액과 같아야', '최저가보다만 높으면', '감정가보다 높아야'], why: '차순위매수신고는 최고가에서 보증금을 뺀 금액을 넘는 사람만 할 수 있어요.' },
+  { q: '매각허가결정이 확정되면 잔금(대금) 지급기한은 보통 언제까지로 정해질까?', a: ['확정일부터 1개월 안', '확정일부터 1주 안', '확정일부터 6개월 안', '기한 없음'], why: '대금지급기한은 매각허가결정 확정일부터 1개월 안으로 정해져요.' },
+  { q: '경매로 산 집의 소유권은 언제 낙찰자에게 넘어올까?', a: ['매각대금을 다 낸 때', '낙찰(최고가매수신고)된 날', '소유권이전등기를 마친 날', '명도가 끝난 날'], why: '경매는 법률 규정에 따른 취득이라 등기 전이라도 매각대금을 완납한 때 소유권을 취득해요.' },
+  { q: '대금을 낸 낙찰자가 점유자를 상대로 인도명령을 신청할 수 있는 기간은?', a: ['대금 낸 뒤 6개월 안', '대금 낸 뒤 1개월 안', '대금 낸 뒤 1년 안', '기간 제한 없음'], why: '인도명령은 대금 완납 후 6개월 안에 신청해야 해요. 그 뒤엔 명도소송을 해야 해요.' },
+  { q: '등기부에 나오지 않아 현장 조사로 확인해야 하는 권리는?', a: ['유치권', '근저당권', '가압류', '전세권'], why: '유치권은 등기 없이 점유로 성립해요. 현수막·점유 상태·유치권 신고를 직접 확인해야 해요.' },
+  { q: '같은 사람 소유였던 땅과 건물이 경매로 주인이 달라질 때, 건물을 위해 생길 수 있는 권리는?', a: ['법정지상권', '분묘기지권', '지역권', '유치권'], why: '토지와 건물이 같은 소유자였다가 경매 등으로 달라지면 건물 주인에게 법정지상권이 생길 수 있어요.' },
+  { q: '남의 땅에 있는 묘 때문에 생겨서 땅 낙찰자가 함부로 이장하기 어려운 권리는?', a: ['분묘기지권', '법정지상권', '전세권', '임차권'], why: '분묘기지권이 있으면 묘를 함부로 옮길 수 없어요. 임야·토지 경매에서 특히 조심해요.' },
+  { q: '소액임차인이 최우선변제를 받으려면 언제까지 대항요건(인도+전입)을 갖춰야 할까?', a: ['경매개시결정 기입등기 전', '매각기일 전날', '배당기일 전', '낙찰 뒤 1주 안'], why: '경매개시결정등기 전에 대항요건을 갖추고 배당요구종기까지 배당요구해야 최우선변제를 받아요.' },
+  { q: '임차인이 배당을 받으려면 언제까지 배당요구를 해야 할까?', a: ['배당요구종기', '매각기일', '배당기일', '잔금 납부일'], why: '배당요구가 필요한 채권자(임차인 등)는 법원이 정한 배당요구종기까지 신청해야 배당받아요.' },
+  { q: '말소기준권리보다 먼저 대항력을 갖춘 임차인이 배당으로 보증금을 다 못 받으면?', a: ['남은 보증금을 낙찰자가 떠안는다', '못 받은 돈은 사라진다', '법원이 대신 준다', '전 집주인만 책임진다'], why: '선순위 임차인의 남은 보증금은 낙찰자가 인수해요. 입찰가를 정할 때 꼭 빼고 계산해요.' },
+  { q: '지분 경매에서 다른 공유자가 쓸 수 있는 권리는?', a: ['최고가와 같은 값에 먼저 사겠다고 할 수 있다', '경매를 막을 수 있다', '최저가로 살 수 있다', '보증금 없이 입찰할 수 있다'], why: '공유자는 매각기일까지 보증금을 내고 최고가와 같은 가격으로 우선매수를 신고할 수 있어요.' },
+  { q: '서울 등 많은 법원에서 한 번 유찰되면 다음 최저매각가격은 보통 얼마나 내려갈까?', a: ['20%', '5%', '50%', '그대로'], why: '서울 법원들은 보통 20%씩, 일부 지방 법원은 30%씩 낮춰요.' },
+  { q: '입찰표에 금액을 잘못 써서 고치고 싶다면?', a: ['새 입찰표에 다시 쓴다', '두 줄 긋고 도장 찍는다', '수정 테이프로 고친다', '옆에 맞는 금액을 적는다'], why: '입찰가격은 고칠 수 없어요. 고친 입찰표는 무효라 새 용지에 다시 써야 해요.' },
+  { q: '다른 사람 대신 입찰(대리입찰)할 때 꼭 필요한 서류는?', a: ['위임장과 본인 인감증명서', '가족관계증명서만', '주민등록등본만', '아무것도 필요 없다'], why: '대리입찰은 본인의 인감이 찍힌 위임장과 인감증명서, 대리인 신분증이 필요해요.' },
+  { q: '최고가를 쓴 사람이 둘 이상이면?', a: ['그 사람들끼리 다시 입찰한다', '먼저 낸 사람이 낙찰', '둘 다 낙찰', '모두 무효로 유찰'], why: '같은 최고가가 여러 명이면 그 사람들만 추가 입찰을 하고, 그래도 같으면 추첨해요.' },
+  { q: '매각물건명세서·현황조사서·감정평가서는 언제부터 볼 수 있을까?', a: ['매각기일 1주 전부터', '매각기일 당일만', '낙찰 뒤에만', '배당기일 뒤'], why: '법원은 매각기일 1주 전까지 이 서류들을 비치해 누구나 볼 수 있게 해요.' },
+  { q: '경매개시결정이 되면 그 부동산에는 어떤 효력이 생길까?', a: ['압류의 효력 (처분 제한)', '바로 소유권이 법원으로', '임차인이 모두 나가야', '세금이 면제'], why: '경매개시결정은 압류의 효력이 있어 그 뒤의 처분은 경매 절차에 대항하지 못해요.' },
+  { q: '배당에서 가장 먼저 나가는 돈은?', a: ['경매 집행비용', '근저당 채권', '임차인 보증금', '세금'], why: '집행비용이 가장 먼저, 그다음 최우선변제(소액임차인·임금채권 일부) 등이 순서대로 배당돼요.' },
+  { q: '농지(논·밭)를 낙찰받으면 매각결정기일까지 내야 하는 서류는?', a: ['농지취득자격증명', '건축물대장', '토지이용계획확인서', '사업자등록증'], why: '농지취득자격증명을 기한 안에 못 내면 매각불허가가 되고 보증금을 잃을 수도 있어요.' },
+  { q: '아파트 경매 정보에 "대지권 없음(미등기)"이라고 있으면 조심할 점은?', a: ['토지 지분 문제로 추가 비용·분쟁이 생길 수 있다', '관리비가 면제된다', '세금이 없다', '전혀 상관없다'], why: '대지권이 없으면 땅 주인에게 대금을 요구받거나 분쟁이 생길 수 있어요. 미등기인지 아예 없는지 확인해요.' },
+  { q: '위반건축물로 등록된 건물을 낙찰받으면 생길 수 있는 부담은?', a: ['이행강제금', '취득세 면제', '재산세 면제', '대출 우대'], why: '불법 증축 등은 원상복구 전까지 이행강제금이 나올 수 있고 대출이 어려울 수 있어요.' },
+  { q: '말소기준권리보다 먼저 등기된 가처분은?', a: ['낙찰자가 떠안는다(인수)', '매각으로 지워진다', '배당받고 사라진다', '아무 효력 없다'], why: '선순위 가처분은 매각으로 지워지지 않아 소유권을 잃을 위험까지 있어요.' },
+  { q: '임대차계약서에 확정일자를 받을 수 없는 곳은?', a: ['경찰서', '주민센터(행정복지센터)', '등기소', '인터넷 등기소'], why: '확정일자는 주민센터, 등기소, 공증인, 온라인(인터넷 등기소 등)에서 받을 수 있어요.' },
+  { q: '상가 임차인의 대항요건은 건물 인도와 무엇일까?', a: ['사업자등록 신청', '전입신고', '확정일자', '임차권등기'], why: '상가건물 임대차보호법에서는 인도와 사업자등록 신청이 대항요건이에요.' },
+  { q: '보증금을 못 받은 임차인이 이사 가도 대항력·우선변제권을 지키려면 무엇을 할까?', a: ['임차권등기명령 신청', '전입신고만 유지', '집 열쇠를 가져간다', '집주인에게 문자'], why: '임차권등기가 된 뒤에 이사 가면 대항력과 우선변제권이 그대로 유지돼요.' },
+  { q: '전세권자가 배당요구를 하면 그 전세권은 매각 뒤 어떻게 될까?', a: ['매각으로 지워진다', '낙찰자가 떠안는다', '10년 연장된다', '다음 경매로 넘어간다'], why: '최선순위 전세권이라도 배당요구를 하면 매각으로 소멸하고 배당을 받아요.' },
+  { q: '말소기준권리보다 늦게 설정된 지상권은?', a: ['매각으로 지워진다', '낙찰자가 떠안는다', '더 강해진다', '배당받는다'], why: '말소기준권리보다 뒤의 용익권(지상권·지역권·전세권 등)은 원칙적으로 매각으로 소멸해요.' },
+  { q: '낙찰받은 집에 사는 사람이 안 나가면 낙찰자가 하면 안 되는 것은?', a: ['문 따고 짐을 마음대로 빼기', '인도명령 신청', '이사비 협상', '강제집행 신청'], why: '직접 문을 따거나 짐을 빼면 범죄가 될 수 있어요. 인도명령·강제집행 같은 법 절차를 써요.' },
+  { q: '"허위 임차인"이 의심될 때 확인해 볼 자료로 알맞지 않은 것은?', a: ['주변 맛집 리뷰', '전입세대 열람', '임대차계약서·보증금 송금 내역', '현황조사서'], why: '전입세대 열람, 현황조사서, 계약서·송금 내역 등으로 진짜 임차인인지 살펴요.' },
+  { q: '입찰하러 법원에 갈 때 본인 입찰이면 꼭 챙길 것은?', a: ['신분증·도장·입찰보증금', '등기권리증', '인감증명서 3통', '재직증명서'], why: '본인 입찰은 신분증, 도장, 보증금(보통 수표)이면 돼요.' },
+  { q: '경매에서 감정가는 무엇일까?', a: ['감정평가사가 매긴 가격 (첫 최저가 기준)', '낙찰자가 낼 확정 가격', '시세보다 항상 높은 값', '세금 기준가'], why: '감정가는 첫 회차 최저매각가격의 기준이 될 뿐, 실제 시세와 다를 수 있어요.' },
+  { q: '"인수"라는 말의 뜻으로 맞는 것은?', a: ['낙찰자가 그 권리·부담을 떠안는 것', '권리가 매각으로 지워지는 것', '배당을 받는 것', '경매를 취소하는 것'], why: '인수는 낙찰 뒤에도 남아 낙찰자가 책임지는 것, 소멸은 매각으로 지워지는 거예요.' },
+  { q: '낙찰 뒤 매각허가결정이 나기까지 보통 걸리는 기간은?', a: ['매각기일부터 1주 정도', '당일 바로', '3개월', '1년'], why: '매각기일부터 보통 1주 뒤 매각결정기일에 허가 여부를 정하고, 1주 더 지나면 확정돼요.' },
+];
+
+const Quiz = {
+  open_: false, N: 10, SEC: 15, REV: 4200, state: 'ready', g: null, timer: 0,
+  best() { return Store.get('quizBest', 0) || 0; },
+  inParty() { return typeof Party !== 'undefined' && Party.on('quiz'); },
+  open() {
+    if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
+    if (!this.inParty()) { this.state = 'ready'; this.g = null; }
+    const el = $('quizWin'); el.classList.add('in');
+    el.innerHTML = arcadeShell('🧠 경매 퀴즈', '<div class="qzScr" id="qzScr"></div>', '<div class="qzPan" id="qzPan"></div><button class="btn" id="qzQuit">← 일어나기</button>', 'qz');
+    $('qzQuit').onclick = () => this.close();
+    clearInterval(this.timer); this.timer = setInterval(() => this.tick(), 200);
+    this.render();
+  },
+  close() {
+    if (!this.open_) return;
+    if (this.inParty()) Party.leave(); this.g = null; this.state = 'ready';
+    this.open_ = false; Game.formOpen = false; clearInterval(this.timer); $('quizWin').classList.remove('in'); Sound.play('flip');
+  },
+  // 같은 시드면 누구나 같은 문제·같은 보기 순서
+  build(seed, order, names) {
+    const R = makeRng(seed), idx = QUIZ_BANK.map((_, i) => i);
+    for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(R.next() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+    const qs = idx.slice(0, Math.min(this.N, idx.length)), perm = qs.map(() => { const p = [0, 1, 2, 3]; for (let i = 3; i > 0; i--) { const j = Math.floor(R.next() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } return p; });
+    const score = {}; for (const id of order) score[id] = 0;
+    return { seed, order, names, qs, perm, i: -1, score, state: 'q', t0: 0, locked: {}, picks: {}, winner: null, revAt: 0, mine: null, ai: null };
+  },
+  nm(id) { const g = this.g; if (id === Net.myId || id === 'me') return '나'; return (g && g.names[id]) || (typeof Party !== 'undefined' ? Party.nm(id) : '친구'); },
+  meId() { return this.g && this.g.solo ? 'me' : Net.myId; },
+  startSolo() {
+    this.g = this.build((Math.random() * 2 ** 31) >>> 0, ['me', 'house'], { me: '나', house: castName('arcade') + ' 사장' }); this.g.solo = true;
+    this.state = 'play'; this.next(0);
+  },
+  // 방장: 친구들이랑 시작
+  hostStart() {
+    const P = Party.p; if (!P || !Party.isHost() || P.members.length < 2) return;
+    const order = P.members.slice(), seed = (Math.random() * 2 ** 31) >>> 0; P.started = true;
+    Party.send('start', { gid: P.gid, order, seed }); Party.roster(); this.begin(order, seed);
+  },
+  begin(order, seed) { const P = Party.p; this.g = this.build(seed, order, Object.assign({}, P ? P.names : {})); this.state = 'play'; Sound.play('chime'); this.next(0); },
+  next(i) {
+    const g = this.g; if (!g) return; g.i = i; g.state = 'q'; g.t0 = Date.now(); g.locked = {}; g.picks = {}; g.winner = null; g.mine = null; g.revAt = 0;
+    if (g.solo) { const R = Math.random; g.ai = { at: g.t0 + 3500 + R() * 8000, right: R() < 0.62 }; }
+    Sound.play('blip'); this.render();
+  },
+  isHost() { return this.g && (this.g.solo || Party.isHost()); },
+  // 내가 보기를 누름
+  answer(k) {
+    const g = this.g; if (!g || this.state !== 'play' || g.state !== 'q') return; const me = this.meId();
+    if (g.locked[me] || g.mine !== null || k < 0 || k > 3) return;
+    g.mine = k; Sound.play('click');
+    if (this.isHost()) this.judge(me, k, g.i); else { Party.send('qa', { gid: Party.p.gid, i: g.i, a: k }); this.render(); }
+  },
+  // 방장(혼자면 나)이 도착한 순서대로 판정
+  judge(id, k, i) {
+    const g = this.g; if (!g || g.state !== 'q' || i !== g.i || g.locked[id] || g.winner) return;
+    const right = g.perm[g.i][k] === 0;
+    if (right) { this.win(id, k); if (!g.solo) Party.send('qwin', { gid: Party.p.gid, i, id, a: k }); return; }
+    this.miss(id, k); if (!g.solo) Party.send('qx', { gid: Party.p.gid, i, id, a: k });
+    if (g.order.every(x => g.locked[x])) this.timeout(true);
+  },
+  win(id, k) { const g = this.g; g.winner = id; g.picks[id] = k; g.score[id] = (g.score[id] || 0) + 1; g.state = 'rev'; g.revAt = Date.now(); Sound.play(id === this.meId() ? 'coins' : 'ding'); this.render(); },
+  miss(id, k) { const g = this.g; g.locked[id] = true; g.picks[id] = k; if (id === this.meId()) Sound.play('deny'); this.render(); },
+  timeout(send) { const g = this.g; if (!g || g.state !== 'q') return; g.state = 'rev'; g.revAt = Date.now(); Sound.play('flip'); if (send && !g.solo && Party.p) Party.send('qto', { gid: Party.p.gid, i: g.i }); this.render(); },
+  finish(score) {
+    const g = this.g; if (!g) return; if (score) for (const id in score) g.score[id] = +score[id] || 0;
+    this.state = 'done'; g.state = 'end'; const me = this.meId(), mine = g.score[me] || 0, top = Math.max(...g.order.map(id => g.score[id] || 0));
+    if (g.solo && mine > this.best()) Store.set('quizBest', mine);
+    const won = top > 0 && mine === top; Sound.play(won ? 'chime' : 'flip');
+    if (won && !g.solo && Net.on) Net.news(`경매 퀴즈 ${g.order.filter(id => (g.score[id] || 0) === top).length > 1 ? '공동 ' : ''}우승 (${mine}/${g.qs.length})`);
+    if (!g.solo && Party.p) Party.p.started = false;
+    this.render();
+  },
+  tick() {
+    if (!this.open_) return; const g = this.g, now = Date.now();
+    const tm = $('qzTime'); if (tm && g && g.state === 'q') { const left = Math.max(0, Math.ceil((g.t0 + this.SEC * 1000 - now) / 1000)); if (tm.textContent !== String(left)) { tm.textContent = left; tm.classList.toggle('low', left <= 5); } }
+    if (!g || this.state !== 'play') return;
+    if (g.solo && g.state === 'q' && g.ai && !g.locked.house && now >= g.ai.at) { // 사장님 차례
+      const right = g.perm[g.i].indexOf(0), wrong = [0, 1, 2, 3].filter(x => x !== right && x !== g.picks.me); this.judge('house', g.ai.right ? right : wrong[Math.floor(Math.random() * wrong.length)], g.i);
+    }
+    if (!this.isHost()) return;
+    if (g.state === 'q' && now - g.t0 > this.SEC * 1000) this.timeout(true);
+    else if (g.state === 'rev' && now - g.revAt > this.REV) {
+      if (g.i + 1 >= g.qs.length) { if (!g.solo && Party.p) Party.send('qend', { gid: Party.p.gid, score: g.score }); this.finish(); }
+      else { if (!g.solo && Party.p) Party.send('qnext', { gid: Party.p.gid, i: g.i + 1 }); this.next(g.i + 1); }
+    }
+  },
+  // Party에서 넘어오는 메시지
+  onParty(m, id) {
+    if (m.k === 'start') { if (!this.open_) this.open(); return this.begin((m.order || []).map(String), +m.seed >>> 0); }
+    const g = this.g; if (!g) return;
+    if (m.k === 'qa') { if (Party.isHost() && g.order.includes(id)) this.judge(id, Math.max(0, Math.min(3, +m.a || 0)), +m.i); return; }
+    if (id !== Party.p.host) return; // 판정은 방장 것만
+    if (m.k === 'qwin' && +m.i === g.i && g.state === 'q') return this.win(String(m.id), +m.a);
+    if (m.k === 'qx' && +m.i === g.i) return this.miss(String(m.id), +m.a);
+    if (m.k === 'qto' && +m.i === g.i) return this.timeout(false);
+    if (m.k === 'qnext') return this.next(+m.i);
+    if (m.k === 'qend') return this.finish(m.score || {});
+  },
+  // 판에서 나간 사람: 점수판에서 빼고, 방장 혼자 남으면 끝
+  drop(ids) {
+    const g = this.g; if (!g || g.solo || !ids.length) return; g.order = g.order.filter(x => !ids.includes(x));
+    if (this.state === 'play' && g.order.length < 2 && Party.isHost()) { Party.send('qend', { gid: Party.p.gid, score: g.score }); return this.finish(); }
+    if (this.state === 'play' && g.state === 'q' && Party.isHost() && g.order.length && g.order.every(x => g.locked[x])) this.timeout(true);
+    this.render();
+  },
+  partyClosed() { if (this.state === 'play' && this.g && !this.g.solo) { this.state = 'done'; if (this.g) this.g.aborted = true; } else if (this.state === 'party') this.state = 'ready'; if (this.open_) this.render(); },
+  board() {
+    const g = this.g; if (!g) return '';
+    const ids = g.order.concat(Object.keys(g.score).filter(x => !g.order.includes(x))); const rows = ids.slice().sort((a, b) => (g.score[b] || 0) - (g.score[a] || 0));
+    return `<ul class="qzBoard">${rows.map(id => `<li class="${id === this.meId() ? 'me' : ''}${g.order.includes(id) ? '' : ' gone'}"><span>${esc(this.nm(id))}${g.state !== 'end' && g.locked[id] ? ' <i class="x">✗</i>' : ''}${g.winner === id && g.state === 'rev' ? ' <i class="o">⭕</i>' : ''}</span><b>${g.score[id] || 0}</b></li>`).join('')}</ul>`;
+  },
+  render(msg) {
+    if (!this.open_) return; const scr = $('qzScr'), pan = $('qzPan'); if (!scr) return; const g = this.g, P = this.inParty() ? Party.p : null;
+    if (this.inParty() && this.state === 'ready') this.state = 'party';
+    if (this.state === 'ready') {
+      scr.innerHTML = `<div class="qzMid"><h2>경매 퀴즈</h2><p>한 판 ${this.N}문제 · 문제마다 ${this.SEC}초. 먼저 맞힌 사람이 1점, 틀리면 그 문제는 끝이에요.</p>
+        <button class="btn gold" id="qzSolo">혼자 하기 · ${esc(castName('arcade'))} 사장님이랑</button><button class="btn" id="qzVs">👥 친구랑 퀴즈 대결</button>
+        <p class="qzNote">혼자 최고 기록 ${this.best()}/${this.N}${msg ? ` · ${esc(msg)}` : ''}</p></div>`;
+      pan.innerHTML = '<div class="qzKeys"><span><b>1 2 3 4</b> 보기 고르기 · <b>Esc</b> 일어나기</span></div>';
+      $('qzSolo').onclick = () => this.startSolo();
+      $('qzVs').onclick = () => { if (!Net.on) { Sound.play('deny'); Toast.show('친구랑 퀴즈는 채널이나 친구 방에서 할 수 있어요.'); return; } if (Party.create('quiz', 2, 0)) { this.state = 'party'; this.render(); } };
+      return;
+    }
+    if (this.state === 'party') {
+      if (!P) { this.state = 'ready'; return this.render(); }
+      const host = Party.isHost();
+      const seats = P.members.map(id => `<li class="${id === Net.myId ? 'me' : ''}">${esc(Party.nm(id))}${id === P.host ? ' <small>방장</small>' : ''}</li>`).join('') + Array.from({ length: Math.max(0, P.size - P.members.length) }, () => '<li class="empty">빈자리 · 모집 중…</li>').join('');
+      const fr = host && P.members.length < P.size ? Party.friends().filter(f => !P.members.includes(f.id)) : [];
+      const inv = !host || P.members.length >= P.size ? '' : fr.length ? `<div class="qzInv"><small>초대장 보내기 (밖에 있어도 와요)</small>${fr.map(f => `<button class="btn" data-inv="${f.id}" ${P.invited[f.id] ? 'disabled' : ''}>${esc(f.name)} <small>${P.invited[f.id] ? '보냄 ✓' : f.here ? '여기 있음' : '초대'}</small></button>`).join('')}</div>` : '<p class="qzNote">같은 동네에 접속한 친구가 없어요.</p>';
+      const opts = host ? `<div class="qzOpt"><span>인원</span>${[2, 3, 4, 5, 6].map(n => `<button class="btn${P.size === n ? ' sel' : ''}" data-qsz="${n}" ${n < P.members.length ? 'disabled' : ''}>${n}명</button>`).join('')}</div>` : '';
+      scr.innerHTML = `<div class="qzMid"><h2>퀴즈 대결</h2><p>보기를 먼저 맞힌 사람이 1점. ${this.N}문제 끝나고 점수가 제일 높은 사람이 우승이에요.</p><ul class="qzSeats">${seats}</ul>${opts}${inv}
+        ${host ? `<button class="btn gold" id="qzStart" ${P.members.length < 2 ? 'disabled' : ''}>START · 퀴즈 시작</button>` : '<p class="qzNote">방장이 시작하면 바로 시작해요.</p>'}<button class="btn" id="qzLeave">${host ? '판 닫기' : '판에서 나가기'}</button></div>`;
+      pan.innerHTML = '<div class="qzKeys"><span>판돈 없이 실력으로만 겨뤄요</span></div>';
+      scr.querySelectorAll('[data-qsz]').forEach(b => (b.onclick = () => { if (!Party.isHost()) return; P.size = +b.dataset.qsz; Party.roster(); Sound.play('click'); this.render(); }));
+      scr.querySelectorAll('[data-inv]').forEach(b => (b.onclick = () => Party.invite(b.dataset.inv)));
+      const st = $('qzStart'); if (st) st.onclick = () => this.hostStart();
+      $('qzLeave').onclick = () => { Party.leave(); this.state = 'ready'; this.g = null; this.render(); };
+      return;
+    }
+    if (this.state === 'done') {
+      const again = g && (g.solo || (P && Party.isHost() && P.members.length >= 2));
+      if (!g || g.aborted) { scr.innerHTML = `<div class="qzMid"><h2>GAME OVER</h2><p>방장이 나가서 판이 끝났어요.</p><button class="btn" id="qzBack">처음으로</button></div>`; pan.innerHTML = ''; $('qzBack').onclick = () => { this.state = 'ready'; this.g = null; this.render(); }; return; }
+      const me = this.meId(), top = Math.max(...Object.values(g.score)), tops = Object.keys(g.score).filter(id => g.score[id] === top), won = top > 0 && g.score[me] === top;
+      scr.innerHTML = `<div class="qzMid"><h2>${won ? (tops.length > 1 ? '공동 우승!' : 'YOU WIN!') : 'GAME OVER'}</h2><p>${top ? `${tops.map(id => esc(this.nm(id))).join(', ')} ${top}점으로 ${tops.length > 1 ? '공동 ' : ''}우승` : '아무도 못 맞혔어요'} · 내 점수 <b>${g.score[me] || 0}</b>/${g.qs.length}</p>${g.solo && (g.score[me] || 0) >= this.best() && g.score[me] ? '<p class="qzNote">🎉 혼자 최고 기록!</p>' : ''}${this.board()}
+        ${again ? `<button class="btn gold" id="qzAgain">CONTINUE · 한 판 더</button>` : P ? '<p class="qzNote">방장이 다시 시작하면 바로 시작해요.</p>' : ''}<button class="btn" id="qzBack">${P ? '대기실로' : '처음으로'}</button></div>`;
+      pan.innerHTML = '';
+      const a = $('qzAgain'); if (a) a.onclick = () => g.solo ? this.startSolo() : this.hostStart();
+      $('qzBack').onclick = () => { this.g = null; this.state = P ? 'party' : 'ready'; this.render(); };
+      return;
+    }
+    // 문제
+    const Q = QUIZ_BANK[g.qs[g.i]], perm = g.perm[g.i], me = this.meId(), rev = g.state === 'rev', lockMe = g.locked[me] || g.mine !== null;
+    const opt = (k) => { const orig = perm[k], right = orig === 0, picked = Object.keys(g.picks).filter(id => g.picks[id] === k);
+      const cls = rev ? (right ? 'ok' : picked.length ? 'bad' : 'dim') : (g.mine === k ? (g.locked[me] ? 'bad' : 'wait') : '');
+      return `<button class="btn qzOptBtn ${cls}" data-qa="${k}" ${rev || lockMe ? 'disabled' : ''}><i>${k + 1}</i><span>${esc(Q.a[orig])}</span>${picked.length && (rev || g.locked[picked[0]]) ? `<em>${picked.map(id => esc(this.nm(id))).join(' · ')}</em>` : ''}</button>`; };
+    const status = rev ? (g.winner ? `<div class="qzRes ${g.winner === me ? 'win' : ''}">${g.winner === me ? '🎉 정답! +1점' : `⭕ ${esc(this.nm(g.winner))} 정답 +1점`}</div>` : '<div class="qzRes">⏰ 아무도 못 맞혔어요</div>') + `<p class="qzWhy">💡 ${esc(Q.why)}</p>`
+      : g.locked[me] ? '<div class="qzRes lose">✗ 틀렸어요. 다른 사람이 맞히는지 지켜봐요</div>' : g.mine !== null ? '<div class="qzRes">답을 보냈어요…</div>' : '';
+    scr.innerHTML = `<div class="qzTop"><span>문제 ${g.i + 1}/${g.qs.length}</span>${rev ? '' : `<b class="qzT">⏱ <span id="qzTime">${Math.max(0, Math.ceil((g.t0 + this.SEC * 1000 - Date.now()) / 1000))}</span></b>`}</div>
+      <div class="qzQ">${esc(Q.q)}</div><div class="qzOpts">${[0, 1, 2, 3].map(opt).join('')}</div>${status}`;
+    pan.innerHTML = this.board() + '<div class="qzKeys"><span><b>1 2 3 4</b> 보기 고르기</span></div>';
+    scr.querySelectorAll('[data-qa]').forEach(b => (b.onclick = () => this.answer(+b.dataset.qa)));
+    void msg;
+  },
+};
+
 /* ===================== 여러 명 모집 · 초대장 (v90, 사용자 2026-10-15 '게임장이나 카지노 2인 이상 모집 선택, 밖이라도 초대장') =====================
  * 방장이 판을 만들고 인원(가위바위보 3~4명 · 카지노 룰렛/홀짝 2~6명)을 정한 뒤 친구에게 초대장을 보낸다.
  * 친구는 어디에 있든 카드로 받고, '가기'를 누르면 그 가게 안으로 바로 간다(타고 있던 차는 세워 둔 자리에 그대로).
@@ -9936,10 +10175,11 @@ const Tetris = {
  * 여러 명 가위바위보: 매 판 다 같이 내서 두 가지 손만 나오면 진 손을 낸 사람이 탈락(세 가지가 다 나오거나 다 같으면 다시).
  *   끝까지 남은 한 명이 판돈 × (끝까지 판에 있던 사람 − 1)을 받고, 나머지는 판돈을 낸다 (각자 자기 돈만 바꾼다). 방장이 25초 안 고른 사람을 탈락시킨다.
  * 같이 하는 룰렛·홀짝: 방장이 돌리거나 던지면 같은 숫자·주사위가 모두에게 나오고, 각자 자기 칩만 정산한다. */
-const PARTY_GAMES = { rps: { name: '가위바위보', kind: 'arcade', sizes: [3, 4] }, rl: { name: '룰렛', kind: 'casino', sizes: [2, 3, 4, 5, 6] }, hol: { name: '홀짝', kind: 'casino', sizes: [2, 3, 4, 5, 6] }, tet: { name: '대전 테트리스', kind: 'arcade', sizes: [2, 3, 4] } };
+const PARTY_GAMES = { rps: { name: '가위바위보', kind: 'arcade', sizes: [3, 4] }, rl: { name: '룰렛', kind: 'casino', sizes: [2, 3, 4, 5, 6] }, hol: { name: '홀짝', kind: 'casino', sizes: [2, 3, 4, 5, 6] }, tet: { name: '대전 테트리스', kind: 'arcade', sizes: [2, 3, 4] }, quiz: { name: '경매 퀴즈', kind: 'arcade', sizes: [2, 3, 4, 5, 6] } };
 // 초대를 받아 그 가게로 바로 가기 (이미 안에 있으면 그대로)
 async function mgGoTo(id) {
   if (Tetris.open_) Tetris.close(); // 초대를 받으면 테트리스는 접고 간다
+  if (Quiz.open_ && !Party.on('quiz')) Quiz.close();
   if (!id || (Game.scene === 'room' && Game.room && Game.room.place.id === id)) return true;
   const pl = Game.zone && Game.zone.places.find(x => x.id === id); if (!pl || Game.busy || (typeof Ride !== 'undefined' && Ride.with)) return false;
   const drove = Game.driving; if (drove) exitCar();
@@ -9976,7 +10216,7 @@ const Party = {
     if (!silent) Toast.show(`같이 하던 ${PARTY_GAMES[P.game].name} 판에서 나왔어요.`);
     if (P.game === 'rps' && Rps.open_ && (Rps.view === 'party' || Rps.view === 'pmatch')) { Rps.view = 'lobby'; Rps.render(); }
   },
-  refresh(msg) { const P = this.p; if (!P) return; if (P.game === 'tet') { if (Tetris.open_) Tetris.overlay(); return; } if (P.game === 'rps') { if (Rps.open_) Rps.render(msg); } else if (Casino.open_) Casino.render(msg); },
+  refresh(msg) { const P = this.p; if (!P) return; if (P.game === 'quiz') { if (Quiz.open_) Quiz.render(msg); return; } if (P.game === 'tet') { if (Tetris.open_) Tetris.overlay(); return; } if (P.game === 'rps') { if (Rps.open_) Rps.render(msg); } else if (Casino.open_) Casino.render(msg); },
   myBet(total, side) { const P = this.p; if (!P || P.game === 'rps') return; P.bets[Net.myId] = { total, side: side || '' }; this.send('bet', { gid: P.gid, total, side: side || '' }); },
   myRes(net) { const P = this.p; if (!P || P.game === 'rps') return; P.res[Net.myId] = net; this.send('res', { gid: P.gid, net }); },
   // 방장: 나간 사람 정리 · 가위바위보 시간 초과
@@ -9985,11 +10225,11 @@ const Party = {
     this.timer = setInterval(() => {
       const P = this.p; if (!P || !this.isHost()) return clearInterval(this.timer);
       const gone = P.members.filter(id => id !== Net.myId && (!Net.players[id] || Net.players[id].gone));
-      if (gone.length) { P.members = P.members.filter(id => !gone.includes(id)); if (P.g) this.rpsDrop(gone); if (P.game === 'tet') Tetris.drop(gone); this.roster(); this.refresh(); }
+      if (gone.length) { P.members = P.members.filter(id => !gone.includes(id)); if (P.g) this.rpsDrop(gone); if (P.game === 'tet') Tetris.drop(gone); if (P.game === 'quiz') Quiz.drop(gone); this.roster(); this.refresh(); }
       const g = P.g; if (g && g.state === 'pick' && Date.now() - g.t0 > 25000) { const cur = g.pk[g.r] || {}, ids = g.alive.filter(id => !cur[id] && id !== Net.myId); if (ids.length) { this.send('kick', { gid: P.gid, r: g.r, ids }); this.rpsKick(g.r, ids); } }
     }, 1000);
   },
-  busyNow() { return VipDuel.open_ || (Tetris.b && Tetris.b.state === 'play') || (Fight.open_ && Fight.view === 'play') || (Rps.g && Rps.g.state !== 'done') || !!this.p; },
+  busyNow() { return VipDuel.open_ || (Quiz.g && Quiz.state === 'play') || (Tetris.b && Tetris.b.state === 'play') || (Fight.open_ && Fight.view === 'play') || (Rps.g && Rps.g.state !== 'done') || !!this.p; },
   onNet(m, from) {
     const P = this.p, id = m.from, name = (from && from.name) || '친구';
     if (m.k === 'inv') {
@@ -9999,7 +10239,7 @@ const Party = {
     if (m.k === 'no') { if (m.to !== Net.myId || !P || P.gid !== m.gid) return; delete P.invited[id]; Toast.show(m.why === 'busy' ? `${name}은(는) 지금 다른 걸 하고 있어요.` : m.why === 'far' ? `${name}은(는) 지금 올 수 없대요.` : `${name}이(가) 초대를 거절했어요.`); return this.refresh(); }
     if (m.k === 'join') {
       if (m.to !== Net.myId || !P || !this.isHost() || P.gid !== m.gid) return;
-      if (!P.members.includes(id) && (P.members.length >= P.size || (P.game === 'rps' && P.g && P.g.state !== 'done') || (P.game === 'tet' && Tetris.b && Tetris.b.state === 'play'))) return this.send('full', { to: id, gid: m.gid });
+      if (!P.members.includes(id) && (P.members.length >= P.size || (P.game === 'rps' && P.g && P.g.state !== 'done') || (P.game === 'tet' && Tetris.b && Tetris.b.state === 'play') || (P.game === 'quiz' && Quiz.state === 'play'))) return this.send('full', { to: id, gid: m.gid });
       if (!P.members.includes(id)) P.members.push(id); P.names[id] = name; delete P.invited[id]; Toast.show(`${name}이(가) 들어왔어요.`); Sound.play('chime'); this.roster(); return this.refresh();
     }
     if (m.k === 'full') { if (m.to !== Net.myId || !this.pend || this.pend.gid !== m.gid) return; this.pend = null; Toast.show('자리가 다 찼거나 이미 시작했어요.'); return; }
@@ -10008,13 +10248,14 @@ const Party = {
       if (this.pend && this.pend.gid === m.gid && list.includes(Net.myId)) { this.pend = null; this.p = { gid: m.gid, host: m.host, game: m.game, size: +m.size, stake: +m.stake || 0, place: Game.room ? Game.room.place.id : '', members: list, names: m.names || {}, invited: {}, started: !!m.started, bets: {}, res: {}, g: null }; return this.arrive(); }
       if (!P || P.gid !== m.gid) return; P.members = list; P.names = m.names || P.names;
       if (!list.includes(Net.myId)) { this.p = null; Toast.show('판에서 빠졌어요.'); return this.closed(P); }
-      if (P.g) this.rpsDrop(P.g.all.filter(x => !list.includes(x))); if (P.game === 'tet' && Tetris.b) Tetris.drop(Tetris.b.order.filter(x => !list.includes(x)));
+      if (P.g) this.rpsDrop(P.g.all.filter(x => !list.includes(x))); if (P.game === 'tet' && Tetris.b) Tetris.drop(Tetris.b.order.filter(x => !list.includes(x))); if (P.game === 'quiz' && Quiz.g) Quiz.drop(Quiz.g.order.filter(x => !list.includes(x)));
       return this.refresh();
     }
     if (!P || P.gid !== m.gid) return;
     if (m.k === 'end') { this.p = null; clearInterval(this.timer); Toast.show('방장이 판을 닫았어요.'); return this.closed(P); }
-    if (m.k === 'leave') { P.members = P.members.filter(x => x !== id); delete P.bets[id]; Toast.show(`${name}이(가) 나갔어요.`); if (P.g) this.rpsDrop([id]); if (P.game === 'tet') Tetris.drop([id]); this.roster(); return this.refresh(); }
-    if (P.game === 'tet' && ['start', 'tb', 'atk', 'tko'].includes(m.k)) return Tetris.onParty(m, id); // 대전 테트리스 (v93)
+    if (m.k === 'leave') { P.members = P.members.filter(x => x !== id); delete P.bets[id]; Toast.show(`${name}이(가) 나갔어요.`); if (P.g) this.rpsDrop([id]); if (P.game === 'tet') Tetris.drop([id]); if (P.game === 'quiz') Quiz.drop([id]); this.roster(); return this.refresh(); }
+    if (P.game === 'tet' && ['start', 'tb', 'atk', 'tko'].includes(m.k)) return Tetris.onParty(m, id);
+    if (P.game === 'quiz' && ['start', 'qa', 'qwin', 'qx', 'qto', 'qnext', 'qend'].includes(m.k)) return Quiz.onParty(m, id); // 경매 퀴즈 (v128) // 대전 테트리스 (v93)
     if (m.k === 'start' && P.game === 'rps') return this.rpsBegin((m.order || []).map(String));
     if (m.k === 'pick') return this.rpsOnPick(id, +m.r, m.h);
     if (m.k === 'kick') return this.rpsKick(+m.r, (m.ids || []).map(String));
@@ -10023,7 +10264,7 @@ const Party = {
     if (m.k === 'spin' && P.game === 'rl' && id === P.host && Casino.open_) { if (Casino.tab !== 'rl') { Casino.tab = 'rl'; Casino.render(); } return Casino.rlSpin(+m.n); }
     if (m.k === 'dice' && P.game === 'hol' && id === P.host && Casino.open_) { if (Casino.tab !== 'hol') { Casino.tab = 'hol'; Casino.render(); } return Casino.holRoll(Math.max(1, Math.min(6, +m.d1 || 1)), Math.max(1, Math.min(6, +m.d2 || 1))); }
   },
-  closed(P) { if (P.game === 'tet') return Tetris.partyClosed(); if (P.game === 'rps') { if (Rps.open_) { Rps.view = 'lobby'; Rps.render('판이 끝났어요.'); } } else if (Casino.open_) Casino.render(); },
+  closed(P) { if (P.game === 'quiz') return Quiz.partyClosed(); if (P.game === 'tet') return Tetris.partyClosed(); if (P.game === 'rps') { if (Rps.open_) { Rps.view = 'lobby'; Rps.render('판이 끝났어요.'); } } else if (Casino.open_) Casino.render(); },
   /* ---- 초대장 카드 ---- */
   showInv() {
     const el = $('partyAsk'), a = this.inv; if (!a) { el.classList.remove('in'); return; }
@@ -10036,15 +10277,16 @@ const Party = {
     const a = this.inv; if (!a) return;
     if (Game.busy || VipDuel.open_ || (Fight.open_ && Fight.view === 'play') || (Casino.open_ && Casino.locked())) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.');
     if (Tetris.b && Tetris.b.state === 'play') return Toast.show('대전 테트리스를 먼저 끝내고 눌러 주세요.');
-    if (Game.formOpen && !Rps.open_ && !Casino.open_ && !Fight.open_ && !Tetris.open_) return Toast.show('열려 있는 창을 닫고 눌러 주세요.');
+    if (Game.formOpen && !Rps.open_ && !Casino.open_ && !Fight.open_ && !Tetris.open_ && !Quiz.open_) return Toast.show('열려 있는 창을 닫고 눌러 주세요.');
     this.inv = null; this.showInv();
-    if (Rps.open_) Rps.close(); if (Fight.open_) Fight.close(); if (Casino.open_) Casino.close();
+    if (Rps.open_) Rps.close(); if (Fight.open_) Fight.close(); if (Casino.open_) Casino.close(); if (Quiz.open_) Quiz.close();
     if (!(await mgGoTo(a.place))) return this.send('no', { to: a.from, gid: a.gid, why: 'far' });
     this.pend = { gid: a.gid }; this.send('join', { to: a.from, gid: a.gid });
     setTimeout(() => { if (this.pend && this.pend.gid === a.gid) { this.pend = null; Toast.show('방장이 대답이 없어요.'); } }, 10000);
   },
   arrive() {
     const P = this.p; Sound.play('chime');
+    if (P.game === 'quiz') { Quiz.open(); Quiz.state = 'party'; Quiz.render(); return; } // 경매 퀴즈 (v128)
     if (P.game === 'tet') { Tetris.open(); Tetris.b = null; Tetris.state = 'party'; Tetris.overlay(); return; } // 대전 테트리스 (v93)
     if (P.game === 'rps') { Rps.open(); Rps.view = 'party'; Rps.render(); } else Casino.open(P.game);
   },

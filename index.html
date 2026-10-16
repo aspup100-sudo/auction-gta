@@ -5247,6 +5247,7 @@ const Live = {
     if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.rentLog = sv.rentLog || []; this.seen = sv.seen || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
     else { State.capital = capital; State.cash = capital; }
     if (sv && !Store.get('topup163_' + this.ch, false)) { Store.set('topup163_' + this.ch, true); if (State.cash < 1e8) { this.topup = Math.round(1e8 - State.cash); Money.why('자금 다시 채워 줌 (1억까지)'); State.cash = 1e8; } } // 한 번만: 돈이 1억 밑이면 1억으로 (사용자 2026-10-16 '자금 1억 밑인 사람 1억으로 다시')
+    if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('adj9k_1', false)) { Store.set('adj9k_1', true); Money.why('운영자 조정 (자금 9천만 원으로)'); State.cash = 9e7; setTimeout(() => HUD.page('운영자가 자금을 9천만 원으로 맞췄어요. 이제부터 합의금·병원비가 모자라면 석탄 땅굴로 끌려가요.', '알림'), 4500); } // 사용자 2026-10-16 '에센티아 이 사람 9천만 원 만들어 봐': 채널 1의 에센티아만, 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;
     const cases = []; for (let k = 0; k < FEEL.liveListings; k++) { const cyc = this.cycle(k); cases.push(this.makeCase(k, cyc.n)); }

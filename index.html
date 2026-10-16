@@ -1868,6 +1868,7 @@ Object.assign(FEEL, {
   wsPosHz: 8,             // 중계 서버로 보내는 위치 신호 횟수/초 (PeerJS는 8) · 6→8 (사용자 2026-10-14 '다른 사람이 끊겨 보여')
   netSmooth: 10,          // 친구 위치를 따라가는 빠르기(클수록 빨리 붙고, 작을수록 부드럽다)
   netPredictSec: 0.2,     // 다음 위치 신호가 올 때까지 마지막 속도로 미리 움직여 두는 최대 시간(초) → 신호 사이가 끊겨 보이지 않게
+  netDelayMs: 170,        // v144: 친구 위치를 이만큼 늦게 그리면서 받은 신호 사이를 이어 그린다 (신호가 들쭉날쭉 와도 안 끊기게)
   netSnapPx: 240,         // 이보다 멀리 뛰면(순간이동·구역 이동) 따라가지 않고 바로 옮긴다
   hostDeadSec: 20,        // 손님: 방장 소식이 이만큼 없으면 다시 잇기 (자리가 비면 내가 방장)
   liveIdleSec: 20,
@@ -4524,6 +4525,12 @@ const Net = {
       p.tx = m.x; p.ty = m.y; p.tcx = m.cx; p.tcy = m.cy; p.tca = m.ca; p.at = now;
       if (p.x === undefined || p.z !== p.lastZ || p.s !== p.lastS || far(p.x, p.y, m.x, m.y)) { p.x = m.x; p.y = m.y; }
       if (p.cx === undefined || p.z !== p.lastZ || far(p.cx, p.cy, m.cx, m.cy)) { p.cx = m.cx; p.cy = m.cy; p.ca = m.ca; }
+      if (m.ts !== undefined) { // v144 (사용자 2026-10-16 '친구 차가 뚝뚝 끊겨'): 보낸 쪽 시각(ts)으로 위치를 쌓아 두고, 조금(netDelayMs) 늦게 그 사이를 이어 그린다
+        const ts = +m.ts, o = now - ts; if (!p.buf || p.z !== p.lastZ || p.s !== p.lastS || p.ts0 === undefined || ts < p.ts0 - 5000) p.buf = []; p.ts0 = ts;
+        const L = p.buf[p.buf.length - 1];
+        if (!L || ts > L.ts) { if (L && (far(L.x, L.y, m.x, m.y) || (L.cx !== undefined && m.cx !== undefined && far(L.cx, L.cy, m.cx, m.cy)))) p.buf = []; p.buf.push({ ts, x: m.x, y: m.y, cx: m.cx, cy: m.cy, ca: m.ca }); if (p.buf.length > 24) p.buf.shift(); }
+        p.off = p.off === undefined || o < p.off ? o : p.off + 0.5; // 제일 빨리 온 신호를 기준으로 (조금씩 늦춰 가며 시계 차이를 따라간다)
+      } else p.buf = null;
       p.lastZ = p.z; p.lastS = p.s; return;
     }
     if (m.t === 'chat') { p.bubble = { text: m.text, t: FEEL.chatBubbleTime }; this.pushLog(p.name, m.text); Sound.play('blip', 1.3); return; }
@@ -4560,7 +4567,7 @@ const Net = {
     // 중계 서버: 10초마다 심장박동이 온다. FEEL.wsDeadSec 동안 아무 소식이 없으면(폰 절전 뒤 죽은 소켓) 닫고 다시 잇는다
     if (this.transport === 'ws' && this.status === 'open' && this.hostSeen && performance.now() - this.hostSeen > FEEL.wsDeadSec * 1000) { this.hostSeen = 0; const w = this.ws; this.ws = null; try { if (w) { w.onclose = null; w.close(); } } catch (e) {} this.setStatus('lost', '중계 서버 응답이 없어요. 다시 잇는 중…'); this.retryT = 0.5; }
     if (this.retryT > 0) { this.retryT -= dt; if (this.retryT <= 0 && this.status === 'lost') { this.retryT = 6; if (this.transport === 'ws') this.connectWs(this.wsPath); else if (this.transport === 'peer') { if (this.mode === 'channel') this.claimChannel(); else if (!this.host) this.join(this.room, this.me); } } }
-    for (const id in this.players) { const p = this.players[id]; if (p.bubble) { p.bubble.t -= dt; if (p.bubble.t <= 0) p.bubble = null; } if (p.x !== undefined && p.tx !== undefined) { // 마지막 속도로 조금 앞을 내다본 목표를 향해 매 프레임 미끄러지듯 따라간다
+    for (const id in this.players) { const p = this.players[id]; if (p.bubble) { p.bubble.t -= dt; if (p.bubble.t <= 0) p.bubble = null; } if (p.buf && p.buf.length) { this.replay(p); continue; } if (p.x !== undefined && p.tx !== undefined) { // 마지막 속도로 조금 앞을 내다본 목표를 향해 매 프레임 미끄러지듯 따라간다
         const k = 1 - Math.exp(-FEEL.netSmooth * dt), ahead = Math.min(FEEL.netPredictSec, (performance.now() - p.at) / 1000);
         p.x += (p.tx + (p.vx || 0) * ahead - p.x) * k; p.y += (p.ty + (p.vy || 0) * ahead - p.y) * k;
         if (p.cx !== undefined && p.tcx !== undefined) { p.cx += (p.tcx + (p.vcx || 0) * ahead - p.cx) * k; p.cy += (p.tcy + (p.vcy || 0) * ahead - p.cy) * k; p.ca += angDiff(p.tca + (p.vca || 0) * ahead, p.ca) * k; }
@@ -4569,7 +4576,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos() });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ts: Math.round(performance.now()) });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -4647,6 +4654,15 @@ const Net = {
     return out;
   },
   // 같은 구역에 세워 둔 다른 사람 차 (주인이 걷거나 건물 안에 있어도 보인다; 운전 중이면 drawFriend가 그린다)
+  // 쌓아 둔 위치 사이를 이어 그린다: 지금보다 netDelayMs 전 (보낸 쪽 시각) 자리. 새 신호가 늦으면 마지막 속도로 조금만 더 간다
+  replay(p) {
+    const B = p.buf, rt = performance.now() - p.off - FEEL.netDelayMs, N = B.length, set = (x, y, cx, cy, ca) => { p.x = x; p.y = y; if (cx !== undefined) { p.cx = cx; p.cy = cy; p.ca = ca; } };
+    if (N === 1 || rt <= B[0].ts) { const a = rt <= B[0].ts ? B[0] : B[N - 1]; return set(a.x, a.y, a.cx, a.cy, a.ca); }
+    if (rt >= B[N - 1].ts) { const a = B[N - 2], b = B[N - 1], u = Math.min(FEEL.netPredictSec * 1000, rt - b.ts) / Math.max(1, b.ts - a.ts);
+      return set(b.x + (b.x - a.x) * u, b.y + (b.y - a.y) * u, b.cx === undefined ? undefined : b.cx + (b.cx - a.cx) * u, b.cy + (b.cy - a.cy) * u, b.ca + angDiff(b.ca, a.ca) * u); }
+    let j = N - 2; while (j > 0 && B[j].ts > rt) j--; const a = B[j], b = B[j + 1], u = (rt - a.ts) / Math.max(1, b.ts - a.ts);
+    set(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, a.cx === undefined || b.cx === undefined ? undefined : a.cx + (b.cx - a.cx) * u, a.cy + (b.cy - a.cy) * u, a.ca + angDiff(b.ca, a.ca) * u);
+  },
   parkedCars() {
     if (!this.on || !Game.zone) return [];
     const out = [];
@@ -8514,12 +8530,12 @@ const Pets = {
   // "펭귄아 받아!" 하고 물고기를 던진다 (한 사람당 한 번). 물고기가 포물선으로 날아오면 펭귄이 폴짝 뛰어 부리로 받아 꿀꺽.
   FISH_SAY: ['펭귄아 받아!', '옛다 생선!', '이거 먹어~', '배고프지?', '자, 고등어!', '하나 줄게~'],
   fish(c, s, idle) {
-    const now = performance.now(), F = s.fish, on = Game.scene === 'zone' && !s.moving && idle > 1.2;
+    const now = performance.now(), F = s.fish, on = Game.scene === 'zone'; // 걸어가는 중에도 받아먹는다 (사용자 2026-10-16 '안 멈추고 지나가도')
     if (F) {
       const w = F.w, e = now - F.t0, gone = !Game.decor.includes(w) || w.esc || w.stun > 0 || (w.ai && w.ai.flee);
       if (e < 700) { if (gone || !on) { this.fishEnd(s, w); return; } } // 던지기 전에 펭귄이 가 버리거나 행인이 도망가면 취소
       if (w.ai && !gone && e < 1500) { w.ai.ix = w.ai.iy = 0; w.ai.t = 0.3; w.moving = false; w.frame = 0; const fx = s.x - w.x, fy = s.y - 8 - w.y; w.dir = Math.abs(fx) > Math.abs(fy) ? (fx > 0 ? 2 : 1) : (fy > 0 ? 0 : 3); }
-      if (e < 700) return; if (!F.from) { F.from = { x: w.x + (w.dir === 2 ? 5 : w.dir === 1 ? -5 : 0), y: w.y - 11 }; s.face = w.x > s.x ? 1 : -1; Sound.play('blip'); }
+      if (e < 700) return; if (!F.from) { F.from = { x: w.x + (w.dir === 2 ? 5 : w.dir === 1 ? -5 : 0), y: w.y - 11 }; Sound.play('blip'); } if (e < 1400 + 1300) s.face = w.x > s.x ? 1 : -1; // 던지는 사람 쪽을 본다
       if (e < 1400) { const u = (e - 700) / 700, tx = s.x + 5 * s.face, ty = s.y - 11, x = F.from.x + (tx - F.from.x) * u, y = F.from.y + (ty - F.from.y) * u - Math.sin(Math.PI * u) * 24, dir = tx > F.from.x ? 1 : -1;
         this.extra.push({ y: s.y + 50, d: () => this.fishFly(c, x, y, dir, u) }); return; }
       F.eat = (e - 1400) / 1000; if (F.eat > 0.05 && !F.ate) { F.ate = true; Sound.play('pop'); }

@@ -7966,6 +7966,14 @@ const Pets = {
 const PET_FOLLOW = { cat: { near: 14, far: 46 }, mouse: { near: 9 }, giraffe: { v: 0.6 }, mantis: { v: 0.65 }, elephant: { v: 0.85 } }; // 따라오는 버릇
 // 펫마다 하나씩 특징 (사용자 2026-10-15 '펫마다 특징'): 따라올 때 / 5초 넘게 서 있을 때. true를 돌려주면 직접 다 그린 것.
 const PET_ACT = {
+  penguin(r, s, t, c, mv, idle, f) { if (mv || idle <= 5) return false; // 5초 넘게 서 있으면 앞 웅덩이에서 물고기를 낚아 먹는다 (사용자 2026-10-16)
+    c.fillStyle = 'rgba(80,160,230,.55)'; c.beginPath(); c.ellipse(10, -1, 5.5, 2, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(225,242,255,.7)'; c.lineWidth = 1; c.stroke();
+    const p = (idle - 5) % 3.2, lean = p < 1 ? 0.12 : p < 1.5 ? 0.12 + (p - 1) * 1.1 : p < 1.9 ? 0.67 - (p - 1.5) * 1.4 : 0.1;
+    if (p >= 1.4 && p < 1.8) for (let i = 0; i < 3; i++) r(7 + i * 3, -3 - Math.round(((p - 1.4) * 10 + i) % 3), 1, 1, '#e8f4ff'); // 첨벙
+    if (p < 1) { const rp = (t * 1.5) % 1; c.strokeStyle = `rgba(225,242,255,${(0.6 * (1 - rp)).toFixed(2)})`; c.beginPath(); c.ellipse(10, -1, 2 + rp * 3, 0.8 + rp, 0, 0, 7); c.stroke(); } // 물속에 뭐가 있나 들여다보기
+    c.save(); c.rotate(lean); f(r, 0, t, c, false);
+    if (p >= 1.6 && p < 2.9) { const sz = p < 2.4 ? 1 : 1 - (p - 2.4) / 0.5, w = Math.max(1, Math.round(4 * sz)), wig = Math.floor(t * 10) % 2; r(4, -10, w, 2, '#a8c4dc'); r(4, -10, w, 1, '#d4e4f0'); if (sz > 0.6) { r(4 + w, -11 + wig, 1, 2, '#7a9ab8'); r(5, -10, 1, 1, '#111'); } } // 물고기 물고 꿀꺽
+    c.restore(); return true; },
   dog(r, s, t, c, mv, idle, f) {
     if (mv) { c.translate(0, s ? -1 : 0); return false; } // 꼬리 흔들며 깡충
     if (idle > 6.6) { const B = '#b5793a', D = '#7a4a1e', ch = Math.floor(t * 6) % 2; r(-3, -8, 6, 8, B); r(1, -13, 5, 5, B); r(1, -14, 2, 3, D); r(5, -11, 2, 2, '#e8c79a'); r(6, -12, 1, 1, '#111'); r(4, -12, 1, 1, '#111'); r(5, -9, 1, 1 + ch, '#e8607a'); r(0, -2, 1, 2, D); r(2, -2, 1, 2, D); r(-6, -2 + ch, 3, 1, B); return true; } // 앉아서 헥헥

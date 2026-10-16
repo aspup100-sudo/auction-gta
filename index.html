@@ -6666,6 +6666,7 @@ function updateDecor(dt) {
         w.moving = false; continue;
       }
     }
+    if (w.petNpc && performance.now() < w.petNpc.until) { w.moving = false; continue; } // 펫이랑 노는 중 (PetNPC가 세워 둔다)
     if (Dialog.open && !w.ai.ix && !w.ai.iy && Math.hypot(w.x - Game.player.x, w.y - Game.player.y) < 40) { w.ai.t = Math.max(w.ai.t, 0.5); w.moving = false; continue; } // 나랑 얘기 중인 행인은 그 자리에 (대화창 동안)
     w.ai.t -= dt;
     if (w.ai.t <= 0) { w.ai.t = 1 + Math.random() * 3; const a = Math.floor(Math.random() * 5); w.ai.ix = [0, 1, -1, 0, 0][a]; w.ai.iy = [0, 0, 0, 1, -1][a]; w.ai.flee = false; }
@@ -8670,6 +8671,7 @@ const Pets = {
     if (k === 'mouse') { if (s.moving || idle < 4.9) s.hole = undefined; else if (s.hole === undefined) { s.hole = null; const z = Game.scene === 'zone' && Game.zone; if (z) for (let dy = 2; dy <= 26; dy += 2) { const ty = Math.floor((s.y - dy) / TILE); if (z.at(Math.floor((s.x + 9 * s.face) / TILE), ty) === T.BLD) { s.hole = Math.round((ty + 1) * TILE - s.y) + 3; break; } } } } // 바로 위쪽에 건물 벽이 있으면 벽 쥐구멍
     if (k === 'trex' && s.moving) Prints.lay(key, s.x, s.y);
     if (k === 'penguin') { this.fish(c, s, idle, key); if (key.startsWith('me')) { if (s.moving && s.lx != null) { const d = Math.hypot(s.x - s.lx, s.y - s.ly); if (d < 40 && PET_FAT.get() > 0) PET_FAT.add(-d / 1400, s); } s.lx = s.x; s.ly = s.y; } } // 많이 걸으면 살이 빠진다
+    if (typeof PNPC !== 'undefined' && PNPC[k]) { const R = PetNPC.run(c, s, key, k, t, n, idle, k !== 'monkey' || t - s.oStill >= 5); if (R) return R; } // 지나가는 행인이랑 놀기 (v159, 원숭이는 머리에서 내려와 있을 때만)
     const TS = k === 'turtle' ? this.turtle(c, s, key, idle, t) : null;
     if (k === 'buddy') { const B = this.buddy(c, s, k, key, ox, oy, t, n, idle); if (B) return B; }
     if (k === 'kid') { const K = this.noona(c, s, k, ox, oy, t, n, idle); if (K) return K; }
@@ -8807,7 +8809,7 @@ const Pets = {
     let have = D.filter(w => w.fan && w.fan.own === s);
     const z = Game.zone, SL = [[34, 6], [-30, 8], [24, -16], [-22, -16], [6, 24], [48, -2], [-46, 0], [0, -28]], walk = (x, y) => z && z.at(Math.floor(x / TILE), Math.floor(y / TILE)) === T.WALK;
     const clear = (x0, y0, x1, y1) => { const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 6); for (let i = 0; i <= n; i++) if (!walk(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n)) return false; return walk(x1 + 8, y1) && walk(x1 - 8, y1) && walk(x1, y1 + 8) && walk(x1, y1 - 8); }; // 인도로 곧장 갈 수 있는 자리만
-    if (have.length < 3 && !(now < s.fanScan)) { s.fanScan = now + 700; for (const w of D) { if (have.length >= 3) break; if (!w.ai || w.fan || w.esc || w.vip || w.promo || w.stun > 0 || (w.fanCd && now < w.fanCd) || (w.bowT && now < w.bowT) || Math.hypot(w.x - s.x, w.y - s.y) > 170) continue;
+    if (have.length < 3 && !(now < s.fanScan)) { s.fanScan = now + 700; for (const w of D) { if (have.length >= 3) break; if (!w.ai || w.fan || w.petNpc || w.esc || w.vip || w.promo || w.stun > 0 || (w.fanCd && now < w.fanCd) || (w.bowT && now < w.bowT) || Math.hypot(w.x - s.x, w.y - s.y) > 170) continue;
       const used = have.map(v => v.fan.slot), slot = SL.findIndex(([dx, dy], i) => !used.includes(i) && clear(w.x, w.y, s.x + dx * s.face, s.y + dy)); if (slot < 0) continue;
       w.fan = { own: s, slot, tx: s.x + SL[slot][0] * s.face, ty: s.y + SL[slot][1], at: now, next: now + 900 + Math.random() * 800 }; if (k === 'panda') { w.bubble = { text: '푸바오??', t: 2 }; w.fan.next = now + 2400; } have.push(w); } }
     for (const w of have) {
@@ -8838,7 +8840,7 @@ const Pets = {
     }
     if (!on || now < (s.fishNext || 0)) return; s.fishNext = now + 900;
     let best = null, bd = 95;
-    for (const w of Game.decor) { if (!w.ai || w.fished || w.fan || w.photo || w.esc || w.vip || w.promo || w.stun > 0 || w.ai.flee) continue; const d = Math.hypot(w.x - s.x, w.y - s.y); if (d > 24 && d < bd) { bd = d; best = w; } }
+    for (const w of Game.decor) { if (!w.ai || w.fished || w.petNpc || w.fan || w.photo || w.esc || w.vip || w.promo || w.stun > 0 || w.ai.flee) continue; const d = Math.hypot(w.x - s.x, w.y - s.y); if (d > 24 && d < bd) { bd = d; best = w; } }
     if (!best) return; best.fished = true; s.fish = { w: best, t0: now }; best.bubble = { text: this.FISH_SAY[Math.floor(Math.random() * this.FISH_SAY.length)], t: 1.6 };
   },
   fishEnd(s, w) { s.fish = null; if (w && w.ai) w.ai.t = 0.3; },
@@ -8896,7 +8898,7 @@ const Prints = {
         w.ai.ix = w.ai.iy = 0; w.ai.t = 0.3; w.moving = false; const fx = w.photo.x - w.x, fy = w.photo.y - w.y; w.dir = Math.abs(fx) > Math.abs(fy) ? (fx > 0 ? 2 : 1) : (fy > 0 ? 0 : 3);
         if (now > w.photo.next) { w.photo.next = now + 1000 + Math.random() * 600; w.photo.flash = now; }
         Pets.extra.push({ y: w.y + 0.4, d: () => Pets.camera(c, w, now) }); continue; }
-      if (!w.ai || w.fan || w.esc || w.vip || w.promo || w.stun > 0 || (w.photoCd && now < w.photoCd) || (w.prChk && now < w.prChk)) continue; w.prChk = now + 500;
+      if (!w.ai || w.fan || w.petNpc || w.esc || w.vip || w.promo || w.stun > 0 || (w.photoCd && now < w.photoCd) || (w.prChk && now < w.prChk)) continue; w.prChk = now + 500;
       const p = this.pts.find(p => Math.hypot(p.x - w.x, p.y - w.y) < 22 && performance.now() / 1000 - p.t < this.LIFE - 2); if (!p || Math.random() < 0.4) continue;
       w.photo = { x: p.x, y: p.y, until: now + 3200, next: now + 600 }; w.bubble = { text: this.SAY[Math.floor(Math.random() * this.SAY.length)], t: 2.4 };
     }
@@ -9346,7 +9348,7 @@ const PetRage = {
     if (Game.driving || Game.scene !== 'zone' || (typeof Ride !== 'undefined' && Ride.with)) return; const now = performance.now();
     for (const key of ['me', 'me#2']) { const s = Pets.st[key], kind = key === 'me' ? Pets.mineK : Pets.mineK2; if (!s || !kind || s.rage || (s.rageCd || 0) > now) continue;
       if (Math.hypot(s.x - Game.player.x, s.y - Game.player.y) > 120) continue; // 화면 밖에 남은 옛 위치는 무시
-      if (pointInCar(s.x, s.y, q.x, q.y, q.a, car.len / 2 + 2, car.wid / 2 + 2)) this.hit(car, q, s, key, kind); }
+      const N = s.npc; if (pointInCar(N ? N.px : s.x, N ? N.py : s.y, q.x, q.y, q.a, car.len / 2 + 2, car.wid / 2 + 2)) { if (N) { s.x = N.px; s.y = N.py; PetNPC.end(s, N); } this.hit(car, q, s, key, kind); } } // 행인이랑 노는 중이면 그려진 자리로
   },
   hit(car, q, s, key, kind) {
     let nx = s.x - q.x, ny = s.y - q.y; const d = Math.hypot(nx, ny) || 1; nx = nx / d * 0.6 + Math.cos(q.a) * 0.8; ny = ny / d * 0.6 + Math.sin(q.a) * 0.8; const L = Math.hypot(nx, ny) || 1;
@@ -9405,6 +9407,160 @@ const PetRage = {
       if (R.pow) { c.save(); c.globalAlpha = Math.min(1, R.pow.t / 0.15); c.font = '900 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2.5; c.strokeStyle = '#5a1a00'; c.strokeText('퍽!', R.pow.x, R.pow.y - (0.3 - R.pow.t) * 20); c.fillStyle = '#ffd84a'; c.fillText('퍽!', R.pow.x, R.pow.y - (0.3 - R.pow.t) * 20); c.restore(); }
     } };
   },
+};
+
+/* ===================== 펫과 행인 (사용자 2026-10-16 '펭귄같이 이렇게 NPC랑 상호작용 할 수 있는 거 만들어 줄래? 펫들') =====================
+ * 서 있는 펫 근처 행인이 한 명씩 말을 걸고, 펫마다 다르게 논다 (한 사람당 한 번, 펭귄 물고기 Pets.fish와 같은 식으로 각자 화면에서).
+ * 장면 동안 행인은 w.petNpc로 그 자리에 세워 두고(updateDecor가 건너뜀), 펫은 서 있던 자리 H에서 오갔다가 돌아온다 (Pets.st 위치는 그대로).
+ * 주인이 걸어가면(펫이 따라가기 시작하면) 바로 끝. 끝나면 5~9초 뒤에 다음 행인.
+ */
+const PetNPC = {
+  run(c, s, key, k, t, n, idle, ok) {
+    const now = performance.now(), D = PNPC[k], S = s.npc, zone = Game.scene === 'zone';
+    if (S) {
+      const w = S.w, e = (now - S.t0) / 1000, gone = !Game.decor.includes(w) || w.esc || w.stun > 0 || w.rage;
+      if (now - S.last > 600 || !zone || !ok || s.moving || (!S.freed && gone) || e > D.dur) { this.end(s, S); return null; }
+      S.last = now; S.H = { x: s.x, y: s.y };
+      if (!S.freed) { const fx = S.px - w.x, fy = S.py - 8 - w.y; w.petNpc.until = now + 500; if (w.ai) { w.ai.ix = w.ai.iy = 0; w.ai.t = 0.3; w.ai.flee = false; } w.moving = false; w.frame = 0;
+        w.dir = S.wdir != null ? S.wdir : Math.abs(fx) > Math.abs(fy) ? (fx > 0 ? 2 : 1) : (fy > 0 ? 0 : 3); w.x = S.wx + (S.jit ? (Math.floor(now / 55) % 2 ? 0.5 : -0.5) : 0); }
+      S.wdir = null; S.jit = false;
+      const A = this.api(c, s, S, e, now, k), R = D.run(S, e, A) || {}, x = R.x != null ? R.x : S.H.x, y = R.y != null ? R.y : S.H.y, face = R.face || A.face;
+      S.px = x; S.py = y; const LH = this.LH[k] || 20, labels = A.labels;
+      if (labels.length) Pets.extra.push({ y: y + 60, d: () => { for (const L of labels) Net.label(c, L, x, y - LH); } }); // 말은 나무·건물보다 위에
+      return { y, d: () => { Pets.draw(c, k, x, y, face, !!R.mv, t, n, R.idle || 0, R.pose); if (R.after) R.after(c, x, y, face); } };
+    }
+    if (!zone || !ok || s.moving || idle < 1 || now < (s.npcNext || 0)) return null; s.npcNext = now + 900;
+    let best = null, bd = 95; const mn = D.min || 24;
+    for (const w of Game.decor) { if (!w.ai || w.petMet || w.petNpc || w.fan || w.photo || w.esc || w.vip || w.promo || w.rage || w.stun > 0 || w.ai.flee || (w.bowT && now < w.bowT)) continue; const d = Math.hypot(w.x - s.x, w.y - s.y); if (d > mn && d < bd) { bd = d; best = w; } }
+    if (!best) return null;
+    best.petMet = true; best.petNpc = { until: now + 500 }; best.bubble = { text: D.say[Math.floor(Math.random() * D.say.length)], t: 1.8 };
+    s.npc = { w: best, t0: now, last: now, wx: best.x, side: Math.sign(s.x - best.x) || 1, H: { x: s.x, y: s.y }, W: { x: best.x, y: best.y }, px: s.x, py: s.y, r: Math.random(), done: {} };
+    return null;
+  },
+  end(s, S) { this.free(S, false); s.npc = null; s.npcNext = performance.now() + 5000 + Math.random() * 4000; },
+  free(S, flee) { if (S.freed) return; S.freed = true; const w = S.w; if (Game.decor.includes(w)) w.x = S.wx; delete w.petNpc;
+    if (w.ai) { w.ai.t = flee ? 1.6 : 0.3; if (flee) { w.ai.ix = Math.sign(w.x - S.px) || 1; w.ai.iy = Math.sign(w.y - S.py); w.ai.flee = true; } } },
+  LH: { trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
+  // 장면에서 쓰는 도구: 시간 구간, 오가기, 던지기, 말풍선, 하트
+  api(c, s, S, e, now, k) {
+    const H = S.H, W = S.W, side = S.side, ex = Pets.extra, A = {
+      c, e, H, W, side, face: -side, labels: [],
+      u: (a, b) => { const u = Math.max(0, Math.min(1, (e - a) / (b - a))); return u * u * (3 - 2 * u); },
+      near: d => ({ x: W.x + side * d, y: W.y + 1 }),
+      hand: () => ({ x: W.x + side * 5, y: W.y - 9 }),
+      // 시간표대로 오간다: [[시각, 자리], ...] 사이는 일정한 속도, 움직이는 동안 그쪽을 본다
+      go(pts) { if (e <= pts[0][0]) return { x: pts[0][1].x, y: pts[0][1].y }; for (let i = 0; i < pts.length - 1; i++) { const [ta, P] = pts[i], [tb, Q] = pts[i + 1]; if (e < tb) { const u = (e - ta) / (tb - ta), d = Math.hypot(Q.x - P.x, Q.y - P.y); return { x: P.x + (Q.x - P.x) * u, y: P.y + (Q.y - P.y) * u, mv: d > 1, face: d > 1 && Math.abs(Q.x - P.x) > 0.5 ? Math.sign(Q.x - P.x) : undefined }; } } const L = pts[pts.length - 1][1]; return { x: L.x, y: L.y }; },
+      once(id, f) { if (!S.done[id]) { S.done[id] = true; f(); } },
+      at(t0, f) { if (e >= t0) A.once('@' + t0, f); },
+      wsay(t0, text, sec = 1.8) { A.at(t0, () => { if (!S.freed || Game.decor.includes(S.w)) S.w.bubble = { text, t: sec }; }); },
+      say(a, b, text) { if (e >= a && e < b) A.labels.push(text); },
+      snd(t0, name) { A.at(t0, () => Sound.play(name)); },
+      free(t0, flee) { if (e >= t0) PetNPC.free(S, flee); },
+      item(kind, x, y, dir = 1, amt = 1, top) { ex.push({ y: top ? y + 60 : y, d: () => PetNPC.item(c, kind, x, y, dir, amt) }); },
+      fly(kind, P, Q, u, h = 20, dir = 1) { const x = P.x + (Q.x - P.x) * u, y = P.y + (Q.y - P.y) * u - Math.sin(Math.PI * u) * h, gy = P.y + 9 + (Q.y - P.y + 2) * u;
+        ex.push({ y: y + 60, d: () => { c.fillStyle = 'rgba(0,0,0,.14)'; c.beginPath(); c.ellipse(Math.round(x), gy, 2.5, 1, 0, 0, 7); c.fill(); PetNPC.item(c, kind, x, y, dir, 1, u); } }); },
+      hearts(a, b, x, y) { if (e < a || e >= b) return; for (let i = 0; i < 3; i++) { const q = ((e - a) * 0.8 + i / 3) % 1; ex.push({ y: y + 60, d: () => PetNPC.heart(c, x + (i - 1) * 4 + Math.sin(q * 6 + i) * 1.5, y - q * 12, 1 - q) }); } },
+    };
+    return A;
+  },
+  heart(c, x, y, a) { const X = Math.round(x), Y = Math.round(y); c.globalAlpha = Math.max(0, a); c.fillStyle = '#ff5a7a'; c.fillRect(X - 1.5, Y - 1, 1, 1); c.fillRect(X + 0.5, Y - 1, 1, 1); c.fillRect(X - 1.5, Y, 3, 1); c.fillRect(X - 0.5, Y + 1, 1, 1); c.fillStyle = '#ffd0da'; c.fillRect(X - 1.5, Y - 1, 0.5, 0.5); c.globalAlpha = 1; },
+  // 주고받는 물건들 (펫 그림체: 1픽셀 = 반 칸까지)
+  item(c, kind, x, y, dir, amt, spin) {
+    const X = Math.round(x), Y = Math.round(y), r = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(dir < 0 ? X - a - w : X + a, Y + b, w, h); };
+    if (kind === 'ball') { r(-1.5, -2, 3, 4, '#e83a4a'); r(-2, -1.5, 4, 3, '#e83a4a'); r(-1, -1.5, 1, 1, '#fff'); r(-2, 0.5, 4, 0.5, '#b82a38'); }
+    else if (kind === 'carrot') { r(-3, -0.5, 1, 1, '#f08a20'); r(-2, -1, 4, 2, '#f08a20'); r(-1, -1, 0.5, 2, '#c86a10'); r(0.8, -1, 0.5, 2, '#c86a10'); r(2, -1.5, 1, 1, '#4ab04a'); r(2, 0, 1.5, 1, '#3a9a3a'); r(2.5, -2.5, 1, 1, '#4ab04a'); }
+    else if (kind === 'churu') { r(-0.5, -4, 1.5, 5, '#f6f2ea'); r(-0.5, -4, 1.5, 1.2, '#e85a8a'); r(-0.5, -1, 1.5, 0.5, '#e85a8a'); r(-0.2, -5, 0.9, 1, '#d89a58'); }
+    else if (kind === 'jelly') { r(-2, -2.5, 4, 2.5, '#f2ece0'); r(-2, -3, 4, 0.6, '#e84a4a'); r(-1.5, -2.4, 3, Math.max(0, 1.6 * amt), '#f0a030'); r(-2, -0.4, 4, 0.4, '#c8c0b0'); }
+    else if (kind === 'banana') { r(-2, -1, 4, 1.2, '#f6d040'); r(-3, -2, 1, 1, '#f6d040'); r(2, -2, 1, 1, '#f6d040'); r(-3.5, -2.5, 0.6, 0.6, '#6a5a20'); r(-1.5, 0, 3, 0.3, '#d8b020'); }
+    else if (kind === 'meat') { const m = Math.max(0.5, 4 * amt); r(2 - m, -2, m, 3, '#a8442a'); r(2 - m, -2, m, 1, '#c86a4a'); r(2, -1, 2, 1, '#f4f0e0'); r(3.5, -1.5, 1, 2, '#f4f0e0'); }
+    else if (kind === 'bamboo') { r(-3, -0.5, 7, 1, '#5ab04a'); r(-3, -0.5, 7, 0.4, '#8ad07a'); r(-1, -0.5, 0.5, 1, '#3a7a2a'); r(2, -0.5, 0.5, 1, '#3a7a2a'); r(4, -1.5, 2, 1, '#6ac05a'); r(4.5, -2.3, 1.5, 0.8, '#4aa03a'); }
+  },
+  // 물줄기·혀처럼 이어진 선: 1픽셀 점을 곡선 따라
+  arc(c, P, Q, h, u, col, w = 1) { const n = Math.max(2, Math.ceil(Math.hypot(Q.x - P.x, Q.y - P.y) / 1.2)); c.fillStyle = col; for (let i = 0; i <= n * u; i++) { const q = i / n, x = P.x + (Q.x - P.x) * q, y = P.y + (Q.y - P.y) * q - Math.sin(Math.PI * q) * h; c.fillRect(Math.round(x * 2) / 2, Math.round(y * 2) / 2, w, w); } },
+};
+// 펫마다: 행인이 거는 말, 길이, 장면. 장면은 { x, y, mv, face, idle, pose, after } (idle/pose는 PET_ACT 그림을 그대로 빌려 쓴다)
+const PNPC = {
+  dog: { dur: 6.2, say: ['멍멍아 공 던진다~!', '공 가져와 봐!', '자, 간다~ 멍멍아!'], run(S, e, A) { // 공 던지면 쫓아가 물어 오고, 착하다~ 쓰담
+    const H = A.H, M = A.near(11), L = { x: H.x + A.side * 30, y: H.y + 4 }, hd = A.hand();
+    if (e < 0.8) A.item('ball', hd.x, hd.y, 1, 1, true); else if (e < 1.7) A.fly('ball', hd, L, (e - 0.8) / 0.9, 24); else if (e < 1.95) A.item('ball', L.x, L.y - 2 - (e < 1.8 ? 2 : 0));
+    A.snd(0.8, 'blip'); A.snd(1.95, 'pop'); A.wsay(3.3, ['착하다~ 잘했어!', '우와 물어 왔네!', '똑똑하다~'][Math.floor(S.r * 3)]); A.hearts(3.4, 4.8, M.x, M.y - 16); A.snd(3.4, 'chime');
+    const R = A.go([[1.0, H], [1.8, L], [2.1, L], [3.2, M], [4.9, M], [6.2, H]]);
+    if (e < 1.0) { R.mv = true; R.face = A.face; } // 제자리에서 꼬리 흔들며 동동
+    if (e >= 3.2 && e < 4.9) { R.idle = 7; R.face = A.face; A.item('ball', M.x - A.side * 6, M.y - 1); } // 앉아서 헥헥, 공은 발 앞에
+    if (e >= 1.95 && e < 3.2) R.after = (c, x, y, f) => PetNPC.item(c, 'ball', x + f * 6.5, y - 8, 1, 1);
+    A.say(2.0, 2.9, '멍!'); return R; } },
+  cat: { dur: 5.6, say: ['야옹아~ 츄르 먹을래?', '나비야~ 이리 와!', '츄르 있다~ 쮸쮸'], run(S, e, A) { // 츄르 들고 부르면 다가가서 핥아 먹는다 (가끔은 '흥!')
+    const H = A.H, M = A.near(9), like = S.r < 0.7, hd = A.hand();
+    if (e < 4.3) A.item('churu', e < 2.3 ? hd.x : hd.x + A.side * 1, e < 2.3 ? hd.y : hd.y + 3, 1, 1, true);
+    const R = A.go([[0.9, H], [2.3, M], [4.3, M], [5.6, H]]);
+    if (like) { A.hearts(2.5, 4.3, M.x, M.y - 12); A.say(2.6, 4.0, '골골…'); A.wsay(2.8, '귀여워ㅠㅠ'); A.snd(2.5, 'chime'); }
+    else { if (e >= 2.8 && e < 4.3) R.face = A.side; A.say(2.8, 3.8, '흥!'); A.wsay(3.0, '…치사해'); A.snd(2.8, 'deny'); }
+    return R; } },
+  rabbit: { dur: 5.2, say: ['토끼야 당근 줄까?', '깡총깡총~ 당근 먹어!', '토끼다! 이거 먹어~'], run(S, e, A) { // 당근을 던져 주면 오물오물
+    const H = A.H, C = A.near(15), P0 = A.near(26), P = A.near(21), hd = A.hand();
+    if (e < 0.7) A.item('carrot', hd.x, hd.y, 1, 1, true); else if (e < 1.4) A.fly('carrot', hd, C, (e - 0.7) / 0.7, 16); else if (e < 1.8) A.item('carrot', C.x, C.y - 1);
+    A.snd(0.7, 'blip'); A.snd(1.8, 'pop');
+    const R = A.go([[0, H], [0.7, P0], [1.4, P0], [1.8, P], [4.3, P], [5.2, H]]); if (e >= 1.8 && e < 4.3) { R.idle = 6; R.face = A.face; }
+    A.say(2.0, 3.6, '오물오물'); A.wsay(2.4, '먹는 거 봐…ㅎㅎ'); A.hearts(2.6, 3.8, P.x, P.y - 14); return R; } },
+  mouse: { dur: 2.9, say: ['꺅!! 쥐다!!', '으악 쥐!!', '엄마야!! 쥐!!'], run(S, e, A) { // 행인이 기겁하고 도망, 생쥐는 신나서 쫓아갔다 돌아온다
+    const H = A.H, M = A.near(8); if (e < 0.7) S.jit = true; A.free(0.7, true); A.snd(0.1, 'deny');
+    const R = A.go([[0.4, H], [1.2, M], [1.7, M], [2.9, H]]); A.say(0.4, 1.7, '찍찍!'); return R; } },
+  beetle: { dur: 5.4, say: ['장수풍뎅이다! 젤리 줄게', '곤충 젤리 먹을래?', '와 뿔 멋있다! 이거 먹어'], run(S, e, A) { // 곤충 젤리를 놔 주면 쪽쪽
+    const H = A.H, J = A.near(14), P = A.near(22), hd = A.hand(), amt = 1 - A.u(2.0, 4.2);
+    if (e < 0.8) A.item('jelly', hd.x, hd.y + 1, 1, 1, true); else if (e < 1.3) A.fly('jelly', hd, J, (e - 0.8) / 0.5, 10); else if (e < 4.4) A.item('jelly', J.x, J.y, 1, amt);
+    A.snd(1.3, 'tick'); const R = A.go([[0, H], [0.8, P], [4.4, P], [5.4, H]]); R.mv = false; R.face = e < 4.4 ? A.face : A.side;
+    A.say(2.0, 4.0, '쪽쪽'); A.wsay(2.6, '잘 먹는다~'); A.free(4.4, false); return R; } },
+  mantis: { dur: 5.8, say: ['사마귀 권법? 한 판 붙자!', '오 사마귀! 덤벼라!', '나도 쿵후 좀 하는데?'], run(S, e, A) { // 쿵후 대결 → 행인이 '사부님!' 하고 큰절
+    const H = A.H, M = A.near(13), R = A.go([[0.8, H], [1.4, M], [5.1, M], [5.8, H]]);
+    if (e >= 1.4 && e < 3.4) { R.idle = 6; R.face = A.face; for (let i = 0; i < 4; i++) A.at(1.5 + i * 0.45, () => { S.w.punchT = performance.now() + 300; Sound.play('flip'); }); }
+    A.wsay(1.5, '얍! 얍!', 1.4); A.say(1.6, 3.3, '쉭쉭!'); A.at(3.4, () => { S.w.bowT = performance.now() + 1700; Sound.play('ding'); }); A.wsay(3.5, '사부님!!'); A.free(5.1, false); return R; } },
+  lizard: { dur: 5.6, say: ['어? 도마뱀이다!', '도마뱀이다! 귀엽다', '오 게코다!'], run(S, e, A) { // 보호색으로 숨었다가 '짠!' → 깜짝
+    const H = A.H, L1 = A.near(20), P = A.near(13), R = A.go([[0, H], [0.8, L1], [3.4, L1], [3.7, P], [4.3, P], [5.6, H]]);
+    if (e >= 0.8 && e < 3.4) { R.idle = 5 + Math.min(2.5, (e - 0.8) * 1.8); R.face = A.face; }
+    if (e >= 1.8 && e < 3.4) S.wdir = Math.floor(e / 0.4) % 2 ? 1 : 2; // 두리번두리번
+    A.wsay(1.8, '어디 갔지…?'); A.say(3.4, 4.2, '짠!'); A.snd(3.4, 'pop'); A.wsay(3.6, '깜짝이야!!'); if (e >= 3.6 && e < 4.0) S.jit = true; A.free(4.0, true); return R; } },
+  monkey: { dur: 5.5, say: ['바나나 맛있겠다~', '오늘 간식은 바나나!', '음~ 바나나'], run(S, e, A) { // 행인 바나나를 휙 뺏어서 먹는다
+    const H = A.H, M = A.near(7), P2 = A.near(20), hd = A.hand();
+    if (e < 1.6) A.item('banana', hd.x, hd.y, 1, 1, true);
+    const R = A.go([[0.9, H], [1.6, M], [1.7, M], [2.4, P2], [4.6, P2], [5.5, H]]); if (e >= 0.9 && e < 1.6) R.y -= Math.sin(Math.PI * (e - 0.9) / 0.7) * 8; // 폴짝
+    if (e >= 1.6 && e < 2.4) R.after = (c, x, y, f) => PetNPC.item(c, 'banana', x + f * 5, y - 8, f, 1);
+    if (e >= 2.4 && e < 4.6) { R.idle = 6; R.face = A.face; }
+    A.snd(1.6, 'pop'); A.wsay(1.6, '야!! 내 바나나!!'); if (e >= 1.6 && e < 2.2) S.jit = true; A.say(2.8, 4.4, '끽끽! 냠냠'); A.wsay(3.2, '어휴… 뺏겼네'); A.free(3.8, false); return R; } },
+  giraffe: { dur: 5.3, say: ['기린이다! 쓰다듬어 볼까?', '와 기린 목 길다~', '기린아 안녕~'], run(S, e, A) { // 다가가서 긴 혀로 할짝 → '으악 침!!'
+    const H = A.H, M = A.near(15), R = A.go([[0.8, H], [2.2, M], [3.8, M], [5.3, H]]);
+    if (e >= 2.2 && e < 3.2) { const q = Math.sin(Math.PI * (e - 2.2) / 1.0); R.face = A.face; R.after = (c, x, y, f) => { const P = { x: x + f * 9.5, y: y - 24 }, Q = { x: S.wx - f * 1, y: S.W.y - 12 }; PetNPC.arc(c, P, Q, -3, q, '#e8607a'); PetNPC.arc(c, P, Q, -3, q * 0.9, '#f490a4', 0.5); }; }
+    A.snd(2.3, 'pop'); A.wsay(2.5, '으악 침!!'); A.wsay(3.3, '…끈적해'); A.free(3.8, true);
+    if (e >= 2.6 && e < 3.8) { const w = S.w, ph = (e * 2) % 1; Pets.extra.push({ y: w.y + 60, d: () => { const c = A.c; c.fillStyle = 'rgba(200,235,255,.85)'; c.fillRect(Math.round(w.x) - 2, Math.round(w.y - 13 + ph * 6), 1, 1); c.fillRect(Math.round(w.x) + 2, Math.round(w.y - 12 + ((ph + 0.5) % 1) * 6), 1, 1); } }); }
+    return R; } },
+  elephant: { dur: 5.0, min: 34, say: ['코끼리다~ 귀엽다!', '와 코끼리! 크다…', '코끼리야 안녕!'], run(S, e, A) { // 코로 물을 빨아 행인한테 촥 → 차가워!!
+    const R = A.go([[0, A.H], [0.8, A.near(32)], [3.8, A.near(32)], [5.0, A.H]]); if (e < 3.8) R.face = A.face;
+    if (e >= 0.8 && e < 2.2) R.idle = 5 + (e - 0.8); else if (e >= 2.2 && e < 3.6) { R.idle = 6.5; const q = A.u(2.2, 2.5);
+      R.after = (c, x, y, f) => { const P = { x: x + f * 13, y: y - 17 }, Q = { x: S.wx, y: S.W.y - 12 }, h = 6 + Math.abs(Q.x - P.x) * 0.15; for (let i = 0; i < 3; i++) PetNPC.arc(c, { x: P.x, y: P.y + i * 0.5 }, { x: Q.x + (i - 1) * 2, y: Q.y + i }, h, q, i ? 'rgba(140,208,255,.85)' : 'rgba(225,245,255,.9)'); }; }
+    if (e >= 2.5 && e < 3.6) { const w = S.w; for (let i = 0; i < 4; i++) { const q = (e * 2.2 + i / 4) % 1; Pets.extra.push({ y: w.y + 60, d: () => { const c = A.c; c.globalAlpha = 1 - q; c.fillStyle = '#8ad0ff'; c.fillRect(Math.round(w.x) - 4 + i * 2.5, Math.round(w.y - 14 + q * 12), 1, 1); c.globalAlpha = 1; } }); } }
+    A.snd(2.2, 'flip'); A.wsay(2.4, '으앗 차가워!!'); if (e >= 2.4 && e < 3.0) S.jit = true; A.free(3.0, true); A.say(3.6, 4.5, '뿌우~!'); return R; } },
+  dolphin: { dur: 5.6, say: ['돌고래야 공 받아!', '이 공 튕겨 봐!', '돌고래 묘기 보여 줘~'], run(S, e, A) { // 공을 던지면 코로 통통 튕기다가 다시 휙
+    const H = A.H, P = A.near(24), hd = A.hand(), top = { x: P.x + A.face * 1, y: P.y - 26 };
+    if (e < 0.7) A.item('ball', hd.x, hd.y, 1, 1, true); else if (e < 1.4) A.fly('ball', hd, top, (e - 0.7) / 0.7, 14); else if (e >= 3.6 && e < 4.4) A.fly('ball', top, hd, (e - 3.6) / 0.8, 14); else if (e >= 4.4) A.item('ball', hd.x, hd.y, 1, 1, true);
+    const R = A.go([[0, H], [0.7, P], [4.8, P], [5.6, H]]); if (e >= 0.7 && e < 4.8) R.face = A.face; if (e >= 1.4 && e < 3.6) R.idle = 6;
+    A.snd(1.4, 'pop'); A.snd(4.4, 'pop'); A.say(1.6, 3.2, '끼익끼익!'); A.wsay(4.4, '나이스 캐치!'); A.free(5.0, false); return R; } },
+  tiger: { dur: 5.6, say: ['호, 호랑이다…', '저, 저기… 호랑이…?', '히익… 호랑이…'], run(S, e, A) { // 덜덜 떨며 고기를 주면 와구와구 → 어흥! 에 도망
+    const H = A.H, P = A.near(28), C = { x: P.x + A.face * 12, y: P.y }, hd = A.hand();
+    if (e < 3.8) S.jit = true; A.wsay(0.9, '고, 고기 줄게… 착하지?');
+    if (e >= 0.9 && e < 1.2) A.item('meat', hd.x, hd.y, A.face, 1, true); else if (e >= 1.2 && e < 1.8) A.fly('meat', hd, C, (e - 1.2) / 0.6, 14, A.face); else if (e >= 1.8 && e < 3.6) A.item('meat', C.x, C.y - 1, A.face, 1 - A.u(2.0, 3.4));
+    const R = A.go([[0, H], [0.8, P], [4.7, P], [5.6, H]]); if (e < 4.7) R.face = A.face; if (e >= 3.6 && e < 4.7) R.idle = 5.5; if (e >= 1.9 && e < 3.6) R.y = P.y + (Math.floor(e * 6) % 2 ? 0.5 : 0); // 와구와구 들썩
+    A.snd(1.8, 'pop'); A.say(2.0, 3.4, '와구와구'); A.say(3.6, 4.6, '어흥!'); A.snd(3.6, 'crash'); A.wsay(3.7, '으아악!!'); A.free(3.8, true); return R; } },
+  turtle: { dur: 6.0, say: ['거북아 안녕~', '거북이다! 귀여워', '느릿느릿 귀엽다~'], run(S, e, A) { // 엉금엉금 다가가면 톡톡 → 등껍질에 쏙 → 빼꼼
+    const H = A.H, M = A.near(11), R = A.go([[0.8, H], [2.4, M], [4.4, M], [6.0, H]]);
+    if (e >= 2.4 && e < 4.4) { const h = e < 2.8 ? A.u(2.5, 2.8) : e < 3.8 ? 1 : 1 - A.u(3.8, 4.2); if (h > 0) R.pose = { hide: h, shake: e < 2.8 ? (Math.floor(e * 20) % 2 ? 0.5 : -0.5) : 0 }; R.face = A.face; }
+    A.at(2.4, () => { S.wdir = 0; }); A.snd(2.5, 'tick'); A.wsay(2.4, '톡톡', 0.8); A.wsay(2.9, '어? 숨었네~'); A.say(3.9, 4.6, '빼꼼'); A.wsay(4.4, '안녕~'); A.free(4.5, false); return R; } },
+  panda: { dur: 5.2, say: ['판다야 대나무 먹어!', '푸바오야 이거 먹어~', '대나무 줄게!'], run(S, e, A) { // 대나무를 던져 주면 앉아서 와작와작
+    const H = A.H, P = A.near(22), C = { x: P.x + A.face * 8, y: P.y }, hd = A.hand();
+    if (e < 0.7) A.item('bamboo', hd.x, hd.y, A.face, 1, true); else if (e < 1.4) A.fly('bamboo', hd, C, (e - 0.7) / 0.7, 16, A.face); else if (e < 1.7) A.item('bamboo', C.x, C.y - 1, A.face);
+    const R = A.go([[0, H], [0.7, P], [4.4, P], [5.2, H]]); if (e < 4.4) R.face = A.face; if (e >= 1.7 && e < 4.4) R.idle = 6;
+    A.snd(1.7, 'pop'); A.say(1.9, 3.6, '와작와작'); A.wsay(2.4, '먹방이다…'); A.hearts(2.6, 4.0, S.wx, S.W.y - 20); A.free(4.4, false); return R; } },
+  trex: { dur: 4.0, say: ['공룡이다… 만져 봐도 되나?', '진짜 공룡이야…?', '저기… 안녕?'], run(S, e, A) { // 한 발짝씩 다가오다가 크앙!! → 살려줘!!
+    const H = A.H, M = A.near(20), R = A.go([[0.8, H], [1.6, M], [2.8, M], [4.0, H]]);
+    if (e >= 1.6 && e < 2.8) { R.idle = 5.5; R.face = A.face; } A.snd(1.6, 'crash'); A.say(1.6, 2.6, '크앙!!'); A.wsay(1.7, '살려줘!!'); if (e >= 1.6 && e < 1.9) S.jit = true; A.free(1.9, true); return R; } },
 };
 
 /* ===================== 펫 배틀 (v147, 사용자 2026-10-16 '펫끼리 싸울 수 있게 할까? 포켓몬처럼', 카드에서 '턴제 배틀') =====================

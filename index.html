@@ -4905,18 +4905,23 @@ const ChatBack = {
  * 걸어서 친구 앞에서 E → '💸 용돈 1,000원 주기'. 받은 쪽은 2.4초 동안 큰절을 한다 (pos의 bw로 친구 화면에도 보인다). 액수가 작아서 하루 한도와 상관없다. {t:'tip', to} */
 const Tip = {
   AMT: 1000, sent: {},
+  // 받은 사람이 하는 말 (사용자 2026-10-16 '아이고 감사합니다!! 이런 문구 등등 재밌는 거'): 준 사람이 고른 줄을 모두가 똑같이 본다
+  THANKS: ['아이고 감사합니다!!', '이 은혜 잊지 않겠습니다!!', '형님!! 아니 누님!! 감사합니다!', '천 원이면 삼각김밥이 몇 개야…', '복 받으실 거예요~!', '대대손손 번창하세요!', '이 돈으로 꼭 낙찰받겠습니다!', '평생 충성하겠습니다!!', '아이고 이걸 왜… 잘 쓸게요!', '눈물이 앞을 가립니다 ㅠㅠ', '천 원의 행복…', '부자 되세요~!', '사장님 최고!!', '이거 가보로 물려줄게요', '오늘부터 제가 모시겠습니다', '로또 되세요!!'],
+  line(i) { return this.THANKS[(i >>> 0) % this.THANKS.length]; },
   give(p) {
     const id = Net.idOf(p); if (!id) return;
     if (Date.now() - (this.sent[id] || 0) < 5000) return Toast.show(`${p.name}님한테 방금 줬어요. 조금 있다 다시 줄 수 있어요.`);
     if (State.cash < this.AMT) return Toast.show('줄 돈이 없어요.');
-    this.sent[id] = Date.now(); p.bowT = performance.now() + 2400; /* 준 사람 화면에서도 바로 절하게 */ mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id }); Sound.play('coins');
+    const li = Math.floor(Math.random() * this.THANKS.length); this.sent[id] = Date.now(); p.bowT = performance.now() + 2400; /* 준 사람 화면에서도 바로 절하게 */ p.bubble = { text: this.line(li), t: FEEL.chatBubbleTime }; mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id, li }); Sound.play('coins');
     Net.myBubble = { text: '옛다 용돈!', t: FEEL.chatBubbleTime }; Net.pushLog(Net.me, `${p.name}님한테 용돈 1,000원을 줬어요 💸`, true, true, true);
   },
   onNet(m, p) {
-    if (m.to !== Net.myId || !Game.player) return; const name = (p && p.name) || '친구';
+    const li = m.li === undefined ? Math.floor(Math.random() * this.THANKS.length) : +m.li || 0;
+    if (m.to !== Net.myId) { const r = Net.players[m.to]; if (r && !r.gone) { r.bowT = performance.now() + 2400; r.bubble = { text: this.line(li), t: FEEL.chatBubbleTime }; } return; } // 옆에서 본 사람 화면에도
+    if (!Game.player) return; const name = (p && p.name) || '친구';
     mgCash(this.AMT, `용돈 (${name})`); Sound.play('coins'); Toast.show(`${name}님이 용돈 1,000원을 줬어요. 감사합니다 꾸벅!`, 3000);
     Net.pushLog(name, '님이 용돈 1,000원을 줬어요 💸', false, true, true);
-    Game.player.bowT = performance.now() + 2400; Net.myBubble = { text: '감사합니다!', t: FEEL.chatBubbleTime }; // 받는 사람은 큰절
+    Game.player.bowT = performance.now() + 2400; Net.myBubble = { text: this.line(li), t: FEEL.chatBubbleTime }; // 받는 사람은 큰절 + 재밌는 한마디
   },
 };
 

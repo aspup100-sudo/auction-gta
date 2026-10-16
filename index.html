@@ -64,7 +64,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title .nameBox { display:flex; align-items:center; gap:10px; padding:6px 14px; } #title .nameBox label { color:var(--paper); opacity:.75; font-size:13px; white-space:nowrap; } #title .nameBox input { width:150px; } #title .nameBox.locked input { background:#e8e2cf; color:#555; border-style:dashed; } #title .nameBox #nameLock { color:#ffd84a; font-size:11px; white-space:nowrap; } #title .nameBox #nameLock:empty { display:none; } #title .mp .ch .chMine { font-style:normal; font-size:10px; color:#ffd84a; margin-top:2px; }
 #title .modeRow { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; } #title .modeRow .mode { display:inline-flex; flex-direction:column; align-items:center; gap:2px; min-width:180px; padding:10px 18px; font-size:16px; font-weight:700; line-height:1.2; } #title .modeRow .mode small { font-size:12px; font-weight:400; opacity:.65; } #title .modeRow .mode.sel { border-color:var(--gold); color:var(--gold); background:rgba(205,174,112,.12); } #title .modeRow .mode.sel small { opacity:.9; }
 #title .mpWrap { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:flex-start; max-width:min(1000px, 94vw); } #title .mpWrap .mp { flex:1 1 320px; max-width:480px; display:none; } #title.modeRoom #mpBox, #title.modeCh #chBox { display:block; } /* 누른 쪽만 펼친다 (사용자: 버튼으로) */ #title.chOn #mpBox, #title.chOn #nameBox, #title.roomOn #chBox, #title.chOn .modeRow, #title.roomOn .modeRow { display:none; } #title .mp #chStatus { margin-top:8px; min-height:1.2em; color:#fff; }
-#chatLog { position:absolute; left:12px; top:var(--stackCl, 12px); max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; } /* 왼쪽 위 피드: 채팅 + 플레이어 소식 (사용자 2026-10-14) */ body.pagerOn #chatLog { top:96px; } #chatLog div.news { background:rgba(15,51,88,.7); border-left:3px solid var(--gold); }
+#chatLog { position:fixed; z-index:11; left:12px; top:var(--stackCl, 12px); max-width:min(60vw, 360px); font-size:13px; color:#fff; text-shadow:0 1px 0 #000; opacity:0; transition:opacity .3s; pointer-events:none; } /* 왼쪽 위 피드: 채팅 + 플레이어 소식 (사용자 2026-10-14) */ body.pagerOn #chatLog { top:96px; } #chatLog div.news { background:rgba(15,51,88,.7); border-left:3px solid var(--gold); }
 #chatLog.in { opacity:1; } #chatLog div { background:rgba(0,0,0,.45); border-radius:6px; padding:2px 8px; margin-top:3px; } #chatLog b { color:var(--gold); margin-right:4px; } #chatLog div.me b { color:#9fe3ff; }
 #chatBar { position:absolute; left:50%; bottom:64px; transform:translate(-50%, 140%); display:flex; gap:6px; width:min(92vw, 460px); opacity:0; transition:transform .2s, opacity .2s; pointer-events:auto; }
 #kingNotice { position:absolute; left:50%; top:10px; transform:translate(-50%, -160%); z-index:30; max-width:min(92vw, 560px); padding:8px 18px 10px; border-radius:12px; background:linear-gradient(#3a2a08, #1d1606); border:2px solid #ffd84a; box-shadow:0 0 24px rgba(255,216,74,.45); color:#fff6d8; text-align:center; transition:transform .35s cubic-bezier(.2,1.4,.4,1); pointer-events:none; } #kingNotice.in { transform:translate(-50%, 0); } #kingNotice small { display:block; color:#ffd84a; font-size:12px; font-weight:700; } #kingNotice b { display:block; font-size:18px; line-height:1.35; word-break:keep-all; } #chatNotice:disabled { opacity:.55; } /* 1등 전체 공지 */
@@ -513,7 +513,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #menu { width:min(640px, calc(100% - 24px)); padding:12px 16px; } .short #menu h2 { font-size:18px; margin-bottom:8px; } .short .keys { font-size:12px; }
 
 /* v80: 채팅 버튼 대신 왼쪽 피드 밑에 늘 있는 입력줄, 피드를 누르면 지난 기록 (사용자 2026-10-15) */
-.netOn #chatLog { opacity:1; } #chatLines div { pointer-events:auto; cursor:pointer; } #chatLines div.money b { color:#7fe08a; } #chatLines div.money.minus b { color:#ff8a7a; }
+.netOn #chatLog { opacity:1; z-index:76; } .netOn #chatHist { z-index:77; } body:not(:has(#hud.on)) #chatLog { visibility:hidden; } /* v147: 채팅 피드는 HUD 밖 — 병원·게임장·카지노 창 위에서도 💬/Enter로 친다 (사용자 2026-10-16) */ #chatLines div { pointer-events:auto; cursor:pointer; } #chatLines div.money b { color:#7fe08a; } #chatLines div.money.minus b { color:#ff8a7a; }
 #chatLog #chatBar { position:static; transform:none; opacity:1; visibility:visible; pointer-events:auto; width:min(60vw, 330px); margin-top:4px; display:flex; gap:4px; }
 #chatLog #chatBar input { padding:5px 10px; font-size:13px; border-width:1px; border-radius:8px; background:rgba(12,16,26,.72); } #chatLog #chatBar .btn { padding:4px 9px; font-size:12px; } #chatLog #chatBar #chatClose { display:none; }
 body:not(.netOn) #chatLog #chatBar { display:none; } #btnChat, #tChat { display:none !important; }
@@ -837,8 +837,6 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="pager"><div id="pagerText"></div></div>
   <div id="tutor"></div>
   <div id="kingNotice"></div>
-  <div id="chatLog"><div id="chatLines" title="눌러서 지난 기록 보기"></div><button id="chatPeek" title="채팅 (Enter)">💬</button><div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="Enter로 채팅"><button class="btn gold" id="chatNotice" hidden title="채널 1등만 · 모두의 화면에 띄워요">👑 공지</button><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div></div>
-  <div id="chatHist"><div class="chBox"><button class="xClose" id="chHistX" aria-label="닫기">×</button><h3>채팅 · 소식 · 내 돈 기록</h3><div id="chatHistList"></div><div class="small dim">최근 300줄까지 남아요. 나갔다 와도 그대로예요.</div></div></div>
   <canvas id="minimap" width="180" height="130" title="서울 지도 (M)"></canvas>
   <div id="hudCash">₩ 0</div>
   <div id="hudTime"></div>
@@ -852,6 +850,8 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="roadSign"></div>
   <div class="osm">© OpenStreetMap contributors</div>
 </div>
+<div id="chatLog"><div id="chatLines" title="눌러서 지난 기록 보기"></div><button id="chatPeek" title="채팅 (Enter)">💬</button><div id="chatBar"><input id="chatInput" maxlength="60" enterkeyhint="send" autocomplete="off" placeholder="Enter로 채팅"><button class="btn gold" id="chatNotice" hidden title="채널 1등만 · 모두의 화면에 띄워요">👑 공지</button><button class="btn" id="chatSend">보내기</button><button class="btn" id="chatClose" title="닫기">✕</button></div></div>
+<div id="chatHist"><div class="chBox"><button class="xClose" id="chHistX" aria-label="닫기">×</button><h3>채팅 · 소식 · 내 돈 기록</h3><div id="chatHistList"></div><div class="small dim">최근 300줄까지 남아요. 나갔다 와도 그대로예요.</div></div></div>
 <div id="placeBanner"></div>
 <div id="areaTitle"></div>
 <div id="dayCard"></div>
@@ -6467,6 +6467,7 @@ function update(dt) {
   if (!chat) {
   enterK = consume('Enter'); netEnter = Net.on && enterK && !Dialog.open && !DocViewer.open && !PropertyCard.open_ && !$('caseList').classList.contains('in'); // 같이 할 때는 Enter가 채팅 (사용자 2026-10-15 '엔터 치면 열리는걸로'; 전엔 스페이스)
   interact = consume('e') || (!Game.driving && consume(' ')) || (enterK && !netEnter); if (Game.driving) Pressed[' '] = false;
+  if (Net.on && (consume('t') || netEnter)) { ChatBar.open(); return; } // v147: 병원·정신병원(대화 중엔 T)·게임장·카지노 창 안에서도 채팅 (사용자 2026-10-16)
   if (Dialog.open) { if (interact) Dialog.press(); for (const n of ['1', '2', '3', '4']) if (consume(n) && Dialog._choice) Dialog._choice(Number(n) - 1); return; }
   if (consume('m')) SeoulMap.toggle();
   if (SeoulMap.open) { if (consume('Escape')) SeoulMap.toggle(false); return; }
@@ -6491,7 +6492,6 @@ function update(dt) {
   if (MemoPad.open_) { if (consume('Escape')) MemoPad.close(); return; }
   if (PropertyCard.open_) { if (interact || consume('Escape')) PropertyCard.close(); return; }
   if (Notebook.open || Menu.open) return;
-  if (Net.on && (consume('t') || netEnter) && !Game.busy) { ChatBar.open(); return; }
   }
   State.clockMin = Math.min(170, State.clockMin + dt * FEEL.clockMinPerSec);
   const p = Game.player;

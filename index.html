@@ -4562,6 +4562,7 @@ const Net = {
     if (m.t === 'fight') { Fight.onNet(m, p); return; } // 게임장 격투 게임 (v82)
     if (m.t === 'pb') { PetBattle.onNet(m, p); return; } // 펫 배틀 (v147)
     if (m.t === 'fr') { Friends.onNet(m, p); return; } // 친구 신청 (v155)
+    if (m.t === 'prg') { PetRage.onNet(m, p); return; } // 차에 치인 펫이 운전자 혼내기를 같이 본다 (v157)
     if (m.t === 'cbor') { CarSwap.onNet(m, p); return; } // 남의 차 타기 (v138)
     if (m.t === 'party') { Party.onNet(m, p); return; } // 여러 명 모집 · 초대장 (v90)
     if (m.t === 'cbreq' || m.t === 'cback') { ChatBack.onNet(m, p); return; } // 자리 비운 동안의 채팅 (v100)
@@ -6528,7 +6529,8 @@ function update(dt) {
   enterK = consume('Enter'); netEnter = Net.on && enterK && !Dialog.open && !DocViewer.open && !PropertyCard.open_ && !$('caseList').classList.contains('in'); // 같이 할 때는 Enter가 채팅 (사용자 2026-10-15 '엔터 치면 열리는걸로'; 전엔 스페이스)
   interact = consume('e') || (!Game.driving && consume(' ')) || (enterK && !netEnter); if (Game.driving) Pressed[' '] = false;
   if (Net.on && (consume('t') || netEnter)) { ChatBar.open(); return; } // v147: 병원·정신병원(대화 중엔 T)·게임장·카지노 창 안에서도 채팅 (사용자 2026-10-16)
-  if (Dialog.open) { if (interact) Dialog.press(); for (const n of ['1', '2', '3', '4']) if (consume(n) && Dialog._choice) Dialog._choice(Number(n) - 1); return; }
+  if (Dialog.open) { if (interact) Dialog.press(); for (const n of ['1', '2', '3', '4']) if (consume(n) && Dialog._choice) Dialog._choice(Number(n) - 1);
+    if (Game.formOpen || State.finished || DocViewer.open || Notebook.open || Menu.open || SeoulMap.open || ZoneMap.open || PetBattle.open_ || Shop.open_) return; } else { // 대화창이 떠 있어도 거리(차·행인·친구)는 계속 돈다. 나만 멈춘다 (v157, 사용자 2026-10-16 '여기 얘기할 때 왜 멈춰')
   if (consume('m')) SeoulMap.toggle();
   if (SeoulMap.open) { if (consume('Escape')) SeoulMap.toggle(false); return; }
   if (ZoneMap.open) { if (consume('Escape') || consume('n')) ZoneMap.toggle(false); return; }
@@ -6555,9 +6557,10 @@ function update(dt) {
   if (PropertyCard.open_) { if (interact || consume('Escape')) PropertyCard.close(); return; }
   if (Notebook.open || Menu.open) return;
   }
+  }
   State.clockMin = Math.min(170, State.clockMin + dt * FEEL.clockMinPerSec);
   const p = Game.player;
-  const frozen = Game.busy || Game.trans || chat;
+  const frozen = Game.busy || Game.trans || chat || Dialog.open;
   const [ix, iy] = frozen ? [0, 0] : readMove();
   const run = (Keys.Shift || !!Touch.run) && !(Net.on && Net.mode === 'channel'); // 채널에서는 달리기 없음(차를 타게)
   if (Game.scene === 'zone') {
@@ -6663,6 +6666,7 @@ function updateDecor(dt) {
         w.moving = false; continue;
       }
     }
+    if (Dialog.open && !w.ai.ix && !w.ai.iy && Math.hypot(w.x - Game.player.x, w.y - Game.player.y) < 40) { w.ai.t = Math.max(w.ai.t, 0.5); w.moving = false; continue; } // 나랑 얘기 중인 행인은 그 자리에 (대화창 동안)
     w.ai.t -= dt;
     if (w.ai.t <= 0) { w.ai.t = 1 + Math.random() * 3; const a = Math.floor(Math.random() * 5); w.ai.ix = [0, 1, -1, 0, 0][a]; w.ai.iy = [0, 0, 0, 1, -1][a]; w.ai.flee = false; }
     // 차가 빠르게 다가오면 물러난다
@@ -6711,6 +6715,7 @@ function drawZone(t) {
   // 신호등 · NPC 차량 · 내 차
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
+  PetRage.drawCars(ctx, x0, y0, x1, y1); // 친구 펫을 친 차 (v157)
   if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0 }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
@@ -9310,9 +9315,15 @@ const Fx = {
 
 /* ===================== 펫이 차에 치이면 화나서 운전자 공격 (v156, 사용자 2026-10-16 'npc 자동차가 펫 치면 펫이 화나서 운전자 공격하자') =====================
  * 걸어 다닐 때 내 펫(1·2번째)이 달리는 길가 차에 닿으면: 펫이 데굴 날아갔다가 💢 → 차가 서고 운전자가 내린다 → 펫이 운전자를 쫓아다니며 퍽퍽
- * → 운전자가 "잘못했어요!" 하고 차에 도로 타서 부리나케 도망 → 펫은 '흥!' 하고 다시 주인을 따라온다. 내 화면에서만 (장식). 펫 하나당 4초에 한 번. */
+ * → 운전자가 "잘못했어요!" 하고 차에 도로 타서 부리나케 도망 → 펫은 '흥!' 하고 다시 주인을 따라온다. 펫 하나당 4초에 한 번.
+ * v157 (사용자 '펫 화내기는 왜 내 화면에서만 보여, 다 보이게 해'): 치인 순간 {t:'prg', z, n, kind, x, y, vx, vy, sp, car} 를 보내면, 같은 구 사람들 화면에서도
+ *   그 자리에 같은 차(유령 차: 길가 차는 화면마다 달라서)가 서고 그 사람 펫('f:이름')이 똑같이 운전자를 혼낸다. */
 const PetRage = {
-  list: [], says: [],
+  list: [], says: [], ghosts: [],
+  near(s) { return Math.hypot(s.x - Game.player.x, s.y - Game.player.y) < 260; },
+  snd(s, k) { if (this.near(s)) Sound.play(k); },
+  pos(car) { return car.ghost ? { x: car.x, y: car.y, a: car.a } : trafficCarPos(car); },
+  alive(car) { return car.ghost ? this.ghosts.includes(car) : Game.traffic.includes(car); },
   // '흥!' (다시 따라올 때 잠깐)
   extras(c, out) { const now = performance.now(); this.says = this.says.filter(q => q.until > now); for (const q of this.says) out.push({ y: q.s.y + 40, d: () => Net.label(c, '흥!', q.s.x, q.s.y - 22) }); },
   SAY: { hit: ['아이고! 미안해요!', '어어? 뭐야 뭐야!', '헉, 괜찮니?!'], run: ['으악! 살려줘요!', '아야 아야!', '잘못했어요!!', '그만 그만!!'], big: ['공룡이다!!!', '엄마야!!!'], end: ['다시는 안 그럴게요!', '죄송합니다아~!', '운전 조심할게요!!'] },
@@ -9326,20 +9337,32 @@ const PetRage = {
   },
   hit(car, q, s, key, kind) {
     let nx = s.x - q.x, ny = s.y - q.y; const d = Math.hypot(nx, ny) || 1; nx = nx / d * 0.6 + Math.cos(q.a) * 0.8; ny = ny / d * 0.6 + Math.sin(q.a) * 0.8; const L = Math.hypot(nx, ny) || 1;
-    s.rage = { ph: 'fly', t: 0, car, kind, key, x0: s.x, y0: s.y, vx: nx / L * 110, vy: ny / L * 110, h: 0, n: 0, spin: Math.sign(nx || 1) };
+    const sp = Math.floor(Math.random() * 3), vx = Math.round(nx / L * 110), vy = Math.round(ny / L * 110);
+    s.rage = { ph: 'fly', t: 0, car, kind, key, x0: s.x, y0: s.y, vx, vy, h: 0, n: 0, spin: Math.sign(nx || 1), sp };
     car.halt = 9; car.v = Math.min(car.v, 18); Sound.play('crash'); shake(4, 0.25); Game.hitstop = 0.04; this.list.push(s);
+    if (typeof Net !== 'undefined' && Net.on) Net.send({ t: 'prg', z: Game.zone.id, n: key === 'me' ? 1 : 2, kind, x: Math.round(s.x), y: Math.round(s.y), vx, vy, sp, car: { x: Math.round(q.x), y: Math.round(q.y), a: Math.round(q.a * 100) / 100, col: car.col, len: car.len, wid: car.wid, kind: car.kind, side: car.dirn > 0 ? 1 : -1 } });
     if (!REDUCED_MOTION) for (let i = 0; i < 6; i++) Particles.push({ x: s.x, y: s.y - 6, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 60, g: 220, life: 0.5, max: 0.5, col: 'rgba(255,230,120,', r: 1.5 });
   },
-  door(car) { const q = trafficCarPos(car), side = car.dirn > 0 ? 1 : -1; return { x: q.x - Math.sin(q.a) * 13 * side, y: q.y + Math.cos(q.a) * 13 * side, q }; },
+  // 친구 화면: 그 사람 펫이 그 자리에서 똑같이 (유령 차를 세워 두고)
+  onNet(m, p) {
+    if (!p || !p.name || Game.scene !== 'zone' || !Game.zone || m.z !== Game.zone.id || !PET_DRAW[m.kind]) return; const C = m.car || {}; if (![m.x, m.y, C.x, C.y, C.a].every(Number.isFinite)) return;
+    const key = 'f:' + p.name + (m.n === 2 ? '#2' : ''); let s = Pets.st[key]; if (!s) s = Pets.st[key] = { x: m.x, y: m.y, face: 1, moving: false, t: performance.now() / 1000 }; if (s.rage) return;
+    s.x = m.x; s.y = m.y; const car = { ghost: 1, x: C.x, y: C.y, a: C.a, col: C.col || '#888', len: +C.len || 20, wid: +C.wid || 10, kind: C.kind || 'car', side: C.side < 0 ? -1 : 1, v: 0, life: 0 }; this.ghosts.push(car);
+    s.rage = { ph: 'fly', t: 0, car, kind: m.kind, key, x0: s.x, y0: s.y, vx: +m.vx || 0, vy: +m.vy || 0, h: 0, n: 0, spin: Math.sign(+m.vx || 1), sp: Math.max(0, Math.min(2, m.sp | 0)), remote: 1 }; this.list.push(s); this.snd(s, 'crash');
+  },
+  drawCars(c, x0, y0, x1, y1) { for (const g of this.ghosts) { if (g.x < x0 - 40 || g.x > x1 + 40 || g.y < y0 - 40 || g.y > y1 + 40) continue; drawCarSprite(c, g.x, g.y, g.a, g.col, g.len, g.wid, g.kind, g.v); } },
+  door(car) { const q = this.pos(car), side = car.ghost ? car.side : car.dirn > 0 ? 1 : -1; return { x: q.x - Math.sin(q.a) * 13 * side, y: q.y + Math.cos(q.a) * 13 * side, q }; },
   dirOf(dx, dy) { return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0); },
-  end(s, quiet) { const R = s.rage; if (!R) return; if (R.w) { const i = Game.decor.indexOf(R.w); if (i >= 0) Game.decor.splice(i, 1); } if (R.car) R.car.halt = 0; s.rage = null; s.rageCd = performance.now() + 4000; s.still = s.t = performance.now() / 1000; if (!quiet) this.says.push({ s, until: performance.now() + 1400 }); this.list = this.list.filter(x => x !== s); },
+  end(s, quiet) { const R = s.rage; if (!R) return; if (R.w) { const i = Game.decor.indexOf(R.w); if (i >= 0) Game.decor.splice(i, 1); } if (R.car) { R.car.halt = 0; if (R.car.ghost && !R.car.go) this.ghosts = this.ghosts.filter(g => g !== R.car); } s.rage = null; s.rageCd = performance.now() + 4000; s.still = s.t = performance.now() / 1000; if (!quiet) this.says.push({ s, until: performance.now() + 1400 }); this.list = this.list.filter(x => x !== s); },
   update(dt) {
-    if (!this.list.length) return; if (Game.scene !== 'zone' || Game.driving) { for (const s of this.list.slice()) this.end(s, true); return; }
-    for (const s of this.list.slice()) { const R = s.rage; if (!R) { this.list = this.list.filter(x => x !== s); continue; } R.t += dt; const car = R.car, alive = Game.traffic.includes(car);
-      if (R.ph === 'fly') { const k = Math.max(0, 1 - R.t / 0.5); s.x += R.vx * k * dt; s.y += R.vy * k * dt; R.h = Math.sin(Math.min(1, R.t / 0.5) * Math.PI) * 12; if (R.t >= 0.5) { R.ph = 'mad'; R.t = 0; R.h = 0; Sound.play('deny'); } continue; }
+    for (const g of this.ghosts.slice()) { g.life += dt; if (g.go) { g.v = Math.min(200, g.v + 260 * dt); g.x += Math.cos(g.a) * g.v * dt; g.y += Math.sin(g.a) * g.v * dt; if ((g.go += dt) > 4) this.ghosts = this.ghosts.filter(x => x !== g); } else if (g.life > 20) this.ghosts = this.ghosts.filter(x => x !== g); }
+    if (!this.list.length) return; if (Game.scene !== 'zone') { for (const s of this.list.slice()) this.end(s, true); this.ghosts = []; return; }
+    if (Game.driving) for (const s of this.list.slice()) if (s.rage && !s.rage.remote) this.end(s, true); // 내가 차를 타면 내 펫은 그만 (친구 펫은 계속)
+    for (const s of this.list.slice()) { const R = s.rage; if (!R) { this.list = this.list.filter(x => x !== s); continue; } R.t += dt; const car = R.car, alive = this.alive(car);
+      if (R.ph === 'fly') { const k = Math.max(0, 1 - R.t / 0.5); s.x += R.vx * k * dt; s.y += R.vy * k * dt; R.h = Math.sin(Math.min(1, R.t / 0.5) * Math.PI) * 12; if (R.t >= 0.5) { R.ph = 'mad'; R.t = 0; R.h = 0; this.snd(s, 'deny'); } continue; }
       if (R.ph === 'mad') { if (R.t >= 0.7) { if (!alive) { this.end(s); continue; } // 운전자 내림
-          const D = this.door(car), w = makeWalker(['walker1', 'walker2', 'walker3'][Math.floor(Math.random() * 3)], D.x, D.y); w.ai = { t: 999, ix: 0, iy: 0 }; w.rage = true; w.dir = this.dirOf(s.x - w.x, s.y - w.y);
-          w.bubble = { text: this.pick(this.SAY.hit), t: 1.6 }; Game.decor.push(w); R.w = w; R.ph = 'atk'; R.t = 0; Sound.play('carDoor'); car.halt = 9; } continue; }
+          const D = this.door(car), w = makeWalker(['walker1', 'walker2', 'walker3'][R.sp != null ? R.sp : Math.floor(Math.random() * 3)], D.x, D.y); w.ai = { t: 999, ix: 0, iy: 0 }; w.rage = true; w.dir = this.dirOf(s.x - w.x, s.y - w.y);
+          w.bubble = { text: this.pick(this.SAY.hit), t: 1.6 }; Game.decor.push(w); R.w = w; R.ph = 'atk'; R.t = 0; this.snd(s, 'carDoor'); car.halt = 9; } continue; }
       const w = R.w; if (!w || !alive) { this.end(s); continue; }
       if (R.ph === 'atk') { car.halt = 9; const D = this.door(car);
         // 운전자: 펫 반대쪽으로 도망 (차 옆을 크게 벗어나진 않는다)
@@ -9348,13 +9371,13 @@ const PetRage = {
         // 펫: 운전자한테 달려가서 깡충깡충 퍽퍽
         const sd = s.x < w.x ? -9 : 9, dx = w.x + sd - s.x, dy = w.y + 1 - s.y, d = Math.hypot(dx, dy); s.face = sd < 0 ? 1 : -1; /* 운전자 옆에 붙어서 (둘 다 보이게) */
         if (d > 3) { const v = Math.min(d, 70 * dt); s.x += dx / d * v; s.y += dy / d * v; s.moving = true; R.h = Math.abs(Math.sin(R.t * 16)) * 2; }
-        else { s.moving = false; R.h = Math.abs(Math.sin(R.t * 11)) * 7; if (R.t - (R.lastHit || 0) > 0.32) { R.lastHit = R.t; R.n++; Sound.play('pop'); R.pow = { x: (s.x + w.x) / 2, y: w.y - 12, t: 0.3 }; if (!REDUCED_MOTION) Particles.push({ x: w.x, y: w.y - 10, vx: (Math.random() - 0.5) * 60, vy: -40, g: 160, life: 0.35, max: 0.35, col: 'rgba(255,240,160,', r: 1.4 }); if (R.n % 3 === 1) w.bubble = { text: this.pick(R.kind === 'trex' || R.kind === 'tiger' || R.kind === 'elephant' ? this.SAY.big.concat(this.SAY.run) : this.SAY.run), t: 1.1 }; } }
+        else { s.moving = false; R.h = Math.abs(Math.sin(R.t * 11)) * 7; if (R.t - (R.lastHit || 0) > 0.32) { R.lastHit = R.t; R.n++; this.snd(s, 'pop'); R.pow = { x: (s.x + w.x) / 2, y: w.y - 12, t: 0.3 }; if (!REDUCED_MOTION) Particles.push({ x: w.x, y: w.y - 10, vx: (Math.random() - 0.5) * 60, vy: -40, g: 160, life: 0.35, max: 0.35, col: 'rgba(255,240,160,', r: 1.4 }); if (R.n % 3 === 1) w.bubble = { text: this.pick(R.kind === 'trex' || R.kind === 'tiger' || R.kind === 'elephant' ? this.SAY.big.concat(this.SAY.run) : this.SAY.run), t: 1.1 }; } }
         if (R.pow) { R.pow.t -= dt; if (R.pow.t <= 0) R.pow = null; }
         if (R.t > 3.4) { R.ph = 'flee'; R.t = 0; w.bubble = { text: this.pick(this.SAY.end), t: 1.8 }; }
         continue; }
       if (R.ph === 'flee') { const D = this.door(car), dx = D.x - w.x, dy = D.y - w.y, d = Math.hypot(dx, dy); R.h = 0; s.moving = false;
         if (d > 2 && R.t < 3) { const v = Math.min(d, 70 * dt); w.x += dx / d * v; w.y += dy / d * v; w.dir = this.dirOf(dx, dy); w.moving = true; w.ft = (w.ft || 0) + dt; if (w.ft > 0.09) { w.ft = 0; w.frame = (w.frame % 4) + 1; } continue; }
-        Sound.play('carDoor'); car.halt = 0; car.flee = 2.5; car.v = Math.max(car.v, 20); setTimeout(() => Sound.play('ignition'), 150); this.end(s); }
+        this.snd(s, 'carDoor'); car.halt = 0; car.flee = 2.5; car.v = Math.max(car.v, 20); if (car.ghost) car.go = 0.001; if (this.near(s)) setTimeout(() => Sound.play('ignition'), 150); this.end(s); }
     }
   },
   // Pets.actor 대신 그린다 (화난 동안)

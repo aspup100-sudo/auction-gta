@@ -9127,8 +9127,14 @@ const PetBattle = {
   /* ---- 동네 펫 트레이너 (spawnDecor 끝에서) ---- */
   spawn() {
     const D = Game.decor || [], kinds = Object.keys(PB_DEX), zid = [...String(Game.zone ? Game.zone.id : '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7); let n = 0;
-    for (let i = 0; i < D.length && n < 3; i++) { const w = D[i]; if (i % 5 !== 2 || w.vip || w.promo || w.trainer) continue; const R = makeRng((zid * 131 + i * 977 + (State.day || 0) * 31) >>> 0); const key = 'tr' + zid + ':' + i; w.trainer = { kind: kinds[Math.floor(R.next() * R.next() * kinds.length)], off: Math.floor(R.next() * 3) - 1, key, next: 0, done: this.beat().includes(key) }; n++; }
+    for (let i = 0; i < D.length && n < 3; i++) { const w = D[i]; if (i % 5 !== 2 || w.vip || w.promo || w.trainer) continue; const R = makeRng((zid * 131 + i * 977 + (State.day || 0) * 31) >>> 0); const key = 'tr' + zid + ':' + i; w.trainer = { n, kind: kinds[Math.floor(R.next() * R.next() * kinds.length)], off: Math.floor(R.next() * 3) - 1, key, next: 0, done: this.beat().includes(key) }; n++; }
   },
+  // 트레이너 이름 (사용자 2026-10-16 '트레이너라고 하지 말고 플레이어 이름으로'): 채널에서 전에 만난 (지금 접속 안 한) 플레이어 이름을 단다. 모자라거나 혼자 하기면 행인 호칭
+  tname(T) {
+    if (T.who) return T.who; let names = []; try { if (Live.on) names = Live.rankRows().filter(r => r.away && r.name).map(r => r.name).sort(); } catch (e) {}
+    const nm = names[T.n] || ''; T.pl = !!nm; T.who = nm || WALKER_NAMES[(T.n * 3 + 2) % WALKER_NAMES.length]; return T.who;
+  },
+  hon(T) { this.tname(T); return T.pl ? `${T.who}님` : T.who; },
   // 오늘(실제 날짜) 이긴 트레이너 (동네를 나갔다 와도 상금은 하루 한 번)
   today() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; },
   beat() { const v = Store.get('pbBeat', null); return v && v.d === this.today() && Array.isArray(v.k) ? v.k : []; },
@@ -9138,7 +9144,7 @@ const PetBattle = {
   actors(c, t, out) {
     if (Game.scene !== 'zone' || !Game.decor) return; const now = performance.now(), P = Game.player;
     for (const w of Game.decor) { const T = w.trainer; if (!T) continue;
-      out.push(Pets.actor(c, T.key, T.kind, w.x, w.y, t, ''));
+      out.push(Pets.actor(c, T.key, T.kind, w.x, w.y, t, '')); out.push({ y: w.y + 0.2, d: () => Net.label(c, this.tname(T), w.x, w.y - 22) }); // 플레이어처럼 머리 위 이름표
       if (P && !T.done && now > T.next && !w.bubble && Math.hypot(P.x - w.x, P.y - w.y) < 140) { T.next = now + 7000 + Math.random() * 5000; w.bubble = { text: PB_TRAINER_SAY[Math.floor(Math.random() * PB_TRAINER_SAY.length)], t: 2.6 }; } }
     this.tuks = this.tuks.filter(x => now - x.t0 < 2000);
     for (const x of this.tuks) { const a = Pets.st.me, b = Pets.st['f:' + x.name]; if (!a || !b) continue; // 두 펫이 가운데로 달려가 먼지구름 속에서 투닥투닥
@@ -9163,7 +9169,7 @@ const PetBattle = {
     setTimeout(() => { const q = Net.players[id]; if (q && !this.open_ && !this.pend && !Game.busy && !Dialog.open) this.ask(q, true); }, 1500);
   },
   async talk(w) {
-    if (Game.busy) return; Game.busy = true; const T = w.trainer, p = Game.player, name = '펫 트레이너', sp = w.sprite;
+    if (Game.busy) return; Game.busy = true; const T = w.trainer, p = Game.player, name = this.tname(T), sp = w.sprite;
     try {
       w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
       const mine = this.myPet(), lv = Math.max(1, Math.min(50, (mine ? mine.lv : 5) + T.off)), kn = this.kindName(T.kind), ty = PB_TYPES[PB_DEX[T.kind].t];
@@ -9172,7 +9178,7 @@ const PetBattle = {
       if (pick === 'look') { await Dialog.say([{ name, sprite: sp, text: `${kn} · ${ty[1]} ${ty[0]} 타입 · Lv.${lv}. 기술은 ${PB_DEX[T.kind].m.map(m => m[0]).join(', ')}. 상성 잘 생각해서 와!` }]); return; }
       if (pick !== 'go') return;
       if (!mine) { await Dialog.say([{ name, sprite: sp, text: '펫이 없네? 건대 편집숍에서 펫부터 데려와!' }]); return; }
-      this.start({ mode: 'npc', me: 'a', w, a: this.mk(mine, '나'), b: this.mk({ kind: T.kind, lv }, '트레이너'), foeName: '트레이너' });
+      this.start({ mode: 'npc', me: 'a', w, a: this.mk(mine, '나'), b: this.mk({ kind: T.kind, lv }, name), foeName: name, foeHon: this.hon(T) });
     } finally { Game.busy = false; if (w.ai) w.ai.t = 0.3; }
   },
   prize(lv) { return 20e4 + lv * 10e4; },
@@ -9224,8 +9230,9 @@ const PetBattle = {
     this.B = Object.assign({ n: 0, picks: {}, busy: true, over: false, t0: Date.now(), foeAt: Date.now(), anim: { a: {}, b: {} }, shown: { a: o.a.max, b: o.b.max } }, o, { S: { a: o.a, b: o.b } });
     this.open_ = true; Game.formOpen = true; Sound.play('ding'); this.build(); this.loop();
     const B = this.B, foe = B.S[B.me === 'a' ? 'b' : 'a'], mine = B.S[B.me];
-    this.say([`${B.mode === 'npc' ? '펫 트레이너' : esc(B.foeName) + '님'}이(가) 배틀을 걸어왔다!`, `${B.mode === 'npc' ? '트레이너' : esc(B.foeName)}은(는) ${esc(foe.name)}을(를) 내보냈다!`, `가랏, ${esc(mine.name)}!`], () => { B.busy = false; B.t0 = Date.now(); this.render(); });
+    this.say([`${esc(this.foeHon())}이(가) 배틀을 걸어왔다!`, `${esc(B.foeName)}은(는) ${esc(foe.name)}을(를) 내보냈다!`, `가랏, ${esc(mine.name)}!`], () => { B.busy = false; B.t0 = Date.now(); this.render(); });
   },
+  foeHon() { const B = this.B; return B.foeHon || `${B.foeName}님`; },
   side(w) { const B = this.B; return w === B.me ? 'me' : 'foe'; },
   who(w) { const B = this.B, P = B.S[w]; return w === B.me ? esc(P.name) : `상대 ${esc(P.name)}`; },
   pick(i) {
@@ -9259,8 +9266,8 @@ const PetBattle = {
     const B = this.B; if (!B || B.over) return; B.over = true; B.busy = true; const won = win === B.me, mine = B.S[B.me], foe = B.S[B.me === 'a' ? 'b' : 'a'];
     let gain = won ? (B.mode === 'npc' ? 8 + foe.lv * 4 : 6 + foe.lv * 3) : 3; const lines = [];
     if (why) lines.push(esc(why));
-    lines.push(won ? `🏆 ${B.mode === 'npc' ? '트레이너' : esc(B.foeName) + '님'}에게 이겼다!` : `${esc(mine.name)}이(가) 졌다… 다음엔 꼭!`);
-    if (won && B.mode === 'npc' && B.w && B.w.trainer && !B.w.trainer.done) { const pz = this.prize(foe.lv); B.w.trainer.done = true; this.markBeat(B.w.trainer.key); mgCash(pz, '펫 배틀 상금 (트레이너)'); lines.push(`상금 ${fmtWon(pz)}을(를) 받았다!`); B.w.bubble = { text: '졌다… 너 정말 세다!', t: 3 }; }
+    lines.push(won ? `🏆 ${esc(this.foeHon())}에게 이겼다!` : `${esc(mine.name)}이(가) 졌다… 다음엔 꼭!`);
+    if (won && B.mode === 'npc' && B.w && B.w.trainer && !B.w.trainer.done) { const pz = this.prize(foe.lv); B.w.trainer.done = true; this.markBeat(B.w.trainer.key); mgCash(pz, `펫 배틀 상금 (${B.foeName})`); lines.push(`상금 ${fmtWon(pz)}을(를) 받았다!`); B.w.bubble = { text: '졌다… 너 정말 세다!', t: 3 }; }
     if (won && B.mode === 'net' && Net.on) Net.news(`펫 배틀에서 ${B.foeName}님의 ${foe.name}을(를) 이김 (${mine.name} Lv.${mine.lv})`);
     const L = this.lvs(), cur = this.lvOf(mine.kind); let lv = cur.lv, xp = cur.xp + gain, up = 0; if (lv >= 50) xp = 0; while (lv < 50 && xp >= this.need(lv)) { xp -= this.need(lv); lv++; up++; }
     L[mine.kind] = { lv, xp }; Store.set('petLv', L); lines.push(`${esc(mine.name)}은(는) 경험치 ${gain}을(를) 얻었다!`); if (up) { lines.push(`🎉 ${esc(mine.name)}의 레벨이 ${lv}(으)로 올랐다!`); Sound.play('chime'); }
@@ -9294,7 +9301,7 @@ const PetBattle = {
   },
   hudOne(w) {
     const B = this.B, P = B.S[w], v = B.shown[w], pct = Math.max(0, v / P.max * 100), ty = PB_TYPES[P.t], mine = w === B.me, X = this.lvOf(P.kind);
-    return `<div class="pbName"><b>${esc(P.name)}</b><small>Lv.${P.lv}</small><i style="background:${ty[2]}">${ty[1]} ${ty[0]}</i></div><div class="pbBar"><span>HP</span><div><em class="${pct < 25 ? 'r' : pct < 50 ? 'y' : ''}" style="width:${pct}%"></em></div></div>${mine ? `<div class="pbNum">${v}/${P.max}</div><div class="pbXp"><em style="width:${Math.min(100, X.xp / this.need(X.lv) * 100)}%"></em></div>` : `<div class="pbOwner">${B.mode === 'npc' ? '트레이너' : esc(B.foeName)}의 ${this.kindName(P.kind)}</div>`}`;
+    return `<div class="pbName"><b>${esc(P.name)}</b><small>Lv.${P.lv}</small><i style="background:${ty[2]}">${ty[1]} ${ty[0]}</i></div><div class="pbBar"><span>HP</span><div><em class="${pct < 25 ? 'r' : pct < 50 ? 'y' : ''}" style="width:${pct}%"></em></div></div>${mine ? `<div class="pbNum">${v}/${P.max}</div><div class="pbXp"><em style="width:${Math.min(100, X.xp / this.need(X.lv) * 100)}%"></em></div>` : `<div class="pbOwner">${esc(B.foeName)}의 ${this.kindName(P.kind)}</div>`}`;
   },
   hud() { const B = this.B; if (!B) return; const f = $('pbHudFoe'), m = $('pbHudMe'); if (!f) return; f.innerHTML = this.hudOne(B.me === 'a' ? 'b' : 'a'); m.innerHTML = this.hudOne(B.me); },
   msg(h) { const el = $('pbMsg'); if (el) el.innerHTML = h; },

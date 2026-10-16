@@ -50,6 +50,7 @@ jobs:
           echo "relay: $URL"
           printf '%s\n' "$URL" > relay-url.txt
           curl -fsS --max-time 20 "$URL/health" || { echo "::error::서버가 응답하지 않아요: $URL"; exit 1; }
+          curl -fsS --max-time 20 "$URL/push/key" | grep -q '"key"' || { echo "::error::콕 알림(/push/key)이 응답하지 않아요"; exit 1; }
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain -- relay-url.txt)" ]; then git add relay-url.txt && git commit -m "relay: 서버 주소 갱신 ($URL)" && git push; else echo "주소 그대로"; fi

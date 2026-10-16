@@ -8376,6 +8376,7 @@ const Pets = {
     if (k === 'trex') { this.fans(c, s, idle, k); if (!s.moving && idle > 1.5) this.extra.push({ y: s.y + 60, d: () => this.ptero(c, s, idle, t) }); } // 서 있으면 익룡이 머리 위를 빙빙, 행인이 와서 사진 (사용자 2026-10-16)
     if (k === 'mouse') { if (s.moving || idle < 4.9) s.hole = undefined; else if (s.hole === undefined) { s.hole = null; const z = Game.scene === 'zone' && Game.zone; if (z) for (let dy = 2; dy <= 26; dy += 2) { const ty = Math.floor((s.y - dy) / TILE); if (z.at(Math.floor((s.x + 9 * s.face) / TILE), ty) === T.BLD) { s.hole = Math.round((ty + 1) * TILE - s.y) + 3; break; } } } } // 바로 위쪽에 건물 벽이 있으면 벽 쥐구멍
     if (k === 'trex' && s.moving) Prints.lay(key, s.x, s.y);
+    if (k === 'penguin') this.fish(c, s, idle);
     if (k === 'buddy') { const B = this.buddy(c, s, k, key, ox, oy, t, n, idle); if (B) return B; }
     if (k === 'kid') { const K = this.noona(c, s, k, ox, oy, t, n, idle); if (K) return K; }
     if (k === 'gf' || k === 'bf') { const L = this.lover(c, s, k, ox, oy, t, n, idle); if (L) return L; }
@@ -8384,7 +8385,8 @@ const Pets = {
     if (k === 'dog' && idle > 5 && idle < 6.6) { const a = (idle - 5) / 1.6 * Math.PI * 2, x = ox - Math.cos(a) * 14, y = oy + 2 - Math.sin(a) * 7; return { y, d: () => this.draw(c, k, x, y, Math.sin(a) > 0 ? 1 : -1, true, t, n, 0) }; } // 주인 주위를 한 바퀴
     const roar = (k === 'tiger' || k === 'trex') && idle > 5 && (idle - 5) % 4 < 1.2;
     if (roar && !s.roared) this.scare(s.x, s.y, k === 'trex' ? 90 : 60); s.roared = roar;
-    return { y: s.y, d: () => { this.draw(c, k, s.x, s.y, s.face, s.moving, t, n, idle, k === 'mouse' && s.hole != null ? s.hole : undefined); if (roar && typeof Net !== 'undefined') Net.label(c, k === 'trex' ? '크앙!' : '어흥!', s.x, s.y - (k === 'trex' ? 40 : 22)); } };
+    const pose = k === 'mouse' && s.hole != null ? s.hole : k === 'penguin' && s.fish && s.fish.eat != null ? { eat: s.fish.eat } : undefined;
+    return { y: s.y, d: () => { this.draw(c, k, s.x, s.y, s.face, s.moving, t, n, idle, pose); if (roar && typeof Net !== 'undefined') Net.label(c, k === 'trex' ? '크앙!' : '어흥!', s.x, s.y - (k === 'trex' ? 40 : 22)); } };
   },
   // 여친·남친 (사용자 2026-10-16): 주인이 서 있다가 움직이면 "어디가? 같이가~" 하며 뛰어오고, 5초 서 있으면 다가와 뽀뽀 (꽃다발·하트는 그대로)
   lover(c, s, k, ox, oy, t, n, idle) {
@@ -8486,6 +8488,35 @@ const Pets = {
       if (w.fan.here) this.extra.push({ y: w.y + 0.4, d: () => this.camera(c, w, now) });
     }
   },
+  // 펭귄 (사용자 2026-10-16 '주변에서 NPC들이 물고기 한 번씩 던지게 하고 펭귄은 받아먹자'): 서 있는 펭귄 근처 행인이 한 명씩 다가와
+  // "펭귄아 받아!" 하고 물고기를 던진다 (한 사람당 한 번). 물고기가 포물선으로 날아오면 펭귄이 폴짝 뛰어 부리로 받아 꿀꺽.
+  FISH_SAY: ['펭귄아 받아!', '옛다 생선!', '이거 먹어~', '배고프지?', '자, 고등어!', '하나 줄게~'],
+  fish(c, s, idle) {
+    const now = performance.now(), F = s.fish, on = Game.scene === 'zone' && !s.moving && idle > 1.2;
+    if (F) {
+      const w = F.w, e = now - F.t0, gone = !Game.decor.includes(w) || w.esc || w.stun > 0 || (w.ai && w.ai.flee);
+      if (e < 700) { if (gone || !on) { this.fishEnd(s, w); return; } } // 던지기 전에 펭귄이 가 버리거나 행인이 도망가면 취소
+      if (w.ai && !gone && e < 1500) { w.ai.ix = w.ai.iy = 0; w.ai.t = 0.3; w.moving = false; w.frame = 0; const fx = s.x - w.x, fy = s.y - 8 - w.y; w.dir = Math.abs(fx) > Math.abs(fy) ? (fx > 0 ? 2 : 1) : (fy > 0 ? 0 : 3); }
+      if (e < 700) return; if (!F.from) { F.from = { x: w.x + (w.dir === 2 ? 5 : w.dir === 1 ? -5 : 0), y: w.y - 11 }; s.face = w.x > s.x ? 1 : -1; Sound.play('blip'); }
+      if (e < 1400) { const u = (e - 700) / 700, tx = s.x + 5 * s.face, ty = s.y - 11, x = F.from.x + (tx - F.from.x) * u, y = F.from.y + (ty - F.from.y) * u - Math.sin(Math.PI * u) * 24, dir = tx > F.from.x ? 1 : -1;
+        this.extra.push({ y: s.y + 50, d: () => this.fishFly(c, x, y, dir, u) }); return; }
+      F.eat = (e - 1400) / 1000; if (F.eat > 0.05 && !F.ate) { F.ate = true; Sound.play('pop'); }
+      if (F.eat > 0.25 && F.eat < 1.1) this.extra.push({ y: s.y + 50, d: () => Net.label(c, '냠!', s.x, s.y - 20) });
+      if (F.eat > 1.3) { this.fishEnd(s, w); s.fishNext = now + 3500 + Math.random() * 4000; }
+      return;
+    }
+    if (!on || now < (s.fishNext || 0)) return; s.fishNext = now + 900;
+    let best = null, bd = 95;
+    for (const w of Game.decor) { if (!w.ai || w.fished || w.fan || w.photo || w.esc || w.vip || w.promo || w.stun > 0 || w.ai.flee) continue; const d = Math.hypot(w.x - s.x, w.y - s.y); if (d > 24 && d < bd) { bd = d; best = w; } }
+    if (!best) return; best.fished = true; s.fish = { w: best, t0: now }; best.bubble = { text: this.FISH_SAY[Math.floor(Math.random() * this.FISH_SAY.length)], t: 1.6 };
+  },
+  fishEnd(s, w) { s.fish = null; if (w && w.ai) w.ai.t = 0.3; },
+  // 날아가는 물고기 (펫 그림체 1픽셀): 파닥파닥 꼬리를 흔들며
+  fishFly(c, x, y, dir, u) {
+    const X = Math.round(x), Y = Math.round(y), wig = Math.floor(u * 12) % 2, r = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(X + a * dir - (dir < 0 ? w : 0), Y + b, w, h); };
+    c.fillStyle = 'rgba(0,0,0,.12)'; c.beginPath(); c.ellipse(X, Y + 6 + Math.sin(Math.PI * u) * 20, 2.5, 1, 0, 0, 7); c.fill();
+    r(-2, -1, 5, 2, '#a8c4dc'); r(-2, -1, 5, 1, '#d4e4f0'); r(2, -1, 1, 1, '#111'); r(-4, -2 + wig, 2, 1, '#7a9ab8'); r(-4, 0 - wig, 2, 1, '#7a9ab8'); r(-3, -1, 1, 2, '#7a9ab8');
+  },
   camera(c, w, now) { const ox = [0, -6, 6, 0][w.dir] || 0, oy = [-11, -12, -12, -14][w.dir] || -12, X = Math.round(w.x + ox), Y = Math.round(w.y + oy);
     if (w.dir !== 3) { c.fillStyle = '#1d1d24'; c.fillRect(X - 2.5, Y - 2, 5, 3.5); c.fillStyle = '#6a8ab0'; c.fillRect(X - 1, Y - 1, 2, 1.5); }
     const fl = (w.fan && w.fan.flash) || (w.photo && w.photo.flash), f = fl ? (now - fl) / 260 : 9; if (f < 1) { c.globalAlpha = 1 - f; c.fillStyle = '#fffbe6'; c.beginPath(); c.arc(X, Y - 1, 3 + f * 9, 0, 7); c.fill(); c.globalAlpha = 1; } },
@@ -8543,7 +8574,14 @@ const Prints = {
 const PET_FOLLOW = { cat: { near: 14, far: 46 }, mouse: { near: 9 }, giraffe: { v: 0.6 }, mantis: { v: 0.65 }, elephant: { v: 0.85 } }; // 따라오는 버릇
 // 펫마다 하나씩 특징 (사용자 2026-10-15 '펫마다 특징'): 따라올 때 / 5초 넘게 서 있을 때. true를 돌려주면 직접 다 그린 것.
 const PET_ACT = {
-  penguin(r, s, t, c, mv, idle, f) { if (mv || idle <= 5) return false; // 5초 넘게 서 있으면 앞 웅덩이에서 물고기를 낚아 먹는다 (사용자 2026-10-16)
+  penguin(r, s, t, c, mv, idle, f, pose) {
+    if (pose && pose.eat != null) { const e = pose.eat, jy = e < 0.35 ? -Math.round(Math.sin(e / 0.35 * Math.PI) * 4) : 0; // 폴짝 뛰어 부리로 받고 → 꿀꺽 (목이 볼록) → 날개 파닥
+      c.save(); c.translate(0, jy); c.rotate(e < 0.35 ? -0.12 : 0); f(r, 0, t, c, false);
+      if (e < 0.8) { const sz = e < 0.5 ? 1 : 1 - (e - 0.5) / 0.3, w = Math.max(1, Math.round(4 * sz)), wig = Math.floor(t * 12) % 2; r(4, -10, w, 2, '#a8c4dc'); r(4, -10, w, 1, '#d4e4f0'); if (sz > 0.6) { r(4 + w, -11 + wig, 1, 2, '#7a9ab8'); r(5, -10, 1, 1, '#111'); } }
+      else if (e < 1.05) r(1, -8, 2, 2, '#f4f4f0'); // 꿀꺽 넘어가는 목
+      else { const fl = Math.floor(t * 10) % 2; r(-4, -7 + fl, 1, 3, '#1c1e2a'); r(3, -7 - fl, 1, 3, '#1c1e2a'); } // 기분 좋아 날개 파닥
+      c.restore(); return true; }
+    if (mv || idle <= 5) return false; // 5초 넘게 서 있으면 앞 웅덩이에서 물고기를 낚아 먹는다 (사용자 2026-10-16)
     c.fillStyle = 'rgba(80,160,230,.55)'; c.beginPath(); c.ellipse(10, -1, 5.5, 2, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(225,242,255,.7)'; c.lineWidth = 1; c.stroke();
     const p = (idle - 5) % 3.2, lean = p < 1 ? 0.12 : p < 1.5 ? 0.12 + (p - 1) * 1.1 : p < 1.9 ? 0.67 - (p - 1.5) * 1.4 : 0.1;
     if (p >= 1.4 && p < 1.8) for (let i = 0; i < 3; i++) r(7 + i * 3, -3 - Math.round(((p - 1.4) * 10 + i) % 3), 1, 1, '#e8f4ff'); // 첨벙

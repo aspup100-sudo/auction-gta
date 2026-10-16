@@ -551,8 +551,22 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 #mnCv { image-rendering:pixelated; image-rendering:crisp-edges; }
 #mnFx { pointer-events:none; }
 .mnTop { position:absolute; top:max(10px, env(safe-area-inset-top)); left:max(12px, env(safe-area-inset-left)); right:max(12px, env(safe-area-inset-right)); display:flex; justify-content:center; align-items:flex-start; pointer-events:none; } /* 왼쪽 위는 채팅 자리라 빚은 가운데 */
-.mnTop #mnMap { position:absolute; right:0; top:0; }
-.mn:not(.play) .mnPad, .mn:not(.play) .mnDig, .mn:not(.play) .mnKeys, .mn:not(.play) .mnTop { visibility:hidden; }
+.mnTop .mnMapW { position:absolute; right:0; top:0; display:flex; flex-direction:column; align-items:center; gap:5px; pointer-events:auto; }
+#mnMap { cursor:pointer; touch-action:none; }
+.mnMapB { border:1px solid rgba(240,180,74,.45); background:rgba(18,13,8,.72); color:#f0dcb4; font:700 11.5px var(--ui); border-radius:9px; padding:4px 9px; cursor:pointer; touch-action:none; white-space:nowrap; } .mnMapB:active { background:rgba(240,180,74,.3); }
+.mnUp { display:none; background:rgba(120,70,14,.85); color:#fff3dc; } .mnUp.on { display:block; }
+.mnCard .mcBtns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; } .mnCard .mcBtns .btn { min-width:130px; }
+.mnBig { position:absolute; inset:0; z-index:2; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); padding:max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); box-sizing:border-box; } .mnBig.on { display:flex; }
+.mnBig .mbIn { width:min(820px, 100%); height:min(620px, 100%); display:flex; flex-direction:column; background:linear-gradient(#1a130c, #0e0a06); border:1px solid rgba(240,180,74,.4); border-radius:14px; box-shadow:0 18px 50px rgba(0,0,0,.8); overflow:hidden; animation:mcIn .3s ease-out; }
+.mbHead { display:flex; align-items:center; gap:10px; padding:8px 8px 8px 14px; border-bottom:1px solid rgba(240,180,74,.2); } .mbHead b { color:#f0b44a; font-size:15px; } .mbInfo { flex:1; font-size:12px; color:#bba98a; }
+.mbX { width:34px; height:34px; border-radius:9px; border:1px solid rgba(240,180,74,.35); background:rgba(40,28,14,.8); color:#f0dcb4; font-size:16px; cursor:pointer; }
+#mnBigCv { flex:1; min-height:0; width:100%; display:block; touch-action:none; cursor:grab; }
+.mbFoot { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 8px 7px 12px; border-top:1px solid rgba(240,180,74,.2); font-size:11px; color:#bba98a; flex-wrap:wrap; }
+.mbLeg i { display:inline-block; width:9px; height:9px; margin:0 3px 0 7px; vertical-align:-1px; border-radius:2px; } .mbLeg i:first-child { margin-left:0; }
+.mbLeg .me { background:#fff; clip-path:polygon(100% 50%, 0 0, 30% 50%, 0 100%); border-radius:0; } .mbLeg .ot { background:#7fd4ff; border-radius:50%; } .mbLeg .lp { background:#ffc35a; border-radius:50%; } .mbLeg .ev { background:#6c8a5a; } .mbLeg .tp { border:2px solid #ff7a3c; width:6px; height:6px; }
+.mbZ { display:flex; gap:5px; } .mbZ button { min-width:36px; height:32px; padding:0 9px; border-radius:9px; border:1px solid rgba(240,180,74,.35); background:rgba(40,28,14,.8); color:#f0dcb4; font:700 13px var(--ui); cursor:pointer; }
+.short .mbLeg { display:none; } .short .mbHead { padding:5px 6px 5px 12px; } .short .mbX { width:30px; height:30px; } .short .mnMapB { font-size:10.5px; padding:3px 7px; }
+.mn:not(.play) .mnJoy, .mn:not(.play) .mnDig, .mn:not(.play) .mnKeys, .mn:not(.play) .mnTop { visibility:hidden; }
 .mnDebt { background:rgba(12,9,6,.74); border:1px solid rgba(230,170,70,.35); border-radius:10px; padding:8px 12px 7px; min-width:232px; box-shadow:0 4px 18px rgba(0,0,0,.5); }
 .mnDebt:empty { display:none; }
 .mnDebt h4 { margin:0 0 4px; font-size:13px; color:#f0b44a; letter-spacing:.04em; }
@@ -565,10 +579,12 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 .mnPop { position:absolute; top:40%; transform:translate(-50%,0); font-weight:800; font-size:20px; color:#ffe7a8; text-shadow:0 2px 0 #3a2000, 0 0 10px rgba(255,180,60,.6); animation:mnPop 1.1s ease-out forwards; white-space:nowrap; }
 .mnPop.coal { color:#fff; font-size:23px; } .mnPop.gold { font-size:38px; color:#ffd84a; animation-duration:2.6s; text-shadow:0 3px 0 #5a3500, 0 0 24px rgba(255,200,60,.9); }
 @keyframes mnPop { 0% { opacity:0; transform:translate(-50%,8px) scale(.8) } 15% { opacity:1; transform:translate(-50%,0) scale(1.08) } 100% { opacity:0; transform:translate(-50%,-64px) scale(1) } }
-.mnPad { position:absolute; left:max(18px, env(safe-area-inset-left)); bottom:max(18px, env(safe-area-inset-bottom)); display:grid; grid-template-columns:repeat(3, 56px); grid-template-rows:repeat(2, 56px); gap:6px; }
-.mnPad button small { display:block; font-size:9px; font-weight:600; opacity:.7; margin-top:1px; } .mnPad button { flex-direction:column; border-radius:12px; border:1px solid rgba(240,180,74,.35); background:rgba(18,13,8,.62); color:#f0dcb4; font-size:22px; font-weight:700; display:flex; align-items:center; justify-content:center; touch-action:none; cursor:pointer; }
-.mnPad button:active { background:rgba(240,180,74,.3); }
-.mnPad .pL { grid-column:1; grid-row:2; } .mnPad .pF { grid-column:2; grid-row:1; } .mnPad .pB { grid-column:2; grid-row:2; } .mnPad .pR { grid-column:3; grid-row:2; }
+.mnJoy { position:absolute; left:calc(max(18px, env(safe-area-inset-left)) + 48px); bottom:max(18px, env(safe-area-inset-bottom)); width:136px; height:136px; border-radius:50%; background:radial-gradient(circle, rgba(18,13,8,.35) 0%, rgba(18,13,8,.66) 70%); border:2px solid rgba(240,180,74,.35); box-shadow:0 6px 20px rgba(0,0,0,.5), inset 0 0 18px rgba(0,0,0,.6); touch-action:none; cursor:pointer; }
+.mnJoy span { position:absolute; font-size:13px; color:rgba(240,220,180,.5); pointer-events:none; } .mjU { top:7px; left:50%; transform:translateX(-50%); } .mjD { bottom:7px; left:50%; transform:translateX(-50%); } .mjL { left:9px; top:50%; transform:translateY(-50%); } .mjR { right:9px; top:50%; transform:translateY(-50%); }
+.mjKnob { position:absolute; left:50%; top:50%; width:58px; height:58px; margin:-29px 0 0 -29px; border-radius:50%; background:radial-gradient(circle at 40% 34%, #6a5536, #33281a 70%); border:2px solid rgba(240,180,74,.55); box-shadow:0 4px 10px rgba(0,0,0,.6); pointer-events:none; transition:transform .12s ease-out; }
+.mnJoy.on .mjKnob { transition:none; background:radial-gradient(circle at 40% 34%, #8a6c40, #44331d 70%); } .mnJoy.on { border-color:rgba(240,180,74,.6); }
+.mnLook { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); margin:0; padding:6px 12px; border-radius:16px; background:rgba(12,9,6,.55); font-size:12.5px; color:rgba(240,220,180,.85); pointer-events:none; animation:mnLook 2.4s ease-in-out infinite; transition:opacity .6s; white-space:nowrap; } .mnLook.off { opacity:0; } .touchOn .mnLook { } .mn:not(.play) .mnLook { visibility:hidden; }
+@keyframes mnLook { 0%,100% { transform:translate(-62%,-50%) } 50% { transform:translate(-38%,-50%) } }
 .mnDig { position:absolute; right:max(22px, env(safe-area-inset-right)); bottom:max(22px, env(safe-area-inset-bottom)); width:116px; height:116px; border-radius:50%; background:radial-gradient(circle at 40% 32%, #f6c25a, #b06c1e 66%, #6b3e0e); border:3px solid #3a2208; color:#2a1604; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; box-shadow:0 6px 0 #3a2208, 0 10px 24px rgba(0,0,0,.6); touch-action:none; cursor:pointer; font-family:var(--ui); }
 .mnDig i { font-style:normal; font-size:32px; line-height:1; } .mnDig b { font-size:16px; } .mnDig small { font-size:9.5px; opacity:.75; }
 .mnDig.on { transform:translateY(4px); box-shadow:0 2px 0 #3a2208, 0 6px 16px rgba(0,0,0,.6); }
@@ -581,7 +597,7 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 .mnCard .mcT { width:100%; border-collapse:collapse; margin:4px 0 12px; font-size:14px; } .mnCard .mcT td { padding:5px 4px; border-bottom:1px solid rgba(240,180,74,.15); } .mnCard .mcT td:last-child { text-align:right; color:#fff; font-weight:700; } .mnCard .mcT .sum td { color:#ffd27a; font-size:16px; border-bottom:0; }
 .short .mnDebt { min-width:190px; padding:6px 10px 5px; } .short .mnDebt h4 { font-size:11.5px; margin-bottom:2px; } .short .mnDebt .nums b { font-size:12.5px; } .short .mnDebt small { font-size:9.5px; }
 .short #mnMap { width:84px; height:84px; } .short .mnSub { bottom:96px; font-size:13px; max-width:56vw; }
-.short .mnPad { grid-template-columns:repeat(3, 46px); grid-template-rows:repeat(2, 46px); gap:5px; } .short .mnPad button { font-size:16px; } .short .mnPad button small { display:none; }
+.short .mnJoy { left:calc(max(14px, env(safe-area-inset-left)) + 40px); width:112px; height:112px; } .short .mjKnob { width:48px; height:48px; margin:-24px 0 0 -24px; }
 .short .mnDig { width:92px; height:92px; } .short .mnDig i { font-size:26px; } .short .mnDig b { font-size:14px; } .short .mnDig small { display:none; }
 .short .mnCard .mcIn { padding:14px 18px 12px; } .short .mnCard h3 { font-size:18px; margin:4px 0 6px; } .short .mnCard p { font-size:12.5px; margin-bottom:6px; } .short .mnCard .mcT { font-size:12.5px; margin-bottom:6px; } .short .mnCard .mcT td { padding:3px 4px; }
 #duelWin.hit { animation:duelHit .5s ease-out; } @keyframes duelHit { 0% { background:#fff4e0; transform:translate(8px,-4px) } 20% { transform:translate(-8px,4px) } 40% { transform:translate(5px,0) } 100% { transform:none } }
@@ -2001,7 +2017,8 @@ Object.assign(FEEL, {
   hospitalHits: 3,        // 이 횟수째 치이면 입원 (합의금 대신 입원비를 내고 병원 앞에서 다시 시작)
   hospitalMin: 3000000, hospitalMax: 5000000, // 입원비(원) · 시간도 1칸 지나간다
   // 석탄 땅굴 (v168, 사용자 2026-10-16): 자금이 시작 자금의 mineFloor(90%)보다 내려가는 만큼의 합의금·병원비는 땅굴 빚. 곡괭이질 한 번마다 돈, 한 칸은 mineHits번에 뚫린다
-  mineFloor: 0.9, mineSwingMin: 20000, mineSwingMax: 50000, mineCoalMin: 50000, mineCoalMax: 120000, mineHits: 3, mineGoldP: 0.004, mineGold: 10000000,
+  mineAllow: 10000000, // v170 (사용자 2026-10-16): 자금과 따로 도는 '땅굴 한도'. 합의금·병원비·수리비·과태료가 이 한도를 깎고, 넘는 만큼이 땅굴 빚. 매각 수익·월세가 번 만큼 다시 채운다
+  mineSwingMin: 20000, mineSwingMax: 50000, mineCoalMin: 50000, mineCoalMax: 120000, mineHits: 3, mineGoldP: 0.004, mineGold: 10000000, mineMore: 10000000, // v170 빚 다 갚고 '더 캐기'로 더 벌 수 있는 한도
   hitKnock: 22,           // 치였을 때 튕겨 나가는 거리(px)
   hitSpeed: 15,           // 이 속도 미만으로 닿으면 치인 것으로 치지 않음
   pedMin: 300000, pedMax: 1000000, // 내 차로 보행자를 쳤을 때 합의금(원)
@@ -2748,15 +2765,15 @@ function drawCourtRoof(ctx, b) {
 
 /* ===================== 운전: 내 차 · NPC 차량 · 신호등 · 스키드 ===================== */
 const Skids = [];
-// 기차 탈것이 지나간 자리에 깔리는 철로 (잠깐 남았다가 서서히 사라진다)
+// 기차 탈것이 지나간 자리에 깔리는 철로. v170 (사용자 2026-10-16 '드리프트 타이어 자국처럼 남게'): 사라지지 않고 스키드처럼 남는다 (구를 옮기면 지워짐, 오래된 것부터 MAX개까지)
 const Rails = {
-  LIFE: 3, FADE: 1.5, GAP: 7, pts: [], last: {},
+  LIFE: 1e9, FADE: 1.5, GAP: 7, MAX: 1600, pts: [], last: {},
   lay(key, x, y, a, spd) {
     if (spd < 4) return; const now = performance.now() / 1000, L = this.last[key];
     if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
     const brk = !L || Math.hypot(x - L.x, y - L.y) > 40 || now - L.t > 1.5;
     const p = { x, y, a, t: now, key, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p;
-    if (this.pts.length > 800) this.pts.splice(0, this.pts.length - 800);
+    if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null;
   },
   clear() { this.pts.length = 0; this.last = {}; },
   draw(c, x0, y0, x1, y1) {
@@ -2894,7 +2911,7 @@ function crashFx(c, sp) {
     c.hitCd = 0.8; shake(Math.min(8, sp / 30), 0.3); Sound.play('crash');
     if (!REDUCED_MOTION) for (let i = 0; i < 8; i++) Particles.push({ x: c.x + Math.cos(c.a) * 10, y: c.y + Math.sin(c.a) * 10, vx: (Math.random() - 0.5) * 160, vy: -30 - Math.random() * 80, g: 220, life: 0.45, max: 0.45, col: i % 2 ? 'rgba(255,200,80,' : 'rgba(255,120,40,', r: 1 + Math.random() });
     const fee = Math.round((FEEL.repairMin + Math.random() * (FEEL.repairMax - FEEL.repairMin)) / 1000) * 1000;
-    State.cash -= fee; HUD.setCash(State.cash); Toast.show(`쾅! 수리비 ${fmtWon(fee)}`);
+    Mine.charge(fee, '수리비'); Toast.show(`쾅! 수리비 ${fmtWon(fee)}`); // v170: 수리비·과태료도 자금 90% 밑이면 땅굴 빚
   }
 }
 let engineHum = 0;
@@ -2933,7 +2950,7 @@ function checkTrafficFines(c, z) {
   if (c.speed > FEEL.carMaxSpeed * 0.62 && c.fineCd <= 0 && Game.decor.some(w => Math.hypot(w.x - c.x, w.y - c.y) < 34)) { c.fineCd = 6; issueFine('보행자 근처 과속', FEEL.fineSpeed); }
 }
 function issueFine(why, amt) {
-  State.cash -= amt; HUD.setCash(State.cash);
+  Mine.charge(amt, `과태료 (${why})`);
   State.fines = (State.fines || []); State.fines.push({ why, amt, day: State.day });
   setTimeout(() => { HUD.page(`과태료 고지서: ${why} ${fmtWon(amt)}`, '알림'); HUD.notebookBump(1); }, 900);
 }
@@ -5249,6 +5266,7 @@ const Live = {
     if (sv && !Store.get('topup163_' + this.ch, false)) { Store.set('topup163_' + this.ch, true); if (State.cash < 1e8) { this.topup = Math.round(1e8 - State.cash); Money.why('자금 다시 채워 줌 (1억까지)'); State.cash = 1e8; } } // 한 번만: 돈이 1억 밑이면 1억으로 (사용자 2026-10-16 '자금 1억 밑인 사람 1억으로 다시')
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('adj9k_1', false)) { Store.set('adj9k_1', true); Money.why('운영자 조정 (자금 9천만 원으로)'); State.cash = 9e7; setTimeout(() => HUD.page('운영자가 자금을 9천만 원으로 맞췄어요. 이제부터 합의금·병원비가 모자라면 석탄 땅굴로 끌려가요.', '알림'), 4500); } // 사용자 2026-10-16 '에센티아 이 사람 9천만 원 만들어 봐': 채널 1의 에센티아만, 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
+    if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
     this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;
     const cases = []; for (let k = 0; k < FEEL.liveListings; k++) { const cyc = this.cycle(k); cases.push(this.makeCase(k, cyc.n)); }
     State.week = { seed: Net.seed, capital: State.capital, saleDate: '2025-11-11', cases };
@@ -5547,6 +5565,7 @@ const Live = {
     const already = (E ? (E.moveFee || 0) + (E.forced ? E.forced.cost : 0) + (E.paidAssume || 0) : 0) + (O ? O.repair - O.rentTotal + (O.intPaid || 0) : 0); // 현금에서 이미 나간 돈(명도비·수리비·매달 낸 이자)과 이미 들어온 돈(월세)
     // 잔금까지 낸 현금 = 시작 − 낙찰가 + 대출 − 이미 낸 명도비. 처분하고 대출을 갚으면 시작 + 손익
     Money.why(O && O.condLabel === '경매로 넘어감' ? '경매 낙찰대금으로 대출 갚고 남은 돈' : '매도 대금 (대출 상환 뒤)'); State.cash += S.profit + m.bid - (L.bank + L.savings) + already - (m.extraLoan || 0); HUD.setCash(State.cash); // 집 담보 추가 대출도 이때 갚는다
+    if (S.profit > 0) Mine.refill(S.profit, '매각 수익');
     this.results.unshift({ at: this.stamp(), name: c.name, caseNo: c.caseNo, won: true, profit: S.profit, grade: G.grade, bid: m.bid, winner: '본인', wbid: m.bid });
     Net.news(`${c.name.split(' ').slice(0, 2).join(' ')} 매도 · 손익 ${(S.profit >= 0 ? '+' : '−') + fmtWon(Math.abs(S.profit))}`);
     Records.add(S, c, G); this.save(); if (S.profit > 0 && !(O && O.condLabel === '경매로 넘어감')) Titles.redeem();
@@ -5610,7 +5629,7 @@ const Live = {
         else if (a.held >= a.leaseEnd) { a.leaseEnd += this.leaseMs(); a.renewNo = (a.renewNo || 0) + 1; changed = true; if (Game.player && !this.quiet) HUD.page(`${m.name.split(' ')[0]} 임대 계약이 그대로 연장됐어요. 만료 전에 아무도 말을 안 해서 묵시적 갱신이에요.`, a.tenant || '세입자'); }
       }
       if (a.repair === 'doing' && this.now() >= a.repairUntil) { a.repair = 'done'; changed = true; if (Game.player && !this.quiet) { Toast.show(`${m.name.split(' ')[0]} 수리 끝 · 집값 +${Math.round((FEEL.liveRepairPremium - 1) * 100)}%, 월세 +10%`, 3000); Sound.play('ding'); } }
-      if (a.rentOn && a.held >= (a.rentHeld || 0) + this.monthMs()) { a.rentHeld = (a.rentHeld || 0) + this.monthMs(); a.rentAt = this.now(); a.rentTotal += a.rent; a.rentMonths++; State.cash += a.rent; HUD.setCash(State.cash); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ')[0], amt: a.rent, cash: State.cash }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player && !this.quiet) { Toast.show(`월세 입금 ${fmtWon(a.rent)} (${m.name.split(' ')[0]})`); Sound.play('coins'); } }
+      if (a.rentOn && a.held >= (a.rentHeld || 0) + this.monthMs()) { a.rentHeld = (a.rentHeld || 0) + this.monthMs(); a.rentAt = this.now(); a.rentTotal += a.rent; a.rentMonths++; State.cash += a.rent; HUD.setCash(State.cash); Mine.refill(a.rent, '월세'); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ')[0], amt: a.rent, cash: State.cash }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player && !this.quiet) { Toast.show(`월세 입금 ${fmtWon(a.rent)} (${m.name.split(' ')[0]})`); Sound.play('coins'); } }
       const c0 = this.caseFor(this.key(m.k, m.n));
       if (a.listed && !a.offer && c0 && this.now() >= a.listed + this.saleWaitMs(c0)) {
         const c = c0, Q = this.liq(c); const R = caseRng(c, 500 + (a.offerNo || 0)); a.offerNo = (a.offerNo || 0) + 1; changed = true;
@@ -7224,7 +7243,8 @@ const Punch = {
  * - 합의금은 바로 끌려가고, 병원(정신과 병동 포함)은 퇴원하자마자 끌려간다. 빚을 다 캐는 순간 현실로 돌아온다.
  * - 1인칭, 답답한 분위기. 곡괭이질 한 번마다 돈. 아주 낮은 확률로 금(1,000만 원) → 빚을 빼고 남은 돈을 들고 나온다.
  * - 굴은 채널마다 하나: 앞사람이 판 데서 이어서 판다 (중계 서버에 저장, 'mdig'/'getmine'). 파는 방향은 내 마음대로.
- * 사용자 2026-10-16 추가 '1천만 원까지는 그냥 빠져나가게, 9천만 원이 되면 그때부터 끌려가는 걸로': 자금이 시작 자금의 90%(FEEL.mineFloor)
+ * v170 (사용자 2026-10-16 '그냥 천만 원이 항상 한계, 매각·임대 수입은 번 만큼 메꿔 주자, 한도는 따로 흘러가는 메커니즘'): 땅굴 한도 lim (FEEL.mineAllow). 아래 v168 규칙(자금 90%)은 이걸로 바뀜.
+ * (v168) 사용자 2026-10-16 추가 '1천만 원까지는 그냥 빠져나가게, 9천만 원이 되면 그때부터 끌려가는 걸로': 자금이 시작 자금의 90%(FEEL.mineFloor)
  * 밑으로 내려가는 만큼만 땅굴 빚이 된다. 카지노·펫 배틀·이혁진 게임은 원래대로 번 돈으로만 (mgFree).
  */
 const MINE_TS = 128;                       // 텍스처 한 변 (막장이 가까워도 덜 뭉개지게)
@@ -7234,6 +7254,7 @@ const MINE_WALL = 1.05, MINE_EYE = 0.5;    // 천장 높이 · 눈높이 (낮고
 const MINE_PLANE = 0.8;                    // 시야 · 세로는 0.8배로 눌러 천장이 더 낮아 보이게 (render의 Kv)
 const MINE_SW = 0.62;                      // 곡괭이질 한 번 (초)
 const MINE_DX = [1, 0, -1, 0], MINE_DY = [0, 1, 0, -1];
+const MINE_RAD = 0.3, MINE_REACH = 1.05, MINE_SPD = 1.7, MINE_TURN = 2.4, MINE_LOOK = 0.0062; // v170 자유 시야: 몸 반지름 · 곡괭이 닿는 거리 · 걷기(칸/초) · 키 돌기(rad/초) · 드래그 감도(rad/px)
 const MINE_START = ['0,0', '1,0', '2,0', '3,0'];
 const MINE_BOSS = '반장';
 const MINE_SAY = {
@@ -7242,6 +7263,7 @@ const MINE_SAY = {
   any: ['여기 공기 원래 이래. 익숙해져.', '금? 여기서 금 본 사람, 십 년에 한 명이다.', '천장 울리면 고개 숙여.', '물 떨어지는 소리는 신경 쓰지 마.', '다들 빚 갚으러 온 거다. 너만 그런 거 아니야.', '등 펴지 마. 천장에 머리 박는다.', '랜턴 기름 아껴. 위에서 안 내려 준다.'],
   coal: '검은 줄 보이지? 석탄 줄기다. 그쪽으로 파면 돈이 더 된다.',
   open: '앞은 이미 뚫려 있다. 막힌 쪽을 보고 캐.',
+  far: '벽에 더 붙어서 쳐. 허공에 휘두르면 돈 안 나온다.',
   wall: '막혔다. 캐야 지나간다.',
   rock: '여긴 암반이라 안 파진다. 다른 쪽으로 파.',
   half: '반 왔다. 조금만 더 버텨.',
@@ -7271,29 +7293,41 @@ const Mine = {
     if (mp && typeof mp.c === 'string' && mp.c) for (const k of mp.c.split(';')) if (/^-?\d{1,3},-?\d{1,3}$/.test(k)) this.cells.add(k);
     this.last = mp && Array.isArray(mp.l) && mp.l.length === 3 ? mp.l : null;
     this.debt = Store.get('mineDebt' + ch, null); if (this.debt && !(this.debt.owe > 0)) this.debt = null;
+    if (this.debt && this.debt.got >= this.debt.owe) { // 빚은 다 갚고 '더 캐기' 하다 앱을 껐다: 캔 만큼 들고 나온 걸로
+      const D = this.debt, left = Math.max(0, Math.min(D.got, D.owe + FEEL.mineMore) - D.owe); this.debt = null; this.saveDebt();
+      if (left > 0) { Money.why(`석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left; HUD.setCash(State.cash); setTimeout(() => { try { Live.save(); } catch (e) {} }, 0); }
+    }
+    const lm = Store.get('mineLim' + ch, null); this.lim = typeof lm === 'number' && lm >= 0 ? Math.min(FEEL.mineAllow, lm) : FEEL.mineAllow;
     this.want = performance.now() + 3000; this.gridDirty = true;
     if (!this.iv) this.iv = setInterval(() => { try { this.watch(); } catch (e) {} }, 300);
   },
   saveMap() { if (this.ch == null) return; Store.set('mineMap' + this.ch, { c: [...this.cells].join(';'), l: this.last }); },
   saveDebt() { if (this.ch == null) return; Store.set('mineDebt' + this.ch, this.debt); },
-  reset(ch) { Store.set('mineDebt' + ch, null); if (ch === this.ch) this.debt = null; }, // 기록 지우기: 내 빚만 지운다 (굴은 채널 모두의 것)
-  floor() { return Math.round((State.capital || 1e8) * FEEL.mineFloor); },
+  reset(ch) { Store.set('mineDebt' + ch, null); Store.set('mineLim' + ch, null); if (ch === this.ch) { this.debt = null; this.lim = FEEL.mineAllow; } }, // 기록 지우기: 내 빚만 지운다 (굴은 채널 모두의 것)
+  // 땅굴 한도 (v170): 자금과 상관없이 따로 흐른다. 처음 FEEL.mineAllow(1천만 원), 강제로 나가는 돈이 깎고 매각 수익·월세가 채운다
+  lim: 0,
+  saveLim() { if (this.ch != null) Store.set('mineLim' + this.ch, this.lim); },
+  refill(amt, why) {
+    if (!Live.on || !(amt > 0) || this.ch == null) return; const before = this.lim; this.lim = Math.min(FEEL.mineAllow, this.lim + Math.round(amt)); this.saveLim();
+    // 따로 표시하지 않는다 (사용자: 돈은 하나로). 다음에 돈이 나갈 때 남은 한도를 알려 준다
+  },
   owed() { const D = this.debt; return D ? Math.max(0, D.owe - D.got) : 0; },
 
   /* ---- 돈 내기: 합의금·병원비는 모두 여기로 ----
-   * 채널이 아니면 예전처럼 그냥 낸다. 채널에서는 자금이 floor(시작 자금의 90%)까지는 내고, 그 밑으로 내려갈 만큼은 땅굴 빚.
+   * 채널이 아니면 예전처럼 그냥 낸다. 채널에서는 땅굴 한도(lim)만큼은 자금에서 내고, 한도를 넘는 만큼은 땅굴 빚. 낼 때마다 남은 한도를 알려 준다.
    * after: 이어서 병원·정신과 병동에 가는 경우 (퇴원하고 나서 끌려간다) */
   charge(fee, label, o = {}) {
     fee = Math.max(0, Math.round(fee || 0)); if (!fee) return 0;
     if (!Live.on) { if (label) Money.why(label); State.cash -= fee; HUD.setCash(State.cash); return fee; }
-    const can = Math.max(0, Math.min(fee, Math.round(State.cash - this.floor())));
-    if (can > 0) { if (label) Money.why(label); State.cash -= can; HUD.setCash(State.cash); }
+    const can = Math.max(0, Math.min(fee, this.lim, Math.round(State.cash))); this.lim -= can; this.saveLim(); /* 한도가 남아도 자금이 모자라면 모자란 만큼은 땅굴 빚 */
+    if (can > 0) { Money.why(`${label || '합의금'} · 땅굴 한도 ${fmtWon(this.lim)} 남음`); State.cash -= can; HUD.setCash(State.cash); }
     const rest = fee - can;
+    if (!rest) setTimeout(() => { if (!this.open_) Toast.show(this.lim > 0 ? `⛏ 땅굴 한도 ${fmtWon(this.lim)} 남음 · 이만큼 더 내면 석탄 땅굴` : '⛏ 땅굴 한도를 다 썼다 · 다음에 돈 낼 일이 생기면 바로 석탄 땅굴', 3200); }, 1500);
     if (rest > 0) {
       const D = this.debt || (this.debt = { owe: 0, got: 0, why: [], at: Date.now() });
       D.owe += rest; D.why.push(label || '합의금'); D.why = D.why.slice(-4); this.saveDebt();
       this.want = performance.now() + (o.after ? 2500 : 900);
-      setTimeout(() => { if (!this.open_) HUD.page(`돈이 모자라 ${label || '합의금'} 중 ${fmtWon(rest)}을 못 냈다. ${o.after ? '퇴원하면' : '곧'} 석탄 땅굴로 끌려간다.`, '알림'); }, o.after ? 400 : 200);
+      setTimeout(() => { if (!this.open_) HUD.page(`${this.lim > 0 ? '돈이 모자라다' : '땅굴 한도를 넘었다'}. ${label || '합의금'} 중 ${fmtWon(rest)}은 땅굴 빚이다. ${o.after ? '퇴원하면' : '곧'} 석탄 땅굴로 끌려간다.`, '알림'); }, o.after ? 400 : 200);
     }
     Live.save(); return can;
   },
@@ -7404,15 +7438,16 @@ const Mine = {
     if (Net.on) Net.news(`석탄 땅굴에 끌려감 (빚 ${fmtWon(this.owed())})`);
     this.ph = 'intro'; this.phT = performance.now(); this.fade = 1;
     const D = this.debt, why = D.why.length ? D.why[D.why.length - 1] : '합의금';
-    await this.card(`<p class="mcK">번 돈이 바닥났다</p><h3>석탄 땅굴로 끌려간다</h3><p>${esc(why)}을(를) 낼 돈이 모자랐다.<br>못 낸 돈 <b>${fmtWon(this.owed())}</b>, 이걸 다 캐기 전엔 못 올라온다.</p><p class="mcS">곡괭이질 한 번마다 돈이 쌓인다. 아주 가끔 금이 나온다는 소문이 있다.</p>`, '내려가기', 5200);
+    await this.card(`<p class="mcK">${this.lim > 0 ? '낼 돈이 없다' : '땅굴 한도를 다 썼다'}</p><h3>석탄 땅굴로 끌려간다</h3><p>${this.lim > 0 ? `${esc(why)}을(를) 낼 돈이 모자랐다.` : `${esc(why)}까지 내다가 한도 ${fmtWon(FEEL.mineAllow)}을 넘었다.`}<br>못 낸 돈 <b>${fmtWon(this.owed())}</b>, 이걸 다 캐기 전엔 못 올라온다.</p><p class="mcS">곡괭이질 한 번마다 돈이 쌓인다. 아주 가끔 금이 나온다는 소문이 있다.</p>`, '내려가기', 5200);
     this.ph = 'down'; this.phT = performance.now(); Sound.play('cage'); Sound.play('rumble'); this.rumbleIv = setInterval(() => Sound.play('rumble'), 900);
     await this.wait(2900);
     clearInterval(this.rumbleIv); Sound.play('cage'); Sound.play('slam');
     // 앞사람이 판 데(막장)에서 시작
     let l = this.last; if (!l || !this.isOpen(l[0], l[1])) l = [3, 0, 0];
     { const busy = Object.values(this.others).some(o => Math.floor(o.x) === l[0] && Math.floor(o.y) === l[1]), bx = l[0] - MINE_DX[l[2] & 3], by = l[1] - MINE_DY[l[2] & 3]; if (busy && this.isOpen(bx, by)) l = [bx, by, l[2]]; } // 막장에 누가 있으면 한 칸 뒤에서
-    this.px = l[0]; this.py = l[1]; this.d = l[2] & 3; this.ang = this.d * Math.PI / 2; this.cx = this.px + 0.5; this.cy = this.py + 0.5; this.mv = null; this.tr = null; this.sw = null; this.gridDirty = true;
+    this.px = l[0]; this.py = l[1]; this.d = l[2] & 3; this.ang = this.d * Math.PI / 2; this.cx = this.px + 0.5; this.cy = this.py + 0.5; this.mv = null; this.tr = null; this.sw = null; this.gridDirty = true; this.keys = {}; this.joy = null; this.auto = null; this.stepPh = 0; this.walk = 0; this.walkK = 0;
     this.ph = 'play'; this.phT = performance.now(); this.fade = 1; this.lastAct = performance.now(); this.nextAny = performance.now() + 16000; this.nextDrip = 0; this.nextCreak = performance.now() + 7000; this.nextQuake = performance.now() + 20000 + Math.random() * 15000;
+    setTimeout(() => { const lk = this.el && this.el.querySelector('.mnLook'); if (lk) lk.classList.add('off'); }, 9000);
     Sound.playBgm('mine'); this.say(MINE_SAY.arrive[Math.floor(Math.random() * MINE_SAY.arrive.length)], 4200, true);
     this.hud();
   },
@@ -7429,27 +7464,56 @@ const Mine = {
 
   /* ---- 화면 ---- */
   mount() {
-    const el = this.el = $('mineWin');
+    const el = this.el = $('mineWin'); this.bigOn = false;
     el.innerHTML = `<div class="mn"><canvas id="mnCv"></canvas><canvas id="mnFx"></canvas>
-      <div class="mnTop"><div class="mnDebt"></div><canvas id="mnMap" width="224" height="224"></canvas></div>
+      <div class="mnTop"><div class="mnDebt"></div><div class="mnMapW"><canvas id="mnMap" width="224" height="224"></canvas><button class="mnMapB" id="mnMapB">🗺 큰 지도</button><button class="mnMapB mnUp" id="mnUp">⬆ 올라가기</button></div></div>
       <p class="mnSub"></p><div class="mnPops"></div>
-      <div class="mnPad"><button data-k="L" class="pL" aria-label="왼쪽으로 돌기">◀<small>돌기</small></button><button data-k="F" class="pF" aria-label="앞으로">▲</button><button data-k="B" class="pB" aria-label="뒤로">▼</button><button data-k="R" class="pR" aria-label="오른쪽으로 돌기">▶<small>돌기</small></button></div>
+      <div class="mnJoy" aria-label="걷기 조이스틱"><i class="mjKnob"></i><span class="mjU">▲</span><span class="mjD">▼</span><span class="mjL">◀</span><span class="mjR">▶</span></div><p class="mnLook">화면을 끌면 둘러보기</p>
       <button class="mnDig" id="mnDig"><i>⛏</i><b>캐기</b><small>꾹 누르면 계속</small></button>
-      <p class="mnKeys">← → 돌기 · ↑ ↓ 걷기 · Space 꾹 캐기</p><div class="mnCard"></div></div>`;
-    el.querySelectorAll('.mnPad button').forEach(b => { b.onpointerdown = e => { e.preventDefault(); this.act(b.dataset.k); }; });
+      <p class="mnKeys">W S 앞뒤 · A D 옆걸음 · ← → 또는 마우스로 끌어서 둘러보기 · Space 꾹 캐기 · M 지도</p>
+      <div class="mnBig"><div class="mbIn"><div class="mbHead"><b>땅굴 지도</b><span class="mbInfo"></span><button class="mbX" aria-label="지도 닫기">✕</button></div>
+      <canvas id="mnBigCv"></canvas>
+      <div class="mbFoot"><span class="mbLeg"><i class="me"></i>나 <i class="ot"></i>다른 광부 <i class="lp"></i>등 <i class="ev"></i>엘리베이터 <i class="tp"></i>마지막으로 판 곳</span><span class="mbZ"><button data-z="-1" aria-label="작게">－</button><button data-z="0">내 위치</button><button data-z="1" aria-label="크게">＋</button></span></div></div></div>
+      <div class="mnCard"></div></div>`;
+    // 조이스틱: 위아래 = 앞뒤로 걷기, 좌우 = 옆걸음
+    const joy = el.querySelector('.mnJoy'), knob = joy.querySelector('.mjKnob'); let jid = null;
+    const jset = e => { const r = joy.getBoundingClientRect(), R = r.width * 0.36; let x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2); const l = Math.hypot(x, y); if (l > R) { x *= R / l; y *= R / l; } knob.style.transform = `translate(${x}px, ${y}px)`; const nx = x / R, ny = y / R, m = Math.hypot(nx, ny); this.joy = m < 0.14 ? { x: 0, y: 0 } : { x: nx, y: ny }; };
+    const jend = e => { if (e.pointerId !== jid) return; jid = null; this.joy = null; knob.style.transform = ''; joy.classList.remove('on'); };
+    joy.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); if (jid != null) return; jid = e.pointerId; joy.setPointerCapture(e.pointerId); joy.classList.add('on'); jset(e); };
+    joy.onpointermove = e => { if (e.pointerId === jid) jset(e); }; joy.onpointerup = joy.onpointercancel = jend;
     const dig = $('mnDig'), on = e => { e.preventDefault(); this.hold = true; dig.classList.add('on'); this.swing(); }, off = () => { this.hold = false; dig.classList.remove('on'); };
     dig.onpointerdown = on; dig.onpointerup = off; dig.onpointerleave = off; dig.onpointercancel = off;
-    $('mnCv').onpointerdown = e => { e.preventDefault(); if (this.ph === 'play') this.swing(); };
+    // 화면 끌기 = 둘러보기, 짧게 톡 = 캐기
+    const cv = $('mnCv'), look = new Map();
+    cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); look.set(e.pointerId, { x: e.clientX, t: performance.now(), mv: 0 }); };
+    cv.onpointermove = e => { const q = look.get(e.pointerId); if (!q || this.ph !== 'play' || this.bigOn) return; const dx = e.clientX - q.x; q.x = e.clientX; q.mv += Math.abs(dx); if (q.mv > 6) { this.ang += dx * MINE_LOOK; this.tr = null; this.lastAct = performance.now(); if (!this.lookSaid) { this.lookSaid = true; this.el.querySelector('.mnLook').classList.add('off'); } } };
+    cv.onpointerup = cv.onpointercancel = e => { const q = look.get(e.pointerId); look.delete(e.pointerId); if (q && e.type === 'pointerup' && q.mv <= 6 && performance.now() - q.t < 350 && this.ph === 'play') this.swing(); };
+    $('mnUp').onclick = () => { if (this.ph === 'play' && this.debt && this.debt.more) { this.hold = false; this.finish(false); } };
+    $('mnMap').onpointerdown = $('mnMapB').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); this.bigMap(true); };
+    const big = el.querySelector('.mnBig'), bc = $('mnBigCv'), ptr = new Map(); let pinch = 0;
+    big.querySelector('.mbX').onclick = () => this.bigMap(false);
+    big.onpointerdown = e => { if (e.target === big) this.bigMap(false); };
+    big.querySelectorAll('.mbZ button').forEach(b => { b.onclick = () => { const z = +b.dataset.z; if (!z) { this.bm.x = this.cx; this.bm.y = this.cy; } else this.bm.cs = Math.max(3, Math.min(40, this.bm.cs * (z > 0 ? 1.4 : 1 / 1.4))); Sound.play('click'); }; });
+    bc.onpointerdown = e => { e.preventDefault(); bc.setPointerCapture(e.pointerId); ptr.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); } };
+    bc.onpointermove = e => {
+      const q = ptr.get(e.pointerId); if (!q || !this.bm) return;
+      if (ptr.size === 1) { this.bm.x -= (e.clientX - q.x) / this.bm.cs; this.bm.y -= (e.clientY - q.y) / this.bm.cs; }
+      q.x = e.clientX; q.y = e.clientY;
+      if (ptr.size === 2 && pinch) { const [a, b] = [...ptr.values()], d = Math.hypot(a.x - b.x, a.y - b.y); this.bm.cs = Math.max(3, Math.min(40, this.bm.cs * d / pinch)); pinch = d; }
+    };
+    bc.onpointerup = bc.onpointercancel = e => { ptr.delete(e.pointerId); pinch = 0; };
+    bc.onwheel = e => { e.preventDefault(); if (this.bm) this.bm.cs = Math.max(3, Math.min(40, this.bm.cs * (e.deltaY < 0 ? 1.15 : 1 / 1.15))); };
     if (!this.keyFn) {
       this.keyFn = e => {
         if (!this.open_ || (typeof ChatBar !== 'undefined' && ChatBar.open_) || /INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) return;
         const k = e.key.length === 1 ? e.key.toLowerCase() : e.key, down = e.type === 'keydown';
+        if (k === 'm' || k === 'ㅡ' || (k === 'Escape' && this.bigOn)) { if (down && !e.repeat) { e.preventDefault(); this.bigMap(k === 'Escape' ? false : !this.bigOn); } return; }
+        if (this.bigOn) return;
         if (k === ' ' || k === 'f' || k === 'ㄹ' || k === 'j') { e.preventDefault(); this.hold = down; if (down && !e.repeat) this.swing(); return; }
-        if (!down || e.repeat) return;
-        const m = { ArrowLeft: 'L', a: 'L', 'ㅁ': 'L', q: 'L', ArrowRight: 'R', d: 'R', 'ㅇ': 'R', ArrowUp: 'F', w: 'F', 'ㅈ': 'F', ArrowDown: 'B', s: 'B', 'ㄴ': 'B' }[k];
-        if (m) { e.preventDefault(); this.act(m); }
+        const m = { ArrowLeft: 'TL', q: 'TL', 'ㅂ': 'TL', ArrowRight: 'TR', e: 'TR', 'ㄷ': 'TR', a: 'SL', 'ㅁ': 'SL', d: 'SR', 'ㅇ': 'SR', ArrowUp: 'F', w: 'F', 'ㅈ': 'F', ArrowDown: 'B', s: 'B', 'ㄴ': 'B' }[k];
+        if (m) { e.preventDefault(); (this.keys || (this.keys = {}))[m] = down; }
       };
-      addEventListener('keydown', this.keyFn); addEventListener('keyup', this.keyFn);
+      addEventListener('keydown', this.keyFn); addEventListener('keyup', this.keyFn); addEventListener('blur', () => { this.keys = {}; this.hold = false; });
     }
     const loop = now => { if (!this.open_ || !$('mnCv')) return; try { this.frame(now); } catch (e) { console.error(e); } requestAnimationFrame(loop); };
     this.t0 = performance.now(); this.prevT = this.t0; requestAnimationFrame(loop);
@@ -7463,31 +7527,57 @@ const Mine = {
   hud() {
     const D = this.debt; if (!D || !this.el) return; const box = this.el.querySelector('.mnDebt'); if (!box) return;
     const k = Math.min(1, D.got / D.owe), total = this.cells.size;
+    if (D.more) { const x = Math.max(0, D.got - D.owe), k2 = Math.min(1, x / FEEL.mineMore); box.innerHTML = `<h4>⛏ 석탄 땅굴 · 빚 다 갚음</h4><div class="nums"><span>더 번 돈 <b>${fmtWon(x)}</b></span><span>한도 <b>${fmtWon(FEEL.mineMore)}</b></span></div><div class="bar"><i style="width:${(k2 * 100).toFixed(1)}%"></i></div><small>이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`; const up = this.el.querySelector('.mnUp'); if (up) up.classList.add('on'); return; }
     box.innerHTML = `<h4>⛏ 석탄 땅굴</h4><div class="nums"><span>캔 돈 <b>${fmtWon(Math.min(D.got, D.owe))}</b></span><span>남은 빚 <b>${fmtWon(this.owed())}</b></span></div><div class="bar"><i style="width:${(k * 100).toFixed(1)}%"></i></div><small>이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`;
   },
 
   /* ---- 움직이기 ---- */
+  // 한 번에 90° 돌기 / 한 칸쯤 걷기 (테스트·예전 조작용). 평소엔 조이스틱·드래그·키를 frame()의 steer()가 처리
   act(k) {
-    if (this.ph !== 'play' || this.mv || this.tr || this.sw) return; const now = performance.now();
-    if (k === 'L' || k === 'R') { const nd = (this.d + (k === 'R' ? 1 : 3)) & 3, a0 = this.ang; let a1 = nd * Math.PI / 2; while (a1 - a0 > Math.PI) a1 -= Math.PI * 2; while (a1 - a0 < -Math.PI) a1 += Math.PI * 2; this.d = nd; this.tr = { a0, a1, t0: now, dur: 230 }; Sound.play('step'); this.lastAct = now; return; }
-    const dir = k === 'F' ? this.d : (this.d + 2) & 3, nx = this.px + MINE_DX[dir], ny = this.py + MINE_DY[dir];
-    if (!this.isOpen(nx, ny)) { if (k === 'F') { this.bump = now; this.say(MINE_SAY.wall, 1800); Sound.play('deny'); } return; }
-    this.mv = { fx: this.cx, fy: this.cy, t0: now, dur: 330 }; this.px = nx; this.py = ny; this.lastAct = now; Sound.play('step', 'wood'); setTimeout(() => this.open_ && Sound.play('step'), 160);
+    if (this.ph !== 'play' || this.tr) return; const now = performance.now();
+    if (k === 'L' || k === 'R') { const a0 = this.ang, a1 = (Math.round(a0 / (Math.PI / 2)) + (k === 'R' ? 1 : -1)) * Math.PI / 2; this.tr = { a0, a1, t0: now, dur: 230 }; Sound.play('step'); this.lastAct = now; return; }
+    this.auto = { f: k === 'F' ? 1 : -1, until: now + 1000 / MINE_SPD }; this.lastAct = now;
+  },
+  free(x, y) { const r = MINE_RAD; return this.isOpen(Math.floor(x - r), Math.floor(y - r)) && this.isOpen(Math.floor(x + r), Math.floor(y - r)) && this.isOpen(Math.floor(x - r), Math.floor(y + r)) && this.isOpen(Math.floor(x + r), Math.floor(y + r)); },
+  steer(now, dt) {
+    const K = this.keys || {}, j = this.joy, a = this.auto && now < this.auto.until ? this.auto : (this.auto = null);
+    let f = (K.F ? 1 : 0) - (K.B ? 1 : 0) + (j ? -j.y : 0) + (a ? a.f : 0), st = (K.SR ? 1 : 0) - (K.SL ? 1 : 0) + (j ? j.x * 0.8 : 0);
+    const tn = (K.TR ? 1 : 0) - (K.TL ? 1 : 0); if (tn) { this.ang += tn * MINE_TURN * dt; this.tr = null; this.lastAct = now; }
+    const m = Math.hypot(f, st); if (m > 1) { f /= m; st /= m; }
+    const sp = MINE_SPD * (this.sw ? 0.55 : 1), dX = Math.cos(this.ang), dY = Math.sin(this.ang), vx = (dX * f - dY * st) * sp * dt, vy = (dY * f + dX * st) * sp * dt, mv = Math.hypot(vx, vy) / dt;
+    let moved = 0;
+    if (vx && this.free(this.cx + vx, this.cy)) { this.cx += vx; moved = 1; }
+    if (vy && this.free(this.cx, this.cy + vy)) { this.cy += vy; moved = 1; }
+    if (m > 0.2 && !moved && f > 0.3 && now > (this.wallSaid || 0)) { this.wallSaid = now + 6000; this.bump = now; this.say(MINE_SAY.wall, 1800); }
+    if (m > 0.05) this.lastAct = now;
+    const go = moved ? Math.min(1, mv / MINE_SPD) : 0; this.walkK += (go - this.walkK) * Math.min(1, dt * 10);
+    if (go) { const p0 = this.stepPh; this.stepPh += dt * Math.PI * 2 * 1.5 * go; if (Math.floor(p0 / Math.PI) !== Math.floor(this.stepPh / Math.PI)) Sound.play('step', Math.floor(this.stepPh / Math.PI) & 1 ? 'wood' : undefined); }
+    this.walk = Math.sin(this.stepPh) * this.walkK;
+    this.px = Math.floor(this.cx); this.py = Math.floor(this.cy); this.d = ((Math.round(this.ang / (Math.PI / 2)) % 4) + 4) % 4;
     if (Math.abs(this.px - this.gx0 - MINE_R) > MINE_R / 2 || Math.abs(this.py - this.gy0 - MINE_R) > MINE_R / 2) this.gridDirty = true;
   },
-  front() { return [this.px + MINE_DX[this.d], this.py + MINE_DY[this.d]]; },
+  // 보는 쪽으로 처음 막힌 칸 (곡괭이가 닿는지는 d로)
+  aim() {
+    const dx = Math.cos(this.ang), dy = Math.sin(this.ang); let mx = Math.floor(this.cx), my = Math.floor(this.cy);
+    const ddx = Math.abs(1 / (dx || 1e-9)), ddy = Math.abs(1 / (dy || 1e-9)), sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+    let sdx = dx < 0 ? (this.cx - mx) * ddx : (mx + 1 - this.cx) * ddx, sdy = dy < 0 ? (this.cy - my) * ddy : (my + 1 - this.cy) * ddy;
+    for (let i = 0; i < 10; i++) { let d; if (sdx < sdy) { d = sdx; sdx += ddx; mx += sx; } else { d = sdy; sdy += ddy; my += sy; } if (!this.isOpen(mx, my)) return { x: mx, y: my, d }; }
+    return null;
+  },
+  front() { const a = this.aim(); return a ? [a.x, a.y] : [this.px + MINE_DX[this.d], this.py + MINE_DY[this.d]]; },
   swing() {
-    if (this.ph !== 'play' || this.sw || this.mv || this.tr) return; const now = performance.now();
+    if (this.ph !== 'play' || this.sw || this.bigOn) return; const now = performance.now();
     if (this.tired && now < this.tired) return;
     this.sw = { t0: now, hit: false }; this.lastAct = now; Sound.play('whoosh');
   },
   impact(now) {
-    const [fx, fy] = this.front(), key = fx + ',' + fy;
-    if (this.isOpen(fx, fy)) { this.say(MINE_SAY.open, 2200); return; }
+    const a = this.aim(); if (!a || a.d > MINE_REACH) { if (now > (this.farSaid || 0)) { this.farSaid = now + 5000; this.say(MINE_SAY.far, 2200); } return; }
+    const fx = a.x, fy = a.y, key = fx + ',' + fy;
     if (!this.inLim(fx, fy)) { Sound.play('pick'); this.shake = 0.5; this.spark(10); this.say(MINE_SAY.rock, 2200); return; }
     const D = this.debt; if (!D) return;
     const coal = this.isCoal(fx, fy), gold = Math.random() < FEEL.mineGoldP;
-    const amt = gold ? FEEL.mineGold : Math.round((coal ? FEEL.mineCoalMin + Math.random() * (FEEL.mineCoalMax - FEEL.mineCoalMin) : FEEL.mineSwingMin + Math.random() * (FEEL.mineSwingMax - FEEL.mineSwingMin)) / 1000) * 1000;
+    let amt = gold ? FEEL.mineGold : Math.round((coal ? FEEL.mineCoalMin + Math.random() * (FEEL.mineCoalMax - FEEL.mineCoalMin) : FEEL.mineSwingMin + Math.random() * (FEEL.mineSwingMax - FEEL.mineSwingMin)) / 1000) * 1000;
+    const cap = D.owe + FEEL.mineMore; if (D.more) amt = Math.max(0, Math.min(amt, cap - D.got));
     D.got += amt; this.swings++; this.saveDebt();
     this.prog[key] = (this.prog[key] || 0) + 1; this.shake = coal ? 0.9 : 0.75; Sound.play('pick'); this.chips(coal, gold); this.spark(coal ? 5 : 9);
     if (gold) { this.goldHit = now; this.goldCell = key; Sound.play('gold'); this.pop(`금이다!! +${fmtWon(amt)}`, 'gold'); this.say('…금이다. 진짜 금이다.', 3600); }
@@ -7495,13 +7585,13 @@ const Mine = {
     if (this.prog[key] >= FEEL.mineHits) { // 한 칸 뚫림
       delete this.prog[key]; this.addCells([key], [fx, fy, this.d]); this.dug++;
       if (Net.on) Net.send({ t: 'mdig', c: [key], l: [fx, fy, this.d] });
-      this.rubble.push({ x: fx + 0.5, y: fy + 0.5, t: now, s: mineHash(fx, fy, 3) }); Sound.play('rubble'); this.shake = 1.4; this.stepIn = now + 420; // 뚫린 칸으로 한 발 들어간다: 꾹 누르고 있으면 계속 앞으로 파 나간다
+      this.rubble.push({ x: fx + 0.5, y: fy + 0.5, t: now, s: mineHash(fx, fy, 3) }); Sound.play('rubble'); this.shake = 1.4; // 뚫린 칸으로 걸어 들어가는 건 직접 (조이스틱)
       for (let i = 0; i < 26; i++) this.dust.push({ x: Math.random(), y: 0.3 + Math.random() * 0.5, vx: (Math.random() - 0.5) * 0.06, vy: -0.01 - Math.random() * 0.03, life: 2 + Math.random() * 2, t: now, r: 2 + Math.random() * 5, big: 1 });
     }
     if (this.swings % 28 === 0 && !gold) { this.tired = now + 1300; Sound.play('breath'); this.say(MINE_SAY.tired, 1600, false); }
     if (!this.halfSaid && D.got >= D.owe / 2 && D.got < D.owe) { this.halfSaid = true; setTimeout(() => this.open_ && this.say(MINE_SAY.half, 2600), 500); }
     this.hud();
-    if (D.got >= D.owe) setTimeout(() => this.finish(gold), gold ? 2400 : 700);
+    if (D.more ? D.got >= cap : D.got >= D.owe) { this.ph = 'wait'; this.hold = false; setTimeout(() => { if (this.ph !== 'wait') return; this.ph = 'play'; if (D.more) this.finish(gold); else this.offer(gold); }, gold ? 2400 : 700); }
   },
   pop(text, cls) { const box = this.el.querySelector('.mnPops'); const b = document.createElement('b'); b.className = 'mnPop ' + (cls || ''); b.textContent = text; b.style.left = `${46 + Math.random() * 8}%`; box.appendChild(b); setTimeout(() => b.remove(), cls === 'gold' ? 2600 : 1150); },
   chips(coal, gold) { // 튀는 돌·석탄 조각 (화면 좌표)
@@ -7511,9 +7601,19 @@ const Mine = {
   },
   spark(n) { const ip = this.tip || { x: this.W * 0.5, y: this.H * 0.48 }; for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2; this.parts.push({ x: ip.x, y: ip.y, vx: Math.cos(a) * (60 + Math.random() * 160), vy: Math.sin(a) * (50 + Math.random() * 140) - 40, g: 260, life: 0.15 + Math.random() * 0.25, t: 0, s: 1, c: [255, 236, 170], em: 1 }); } },
 
-  /* ---- 다 갚았다 ---- */
+  /* ---- 다 갚았다: 나갈지, 천만 원까지 더 캘지 고른다 (v170) ---- */
+  offer(gold) {
+    const D = this.debt; if (!D || !this.open_) return; const left = D.got - D.owe;
+    if (left >= FEEL.mineMore) { this.ph = 'play'; return this.finish(gold); }
+    this.ph = 'ask'; Sound.play('ding');
+    const el = this.el.querySelector('.mnCard');
+    el.innerHTML = `<div class="mcIn"><p class="mcK">${gold ? '금덩이를 캤다' : '마지막 한 삽'}</p><h3>빚 다 갚았다!</h3><p>지금 올라가면 <b>${left > 0 ? fmtWon(left) : '0원'}</b>을 들고 나간다.<br>더 캐면 <b>최대 ${fmtWon(FEEL.mineMore)}</b>까지 더 벌 수 있다.</p><p class="mcS">더 캐다가도 위의 '올라가기'로 언제든 나갈 수 있다. 금도 그대로 나온다.</p><div class="mcBtns"><button class="btn" id="mnMore">⛏ 더 캐기</button><button class="btn gold" id="mnGo">올라가기</button></div></div>`;
+    el.classList.add('on');
+    $('mnGo').onclick = () => { el.classList.remove('on'); Sound.play('click'); this.ph = 'play'; this.finish(gold); };
+    $('mnMore').onclick = () => { el.classList.remove('on'); Sound.play('click'); D.more = true; this.saveDebt(); this.ph = 'play'; this.lastAct = performance.now(); this.hud(); this.say(`좋아, 더 캐. 대신 ${fmtWon(FEEL.mineMore)}까지만이다.`, 3000); };
+  },
   async finish(gold) {
-    if (this.ph !== 'play') return; this.ph = 'done'; this.hold = false; const D = this.debt, left = Math.max(0, D.got - D.owe);
+    if (this.ph !== 'play') return; this.ph = 'done'; this.hold = false; const D = this.debt, left = Math.max(0, Math.min(D.got, D.owe + FEEL.mineMore) - D.owe);
     if (left > 0) { Money.why(`석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left; HUD.setCash(State.cash); }
     this.debt = null; this.saveDebt(); Live.save(); if (Net.on) Net.news(`석탄 땅굴에서 빚 ${fmtWon(D.owe)} 다 갚고 나옴${gold ? ' (금 캠!)' : ''}`);
     Sound.play('ding'); this.hud();
@@ -7524,10 +7624,43 @@ const Mine = {
   },
   close(left) {
     if (Net.on) Net.send({ t: 'mpos', out: 1 });
+    let at = null; try { at = this.dropRemote(); } catch (e) { console.error(e); }
     this.open_ = false; this.hold = false; this.ph = null; $('mineWin').classList.remove('in'); this.el.innerHTML = '';
     for (const k in Pressed) Pressed[k] = false; for (const k in Keys) Keys[k] = false;
     Game.busy = false; Game.formOpen = false; Sound.playBgm(Game.room ? Game.room.def.bgm : 'town'); Sound.play('chime');
     Toast.show(`석탄 땅굴에서 나왔다${left ? ` · 남은 돈 +${fmtWon(left)}` : ''}`, 3200);
+    if (at) {
+      const sign = $('dropSign'); sign.innerHTML = `<b>${at.where}</b><small>${at.gu} 외진 곳 · 땅굴 비상구</small>`; sign.classList.remove('in'); void sign.offsetWidth; sign.classList.add('in'); setTimeout(() => sign.classList.remove('in'), 3200);
+      setTimeout(() => HUD.page(`땅굴 비상구로 나와 보니 ${at.gu} 외진 ${at.where}이다. 내 차는 반장이 근처 길가에 갖다 놨다고 했다.`, '알림'), 1800);
+      if (Net.on) Net.news(`석탄 땅굴 비상구로 ${at.gu}에 나옴`);
+    }
+  },
+  // v170 (사용자 2026-10-16 '땅굴에서 나오면 지역도 외진 곳, 외진 곳에서 나타나게'): 지금 구에서 먼 서울 가장자리 구의, 건물 문에서 먼 골목·공원에 내려 준다. 차는 근처 길가에
+  dropRemote() {
+    if (!Live.on || !Game.player || Game.scene === 'title') return null;
+    const from = currentGu(), rows = DISTRICTS.map(d => d.row), cols = DISTRICTS.map(d => d.col), r0 = Math.min(...rows), r1 = Math.max(...rows), c0 = Math.min(...cols), c1 = Math.max(...cols);
+    let pool = DISTRICTS.filter(d => d.id !== from && (d.row === r0 || d.row === r1 || d.col === c0 || d.col === c1)); if (!pool.length) pool = DISTRICTS.filter(d => d.id !== from);
+    pool = pool.sort((a, b) => guDistance(from, b.id) - guDistance(from, a.id)).slice(0, 4);
+    const gu = pool[Math.floor(Math.random() * pool.length)].id, z = getZone(ZONE_OF_GU[gu]);
+    const doors = z.places.map(p => p.door).filter(Boolean), E = (FEEL.edgeSignDist || 10) + 4, ok = t => t === T.ALLEY || t === T.PARK || t === T.WALK || t === T.GROUND;
+    let best = null, bs = -1e9;
+    for (let i = 0; i < 3000; i++) {
+      const x = E + Math.floor(Math.random() * (z.W - 2 * E)), y = E + Math.floor(Math.random() * (z.H - 2 * E)), t = z.at(x, y); if (!ok(t)) continue;
+      let open = 0; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) if (ok(z.at(x + a, y + b)) || z.at(x + a, y + b) === T.ROAD) open++; if (open < 9) continue;
+      let dm = 1e9; for (const d of doors) dm = Math.min(dm, Math.hypot(d.tx - x, d.ty - y));
+      const s = Math.min(dm, 50) + Math.hypot(x - z.W / 2, y - z.H / 2) * 0.35 + (t === T.ALLEY ? 16 : t === T.PARK ? 12 : 0) + Math.random() * 4;
+      if (s > bs) { bs = s; best = [x, y, t]; }
+    }
+    if (!best) return null;
+    if (typeof Ride !== 'undefined' && Ride.with) Ride.leave(false);
+    if (Game.room) { Game.room = null; State.siteSession = null; }
+    Game.scene = 'zone'; Game.driving = false; if (typeof CarSwap !== 'undefined') CarSwap.reset(); if (typeof NavPick !== 'undefined') NavPick.close(); if (typeof Nav !== 'undefined') Nav.free = false;
+    Game.zone = z; Game.zonePos = null; Skids.length = 0; Rails.clear(); Prints.clear(); Beach.clear();
+    const p = Game.player; p.x = best[0] * TILE + 8; p.y = best[1] * TILE + 8; p.vx = p.vy = 0; p.dir = 0; p.sit = false;
+    Game.car = placeCarNear(z, best[0], best[1]); spawnDecor(); Game.traffic = spawnTraffic(z);
+    Cam.x = p.x; Cam.y = p.y; Game.prompt = { target: null, t: 0 }; $('edgeSign').classList.remove('in');
+    Banner.area(...z.spec.dongLabel);
+    return { gu: DISTRICT[gu].name, where: best[2] === T.PARK ? '공원 구석' : best[2] === T.ALLEY ? '뒷골목' : '길모퉁이' };
   },
 
   /* ---- 매 프레임 ---- */
@@ -7536,17 +7669,16 @@ const Mine = {
     const W = this.W, H = this.H, cv = $('mnCv'), c = cv.getContext('2d'); const mn = this.el.querySelector('.mn'); if (mn) mn.classList.toggle('play', this.ph === 'play');
     if (!this.img || this.img.width !== W) { this.img = c.createImageData(W, H); this.buf = new Uint32Array(this.img.data.buffer); this.zb = new Float32Array(W); this.lut = new Uint8Array(2048); for (let i = 0; i < 2048; i++) this.lut[i] = Math.round(255 * Math.pow(1 - Math.exp(-2.3 * i / 512), 0.95)); }
     if (this.ph === 'intro' || this.ph === 'down' || this.ph === 'up') { this.drawShaft(c, now); this.fx(now); return; }
-    if (this.ph === 'play' || this.ph === 'done') {
+    if (this.ph === 'play' || this.ph === 'done' || this.ph === 'ask' || this.ph === 'wait') {
       // 걷기·돌기 보간
-      if (this.mv) { const k = Math.min(1, (now - this.mv.t0) / this.mv.dur), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; this.cx = this.mv.fx + (this.px + 0.5 - this.mv.fx) * e; this.cy = this.mv.fy + (this.py + 0.5 - this.mv.fy) * e; if (k >= 1) this.mv = null; } else { this.cx = this.px + 0.5; this.cy = this.py + 0.5; }
-      if (this.tr) { const k = Math.min(1, (now - this.tr.t0) / this.tr.dur), e = 1 - Math.pow(1 - k, 3); this.ang = this.tr.a0 + (this.tr.a1 - this.tr.a0) * e; if (k >= 1) { this.ang = this.d * Math.PI / 2; this.tr = null; } }
-      if (this.sw) { const k = (now - this.sw.t0) / 1000 / MINE_SW; if (!this.sw.hit && k >= 0.52) { this.sw.hit = true; this.impact(now); } if (k >= 1) { this.sw = null; if (this.hold && !this.stepIn) this.swing(); } }
-      if (this.stepIn && now >= this.stepIn && !this.sw && this.ph === 'play') { this.stepIn = 0; this.act('F'); if (this.hold) setTimeout(() => this.hold && this.open_ && this.swing(), 360); }
+      if (this.tr) { const k = Math.min(1, (now - this.tr.t0) / this.tr.dur), e = 1 - Math.pow(1 - k, 3); this.ang = this.tr.a0 + (this.tr.a1 - this.tr.a0) * e; if (k >= 1) { this.ang = this.tr.a1; this.tr = null; } }
+      if (this.ph === 'play' && !this.bigOn) this.steer(now, dt); else { this.walkK = 0; this.walk = 0; }
+      if (this.sw) { const k = (now - this.sw.t0) / 1000 / MINE_SW; if (!this.sw.hit && k >= 0.52) { this.sw.hit = true; this.impact(now); } if (k >= 1) { this.sw = null; if (this.hold) this.swing(); } }
       if (this.gridDirty) this.buildGrid();
       this.ambient(now);
       if (Net.on) { this.posT = (this.posT || 0) - dt; if (this.posT <= 0) { this.posT = 0.25; Net.send({ t: 'mpos', x: +this.cx.toFixed(2), y: +this.cy.toFixed(2), a: +this.ang.toFixed(2), sw: this.sw ? 1 : 0 }); } }
-      for (const id in this.others) { const o = this.others[id]; if (now - o.at > 6000) { delete this.others[id]; continue; } const k = Math.min(1, dt * 8); o.x += (o.tx - o.x) * k; o.y += (o.ty - o.y) * k; o.a = o.ta; }
-      this.render(c, now, dt); this.fx(now); this.map(now);
+      for (const id in this.others) { const o = this.others[id]; if (now - o.at > 6000) { delete this.others[id]; continue; } const k = Math.min(1, dt * 8); o.x += (o.tx - o.x) * k; o.y += (o.ty - o.y) * k; let da = o.ta - o.a; da -= Math.round(da / (Math.PI * 2)) * Math.PI * 2; o.a += da * k; }
+      this.render(c, now, dt); this.fx(now); this.map(now); if (this.bigOn) { if (this.ph === 'play') this.drawBig(now); else this.bigMap(false); }
       if (this.fade > 0) this.fade = Math.max(0, this.fade - dt * 0.9);
     }
   },
@@ -7572,12 +7704,15 @@ const Mine = {
   },
   render(c, now, dt) {
     const W = this.W, H = this.H, B = this.buf, zb = this.zb, T = this.tex, N = MINE_TS, M = N - 1, lut = this.lut;
-    this.labels = []; const t = now / 1000, walk = this.mv ? Math.sin(((now - this.mv.t0) / this.mv.dur) * Math.PI * 2) : 0;
+    this.labels = []; const t = now / 1000, walk = this.walk || 0;
     const breathe = Math.sin(t * 1.6) * 0.006, bobZ = walk * 0.022 + breathe;
     if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 4.5);
     const shk = (this.shake || 0) * (Settings.shake === false ? 0.3 : 1), bump = this.bump && now - this.bump < 200 ? Math.sin((now - this.bump) / 200 * Math.PI) * 0.06 : 0;
     // 카메라: 뒤가 뚫려 있으면 칸 경계까지 물러서서 막장 아래 바닥이 보이게, 막혀 있으면 조금만
-    const bd = (this.d + 2) & 3, backT = this.mv ? this.back : this.isOpen(this.px + MINE_DX[bd], this.py + MINE_DY[bd]) ? 0.5 : 0.16; this.back = this.back == null ? backT : this.back + (backT - this.back) * Math.min(1, dt * 6);
+    // 카메라: 몸(반지름 MINE_RAD) 안에서 조금 뒤 (벽을 뚫고 보지 않게)
+    const okAt = b => { const x = this.cx - Math.cos(this.ang) * b, y = this.cy - Math.sin(this.ang) * b, e = 0.06; return this.isOpen(Math.floor(x - e), Math.floor(y - e)) && this.isOpen(Math.floor(x + e), Math.floor(y - e)) && this.isOpen(Math.floor(x - e), Math.floor(y + e)) && this.isOpen(Math.floor(x + e), Math.floor(y + e)); };
+    let backT = 0.1; for (const b of [0.34, 0.28, 0.22, 0.16]) if (okAt(b)) { backT = b; break; }
+    this.back = this.back == null || backT < this.back ? backT : this.back + (backT - this.back) * Math.min(1, dt * 5);
     const ang = this.ang + (Math.random() - 0.5) * 0.012 * shk, dX = Math.cos(ang), dY = Math.sin(ang), pX = -dY * MINE_PLANE, pY = dX * MINE_PLANE;
     const camx = this.cx - Math.cos(this.ang) * (this.back - bump), camy = this.cy - Math.sin(this.ang) * (this.back - bump), camZ = MINE_EYE + bobZ;
     const K = (W / 2) / MINE_PLANE, Kv = K * 0.8, hz = H * 0.42 + (Math.random() - 0.5) * 3 * shk + walk * 1.5, Ls = this.lights(now, camx, camy), nL = Ls.length;
@@ -7730,6 +7865,39 @@ const Mine = {
     const fx = $('mnFx'); if (!fx) return; const c = fx.getContext('2d'), sx = fx.width / this.W, sy = fx.height / this.H; c.clearRect(0, 0, fx.width, fx.height);
     for (const L of this.labels || []) { const f = Math.max(10, Math.min(16, 26 / L.d)) * (fx.width / innerWidth); c.font = `700 ${f}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.lineWidth = f * 0.25; c.strokeStyle = 'rgba(0,0,0,.8)'; c.strokeText(L.name, L.x * sx, L.y * sy); c.fillStyle = '#ffe2a0'; c.fillText(L.name, L.x * sx, L.y * sy); }
     this.labels = [];
+  },
+  // 큰 지도 (v170): 지금까지 판 굴 전체 · 끌어서 옮기기 · 두 손가락/휠/± 로 크기
+  bigMap(on) {
+    const el = this.el && this.el.querySelector('.mnBig'); if (!el) return; if (on && this.ph !== 'play') return;
+    this.bigOn = !!on; el.classList.toggle('on', this.bigOn); Sound.play('click');
+    if (!on) return;
+    this.hold = false; const dig = $('mnDig'); if (dig) dig.classList.remove('on');
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const k of this.cells) { const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1); if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const bc = $('mnBigCv'), r = bc.getBoundingClientRect(), w = r.width || innerWidth * 0.8, h = r.height || innerHeight * 0.6;
+    this.bm = { x: (x0 + x1 + 1) / 2, y: (y0 + y1 + 1) / 2, cs: Math.max(3, Math.min(26, Math.min(w / (x1 - x0 + 5), h / (y1 - y0 + 5)))) };
+  },
+  drawBig(now) {
+    const cv = $('mnBigCv'); if (!cv || !this.bm) return; const dpr = Math.min(2, devicePixelRatio || 1), r = cv.getBoundingClientRect(), W = Math.round(r.width * dpr), H = Math.round(r.height * dpr); if (!W || !H) return;
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    const c = cv.getContext('2d'), bm = this.bm, cs = bm.cs * dpr, X = x => W / 2 + (x - bm.x) * cs, Y = y => H / 2 + (y - bm.y) * cs;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#0b0805'; c.fillRect(0, 0, W, H);
+    const gx0 = Math.floor(bm.x - W / 2 / cs) - 1, gx1 = Math.ceil(bm.x + W / 2 / cs) + 1, gy0 = Math.floor(bm.y - H / 2 / cs) - 1, gy1 = Math.ceil(bm.y + H / 2 / cs) + 1, has = (x, y) => this.cells.has(x + ',' + y);
+    const pts = []; for (const k of this.cells) { const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1); if (x >= gx0 && x <= gx1 && y >= gy0 && y <= gy1) pts.push(x, y); }
+    // 굴 가장자리 바위 (석탄은 검게)
+    for (let i = 0; i < pts.length; i += 2) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = pts[i] + a, y = pts[i + 1] + b; if (has(x, y)) continue; c.fillStyle = this.isCoal(x, y) ? '#1c1a1b' : '#2a2117'; c.fillRect(Math.floor(X(x)), Math.floor(Y(y)), Math.ceil(cs) + 1, Math.ceil(cs) + 1); }
+    for (let i = 0; i < pts.length; i += 2) { const x = pts[i], y = pts[i + 1]; c.fillStyle = (x + y) & 1 ? '#715b3b' : '#6b5638'; c.fillRect(Math.floor(X(x)), Math.floor(Y(y)), Math.ceil(cs) + 1, Math.ceil(cs) + 1); }
+    for (let i = 0; i < pts.length; i += 2) { const x = pts[i], y = pts[i + 1]; if (!this.isLamp(x, y)) continue; c.fillStyle = 'rgba(255,190,80,.22)'; c.beginPath(); c.arc(X(x + 0.5), Y(y + 0.5), cs * 1.1, 0, 7); c.fill(); c.fillStyle = '#ffc35a'; c.beginPath(); c.arc(X(x + 0.5), Y(y + 0.5), Math.max(1.5 * dpr, cs * 0.2), 0, 7); c.fill(); }
+    const f = Math.round(12 * dpr), tag = (t, x, y, col) => { c.font = `700 ${f}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.lineWidth = f * 0.3; c.strokeStyle = 'rgba(0,0,0,.85)'; c.strokeText(t, x, y); c.fillStyle = col; c.fillText(t, x, y); };
+    // 엘리베이터 (0,0)
+    c.fillStyle = '#6c8a5a'; c.fillRect(Math.floor(X(0)), Math.floor(Y(0)), Math.ceil(cs) + 1, Math.ceil(cs) + 1); c.strokeStyle = '#b8e09a'; c.lineWidth = Math.max(1, dpr); c.strokeRect(X(0) + 1, Y(0) + 1, cs - 2, cs - 2); tag('엘리베이터', X(0.5), Y(0) - 5 * dpr, '#cdeeb4');
+    // 마지막으로 판 곳
+    if (this.last) { const [lx, ly] = this.last, p = 0.5 + 0.5 * Math.sin(now / 300); c.strokeStyle = `rgba(255,120,60,${0.5 + p * 0.5})`; c.lineWidth = 2 * dpr; c.strokeRect(X(lx) + 1, Y(ly) + 1, cs - 2, cs - 2); }
+    // 다른 광부
+    for (const id in this.others) { const o = this.others[id]; c.fillStyle = '#7fd4ff'; c.beginPath(); c.arc(X(o.x), Y(o.y), Math.max(4 * dpr, cs * 0.32), 0, 7); c.fill(); tag(o.name, X(o.x), Y(o.y) - Math.max(7 * dpr, cs * 0.45), '#bfe8ff'); }
+    // 나
+    const ms = Math.max(7 * dpr, cs * 0.55); c.save(); c.translate(X(this.cx), Y(this.cy)); c.rotate(this.ang); c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = dpr; c.beginPath(); c.moveTo(ms, 0); c.lineTo(-ms * 0.65, -ms * 0.65); c.lineTo(-ms * 0.3, 0); c.lineTo(-ms * 0.65, ms * 0.65); c.closePath(); c.fill(); c.stroke(); c.restore();
+    tag('나', X(this.cx), Y(this.cy) - ms - 4 * dpr, '#fff');
+    const n = Object.keys(this.others).length, inf = this.el.querySelector('.mbInfo'), txt = `판 굴 ${(this.cells.size).toLocaleString()}칸 · 지금 ${n + 1}명이 캐는 중`; if (inf && inf.textContent !== txt) inf.textContent = txt;
   },
   // 작은 지도: 굴 모양 · 등 · 나 · 다른 광부
   map(now) {
@@ -9516,11 +9684,11 @@ const Prints = {
     }
   },
 };
-// 거북이 모래·물길 (사용자 2026-10-16 '지나다니면 모래랑 물 기찻길처럼'): 지나간 자리에 모래 띠 + 가운데 물길이 깔렸다가, 가늘어지며 사라진다
+// 거북이 모래·물길 (사용자 2026-10-16 '지나다니면 모래랑 물 기찻길처럼'): 지나간 자리에 모래 띠 + 가운데 물길. v170: 타이어 자국처럼 사라지지 않고 남는다 (구를 옮기면 지워짐, MAX개까지)
 const Beach = {
-  LIFE: 3.5, FADE: 1.6, GAP: 4, pts: [], last: {},
+  LIFE: 1e9, FADE: 1.6, GAP: 4, MAX: 1400, pts: [], last: {},
   lay(key, x, y) { const now = performance.now() / 1000, L = this.last[key]; if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
-    const brk = !L || Math.hypot(x - L.x, y - L.y) > 30 || now - L.t > 1; const p = { x, y: y - 1, t: now, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p; if (this.pts.length > 500) this.pts.splice(0, this.pts.length - 500); },
+    const brk = !L || Math.hypot(x - L.x, y - L.y) > 30 || now - L.t > 1; const p = { x, y: y - 1, t: now, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p; if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null; },
   clear() { this.pts.length = 0; this.last = {}; },
   draw(c, x0, y0, x1, y1) { const now = performance.now() / 1000; let cut = 0; while (cut < this.pts.length && now - this.pts[cut].t > this.LIFE) cut++; if (cut) this.pts.splice(0, cut); if (!this.pts.length) return;
     const segs = []; for (const p of this.pts) { const q = p.prev; if (!q || now - q.t > this.LIFE) continue; if (Math.max(p.x, q.x) < x0 - 12 || Math.min(p.x, q.x) > x1 + 12 || Math.max(p.y, q.y) < y0 - 12 || Math.min(p.y, q.y) > y1 + 12) continue; segs.push([q.x, q.y, p.x, p.y, Math.min(1, (this.LIFE - (now - q.t)) / this.FADE)]); }

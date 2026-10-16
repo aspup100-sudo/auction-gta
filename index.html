@@ -417,6 +417,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #records.in { transform:translate(-50%, -50%); }
 #records .rcpt { width:100%; } #records .plus { color:#1f8f4e; } #records .minus { color:var(--seal); }
 .resultOn #notebook { z-index:65; }
+#tHit { position:absolute; right:196px; bottom:56px; width:52px; height:52px; border-radius:50%; background:rgba(255,90,90,.55); color:#fff; font-size:22px; border:1px solid rgba(255,200,200,.6); pointer-events:auto; } .touchOn.driving #tHit { display:none; } .layoutEdit #tHit { display:block !important; outline:2px dashed #ffd84a; outline-offset:3px; cursor:move; pointer-events:auto; }
 #tCar { position:absolute; right:120px; bottom:48px; width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,.18); color:#fff; font-weight:700; border:1px solid rgba(255,255,255,.3); pointer-events:auto; font-size:12px; }
 #pedals { position:absolute; right:20px; bottom:24px; display:none; flex-direction:column; gap:8px; pointer-events:auto; }
 #pedals button { width:92px; height:54px; border-radius:12px; border:none; font-weight:700; color:#1a1408; background:rgba(205,174,112,.8); }
@@ -481,6 +482,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #rankBox { top:6px; left:12px; width:164px; font-size:10.5px; line-height:1.3; padding:4px 7px 5px; } .short #rankBox .rbOn { margin-top:3px; padding-top:2px; } /* 매물 카드(60~170px) 아래, 조이스틱(273px~) 위의 빈 자리에 줄인 판으로 (사용자 2026-10-14: 모바일에서 겹친다 / 왼쪽 끝에) */
   .short #stick { width:100px; height:100px; left:20px; bottom:20px; } .short #knob { left:28px; top:28px; width:44px; height:44px; }
   .short #tAct { width:72px; height:72px; right:20px; bottom:24px; font-size:13px; }
+  .short #tHit { right:166px; bottom:34px; width:46px; height:46px; font-size:19px; }
   .short #tCar { right:104px; bottom:30px; width:54px; height:54px; } .short.driving #tCar { right:124px; bottom:30px; }
   .short #pedals { right:16px; bottom:16px; gap:6px; } .short #pedals button { width:82px; height:44px; } .short #tHb { height:34px !important; }
   .short #hudSpeed { right:124px; bottom:92px; font-size:18px; }
@@ -886,7 +888,8 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
       <tr><th>걷기</th><td>W A S D 또는 방향키</td><td class="tc">왼쪽 조이스틱</td></tr>
       <tr><th>달리기</th><td>Shift (실시간 채널에선 없음)</td><td class="tc">조이스틱 끝까지</td></tr>
       <tr><th>조사·대화·문</th><td>E (또는 Space, Enter)</td><td class="tc">E 버튼</td></tr>
-      <tr><th>차 타기·내리기</th><td>F (차 옆에서 / 속도 40 이하)</td><td class="tc">F 버튼</td></tr>
+      <tr><th>차 타기·내리기</th><td>F (차 옆에서 / 속도 40 이하) · 친구 차·길가 차도</td><td class="tc">승하차 버튼</td></tr>
+      <tr><th>때리기</th><td>G (사람 옆에서) · 3번 때리면 정신과 병동, 6번 맞으면 병원</td><td class="tc">👊 버튼</td></tr>
       <tr><th>운전</th><td>W 가속 · S 브레이크/후진 · A D 핸들</td><td class="tc">가속·브레이크 버튼으로 전진·후진, 조이스틱은 핸들만</td></tr>
       <tr><th>핸드브레이크</th><td>Space</td><td class="tc">HB 버튼</td></tr>
       <tr><th>채팅 (같이 하기·채널)</th><td>Enter 또는 T, 위쪽 '채팅' 버튼 · Enter 보내기 · Esc 닫기</td><td class="tc">채팅 버튼</td></tr>
@@ -943,7 +946,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 <div id="rankWin" class="ovl"></div>
 <div id="dupGate" class="ovl"></div>
 <div id="layoutBar"><span>버튼을 끌어서 옮기세요</span><button class="btn" id="layoutReset">기본값</button><button class="btn gold" id="layoutDone">완료</button></div>
-<div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
+<div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tHit" hidden>👊</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
 
 <div id="devPage"><div class="wrap">
   <h1>경매 GTA · 개발 1단계</h1>
@@ -1813,6 +1816,8 @@ const FEEL = {
   liveOfflineMidnight: true, // 꺼 둔 동안 월세·이자는 다 흐르되, 접속 안 한 채 자정(현실 시간 24시)을 넘기면 그 뒤로 멈춘다 (사용자 2026-10-16, 하루 4달 한도를 바꿈)
   liveHospitalSec: 10,    // (20→10, 사용자 2026-10-16) 실시간 채널: 입원하면 실제 몇 초 동안 병원에 묶이는지 (시간을 건너뛸 수 없어서)
   liveAsylumSec: 60,      // 실시간 채널: 정신과 병동 입원 시간(초)
+  punchAsylumHits: 3,     // 때리기 (v139): 사람(플레이어·행인)을 이만큼 때리면 정신과 병동
+  punchHospHits: 6,       // 맞은 사람이 누적 이만큼 맞으면 병원 (병원비는 마지막에 때린 사람)
   pvpAsylumHits: 3,       // 같이 하기: 내 차로 다른 플레이어를 이만큼 치면 병원비까지 물어주고 정신과 병동
   // 카메라
   zoom: 2,                // 기본 확대 (16px 픽셀아트 ×2)
@@ -4506,6 +4511,7 @@ const Net = {
     if (m.t === 'vduel') { VipDuel.onNet(m, p); return; } // 이혁진 룰렛: 한 번에 한 사람
     if (m.t === 'hit') { Pvp.onHit(m, p); return; }
     if (m.t === 'hosp') { Pvp.onHosp(m, p); return; }
+    if (m.t === 'punch') { Punch.onPunch(m, p); return; } // 때리기 (v139)
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
@@ -4737,6 +4743,7 @@ const Pvp = {
   // 내가 친 사람이 병원에 실려 갔다 → 병원비(아직 안 냈으면)를 물어주고 나도 정신과 병동으로
   onHosp(m, p) {
     if (m.to !== Net.myId || !Game.player) return;
+    if (m.punch) { if (m.fee) { Money.why(`${p.name} 병원비 (때려서)`); State.cash -= m.fee; HUD.setCash(State.cash); if (Live.on) Live.save(); } Toast.show(`${p.name}이(가) 맞다가 병원에 실려 갔다! 마지막에 때린 내가 병원비 ${fmtWon(m.fee)} 냄.`, 3600); return; } // 때리기 (v139)
     if (m.fee) { State.cash -= m.fee; HUD.setCash(State.cash); if (Live.on) Live.save(); }
     Toast.show(`${p.name}이(가) 내 차에 치여 병원에 실려 갔다!${m.fee ? ` 병원비 ${fmtWon(m.fee)} 물어줌.` : ''} 나도 정신과 병동행.`, 3600);
     State.pvp = 0;
@@ -6275,7 +6282,7 @@ async function hospitalize(opts = {}) {
     await sleep(600); Sound.play('horn'); await sleep(320); Sound.play('horn'); await sleep(320); Sound.play('horn'); // 구급차
     await iris(true);
     const fee = opts.fee !== undefined ? opts.fee : Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000;
-    State.cash -= fee; HUD.setCash(State.cash); State.hits = 0; State.hospital = (State.hospital || 0) + 1; if (Net.on) Net.news('차에 치여 병원에 입원');
+    State.cash -= fee; HUD.setCash(State.cash); State.hits = 0; State.hospital = (State.hospital || 0) + 1; if (Net.on) Net.news(opts.punch ? '맞아서 병원에 입원' : '차에 치여 병원에 입원');
     const timePassed = !(State.day >= 7 && State.evening); if (timePassed) await advanceSlot(); // 매각기일 저녁엔 더 넘길 시간이 없다
     const h = Game.zone.places.find(x => x.kind === 'hospital');
     if (h) { p.x = h.door.tx * TILE + 8; p.y = h.door.ty * TILE + 8; p.dir = 0; Cam.x = p.x; Cam.y = p.y; }
@@ -6283,13 +6290,13 @@ async function hospitalize(opts = {}) {
     await iris(false); Game.trans = null;
     if (Live.on) await Live.bedRest(fee, h); // 채널: 시간을 건너뛸 수 없으니 실제 시간으로 입원
     await Dialog.say([
-      { name: h ? h.name : '병원', text: opts.by ? `${opts.by}의 차에 크게 치여 구급차에 실려 왔다. 병원비 ${fmtWon(fee)}은 ${opts.by}이(가) 물어줬다. ${Live.on ? `${FEEL.liveHospitalSec}초 입원 뒤 ` : timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` : Live.on ? `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${FEEL.liveHospitalSec}초 입원 뒤 퇴원했다.` : `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
+      { name: h ? h.name : '병원', text: opts.by ? `${opts.by}${opts.punch ? `에게 ${FEEL.punchHospHits}번이나 맞아` : '의 차에 크게 치여'} 구급차에 실려 왔다. 병원비 ${fmtWon(fee)}은 ${opts.by}이(가) 물어줬다. ${Live.on ? `${FEEL.liveHospitalSec}초 입원 뒤 ` : timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` : Live.on ? `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${FEEL.liveHospitalSec}초 입원 뒤 퇴원했다.` : `${FEEL.hospitalHits}번째로 차에 치여 구급차에 실려 왔다. 입원비 ${fmtWon(fee)}을 내고 ${timePassed ? `${dLabel()} ${halfLabel()}에 ` : ''}퇴원했다.` },
       { name: castLabel('hospital'), sprite: 'banker', voice: 'banker', text: '합의금 욕심내다 큰일 나요. 길 건널 때 좌우 좀 보세요.' }]);
     Toast.show(opts.by ? `입원 · 병원비 ${fmtWon(fee)}은 ${opts.by}이(가) 냄` : `입원비 ${fmtWon(fee)}`, 2600);
   } finally { p.hurtCd = 2; Game.busy = false; }
 }
 /* ---- 정신과 병동: 같이 하기에서 다른 플레이어를 FEEL.pvpAsylumHits번 치면 (합의금·병원비는 이미 물어줌) 같은 병원 정신과 병동에 입원 ---- */
-async function asylum(victim, total, why) {
+async function asylum(victim, total, why, line) {
   if (Game.busy) { await new Promise(r => { const iv = setInterval(() => { if (!Game.busy) { clearInterval(iv); r(); } }, 200); }); } // 대화·이동 중이면 끝나고
   Game.busy = true; const p = Game.player;
   try {
@@ -6303,7 +6310,7 @@ async function asylum(victim, total, why) {
     if (Live.on) await Live.bedRest(total, h, { title: '정신과 병동 입원 중', sec: FEEL.liveAsylumSec, note: why || `${victim}에게 합의금과 병원비를 물어줬습니다.` }); else await advanceSlot();
     await Dialog.say([
       { name: `${h ? h.name : '병원'} 정신과 병동`, text: `${why || `사람을 ${FEEL.pvpAsylumHits}번이나 차로 쳐서`} 정신과 병동에 입원했다.${total ? ` ${victim}에게 합의금과 병원비 ${fmtWon(total)}을 물어줬다.` : ''}` },
-      { name: castLabel('hospital'), sprite: 'banker', voice: 'banker', text: '운전대 잡기 전에 마음부터 진정시키세요. 다음엔 면허도 위험해요.', emote: 'anger' }]);
+      { name: castLabel('hospital'), sprite: 'banker', voice: 'banker', text: line || '운전대 잡기 전에 마음부터 진정시키세요. 다음엔 면허도 위험해요.', emote: 'anger' }]);
   } finally { p.hurtCd = 2; Game.busy = false; }
 }
 
@@ -6416,7 +6423,7 @@ function update(dt) {
   Game.t += dt;
   HUD.tick(dt);
   if (Game.scene === 'title') return;
-  Net.tick(dt); CarSwap.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); CourtRules.tick();
+  Net.tick(dt); CarSwap.tick(dt); Punch.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); CourtRules.tick();
   if (Layout.editing) return;
   const chat = ChatBar.open_; /* 채팅 치는 동안에도 세상(차·행인·이혁진·내 차 관성)은 계속 돈다. 나만 손을 뗀 상태 (사용자 2026-10-15 '채팅 칠라면 멈추는데 다른사람이랑 달라?') */
   let enterK = false, netEnter = false, interact = false;
@@ -6484,7 +6491,8 @@ function update(dt) {
       const sw = !frozen && !ride && !nearCar ? CarSwap.near() : null; // 세워 둔 친구 차 · 길가 차 (v138)
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) { /* 위에서 탔다 */ }
       else if (fKey && ride) Ride.board(ride);
-      else if (fKey && sw) CarSwap.take(sw);
+      else if ((fKey || (interact && !tg)) && sw) CarSwap.take(sw);
+      if (!chat && (consume('g') || consume('ㅎ')) && !frozen) Punch.go(); // 때리기 (v139) · 한글 자판이면 ㅎ
       else if (fKey) Toast.show(CarSwap.lent ? `${CarSwap.lent.name}님이 내 차를 몰고 있어요. 돌려줄 때까지 기다리거나 다른 차를 타요.` : '차가 멀리 있어요. 레이더의 흰 차 표시를 따라가세요.');
       if (ride && !tg && !nearCar) Game.promptFor(ride.tg || (ride.tg = { kind: 'ride', p: ride }));
       else if (sw && !tg) Game.promptFor(sw);
@@ -6785,6 +6793,7 @@ function draw() {
     const tg = Game.prompt.target; const act = tg && !Game.busy && !Dialog.open && tg.kind !== 'car' ? promptWord(tg) : '조사';
     const ta = $('tAct'); if (ta.textContent !== act) ta.textContent = act;
     const car = Game.driving ? '내리기' : (tg && tg.kind === 'car' ? '타기' : '승하차'); const tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
+    const th = $('tHit'), hit = !!Punch.tg && !Game.busy && !Dialog.open; if (th.hidden === hit) th.hidden = !hit;
   }
   $('hudSpeed').textContent = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '';
   $('hudTime').textContent = Live.on ? Live.hudText() : `${mdText(dateOfDay(State.day), true)} ${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
@@ -6946,6 +6955,62 @@ const CarSwap = {
     }
     if (this.lent) { const b = Net.players[this.lent.id]; return !!(b && !b.gone && b.dr && b.bo === Net.myId); } // 친구가 몰고 있으면 친구 차로 그려진다
     return false;
+  },
+};
+
+/* ===================== 때리기 (사용자 2026-10-16 '플레이어, NPC 때릴 수 있게. 3번 때리면 정신병원 가는 그 메커니즘 그대로,
+ *  맞는 사람은 6번 누적되면 병원, 병원비는 당연히 마지막 때린 사람이 내는 거') =====================
+ * 걸어 다니다 사람(다른 플레이어 · 길 가는 행인) 옆에서 G (폰은 👊 버튼). 이혁진·편집숍 사장님은 안 맞는다.
+ * 때린 사람: 내가 때린 횟수가 FEEL.punchAsylumHits(3)번이 되면 정신과 병동 (차로 친 것과 같은 asylum).
+ * 맞은 사람: 누적 FEEL.punchHospHits(6)번이면 구급차로 병원. 병원비는 마지막에 때린 사람이 낸다.
+ *   플레이어: {t:'punch', to, x, y} → 맞은 쪽이 센다. 6번째면 {t:'hosp', to: 때린 사람, fee, punch:1} → 때린 사람이 병원비를 낸다.
+ *   행인: 내 게임 안에서만 센다. 6번째면 구급차에 실려 가고 병원비는 내가 낸다. */
+const Punch = {
+  cd: 0, tg: null,
+  // 바로 옆(22px)에 있는 때릴 수 있는 사람
+  target() {
+    if (Game.scene !== 'zone' || Game.driving || Ride.with || Game.busy || !Game.player) return null; const pl = Game.player; let best = null, bd = 22;
+    if (Net.on) for (const v of Net.visible('zone')) { const p = v.p || v; if (!p || p.dr || p.rd) continue; const id = Net.idOf(p); if (!id) continue; const d = Math.hypot(p.x - pl.x, p.y - pl.y); if (d < bd) { bd = d; best = { kind: 'player', id, p, x: p.x, y: p.y }; } }
+    for (const w of Game.decor) { if (w.vip || w.promo || w.esc || w.gone) continue; const d = Math.hypot(w.x - pl.x, w.y - pl.y); if (d < bd) { bd = d; best = { kind: 'npc', w, x: w.x, y: w.y }; } }
+    return best;
+  },
+  tick(dt) { this.cd = Math.max(0, this.cd - dt); this.tg = this.target(); },
+  fee() { return Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000; },
+  pow(x, y) {
+    shake(4, 0.18); Game.hitstop = 0.05; Sound.play('crash');
+    if (!REDUCED_MOTION) for (let i = 0; i < 7; i++) Particles.push({ x, y: y - 10, vx: (Math.random() - 0.5) * 140, vy: -30 - Math.random() * 80, g: 240, life: 0.4, max: 0.4, col: 'rgba(255,220,90,', r: 1.6 });
+    const pl = Game.player, a = Math.atan2(y - pl.y, x - pl.x); pl.dir = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) < 0 ? 1 : 2) : (Math.sin(a) < 0 ? 3 : 0);
+  },
+  async go() {
+    const t = this.tg || this.target(); if (!t || this.cd > 0) return; this.cd = 0.55; this.pow(t.x, t.y);
+    const pl = Game.player, dx = t.x - pl.x, dy = t.y - pl.y, L = Math.hypot(dx, dy) || 1;
+    if (t.kind === 'npc') {
+      const w = t.w, z = Game.zone, nx = w.x + dx / L * 10, ny = w.y + dy / L * 10; if (z.at(Math.floor(nx / TILE), Math.floor(ny / TILE)) !== T.BLD) { w.x = nx; w.y = ny; }
+      w.stun = 0.9; w.hurtCd = 1; w.punched = (w.punched || 0) + 1;
+      if (w.punched >= FEEL.punchHospHits) { // 구급차에 실려 간다 · 병원비는 내가
+        const fee = this.fee(); w.bubble = { text: '으윽… 구급차…', t: 2 }; setTimeout(() => { const i = Game.decor.indexOf(w); if (i >= 0) Game.decor.splice(i, 1); Sound.play('horn'); }, 900);
+        Money.why('행인 병원비 (때려서)'); State.cash -= fee; HUD.setCash(State.cash); if (Live.on) Live.save();
+        Toast.show(`행인이 ${FEEL.punchHospHits}번 맞고 구급차에 실려 갔어요. 병원비 ${fmtWon(fee)}은 내가 냄`, 3400);
+        if (Net.on) Net.news('행인을 때려서 병원에 보냄');
+      } else { w.bubble = { text: ['아야!', '왜 때려요!!', '경찰 불러요!', '이 사람이 진짜…', '살려 주세요!'][Math.floor(Math.random() * 5)] + ` (${w.punched}/${FEEL.punchHospHits})`, t: 2 }; w.ai = { t: 2, ix: Math.sign(dx) || 1, iy: Math.sign(dy) }; }
+    } else Net.send({ t: 'punch', to: t.id, x: Math.round(pl.x), y: Math.round(pl.y) });
+    // 때린 횟수: 3번째면 정신과 병동
+    State.punch = (State.punch || 0) + 1;
+    if (State.punch >= FEEL.punchAsylumHits) { State.punch = 0; const who = t.kind === 'npc' ? '행인' : t.p.name; await sleep(400); await asylum(who, 0, `사람을 ${FEEL.punchAsylumHits}번이나 때려서`, '주먹 쓰기 전에 마음부터 진정시키세요. 경매는 머리로 하는 거예요.'); }
+    else if (State.punch === FEEL.punchAsylumHits - 1) HUD.page('한 번만 더 사람 때리면 정신과 병동 간다.', '알림');
+  },
+  // 내가 맞았다
+  onPunch(m, p) {
+    if (m.to !== Net.myId || !Game.player || Game.scene !== 'zone' || Game.driving || Game.busy) return;
+    const pl = Game.player, z = Game.zone; let nx = pl.x - (+m.x), ny = pl.y - (+m.y); const L = Math.hypot(nx, ny) || 1;
+    const tx = pl.x + nx / L * 12, ty = pl.y + ny / L * 12; if (z.at(Math.floor(tx / TILE), Math.floor(ty / TILE)) !== T.BLD) { pl.x = tx; pl.y = ty; }
+    pl.vx = pl.vy = 0; pl.push = 0.25; pl.hurt = 0.5; shake(6, 0.25); Sound.play('crash'); Game.hitstop = 0.05;
+    State.punched = (State.punched || 0) + 1; const n = State.punched;
+    if (n >= FEEL.punchHospHits) { // 병원비는 마지막에 때린 사람이
+      State.punched = 0; const fee = this.fee(); State.cash += fee; HUD.setCash(State.cash);
+      Net.send({ t: 'hosp', to: m.from, fee, punch: 1 }); hospitalize({ fee, by: p.name, punch: true }); return;
+    }
+    Toast.show(`👊 ${p.name}에게 맞았다! (${n}/${FEEL.punchHospHits}번 맞으면 병원)`, 2600);
   },
 };
 
@@ -11154,7 +11219,7 @@ const Study = {
  * 가로/세로(그리고 폰 가로 .short)마다 따로, 화면 비율로 이 기기에 저장한다. '기본값'이면 CSS 기본 위치로 돌아간다.
  */
 const Layout = {
-  editing: false, drag: null, IDS: ['stick', 'tAct', 'tCar', 'tChat', 'pedals', 'hudBtns', 'radar', 'minimap', 'rankBox'],
+  editing: false, drag: null, IDS: ['stick', 'tAct', 'tCar', 'tHit', 'tChat', 'pedals', 'hudBtns', 'radar', 'minimap', 'rankBox'],
   bucket() { return (innerWidth > innerHeight ? 'l' : 'p') + (document.body.classList.contains('short') ? 's' : ''); },
   data() { return Store.get('layout', {}); },
   parentRect(el) { const p = el.offsetParent; return p ? p.getBoundingClientRect() : { left: 0, top: 0, width: innerWidth, height: innerHeight }; },
@@ -11475,6 +11540,7 @@ const Instance = {
   stick.addEventListener('pointerup', endStick); stick.addEventListener('pointercancel', endStick);
   $('tAct').addEventListener('pointerdown', e => { e.preventDefault(); Sound.init(); Pressed.e = true; });
   $('tCar').addEventListener('pointerdown', e => { e.preventDefault(); Sound.init(); Pressed.f = true; });
+  $('tHit').addEventListener('pointerdown', e => { e.preventDefault(); Sound.init(); Pressed.g = true; }); // 때리기 (v139)
   // 운전 페달: 누르는 동안만
   for (const [id, key] of [['tGas', 'gas'], ['tBrake', 'brake'], ['tHb', 'hb']]) {
     const b = $(id); const on = e => { e.preventDefault(); Touch[key] = true; }; const off = () => (Touch[key] = false);

@@ -598,7 +598,7 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 
 /* 채팅 자동 숨김 (사용자 2026-10-15): 줄은 10초 뒤 사라지고, 입력줄은 Enter나 💬로만 연다 */
 #chatLines div { background:rgba(0,0,0,.3); animation:clFade 10s linear forwards; }
-@keyframes clFade { 0%, 85% { opacity:1; } 99.9% { opacity:0; } 100% { opacity:0; max-height:0; padding:0; margin:0; overflow:hidden; } }
+@keyframes clFade { 0%, 85% { opacity:1; max-height:6em; padding:var(--clp); margin-top:var(--clm); visibility:visible; } 99.9% { opacity:0; max-height:6em; padding:var(--clp); margin-top:var(--clm); visibility:visible; } 100% { opacity:0; max-height:0; padding:0; margin:0; border-width:0; overflow:hidden; visibility:hidden; } } #chatLines div { --clp:2px 8px; --clm:3px; } .short #chatLines div { --clp:1px 6px; --clm:2px; } /* v147: 줄이 반쯤 지나 2px 띠로 접혀 남던 것 (max-height는 구간 가운데서 뒤집힌다) */
 .chatOpen #chatLines div { animation:none !important; opacity:1; background:rgba(0,0,0,.5); }
 body.netOn:not(.chatOpen) #chatLog #chatBar { display:none; }
 #chatPeek { display:none; pointer-events:auto; margin-top:4px; width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,.25); background:rgba(12,16,26,.55); font-size:15px; line-height:1; align-items:center; justify-content:center; cursor:pointer; padding:0; }
@@ -786,6 +786,23 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .short .dealer canvas { width:76px; height:76px; } .short .dealer { margin-bottom:-14px; } .short .dName { bottom:16px; } .short .bubble { left:calc(50% + 40px); font-size:11px; padding:5px 9px; } .short .rlSide .dealer canvas { width:40px; height:40px; }
 .short .arcCab { padding:5px 8px 6px; } .short .arcMarq b { font-size:15px; } .short .arcBezel { margin:5px 0; padding:7px; } .short .arcPanel { padding:5px 10px; gap:8px; } .short .arcPanel .rpsPick .btn { width:56px; height:56px; } .short .arcPanel .rpsPick .btn span { font-size:20px; }
 .short .rpsBoard canvas.pt { width:34px; height:34px; } .short .arcScreen .rcHead, .short .arcScreen .rcpt.arcade .rcHead { font-size:0; } .short .arcScreen .rcHead small { font-size:11px; margin:0; } .short .arcScreen .rcpt.arcade::before { display:none; } .short .arcScreen .rpsBoard .hand { font-size:32px; height:36px; } .short .arcScreen .mgMsg { margin:4px 0 2px; } .short i.card .ci.rt { display:none; } .short .arcScreen .rcpt.arcade { padding:6px 10px; } .short .rcpt.arcade::before { margin:0 0 2px; } .short .rpsBoard { margin:2px 0; padding:2px 4px; } .short .rpsBoard > div { gap:0; }
+/* 펫 배틀 (v147) */
+#chatLog #chatLines { background:none; padding:0; margin:0; border-radius:0; } /* 빈 피드 상자가 게임 창 위에 줄처럼 보이던 것 */
+#pbWin { left:0; top:0; right:0; bottom:0; z-index:72; background:rgba(8,10,16,.82); display:flex; align-items:center; justify-content:center; font-family:var(--ui); } #pbWin:not(.in) { transform:scale(1.06); }
+.pbBox { width:min(760px, 96vw); height:min(560px, calc(var(--vh, 100vh) - 16px)); display:flex; flex-direction:column; background:#f8f4e8; border:4px solid #2a2a38; border-radius:14px; overflow:hidden; box-shadow:0 0 0 3px #e8d8a8, 0 14px 40px rgba(0,0,0,.6); }
+.pbScene { position:relative; flex:1; min-height:0; } #pbCv { position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; }
+.pbHud { position:absolute; width:min(260px, 42%); background:#fffbe8; border:3px solid #2a2a38; border-radius:10px 10px 10px 2px; padding:6px 10px; color:#1a1a24; font-size:12px; box-shadow:3px 3px 0 rgba(0,0,0,.25); } .pbHud.foe { left:12px; top:12px; } .pbHud.me { right:12px; bottom:12px; border-radius:10px 10px 2px 10px; }
+.pbName { display:flex; align-items:center; gap:6px; } .pbName b { font-size:14px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .pbName small { font-weight:700; } .pbName i { font-style:normal; color:#fff; font-size:10px; padding:1px 6px; border-radius:8px; white-space:nowrap; text-shadow:0 1px 0 rgba(0,0,0,.35); }
+.pbBar { display:flex; align-items:center; gap:5px; margin-top:4px; } .pbBar span { font:800 10px var(--ui); color:#f0b030; background:#2a2a38; padding:0 4px; border-radius:3px; } .pbBar div { flex:1; height:8px; background:#404050; border-radius:4px; overflow:hidden; border:1px solid #2a2a38; } .pbBar em { display:block; height:100%; background:#3ad060; transition:width .5s; } .pbBar em.y { background:#f0c020; } .pbBar em.r { background:#e84030; }
+.pbNum { text-align:right; font-weight:700; font-size:12px; margin-top:2px; } .pbXp { height:4px; background:#d8d0b8; border-radius:2px; overflow:hidden; margin-top:3px; } .pbXp em { display:block; height:100%; background:#4a90e8; } .pbOwner { font-size:11px; color:#6a6a7a; margin-top:2px; }
+.pbBot { display:flex; gap:8px; padding:8px; background:#2a2a38; } .pbMsg { flex:1 1 40%; min-height:84px; background:#fffbe8; border-radius:8px; padding:10px 12px; color:#1a1a24; font-size:14px; line-height:1.5; cursor:pointer; }
+.pbGo { font-style:normal; color:#c04030; animation:pbB .8s infinite; display:inline-block; } @keyframes pbB { 50% { transform:translateY(3px); } } .pbT { color:#c04030; margin-left:6px; white-space:nowrap; }
+.pbMoves { flex:1 1 60%; display:grid; grid-template-columns:1fr 1fr; gap:6px; align-content:start; }
+.pbMv { position:relative; text-align:left; display:flex; flex-direction:column; gap:1px; padding:6px 22px 6px 10px; background:#fffbe8; color:#1a1a24; border:2px solid var(--tc); border-left-width:8px; border-radius:8px; font-family:var(--ui); } .pbMv b { font-size:13px; } .pbMv small { font-size:10px; color:#5a5a6a; } .pbMv kbd { position:absolute; right:6px; top:5px; font:700 10px var(--ui); color:#8a8a9a; } .pbMv.sel { background:#ffe890; } .pbMv:disabled { opacity:.55; } .pbMv.sel:disabled { opacity:1; }
+.pbQuit { grid-column:1 / -1; padding:4px; font-size:12px; background:#3a3a4a; color:#ccc; border-color:#555; } .pbQuit.arm { background:#c03028; color:#fff; } .pbEnd { grid-column:1 / -1; font-size:15px; padding:10px; } .pbEnd small { display:block; font-size:11px; opacity:.8; }
+.short .pbMsg { font-size:12px; min-height:0; padding:6px 10px; line-height:1.4; } .short .pbBot { padding:6px; gap:6px; } .short .pbMoves { gap:4px; } .short .pbMv { padding:3px 20px 3px 8px; border-width:1px; border-left-width:6px; } .short .pbMv b { font-size:12px; } .short .pbQuit { padding:2px; font-size:11px; } .short .pbHud { padding:3px 8px; font-size:11px; border-width:2px; } .short .pbName b { font-size:12px; } .short .pbHud.foe { top:6px; left:8px; } .short .pbHud.me { bottom:6px; right:8px; } .short .pbXp { display:none; }
+#pbAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
+#pbAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #pbAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color:#a8501a; } #pbAsk b { font-size:15px; } #pbAsk span { font-size:12px; color:#6a4a1a; } #pbAsk .sm { font-size:11px; opacity:.8; } #pbAsk div { display:flex; gap:6px; justify-content:center; margin-top:6px; } #pbAsk .btn:not(.gold) { background:#fff; color:#2a1a08; border-color:#c8a868; } .short #pbAsk { bottom:10px; }
 </style>
 </head>
 <body>
@@ -943,7 +960,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
-<div id="examWin" class="ovl"></div><div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
+<div id="pbWin" class="ovl"></div><div id="pbAsk"></div><div id="examWin" class="ovl"></div><div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div>
 <div id="assetBox" class="ovl"></div>
 <div id="rankWin" class="ovl"></div>
 <div id="dupGate" class="ovl"></div>
@@ -4505,6 +4522,7 @@ const Net = {
     if (m.t === 'lbid') { Live.onBid(m); return; }
     if (m.t === 'rps') { Rps.onNet(m, p); return; } // 게임장 가위바위보 (v81)
     if (m.t === 'fight') { Fight.onNet(m, p); return; } // 게임장 격투 게임 (v82)
+    if (m.t === 'pb') { PetBattle.onNet(m, p); return; } // 펫 배틀 (v147)
     if (m.t === 'cbor') { CarSwap.onNet(m, p); return; } // 남의 차 타기 (v138)
     if (m.t === 'party') { Party.onNet(m, p); return; } // 여러 명 모집 · 초대장 (v90)
     if (m.t === 'cbreq' || m.t === 'cback') { ChatBack.onNet(m, p); return; } // 자리 비운 동안의 채팅 (v100)
@@ -4710,8 +4728,8 @@ const GREET_REPLIES = ['안녕하세요!', '네, 반가워요', '좋아요, 같�
 async function greetFriend(p) {
   if (Game.busy || Dialog.open) return; Game.busy = true;
   try {
-    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 용돈을 주면 큰절을 한다.` }], [{ label: '💸 용돈 1,000원 주기', value: '__tip' }, { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
-    if (pick === '__tip') Tip.give(p); else if (pick) Net.greet(p, pick);
+    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 용돈을 주면 큰절을 한다.` }], [{ label: '💸 용돈 1,000원 주기', value: '__tip' }, ...(PetBattle.myPet() && PetBattle.hasPet(p) ? [{ label: '⚔️ 펫 배틀 신청', value: '__pb' }] : []), { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
+    if (pick === '__tip') Tip.give(p); else if (pick === '__pb') PetBattle.ask(p); else if (pick) Net.greet(p, pick);
   } finally { Game.busy = false; }
 }
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -6129,6 +6147,7 @@ function spawnDecor() {
   const VR = makeRng([...String(z.id)].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 77)), vipTile = (() => { for (let i = 0; i < 4000; i++) { const x = Math.floor(VR.next() * z.W), y = Math.floor(VR.next() * z.H); if (z.at(x, y) === T.WALK) return [x, y]; } return null; })(); // 이혁진 첫 자리: 동네마다 정해진 곳 (모두에게 같게)
   if (walkTiles.length) { const [x, y] = vipTile || walkTiles[11 % walkTiles.length]; const v = makeWalker('vip', x * TILE + 8, y * TILE + 8); v.ai = { t: 0, ix: 0, iy: 0 }; v.vip = true; Game.decor.push(v); } // 이혁진: 동네마다 한 명, 누가 봐도 멋진 사람
   const alley = []; for (let i = 0; i < 4000 && alley.length < 30; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) === T.ALLEY) alley.push([x, y]); }
+  PetBattle.spawn(); // 펫 데리고 다니는 행인 = 펫 트레이너 (v147)
   Game.cats = alley.slice(0, 3).map(([x, y]) => ({ x: x * TILE + 8, y: y * TILE + 8, t: Math.random() * 5, vx: 0, sit: true }));
 }
 /* ---- 공용 주차장: 칸 3타일 폭, 위아래 두 줄 (위 줄은 위를 보고, 아래 줄은 아래를 본다) ---- */
@@ -6172,6 +6191,7 @@ function zoneInteractTarget(fromCar = false) {
 const WALKER_NAMES = ['지나가던 주민', '동네 아주머니', '학생', '배달 기사님', '산책 나온 아저씨', '편의점 알바생', '강아지 산책 중인 분'];
 async function talkWalker(w) {
   if (w.promo) return ShopPromo.talk(w);
+  if (w.trainer && !w.vip) return PetBattle.talk(w); // 펫 트레이너 (v147)
   if (Game.busy) return; Game.busy = true;
   const z = Game.zone, p = Game.player; const i = Game.decor.indexOf(w); const name = w.vip ? castName('vip') : WALKER_NAMES[(i < 0 ? 0 : i) % WALKER_NAMES.length];
   w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
@@ -6475,6 +6495,7 @@ function update(dt) {
   if (VipDuel.open_) { if (consume('1')) VipDuel.meShoot('me'); else if (consume('2')) VipDuel.meShoot('op'); return; } // 룰렛: 끝날 때까지 못 나간다
   if (Tetris.open_) return; // 테트리스: 키는 Tetris가 먼저 받는다 (v92)
   if (Fight.open_) { if (consume('Escape') && Fight.view !== 'play') Fight.close(); return; } // 격투 게임: 키는 Fight가 직접 읽는다
+  if (PetBattle.open_) { if (consume('Escape')) PetBattle.esc(); else if (interact && PetBattle.sayNext) PetBattle.sayNext(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) PetBattle.pick(Number(n) - 1); return; } // 펫 배틀 (v147)
   if (Exam.open_) { if (consume('Escape')) Exam.close(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) Exam.answer(Number(n) - 1); return; } // 죽음의 문답 (v136)
   if (Quiz.open_) { if (consume('Escape')) Quiz.close(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) Quiz.answer(Number(n) - 1); return; } // 경매 퀴즈 (v128)
   if (Rps.open_) { if (consume('Escape')) Rps.close(); else for (const n of ['1', '2', '3']) if (consume(n)) Rps.pick(Number(n) - 1); return; }
@@ -7040,7 +7061,7 @@ const Punch = {
         Toast.show(`행인이 ${FEEL.punchHospHits}번 맞고 구급차에 실려 갔어요. 병원비 ${fmtWon(fee)}은 내가 냄`, 3400);
         if (Net.on) Net.news('행인을 때려서 병원에 보냄');
       } else { w.bubble = { text: ['아야!', '왜 때려요!!', '경찰 불러요!', '이 사람이 진짜…', '살려 주세요!'][Math.floor(Math.random() * 5)] + ` (${w.punched}/${FEEL.punchHospHits})`, t: 2 }; w.ai = { t: 2, ix: Math.sign(dx) || 1, iy: Math.sign(dy) }; }
-    } else Net.send({ t: 'punch', to: t.id, x: Math.round(pl.x), y: Math.round(pl.y) });
+    } else { Net.send({ t: 'punch', to: t.id, x: Math.round(pl.x), y: Math.round(pl.y) }); PetBattle.tukHit(t.p, t.id); } // 둘 다 펫이 있으면 펫끼리 투닥투닥 → 배틀 신청 (v147)
     // 때린 횟수: 3번째면 정신과 병동
     State.punch = (State.punch || 0) + 1;
     if (State.punch >= FEEL.punchAsylumHits) { State.punch = 0; const who = t.kind === 'npc' ? '행인' : t.p.name; await sleep(400); await asylum(who, 0, `사람을 ${FEEL.punchAsylumHits}번이나 때려서`, '주먹 쓰기 전에 마음부터 진정시키세요. 경매는 머리로 하는 거예요.'); }
@@ -7052,6 +7073,7 @@ const Punch = {
     const pl = Game.player, z = Game.zone; let nx = pl.x - (+m.x), ny = pl.y - (+m.y); const L = Math.hypot(nx, ny) || 1;
     const tx = pl.x + nx / L * 12, ty = pl.y + ny / L * 12; if (z.at(Math.floor(tx / TILE), Math.floor(ty / TILE)) !== T.BLD) { pl.x = tx; pl.y = ty; }
     pl.vx = pl.vy = 0; pl.push = 0.25; pl.hurt = 0.5; shake(6, 0.25); Sound.play('crash'); Game.hitstop = 0.05;
+    PetBattle.scuffle(p); // 내 펫이랑 때린 사람 펫이 투닥투닥 (v147)
     State.punched = (State.punched || 0) + 1; const n = State.punched;
     if (n >= FEEL.punchHospHits) { // 병원비는 마지막에 때린 사람이
       State.punched = 0; const fee = this.fee(); State.cash += fee; HUD.setCash(State.cash);
@@ -8411,6 +8433,7 @@ const Pets = {
     this.extra = []; const out = [], k = this.mine(), P = Game.player; if (typeof Prints !== 'undefined') Prints.watch(c); if (typeof ShopPromo !== 'undefined') ShopPromo.step();
     if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { out.push(this.actor(c, 'me', k, P.x, P.y, t, this.mineN)); if (this.mineK2) out.push(this.second(c, 'me', this.mineK2, P.x, P.y, t, this.mineN2)); }
     for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; out.push(this.actor(c, 'f:' + p.name, pk, p.x, p.y, t, String(p.pal.petName || '').slice(0, 10))); if (p.pal.pet2) out.push(this.second(c, 'f:' + p.name, p.pal.pet2, p.x, p.y, t, String(p.pal.petName2 || '').slice(0, 10))); }
+    if (typeof PetBattle !== 'undefined') PetBattle.actors(c, t, out); // 트레이너 펫 · 투닥투닥
     return out.concat(this.extra);
   },
   // 두 번째 펫 (사용자 2026-10-15 '펫은 최대 2마리'): 첫 펫 뒤를 졸졸 따라온다. 원숭이는 주인 머리에 타야 하니 주인을 따른다
@@ -8992,6 +9015,306 @@ const Fx = {
     if (me && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push({ y: P.y + 0.3, d: () => this.draw(c, me, P.x, P.y, t) });
     for (const { p } of vis) { const f = p.pal && p.pal.fx; if (!f || p.rd || (p.dr && p.s === 'zone')) continue; out.push({ y: p.y + 0.3, d: () => this.draw(c, f, p.x, p.y, t) }); }
     return out;
+  },
+};
+
+/* ===================== 펫 배틀 (v147, 사용자 2026-10-16 '펫끼리 싸울 수 있게 할까? 포켓몬처럼', 카드에서 '턴제 배틀') =====================
+ * 데리고 다니는 첫 번째 펫(Profile.pet)이 나간다. 펫마다 타입 하나 · 기술 4개 · 능력치(체력/공격/방어/스피드)가 있고, 이기면 경험치로 레벨이 오른다 (Store 'petLv').
+ * 상대 1) 펫 트레이너: 동네 행인 중 몇 명이 펫을 데리고 다닌다. 말을 걸면 '⚔️ 배틀!' (이기면 상금, 트레이너마다 한 번).
+ *      2) 친구: 친구 앞에서 F → '⚔️ 펫 배틀 신청'. 판돈 없이 실력(과 레벨)으로만.
+ * 한 턴: 둘 다 기술을 고르면 스피드가 빠른 쪽부터 쓴다. 명중 · 타입 상성(2배/0.5배) · 같은 타입 기술 1.5배 · 급소(1/16) · 랜덤 0.85~1.
+ * 친구 배틀은 같은 시드(seed + 턴)로 양쪽이 똑같이 계산한다: net {t:'pb', k:'ask'|'ok'|'no'|'go'|'mv'|'quit', to, ...}.
+ *      3) 친구를 때렸는데 둘 다 펫이 있으면 펫끼리 투닥투닥 → 맞은 쪽에 배틀 신청 카드 (사용자 2026-10-16 '때리면 펫끼리 투닥거리는 것도, 그렇게 배틀 시작도').
+ * 배틀이 끝나면 펫 체력은 다 돌아온다 (기절해도 다음 배틀엔 멀쩡). */
+const PB_TYPES = { N: ['노멀', '⭐', '#a8a090'], F: ['불', '🔥', '#f07030'], W: ['물', '💧', '#4a90e8'], G: ['풀', '🌿', '#4aa84a'], E: ['전기', '⚡', '#e8b818'], R: ['땅', '🪨', '#b08848'], B: ['벌레', '🐛', '#90a820'], K: ['격투', '👊', '#c03028'], H: ['하트', '💕', '#e860a8'] };
+// 공격 타입 → 맞는 타입: 2 = 효과가 굉장, 0.5 = 별로
+const PB_CHART = { F: { G: 2, B: 2, W: 0.5, R: 0.5, F: 0.5 }, W: { F: 2, R: 2, G: 0.5, W: 0.5 }, G: { W: 2, R: 2, F: 0.5, B: 0.5, G: 0.5 }, E: { W: 2, R: 0.5, G: 0.5, E: 0.5 }, R: { F: 2, E: 2, G: 0.5, B: 0.5 }, B: { G: 2, H: 2, F: 0.5, K: 0.5 }, K: { N: 2, R: 2, B: 0.5, H: 0.5 }, H: { K: 2, B: 0.5 }, N: { R: 0.5 } };
+// 기술 [이름, 타입, 위력(0이면 변화기), 명중, 효과]  효과: drain 준 피해 절반 회복 · heal 최대 체력 절반 회복 · atk+/def+/spd+ 내 능력 ↑ · atk-/def-/acc- 상대 능력 ↓
+const PB_DEX = {
+  mouse: { t: 'E', b: [40, 55, 40, 100], m: [['찌릿찌릿', 'E', 45, 100], ['백만 볼트 꼬리', 'E', 85, 90], ['치즈 갉아먹기', 'N', 50, 100, 'drain'], ['쥐구멍 쏙', 'N', 0, 100, 'def+']] },
+  beetle: { t: 'B', b: [55, 80, 90, 35], m: [['뿔 들이받기', 'B', 80, 90], ['장수 박치기', 'K', 60, 100], ['단단한 등껍질', 'N', 0, 100, 'def+'], ['수액 쪽쪽', 'B', 45, 100, 'drain']] },
+  mantis: { t: 'B', b: [50, 90, 50, 80], m: [['낫 베기', 'B', 80, 90], ['사마귀 권법', 'K', 70, 95], ['기도하는 자세', 'N', 0, 100, 'atk+'], ['날개 펄럭', 'N', 40, 100]] },
+  dog: { t: 'N', b: [60, 70, 55, 75], m: [['몸통 박치기', 'N', 55, 100], ['뼈다귀 휘두르기', 'R', 65, 95], ['왈왈 짖기', 'N', 0, 100, 'atk-'], ['꼬리 흔들기', 'N', 0, 100, 'def-']] },
+  cat: { t: 'N', b: [55, 70, 50, 85], m: [['냥냥 펀치', 'N', 55, 100], ['발톱 할퀴기', 'N', 80, 90], ['그루밍', 'N', 0, 100, 'heal'], ['꾹꾹이', 'N', 0, 100, 'def-']] },
+  lizard: { t: 'R', b: [55, 65, 60, 80], m: [['흙먼지 돌진', 'R', 75, 95], ['꼬리 채찍', 'N', 45, 100], ['모래 뿌리기', 'R', 0, 100, 'acc-'], ['보호색', 'N', 0, 100, 'def+']] },
+  rabbit: { t: 'G', b: [55, 60, 55, 95], m: [['당근 던지기', 'G', 65, 100], ['뒷발 차기', 'K', 70, 95], ['깡충 박치기', 'N', 40, 100], ['당근 오물오물', 'G', 0, 100, 'heal']] },
+  monkey: { t: 'K', b: [65, 85, 55, 85], m: [['원숭이 펀치', 'K', 75, 95], ['똥 던지기', 'R', 65, 90], ['바나나 껍질', 'N', 0, 100, 'acc-'], ['나무 타기 박치기', 'N', 55, 100]] },
+  penguin: { t: 'W', b: [65, 70, 70, 60], m: [['배 미끄럼', 'W', 75, 95], ['물고기 던지기', 'W', 55, 100], ['부리 쪼기', 'N', 50, 100], ['뒤뚱 춤', 'N', 0, 100, 'atk-']] },
+  panda: { t: 'G', b: [85, 80, 75, 40], m: [['대나무 휘두르기', 'G', 80, 95], ['데굴데굴 구르기', 'R', 65, 95], ['판다 펀치', 'K', 70, 95], ['냠냠 대나무', 'G', 0, 100, 'heal']] },
+  tiger: { t: 'F', b: [70, 95, 60, 80], m: [['불꽃 발톱', 'F', 80, 95], ['물기', 'N', 65, 100], ['어흥!', 'N', 0, 100, 'atk-'], ['호랑이 기운', 'F', 0, 100, 'atk+']] },
+  giraffe: { t: 'G', b: [75, 75, 65, 55], m: [['나뭇잎 폭풍', 'G', 80, 90], ['목 휘두르기', 'N', 75, 95], ['긴 다리 차기', 'K', 65, 100], ['높이서 내려다보기', 'N', 0, 100, 'def-']] },
+  elephant: { t: 'R', b: [95, 90, 80, 35], m: [['지진 쿵쿵', 'R', 90, 90], ['코로 물 뿜기', 'W', 70, 100], ['상아 찌르기', 'N', 65, 100], ['귀 펄럭', 'N', 0, 100, 'def+']] },
+  buddy: { t: 'N', b: [65, 65, 60, 65], m: [['꽈당 몸통', 'N', 65, 95], ['하이파이브', 'K', 55, 100], ['수다 폭탄', 'N', 0, 100, 'atk-'], ['용돈 조르기', 'N', 50, 100, 'drain']] },
+  kid: { t: 'N', b: [55, 60, 50, 95], m: [['장난감 던지기', 'N', 60, 100], ['막무가내 떼쓰기', 'K', 70, 90], ['엉덩이 흔들기', 'N', 0, 100, 'atk-'], ['초코과자 먹기', 'N', 0, 100, 'heal']] },
+  gf: { t: 'H', b: [65, 70, 60, 80], m: [['애교 공격', 'H', 75, 95], ['뽀뽀', 'H', 45, 100, 'drain'], ['삐짐', 'H', 0, 100, 'atk-'], ['꽃다발 휘두르기', 'G', 60, 100]] },
+  bf: { t: 'H', b: [70, 75, 65, 70], m: [['윙크', 'H', 75, 95], ['백허그', 'H', 45, 100, 'drain'], ['듬직한 어깨', 'N', 0, 100, 'def+'], ['꽃다발 휘두르기', 'G', 60, 100]] },
+  dolphin: { t: 'W', b: [75, 85, 65, 90], m: [['물대포', 'W', 80, 95], ['점프 다이빙', 'W', 95, 85], ['꼬리 치기', 'N', 60, 100], ['초음파', 'W', 0, 100, 'acc-']] },
+  trex: { t: 'R', b: [95, 110, 90, 60], m: [['꼬리 휘두르기', 'R', 90, 90], ['공룡 물기', 'N', 85, 95], ['쿵쿵 발구르기', 'R', 60, 100], ['크앙!', 'N', 0, 100, 'atk-']] },
+};
+const PB_STAT = { atk: '공격', def: '방어', spd: '스피드', acc: '명중' };
+const PB_TRAINER_SAY = ['펫 배틀 할 사람~?', '눈이 마주쳤으니 배틀이다!', '내 펫 엄청 세요!', '한 판 붙을래요?', '펫 데리고 있죠? 배틀해요!'];
+
+const PetBattle = {
+  open_: false, B: null, pend: null, inv: null,
+  /* ---- 펫 정보 ---- */
+  kindName(k) { const it = (SHOP_ITEMS.pet || []).find(x => x.pet === k); return it ? it.name.replace(/\s*\(.*\)$/, '') : k; },
+  lvs() { const v = Store.get('petLv', {}); return v && typeof v === 'object' ? v : {}; },
+  lvOf(k) { const L = this.lvs()[k]; return { lv: Math.max(1, Math.min(50, (L && +L.lv) || 5)), xp: (L && +L.xp) || 0 }; },
+  need(lv) { return 10 + lv * 6; },
+  myPet() { const P = Profile.get(), k = P.pet; if (!k || !PB_DEX[k]) return null; return { kind: k, lv: this.lvOf(k).lv, name: String(P.petName || '').slice(0, 10) }; },
+  // 레벨에 맞춘 능력치
+  mk(info, owner) {
+    const k = PB_DEX[info.kind] ? info.kind : 'dog', D = PB_DEX[k], L = Math.max(1, Math.min(50, +info.lv || 5)), [h, a, d, s] = D.b, st = b => Math.floor(b * 2 * L / 50) + 5;
+    const max = Math.floor(h * 2 * L / 50) + L + 10;
+    return { kind: k, lv: L, t: D.t, name: String(info.name || '').slice(0, 10) || this.kindName(k), owner, max, hp: max, atk: st(a), def: st(d), spd: st(s), st: { atk: 0, def: 0, spd: 0, acc: 0 }, moves: D.m };
+  },
+  stage(s) { return s >= 0 ? (2 + s) / 2 : 2 / (2 - s); },
+  eff(mt, dt) { return (PB_CHART[mt] && PB_CHART[mt][dt]) || 1; },
+  /* ---- 한 턴 계산 (양쪽이 같은 rng로 똑같이) ---- */
+  turn(S, ia, ib, R) {
+    const ev = [], pa = S.a, pb = S.b, sa = pa.spd * this.stage(pa.st.spd), sb = pb.spd * this.stage(pb.st.spd), tie = R.next() < 0.5;
+    const order = sa > sb || (sa === sb && tie) ? [['a', ia], ['b', ib]] : [['b', ib], ['a', ia]];
+    for (const [w, i] of order) {
+      const me = S[w], o = w === 'a' ? 'b' : 'a', foe = S[o]; if (me.hp <= 0 || foe.hp <= 0) continue;
+      const mv = me.moves[i] || me.moves[0], [, mt, pw, acc, fx] = mv; ev.push({ k: 'use', s: w, i });
+      const hit = R.next() * 100 < acc * (me.st.acc >= 0 ? (3 + me.st.acc) / 3 : 3 / (3 - me.st.acc)); if (!hit) { ev.push({ k: 'miss', s: w }); continue; }
+      if (pw > 0) {
+        const e = this.eff(mt, foe.t), crit = R.next() < 1 / 16, rnd = 0.85 + R.next() * 0.15;
+        const A = me.atk * this.stage(me.st.atk), D = foe.def * this.stage(foe.st.def);
+        const n = Math.max(1, Math.floor(((2 * me.lv / 5 + 2) * pw * A / D / 50 + 2) * (mt === me.t ? 1.5 : 1) * e * (crit ? 1.5 : 1) * rnd));
+        foe.hp = Math.max(0, foe.hp - n); ev.push({ k: 'dmg', s: o, n, e, crit, hp: foe.hp });
+        if (fx === 'drain' && me.hp < me.max) { const h = Math.max(1, Math.floor(n / 2)); me.hp = Math.min(me.max, me.hp + h); ev.push({ k: 'heal', s: w, n: h, hp: me.hp }); }
+        if (foe.hp <= 0) { ev.push({ k: 'faint', s: o }); break; }
+      } else if (fx === 'heal') { const h = Math.floor(me.max / 2); if (me.hp >= me.max) ev.push({ k: 'nofx', s: w }); else { me.hp = Math.min(me.max, me.hp + h); ev.push({ k: 'heal', s: w, n: h, hp: me.hp }); } }
+      else if (fx) { const self = fx.endsWith('+'), tgt = self ? w : o, key = fx.slice(0, -1), d = self ? 1 : -1, P = S[tgt], nv = Math.max(-3, Math.min(3, P.st[key] + d)); ev.push({ k: 'stat', s: tgt, key, d: nv === P.st[key] ? 0 : d }); P.st[key] = nv; }
+    }
+    return ev;
+  },
+  // 트레이너 AI: 세게 들어가는 기술 위주, 가끔 변화기 · 체력이 적으면 회복
+  aiPick(S, w) {
+    const me = S[w], foe = S[w === 'a' ? 'b' : 'a'];
+    const sc = me.moves.map(([, mt, pw, acc, fx]) => {
+      if (pw > 0) return pw * acc / 100 * (mt === me.t ? 1.5 : 1) * this.eff(mt, foe.t) * (fx === 'drain' && me.hp < me.max * 0.7 ? 1.25 : 1);
+      if (fx === 'heal') return me.hp < me.max * 0.4 ? 140 : me.hp < me.max * 0.7 ? 40 : 2;
+      const self = fx.endsWith('+'), st = (self ? me : foe).st[fx.slice(0, -1)]; return (self ? st >= 2 : st <= -2) ? 2 : me.hp > me.max * 0.5 ? 45 : 15;
+    });
+    let tot = 0; const wts = sc.map(v => (tot += v * v, v * v)); let r = Math.random() * tot; for (let i = 0; i < 4; i++) { r -= wts[i]; if (r <= 0) return i; } return 0;
+  },
+  /* ---- 동네 펫 트레이너 (spawnDecor 끝에서) ---- */
+  spawn() {
+    const D = Game.decor || [], kinds = Object.keys(PB_DEX), zid = [...String(Game.zone ? Game.zone.id : '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7); let n = 0;
+    for (let i = 0; i < D.length && n < 3; i++) { const w = D[i]; if (i % 5 !== 2 || w.vip || w.promo || w.trainer) continue; const R = makeRng((zid * 131 + i * 977 + (State.day || 0) * 31) >>> 0); const key = 'tr' + zid + ':' + i; w.trainer = { kind: kinds[Math.floor(R.next() * R.next() * kinds.length)], off: Math.floor(R.next() * 3) - 1, key, next: 0, done: this.beat().includes(key) }; n++; }
+  },
+  // 오늘(실제 날짜) 이긴 트레이너 (동네를 나갔다 와도 상금은 하루 한 번)
+  today() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; },
+  beat() { const v = Store.get('pbBeat', null); return v && v.d === this.today() && Array.isArray(v.k) ? v.k : []; },
+  markBeat(key) { const k = this.beat().concat(key).slice(-60); Store.set('pbBeat', { d: this.today(), k });
+  },
+  // 매 프레임 (Pets.actors): 트레이너 펫 그리기 목록 + 가끔 외치기
+  actors(c, t, out) {
+    if (Game.scene !== 'zone' || !Game.decor) return; const now = performance.now(), P = Game.player;
+    for (const w of Game.decor) { const T = w.trainer; if (!T) continue;
+      out.push(Pets.actor(c, T.key, T.kind, w.x, w.y, t, ''));
+      if (P && !T.done && now > T.next && !w.bubble && Math.hypot(P.x - w.x, P.y - w.y) < 140) { T.next = now + 7000 + Math.random() * 5000; w.bubble = { text: PB_TRAINER_SAY[Math.floor(Math.random() * PB_TRAINER_SAY.length)], t: 2.6 }; } }
+    this.tuks = this.tuks.filter(x => now - x.t0 < 2000);
+    for (const x of this.tuks) { const a = Pets.st.me, b = Pets.st['f:' + x.name]; if (!a || !b) continue; // 두 펫이 가운데로 달려가 먼지구름 속에서 투닥투닥
+      const u = (now - x.t0) / 2000, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, run = Math.min(1, u * 5), sd = a.x < b.x ? -1 : 1;
+      for (const [s, d] of [[a, sd], [b, -sd]]) { const tx = mx + d * 4 + (u < 0.85 ? Math.sin(now / 45 + d) * 2 : 0), ty = my + (u < 0.85 ? Math.cos(now / 60 + d) * 1.5 : 0); s.x += (tx - s.x) * run; s.y += (ty - s.y) * run; s.face = -d; s.moving = true; s.still = t; }
+      if (u > 0.12 && u < 0.85) out.push({ y: my + 2, d: () => this.cloud(c, mx, my, now, u) }); }
+  },
+  tuks: [], tukAt: {},
+  cloud(c, x, y, now, u) {
+    const R = makeRng(Math.floor(now / 70)); c.save(); c.globalAlpha = Math.min(1, (u - 0.12) * 8, (0.85 - u) * 8);
+    for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283 + now / 300, r = 6 + R.next() * 3; c.fillStyle = i % 3 ? '#efe9dc' : '#d6cdbb'; c.beginPath(); c.arc(Math.round(x + Math.cos(a) * 7), Math.round(y - 6 + Math.sin(a) * 4), r, 0, 7); c.fill(); }
+    c.fillStyle = '#ffd84a'; for (let i = 0; i < 4; i++) { const sx = Math.round(x - 12 + R.next() * 24), sy = Math.round(y - 16 + R.next() * 12); c.fillRect(sx - 1, sy, 3, 1); c.fillRect(sx, sy - 1, 1, 3); }
+    c.fillStyle = '#5a4a3a'; for (let i = 0; i < 3; i++) { const sx = Math.round(x - 8 + R.next() * 16), sy = Math.round(y - 9 + R.next() * 6); c.fillRect(sx, sy, 2, 2); } // 삐져나온 발·꼬리
+    c.restore(); Net.label(c, ['투닥투닥!', '퍽퍽!', '으르릉!'][Math.floor(now / 500) % 3], x, y - 22);
+  },
+  /* ---- 때리면 펫끼리 투닥투닥 ---- */
+  hasPet(p) { return !!(p && p.pal && PB_DEX[p.pal.pet]); },
+  scuffle(p) { if (!this.myPet() || !this.hasPet(p) || Game.scene !== 'zone') return false; this.tuks = this.tuks.filter(x => x.name !== p.name); this.tuks.push({ name: p.name, t0: performance.now() }); Sound.play('pop'); return true; },
+  // 내가 친구를 때렸다: 투닥투닥 보여 주고, 45초에 한 번 배틀 신청
+  tukHit(p, id) {
+    if (!this.scuffle(p)) return; const now = Date.now(); if (now - (this.tukAt[id] || 0) < 45000 || this.pend || this.open_) return; this.tukAt[id] = now;
+    setTimeout(() => { const q = Net.players[id]; if (q && !this.open_ && !this.pend && !Game.busy && !Dialog.open) this.ask(q, true); }, 1500);
+  },
+  async talk(w) {
+    if (Game.busy) return; Game.busy = true; const T = w.trainer, p = Game.player, name = '펫 트레이너', sp = w.sprite;
+    try {
+      w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
+      const mine = this.myPet(), lv = Math.max(1, Math.min(50, (mine ? mine.lv : 5) + T.off)), kn = this.kindName(T.kind), ty = PB_TYPES[PB_DEX[T.kind].t];
+      if (T.done) { await Dialog.say([{ name, sprite: sp, text: '졌다… 오늘은 그만할래. 내 펫 쉬게 해 줘야 해. 다음에 또 붙자!' }]); return; }
+      const pick = await Dialog.say([{ name, sprite: sp, text: `내 ${kn} Lv.${lv}랑 한 판 붙을래? 이기면 상금 ${fmtWon(this.prize(lv))}!` }], [{ label: '⚔️ 배틀!', value: 'go' }, { label: '펫 구경하기', value: 'look' }, { label: '다음에요', value: null }]);
+      if (pick === 'look') { await Dialog.say([{ name, sprite: sp, text: `${kn} · ${ty[1]} ${ty[0]} 타입 · Lv.${lv}. 기술은 ${PB_DEX[T.kind].m.map(m => m[0]).join(', ')}. 상성 잘 생각해서 와!` }]); return; }
+      if (pick !== 'go') return;
+      if (!mine) { await Dialog.say([{ name, sprite: sp, text: '펫이 없네? 건대 편집숍에서 펫부터 데려와!' }]); return; }
+      this.start({ mode: 'npc', me: 'a', w, a: this.mk(mine, '나'), b: this.mk({ kind: T.kind, lv }, '트레이너'), foeName: '트레이너' });
+    } finally { Game.busy = false; if (w.ai) w.ai.t = 0.3; }
+  },
+  prize(lv) { return 20e4 + lv * 10e4; },
+  /* ---- 친구에게 신청 ---- */
+  ask(p, tuk) {
+    const mine = this.myPet(); if (!mine) { Toast.show('펫이 없어요. 건대 편집숍에서 펫부터 데려와요.'); return; }
+    const id = Net.idOf(p); if (!id) return; if (!(p.pal && p.pal.pet)) { Toast.show(`${p.name}님은 펫을 안 데리고 있어요.`); return; }
+    this.pend = { id, name: p.name, at: Date.now() }; Net.send({ t: 'pb', k: 'ask', to: id, pet: mine, tuk: tuk ? 1 : undefined }); Sound.play('blip'); Toast.show(tuk ? `펫끼리 투닥투닥! ${p.name}님에게 펫 배틀을 걸었어요…` : `${p.name}님에게 펫 배틀을 신청했어요…`, 2400);
+    setTimeout(() => { if (this.pend && this.pend.id === id) { this.pend = null; Toast.show(`${p.name}님이 대답이 없어요.`); } }, 20000);
+  },
+  clean(x) { return x && PB_DEX[x.kind] ? { kind: x.kind, lv: Math.max(1, Math.min(50, +x.lv || 5)), name: String(x.name || '').replace(/[<>]/g, '').slice(0, 10) } : null; },
+  onNet(m, p) {
+    if (m.to !== Net.myId) return; const from = m.from, name = (p && p.name) || '친구';
+    if (m.k === 'ask') {
+      const theirs = this.clean(m.pet), mine = this.myPet(); if (!theirs) return;
+      if (this.open_ || Game.busy || Dialog.open || this.inv || (Game.formOpen && !Shop.open_)) return Net.send({ t: 'pb', k: 'no', to: from, why: 'busy' });
+      if (!mine) return Net.send({ t: 'pb', k: 'no', to: from, why: 'nopet' });
+      this.inv = { from, name, pet: theirs, tuk: !!m.tuk }; this.showInv(); Sound.play('ding'); return;
+    }
+    if (m.k === 'no') { if (this.wait && this.wait.id === from) { this.wait = null; Toast.show(`${name}님이 지금은 배틀을 못 해요.`); return; } if (!this.pend || this.pend.id !== from) return; this.pend = null; Sound.play('deny'); Toast.show(m.why === 'busy' ? `${name}님은 지금 다른 걸 하고 있어요.` : m.why === 'nopet' ? `${name}님은 펫을 안 데리고 있어요.` : `${name}님이 배틀을 거절했어요.`); return; }
+    if (m.k === 'ok') { // 신청한 쪽: 시드를 정해서 시작
+      if (!this.pend || this.pend.id !== from || this.open_) return; this.pend = null; const theirs = this.clean(m.pet), mine = this.myPet(); if (!theirs || !mine || Game.busy || Dialog.open || (Game.formOpen && !Shop.open_)) return Net.send({ t: 'pb', k: 'no', to: from, why: 'busy' }); if (Shop.open_) Shop.close();
+      const seed = (Math.random() * 2 ** 31) >>> 0; Net.send({ t: 'pb', k: 'go', to: from, seed, a: mine, b: theirs });
+      this.start({ mode: 'net', me: 'a', foe: from, foeName: name, seed, a: this.mk(mine, '나'), b: this.mk(theirs, name) }); return;
+    }
+    if (m.k === 'go') { if (!this.wait || this.wait.id !== from || this.open_) return; this.wait = null; const a = this.clean(m.a), b = this.clean(m.b); if (!a || !b) return;
+      this.start({ mode: 'net', me: 'b', foe: from, foeName: name, seed: +m.seed >>> 0, a: this.mk(a, name), b: this.mk(b, '나') }); return; }
+    const B = this.B; if (!B || B.mode !== 'net' || B.foe !== from) return;
+    if (m.k === 'mv') { const n = +m.n, i = Math.max(0, Math.min(3, +m.i || 0)); (B.picks[n] || (B.picks[n] = {}))[B.me === 'a' ? 'b' : 'a'] = i; B.foeAt = Date.now(); this.maybeRun(); return; }
+    if (m.k === 'quit') { if (B.over) return; this.end(B.me, `${name}님이 항복했어요.`); }
+  },
+  showInv() {
+    const el = $('pbAsk'), a = this.inv; if (!a) { el.classList.remove('in'); return; }
+    const ty = PB_TYPES[PB_DEX[a.pet.kind].t];
+    el.innerHTML = `<i class="tk">⚔️ 펫 배틀 신청</i><b>${a.tuk ? `${esc(a.name)}님이 때려서 펫끼리 투닥투닥! 배틀로 끝장 볼까요?` : `${esc(a.name)}님이 펫 배틀을 걸어왔어요!`}</b><span>${esc(a.name)}의 ${esc(a.pet.name || this.kindName(a.pet.kind))}${a.pet.name ? ` (${this.kindName(a.pet.kind)})` : ''} Lv.${a.pet.lv} · ${ty[1]} ${ty[0]} 타입</span><span class="sm">판돈 없이 펫 실력으로만 겨뤄요.</span><div><button class="btn gold" id="pbYes">⚔️ ${a.tuk ? '붙자!' : '받아들이기'}</button><button class="btn" id="pbNo">${a.tuk ? '참는다' : '거절'}</button></div>`;
+    el.classList.add('in'); $('pbYes').onclick = () => this.accept(); $('pbNo').onclick = () => { Net.send({ t: 'pb', k: 'no', to: a.from, why: 'no' }); this.inv = null; this.showInv(); };
+    clearTimeout(this.invT); this.invT = setTimeout(() => { if (this.inv === a) { this.inv = null; this.showInv(); } }, 20000);
+  },
+  accept() {
+    const a = this.inv; if (!a) return; const mine = this.myPet();
+    if (Game.busy || Dialog.open || (Game.formOpen && !Shop.open_) || this.open_) return Toast.show('지금 하던 걸 먼저 끝내고 눌러 주세요.');
+    this.inv = null; this.showInv(); if (!mine) return Net.send({ t: 'pb', k: 'no', to: a.from, why: 'nopet' });
+    if (Shop.open_) Shop.close(); this.wait = { id: a.from }; Net.send({ t: 'pb', k: 'ok', to: a.from, pet: mine });
+    setTimeout(() => { if (this.wait && this.wait.id === a.from) { this.wait = null; Toast.show(`${a.name}님이 대답이 없어요.`); } }, 6000);
+  },
+  /* ---- 배틀 진행 ---- */
+  start(o) {
+    if (Game.driving && Game.scene === 'zone') exitCar();
+    this.B = Object.assign({ n: 0, picks: {}, busy: true, over: false, t0: Date.now(), foeAt: Date.now(), anim: { a: {}, b: {} }, shown: { a: o.a.max, b: o.b.max } }, o, { S: { a: o.a, b: o.b } });
+    this.open_ = true; Game.formOpen = true; Sound.play('ding'); this.build(); this.loop();
+    const B = this.B, foe = B.S[B.me === 'a' ? 'b' : 'a'], mine = B.S[B.me];
+    this.say([`${B.mode === 'npc' ? '펫 트레이너' : esc(B.foeName) + '님'}이(가) 배틀을 걸어왔다!`, `${B.mode === 'npc' ? '트레이너' : esc(B.foeName)}은(는) ${esc(foe.name)}을(를) 내보냈다!`, `가랏, ${esc(mine.name)}!`], () => { B.busy = false; B.t0 = Date.now(); this.render(); });
+  },
+  side(w) { const B = this.B; return w === B.me ? 'me' : 'foe'; },
+  who(w) { const B = this.B, P = B.S[w]; return w === B.me ? esc(P.name) : `상대 ${esc(P.name)}`; },
+  pick(i) {
+    const B = this.B; if (!B || B.busy || B.over || !(i >= 0 && i < 4)) return; const n = B.n, cur = B.picks[n] || (B.picks[n] = {}); if (cur[B.me] != null) return;
+    cur[B.me] = i; Sound.play('click');
+    if (B.mode === 'npc') cur[B.me === 'a' ? 'b' : 'a'] = this.aiPick(B.S, B.me === 'a' ? 'b' : 'a');
+    else Net.send({ t: 'pb', k: 'mv', to: B.foe, n, i });
+    this.render(); this.maybeRun();
+  },
+  maybeRun() {
+    const B = this.B; if (!B || B.busy || B.over) return; const cur = B.picks[B.n]; if (!cur || cur.a == null || cur.b == null) return;
+    B.busy = true; const R = makeRng(((B.seed || 1) + (B.n + 1) * 7919) >>> 0), ev = this.turn(B.S, cur.a, cur.b, B.mode === 'npc' ? { next: Math.random } : R); B.n++;
+    this.play(ev, 0);
+  },
+  // 이벤트를 하나씩 보여 준다 (말풍선 + 움직임 + 체력 바)
+  play(ev, k) {
+    const B = this.B; if (!B || this.B !== B) return; if (k >= ev.length) { if (!B.over) { const dead = ['a', 'b'].find(w => B.S[w].hp <= 0); if (dead) return this.end(dead === B.me ? (B.me === 'a' ? 'b' : 'a') : B.me); B.busy = false; B.t0 = Date.now(); B.foeAt = Date.now(); this.render(); } return; }
+    const e = ev[k], A = B.anim, next = (ms) => setTimeout(() => this.play(ev, k + 1), ms), S = B.S;
+    if (e.k === 'use') { const mv = S[e.s].moves[e.i]; A[e.s].lunge = performance.now(); A[e.s].mt = mv[1]; Sound.play(mv[2] > 0 ? 'blip' : 'chime'); this.msg(`${this.who(e.s)}의 <b style="color:${PB_TYPES[mv[1]][2]}">${esc(mv[0])}</b>!`); return next(650); }
+    if (e.k === 'miss') { this.msg('그러나 빗나갔다!'); Sound.play('deny'); return next(800); }
+    if (e.k === 'dmg') { A[e.s].hit = performance.now(); B.shown[e.s] = e.hp; Sound.play(e.e > 1 ? 'crash' : 'flip'); this.hud();
+      const t = [e.crit ? '급소에 맞았다!' : '', e.e > 1 ? '효과가 굉장했다!' : e.e < 1 ? '효과가 별로인 것 같다…' : ''].filter(Boolean); if (t.length) this.msg(t.join(' ')); return next(t.length ? 1000 : 650); }
+    if (e.k === 'heal') { B.shown[e.s] = e.hp; A[e.s].heal = performance.now(); Sound.play('coins'); this.hud(); this.msg(`${this.who(e.s)}의 체력이 회복됐다!`); return next(850); }
+    if (e.k === 'nofx') { this.msg('하지만 아무 일도 일어나지 않았다!'); return next(800); }
+    if (e.k === 'stat') { A[e.s].stat = { at: performance.now(), d: e.d }; this.msg(e.d === 0 ? `${this.who(e.s)}의 ${PB_STAT[e.key]}은(는) 더 이상 변하지 않는다!` : `${this.who(e.s)}의 ${PB_STAT[e.key]}이(가) ${e.d > 0 ? '올라갔다!' : '떨어졌다!'}`); Sound.play(e.d > 0 ? 'ding' : 'deny'); return next(900); }
+    if (e.k === 'faint') { A[e.s].faint = performance.now(); Sound.play('deny'); this.msg(`${this.who(e.s)}은(는) 쓰러졌다!`); return next(1300); }
+    next(10);
+  },
+  // 끝: win = 이긴 쪽 ('a'|'b')
+  end(win, why) {
+    const B = this.B; if (!B || B.over) return; B.over = true; B.busy = true; const won = win === B.me, mine = B.S[B.me], foe = B.S[B.me === 'a' ? 'b' : 'a'];
+    let gain = won ? (B.mode === 'npc' ? 8 + foe.lv * 4 : 6 + foe.lv * 3) : 3; const lines = [];
+    if (why) lines.push(esc(why));
+    lines.push(won ? `🏆 ${B.mode === 'npc' ? '트레이너' : esc(B.foeName) + '님'}에게 이겼다!` : `${esc(mine.name)}이(가) 졌다… 다음엔 꼭!`);
+    if (won && B.mode === 'npc' && B.w && B.w.trainer && !B.w.trainer.done) { const pz = this.prize(foe.lv); B.w.trainer.done = true; this.markBeat(B.w.trainer.key); mgCash(pz, '펫 배틀 상금 (트레이너)'); lines.push(`상금 ${fmtWon(pz)}을(를) 받았다!`); B.w.bubble = { text: '졌다… 너 정말 세다!', t: 3 }; }
+    if (won && B.mode === 'net' && Net.on) Net.news(`펫 배틀에서 ${B.foeName}님의 ${foe.name}을(를) 이김 (${mine.name} Lv.${mine.lv})`);
+    const L = this.lvs(), cur = this.lvOf(mine.kind); let lv = cur.lv, xp = cur.xp + gain, up = 0; if (lv >= 50) xp = 0; while (lv < 50 && xp >= this.need(lv)) { xp -= this.need(lv); lv++; up++; }
+    L[mine.kind] = { lv, xp }; Store.set('petLv', L); lines.push(`${esc(mine.name)}은(는) 경험치 ${gain}을(를) 얻었다!`); if (up) { lines.push(`🎉 ${esc(mine.name)}의 레벨이 ${lv}(으)로 올랐다!`); Sound.play('chime'); }
+    B.result = { won, lv, xp, up }; Sound.play(won ? 'coins' : 'deny');
+    this.say(lines, () => this.render());
+  },
+  quit() {
+    const B = this.B; if (!B) return; if (B.over) return this.close();
+    if (!B.qArm) { B.qArm = Date.now(); this.render(); return; } // 한 번 더 누르면 항복
+    if (B.mode === 'net') Net.send({ t: 'pb', k: 'quit', to: B.foe });
+    this.end(B.me === 'a' ? 'b' : 'a', '항복했다…');
+  },
+  esc() { const B = this.B; if (!B) return; if (B.over) this.close(); else this.quit(); },
+  close() { if (!this.open_) return; this.open_ = false; this.B = null; this.sayNext = null; clearTimeout(this.sayT); clearInterval(this.tmr); Game.formOpen = false; $('pbWin').classList.remove('in'); cancelAnimationFrame(this.raf); Sound.play('flip'); },
+  // 상대가 사라지거나 너무 오래 안 고르면 / 내가 30초 안 고르면 아무거나
+  tick() {
+    const B = this.B; if (!B || B.over) return; const now = Date.now();
+    if (B.mode === 'net') { const f = Net.players[B.foe]; if (!Net.on || !f || f.gone) return this.end(B.me, '상대가 나가 버렸어요.'); }
+    if (B.busy) return; const cur = B.picks[B.n] || {};
+    if (cur[B.me] == null && now - B.t0 > 30000) this.pick(Math.floor(Math.random() * 4));
+    else if (B.mode === 'net' && cur[B.me] != null && cur[B.me === 'a' ? 'b' : 'a'] == null && now - Math.max(B.t0, B.foeAt) > 50000) this.end(B.me, '상대가 너무 오래 안 골라서 이겼어요.');
+    const tm = $('pbTime'); if (tm) { const left = Math.max(0, Math.ceil((B.t0 + 30000 - now) / 1000)); if (tm.textContent !== String(left)) tm.textContent = left; }
+  },
+  /* ---- 화면 ---- */
+  build() {
+    const el = $('pbWin'); el.classList.add('in');
+    el.innerHTML = `<div class="pbBox"><div class="pbScene"><canvas id="pbCv"></canvas><div class="pbHud foe" id="pbHudFoe"></div><div class="pbHud me" id="pbHudMe"></div></div>
+      <div class="pbBot"><div class="pbMsg" id="pbMsg"></div><div class="pbMoves" id="pbMoves"></div></div></div>`;
+    clearInterval(this.tmr); this.tmr = setInterval(() => { if (!this.open_) return clearInterval(this.tmr); this.tick(); }, 300);
+    this.hud(); this.render();
+  },
+  hudOne(w) {
+    const B = this.B, P = B.S[w], v = B.shown[w], pct = Math.max(0, v / P.max * 100), ty = PB_TYPES[P.t], mine = w === B.me, X = this.lvOf(P.kind);
+    return `<div class="pbName"><b>${esc(P.name)}</b><small>Lv.${P.lv}</small><i style="background:${ty[2]}">${ty[1]} ${ty[0]}</i></div><div class="pbBar"><span>HP</span><div><em class="${pct < 25 ? 'r' : pct < 50 ? 'y' : ''}" style="width:${pct}%"></em></div></div>${mine ? `<div class="pbNum">${v}/${P.max}</div><div class="pbXp"><em style="width:${Math.min(100, X.xp / this.need(X.lv) * 100)}%"></em></div>` : `<div class="pbOwner">${B.mode === 'npc' ? '트레이너' : esc(B.foeName)}의 ${this.kindName(P.kind)}</div>`}`;
+  },
+  hud() { const B = this.B; if (!B) return; const f = $('pbHudFoe'), m = $('pbHudMe'); if (!f) return; f.innerHTML = this.hudOne(B.me === 'a' ? 'b' : 'a'); m.innerHTML = this.hudOne(B.me); },
+  msg(h) { const el = $('pbMsg'); if (el) el.innerHTML = h; },
+  // 여러 줄을 차례로 (탭/클릭으로 넘기기)
+  say(lines, done) {
+    let i = 0; const step = () => { if (!this.B) return; if (i >= lines.length) { this.sayNext = null; return done && done(); } this.msg(lines[i++] + ' <i class="pbGo">▼</i>'); clearTimeout(this.sayT); this.sayT = setTimeout(step, 1500); };
+    this.sayNext = () => { clearTimeout(this.sayT); step(); }; step(); const el = $('pbMsg'); if (el) el.onclick = () => this.sayNext && this.sayNext();
+  },
+  render() {
+    const B = this.B, el = $('pbMoves'); if (!B || !el) return; const P = B.S[B.me], cur = B.picks[B.n] || {}, foe = B.S[B.me === 'a' ? 'b' : 'a'];
+    if (B.over) { if (B.result) { el.innerHTML = `<button class="btn gold pbEnd" id="pbOut">${B.result.won ? '🏆 이겼다! 나가기' : '나가기'} <small>Lv.${B.result.lv} · 경험치 ${B.result.xp}/${this.need(B.result.lv)}</small></button>`; $('pbOut').onclick = () => this.close(); } return; }
+    const wait = B.busy || cur[B.me] != null;
+    if (!B.busy) this.msg(cur[B.me] != null ? `${B.mode === 'npc' ? '' : esc(B.foeName) + '님이 고르는 중… '}` : `${esc(P.name)}은(는) 무엇을 할까? <b class="pbT">⏱ <span id="pbTime">30</span></b>`);
+    el.innerHTML = P.moves.map(([n, t, pw, acc, fx], i) => { const ty = PB_TYPES[t], e = pw > 0 ? this.eff(t, foe.t) : 1;
+      return `<button class="btn pbMv${cur[B.me] === i ? ' sel' : ''}" data-mv="${i}" style="--tc:${ty[2]}" ${wait ? 'disabled' : ''}><b>${esc(n)}</b><small>${ty[1]} ${ty[0]} · ${pw > 0 ? `위력 ${pw}` : { heal: '회복', drain: '흡수' }[fx] || (fx.endsWith('+') ? `내 ${PB_STAT[fx.slice(0, -1)]} ↑` : `상대 ${PB_STAT[fx.slice(0, -1)]} ↓`)} · 명중 ${acc}</small><kbd>${i + 1}</kbd></button>`; }).join('')
+      + `<button class="btn pbQuit${B.qArm && Date.now() - B.qArm < 4000 ? ' arm' : ''}" id="pbQuit">${B.qArm && Date.now() - B.qArm < 4000 ? '정말 항복?' : '🏳️ 항복'}</button>`;
+    el.querySelectorAll('[data-mv]').forEach(b => (b.onclick = () => this.pick(+b.dataset.mv)));
+    $('pbQuit').onclick = () => { if (B.qArm && Date.now() - B.qArm >= 4000) B.qArm = 0; this.quit(); };
+  },
+  // 배경 + 두 펫 (픽셀은 정수 배율로만)
+  loop() {
+    const cv = $('pbCv'); if (!cv || !this.open_) return; const c = cv.getContext('2d'), dpr = Math.max(1, Math.round(window.devicePixelRatio || 1)), W = cv.clientWidth, H = cv.clientHeight;
+    if (cv.width !== W * dpr || cv.height !== H * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
+    const B = this.B; if (!B) return; const now = performance.now(), t = now / 1000;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0); c.imageSmoothingEnabled = false;
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#8fd0ff'); g.addColorStop(0.55, '#d8f0ff'); g.addColorStop(0.56, '#9ad870'); g.addColorStop(1, '#5aa848'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.fillStyle = 'rgba(255,255,255,.75)'; for (const [x, y, r] of [[0.15, 0.14, 22], [0.22, 0.12, 16], [0.62, 0.2, 18], [0.68, 0.18, 24]]) { c.beginPath(); c.arc(((x * W + t * 6) % (W + 60)) - 30, y * H, r, 0, 7); c.fill(); }
+    const base = H >= 300 ? 4 : H >= 170 ? 3 : 2, spots = { foe: [Math.round(W * 0.72), Math.round(H * 0.5)], me: [Math.round(W * 0.27), Math.round(H * 0.86)] };
+    for (const k of ['foe', 'me']) { const [x, y] = spots[k]; c.fillStyle = 'rgba(40,90,30,.35)'; c.beginPath(); c.ellipse(x, y + 2, base * 16, base * 4.5, 0, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(x, y, base * 14, base * 3.5, 0, 0, 7); c.fill(); }
+    for (const w of ['a', 'b']) {
+      const P = B.S[w], A = B.anim[w], side = this.side(w), [x0, y0] = spots[side], kind = P.kind, k = Math.max(2, 2 * Math.round(base * (['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 2 : ['trex', 'giraffe', 'elephant'].includes(kind) ? 0.5 : 1) / 2)); // 고화질 펫은 반 픽셀로 그리니 짝수 배율만 (화면 1픽셀 단위)
+      let dx = 0, dy = 0, al = 1; const dir = side === 'me' ? 1 : -1;
+      if (A.lunge) { const u = (now - A.lunge) / 400; if (u < 1) dx = Math.sin(u * Math.PI) * 26 * dir; else A.lunge = 0; }
+      if (A.hit) { const u = (now - A.hit) / 500; if (u < 1) { dx += Math.sin(u * 40) * 4; al = Math.floor(u * 10) % 2 ? 0.25 : 1; } else A.hit = 0; }
+      if (A.faint) { const u = Math.min(1, (now - A.faint) / 700); dy = u * 30; al *= 1 - u; }
+      if (al <= 0) continue;
+      c.save(); c.globalAlpha = al; c.beginPath(); c.rect(0, 0, W, A.faint ? y0 + 4 : H); c.clip(); c.translate(Math.round(x0 + dx), Math.round(y0 + dy)); c.scale(k, k);
+      Pets.draw(c, kind, 0, 0, dir, false, t, '', 0); c.restore();
+      if (A.heal && now - A.heal < 800) { const u = (now - A.heal) / 800; c.fillStyle = `rgba(120,255,140,${(1 - u).toFixed(2)})`; for (let i = 0; i < 6; i++) c.fillRect(Math.round(x0 - 18 + i * 7), Math.round(y0 - 10 - u * 40 - (i % 2) * 8), 3, 3); }
+      if (A.stat && now - A.stat.at < 900 && A.stat.d) { const u = (now - A.stat.at) / 900, up = A.stat.d > 0; c.fillStyle = up ? `rgba(255,120,60,${(1 - u).toFixed(2)})` : `rgba(80,140,255,${(1 - u).toFixed(2)})`; c.font = `bold ${base * 5}px sans-serif`; c.textAlign = 'center'; for (let i = -1; i <= 1; i++) c.fillText(up ? '▲' : '▼', x0 + i * 16, y0 - 20 + (up ? -u * 30 : u * 30) - i * 4); }
+      // 기술 맞을 때 타입 색 번쩍
+      const o = B.anim[w === 'a' ? 'b' : 'a']; if (A.hit && now - A.hit < 250 && o.mt) { c.fillStyle = PB_TYPES[o.mt][2]; c.globalAlpha = 0.5 * (1 - (now - A.hit) / 250); c.beginPath(); c.arc(x0, y0 - base * 6, base * 12, 0, 7); c.fill(); c.globalAlpha = 1; }
+    }
+    this.raf = requestAnimationFrame(() => this.loop());
   },
 };
 

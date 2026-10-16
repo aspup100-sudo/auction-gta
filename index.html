@@ -9667,16 +9667,21 @@ const PetBattle = {
   // 트레이너 이름 (사용자 2026-10-16 '트레이너라고 하지 말고, 그냥 사람 이름으로 넣어'): 정해 준 6명 중에서. 동네마다 다른 사람이 나온다 (한 동네에선 안 겹친다)
   tname(T) { if (T.who) return T.who; T.pl = true; T.who = PB_TRAINER_NAMES[((T.z || 0) + T.n * 5) % PB_TRAINER_NAMES.length]; return T.who; },
   hon(T) { this.tname(T); return T.pl ? `${T.who}님` : T.who; },
-  // 오늘(실제 날짜) 이긴 트레이너 (동네를 나갔다 와도 상금은 하루 한 번)
-  today() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; },
-  beat() { const v = Store.get('pbBeat', null); return v && v.d === this.today() && Array.isArray(v.k) ? v.k : []; },
-  markBeat(key) { const k = this.beat().concat(key).slice(-60); Store.set('pbBeat', { d: this.today(), k });
+  // 이긴 트레이너는 게임 속 일주일(7일) 쉰다 (사용자 2026-10-16 '게임 속 일주일이 지나면 붙을 수 있게'). 채널은 채널 시계(1주 = 실제 20분), 혼자 하기는 State.day.
+  // Store 'pbBeat2' = { 'ch2' | 'solo': { 트레이너 key: 이긴 날 } }
+  gday() { return Live.on ? Math.floor(Live.now() / Live.dayMs()) : (State.day | 0); },
+  slot() { return Live.on ? 'ch' + Live.ch : 'solo'; },
+  beatMap() { const v = Store.get('pbBeat2', null), m = v && typeof v === 'object' && v[this.slot()]; return m && typeof m === 'object' ? m : {}; },
+  left(key) { const d = this.beatMap()[key]; return typeof d === 'number' ? Math.max(0, 7 - (this.gday() - d)) : 0; }, // 다시 붙을 수 있을 때까지 남은 날
+  beat() { const m = this.beatMap(); return Object.keys(m).filter(k => this.left(k) > 0); },
+  markBeat(key) { const v = Store.get('pbBeat2', null), all = v && typeof v === 'object' ? v : {}, m = this.beatMap(), g = this.gday(); m[key] = g; for (const k in m) if (g - m[k] >= 7) delete m[k]; all[this.slot()] = m; Store.set('pbBeat2', all);
   },
   // 매 프레임 (Pets.actors): 트레이너 펫 그리기 목록 + 가끔 외치기
   actors(c, t, out) {
     if (Game.scene !== 'zone' || !Game.decor) return; const now = performance.now(), P = Game.player;
     for (const w of Game.decor) { const T = w.trainer; if (!T) continue;
       out.push(Pets.actor(c, T.key, T.kind, w.x, w.y, t, '')); out.push({ y: w.y + 0.2, d: () => Net.label(c, this.tname(T), w.x, w.y - 22) }); // 플레이어처럼 머리 위 이름표
+      if (T.done && now > (T.chk || 0)) { T.chk = now + 3000; T.done = this.left(T.key) > 0; } // 일주일 지나면 다시 도전 받는다
       if (P && !T.done && now > T.next && !w.bubble && Math.hypot(P.x - w.x, P.y - w.y) < 140) { T.next = now + 7000 + Math.random() * 5000; w.bubble = { text: PB_TRAINER_SAY[Math.floor(Math.random() * PB_TRAINER_SAY.length)], t: 2.6 }; } }
     this.tuks = this.tuks.filter(x => now - x.t0 < 2000);
     for (const x of this.tuks) { const a = Pets.st.me, b = Pets.st['f:' + x.name]; if (!a || !b) continue; // 두 펫이 가운데로 달려가 먼지구름 속에서 투닥투닥
@@ -9705,7 +9710,7 @@ const PetBattle = {
     try {
       w.ai.t = 6; w.ai.ix = w.ai.iy = 0; w.moving = false; w.dir = Math.abs(p.x - w.x) > Math.abs(p.y - w.y) ? (p.x > w.x ? 2 : 1) : (p.y > w.y ? 0 : 3);
       const pets = this.myPets(), lv = Math.max(1, Math.min(50, (pets.length ? Math.max(...pets.map(x => x.lv)) : 5) + T.off)), kn = this.kindName(T.kind), ty = PB_TYPES[PB_DEX[T.kind].t];
-      if (T.done) { await Dialog.say([{ name, sprite: sp, text: '졌다… 오늘은 그만할래. 내 펫 쉬게 해 줘야 해. 다음에 또 붙자!' }]); return; }
+      if (T.done) { const L = this.left(T.key); if (L > 0) { await Dialog.say([{ name, sprite: sp, text: `졌다… 내 펫 좀 쉬게 해 줘야 해. ${L}일 뒤에 다시 붙자!` }]); return; } T.done = false; } // 일주일 지나면 다시
       const pick = await Dialog.say([{ name, sprite: sp, text: `내 ${kn} Lv.${lv}랑 한 판 붙을래? 이기면 상금 ${fmtWon(this.prize(lv))}!` }], [{ label: '⚔️ 배틀!', value: 'go' }, { label: '펫 구경하기', value: 'look' }, { label: '다음에요', value: null }]);
       if (pick === 'look') { await Dialog.say([{ name, sprite: sp, text: `${kn} · ${ty[1]} ${ty[0]} 타입 · Lv.${lv}. 기술은 ${PB_DEX[T.kind].m.map(m => m[0]).join(', ')}. 상성 잘 생각해서 와!` }]); return; }
       if (pick !== 'go') return;

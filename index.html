@@ -3521,7 +3521,7 @@ const Nav = {
     const na = -(car.a + Math.PI / 2) - Math.PI / 2; x.fillStyle = '#8fd0ff'; x.font = 'bold 9px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('N', cx + Math.cos(na) * (Math.min(W, H) / 2 - 8), cy + Math.sin(na) * (Math.min(W, H) / 2 - 8));
   },
   update(dt) {
-    if (!Game.driving || Game.scene !== 'zone' || NavPick.on) { if (this.on || this.path.length) this.off(); return; } // 목적지 고르는 동안은 안내를 미룬다
+    if (!Game.driving || Game.scene !== 'zone' || NavPick.on || CarSwap.stolen()) { if (this.on || this.path.length) this.off(); return; } // 뺏어 탄 차엔 내비가 없다 (사용자 2026-10-16) // 목적지 고르는 동안은 안내를 미룬다
     if (this.free) { this.path = []; this.key = ''; this.show('🚗', '목적지 없이 운전 중', '내비를 누르면 목적지 고르기'); return; }
     const z = Game.zone, c = Game.car; const g = this.goalOf();
     if (!g) { this.off(); return; }
@@ -4517,7 +4517,7 @@ const Net = {
     if (m.t === 'lbook') { Live.onBook(m); return; }
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
-      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.sk = m.sk; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
+      p.z = m.z; p.s = m.s; p.p = m.p; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.sk = m.sk; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
       const moved = gap > 0.02 && p.z === p.lastZ && p.s === p.lastS;
       if (moved && !far(p.tx, p.ty, m.x, m.y)) { p.vx = (m.x - p.tx) / gap; p.vy = (m.y - p.ty) / gap; } else { p.vx = p.vy = 0; }
       if (moved && !far(p.tcx, p.tcy, m.cx, m.cy)) { p.vcx = (m.cx - p.tcx) / gap; p.vcy = (m.cy - p.tcy) / gap; p.vca = angDiff(m.ca, p.tca) / gap; } else { p.vcx = p.vcy = p.vca = 0; }
@@ -4569,7 +4569,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos() });
+    this.send({ t: 'pos', pal: Profile.get(), z: Game.zone.id, s: Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos() });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -4662,7 +4662,7 @@ const Net = {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
     if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
-    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0 }, t);
+    drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0, punchT: p.punchT, punchHit: p.punchHit }, t);
     this.label(c, p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
     if (p.bubble) this.bubble(c, p.bubble.text, p.x, p.y - (Titles.of(p.name, p.tt) ? 39 : 30));
   },
@@ -5869,6 +5869,18 @@ function drawWalker(c, w, t, opts = {}) {
     c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 20); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 20); c.restore();
   }
   Sprites.drawSprite(c, w.sprite, w.dir, w.frame, Math.round(w.x - 8), Math.round(w.y - 15 + bob + breath), 1, w.sit);
+  if (w.punchT && performance.now() < w.punchT) drawFist(c, w); // 때리기 (v143): 팔을 쭉 뻗은 주먹
+}
+// 주먹 (사용자 2026-10-16 '주먹이 좀 안 보이는데'): 보는 쪽으로 팔이 쭉 나갔다 들어온다. 맞히면 '퍽!'
+function drawFist(c, w) {
+  const P = Sprites.PAL[w.sprite] || Sprites.PLAYER_DEFAULT, e = 1 - (w.punchT - performance.now()) / 300, ext = e < 0.25 ? e / 0.25 : e > 0.7 ? Math.max(0, 1 - (e - 0.7) / 0.3) : 1;
+  const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][w.dir] || [1, 0], L = Math.round(3 + ext * 8), sx = Math.round(w.x + vx * 3), sy = Math.round(w.y - 9 + vy * 2), fx = sx + vx * L, fy = sy + vy * L;
+  const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
+  if (vx) r(Math.min(sx, fx), sy - 1, Math.abs(fx - sx), 3, P.shirt); else r(sx - 1, Math.min(sy, fy), 3, Math.abs(fy - sy), P.shirt); // 팔 (소매)
+  r(fx - 3, fy - 3, 6, 6, '#2a1a10'); r(fx - 2, fy - 2, 4, 4, P.skin || '#f1c9a5'); r(fx - 2, fy - 2, 4, 1, 'rgba(255,255,255,.45)'); // 주먹 (테두리 + 살색)
+  if (vx) for (let i = 0; i < 3; i++) r(fx - vx * (6 + i * 3) - 1, fy - 3 + i * 3, 3, 1, 'rgba(255,255,255,.8)'); else for (let i = 0; i < 3; i++) r(fx - 3 + i * 3, fy - vy * (6 + i * 3) - 1, 1, 3, 'rgba(255,255,255,.8)'); // 휙 선
+  if (w.punchHit && ext > 0.6) { const X = fx + vx * 6, Y = fy + vy * 6 - 4; c.save(); c.fillStyle = '#ffe14a'; c.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, R = i % 2 ? 4 : 9; c.lineTo(X + Math.cos(a) * R, Y + Math.sin(a) * R); } c.closePath(); c.fill(); c.strokeStyle = '#c0392b'; c.lineWidth = 1; c.stroke();
+    c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = '#fff'; c.strokeText('퍽!', X, Y + 3); c.fillStyle = '#c0392b'; c.fillText('퍽!', X, Y + 3); c.restore(); }
 }
 // 큰절: 무릎 꿇고 엎드려 이마를 바닥에 (옆모습, 보던 쪽으로). 1.2초마다 한 번 꾸벅
 function drawBow(c, w, t) {
@@ -6360,7 +6372,7 @@ function placeClosed(kind) {
 function enterCar() {
   Game.driving = true; Sound.play('carDoor'); setTimeout(() => Sound.play('ignition'), 150);
   Game.car.rock = 1; Game.prompt = { target: null, t: 0 };
-  NavPick.open(); // 타자마자 목적지 고르기
+  if (!CarSwap.stolen()) NavPick.open(); // 타자마자 목적지 고르기 (뺏어 탄 차는 내비 없음)
 }
 function exitCar() {
   const c = Game.car, z = Game.zone; c.vx = c.vy = 0; c.speed = 0;
@@ -6878,6 +6890,7 @@ const CarSwap = {
   pend: null, dumped: [], tgs: new WeakMap(), DUMP_MS: 60000,
   reset() { this.own = this.alt = this.lent = this.pend = null; this.dumped = []; },
   myCar() { return this.own || Game.car; },
+  stolen() { return !!(this.alt && this.alt.kind === 'npc'); }, // 길가에서 뺏은 차: 내비 없음 (사용자 2026-10-16)
   // 걸어 다닐 때 F로 탈 수 있는 남의 차 (가장 가까운 것)
   near() {
     if (Game.scene !== 'zone' || Game.driving || Ride.with || !Game.zone) return null; const pl = Game.player; let best = null, bd = FEEL.carEnterDist + 4;
@@ -6894,7 +6907,7 @@ const CarSwap = {
       const side = car.dirn > 0 ? 1 : -1, w = makeWalker(['walker1', 'walker2', 'walker3'][Math.floor(Math.random() * 3)], q.x - Math.sin(q.a) * 14 * side, q.y + Math.cos(q.a) * 14 * side);
       w.ai = { t: 2.5, ix: Math.sign(w.x - Game.player.x) || 1, iy: Math.sign(w.y - Game.player.y) }; w.bubble = { text: ['야!! 내 차!!', '어어 내 차 어디 가!', '경찰 부를 거예요!!'][Math.floor(Math.random() * 3)], t: 3 }; Game.decor.push(w);
       Sound.play('horn'); this.board(q, { kind: 'npc', col: car.col, len: car.len, wid: car.wid, vk: car.kind });
-      Toast.show(`🚗 길가 ${car.kind === 'bus' ? '버스' : car.kind === 'taxi' ? '택시' : '차'}를 뺏어 탔어요! F로 내리면 그 자리에 두고 가요. 다른 구로는 못 가요.`, 3600);
+      Toast.show(`🚗 길가 ${car.kind === 'bus' ? '버스' : car.kind === 'taxi' ? '택시' : '차'}를 뺏어 탔어요! 남의 차라 내비가 없어요. F로 내리면 그 자리에 두고 가요. 다른 구로는 못 가요.`, 3600);
       if (Net.on) Net.news(`길가 ${car.kind === 'bus' ? '버스' : car.kind === 'taxi' ? '택시' : '차'}를 뺏어 탐`);
       return;
     }
@@ -6981,11 +6994,14 @@ const Punch = {
   pow(x, y) {
     shake(4, 0.18); Game.hitstop = 0.05; Sound.play('crash');
     if (!REDUCED_MOTION) for (let i = 0; i < 7; i++) Particles.push({ x, y: y - 10, vx: (Math.random() - 0.5) * 140, vy: -30 - Math.random() * 80, g: 240, life: 0.4, max: 0.4, col: 'rgba(255,220,90,', r: 1.6 });
-    const pl = Game.player, a = Math.atan2(y - pl.y, x - pl.x); pl.dir = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) < 0 ? 1 : 2) : (Math.sin(a) < 0 ? 3 : 0);
+    const pl = Game.player, a = Math.atan2(y - pl.y, x - pl.x); pl.dir = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) < 0 ? 1 : 2) : (Math.sin(a) < 0 ? 3 : 0); this.swing(true);
   },
+  // 팔 뻗기 (drawFist) · 친구 화면에도 보이게 pos에 pc(휘두른 횟수)·ph(맞힘)
+  seq: 0, swing(hit) { const pl = Game.player; pl.punchT = performance.now() + 300; pl.punchHit = hit; this.seq++; this.hit = hit; },
+  pos() { return this.seq ? { pc: this.seq, ph: this.hit ? 1 : undefined } : {}; },
   // 옆에 아무도 없을 때: 보는 쪽으로 허공에 주먹 (횟수는 안 센다, 사용자 2026-10-16 '그냥 평소에도 G 누를 수 있게')
   whiff() {
-    const pl = Game.player; if (Game.scene !== 'zone' || Game.driving || !pl) return; this.cd = 0.35; Sound.play('flip');
+    const pl = Game.player; if (Game.scene !== 'zone' || Game.driving || !pl) return; this.cd = 0.35; Sound.play('flip'); this.swing(false);
     const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][pl.dir] || [1, 0], hx = pl.x + vx * 7, hy = pl.y - 9 + vy * 4;
     if (!REDUCED_MOTION) for (let i = 0; i < 5; i++) Particles.push({ x: hx, y: hy + (i - 2) * 1.2, vx: vx * (110 + i * 25) + vy * (i - 2) * 20, vy: vy * (110 + i * 25) + vx * (i - 2) * 20, g: 0, life: 0.18, max: 0.18, col: 'rgba(255,255,255,', r: 1.1 });
   },

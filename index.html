@@ -5077,11 +5077,12 @@ const Live = {
     return out;
   },
   assetsOf(name) { if (name === Net.me) return this.assetSummary(); const p = Object.values(Net.players).find(q => q.name === name && !q.gone); if (p && p.assets) return p.assets; const v = this.seen[name]; return v && v.as ? v.as : null; },
-  assetCard(name) {
+  assetCard(name, cash) {
     const L = this.assetsOf(name); const f = v => fmtWon(v); const S = { bid: '입찰표 냄', pay: '잔금 전', evict: '명도 중', forced: '강제집행 중', own: '보유 중', rent: '임대 중', sale: '매도 중' };
-    if (!L) return '<div class="al"><span>자산 정보를 아직 못 받았어요</span></div>';
-    if (!L.length) return '<div class="al"><span>집 없음 · 현금만</span></div>';
-    return L.map(e => `<div class="al"><span>${esc(e.n)} <small>${S[e.s] || e.s}${e.c && this.COND[e.c] ? ' · ' + this.COND[e.c].label : ''}</small></span><b>${f(e.b)}${e.r ? ` <i class="up">월세 ${f(e.r)}</i>` : ''}${e.l ? ` <i class="down">대출 ${f(e.l)}</i>` : ''}</b></div>`).join('');
+    const cl = `<div class="al"><span>현금</span><b>${typeof cash === 'number' ? f(cash) : '아직 몰라요'}</b></div>`; // 이름 누르면 현금도 (사용자 2026-10-16)
+    if (!L) return cl + '<div class="al"><span>자산 정보를 아직 못 받았어요</span></div>';
+    if (!L.length) return cl + '<div class="al"><span>집 없음</span></div>';
+    return cl + L.map(e => `<div class="al"><span>${esc(e.n)} <small>${S[e.s] || e.s}${e.c && this.COND[e.c] ? ' · ' + this.COND[e.c].label : ''}</small></span><b>${f(e.b)}${e.r ? ` <i class="up">월세 ${f(e.r)}</i>` : ''}${e.l ? ` <i class="down">대출 ${f(e.l)}</i>` : ''}</b></div>`).join('');
   },
   seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { cash: State.cash, pnl: this.pnl(), earn: this.earn(), at: this.now(), as: this.assetSummary() }; return o; },
   announce() { if (!this.on) return; for (const key in this.mine) if (!this.mine[key].done) Net.send({ t: 'lbid', key, bid: this.mine[key].bid, caseNo: this.mine[key].caseId }); Net.send({ t: 'lbook', book: this.bookOut(), seen: this.seenOut() }); if (Net.transport === 'ws') Net.send({ t: 'getbook' }); }, // 중계 서버: 서버가 들고 있는 장부·순위표를 받는다
@@ -5450,8 +5451,8 @@ const Live = {
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
     const on = this.online();
     return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · 접속 ${1 + on.length}명</span><span class="lvSub">경매 차익 + 월세 누적 순위 · 카지노·게임·용돈은 안 쳐요 · 내 현금 ${fmtWon(State.cash)} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
-      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${Titles.badge(r.name, Titles.ttOf(r.name))}${r.me ? ' <small>나</small>' : r.away ? ' <small>접속 안 함</small>' : r.doing ? ` <small>${this.onDot(r.doing)}${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.earn)}">${f(r.earn)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name)}</td></tr>` : ''}`).join('')}</table>
-      <div class="lvFoot">사람을 누르면 가진 집·대출이 보여요</div>
+      <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${Titles.badge(r.name, Titles.ttOf(r.name))}${r.me ? ' <small>나</small>' : r.away ? ' <small>접속 안 함</small>' : r.doing ? ` <small>${this.onDot(r.doing)}${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.earn)}">${f(r.earn)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name, r.cash)}</td></tr>` : ''}`).join('')}</table>
+      <div class="lvFoot">사람을 누르면 현금과 가진 집·대출이 보여요</div>
       ${all.length > rows.length ? `<div class="lvFoot">외 ${all.length - rows.length}명</div>` : ''}
       <div class="lvRecent"><small>지금 접속 ${on.length + 1}명 (나 포함)${Net.host ? ' · 내가 방장' : ''}</small>${on.length ? on.map(o => `<div><span>${esc(o.name)}</span><b class="dim">${this.onDot(o.doing)}${esc(o.doing)}</b></div>`).join('') : '<div><span>아직 나뿐이에요</span></div>'}</div>`;
   },
@@ -5992,7 +5993,7 @@ async function talkWalker(w) {
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
   const hello = [`안녕하세요. ${dong} 처음 오셨어요?`, `네? 아, 길 물어보시려고요?`, `${gu}는 요즘 공사가 많아서 길이 좀 막혀요.`, `오늘 날씨 좋죠? 걷기 딱 좋아요.`, `경매 보러 오신 분이죠? 요즘 그런 분들 자주 보여요.`];
     const pick = await Dialog.say([{ name, sprite: w.sprite, text: hello[(i + State.day) % hello.length] }], [
-    { label: '동네 어때요?', value: 'town' }, { label: '요즘 경매 어때요?', value: 'auction' }, { label: '💸 용돈 1,000원 주기', value: 'tip' }, { label: '안녕히 가세요', value: 'bye' }, // '그냥 인사했어요' 문구 뺌 (사용자 2026-10-15); 대화를 끝낼 선택지는 남긴다
+    { label: '동네 어때요?', value: 'town' }, { label: '요즘 경매 어때요?', value: 'auction' }, { label: '💸 용돈 1,000원 주기', value: 'tip' }, // 끝내기 선택지 없이 3개만 (사용자 2026-10-16)
   ]);
   const town = [`${dong}은 역이 가까워서 출퇴근은 편해요. 대신 밤에 큰길은 좀 시끄럽고요.`, `오래된 집이 많아서 골목이 좁아요. 주차가 늘 전쟁이에요.`, `학교랑 마트가 가까워서 애 키우는 집이 많아요.`, `요즘 카페가 많이 생겼어요. 동네가 좀 바뀌는 중이죠.`];
   const auction = [`글쎄요, 법원 앞에 사람 많더라고요. 서류 잘 보고 들어가야 한대요.`, `저도 잘은 몰라요. 싸다고 덥석 받으면 큰일 난다는 얘기만 들었어요.`, `등기부랑 전입 같은 건 직접 떼 보셔야죠. 남 말만 믿으면 안 돼요.`, `주민센터랑 중개사한테 물어보세요. 저는 그냥 지나가는 사람이라.`];

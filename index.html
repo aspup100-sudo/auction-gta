@@ -868,9 +868,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .winOpen:not(.chatOpen) #chatLines div:not(:nth-last-child(-n+2)) { display:none; } /* 상점·게임 창 위에서는 피드가 창을 덜 가리게 (v149) */
 #chatLog #chatLines { background:none; padding:0; margin:0; border-radius:0; } /* 빈 피드 상자가 게임 창 위에 줄처럼 보이던 것 */
 #pbWin { left:0; top:0; right:0; bottom:0; z-index:72; background:rgba(8,10,16,.82); display:flex; align-items:center; justify-content:center; font-family:var(--ui); } #pbWin:not(.in) { transform:scale(1.06); }
-.lsChip { position:absolute; right:10px; top:46%; z-index:6; display:flex; align-items:center; gap:6px; padding:5px 9px; border-radius:999px; background:rgba(10,12,20,.62); color:#fff; font:700 12px var(--ui); pointer-events:auto; } /* 둘러보기 감도 (v195) */
-.lsChip input { width:86px; accent-color:#ffd24a; margin:0; } .lsChip b { min-width:30px; color:#ffd24a; font-weight:800; }
-@media (pointer:coarse) { .lsChip { top:34%; } .lsChip input { width:72px; } }
+.setLookR { display:inline-flex; align-items:center; gap:6px; } .setLookR b { min-width:34px; color:#c8902a; font-weight:800; text-align:right; } /* 메뉴 마우스 감도 (v196) */
 #evoWin { left:0; top:0; right:0; bottom:0; z-index:84; background:radial-gradient(ellipse at 50% 55%, #26305a 0%, #0b0e1c 60%, #04050a 100%); font-family:var(--ui); color:#fff; } /* 펫 진화 (v194) */
 #evoWin canvas { position:absolute; left:0; top:0; width:100%; height:100%; image-rendering:pixelated; }
 #evoWin .evoTx { position:absolute; left:16px; right:16px; top:calc(10% + env(safe-area-inset-top)); text-align:center; font-size:clamp(20px, 5vw, 34px); font-weight:800; text-shadow:0 2px 0 #000, 0 0 18px rgba(255,220,120,.6); }
@@ -1029,6 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
   <label>BGM <input type="range" id="setBgm" min="0" max="1" step="0.1"></label>
   <label>화면 흔들림 <input type="checkbox" id="setShake"></label>
+  <label title="땅굴·콜로세움에서 마우스로 둘러보는 빠르기">마우스 감도 <span class="setLookR"><input type="range" id="setLook" min="0.2" max="3" step="0.1"><b id="setLookV">×1.0</b></span></label>
   <label>왼쪽 위 호출기 메시지 <input type="checkbox" id="setPager"></label>
   <label>콕 알림 (게임이 꺼져 있어도 폰으로) <input type="checkbox" id="setPush"></label>
   <label>텍스트 속도 <select id="setText"><option value="slow">느림</option><option value="normal">보통</option><option value="instant">즉시</option></select></label>
@@ -1056,6 +1055,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
       <tr><th>플레이어 치면</th><td colspan="2">같이 하기에서 내 차로 다른 플레이어를 치면 합의금을 물어줌 · 3번째엔 병원비까지 물어주고 정신과 병동 입원 (채널 60초)</td></tr>
       <tr><th>차에 치이면</th><td colspan="2">합의금을 받는다 · 3번째엔 입원 (입원비 + 시간 1칸, 병원 앞에서 다시 시작 · 실시간 채널에선 실제 30초 입원)</td></tr>
       <tr><th>실시간 채널</th><td colspan="2">1주 = 실제 20분, 물건 7개가 어긋나게 돌아감 · 입찰은 매각기일 당일(마지막 날 약 3분) 그 법원에서 · 개찰은 자동 · 하루 조사 2번 · 돈은 채널별로 이어짐</td></tr>
+      <tr><th>마우스 감도</th><td colspan="2">메뉴 → 마우스 감도 (땅굴·콜로세움 둘러보기 빠르기) · 땅굴·콜로세움 안에서 [ 느리게 ] 빠르게</td></tr>
       <tr><th>버튼 위치</th><td colspan="2">메뉴 → 버튼 위치 조정 (조이스틱·버튼을 끌어서 옮김)</td></tr>
       <tr><th>수첩</th><td>Tab</td><td class="tc">수첩 버튼</td></tr>
       <tr><th>메뉴·닫기</th><td>Esc</td><td class="tc">메뉴 버튼</td></tr>
@@ -7646,7 +7646,7 @@ const Mine = {
     cv.onmouseup = () => { if (document.pointerLockElement === cv) this.hold = false; };
     cv.onpointermove = e => { const q = look.get(e.pointerId); if (!q || this.ph !== 'play' || this.bigOn) return; const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; q.mv += Math.abs(dx) + Math.abs(dy); if (q.mv > 6) { const ks = MINE_LOOK * LookSens.k(); this.ang += dx * ks; this.pi = Math.max(-1.45, Math.min(1.45, (this.pi || 0) - dy * ks)); /* v192: 위아래도 끝까지 (바로 위 천장·발밑까지) */ this.tr = null; this.lastAct = performance.now(); this.lookOff(); } };
     cv.onpointerup = cv.onpointercancel = e => { const q = look.get(e.pointerId); look.delete(e.pointerId); if (q && e.type === 'pointerup' && q.mv <= 6 && performance.now() - q.t < 350 && this.ph === 'play') this.swing(); };
-    el.querySelector('.mnCartB').onclick = () => this.cartToggle(); LookSens.chip(el); // v195 둘러보기 감도
+    el.querySelector('.mnCartB').onclick = () => this.cartToggle();
     for (const b of el.querySelectorAll('.mnLiftB')) b.onclick = e => { e.stopPropagation(); this.liftGo(+b.dataset.d); };
     $('mnUp').onclick = () => { if (this.ph === 'play' && this.debt && this.debt.more) { this.hold = false; this.finish(false); } };
     $('mnMap').onpointerdown = $('mnMapB').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); this.bigMap(true); };
@@ -12605,7 +12605,6 @@ PetRT.arena = {
     const cv = $('pbCv'); if (!cv) return; const me = this;
     for (const [id, key] of [['pbAct', 'a'], ['pbJmp', 's']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); me.hold[key] = true; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => { me.hold[key] = false; b.classList.remove('dn'); }; }
     const vb = $('pbView'); if (vb) vb.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); me.fp = !me.fp; Store.set('arenaFP', me.fp); Sound.play('click'); }; // v192: 폰에서 1인칭/3인칭
-    LookSens.chip(cv.parentElement); // v195 둘러보기 감도
     let tid = null, tx = 0, ty = 0;
     cv.onpointerdown = e => {
       if (e.pointerType === 'touch') { tid = e.pointerId; tx = e.clientX; ty = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
@@ -13656,23 +13655,18 @@ PetBattle.close = function () { const was = this.open_, K = this.kneel; this.clo
 
 /* ===================== 둘러보기 감도 (v195, 사용자 2026-10-17 '360도 하는 거, 감도 조절할 수 있게 마우스') =====================
  * 땅굴 · 콜로세움에서 마우스(그리고 손가락 끌기)로 둘러보는 빠르기. Store 'lookSens' ×0.2 ~ ×3 (기본 ×1).
- * 화면 오른쪽 '🖱 감도' 막대로 바꾸거나, 아무 때나 [ ] 키 (마우스 잠금 중에도). */
+ * 메뉴(설정) '마우스 감도' 막대로 바꾸거나 (v196, 사용자 '감도 설정은 메뉴에서'), 땅굴·콜로세움 안에서는 [ ] 키 (마우스 잠금 중에도). */
 const LookSens = {
   MIN: 0.2, MAX: 3,
   k() { const v = +Store.get('lookSens', 1); return Number.isFinite(v) ? Math.max(this.MIN, Math.min(this.MAX, v)) : 1; },
-  set(v) { v = Math.round(Math.max(this.MIN, Math.min(this.MAX, v)) * 10) / 10; Store.set('lookSens', v); for (const el of document.querySelectorAll('.lsChip')) this.sync(el); return v; },
-  sync(el) { const v = this.k(); el.querySelector('input').value = v; el.querySelector('b').textContent = '×' + v.toFixed(1); },
-  chip(parent) {
-    if (!parent) return; let el = parent.querySelector(':scope > .lsChip');
-    if (!el) { el = document.createElement('div'); el.className = 'lsChip'; el.innerHTML = `<span>🎯 감도</span><input type="range" min="${this.MIN}" max="${this.MAX}" step="0.1" aria-label="둘러보기 감도"><b></b>`; parent.appendChild(el);
-      for (const ev of ['pointerdown', 'mousedown', 'touchstart', 'click']) el.addEventListener(ev, e => e.stopPropagation());
-      const inp = el.querySelector('input'); inp.oninput = () => this.set(+inp.value); inp.onchange = () => { this.set(+inp.value); inp.blur(); Sound.play('click'); }; inp.onkeydown = e => e.stopPropagation(); }
-    this.sync(el);
-  },
+  set(v) { v = Math.round(Math.max(this.MIN, Math.min(this.MAX, v)) * 10) / 10; Store.set('lookSens', v); this.menu(); return v; },
+  menu() { const inp = $('setLook'); if (!inp) return; const v = this.k(); inp.value = v; $('setLookV').textContent = '×' + v.toFixed(1);
+    if (!inp.dataset.on) { inp.dataset.on = 1; inp.oninput = () => this.set(+inp.value); inp.onchange = () => { this.set(+inp.value); inp.blur(); }; inp.onkeydown = e => e.stopPropagation(); } },
   on() { return (typeof Mine !== 'undefined' && Mine.open_) || (typeof PetBattle !== 'undefined' && PetBattle.B && PetBattle.B.rtMode === 'arena'); },
 };
 window.addEventListener('keydown', e => { if ((e.key !== '[' && e.key !== ']') || !LookSens.on() || /INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) return;
   const v = LookSens.set(LookSens.k() + (e.key === ']' ? 0.1 : -0.1)); Toast.show(`🎯 둘러보기 감도 ×${v.toFixed(1)}  ([ 느리게 · ] 빠르게)`); e.preventDefault(); }, true);
+Menu.toggle0 = Menu.toggle; Menu.toggle = function (v) { const r = this.toggle0.apply(this, arguments); if (this.open) LookSens.menu(); return r; };
 
 /* ===================== 게임장 가위바위보 · 카지노 홀짝 (사용자 2026-10-15) =====================
  * 가위바위보: 건대 게임장 기계에서 3판 2선승. 같은 게임장에 있는 친구(같이 하기·채널)에게 신청하거나 사장 장우준이랑 한다.

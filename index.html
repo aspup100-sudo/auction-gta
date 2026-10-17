@@ -12600,12 +12600,17 @@ const Titles = {
  * 친구 대전: 각자 자기 캐릭터만 움직이고 {t:'fight', k:'st'}로 위치를 보낸다. 때린 쪽이 맞았는지 보고 'hit'을 보내면 맞은 쪽이 막기 여부를 따져 체력을 깎는다(맞은 쪽 체력이 기준).
  * 넘어지면 맞은 쪽이 'ko'를 보낸다. 시간 초과 판정은 신청한 쪽(왼쪽)이 내린다. 판돈은 가위바위보와 같다. */
 const FIGHT_MOVES = { punch: { dur: 0.3, a0: 0.07, a1: 0.16, range: 30, dmg: 7, kb: 50 }, kick: { dur: 0.46, a0: 0.15, a1: 0.27, range: 42, dmg: 11, kb: 90 } };
+// v181 무기 (사용자 2026-10-17 '시작하기 전에 어떤 무기 쓸건지 고를수있게해', 불은 다음에). 칼은 멀리 닿고 세지만 느리다
+const FIGHT_W = { fist: FIGHT_MOVES, sword: { punch: { dur: 0.36, a0: 0.1, a1: 0.19, range: 46, dmg: 8, kb: 60 }, kick: { dur: 0.58, a0: 0.22, a1: 0.32, range: 54, dmg: 13, kb: 110 } } };
+const FIGHT_WP = [{ id: 'fist', icon: '👊', name: '맨손', note: '빠르고 가까이', keys: ['주먹', '발차기'], btn: ['👊', '🦵'] }, { id: 'sword', icon: '🗡️', name: '칼', note: '멀리 닿고 세게, 대신 느려요', keys: ['베기', '힘껏 베기'], btn: ['🗡️', '⚔️'] }, { id: 'fire', icon: '🔥', name: '불', note: '준비 중', soon: true }];
+const fightWp = w => (FIGHT_W[w] ? w : 'fist');
 const Fight = {
-  open_: false, view: 'lobby', vs: 'house', stake: 0, g: null, pend: null, ask: null, timer: null, raf: 0, touch: {},
+  open_: false, view: 'lobby', vs: 'house', stake: 0, weapon: null, g: null, pend: null, ask: null, timer: null, raf: 0, touch: {},
   W: 480, H: 270, FLOOR: 228, ROUND_SEC: 60,
   open(vs) {
     if (this.open_) return; this.open_ = true; Game.formOpen = true; Sound.play('paper');
     if (vs) this.vs = vs; if (this.vs !== 'house' && !Rps.friends().some(f => f.id === this.vs)) this.vs = 'house';
+    if (!this.weapon) this.weapon = fightWp(Store.get('fightWp', 'fist'));
     if (this.stake > mgFree()) this.stake = 0; this.view = 'lobby'; $('fightWin').classList.add('in'); this.render();
     clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500);
   },
@@ -12631,17 +12636,19 @@ const Fight = {
     if (this.stake > PvpCap.room(f.name)) { Sound.play('deny'); return this.render(PvpCap.note(f.name)); }
     const gid = Net.myId + ':' + Date.now().toString(36);
     this.pend = { gid, to: f.id, name: f.name, stake: this.stake, at: performance.now() };
-    this.send('ask', f.id, { gid, stake: this.stake, place: Game.room.place.id }); Sound.play('blip'); this.view = 'wait'; this.render();
+    this.send('ask', f.id, { gid, stake: this.stake, place: Game.room.place.id, wp: this.weapon }); Sound.play('blip'); this.view = 'wait'; this.render();
   },
-  fighter(left, name, sprite) { return { x: left ? 140 : 340, y: this.FLOOR, vy: 0, face: left ? 1 : -1, hp: 100, ghost: 100, gHold: 0, lastHp: 100, act: 'idle', at: 0, hit: false, name, sprite, flash: 0, wins: 0 }; },
+  fighter(left, name, sprite, wp) { return { x: left ? 140 : 340, y: this.FLOOR, vy: 0, face: left ? 1 : -1, hp: 100, ghost: 100, gHold: 0, lastHp: 100, act: 'idle', at: 0, hit: false, name, sprite, wp: fightWp(wp), flash: 0, wins: 0 }; },
+  mv(f) { return (FIGHT_W[f.wp] || FIGHT_MOVES)[f.act]; },
   begin(o) {
     const mySpr = 'fight:me'; Sprites.setPal(mySpr, Profile.pal(Profile.get()));
     let opSpr = 'occ_young'; if (o.vs !== 'house') { const p = Net.players[o.vs]; if (p && p.pal) { opSpr = 'fight:op'; Sprites.setPal(opSpr, Profile.pal(p.pal)); } }
-    const me = this.fighter(o.left, '나', mySpr), op = this.fighter(!o.left, o.name, opSpr);
-    this.g = Object.assign({ me, op, round: 1, state: 'intro', t: 0, clock: this.ROUND_SEC, sendT: 0, ai: { t: 0, plan: 'walk' }, sparks: [], parts: [], nums: [], shakeT: 0, flashT: 0, lastFlash: 0, banner: '1 라운드', lastRemote: performance.now() }, o);
+    const opWp = o.vs === 'house' ? (Math.random() < 0.5 ? 'sword' : 'fist') : o.opWp; /* 사장은 그때그때 아무거나 */
+    const me = this.fighter(o.left, '나', mySpr, this.weapon), op = this.fighter(!o.left, o.name, opSpr, opWp);
+    this.g = Object.assign({ me, op, round: 1, state: 'intro', t: 0, clock: this.ROUND_SEC, sendT: 0, ai: { t: 0, plan: 'walk' }, sparks: [], parts: [], nums: [], shakeT: 0, flashT: 0, lastFlash: 0, stopT: 0, silT: 0, silAt: null, banner: '1 라운드', lastRemote: performance.now() }, o);
     this.view = 'play'; this.render(); Sound.play('ding');
     cancelAnimationFrame(this.raf); let last = performance.now();
-    const loop = now => { if (!this.open_ || !this.g || this.view !== 'play') return; const dt = Math.min(0.05, (now - last) / 1000); last = now; this.step(dt); this.draw(); this.raf = requestAnimationFrame(loop); };
+    const loop = now => { if (!this.open_ || !this.g || this.view !== 'play') return; const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; this.step(dt); this.draw(); this.raf = requestAnimationFrame(loop); };
     this.raf = requestAnimationFrame(loop);
   },
   resetRound() { const g = this.g; for (const [f, left] of [[g.me, g.left], [g.op, !g.left]]) Object.assign(f, { x: left ? 140 : 340, y: this.FLOOR, vy: 0, hp: 100, ghost: 100, gHold: 0, lastHp: 100, act: 'idle', at: 0, hit: false, flash: 0, landT: 0, air: false }); g.clock = this.ROUND_SEC; g.state = 'intro'; g.t = 0; g.banner = `${g.round} 라운드`; },
@@ -12655,11 +12662,12 @@ const Fight = {
     f.at += dt; f.flash = Math.max(0, f.flash - dt);
     if (f.act === 'ko') return;
     if (f.act === 'hurt') { if (f.at > 0.3) f.act = 'idle'; }
-    else if (f.act === 'punch' || f.act === 'kick') { const M = FIGHT_MOVES[f.act]; if (f.at >= M.dur) f.act = 'idle'; }
+    else if (f.act === 'punch' || f.act === 'kick') { const M = this.mv(f); if (f.at >= M.dur) f.act = 'idle'; }
     else {
       const ground = f.y >= this.FLOOR;
-      if (inp.punch) { f.act = 'punch'; f.at = 0; f.hit = false; Sound.play('blip', 1.4); }
-      else if (inp.kick) { f.act = 'kick'; f.at = 0; f.hit = false; Sound.play('blip', 0.9); }
+      const sw = f.wp === 'sword';
+      if (inp.punch) { f.act = 'punch'; f.at = 0; f.hit = false; Sound.play(sw ? 'whoosh' : 'blip', 1.4); }
+      else if (inp.kick) { f.act = 'kick'; f.at = 0; f.hit = false; if (sw) setTimeout(() => Sound.play('whoosh'), 150); else Sound.play('blip', 0.9); }
       else if (inp.block && ground) f.act = 'block';
       else { f.act = inp.left || inp.right ? 'walk' : 'idle'; if (inp.left) f.x -= 125 * dt; if (inp.right) f.x += 125 * dt; if (inp.up && ground) { f.vy = -340; Sound.play('step'); } }
     }
@@ -12669,23 +12677,31 @@ const Fight = {
   },
   // 공격 판정: 지금 공격의 유효 구간에 상대가 사거리 안이면 한 번만 맞는다
   strike(f, o) {
-    if (f.act !== 'punch' && f.act !== 'kick') return null; const M = FIGHT_MOVES[f.act];
+    if (f.act !== 'punch' && f.act !== 'kick') return null; const M = this.mv(f);
     if (f.hit || f.at < M.a0 || f.at > M.a1) return null; const dx = (o.x - f.x) * f.face;
-    if (dx < 0 || dx > M.range + 12 || Math.abs(o.y - f.y) > 40) return null; f.hit = true; return { dmg: M.dmg, kb: M.kb, dir: f.face, kind: f.act };
+    if (dx < 0 || dx > M.range + 12 || Math.abs(o.y - f.y) > 40) return null; f.hit = true; return { dmg: M.dmg, kb: M.kb, dir: f.face, kind: f.act, wp: f.wp };
   },
   // 맞는 쪽에서 계산 (막기 = 상대를 보고 막는 중이면 피해 0. 전엔 20%가 들어가서 '쉴드 안먹힌다'고 느꼈다 — 사용자 2026-10-15)
   takeHit(f, h) {
     if (f.act === 'ko') return false;
     const blocked = f.act === 'block' && f.face === -h.dir; const dmg = blocked ? 0 : h.dmg;
     f.hp = Math.max(0, f.hp - dmg); f.x += h.dir * (blocked ? h.kb * 0.3 : h.kb) * 0.4; f.x = Math.max(24, Math.min(this.W - 24, f.x));
-    if (!blocked) { f.act = 'hurt'; f.at = 0; f.flash = 0.15; Sound.play(h.kind === 'kick' ? 'slam' : 'stamp'); } else Sound.play('click');
-    this.g.sparks.push({ x: f.x - h.dir * 8, y: f.y - 40, t: 0, blocked }); this.burst(f.x - h.dir * 8, f.y - 40, h.dir, blocked, h.kind === 'kick');
+    if (!blocked) { f.act = 'hurt'; f.at = 0; Sound.play(h.kind === 'kick' ? 'slam' : 'stamp'); } else Sound.play('click');
+    this.hitFx(f, h, blocked);
     if (f.hp <= 0) { f.act = 'ko'; f.at = 0; return true; } return false;
   },
+  /* v181 애니 타격 (사용자 2026-10-17 영상 'HOW TO: MAKE ANIME HITS'): 칼에 맞으면 ① 닿는 순간 화면 멈춤 ② 힘껏 베기는 흰 바탕에 검은 실루엣 한 장 (번쩍임과 합쳐 1초에 세 번까지, 움직임 줄이기 설정이면 안 함)
+   * 맞은 쪽은 몸이 하얗게 번쩍 (전엔 흰 네모였다) */
+  hitFx(f, h, blocked) {
+    const g = this.g, x = f.x - h.dir * 8, y = f.y - 40, big = h.kind === 'kick', sw = h.wp === 'sword';
+    if (sw && !blocked) { g.stopT = big ? 0.13 : 0.06; const now = performance.now(); if (big && !REDUCED_MOTION && now - g.lastFlash > 340) { g.silT = 0.09; g.silAt = { x, y }; g.lastFlash = now; } }
+    g.sparks.push({ x, y, t: 0, blocked }); this.burst(x, y, h.dir, blocked, big);
+    if (!blocked) f.flash = sw ? 0.2 : 0.15;
+  },
   aiInput(dt) {
-    const g = this.g, a = g.op, m = g.me, ai = g.ai; ai.t -= dt; const d = Math.abs(m.x - a.x), inp = {};
-    const atk = (m.act === 'punch' || m.act === 'kick') && d < 70; if (atk && ai.plan !== 'block' && Math.random() < dt * 9) { ai.plan = 'block'; ai.t = 0.35; } /* 맞기 직전이면 반사적으로 막는다 */
-    if (ai.t <= 0) { ai.t = 0.16 + Math.random() * 0.28; const r = Math.random(); ai.plan = d > 46 ? (r < 0.8 ? 'walk' : r < 0.92 ? 'jump' : 'wait') : m.act === 'hurt' ? (r < 0.6 ? 'punch' : 'kick') : r < 0.4 ? 'punch' : r < 0.68 ? 'kick' : r < 0.85 ? 'block' : 'back'; }
+    const g = this.g, a = g.op, m = g.me, ai = g.ai; ai.t -= dt; const d = Math.abs(m.x - a.x), inp = {}, reach = (FIGHT_W[a.wp] || FIGHT_MOVES).punch.range + 16;
+    const atk = (m.act === 'punch' || m.act === 'kick') && d < (FIGHT_W[m.wp] || FIGHT_MOVES).kick.range + 28; if (atk && ai.plan !== 'block' && Math.random() < dt * 9) { ai.plan = 'block'; ai.t = 0.35; } /* 맞기 직전이면 반사적으로 막는다 */
+    if (ai.t <= 0) { ai.t = 0.16 + Math.random() * 0.28; const r = Math.random(); ai.plan = d > reach ? (r < 0.8 ? 'walk' : r < 0.92 ? 'jump' : 'wait') : m.act === 'hurt' ? (r < 0.6 ? 'punch' : 'kick') : r < 0.4 ? 'punch' : r < 0.68 ? 'kick' : r < 0.85 ? 'block' : 'back'; }
     const toward = m.x > a.x ? 'right' : 'left', away = toward === 'right' ? 'left' : 'right';
     if (ai.plan === 'walk') inp[toward] = true; if (ai.plan === 'back') inp[away] = true; if (ai.plan === 'block') inp.block = true;
     if (ai.plan === 'jump') { inp.up = true; inp[toward] = true; ai.plan = 'walk'; }
@@ -12693,7 +12709,8 @@ const Fight = {
     return inp;
   },
   step(dt) {
-    const g = this.g; g.t += dt; for (const s of g.sparks) s.t += dt; g.sparks = g.sparks.filter(s => s.t < 0.3); this.fxStep(dt);
+    const g = this.g; if (g.stopT > 0) { g.stopT -= dt; g.silT = Math.max(0, g.silT - dt); return; } /* 칼에 맞는 순간 화면이 멈춘다 */
+    g.t += dt; for (const s of g.sparks) s.t += dt; g.sparks = g.sparks.filter(s => s.t < 0.3); this.fxStep(dt);
     if (g.state === 'intro') { g.banner = g.t < 1 ? `${g.round} 라운드` : '싸워라!'; if (g.t > 1.6) { g.state = 'fight'; g.banner = ''; } this.act(g.me, g.op, {}, dt); this.act(g.op, g.me, {}, dt); return; }
     if (g.state === 'ko') { this.act(g.me, g.op, {}, dt); if (g.vs === 'house') this.act(g.op, g.me, {}, dt); if (g.t > 2.2) this.nextRound(); return; }
     if (g.state === 'done') return;
@@ -12705,7 +12722,7 @@ const Fight = {
       const h2 = this.strike(g.op, g.me); if (h2 && this.takeHit(g.me, h2)) return this.roundOver(false);
     } else {
       this.remoteStep(dt);
-      const h = this.strike(g.me, g.op); if (h) { this.send('hit', g.vs, Object.assign({ gid: g.gid, r: g.round }, h)); { const bl = g.op.act === 'block' && g.op.face === -h.dir; g.sparks.push({ x: g.op.x - h.dir * 8, y: g.op.y - 40, t: 0, blocked: bl }); this.burst(g.op.x - h.dir * 8, g.op.y - 40, h.dir, bl, h.kind === 'kick'); } }
+      const h = this.strike(g.me, g.op); if (h) { this.send('hit', g.vs, Object.assign({ gid: g.gid, r: g.round }, h)); this.hitFx(g.op, h, g.op.act === 'block' && g.op.face === -h.dir); }
       g.sendT -= dt; if (g.sendT <= 0) { g.sendT = 1 / 15; const f = g.me; this.send('st', g.vs, { gid: g.gid, r: g.round, x: Math.round(f.x), y: Math.round(f.y), act: f.act, at: Math.round(f.at * 100) / 100, face: f.face, hp: f.hp }); }
     }
     const sep = 22, dx = g.op.x - g.me.x; if (Math.abs(dx) < sep && Math.abs(g.op.y - g.me.y) < 30) { const push = (sep - Math.abs(dx)) * (dx >= 0 ? 1 : -1); g.me.x -= push * (g.vs === 'house' ? 0.5 : 1); if (g.vs === 'house') g.op.x += push * 0.5; }
@@ -12730,9 +12747,9 @@ const Fight = {
   },
   onNet(m, p) {
     if (m.to !== Net.myId) return; const name = (p && p.name) || m.name || '친구';
-    if (m.k === 'ask') { if (this.g && this.g.state !== 'done') return this.send('no', m.from, { gid: m.gid, why: 'busy' }); this.ask = { gid: m.gid, from: m.from, name, stake: Math.max(0, Number(m.stake) || 0), place: m.place || '' }; this.showAsk(); Sound.play('ding'); return; }
+    if (m.k === 'ask') { if (this.g && this.g.state !== 'done') return this.send('no', m.from, { gid: m.gid, why: 'busy' }); this.ask = { gid: m.gid, from: m.from, name, stake: Math.max(0, Number(m.stake) || 0), place: m.place || '', wp: fightWp(m.wp) }; this.showAsk(); Sound.play('ding'); return; }
     if (m.k === 'no') { if (this.ask && this.ask.gid === m.gid) { this.ask = null; this.showAsk(); return; } if (!this.pend || this.pend.gid !== m.gid) return; this.pend = null; this.view = 'lobby'; Sound.play('deny'); return this.render(m.why === 'busy' ? `${name}은(는) 지금 다른 판 중이에요.` : m.why === 'cash' ? `${name}은(는) 판돈이 모자라요.` : m.why === 'cap' ? `오늘 ${name}님과는 하루 한도를 넘어서 그 판돈은 안 돼요.` : m.why === 'far' ? `${name}은(는) 지금 올 수 없대요.` : `${name}이(가) 안 한대요.`); }
-    if (m.k === 'ok') { if (!this.pend || this.pend.gid !== m.gid) return; const P = this.pend; this.pend = null; if (!this.open_) return this.send('quit', m.from, { gid: m.gid }); return this.begin({ gid: P.gid, vs: P.to, name: P.name, stake: P.stake, left: true }); }
+    if (m.k === 'ok') { if (!this.pend || this.pend.gid !== m.gid) return; const P = this.pend; this.pend = null; if (!this.open_) return this.send('quit', m.from, { gid: m.gid }); return this.begin({ gid: P.gid, vs: P.to, name: P.name, stake: P.stake, left: true, opWp: fightWp(m.wp) }); }
     const g = this.g; if (!g || g.gid !== m.gid) return; g.lastRemote = performance.now();
     if (m.k === 'st') { if (m.r !== g.round) return; g.op.net = m; if (typeof m.hp === 'number' && g.state === 'fight') g.op.hp = m.hp; if (g.op.net && g.op.x === undefined) g.op.x = m.x; return; }
     if (m.k === 'hit' && g.state === 'fight' && m.r === g.round) { const ko = this.takeHit(g.me, m); this.send('st', g.vs, { gid: g.gid, r: g.round, x: Math.round(g.me.x), y: Math.round(g.me.y), act: g.me.act, at: 0, face: g.me.face, hp: g.me.hp }); if (ko) { this.send('ko', g.vs, { gid: g.gid, r: g.round }); this.roundOver(false); } return; }
@@ -12743,7 +12760,7 @@ const Fight = {
   showAsk() {
     const el = $('fightAsk'), a = this.ask; if (!a) { el.classList.remove('in'); return; } const short = a.stake > mgFree(), over = a.stake > PvpCap.room(a.name);
     const away = a.place && !(Game.scene === 'room' && Game.room && Game.room.place.id === a.place);
-    el.innerHTML = `<b>🥊 ${esc(a.name)}이(가) 격투 게임 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'}</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 번 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="fgYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="fgNo">안 하기</button></div>`;
+    el.innerHTML = `<b>🥊 ${esc(a.name)}이(가) 격투 게임 하재요</b><span>3판 2선승 · 판돈 ${a.stake ? fmtWon(a.stake) : '없음 (재미로)'} · 상대 무기 ${FIGHT_WP.find(w => w.id === a.wp).icon} ${FIGHT_WP.find(w => w.id === a.wp).name}</span><span>내 무기 ${(w => `${w.icon} ${w.name}`)(FIGHT_WP.find(w => w.id === fightWp(this.weapon || Store.get('fightWp', 'fist'))))} (게임장 격투 게임에서 바꿔요)</span>${away ? '<span>🎟 하기를 누르면 게임장으로 바로 가요</span>' : ''}${short ? '<span class="bad">판돈이 번 돈보다 많아요</span>' : over ? `<span class="bad">${esc(PvpCap.note(a.name))}</span>` : ''}<div><button class="btn gold" id="fgYes" ${short || over ? 'disabled' : ''}>하기</button><button class="btn" id="fgNo">안 하기</button></div>`;
     el.classList.add('in'); $('fgYes').onclick = () => this.accept(); $('fgNo').onclick = () => { this.send('no', a.from, { gid: a.gid, why: short ? 'cash' : over ? 'cap' : 'no' }); this.ask = null; this.showAsk(); };
     clearTimeout(this.askT); this.askT = setTimeout(() => { if (this.ask === a) { this.ask = null; this.showAsk(); } }, 20000);
   },
@@ -12752,15 +12769,17 @@ const Fight = {
     if (Casino.open_ && Casino.locked()) return this.send('no', a.from, { gid: a.gid, why: 'busy' }); if (Casino.open_) Casino.close(); if (!(await mgGoTo(a.place))) return this.send('no', a.from, { gid: a.gid, why: 'far' });
     if (Rps.open_) Rps.close(); if (Casino.open_) Casino.close();
     if (!this.open_) { this.open_ = true; Game.formOpen = true; $('fightWin').classList.add('in'); clearInterval(this.timer); this.timer = setInterval(() => this.watch(), 500); }
-    this.pend = null; this.send('ok', a.from, { gid: a.gid }); this.begin({ gid: a.gid, vs: a.from, name: a.name, stake: a.stake, left: false });
+    if (!this.weapon) this.weapon = fightWp(Store.get('fightWp', 'fist'));
+    this.pend = null; this.send('ok', a.from, { gid: a.gid, wp: this.weapon }); this.begin({ gid: a.gid, vs: a.from, name: a.name, stake: a.stake, left: false, opWp: a.wp });
   },
   render(msg) {
     if (!this.open_) return; const el = $('fightWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view);
     if (this.view === 'lobby' || this.view === 'wait') {
-      const fr = Rps.friends(), wait = this.view === 'wait';
+      const fr = Rps.friends(), wait = this.view === 'wait', wpI = FIGHT_WP.find(w => w.id === this.weapon) || FIGHT_WP[0];
       const fsel = this.vs !== 'house' ? fr.find(f => f.id === this.vs) : null, fRoom = fsel ? PvpCap.room(fsel.name) : Infinity; if (!wait && this.stake > fRoom) this.stake = Math.max(...RPS_STAKES.filter(s => s <= fRoom)); const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` })));
       el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 번 돈 ${fmtWon(mgFree())}</small></div>
-        <p class="mgNote">내 캐릭터로 직접 싸워요. <b>A·D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기 · <b>J</b> 주먹 · <b>K</b> 발차기. 터치는 화면 버튼.</p>
+        <p class="mgNote">내 캐릭터로 직접 싸워요. <b>A·D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기 · <b>J</b> ${wpI.keys[0]} · <b>K</b> ${wpI.keys[1]}. 터치는 화면 버튼.</p>
+        <div class="mgSec">무기 <small>${esc(wpI.note)}</small></div><div class="mgRow">${FIGHT_WP.map(w => `<button class="btn${this.weapon === w.id ? ' sel' : ''}" data-wp="${w.id}" ${wait || w.soon ? 'disabled' : ''}>${w.icon} ${w.name}${w.soon ? ' <small>준비 중</small>' : ''}</button>`).join('')}</div>
         <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>
         ${Net.on && !fr.length ? '<p class="mgNote">접속한 친구가 있으면 여기에 떠요. 밖에 있어도 초대장이 가요.</p>' : ''}
         <div class="mgSec">판돈 <small>${this.vs === 'house' ? '사장이랑은 재미로만 해요. 판돈은 친구랑 할 때만 걸 수 있어요' : fsel ? PvpCap.note(fsel.name) : '진 사람이 이긴 사람에게 줘요'}</small></div><div class="mgRow">${RPS_STAKES.map(s => `<button class="btn${this.stake === s ? ' sel' : ''}" data-st="${s}" ${wait || s > mgFree() || s > fRoom || (s && this.vs === 'house') ? 'disabled' : ''}>${s ? fmtWon(s) : '재미로'}</button>`).join('')}</div>
@@ -12768,6 +12787,7 @@ const Fight = {
         `<div class="pcBtns">${wait ? '<button class="btn" id="fgCancel">신청 취소</button>' : '<button class="btn gold" id="fgGo">START · 시작</button>'}<button class="btn" id="fgX">← 일어나기</button></div>`);
       el.querySelectorAll('[data-vs]').forEach(b => (b.onclick = () => { this.vs = b.dataset.vs; if (this.vs === 'house') this.stake = 0; Sound.play('click'); this.render(); }));
       el.querySelectorAll('[data-st]').forEach(b => (b.onclick = () => { this.stake = Number(b.dataset.st); Sound.play('click'); this.render(); }));
+      el.querySelectorAll('[data-wp]').forEach(b => (b.onclick = () => { this.weapon = fightWp(b.dataset.wp); Store.set('fightWp', this.weapon); Sound.play(this.weapon === 'sword' ? 'whoosh' : 'click'); this.render(); }));
       if ($('fgGo')) $('fgGo').onclick = () => this.start();
       if ($('fgCancel')) $('fgCancel').onclick = () => { this.send('no', this.pend.to, { gid: this.pend.gid, why: 'cancel' }); this.pend = null; this.view = 'lobby'; this.render(); };
       $('fgX').onclick = () => this.close(); return;
@@ -12778,7 +12798,8 @@ const Fight = {
       $('fgAgain').onclick = () => { const vs = g.vs, st = g.stake <= mgFree() ? g.stake : 0; this.g = null; this.vs = vs; this.stake = st; this.start(); };
       $('fgX').onclick = () => this.close(); return;
     }
-    el.innerHTML = arcadeShell('🥊 건대 파이터', `<canvas id="fgCv" width="${this.W}" height="${this.H}"></canvas>`, `<div class="fgKeys"><i class="stick"></i><span><b>A D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기</span><span><b>J</b> 주먹 · <b>K</b> 발차기</span></div><div class="fgPad"><div><button data-t="left">◀</button><button data-t="up">▲</button><button data-t="right">▶</button><button data-t="block">🛡</button></div><div><button data-t="punchP" class="atk">👊</button><button data-t="kickP" class="atk">🦵</button></div></div><button class="fgQuit" id="fgQuit">그만하기</button>`, 'play');
+    const wq = FIGHT_WP.find(w => w.id === (this.g && this.g.me.wp)) || FIGHT_WP[0];
+    el.innerHTML = arcadeShell('🥊 건대 파이터', `<canvas id="fgCv" width="${this.W}" height="${this.H}"></canvas>`, `<div class="fgKeys"><i class="stick"></i><span><b>A D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기</span><span><b>J</b> ${wq.keys[0]} · <b>K</b> ${wq.keys[1]}</span></div><div class="fgPad"><div><button data-t="left">◀</button><button data-t="up">▲</button><button data-t="right">▶</button><button data-t="block">🛡</button></div><div><button data-t="punchP" class="atk">${wq.btn[0]}</button><button data-t="kickP" class="atk">${wq.btn[1]}</button></div></div><button class="fgQuit" id="fgQuit">그만하기</button>`, 'play');
     el.querySelectorAll('[data-t]').forEach(b => { const k = b.dataset.t; const on = e => { e.preventDefault(); this.touch[k] = true; }, off = e => { e.preventDefault(); if (!k.endsWith('P')) this.touch[k] = false; }; b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); });
     $('fgQuit').onclick = () => this.close();
   },
@@ -12796,7 +12817,7 @@ const Fight = {
     const g = this.g;
     for (const p of g.parts) { p.life += dt; p.vy += 420 * dt; p.vx *= 1 - 2.5 * dt; p.x += p.vx * dt; p.y += p.vy * dt; } g.parts = g.parts.filter(p => p.life < p.max);
     for (const n of g.nums) n.t += dt; g.nums = g.nums.filter(n => n.t < 0.9);
-    g.shakeT = Math.max(0, g.shakeT - dt); g.flashT = Math.max(0, g.flashT - dt);
+    g.shakeT = Math.max(0, g.shakeT - dt); g.flashT = Math.max(0, g.flashT - dt); g.silT = Math.max(0, g.silT - dt);
     for (const f of [g.me, g.op]) {
       if (f.hp < f.lastHp) { const d = f.lastHp - f.hp; f.gHold = 0.45; g.nums.push({ x: f.x + (Math.random() - 0.5) * 14, y: f.y - 66, v: d, t: 0, big: d >= 10 }); }
       if (f.hp > f.lastHp) f.ghost = f.hp; f.lastHp = f.hp;
@@ -12830,6 +12851,11 @@ const Fight = {
   },
   draw() {
     const cv = $('fgCv'); if (!cv) return; const c = cv.getContext('2d'), g = this.g, W = this.W, H = this.H, t = g.t; c.imageSmoothingEnabled = false;
+    if (g.silT > 0) { /* 실루엣 한 장: 흰 바탕 · 맞은 자리에서 뻗는 검은 집중선 · 검은 사람과 칼자국 */
+      c.fillStyle = '#fff'; c.fillRect(0, 0, W, H); const o = g.silAt || { x: W / 2, y: H / 2 }; c.fillStyle = '#000'; /* 첫 프레임 rAF 시각이 시작 시각보다 앞서면 dt가 음수가 돼 silT가 살짝 양수가 됐다 → dt는 0 이상으로 */
+      for (let i = 0; i < 30; i++) { const a = i / 30 * Math.PI * 2 + (i % 3) * 0.06, r0 = 44 + (i * 37) % 34, w = 0.03 + (i % 4) * 0.008; c.beginPath(); c.moveTo(o.x + Math.cos(a) * r0, o.y + Math.sin(a) * r0); c.lineTo(o.x + Math.cos(a - w) * 600, o.y + Math.sin(a - w) * 600); c.lineTo(o.x + Math.cos(a + w) * 600, o.y + Math.sin(a + w) * 600); c.fill(); }
+      c.fillRect(0, this.FLOOR, W, 3); for (const f of [g.me, g.op]) this.drawFighter(c, f, t, '#000');
+    } else {
     const sky = c.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#1a1036'); sky.addColorStop(1, '#3a1d4a'); c.fillStyle = sky; c.fillRect(0, 0, W, H);
     for (let i = 0; i < 12; i++) { c.fillStyle = `hsla(${(i * 47 + t * 30) % 360},80%,60%,.25)`; c.fillRect(i * 42, 70 + (i % 3) * 14, 26, 60); } // 뒤쪽 게임기 불빛
     c.fillStyle = '#2b2446'; c.fillRect(0, this.FLOOR, W, H - this.FLOOR); c.fillStyle = '#4a3a70'; c.fillRect(0, this.FLOOR, W, 3);
@@ -12841,27 +12867,60 @@ const Fight = {
     for (const p of g.parts) { const k = p.life / p.max, col = p.blue ? (k < 0.3 ? [220, 240, 255] : [90, 160, 255]) : k < 0.15 ? [255, 255, 230] : k < 0.4 ? [255, 210, 80] : k < 0.7 ? [255, 120, 30] : [200, 40, 20]; c.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${(1 - k * 0.7).toFixed(2)})`; const z = Math.max(1, Math.round(p.sz * (1 - k * 0.6))); c.fillRect(Math.round(p.x), Math.round(p.y), z, z); }
     c.restore(); c.restore();
     for (const n of g.nums) { const k = n.t / 0.9, sz = n.big ? 22 : 14, y = n.y - n.t * 34 - (n.big ? Math.sin(Math.min(1, n.t * 6) * Math.PI) * 6 : 0); c.save(); c.globalAlpha = Math.min(1, (1 - k) * 2); c.font = `900 ${sz}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.lineWidth = n.big ? 5 : 4; c.strokeStyle = '#1a0a10'; c.strokeText('-' + n.v, n.x, y); c.fillStyle = n.big ? '#ffb02e' : '#ffffff'; c.fillText('-' + n.v, n.x, y); c.restore(); }
+    }
     const bar = (f, left) => { const x = left ? 16 : W - 16 - 190; c.fillStyle = '#000'; c.fillRect(x - 2, 14, 194, 16); c.fillStyle = '#5a1a1a'; c.fillRect(x, 16, 190, 12); const gw = 190 * Math.max(f.hp, f.ghost || 0) / 100; c.fillStyle = '#ff8a1e'; c.fillRect(left ? x : x + 190 - gw, 16, gw, 12); /* 방금 잃은 만큼 (주황, 잠깐 남았다 따라 내려온다) */ c.fillStyle = f.hp > 30 ? '#ffd84a' : '#ff5a4a'; const w = 190 * f.hp / 100; c.fillRect(left ? x : x + 190 - w, 16, w, 12); c.fillStyle = '#fff'; c.font = 'bold 11px "IBM Plex Sans KR", sans-serif'; c.textAlign = left ? 'left' : 'right'; c.fillText(f.name, left ? x : x + 190, 44); for (let i = 0; i < 2; i++) { c.fillStyle = i < f.wins ? '#ffd84a' : 'rgba(255,255,255,.2)'; c.beginPath(); c.arc(left ? x + 190 - 6 - i * 12 : x + 6 + i * 12, 44 - 4, 4, 0, 7); c.fill(); } };
     const L = g.left ? g.me : g.op, R = g.left ? g.op : g.me; bar(L, true); bar(R, false);
     c.fillStyle = '#fff'; c.font = 'bold 18px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(String(Math.ceil(g.clock)), W / 2, 30);
     if (g.flashT > 0) { c.fillStyle = `rgba(255,255,255,${(g.flashT / 0.09 * 0.35).toFixed(2)})`; c.fillRect(0, 0, W, H); } /* 큰 한 방만, 1초에 세 번까지 */
     if (g.banner) { c.font = 'bold 34px "IBM Plex Sans KR", sans-serif'; c.lineWidth = 5; c.strokeStyle = '#000'; c.strokeText(g.banner, W / 2, 120); c.fillStyle = g.banner === 'K.O.!' ? '#ff5a4a' : '#ffd84a'; c.fillText(g.banner, W / 2, 120); }
   },
-  drawFighter(c, f, t) {
+  // 도트 한 장을 한 가지 색으로 (맞은 순간 흰색 · 실루엣 검은색). 16×16 그대로 칠해서 정수 배율로 붙인다
+  tinted(spr, frame, dir, col) {
+    const T = this._tc || (this._tc = Object.assign(document.createElement('canvas'), { width: 16, height: 16 })), x = T.getContext('2d');
+    x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, 16, 16); x.drawImage(Sprites.sheet(spr), frame * 16, dir * 16, 16, 16, 0, 0, 16, 16);
+    x.globalCompositeOperation = 'source-in'; x.fillStyle = col; x.fillRect(0, 0, 16, 16); x.globalCompositeOperation = 'source-over'; return T;
+  },
+  drawFighter(c, f, t, sil) {
     const S = 4, dir = f.face > 0 ? 2 : 1, moving = f.act === 'walk'; const frame = moving ? 1 + Math.floor(t * 8) % 4 : 0;
     const now = performance.now(), air = f.y < this.FLOOR - 1; if (f.air && !air && f.act !== 'ko') { f.landT = now; Sound.play('step', 'wood'); } f.air = air;
     const vy = f.vy || 0, land = now - (f.landT || 0) < 110; let tx = 4, ty = 4; /* 한 칸(텍셀) 크기: 가로 tx · 세로 ty (둘 다 정수) */
     if (land) { tx = 5; ty = 3; } else if (air && Math.abs(vy) > 150) { tx = 3; ty = 5; }
-    const hgt = Math.max(0, this.FLOOR - f.y), sh = Math.max(0.45, 1 - hgt / 120); c.fillStyle = `rgba(0,0,0,${(0.35 * sh).toFixed(2)})`; c.beginPath(); c.ellipse(f.x, this.FLOOR + 2, 22 * sh * (land ? 1.2 : 1), 6 * sh, 0, 0, 7); c.fill();
+    const hgt = Math.max(0, this.FLOOR - f.y), sh = Math.max(0.45, 1 - hgt / 120); if (!sil) c.fillStyle = `rgba(0,0,0,${(0.35 * sh).toFixed(2)})`; c.beginPath(); c.ellipse(f.x, this.FLOOR + 2, 22 * sh * (land ? 1.2 : 1), 6 * sh, 0, 0, 7); if (!sil) c.fill();
     c.save();
     if (f.act === 'ko') { c.translate(f.x, f.y); c.rotate(-f.face * Math.min(1, f.at * 3) * Math.PI / 2); c.translate(-f.x, -f.y); }
     const lean = f.act === 'punch' || f.act === 'kick' ? f.face * 6 : f.act === 'hurt' ? -f.face * 6 : 0;
-    if (tx === S && ty === S) Sprites.drawSprite(c, f.sprite, dir, frame, Math.round(f.x - 8 * S + lean), Math.round(f.y - 16 * S), S, false);
-    else c.drawImage(Sprites.sheet(f.sprite), frame * 16, dir * 16, 16, 16, Math.round(f.x - 8 * tx + lean), Math.round(f.y - 16 * ty), 16 * tx, 16 * ty);
-    if (f.flash > 0) { c.globalAlpha = 0.6; c.fillStyle = '#fff'; c.fillRect(f.x - 20, f.y - 60, 40, 60); c.globalAlpha = 1; }
+    const sx = Math.round(f.x - 8 * tx + lean), sy = Math.round(f.y - 16 * ty);
+    if (sil) c.drawImage(this.tinted(f.sprite, frame, dir, sil), sx, sy, 16 * tx, 16 * ty);
+    else if (tx === S && ty === S) Sprites.drawSprite(c, f.sprite, dir, frame, sx, sy, S, false);
+    else c.drawImage(Sprites.sheet(f.sprite), frame * 16, dir * 16, 16, 16, sx, sy, 16 * tx, 16 * ty);
+    if (f.flash > 0 && !sil) { c.globalAlpha = Math.min(1, f.flash / 0.15) * 0.9; c.drawImage(this.tinted(f.sprite, frame, dir, '#fff'), sx, sy, 16 * tx, 16 * ty); c.globalAlpha = 1; }
+    if (f.wp === 'sword') this.drawSword(c, f, lean, sil);
     c.restore();
-    if (f.act === 'punch' || f.act === 'kick') { const M = FIGHT_MOVES[f.act], on = f.at >= M.a0 && f.at <= M.a1, ext = on ? M.range : M.range * 0.4; c.fillStyle = f.act === 'punch' ? '#f2cda8' : '#2c3d63'; const y = f.act === 'punch' ? f.y - 40 : f.y - 18; c.fillRect(f.face > 0 ? f.x + 6 : f.x - 6 - ext, y, ext, f.act === 'punch' ? 7 : 9); if (f.act === 'punch') { c.fillStyle = '#e8b890'; c.fillRect(f.face > 0 ? f.x + 6 + ext - 8 : f.x - 6 - ext, y - 2, 8, 11); } }
-    if (f.act === 'block') { c.strokeStyle = 'rgba(140,210,255,.8)'; c.lineWidth = 3; c.beginPath(); c.arc(f.x + f.face * 10, f.y - 34, 26, f.face > 0 ? -1.1 : Math.PI - 1.1, f.face > 0 ? 1.1 : Math.PI + 1.1); c.stroke(); }
+    if (f.wp !== 'sword' && (f.act === 'punch' || f.act === 'kick')) { const M = this.mv(f), on = f.at >= M.a0 && f.at <= M.a1, ext = on ? M.range : M.range * 0.4; c.fillStyle = sil || (f.act === 'punch' ? '#f2cda8' : '#2c3d63'); const y = f.act === 'punch' ? f.y - 40 : f.y - 18; c.fillRect(f.face > 0 ? f.x + 6 : f.x - 6 - ext, y, ext, f.act === 'punch' ? 7 : 9); if (f.act === 'punch') { c.fillStyle = sil || '#e8b890'; c.fillRect(f.face > 0 ? f.x + 6 + ext - 8 : f.x - 6 - ext, y - 2, 8, 11); } }
+    if (f.act === 'block') { c.strokeStyle = sil || 'rgba(140,210,255,.8)'; c.lineWidth = 3; c.beginPath(); c.arc(f.x + f.face * 10, f.y - 34, 26, f.face > 0 ? -1.1 : Math.PI - 1.1, f.face > 0 ? 1.1 : Math.PI + 1.1); c.stroke(); }
+  },
+  // 칼 각도: 앞 = 0, 위 = −π/2, 뒤 = ±π (얼굴 방향으로 뒤집어서 그린다). 들어 올렸다가(뒤 위) → 앞 아래로 확 내려 벤다
+  swordAng(f) {
+    const idle = -1.0; if (f.act !== 'punch' && f.act !== 'kick') return { a: f.act === 'block' ? -1.5 : f.act === 'hurt' ? -0.3 : f.act === 'ko' ? 0.4 : idle };
+    const M = this.mv(f), big = f.act === 'kick', up = big ? -2.5 : -2.1, end = big ? 1.25 : 0.95;
+    if (f.at < M.a0) { const k = f.at / M.a0; return { a: idle + (up - idle) * (1 - (1 - k) * (1 - k)), up }; }
+    if (f.at <= M.a1) { const k = (f.at - M.a0) / (M.a1 - M.a0); return { a: up + (end - up) * (1 - Math.pow(1 - k, 3)), up, swing: true }; }
+    const k = Math.min(1, (f.at - M.a1) / (M.dur - M.a1)); return { a: end + (idle - end) * k * k, up, after: f.at - M.a1, end };
+  },
+  drawSword(c, f, lean, sil) {
+    const big = f.act === 'kick', L = big ? 36 : 32, hx = f.x + f.face * 9 + lean, hy = f.y - 30, A = this.swordAng(f), P = (a, r) => [hx + f.face * Math.cos(a) * r, hy + Math.sin(a) * r];
+    /* 베는 자국 (초승달): 칼끝이 지나간 길. 꼬리는 뾰족, 칼 쪽은 두껍게. 분홍 → 노랑 → 흰 심을 빛 더하기로 겹친다 */
+    if (A.swing || (A.after !== undefined && A.after < 0.12)) {
+      const fade = A.swing ? 1 : 1 - A.after / 0.12, a1 = A.swing ? A.a : A.end, a0 = Math.max(A.up, a1 - (big ? 2.9 : 2.4)), R = L + (big ? 10 : 6), T = big ? 22 : 15, N = 18;
+      const layer = (w, col) => { c.beginPath(); for (let i = 0; i <= N; i++) { const [x, y] = P(a0 + (a1 - a0) * i / N, R); c.lineTo(x, y); } for (let i = N; i >= 0; i--) { const s = i / N, [x, y] = P(a0 + (a1 - a0) * s, R - T * w * Math.pow(s, 0.7) * (1.2 - 0.4 * s)); c.lineTo(x, y); } c.closePath(); c.fillStyle = col; c.fill(); };
+      if (sil) layer(1, sil); else { c.save(); c.globalCompositeOperation = 'lighter'; layer(1, `rgba(255,70,170,${(0.55 * fade).toFixed(2)})`); layer(0.62, `rgba(255,214,70,${(0.85 * fade).toFixed(2)})`); layer(0.26, `rgba(255,255,255,${fade.toFixed(2)})`); c.restore(); }
+    }
+    /* 칼: 손잡이 · 칼날 (날 등에 흰 줄) · 코등이 · 주먹 */
+    const a = A.a, [bx, by] = P(a + Math.PI, 5), [gx, gy] = P(a, 6), [tx, ty] = P(a, L), px = f.face * Math.cos(a + Math.PI / 2), py = Math.sin(a + Math.PI / 2), ln = (x0, y0, x1, y1, w, col) => { c.lineWidth = w; c.strokeStyle = col; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); };
+    c.lineCap = 'butt'; ln(bx, by, gx, gy, 3, sil || '#5a3a22'); ln(gx, gy, tx, ty, 4, sil || '#c8d4e4');
+    if (!sil) ln(gx - px * 1.5, gy - py * 1.5, tx - px * 1.5, ty - py * 1.5, 1, '#ffffff');
+    ln(gx - px * 5, gy - py * 5, gx + px * 5, gy + py * 5, 3, sil || '#e8b84a');
+    c.fillStyle = sil || '#f2cda8'; c.fillRect(Math.round(hx - 3), Math.round(hy - 3), 6, 6);
   },
 };
 

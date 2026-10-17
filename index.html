@@ -2472,6 +2472,8 @@ const ZONE_SPECS = {
       { id: 'bank', kind: 'bank', name: '한빛은행 강남역지점', near: [177, 78] },
       { id: 'hospital', kind: 'hospital', name: '강남병원', near: [240, 150] },
       { id: 'registry', kind: 'registry', name: '강남등기소', near: [60, 90] }, // 동네마다 등기소 (사용자 2026-10-14 '여긴 등기소 없는데?')
+      { id: 'arcade', kind: 'arcade', name: '강남 게임장', near: [84, 150], late: true }, // 구마다 게임장·카지노 (사용자 2026-10-17)
+      { id: 'casino', kind: 'casino', name: '강남 카지노', near: [96, 152], late: true },
     ],
   },
   mapo: {
@@ -2489,6 +2491,8 @@ const ZONE_SPECS = {
       { id: 'bank', kind: 'bank', name: '한빛은행 합정지점', near: [60, 180] },
       { id: 'hospital', kind: 'hospital', name: '홍대병원', near: [195, 60] },
       { id: 'registry', kind: 'registry', name: '서부등기국', near: [240, 140] },
+      { id: 'arcade', kind: 'arcade', name: '홍대 게임장', near: [128, 170], late: true },
+      { id: 'casino', kind: 'casino', name: '홍대 카지노', near: [140, 172], late: true },
     ],
   },
   gwanak: {
@@ -2505,6 +2509,8 @@ const ZONE_SPECS = {
       { id: 'bank', kind: 'bank', name: '한빛은행 신림지점', near: [165, 66] },
       { id: 'hospital', kind: 'hospital', name: '신림병원', near: [75, 60] },
       { id: 'registry', kind: 'registry', name: '관악등기소', near: [225, 150] },
+      { id: 'arcade', kind: 'arcade', name: '신림 게임장', near: [128, 170], late: true },
+      { id: 'casino', kind: 'casino', name: '신림 카지노', near: [140, 172], late: true },
     ],
   },
 };
@@ -2544,6 +2550,8 @@ function genericZoneSpec(gu) {
       { id: 'bank', kind: 'bank', name: `한빛은행 ${d.short}지점`, near: [xs[0] - 28, ys[0] - 22] },
       { id: 'hospital', kind: 'hospital', name: `${d.short}병원`, near: [xs[1] + 26, ys[1] + 22] },
       { id: 'registry', kind: 'registry', name: `${d.short}등기소`, near: [xs[1] + 26, ys[0] - 22] },
+      { id: 'arcade', kind: 'arcade', name: `${d.short} 게임장`, near: [xs[0] - 30, ys[1] + 22], late: true }, // 구마다 게임장·카지노 (사용자 2026-10-17)
+      { id: 'casino', kind: 'casino', name: `${d.short} 카지노`, near: [xs[0] - 18, ys[1] + 24], late: true },
     ] };
 }
 function applyOsm(spec) {
@@ -2703,7 +2711,9 @@ function buildZone(spec, cases = []) {
     return best;
   }
   for (const b of buildings) if (b.fixedPlace) { const door = doorOf(b); usedB.add(b.id); b.place = b.fixedPlace.id; places.push({ ...b.fixedPlace, building: b.id, door }); }
+  const late = spec.places.filter(p => p.late); // 나중에 넣은 장소는 경매 물건 다음에 자리 잡는다: 기존 물건·집 건물이 안 바뀌게
   for (const p of spec.places) {
+    if (p.late) continue;
     const big = p.kind === 'court'; // 법원은 되도록 큰길 가까운 큰 건물
     const nearRoad = b => { for (let y = b.y - 5; y <= b.y + b.h + 5; y += 2) for (let x = b.x - 5; x <= b.x + b.w + 5; x += 2) if (at(x, y) === T.ROAD) return true; return false; };
     const c = big ? (claim(p.near, b => b.w * b.h >= 60 && nearRoad(b)) || claim(p.near, b => b.w >= 4 && b.h >= 4 && nearRoad(b)) || claim(p.near, b => b.w >= 4 && b.h >= 4)) : claim(p.near, b => b.w >= 4 && b.h >= 4);
@@ -2715,6 +2725,7 @@ function buildZone(spec, cases = []) {
     const c = claim(near, b => (cs.type === '아파트' ? b.w * b.h >= 30 : true));
     if (c) { c.b.place = 'case:' + cs.id; c.b.caseId = cs.id; if (cs.type === '아파트') c.b.floors = Math.max(c.b.floors, 12); places.push({ id: 'case:' + cs.id, kind: 'site', name: cs.name, caseId: cs.id, building: c.b.id, door: c.door }); }
   });
+  for (const p of late) { const c = claim(p.near, b => b.w >= 4 && b.h >= 4); if (c) { c.b.place = p.id; places.push({ ...p, building: c.b.id, door: c.door }); } }
   // 가로수: 큰길 보도 가장자리
   const trees = [];
   for (const r of spec.roads) for (let i = 0; i < r.pts.length - 1; i++) {
@@ -5614,6 +5625,7 @@ const Live = {
   payMs() { return FEEL.livePayMin * 60000; },
   pending() { let best = null; for (const k in this.mine) { const m = this.mine[k]; if (m.opened && m.won && !m.done && m.phase !== 'own' && (!best || m.payBy < best.payBy)) best = m; } return best; },
   owned() { return Object.values(this.mine).filter(m => m.opened && m.won && !m.done && m.phase === 'own'); },
+  liveHome() { return this.owned().find(m => m.asset && m.asset.live && !m.asset.rentOn) || null; }, // 낙찰받은 집을 '우리 집'으로 (사용자 2026-10-17 '우리집으로 만들 수 있게, 팔고 싶으면 팔고')
   ownedFor(c) { return this.owned().find(m => m.caseId === c.id) || null; },
   monthMs() { return FEEL.liveMonthMin * 60000; },
   leaseMs() { return FEEL.liveLeaseMonths * this.monthMs(); },
@@ -5742,10 +5754,11 @@ const Live = {
     HUD.page(`내 집이 됐다. 현장 들어가서 상태 보고, 부동산(${castName('agent')})에 임대·매도 내놔. 대출 이자는 매달 현금에서 빠지고, 보유 시간은 게임을 켜 둔 동안만 흐른다.`);
   },
   assetLine(m, full = false) { // full=false: 화면 왼쪽 HUD 줄 (월세 입금은 안 보여 준다, 사용자 2026-10-14 '월세입금은 여기선 보여주지 마') · full=true: 메뉴 목록
-    const a = m.asset, nm = m.name.split(' ')[0];
-    if (a.repair === 'doing') return `내 집 ${nm} · 수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))}`;
-    if (a.offer) return `내 집 ${nm} · 매수 희망 ${fmtWon(a.offer.price)} · 부동산으로`;
-    if (a.listed) return `내 집 ${nm} · 매수자 찾는 중 ${this.mmss(Math.max(0, a.listed + this.saleWaitMs(this.caseFor(this.key(m.k, m.n))) - this.now()))}`;
+    const a = m.asset, nm = m.name.split(' ')[0], tag = a.live && !a.rentOn ? '우리 집' : '내 집';
+    if (a.repair === 'doing') return `${tag} ${nm} · 수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))}`;
+    if (a.offer) return `${tag} ${nm} · 매수 희망 ${fmtWon(a.offer.price)} · 부동산으로`;
+    if (a.listed) return `${tag} ${nm} · 매수자 찾는 중 ${this.mmss(Math.max(0, a.listed + this.saleWaitMs(this.caseFor(this.key(m.k, m.n))) - this.now()))}`;
+    if (a.live && !a.rentOn) return full ? `우리 집 ${nm} · 내가 사는 중 · 팔려면 부동산` : `우리 집 ${nm}`;
     if (a.rentOn) return full ? `내 집 ${nm} · 월세 ${fmtWon(a.rent)} · 다음 입금 ${this.mmss(Math.max(0, (a.rentHeld || 0) + this.monthMs() - (a.held || 0)))}` : `내 집 ${nm} · 임대 중`;
     return `내 집 ${nm} · ${a.cond ? this.COND[a.cond].label : '상태 미확인'} · 부동산에 임대·매도`;
   },
@@ -5799,9 +5812,15 @@ const Live = {
     }
     const K = this.COND[a.cond], cost = this.repairCostOf(c, a.cond);
     const opts = [];
+    if (a.live) opts.push({ label: '🛋️ 잠깐 쉬다 가기', value: 'rest' });
     if (a.repair === 'none') opts.push({ label: `수리하기 <small>${fmtWon(cost)} · 실제 ${FEEL.liveRepairSec}초</small>`, value: 'fix', disabled: State.cash < cost });
+    if (!a.live && a.repair !== 'doing') opts.push({ label: '🏠 우리 집으로 살기 <small>임대 안 놓고 내가 살아요 · 쉬어 가고 펫도 둬요</small>', value: 'live' });
+    if (a.live) opts.push({ label: '우리 집 그만 살기 <small>짐 빼고 비워 두기 · 임대·매도는 부동산</small>', value: 'unlive' });
     opts.push({ label: '나가기', value: 'n' });
-    const pick = await Dialog.say([{ text: `내 집 · 상태 ${K.label}${a.repair === 'done' ? ' (수리 끝)' : a.repair === 'doing' ? ` (수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))})` : ''}${a.rentOn ? ` · 월세 ${fmtWon(a.rent)}` : ''}. ${a.repair === 'done' ? '수리해 두면 매도가 +4%, 월세 +10%.' : '수리하면 매도가 +4%, 월세 +10%가 붙고 상태 할인이 사라진다.'}` }], opts);
+    const pick = await Dialog.say([{ text: `${a.live ? `우리 집이다! ${fmtWon(m.bid)}에 낙찰받은 집. ` : ''}내 집 · 상태 ${K.label}${a.repair === 'done' ? ' (수리 끝)' : a.repair === 'doing' ? ` (수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))})` : ''}${a.rentOn ? ` · 월세 ${fmtWon(a.rent)}` : ''}. ${a.repair === 'done' ? '수리해 두면 매도가 +4%, 월세 +10%.' : '수리하면 매도가 +4%, 월세 +10%가 붙고 상태 할인이 사라진다.'}` }], opts);
+    if (pick === 'rest') { State.hits = 0; State.punched = 0; Sound.play('chime'); Toast.show('우리 집 소파에서 푹 쉬었다. 다친 데가 다 나았다.'); return; }
+    if (pick === 'live') { for (const o of this.owned()) if (o.asset) o.asset.live = false; a.live = true; this.save(); Sound.play('chime'); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 우리 집으로 이사`); await Dialog.say([{ text: `짐을 풀었다. 여기가 이제 우리 집이다. 들어오면 쉬어 갈 수 있고, 펫도 여기 둔다.` }, { text: `대출 이자는 그대로 매달 빠진다. 나중에 팔고 싶으면 부동산(${castName('agent')})에 매도를 내놓으면 된다. 임대를 놓으면 이사 나간다.` }]); return; }
+    if (pick === 'unlive') { a.live = false; this.save(); Sound.play('door'); Toast.show('짐을 뺐다. 빈집으로 둔다.'); return; }
     if (pick === 'fix') { State.cash -= cost; HUD.setCash(State.cash); Sound.play('coins'); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 수리 공사 시작`); a.repair = 'doing'; a.repairUntil = this.now() + FEEL.liveRepairSec * 1000; a.repairCost = cost; this.save(); await Dialog.say([{ text: `인테리어 업체를 불렀다. ${FEEL.liveRepairSec}초 뒤 공사가 끝난다.` }]); }
   },
   // 부동산: 임대·매도
@@ -5822,12 +5841,12 @@ const Live = {
     if (a.listed) { await Dialog.say([say('agent', `매수자 찾는 중이에요. ${this.mmss(Math.max(0, a.listed + this.saleWaitMs(c) - this.now()))} 뒤에 손님이 ${Q.miss ? `올 수도 있어요. ${c.type}은(는) ${Q.note}` : '올 거예요'}.${a.missNo ? ` (벌써 ${a.missNo}번 허탕)` : ''}`)], [{ label: `급매로 지금 팔기 <small>${fmtWon(quick)}</small>`, value: 'q' }, { label: '매도 취소 <small>매물 내리기</small>', value: 'c' }, { label: '기다리기', value: 'n' }]).then(async p => { if (p === 'q') return this.sold(m, c, quick, true); if (p === 'c') { a.listed = null; a.offer = null; this.save(); await Dialog.say([say('agent', '매물 내렸어요. 다시 팔고 싶으면 또 오세요.')]); } }); return 'done'; }
     const opts = [];
     if (a.rentOn) opts.push({ label: '임대 그만하기 <small>세입자 내보내기</small>', value: 'stop' });
-    if (!a.rentOn) opts.push({ label: `임대 내놓기 <small>월세 ${fmtWon(rent)} · ${FEEL.liveMonthMin}분마다 입금</small>`, value: 'rent' });
+    if (!a.rentOn) opts.push({ label: `임대 내놓기 <small>월세 ${fmtWon(rent)} · ${FEEL.liveMonthMin}분마다 입금${a.live ? ' · 우리 집에서 이사 나가요' : ''}</small>`, value: 'rent' });
     opts.push({ label: `매도 내놓기 <small>기준값의 ${Math.round(Q.lo * 100)}~${Math.round(Q.hi * 100)}% · 매수자 ${waitMin}분${Q.miss ? ` · 허탕 ${Math.round(Q.miss * 100)}%` : ''}</small>`, value: 'sell' });
     opts.push({ label: `급매 <small>${fmtWon(quick)} 바로 (${Math.round(Q.quick * 100)}%)</small>`, value: 'quick' });
     opts.push({ label: '시세 물어보기', value: 'inv' }, { label: '그만두기', value: 'n' });
-    const pick = await Dialog.say([say('agent', `${c.name}, 상태 ${K.label}${a.repair === 'done' ? '(수리 끝)' : ''}${a.rentOn ? `, 월세 ${fmtWon(a.rent)} 받는 중` : ''}. ${a.cond !== 'good' && a.repair !== 'done' ? `이 상태면 시세보다 ${Math.round((1 - K.mod) * 100)}% 깎여요. ` : ''}어떻게 할까요?`)], opts);
-    if (pick === 'rent') { a.rentOn = true; a.rent = rent; a.rentAt = this.now(); a.rentHeld = a.held || 0; a.leaseEnd = (a.held || 0) + this.leaseMs(); a.notice = false; a.renewUsed = false; a.leaveAt = undefined; a.tenant = this.tenantOf(m).name; this.save(); Net.news(`${m.name.split(' ')[0]} 집 임대 놓음 · 월세 ${fmtWon(rent)}`); await Dialog.say([say('agent', `세입자 바로 붙였어요. ${a.tenant} 씨예요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다.`), say('agent', `계약 기간은 ${FEEL.liveLeaseMonths}달. 수리하거나 직접 쓰려면 세입자가 나가야 하니까, 그땐 집에 가서 직접 이야기하세요. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
+    const pick = await Dialog.say([say('agent', `${c.name}, 상태 ${K.label}${a.repair === 'done' ? '(수리 끝)' : ''}${a.rentOn ? `, 월세 ${fmtWon(a.rent)} 받는 중` : a.live ? ', 지금 직접 살고 계시죠' : ''}. ${a.cond !== 'good' && a.repair !== 'done' ? `이 상태면 시세보다 ${Math.round((1 - K.mod) * 100)}% 깎여요. ` : ''}어떻게 할까요?`)], opts);
+    if (pick === 'rent') { a.live = false; a.rentOn = true; a.rent = rent; a.rentAt = this.now(); a.rentHeld = a.held || 0; a.leaseEnd = (a.held || 0) + this.leaseMs(); a.notice = false; a.renewUsed = false; a.leaveAt = undefined; a.tenant = this.tenantOf(m).name; this.save(); Net.news(`${m.name.split(' ')[0]} 집 임대 놓음 · 월세 ${fmtWon(rent)}`); await Dialog.say([say('agent', `세입자 바로 붙였어요. ${a.tenant} 씨예요. 월세 ${fmtWon(rent)}, 채널 한 달(${FEEL.liveMonthMin}분)마다 들어옵니다.`), say('agent', `계약 기간은 ${FEEL.liveLeaseMonths}달. 수리하거나 직접 쓰려면 세입자가 나가야 하니까, 그땐 집에 가서 직접 이야기하세요. 팔 때는 세입자가 나가 주기로 했어요.`)]); return 'done'; }
     if (pick === 'sell') { a.listed = this.now(); a.missNo = 0; this.save(); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 매물로 내놓음`); await Dialog.say([say('agent', `내놨어요. ${c.type}은(는) ${Q.note}. ${waitMin}분쯤 뒤에 손님 붙으면 삐삐 칠게요.`)]); return 'done'; }
     if (pick === 'quick') return this.sold(m, c, quick, true);
     if (pick === 'stop') { const left = Math.max(0, (a.leaseEnd || 0) - (a.held || 0)); await Dialog.say([say('agent', `세입자분 계약이 ${this.mmss(left)} 남았어요. 집주인이 마음대로 계약을 끝낼 순 없어요.`), say('agent', `집에 가서 ${a.tenant || '세입자'} 씨한테 직접 말씀하세요. 계약 끝나기 ${FEEL.liveNoticeMonths}달 전까지 만료 통지를 하든지, 이사비를 주고 일찍 나가 달라고 합의하든지요.`)]); return 'done'; }
@@ -5942,6 +5961,7 @@ const AssetBox = {
       const tag = a.rentOn ? '<span class="tag">임대 중</span>' : a.offer ? '<span class="tag">매수 희망</span>' : a.listed ? '<span class="tag gray">매수자 찾는 중</span>' : a.repair === 'doing' ? '<span class="tag gray">수리 중</span>' : '<span class="tag gray">비어 있음</span>';
       return `<div class="ah${a.rentOn ? ' rent' : ''}"><h3>${esc(m.name)} ${tag}</h3><div class="kv2">
         <span>낙찰가</span><b>${f(m.bid)}</b>
+        ${a.live && !a.rentOn ? '<span>우리 집</span><b class="up">🏠 내가 사는 중 · 팔려면 부동산에 매도</b>' : ''}
         <span>상태</span><b>${a.cond ? L.COND[a.cond].label : '미확인 (현장에 들어가 보세요)'}${a.repair === 'done' ? ' · 수리 끝' : a.repair === 'doing' ? ` · 수리 중 ${L.mmss(Math.max(0, a.repairUntil - L.now()))}` : ''}</b>
         ${a.rentOn ? `<span>월세</span><b class="up">${f(a.rent)} · 다음 입금 ${L.mmss(nxt)}</b><span>받은 월세</span><b>${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b><span>세입자</span><b>${esc(a.tenant || '세입자')} · ${a.leaveAt !== undefined ? `이사 나감 ${L.mmss(Math.max(0, a.leaveAt - (a.held || 0)))} 뒤` : `계약 남은 ${L.mmss(Math.max(0, (a.leaseEnd || 0) - (a.held || 0)))}${a.renewUsed ? ' · 갱신요구권 씀' : ''}`}</b>` : `<span>임대</span><b>안 놓음 · 부동산(${esc(castName('agent'))})에서 임대·매도</b>`}
         ${a.offer ? `<span>매수 희망</span><b class="up">${f(a.offer.price)} · 부동산으로</b>` : a.listed ? `<span>매도</span><b>매수자 찾는 중 ${L.mmss(Math.max(0, a.listed + L.saleWaitMs(L.caseFor(L.key(m.k, m.n))) - L.now()))}${a.missNo ? ` · 허탕 ${a.missNo}번` : ''}</b>` : ''}
@@ -8566,7 +8586,7 @@ async function staffTalk(kind) {
   if (kind === 'court') return courtClerk();
   if (kind === 'shop') { const pick = await Dialog.say([say('shop', `어서 오세요. 옷도 있고 차 색도 바꿔 드려요. 펫도 들어왔어요. 지금 ${fmtWon(State.cash)} 있으시네요.`)], [{ label: '옷 보기', value: 'clothes' }, { label: '차 스킨 보기', value: 'car' }, { label: '🐾 펫 보기', value: 'pet' }, { label: '구경만', value: 'n' }]); if (pick === 'clothes' || pick === 'car' || pick === 'pet') Shop.open(pick); return; }
   if (kind === 'arcade') { const pick = await Dialog.say([say('arcade', '어서 와. 가위바위보 기계랑 격투 게임 "건대 파이터" 들어왔어. 둘 다 3판 2선승이야.'), say('arcade', Net.on ? '같이 온 친구한테 신청해도 되고, 나랑 해도 돼.' : '상대가 없으면 내가 해 줄게.')], [{ label: '가위바위보 (사장님이랑)', value: 'y' }, { label: '격투 게임 (사장님이랑)', value: 'f' }, { label: '구경만', value: 'n' }]); if (pick === 'y') Rps.open('house'); if (pick === 'f') Fight.open('house'); return; }
-  if (kind === 'casino') { const pick = await Dialog.say([say('casino', '어서 오세요, 건대 카지노입니다. 홀짝, 슬롯머신, 블랙잭, 룰렛, 포커가 있어요.'), say('casino', '테이블마다 직접 가셔도 되고, 여기서 골라 주셔도 돼요.')], [{ label: '홀짝', value: 'hol' }, { label: '슬롯머신', value: 'slot' }, { label: '블랙잭', value: 'bj' }, { label: '룰렛', value: 'rl' }, { label: '포커', value: 'pk' }, { label: '구경만', value: 'n' }]); if (pick && pick !== 'n') Casino.open(pick); return; }
+  if (kind === 'casino') { const pick = await Dialog.say([say('casino', `어서 오세요, ${Game.room ? Game.room.place.name : '카지노'}입니다. 홀짝, 슬롯머신, 블랙잭, 룰렛, 포커가 있어요.`), say('casino', '테이블마다 직접 가셔도 되고, 여기서 골라 주셔도 돼요.')], [{ label: '홀짝', value: 'hol' }, { label: '슬롯머신', value: 'slot' }, { label: '블랙잭', value: 'bj' }, { label: '룰렛', value: 'rl' }, { label: '포커', value: 'pk' }, { label: '구경만', value: 'n' }]); if (pick && pick !== 'n') Casino.open(pick); return; }
   if (kind === 'hospital') { await Dialog.say([say('hospital', State.hospital ? `또 오셨네요. 이번 주 입원만 ${State.hospital}번째예요.` : '다친 데는 없으시죠?'), say('hospital', `차에 ${FEEL.hospitalHits}번 치이면 바로 입원이에요. 횡단보도 신호 지키세요.`)]); return; }
   if (kind === 'savings' && Live.on && Live.pending()) return Live.bank(true); // 채널: 낙찰 건 대출
   if (kind === 'savings' && Live.on && Live.owned().some(m => Debt.loans(m) > 0)) { const r = await Debt.repayMenu('savings'); if (r !== 'inv') return; } // 채널: 대출 갚기는 저축은행에서도
@@ -9832,7 +9852,7 @@ const Shop = {
     Sound.play('coins'); Toast.show(`${it.name} 샀어요 (${fmtWon(it.price)})`);
     this.wear(it);
   },
-  hasHome() { return typeof Live === 'undefined' || !Live.on || !!(typeof MyHome !== 'undefined' && MyHome.get()); },
+  hasHome() { return typeof Live === 'undefined' || !Live.on || !!(typeof MyHome !== 'undefined' && MyHome.get()) || !!Live.liveHome(); }, // 낙찰받아 사는 '우리 집'도 집 (v212)
   petOff(k) { const p = Profile.get(); if (p.pet === k) { Profile.set('pet', p.pet2 || null); Profile.set('petName', p.pet2 ? p.petName2 || '' : ''); } Profile.set('pet2', null); if (p.pet !== k || p.pet2) Profile.set('petName2', ''); Pets.mineT = -1; },
   wear(it) { if (it.hat) { Profile.set('hat', it.id); Sound.play('pop'); return this.render(); } if (it.pd) { if (PetDeco.wear(it)) Sound.play('chime'); return this.render(); } if (it.fx) { Profile.set('fx', it.id); Pets.mineT = -1; Sound.play('chime'); return this.render(); } if (it.pet) { const p = Profile.get(); if (!p.pet) Profile.set('pet', it.pet); else if (!p.pet2) Profile.set('pet2', it.pet); else { const old = SHOP_ITEMS.pet.find(x => x.pet === p.pet2); Profile.set('pet2', it.pet); Profile.set('petName2', ''); Toast.show(`${old ? old.name : '펫'}은 집에 두고 ${it.name}를 데려가요`); } Pets.mineT = -1; Sound.play('chime'); return this.render(); } /* 펫 두 마리까지: 빈 자리에, 꽉 찼으면 두 번째 자리를 바꾼다 */ Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
 };
@@ -9915,6 +9935,8 @@ const MyHome = {
     for (let i = z.places.length - 1; i >= 0; i--) if (z.places[i].id === 'home' || z.places[i].id === 'myhome') z.places.splice(i, 1);
     if (!Live.on) { if (z._home0) z.places.push(z._home0); return; }
     if (!h || h.z !== z.id) return; const b = z.buildings[h.b], door = b && z.doorOf(b); if (!door) return;
+    const clash = z.places.find(p => p.building === b.id && (p.kind === 'arcade' || p.kind === 'casino')); // 구마다 새로 생긴 게임장·카지노가 산 집 건물에 들어갔으면 옆 건물로 옮긴다 (v212)
+    if (clash) { let best = null, bd = 1e9; const used = new Set(z.places.map(p => p.building)); for (const o of z.buildings) { if (o === b || o.place || used.has(o.id) || o.w < 4 || o.h < 4) continue; const d = Math.hypot(o.x - b.x, o.y - b.y), dr = d < bd && z.doorOf(o); if (dr) { bd = d; best = o; } } if (best) { best.place = clash.id; clash.building = best.id; clash.door = z.doorOf(best); } }
     b.place = 'myhome'; z.places.push({ id: 'myhome', kind: 'home', name: `내 집 · ${this.type(h).name}`, building: b.id, door });
   },
   // 이 구역 매물: 집 종류마다 하나씩 (구역·종류로 정해서 다시 와도 같은 건물)
@@ -14196,7 +14218,7 @@ const Casino = {
     const recruit = this.recruit && !P ? `<div class="ptPick"><b>몇 명이서 할까요?</b><small>${this.tab === 'rl' ? '룰렛' : '홀짝'} 테이블에 자리를 만들고 친구에게 초대장을 보내요. 방장이 ${this.tab === 'rl' ? '돌리면' : '던지면'} 모두 같은 결과가 나오고, 각자 자기 칩만 정산해요.</small><div>${PARTY_GAMES[this.tab].sizes.map(n => `<button class="btn" data-ptsz="${n}">${n}명</button>`).join('')}</div><button class="btn" data-do="ptcancel">취소</button></div>` : '';
     const dealer = machine ? '' : `<div class="dealer"><canvas class="pt" data-pt="dealer" width="32" height="32"></canvas><span class="dName">${castName('casino')}</span><p class="bubble ${msg ? 'lose' : B.cls}">${say}</p></div>`;
     el.innerHTML = `<div class="scene cs t-${this.tab}"><div class="csAmb"><i></i><i></i><i></i></div>
-      <div class="csBar"><button class="btn sBack" id="hjX" ${lock ? 'disabled' : ''}>← 자리에서 일어나기</button><span class="csLogo">♠ ♥ GRAND 건대 CASINO ♦ ♣</span><span class="csCash">번 돈 <b>${fmtWon(mgFree())}</b></span></div>
+      <div class="csBar"><button class="btn sBack" id="hjX" ${lock ? 'disabled' : ''}>← 자리에서 일어나기</button><span class="csLogo">♠ ♥ GRAND ${esc(Game.room && Game.room.place.kind === 'casino' ? Game.room.place.name.replace(/ 카지노$/, '') : '건대')} CASINO ♦ ♣</span><span class="csCash">번 돈 <b>${fmtWon(mgFree())}</b></span></div>
       <div class="csMain"><div class="csStage">${dealer}${B.html}${recruit}</div>
       <div class="csHud"><div class="csTabs">${CASINO_TABS.map(([k, l]) => `<button class="btn${this.tab === k ? ' sel' : ''}" data-tab="${k}" ${(lock || P) && this.tab !== k ? 'disabled' : ''}>${l}</button>`).join('')}</div>${party}
       <p class="mgMsg big ${msg ? 'lose' : B.cls}">${say}</p>

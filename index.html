@@ -1238,6 +1238,13 @@ const Engine = (() => {
     inj: '처분금지가처분', super: '지상권', lease: '주택임차권'
   };
 
+  // 소액임차인 최우선변제 (주택임대차보호법 시행령 · 서울특별시): [이 날부터 설정된 담보물권 기준, 보증금 한도, 최우선 금액] (v199, 사용자 2026-10-17 신림동 물건)
+  const SMALL_SEOUL = [
+    ['1995-10-19', 30e6, 12e6], ['2001-09-15', 40e6, 16e6], ['2008-08-21', 60e6, 20e6], ['2010-07-26', 75e6, 25e6], ['2014-01-01', 95e6, 32e6],
+    ['2016-03-31', 100e6, 34e6], ['2018-09-18', 110e6, 37e6], ['2021-05-11', 150e6, 50e6], ['2023-02-21', 165e6, 55e6],
+  ];
+  function smallTier(d) { let t = null; for (const x of SMALL_SEOUL) if (x[0] <= d) t = x; return t; }
+
   function addDays(d, n) {
     const [y, m, dd] = d.split('-').map(Number);
     const t = new Date(Date.UTC(y, m - 1, dd + n));
@@ -1302,6 +1309,20 @@ const Engine = (() => {
       return { ...t, idx: i, deposit, daehang, prioDate: prio, eligible, why, paid: 0, assumed: 0 };
     });
 
+    // 5-1. 소액임차인 최우선변제 (caseData.small일 때만 — 이 규칙 전에 만든 물건은 그대로)
+    //   기준: 살아 있는 최선순위 담보물권(근저당·담보가등기·전세권) 설정일 (없으면 매각일). 대항요건(전입)이 경매개시결정 등기 전 + 종기 안 배당요구.
+    //   확정일자가 없어도 받는다. 모두 합쳐 매각대금의 1/2까지. 남은 보증금은 확정일자가 있으면 그 순위로 이어서 받는다.
+    let smallTotal = 0; const smallPays = [];
+    if (caseData.small) {
+      const secs = live.filter(r => SECURED.includes(r.type)).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.idx - b.idx));
+      const sDate = secs.length ? secs[0].date : (caseData.saleDate || '9999-12-31'), tier = smallTier(sDate), startR = live.find(r => r.type === 'start');
+      if (tier) {
+        const cand = tenants.filter(t => !t.noDaehang && t.deposit > 0 && t.deposit <= tier[1] && t.claimed === 'yes' && (!deadline || (t.claimDate && t.claimDate <= deadline)) && (!startR || t.move < startR.date));
+        const want = cand.map(t => Math.min(t.deposit, tier[2])), sum = want.reduce((a, b) => a + b, 0), cap = Math.floor(bid / 2), k = sum > cap ? cap / sum : 1;
+        cand.forEach((t, i) => { const pay = Math.min(Math.floor(want[i] * k), bid - smallTotal); t.small = pay; t.smallBase = sDate; t.smallTier = tier; smallTotal += pay; smallPays.push(t); });
+      }
+    }
+
     // 6. 배당 순서
     const claims = [];
     for (const r of live) {
@@ -1311,12 +1332,14 @@ const Engine = (() => {
         claims.push({ kind: 'reg', ref: r, key: r.date, tie: 1, order: r.idx, amount: r.amount, prov: r.type === 'prov' });
     }
     for (const t of tenants)
-      if (t.eligible && t.deposit > 0) claims.push({ kind: 'tenant', ref: t, key: t.prioDate, tie: 0, order: t.idx, amount: t.deposit, prov: false });
+      if (t.eligible && t.deposit - (t.small || 0) > 0) claims.push({ kind: 'tenant', ref: t, key: t.prioDate, tie: 0, order: t.idx, amount: t.deposit - (t.small || 0), prov: false });
     claims.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : a.tie - b.tie || a.order - b.order));
 
     // 7. 배당 (가압류는 안분)
-    let remain = bid;
+    let remain = bid - smallTotal;
     const distribution = [];
+    for (const t of smallPays) { t.paid = t.small;
+      distribution.push({ kind: 'tenant', label: `임차인 ${t.name}`, type: 'tenant', date: t.move, regIdx: null, tenantIdx: t.idx, claim: Math.min(t.deposit, t.smallTier[2]), paid: t.small, note: '소액임차인 최우선변제' }); }
     for (let i = 0; i < claims.length; i++) {
       const c = claims[i];
       let pay;
@@ -1326,7 +1349,7 @@ const Engine = (() => {
         pay = Math.min(c.amount, Math.floor(remain * c.amount / sum));
       } else pay = Math.min(c.amount, remain);
       remain -= pay;
-      if (c.kind === 'tenant') c.ref.paid = pay;
+      if (c.kind === 'tenant') c.ref.paid = (c.ref.small || 0) + pay;
       distribution.push({
         kind: c.kind,
         label: c.kind === 'tenant' ? `임차인 ${c.ref.name}` : `${REG_LABEL[c.ref.type]} ${c.ref.holder || ''}`.trim(),
@@ -1421,7 +1444,7 @@ const Generator = (() => {
 
   /**
    * 물건 1건 생성.
-   * opts: { R, gu, capital(원|null), useCapital, saleDate, year }
+   * opts: { R, gu, capital(원|null), useCapital, saleDate, year, noSmall }
    */
   function makeCase(opts) {
     const { R, saleDate } = opts;
@@ -1585,7 +1608,7 @@ const Generator = (() => {
       name: makeName(R, type, dong), area, appraisal, failCount, minPrice, saleDate, market, trades,
       owner, startDate, deadline, risks, critical, stars, share, lien, illegal, heir, super: superRisk, daewi,
       occupant, survey, rumor,
-      data: { deadline, reg, tenants }, // 엔진 입력 (입찰일 기준 최종 상태)
+      data: { deadline, reg, tenants, ...(opts.noSmall ? {} : { small: true }) }, // 엔진 입력 (입찰일 기준 최종 상태). small: 소액임차인 최우선변제 (v199부터 만든 물건)
     };
     c.competition = makeCompetition(R, c, gu);
     return c;
@@ -1690,7 +1713,7 @@ const Generator = (() => {
   }
 
   /** 이번 주 물건 20~30건 */
-  function generateWeek({ capital = null, seed = Date.now(), saleDate = '2025-11-11', traps = true } = {}) {
+  function generateWeek({ capital = null, seed = Date.now(), saleDate = '2025-11-11', traps = true, small = true } = {}) {
     const R = makeRng(seed);
     const year = saleDate.slice(0, 4);
     const total = R.RI(20, 30);
@@ -1706,7 +1729,7 @@ const Generator = (() => {
     const cases = [];
     const used = new Set();
     for (const d of DISTRICTS) for (let i = 0; i < counts[d.id]; i++) {
-      const c = makeCase({ R, gu: d.id, capital, useCapital: !!capital && R.chance(0.6), saleDate, year });
+      const c = makeCase({ R, gu: d.id, capital, useCapital: !!capital && R.chance(0.6), saleDate, year, noSmall: !small });
       while (used.has(c.caseNo)) c.caseNo = c.id = `${year}타경${R.RI(10000, 39999)}`;
       used.add(c.caseNo); cases.push(c);
     }
@@ -1717,7 +1740,7 @@ const Generator = (() => {
       while (cases.filter(fits).length < 6 && i < cases.length) {
         if (!fits(cases[i])) {
           const old = cases[i];
-          const c = makeCase({ R, gu: old.gu, capital, useCapital: true, saleDate, year });
+          const c = makeCase({ R, gu: old.gu, capital, useCapital: true, saleDate, year, noSmall: !small });
           c.caseNo = c.id = old.caseNo; cases[i] = c;
         }
         i++;
@@ -1794,6 +1817,15 @@ const EngineTests = (() => {
     { n: 17, title: '법인 임차인 대표이사 거주', bid: 12000,
       data: { deadline: '', reg: [reg('20-01-01', 'mort', 10000)], tenants: [{ ...ten('A', '19-01-01', '19-01-01', 6000), noDaehang: true }] },
       expect: { dist: [10000], daehang: [false], assume: 0, surplus: 2000 } },
+    { n: 18, title: '소액임차인 최우선변제 (확정일자 없어도, 대항력 있어도 인수 없음)', bid: 5000,
+      data: { deadline: D('25-08-15'), small: true, reg: [reg('23-06-09', 'mort', 3900), reg('25-06-04', 'start')], tenants: [ten('A', '23-05-01', null, 2500, '25-07-25')] },
+      expect: { base: '2023-06-09', dist: [2500, 2500], distKinds: ['tenant', 'mort'], daehang: [true], assume: 0, surplus: 0 } },
+    { n: 19, title: '소액 한도 넘는 선순위 임차인은 그대로 인수', bid: 5000,
+      data: { deadline: D('25-08-15'), small: true, reg: [reg('23-06-09', 'mort', 3900), reg('25-06-04', 'start')], tenants: [ten('A', '23-05-01', null, 17000, '25-07-25')] },
+      expect: { base: '2023-06-09', dist: [3900], daehang: [true], assume: 17000, surplus: 1100 } },
+    { n: 20, title: '소액임차인 둘이면 낙찰가의 절반까지 나눠 받음', bid: 8000,
+      data: { deadline: D('25-08-15'), small: true, reg: [reg('23-06-09', 'mort', 9000), reg('25-06-04', 'start')], tenants: [ten('A', '24-01-01', null, 5500, '25-07-25'), ten('B', '24-02-01', null, 5500, '25-07-25')] },
+      expect: { base: '2023-06-09', dist: [2000, 2000, 4000], daehang: [false, false], assume: 0, surplus: 0 } },
   ];
 
   function run(log = console.log) {
@@ -5273,6 +5305,7 @@ const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
 const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3, 0.6, 2.5];
 // 자리 0~6은 처음부터 있던 자리라 시각 오프셋(k·W/7)과 구 순서((n·7+k)%4)를 바꾸면 이미 가진 집·낸 입찰표의 사건이 달라진다. 그래서 7은 고정(LIVE_BASE)이고 나중에 더한 자리(7, 8…)는 그 사이 중간 시각에 끼운다.
 const LIVE_TRAPS_FROM = Date.UTC(2026, 9, 15, 6, 50); // v84 배포 직후 (UTC)
+const LIVE_SMALL_FROM = Date.UTC(2026, 9, 17, 15, 25); // v199 소액임차인 최우선변제: 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
 /* 채널 달력 (v94, 사용자 2026-10-15 '지금 몇일인지 모르지않아?'): 게임 하루(= 1주/7)가 지나면 달력도 하루 넘어간다.
  * 오늘 = 2025-01-01 + ((LIVE_DATES_FROM 날부터 센 일수 + 60) mod 728) → 배포 시각이 2025-03-02, 2년(2025~2026)을 돌고 처음으로 (약 35시간마다). 이 시각 뒤에 시작한 회차의 매각기일은 그 회차 D-day의 날짜 (전엔 모두 2025-11-11 고정 → 그 회차들은 그대로) */
 const LIVE_DATES_FROM = Date.UTC(2026, 9, 15, 11, 40);
@@ -5294,7 +5327,7 @@ const Live = {
     const seed = ((this.ch * 1000003 + k * 7919 + n * 104729) ^ 0x3c3c) & 0x7fffffff; const R = makeRng(seed);
     const gu = DRIVE_GUS[(n * LIVE_BASE + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
     const saleDate = cyc.t0 >= LIVE_DATES_FROM ? this.calDate(Math.floor(cyc.t0 / this.dayMs() + 0.01) + 6) : '2025-11-11';
-    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025' }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
+    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025', noSmall: cyc.t0 < LIVE_SMALL_FROM }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
     c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
     if (cyc.t0 >= LIVE_TRAPS_FROM) Generator.applyTraps(c); // 정리본 2묶음 함정은 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
     c.live = cyc; this.closed[c.id] = c;
@@ -9200,16 +9233,16 @@ function renderMore(S, c, a, G, missed) {
     h += `<div class="rSec"><h3>내 판단 vs 엔진</h3><div class="flipGrid">${G.cmp.map((x, i) => `<div class="flip" data-i="${i}"><div class="card"><div class="face front"><b>${x.label}</b><div class="small">내 판단: ${escapeHtml(x.mine)}</div></div><div class="face back ${x.ok ? 'ok' : 'no'}"><div class="ox">${x.ok ? 'O' : 'X'}</div><b>${x.label}</b><div class="small">내 판단: ${escapeHtml(x.mine)}</div><div class="small">엔진: ${escapeHtml(x.engine)}</div></div></div></div>`).join('')}</div></div>`;
     // 엔진 분석표
     const regRows = a.regs.map(r => `<tr class="${r.status === 'cancelled' ? 'struck' : ''}"><td>${ymd(r.date)}</td><td>${r.label}${r.daewi ? ' <small>(대위변제 말소)</small>' : ''}</td><td>${r.holder || ''}${r.shareText ? ` <small>${r.shareText}</small>` : ''}</td><td class="num">${r.amount ? fmtWon(r.amount) : ''}</td><td class="st ${r.status}">${STATUS_LABEL[r.status]}</td></tr>`).join('');
-    const tRows = a.tenants.length ? a.tenants.map(t => `<tr><td>${t.name}${t.hidden ? ' <small>(현황조사 미발견)</small>' : ''}</td><td>${ymd(t.move)}</td><td>${t.fixed ? ymd(t.fixed) : '없음'}</td><td class="num">${fmtWon(t.deposit)}</td><td class="st ${t.daehang ? 'assume' : 'extinguish'}">${t.daehang ? '있음' : '없음'}</td><td>${t.eligible ? '참여' : t.why}</td><td class="num">${fmtWon(t.paid)}</td><td class="num">${fmtWon(t.assumed)}</td></tr>`).join('') : '<tr><td colspan="8" class="dim">임차인 없음</td></tr>';
+    const tRows = a.tenants.length ? a.tenants.map(t => `<tr><td>${t.name}${t.hidden ? ' <small>(현황조사 미발견)</small>' : ''}</td><td>${ymd(t.move)}</td><td>${t.fixed ? ymd(t.fixed) : '없음'}</td><td class="num">${fmtWon(t.deposit)}</td><td class="st ${t.daehang ? 'assume' : 'extinguish'}">${t.daehang ? '있음' : '없음'}</td><td>${t.small ? `소액 최우선 ${fmtWon(t.small)}${t.eligible ? ' + 참여' : ''}` : t.eligible ? '참여' : t.why}</td><td class="num">${fmtWon(t.paid)}</td><td class="num">${fmtWon(t.assumed)}</td></tr>`).join('') : '<tr><td colspan="8" class="dim">임차인 없음</td></tr>';
     const dRows = a.distribution.map((d, i) => `<tr><td>${i + 1}</td><td>${d.label}${d.note ? ` <small>(${d.note})</small>` : ''}</td><td>${ymd(d.date)}</td><td class="num">${fmtWon(d.claim)}</td><td class="num">${fmtWon(d.paid)}</td></tr>`).join('');
     h += `<div class="rSec"><h3>엔진 분석 <small>낙찰가 ${fmtWon(a.bid)} 기준</small></h3>
       <p><b>말소기준권리:</b> ${a.base ? `${ymd(a.base.date)} ${a.base.label} ${a.base.holder || ''}` : '없음'}</p>
-      ${a.fatal.map(f => `<p class="warn">⚠ ${f.note}</p>`).join('')}${c.risks.filter(r => TRAP_WHY[r]).map(r => `<p class="small">📘 ${TRAP_WHY[r]}</p>`).join('')}
+      ${a.fatal.map(f => `<p class="warn">⚠ ${f.note}</p>`).join('')}${a.tenants.filter(t => t.small).map(t => `<p class="small">📘 ${t.name}님은 소액임차인이라 ${fmtWon(t.small)}을 다른 채권자보다 먼저 받습니다. 기준은 가장 앞선 담보물권(${ymd(t.smallBase)}) 때의 서울 기준(보증금 ${fmtWon(t.smallTier[1])} 이하, 최대 ${fmtWon(t.smallTier[2])})이고, 경매개시결정 등기 전에 전입하고 종기 안에 배당요구하면 확정일자가 없어도 받아요.${t.assumed ? '' : ' 그래서 대항력이 있어도 낙찰자가 물어 줄 보증금이 없습니다.'}</p>`).join('')}${c.risks.filter(r => TRAP_WHY[r]).map(r => `<p class="small">📘 ${TRAP_WHY[r]}</p>`).join('')}
       <table class="rt"><tr><th>접수일</th><th>등기목적</th><th>권리자</th><th>금액</th><th>처리</th></tr>${regRows}</table>
       <table class="rt"><tr><th>임차인</th><th>전입</th><th>확정일자</th><th>보증금</th><th>대항력</th><th>배당</th><th>배당액</th><th>인수</th></tr>${tRows}</table>
       <table class="rt"><tr><th>순위</th><th>채권자</th><th>기준일</th><th>채권액</th><th>배당액</th></tr>${dRows}<tr><td colspan="4">잉여금 (소유자 반환)</td><td class="num">${fmtWon(a.surplus)}</td></tr><tr><td colspan="4">검산: Σ배당 + 잉여금 = 낙찰가</td><td class="num">${a.balanced ? '일치' : '불일치'}</td></tr></table>
       <p><b>낙찰자 인수 총액: ${fmtWon(a.assumeTotal)}</b> <small>(임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)}${a.assumeOther ? ` + 가등기·가처분 정리 ${fmtWon(a.assumeOther)}` : ''})</small> · 엔진 적정 입찰가 ${fmtWon(fairBid(c))} 안팎</p>
-      <p class="small dim">주의(단순화): 소액임차인 최우선변제, 경매비용 공제, 당해세 이외 조세의 법정기일 비교, 임금채권은 다루지 않습니다. 당해세 압류는 가장 먼저 배당하는 것으로 단순화했습니다.</p></div>`;
+      <p class="small dim">주의(단순화): ${c.data.small ? '소액임차인은 서울 기준만 쓰고, ' : '이 물건은 소액임차인 최우선변제를 넣기 전에 만들어져 반영하지 않았고, '}경매비용 공제, 당해세 이외 조세의 법정기일 비교, 임금채권은 다루지 않습니다. 당해세 압류는 가장 먼저 배당하는 것으로 단순화했습니다.</p></div>`;
     // 놓친 정보
     h += `<div class="rSec"><h3>놓친 정보</h3>${missed.length ? `<ul class="missed">${missed.map(m => `<li><b>${m.place}</b>에 가지 않아 ${escapeHtml(m.text)}</li>`).join('')}</ul>` : '<p>핵심 장소는 다 다녀왔어요.</p>'}</div>`;
   }

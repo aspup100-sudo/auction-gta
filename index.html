@@ -452,6 +452,12 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #assetBox .kv2 { display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:13px; } #assetBox .kv2 span:nth-child(odd) { color:#6a5a3a; } #assetBox .kv2 b.up { color:#1f7a3a; } #assetBox .kv2 b.down { color:#c0392b; }
 #assetBox .lvRecent { max-height:180px; overflow:auto; } #assetBox .empty { text-align:center; color:#6a5a3a; font-size:13px; padding:14px 0; }
 .short #assetBox, .short #rankWin { max-height:calc(100% - 12px); } .short #assetBox .rcpt, .short #rankWin .rcpt { padding:12px 14px 10px; } .short #assetBox .rcHead, .short #rankWin .rcHead { font-size:18px; } .short #assetBox .ah { margin:6px 0; padding:7px 10px; } .short #assetBox .lvRecent { max-height:120px; }
+#closet { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(560px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #closet.in { transform:translate(-50%, -50%); } #closet .rcpt { width:100%; }
+.clPrev { position:relative; } #clCv { display:block; width:min(100%, 340px); margin:0 auto; aspect-ratio:160/104; image-rendering:pixelated; border-radius:8px; } .clPrev { background:#e8dcc0; border-radius:8px; } .clMv { position:absolute; right:6px; bottom:6px; padding:4px 10px; font-size:12px; }
+.clRow { display:flex; gap:8px; align-items:flex-start; margin:8px 0; } .clRow > b { flex:0 0 86px; font-size:13px; padding-top:5px; } .clRow > div { display:flex; flex-wrap:wrap; gap:5px; }
+.clChip { padding:5px 9px; border-radius:16px; border:1px solid #c8b88f; background:#fff; font:700 12.5px var(--ui); color:#2a2010; cursor:pointer; } .clChip.on { background:var(--gold); border-color:#a8801a; } .clChip.lock { opacity:.55; } .clChip small { font-weight:600; font-size:10.5px; color:#7a6a4a; }
+.clPets { display:flex; gap:6px; justify-content:center; margin:8px 0 0; } .clNone { text-align:center; font-size:13.5px; margin:14px 0; }
+.short #closet .rcpt { padding:10px 12px; } .short #clCv { max-height:34vh; width:auto; margin:0 auto; } .short .clRow { margin:5px 0; } .short .clRow > b { flex-basis:72px; font-size:12px; }
 #shop { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(640px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #shop.in { transform:translate(-50%, -50%); } #shop .rcpt { width:100%; } #shop .rcHead small { display:block; font:600 13px var(--ui); color:#6a5a3a; margin-top:2px; }
 .shTabs { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; } .shTabs .btn.sel { background:var(--gold); color:#1a1408; }
 #shBig { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:90; } #shBig.in { display:flex; } #shBig .sbIn { background:#fffdf7; border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; align-items:center; gap:6px; max-width:calc(100% - 24px); } #shBig canvas { width:min(640px, 86vw, calc((100vh - 150px) * 1.538)); aspect-ratio:160 / 104; height:auto; border-radius:8px; } #shBig b { color:#2a2016; font-size:15px; } #shBig small { color:#6a5a3a; font-size:12px; min-height:1em; } .shItem canvas { cursor:pointer; } /* #shop은 .ovl 그대로 fixed (relative면 iPhone에서 body에 잘려 아래가 밀림, 사용자 2026-10-17) */
@@ -965,7 +971,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="quest"></div>
   <div id="balanceDue"></div>
   <div id="rankBox" hidden></div>
-  <div class="hudBtns" id="hudBtns"><button class="btn" id="btnChat" hidden title="Enter / T">채팅</button><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnMenu">메뉴</button></div>
+  <div class="hudBtns" id="hudBtns"><button class="btn" id="btnChat" hidden title="Enter / T">채팅</button><button class="btn" id="btnNote">수첩</button><button class="btn" id="btnMute">소리</button><button class="btn" id="btnCloset">옷장</button><button class="btn" id="btnMenu">메뉴</button></div>
   <canvas id="radar" width="132" height="132" title="지도 (N · 서울 전체는 M)"></canvas>
   <div id="hudSpeed"></div>
   <div id="roadSign"></div>
@@ -1064,6 +1070,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 <div id="records" class="ovl"></div>
 <div id="installGuide" class="ovl"></div>
 <div id="shop" class="ovl"></div>
+<div id="closet" class="ovl"></div>
 <div id="pbWin" class="ovl"></div><div id="pbAsk"></div><div id="frAsk"></div><div id="examWin" class="ovl"></div><div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div><div id="mineWin"></div>
 <div id="assetBox" class="ovl"></div>
 <div id="rankWin" class="ovl"></div>
@@ -2055,7 +2062,13 @@ const Profile = {
   redraw: null, // boot.js가 프로필 편집기 다시 그리기를 넣는다 (상점에서 입으면 메뉴 편집기도 바뀌게)
   apply() { Sprites.setPal('player', this.pal(this.get())); },
   // 프로필(머리·피부·옷·바지 색 + 상점에서 산 outfit)을 스프라이트 팔레트로. 친구 것도 같은 식으로 그린다 (pos에 프로필을 그대로 실어 보냄)
-  pal(p) { p = p || {}; const base = Sprites.PLAYER_DEFAULT; const o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit]; const shirt = p.shirt || base.shirt; return { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: o ? o.pal.shirt : shirt, shirt2: o ? o.pal.shirt2 : shade(shirt, -0.18), pants: o ? o.pal.pants : (p.pants || base.pants), tie: o && o.pal.tie ? o.pal.tie : undefined, dress: o && o.pal.dress || undefined, veil: o && o.pal.veil || undefined, tux: o && o.pal.tux || undefined, camo: o && o.pal.camo || undefined }; },
+  // v187: 할로윈 옷(뼈·망토·유령) + 모자·머리(Profile.hat). 좀비·프랑켄슈타인·삐에로는 피부·머리색도 바꾼다
+  pal(p) { p = p || {}; const r = this.pal0(p), o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit], h = p.hat && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.hat];
+    r.bones = r.cape = r.ghost = r.hat = undefined; /* setPal은 이전 팔레트에 덮어쓰니 벗을 때도 키를 꼭 둔다 */
+    if (o && o.pal) { if (o.pal.bones) r.bones = true; if (o.pal.cape) r.cape = o.pal.cape; if (o.pal.ghost) r.ghost = true; }
+    if (h && h.hat) { r.hat = h.hat; if (h.skin) r.skin = h.skin; if (h.hairC) r.hair = h.hairC; }
+    return r; },
+  pal0(p) { p = p || {}; const base = Sprites.PLAYER_DEFAULT; const o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit]; const shirt = p.shirt || base.shirt; return { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: o ? o.pal.shirt : shirt, shirt2: o ? o.pal.shirt2 : shade(shirt, -0.18), pants: o ? o.pal.pants : (p.pants || base.pants), tie: o && o.pal.tie ? o.pal.tie : undefined, dress: o && o.pal.dress || undefined, veil: o && o.pal.veil || undefined, tux: o && o.pal.tux || undefined, camo: o && o.pal.camo || undefined }; },
 };
 function shade(hex, k) { const n = parseInt(hex.slice(1), 16); const f = v => Math.max(0, Math.min(255, Math.round(v * (1 + k)))); return '#' + [f(n >> 16), f((n >> 8) & 255), f(n & 255)].map(v => v.toString(16).padStart(2, '0')).join(''); }
 
@@ -2210,6 +2223,29 @@ const Sprites = (() => {
   const cache = {};
   function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.imageSmoothingEnabled = false; return [c, x]; }
 
+  /* 할로윈 옷 · 모자·머리 (v187, 사용자 2026-10-17 '플레이어도 모자 살 수 있게 … 할로윈 옷 넣자'): 옷 다 그린 뒤에 덮는다.
+   * P(색, x, y, w, h)는 앞/뒤에선 그대로, 옆에선 좌우 뒤집힌 좌표 (옆모습은 얼굴이 x 작은 쪽). */
+  function wearables(P, pal, dir, side, arm) {
+    const front = dir === 0, back = dir === 3;
+    if (pal.bones) { const B = '#ecece4'; if (side) { P(B, 8, 8, 1, 4); P(B, 7, 9, 3, 1); P(B, 7, 11, 3, 1); } else if (front) { P(B, 7, 8, 2, 4); P(B, 6, 9, 4, 1); P(B, 6, 11, 4, 1); P(B, 6, 12, 4, 1); P(B, 5, 14, 1, 1); P(B, 10, 14, 1, 1); } else { P(B, 7, 8, 2, 4); P(B, 6, 10, 4, 1); } }
+    if (pal.cape) { const C = '#15151c', R = pal.cape; if (side) { P(C, 10, 8, 2, 7); P(R, 10, 8, 1, 6); P(R, 9, 7, 3, 1); } else if (front) { P(R, 4, 7, 1, 2); P(R, 11, 7, 1, 2); P(C, 3, 8, 1, 7); P(C, 12, 8, 1, 7); P(R, 3, 14, 1, 1); P(R, 12, 14, 1, 1); } else { P(C, 4, 8, 8, 7); P(R, 4, 14, 8, 1); P(R, 4, 7, 8, 1); } }
+    if (pal.ghost) { const G = '#f6f6fa', S = '#d8d8e4'; P(G, 5, 1, 6, 1); P(G, 4, 2, 8, 12); P(S, 4, 12, 8, 1); for (let i = 0; i < 8; i++) P(G, 4 + i, 14, 1, (i + (arm > 0 ? 1 : 0)) % 2 ? 2 : 1);
+      if (side) { P('#1a1a22', 5, 5, 1, 1); P('#1a1a22', 5, 8, 1, 1); } else if (front) { P('#1a1a22', 6, 5, 1, 2); P('#1a1a22', 9, 5, 1, 2); P('#1a1a22', 7, 8, 2, 2); } }
+    const h = pal.hat; if (!h) return;
+    const E = '#1b1420';
+    if (h === 'crown') { const Gd = '#f2c230', Dk = '#c8941a'; P(Gd, 5, 1, 6, 1); P(Dk, 5, 2, 6, 1); if (side) { P(Gd, 5, 0, 1, 1); P(Gd, 7, 0, 1, 1); P(Gd, 10, 0, 1, 1); P('#e03a3a', 7, 1, 1, 1); } else { P(Gd, 5, 0, 1, 1); P(Gd, 7, 0, 2, 1); P(Gd, 10, 0, 1, 1); P('#e03a3a', 7, 1, 2, 1); P('#3a8ae0', 5, 2, 1, 1); P('#3a8ae0', 10, 2, 1, 1); } }
+    else if (h === 'straw') { const Y = '#e8c870', D = '#c8a050'; P(Y, 5, 0, 6, 2); P('#c0392b', 5, 1, 6, 1); P(Y, 3, 2, 10, 1); P(D, 3, 2, 1, 1); P(D, 12, 2, 1, 1); }
+    else if (h === 'party') { const Pk = '#ff5a8a', Yl = '#ffd84a'; P(Pk, 6, 2, 4, 1); P(Yl, 7, 2, 1, 1); P(Pk, 7, 1, 2, 1); P(Yl, 8, 1, 1, 1); P('#ffffff', 7, 0, 2, 1); }
+    else if (h === 'witch') { const W = '#4a2a6a', O = '#ff8a20'; P(W, 3, 2, 10, 1); P(O, 6, 1, 4, 1); P(W, 7, 0, 3, 1); P(W, 6, 1, 1, 1); P(W, 9, 1, 1, 1); P(W, side ? 4 : 10, 0, 1, 1); }
+    else if (h === 'pumpkin') { const O = '#f08a20', D = '#c8601a', L = '#ffe066'; P(O, 5, 1, 6, 1); P(O, 4, 2, 8, 5); P(O, 5, 7, 6, 1); P(D, 7, 2, 1, 5); P(D, 9, 2, 1, 5); P('#4a8a30', 7, 0, 2, 1);
+      if (side) { P(L, 5, 4, 1, 1); P(L, 4, 6, 3, 1); } else if (front) { P(L, 5, 3, 2, 2); P(L, 9, 3, 2, 2); P(L, 6, 6, 4, 1); P(D, 7, 6, 1, 1); } }
+    else if (h === 'skull') { const Wb = '#efeadc', Sh = '#c8c2b0'; P(Wb, 5, 1, 6, 1); P(Wb, 4, 2, 8, 4); P(Wb, 5, 6, 6, 2); P(Sh, 5, 7, 6, 1);
+      if (side) { P(E, 5, 3, 2, 2); P(E, 4, 6, 1, 1); P(E, 5, 7, 1, 1); P(E, 7, 7, 1, 1); } else if (front) { P(E, 5, 3, 2, 2); P(E, 9, 3, 2, 2); P(E, 7, 5, 2, 1); P(E, 6, 7, 1, 1); P(E, 8, 7, 1, 1); P(E, 10, 7, 1, 1); } }
+    else if (h === 'zombie') { const R = '#c8202a'; if (side) { P(R, 6, 5, 1, 1); P('#5a2a2a', 5, 7, 2, 1); } else if (front) { P(R, 6, 5, 1, 1); P(R, 9, 5, 1, 1); P('#5a2a2a', 6, 7, 3, 1); P('#5a2a2a', 9, 3, 1, 2); P('#e8e0c0', 7, 7, 1, 1); } }
+    else if (h === 'frank') { const K = '#151515', Bt = '#a8a8b8'; P(K, 4, 0, 8, 3); if (front) { P('#2a3a22', 6, 3, 4, 1); for (let i = 0; i < 4; i += 2) P(K, 6 + i, 3, 1, 1); P(Bt, 3, 6, 1, 1); P(Bt, 12, 6, 1, 1); P(K, 6, 7, 4, 1); } else if (side) { P(Bt, 9, 6, 2, 1); P(K, 5, 7, 2, 1); } else { P(Bt, 3, 6, 1, 1); P(Bt, 12, 6, 1, 1); } }
+    else if (h === 'clown') { const R = '#e02a2a'; P('#ff5a3a', 3, 2, 2, 3); P('#3a8ae0', 11, 2, 2, 3); P('#ffd84a', 5, 1, 6, 1);
+      if (side) { P(R, 4, 5, 1, 1); P(R, 5, 7, 2, 1); } else if (front) { P('#3a6ae0', 6, 4, 1, 1); P('#3a6ae0', 9, 4, 1, 1); P(R, 7, 6, 2, 1); P(R, 6, 7, 4, 1); } }
+  }
   // dir: 0 down, 1 left, 2 right, 3 up. frame: 0 idle, 1..4 walk
   function drawChar(x, pal, dir, frame) {
     const p = (c, X, Y, w = 1, h = 1) => { if (!c) return; x.fillStyle = c; x.fillRect(X, Y, w, h); };
@@ -2244,6 +2280,7 @@ const Sprites = (() => {
       if (pal.perm) { p(pal.hair, 4, 1, 8, 1); p(pal.hair, 3, 2, 1, 3); p(pal.hair, 12, 2, 1, 3); }
       if (pal.hardhat) { p(pal.hardhat, 4, 0, 8, 3); p(pal.hardhat, 3, 2, 10, 1); }
       if (pal.camo) { const D = '#353f22', L = '#8a7c4c', H = '#4e5c30'; p(D, 6, 9, 2, 1); p(L, 9, 8, 1, 2); p(D, 8, 10, 2, 1); p(L, 5, 10, 1, 1); p(D, 6, 12, 2, 1); p(L, 9, 12, 1, 1); p(D, 4, 9, 1, 1); p(D, 11, 10 - arm, 1, 1); p(H, 4, 0, 8, 2); p(H, 3, 2, 10, 1); p('#3c4826', 3, 2, 10, 0.5); } // 군복: 얼룩무늬 + 철모
+      wearables(p, pal, dir, false, arm);
     } else {
       const f = dir === 2; // 오른쪽이면 좌우 반전 좌표
       const X = v => (f ? 15 - v : v);
@@ -2264,6 +2301,7 @@ const Sprites = (() => {
       if (pal.perm) { q(pal.hair, 4, 1, 8, 1); q(pal.hair, 11, 2, 1, 3); }
       if (pal.hardhat) { q(pal.hardhat, 4, 0, 8, 3); q(pal.hardhat, 3, 2, 10, 1); }
       if (pal.camo) { const D = '#353f22', L = '#8a7c4c', H = '#4e5c30'; q(D, 7, 8, 2, 1); q(L, 6, 10, 1, 1); q(D, 9, 10, 1, 1); q(D, 7, 12, 2, 1); q(L, 9, 13, 1, 1); q(H, 4, 0, 8, 2); q(H, 3, 2, 10, 1); }
+      wearables(q, pal, dir, true, s1);
     }
   }
   function sheet(name) {
@@ -6683,6 +6721,7 @@ function update(dt) {
   if (Quiz.open_) { if (consume('Escape')) Quiz.close(); else for (const n of ['1', '2', '3', '4']) if (consume(n)) Quiz.answer(Number(n) - 1); return; } // 경매 퀴즈 (v128)
   if (Rps.open_) { if (consume('Escape')) Rps.close(); else for (const n of ['1', '2', '3']) if (consume(n)) Rps.pick(Number(n) - 1); return; }
   if (Casino.open_) { if (consume('Escape')) Casino.close(); else for (const n of ['1', '2', '3', '4', '5']) if (consume(n)) Casino.key(n); return; }
+  if (Closet.open_) { if (consume('Escape')) Closet.close(); return; } // 옷장 (v187)
   if (Shop.open_) { if (consume('Escape')) { if (Shop.bigIt && $('shBigX')) $('shBigX').click(); else Shop.close(); } return; } // 상점: Esc로 닫힘 (메뉴보다 먼저)
   if (AssetBox.open_) { if (consume('Escape')) AssetBox.close(); return; }
   if (RankWin.open_) { if (consume('Escape')) RankWin.close(); return; }
@@ -9168,6 +9207,39 @@ const SHOP_ITEMS = {
     { id: 'c_vip', name: 'VIP 블랙', price: 1e8, pal: { shirt: '#15151c', shirt2: '#c9a24a', pants: '#15151c', tie: '#c9a24a' } },
     { id: 'c_tux', name: '턱시도', price: 1e8, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', tux: true } },
     { id: 'c_wedding', name: '웨딩드레스', price: 1.5e8, pal: { shirt: '#fbfbfb', shirt2: '#e8e8f0', pants: '#fbfbfb', dress: '#ffffff', veil: true } },
+    // 할로윈 옷 (사용자 2026-10-17 '숍에 옷 할로윈 옷 넣자')
+    { id: 'c_ghost', name: '유령 이불 (할로윈)', new: '2026-10-17', price: 800e4, pal: { shirt: '#f6f6fa', shirt2: '#f6f6fa', pants: '#f6f6fa', ghost: true } },
+    { id: 'c_skel', name: '해골 옷 (할로윈)', new: '2026-10-17', price: 1000e4, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', bones: true } },
+    { id: 'c_pumpkin', name: '호박 옷 (할로윈)', new: '2026-10-17', price: 1200e4, pal: { shirt: '#f08a20', shirt2: '#c8601a', pants: '#2a2a1a', tie: '#4a8a30' } },
+    { id: 'c_witch', name: '마녀 옷 (할로윈)', new: '2026-10-17', price: 1500e4, pal: { shirt: '#4a2a6a', shirt2: '#ff8a20', pants: '#2a1a3a', dress: '#4a2a6a' } },
+    { id: 'c_vamp', name: '드라큘라 망토 (할로윈)', new: '2026-10-17', price: 2000e4, pal: { shirt: '#f4f4f4', shirt2: '#15151c', pants: '#15151c', tie: '#b01a2a', cape: '#b01a2a' } },
+  ],
+  hat: [ // 모자·머리 (사용자 2026-10-17 '왕관, 밀짚모자, 생일축하 꼬깔, 삐에로 분장 얼굴, 할로윈 모자, 호박머리, 해골 머리, 좀비 머리, 프랑켄슈타인'). 그림은 sprites.js wearables
+    { id: 'h_straw', name: '밀짚모자', new: '2026-10-17', price: 300e4, hat: 'straw' },
+    { id: 'h_party', name: '생일 축하 꼬깔', new: '2026-10-17', price: 300e4, hat: 'party' },
+    { id: 'h_witch', name: '할로윈 마녀 모자', new: '2026-10-17', price: 800e4, hat: 'witch' },
+    { id: 'h_clown', name: '삐에로 분장', new: '2026-10-17', price: 1000e4, hat: 'clown', skin: '#fbfbfb', hairC: '#ff6a20' },
+    { id: 'h_pumpkin', name: '호박머리', new: '2026-10-17', price: 1500e4, hat: 'pumpkin' },
+    { id: 'h_skull', name: '해골 머리', new: '2026-10-17', price: 2000e4, hat: 'skull' },
+    { id: 'h_zombie', name: '좀비 머리', new: '2026-10-17', price: 2000e4, hat: 'zombie', skin: '#8ab070', hairC: '#3a3a2a' },
+    { id: 'h_frank', name: '프랑켄슈타인', new: '2026-10-17', price: 2500e4, hat: 'frank', skin: '#7ab06a', hairC: '#151515' },
+    { id: 'h_crown', name: '왕관', new: '2026-10-17', price: 5000e4, hat: 'crown' },
+  ],
+  petdeco: [ // 펫 꾸미기 (사용자 2026-10-17 '안경, 목줄, 목도리, 펫 색깔 변경 황금색도'). 데리고 다니는 펫에 단다. 그림은 petdeco.js
+    { id: 'd_glasses', name: '동그란 안경', new: '2026-10-17', price: 200e4, pd: 'eye', v: 'glasses' },
+    { id: 'd_sun', name: '선글라스', new: '2026-10-17', price: 500e4, pd: 'eye', v: 'sun' },
+    { id: 'd_collar', name: '빨간 목줄', new: '2026-10-17', price: 200e4, pd: 'neck', v: 'collar' },
+    { id: 'd_scarf', name: '목도리', new: '2026-10-17', price: 300e4, pd: 'neck', v: 'scarf' },
+    { id: 'd_bow', name: '나비넥타이', new: '2026-10-17', price: 400e4, pd: 'neck', v: 'bowtie' },
+    { id: 'd_ribbon', name: '리본', new: '2026-10-17', price: 200e4, pd: 'head', v: 'ribbon' },
+    { id: 'd_party', name: '펫 생일 꼬깔', new: '2026-10-17', price: 300e4, pd: 'head', v: 'party' },
+    { id: 'd_crown', name: '펫 왕관', new: '2026-10-17', price: 3000e4, pd: 'head', v: 'crown' },
+    { id: 'd_pink', name: '분홍색 털', new: '2026-10-17', price: 500e4, pd: 'color', v: 'pink' },
+    { id: 'd_sky', name: '하늘색 털', new: '2026-10-17', price: 500e4, pd: 'color', v: 'sky' },
+    { id: 'd_purple', name: '보라색 털', new: '2026-10-17', price: 500e4, pd: 'color', v: 'purple' },
+    { id: 'd_black', name: '까만색 털', new: '2026-10-17', price: 800e4, pd: 'color', v: 'black' },
+    { id: 'd_rainbow', name: '무지개 털', new: '2026-10-17', price: 5000e4, pd: 'color', v: 'rainbow' },
+    { id: 'd_gold', name: '황금 털', new: '2026-10-17', price: 1e8, pd: 'color', v: 'gold' },
   ],
   pet: [ // 희귀할수록 비싸다 (사용자 2026-10-15). 그림은 pets.js PET_DRAW
     { id: 'p_mouse', name: '생쥐', price: 100e4, pet: 'mouse' },
@@ -9256,7 +9328,7 @@ const Shop = {
     if (src && src !== this.here()) { Sound.play('deny'); Toast.show(`${it.name}은 ${this.hereKo(src)}에서 샀어요. 산 곳에서만 되팔 수 있어요.`, 3000); return; }
     if (this.sellArm !== it.id || Date.now() - this.sellArmT > 5000) { this.sellArm = it.id; this.sellArmT = Date.now(); Sound.play('click'); this.render(); return; } // 한 번 더 눌러야 판다
     this.sellArm = null; const p = Profile.get(), got = this.resell(it);
-    if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null);
+    if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (it.hat) { if (p.hat === it.id) Profile.set('hat', null); } else if (it.pd) PetDeco.strip(it); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null);
     const w = Store.get('wardrobe', null) || {}, src2 = Object.assign({}, w.src || {}); delete src2[it.id];
     Store.set('wardrobe', { owned: this.owned().filter(x => x !== it.id), src: src2 });
     if (typeof Money !== 'undefined') Money.why(`편집숍 되팔기 (${it.name})`); State.cash += got; HUD.setCash(State.cash); if (Live.on) Live.save();
@@ -9272,20 +9344,21 @@ const Shop = {
   },
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
   render() {
-    const p = Profile.get(); const list = SHOP_ITEMS[this.tab]; const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx';
-    const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
+    const p = Profile.get(); const list = SHOP_ITEMS[this.tab]; const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco';
+    const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : isH ? p.hat : isD ? null : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
     const nt = k => SHOP_ITEMS[k].some(it => this.isNew(it)) ? '<i class="shNew">NEW</i>' : '';
     const sp = this.spendable(), rec = AuctionRec.wins(), nextNeed = list.map(it => this.need(it)).filter(n => n > rec).sort((a, b) => a - b)[0];
     const home = this.hasHome(); /* 채널엔 원래 집이 없다 → 집 없으면 펫은 편집숍에 맡긴다 (사용자 2026-10-17 '집 못샀으면 나둘 집이 없는데?') */
     const card = it => {
-      const own = this.has(it.id), on = isP ? petOn(it) : wearing === it.id;
+      const own = this.has(it.id), on = isP ? petOn(it) : isD ? PetDeco.on(it) : wearing === it.id;
       const need = this.need(it), lock = !own && need > rec;
       const sellBtn = own && !this.look ? (this.sellArm === it.id && Date.now() - this.sellArmT < 5000 ? `<button class="btn shSell arm" data-sell="${it.id}">정말 팔까요? +${fmtWon(this.resell(it))}</button>` : `<button class="btn shSell" data-sell="${it.id}">되팔기 ${fmtWon(this.resell(it))}</button>`) : '';
-      const btn = on ? `<button class="btn" data-off="${isP ? it.pet : 1}">${isC ? '벗기' : isP ? (home ? '집에 두기' : '가게에 맡기기') : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isP ? (p.pet && p.pet2 ? '바꿔 데려가기' : '데리고 다니기') : isF ? '켜기' : '타기'}</button>` : lock ? `<button class="btn shLockBtn" disabled>🔒 이익 경매 ${need}번</button>` : this.look ? '<button class="btn" disabled>숍에서 사요</button>' : `<button class="btn ${sp >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${sp >= it.price ? '' : 'disabled'}>사기</button>`;
-      return `<div class="shItem${on ? ' on' : own ? ' own' : lock ? ' lock' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? (isP ? (home ? '집에 있어요' : '가게에 맡겨 둠') : '보유') : fmtWon(it.price)}</span>${btn}${sellBtn}</div>`;
+      const btn = on ? `<button class="btn" data-off="${isP ? it.pet : isD ? it.id : 1}">${isC || isH ? '벗기' : isD ? '떼기' : isP ? (home ? '집에 두기' : '가게에 맡기기') : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isH ? '쓰기' : isD ? (p.pet ? '달아 주기' : '펫이 없어요') : isP ? (p.pet && p.pet2 ? '바꿔 데려가기' : '데리고 다니기') : isF ? '켜기' : '타기'}</button>` : lock ? `<button class="btn shLockBtn" disabled>🔒 이익 경매 ${need}번</button>` : this.look ? '<button class="btn" disabled>숍에서 사요</button>' : `<button class="btn ${sp >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${sp >= it.price ? '' : 'disabled'}>사기</button>`;
+      return `<div class="shItem${on ? ' on' : own ? ' own' : lock ? ' lock' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isH ? '쓰는 중' : isD ? '달고 있어요' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? (isP ? (home ? '집에 있어요' : '가게에 맡겨 둠') : '보유') : fmtWon(it.price)}</span>${btn}${sellBtn}</div>`;
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">💰 번 돈 <b>${fmtWon(sp)}</b> <small>(밑천 ${fmtWon(State.capital || 0)}은 못 써요 · 되팔면 반값)</small> · 🏅 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
-      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">✨ 이펙트${nt('fx')}</button></div>
+      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">✨ 이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">🎩 모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">🎀 펫 꾸미기${nt('petdeco')}</button></div>
+      ${isD ? `<div class="shNote" style="margin:0 0 6px;text-align:center">${p.pet ? `데리고 다니는 ${esc((SHOP_ITEMS.pet.find(x => x.pet === PetDeco.target()) || {}).name || '펫')}에게 달아요 · 👗 옷장에서 바꿀 수 있어요` : '펫을 데리고 다녀야 달 수 있어요'}</div>` : isH || isC ? '<div class="shNote" style="margin:0 0 6px;text-align:center">산 옷·모자는 화면의 👗 옷장에서 언제든 갈아입어요</div>' : ''}
       ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">그림을 누르면 움직이는 미리보기를 볼 수 있어요. ${isF ? '이펙트는 걸어 다닐 때 내 몸 주변에 보이고, 친구 화면에도 보여요. 산 이펙트는 이 기기에서 계속 가져요.' : isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' + (home ? '' : ' 아직 내 집이 없으면 안 데리고 다니는 펫은 편집숍이 맡아 줘요. 공인중개사에서 집을 사면 집에 둘 수 있어요.') : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
       <div class="pcBtns"><button class="btn" id="shClose">닫기</button></div></div>`;
@@ -9295,7 +9368,7 @@ const Shop = {
     el.querySelectorAll('[data-buy]').forEach(b => (b.onclick = () => this.buy(SHOP_BY_ID[b.dataset.buy])));
     el.querySelectorAll('[data-sell]').forEach(b => (b.onclick = () => this.sell(SHOP_BY_ID[b.dataset.sell])));
     el.querySelectorAll('[data-wear]').forEach(b => (b.onclick = () => this.wear(SHOP_BY_ID[b.dataset.wear])));
-    el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { if (isP) this.petOff(b.dataset.off); else Profile.set(isC ? 'outfit' : isF ? 'fx' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
+    el.querySelectorAll('[data-off]').forEach(b => (b.onclick = () => { if (isP) this.petOff(b.dataset.off); else if (isD) PetDeco.off(SHOP_BY_ID[b.dataset.off]); else Profile.set(isC ? 'outfit' : isF ? 'fx' : isH ? 'hat' : 'car', null); Pets.mineT = -1; Sound.play('click'); this.render(); }));
     $('shClose').onclick = () => this.close();
     if ($('shRideOk')) $('shRideOk').onclick = () => { const v = $('shRideIn').value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('rideName', v); Sound.play('pop'); Toast.show(v ? `'${v}' 등에 업혔어요` : '이름을 뗐어요'); this.render(); }; // 업히기 친구 이름 (사용자 2026-10-15)
     for (const n of ['', '2']) if ($('shTagOk' + n)) $('shTagOk' + n).onclick = () => { const v = $('shTagIn' + n).value.replace(/[<>]/g, '').trim().slice(0, 10); Profile.set('petName' + n, v); Pets.mineT = -1; Sound.play('pop'); Toast.show(v ? `명찰 '${v}' 달았어요` : '명찰을 뗐어요'); this.render(); }; // 펫 명찰 (친구·여자친구 등, 사용자 2026-10-15) · 두 마리면 따로
@@ -9371,7 +9444,9 @@ const Shop = {
     if (it.pet && !thumb) return this.petScene(x, it.pet, t, mv, idle, this.moveT || 0); // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
     if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = thumb ? (hd ? 6 : ['trex', 'giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 3 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 8 : 5) : hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 2 : it.pet === 'beetle' ? 3.5 : ['mouse', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, thumb ? 98 : 96); /* 칸 그림은 더 크게 (뭔지 한눈에) */ x.scale(hd ? k / 2 : k, hd ? k / 2 : k); if (it.pet === 'monkey' && !thumb) { /* 원숭이: 내 캐릭터와 같이 — 걸을 땐 머리 위에 타고, 서 있으면 내려와 바나나 */ Sprites.setPal('shop:me', Profile.pal(Profile.get())); const sh = Sprites.sheet('shop:me'); x.imageSmoothingEnabled = false; if (mv) { x.drawImage(sh, (1 + Math.floor(t * 8) % 4) * 16, 32, 16, 16, -8, -16, 16, 16); Pets.draw(x, 'monkey', 0, -15, 1, false, t, '', 0, 'ride'); } else { x.drawImage(sh, 0, 0, 16, 16, -14, -16, 16, 16); Pets.draw(x, 'monkey', 8, 0, 1, false, t, '', idle); } x.restore(); return; }
       Pets.draw(x, it.pet, 0, 0, 1, mv, t, '', idle, it.pet === 'monkey' && mv ? 'ride' : undefined); if (it.pet === 'trex' && !mv && !thumb) Pets.ptero(x, { x: 0, y: 12 }, idle, t); /* 서 있으면 익룡 (미리보기에도) */ x.restore(); return; }
-    if (it.fx) { this.fxPrev(x, it, t, thumb ? 3 : 2.5); return; } // 이펙트는 머리 위까지 올라가니 조금 작게
+    if (it.fx) { this.fxPrev(x, it, t, thumb ? 3 : 2.5); return; }
+    if (it.hat) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { hat: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, thumb ? 40 : 56, thumb ? 18 : 40, thumb ? 80 : 48, thumb ? 80 : 48); return; }
+    if (it.pd) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }); Closet.petPrev(x, k, d, t, mv, idle, thumb ? 1.2 : 1); return; } // 이펙트는 머리 위까지 올라가니 조금 작게
     if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, thumb ? 40 : 56, thumb ? 18 : 40, thumb ? 80 : 48, thumb ? 80 : 48); return; }
     x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); drawCarSprite(x, 0, 0, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0); x.restore();
   },
@@ -9389,7 +9464,7 @@ const Shop = {
   },
   hasHome() { return typeof Live === 'undefined' || !Live.on || !!(typeof MyHome !== 'undefined' && MyHome.get()); },
   petOff(k) { const p = Profile.get(); if (p.pet === k) { Profile.set('pet', p.pet2 || null); Profile.set('petName', p.pet2 ? p.petName2 || '' : ''); } Profile.set('pet2', null); if (p.pet !== k || p.pet2) Profile.set('petName2', ''); Pets.mineT = -1; },
-  wear(it) { if (it.fx) { Profile.set('fx', it.id); Pets.mineT = -1; Sound.play('chime'); return this.render(); } if (it.pet) { const p = Profile.get(); if (!p.pet) Profile.set('pet', it.pet); else if (!p.pet2) Profile.set('pet2', it.pet); else { const old = SHOP_ITEMS.pet.find(x => x.pet === p.pet2); Profile.set('pet2', it.pet); Profile.set('petName2', ''); Toast.show(`${old ? old.name : '펫'}은 집에 두고 ${it.name}를 데려가요`); } Pets.mineT = -1; Sound.play('chime'); return this.render(); } /* 펫 두 마리까지: 빈 자리에, 꽉 찼으면 두 번째 자리를 바꾼다 */ Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
+  wear(it) { if (it.hat) { Profile.set('hat', it.id); Sound.play('pop'); return this.render(); } if (it.pd) { if (PetDeco.wear(it)) Sound.play('chime'); return this.render(); } if (it.fx) { Profile.set('fx', it.id); Pets.mineT = -1; Sound.play('chime'); return this.render(); } if (it.pet) { const p = Profile.get(); if (!p.pet) Profile.set('pet', it.pet); else if (!p.pet2) Profile.set('pet2', it.pet); else { const old = SHOP_ITEMS.pet.find(x => x.pet === p.pet2); Profile.set('pet2', it.pet); Profile.set('petName2', ''); Toast.show(`${old ? old.name : '펫'}은 집에 두고 ${it.name}를 데려가요`); } Pets.mineT = -1; Sound.play('chime'); return this.render(); } /* 펫 두 마리까지: 빈 자리에, 꽉 찼으면 두 번째 자리를 바꾼다 */ Profile.set(it.pal ? 'outfit' : 'car', it.id); Sound.play(it.pal ? 'pop' : 'ignition'); this.render(); },
 };
 
 /* ===== 편집숍 사장님 호객 (사용자 2026-10-16): 새 물건이 있으면 시작 장소(선배네 사무실) 근처에서 "이번에 ○○ 들어왔어요, 한번 보러들 와요" =====
@@ -10342,6 +10417,150 @@ const Fx = {
   },
 };
 
+/* ===================== 펫 꾸미기 (v187, 사용자 2026-10-17 '펫도 장착할 수 있는 거 안경, 목줄, 목도리, 펫 색깔 변경 황금색도') =====================
+ * 편집숍 '🎀 펫 꾸미기'에서 사고, 👗 옷장(closet.js)에서 데리고 다니는 펫에 단다. Profile.petDeco = { 펫 종류: { eye, neck, head, color } }
+ * → pos로 친구 화면에도 보인다. 그림: 펫마다 눈·머리 꼭대기·목 자리(펫 픽셀, 오른쪽 보기 기준)에 작은 픽셀로 덧그린다.
+ * 색깔은 펫을 화면 밖 캔버스에 그려서 'color' + 'multiply'로 물들인 뒤 같은 자리에 붙인다 (픽셀 그대로). */
+const PET_ANCH = { // e: 눈 (e2: 앞을 보는 펫의 다른 눈), h: 머리 꼭대기, n: 목, s: 머리 크기 (펫 픽셀, 오른쪽 보기 기준, 위가 -)
+  mouse: { e: [5, -4], h: [4, -6], n: [2, -3], s: 3 }, beetle: { e: [4, -6], h: [4, -7], n: [3, -3], s: 3 }, mantis: { e: [6, -14], h: [4, -15], n: [2, -10], s: 3 },
+  dog: { e: [7, -9], h: [6, -11], n: [5, -6], s: 5 }, cat: { e: [7, -8], h: [5, -10], n: [4, -5], s: 4 }, lizard: { e: [5, -4], h: [6, -5], n: [3, -3], s: 3 },
+  rabbit: { e: [4, -7], h: [3, -9], n: [2, -5], s: 3 }, monkey: { e: [-1, -12], e2: [2, -12], h: [0, -15], n: [0, -9], s: 5 }, penguin: { e: [1, -10], h: [0, -12], n: [1, -8], s: 4 },
+  panda: { e: [6, -9], e2: [9, -9], h: [7, -12], n: [6, -5], s: 5 }, tiger: { e: [7, -10], h: [7, -12], n: [5, -7], s: 5 }, giraffe: { e: [6, -26], h: [6, -27], n: [3, -21], s: 4 },
+  elephant: { e: [9, -12], h: [8, -15], n: [7, -8], s: 6 }, buddy: { e: [1, -10], h: [0, -14], n: [0, -7], s: 5 }, kid: { e: [-2, -11], e2: [1, -11], h: [0, -15], n: [0, -7], s: 6 },
+  gf: { e: [-1, -19], e2: [1, -19], h: [0, -22], n: [0, -15], s: 4 }, bf: { e: [-2, -20], e2: [1, -20], h: [0, -23], n: [0, -15], s: 4 }, turtle: { e: [7, -5], h: [7, -6], n: [5, -4], s: 3 },
+  dolphin: { e: [2, -9], h: [1, -11], n: [1, -6], s: 4 }, trex: { e: [6, -24], h: [6, -30], n: [3, -18], s: 7 },
+};
+const PET_TINT = { gold: '#f0b820', pink: '#ff7ab0', sky: '#5ab8ff', purple: '#a070e0' };
+const PetDeco = {
+  sel: 1, // 옷장에서 고른 펫 (두 마리면 1/2)
+  get(kind, prof) { const d = (prof || Profile.get()).petDeco; return (d && typeof d === 'object' && d[kind] && typeof d[kind] === 'object') ? d[kind] : {}; },
+  set(kind, slot, v) { const p = Profile.get(), d = Object.assign({}, p.petDeco || {}); d[kind] = Object.assign({}, d[kind] || {}); if (v) d[kind][slot] = v; else delete d[kind][slot]; Profile.set('petDeco', d); Pets.mineT = -1; },
+  target() { const p = Profile.get(); return this.sel === 2 && p.pet2 ? p.pet2 : p.pet || null; },
+  on(it) { const k = this.target(); return !!k && this.get(k)[it.pd] === it.v; },
+  wear(it) { const k = this.target(); if (!k) { Toast.show('펫을 먼저 데리고 다녀야 꾸밀 수 있어요'); return false; } this.set(k, it.pd, it.v); return true; },
+  off(it) { const k = this.target(); if (k) this.set(k, it.pd, null); },
+  strip(it) { const p = Profile.get(), d = Object.assign({}, p.petDeco || {}); let ch = false; for (const k in d) if (d[k] && d[k][it.pd] === it.v) { d[k] = Object.assign({}, d[k]); delete d[k][it.pd]; ch = true; } if (ch) Profile.set('petDeco', d); },
+  any(d) { return !!(d && (d.eye || d.neck || d.head || d.color)); },
+  // 그리는 펫의 주인: 'me', 'me#2', 'f:이름', 'f:이름#2'
+  ofKey(key, kind) {
+    if (key === 'me' || key === 'me#2') return this.get(kind);
+    if (key.startsWith('f:') && typeof Net !== 'undefined') { const nm = key.slice(2).replace(/#2$/, ''); for (const id in Net.players) { const q = Net.players[id]; if (q && q.name === nm && q.pal) return this.get(kind, q.pal); } }
+    return null;
+  },
+  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12 }[kind] || 15); },
+  draw(c, kind, x, y, face, moving, t, tag, idle, pose, d) {
+    if (d.color && this.tinted(c, kind, x, y, face, moving, t, idle, pose, d.color)) { if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - this.labelY(kind)); }
+    else Pets.draw0(c, kind, x, y, face, moving, t, tag, idle, pose);
+    this.acc(c, kind, x, y, face, d, t, moving);
+  },
+  off2: null,
+  canv(i, W, H) { const L = this.off2 || (this.off2 = [null, null]); let cv = L[i]; if (!cv) cv = L[i] = document.createElement('canvas'); if (cv.width < W || cv.height < H) { cv.width = Math.max(cv.width, W); cv.height = Math.max(cv.height, H); } return cv; },
+  tinted(c, kind, x, y, face, moving, t, idle, pose, col) {
+    if (!c.getTransform) return false; const m = c.getTransform(), sc = Math.hypot(m.a, m.b) || 1, W = Math.ceil(72 * sc), H = Math.ceil(46 * sc); if (W > 2400 || H > 1600) return false;
+    const ox = Math.ceil(36 * sc), oy = Math.ceil(38 * sc), sx = snapPx(c, x), sy = snapPx(c, y), P = { x: m.a * sx + m.c * sy + m.e, y: m.b * sx + m.d * sy + m.f };
+    const A = this.canv(0, W, H), B = this.canv(1, W, H), a = A.getContext('2d'), b = B.getContext('2d');
+    a.setTransform(1, 0, 0, 1, 0, 0); a.globalCompositeOperation = 'source-over'; a.globalAlpha = 1; a.clearRect(0, 0, W, H); a.imageSmoothingEnabled = false; a.setTransform(m.a, m.b, m.c, m.d, ox, oy);
+    Pets.draw0(a, kind, 0, 0, face, moving, t, '', idle, pose); a.setTransform(1, 0, 0, 1, 0, 0);
+    b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, W, H); b.drawImage(A, 0, 0, W, H, 0, 0, W, H);
+    let fill = PET_TINT[col] || '#f0b820';
+    if (col === 'rainbow') { const g = a.createLinearGradient(0, 0, W, 0), o = (t * 0.4) % 1; for (let i = 0; i <= 6; i++) g.addColorStop(i / 6, `hsl(${Math.round((i / 6 + o) * 360) % 360},90%,55%)`); fill = g; }
+    if (col === 'black') { a.globalCompositeOperation = 'source-atop'; a.globalAlpha = 0.78; a.fillStyle = '#16161e'; a.fillRect(0, 0, W, H); }
+    else { a.globalCompositeOperation = 'color'; a.fillStyle = fill; a.fillRect(0, 0, W, H); a.globalCompositeOperation = 'multiply'; a.globalAlpha = 0.5; a.fillRect(0, 0, W, H); }
+    a.globalAlpha = 1; a.globalCompositeOperation = 'destination-in'; a.drawImage(B, 0, 0, W, H, 0, 0, W, H); a.globalCompositeOperation = 'source-over';
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false; c.drawImage(A, 0, 0, W, H, Math.round(P.x - ox), Math.round(P.y - oy), W, H); c.restore();
+    if (col === 'gold') { const h = PetRT.petH(kind), n = Math.floor(t * 3); c.fillStyle = '#fffbe0'; for (let i = 0; i < 2; i++) { const q = paHash(n, i + kind.length); if ((q & 3) === 0) continue; const E = (PET_ANCH[kind] || { e: [0, -h / 2] }).e, sx = face < 0 ? -1 : 1; c.fillRect(Math.round(x + sx * (E[0] + ((q >> 2) % 9) - 6)), Math.round(y + E[1] + ((q >> 6) % 6) - 1), 1, 1); } }
+    return true;
+  },
+  // 안경·목줄·목도리·나비넥타이·리본·꼬깔·왕관 (펫 픽셀 단위, 큰 펫은 2배)
+  acc(c, kind, x, y, face, d, t, moving) {
+    const A = PET_ANCH[kind]; if (!A || !(d.eye || d.neck || d.head)) return; const u = A.s >= 8 ? 2 : 1;
+    c.save(); c.translate(snapPx(c, x), snapPx(c, y)); c.scale(face < 0 ? -1 : 1, 1);
+    const at = (p, X, Y, w, h, col) => { c.fillStyle = col; c.fillRect(p[0] + X * u, p[1] + Y * u, w * u, h * u); };
+    const eyes = A.e2 ? [A.e, A.e2] : [A.e];
+    if (d.eye === 'glasses') { const F = '#2a2026'; for (const e of eyes) { at(e, -1, -1, 3, 1, F); at(e, -1, 0, 1, 1, F); at(e, 1, 0, 1, 1, F); } if (A.e2) at(A.e, 2, -1, A.e2[0] - A.e[0] - 3, 1, F); else at(A.e, -3, -1, 2, 1, F); }
+    else if (d.eye === 'sun') { for (const e of eyes) { at(e, -1, -1, 3, 2, '#111116'); at(e, 1, -1, 1, 1, '#7aa8ff'); } if (A.e2) at(A.e, 2, -1, A.e2[0] - A.e[0] - 3, 1, '#111116'); else at(A.e, -3, -1, 2, 1, '#111116'); }
+    const n = A.n, w = Math.max(2, Math.round(A.s * 0.6)), nl = -(w >> 1);
+    if (d.neck === 'collar') { at(n, nl, 0, w, 1, '#d83a3a'); at(n, 0, 1, 1, 1, '#ffd84a'); }
+    else if (d.neck === 'scarf') { at(n, nl, -1, w, 2, '#e83a3a'); for (let i = 1; i < w; i += 2) at(n, nl + i, -1, 1, 2, '#fff2f2'); at(n, nl - 1, 0, 1, 2 + (moving && Math.floor(t * 6) % 2 ? 1 : 0), '#e83a3a'); }
+    else if (d.neck === 'bowtie') { const B = '#3a6ad8'; at(n, -2, -1, 2, 2, B); at(n, 1, -1, 2, 2, B); at(n, 0, -1, 1, 1, '#22448a'); }
+    const h = A.h;
+    if (d.head === 'ribbon') { const P = '#ff6aa0'; at(h, -2, -2, 2, 2, P); at(h, 1, -2, 2, 2, P); at(h, 0, -2, 1, 1, '#c8407a'); }
+    else if (d.head === 'party') { at(h, -1, -1, 3, 1, '#ff5a8a'); at(h, 0, -2, 1, 1, '#ffd84a'); at(h, 0, -3, 1, 1, '#ffffff'); }
+    else if (d.head === 'crown') { const G = '#f2c230'; at(h, -1, -1, 4, 1, G); at(h, -1, -2, 1, 1, G); at(h, 1, -2, 1, 1, '#e03a3a'); at(h, 2, -2, 1, 1, G); }
+    c.restore();
+  },
+};
+// Pets.draw · Pets.actor 감싸기: 내 펫/친구 펫을 그릴 때만 꾸민 걸 붙인다
+Pets.draw0 = Pets.draw;
+Pets.draw = function (c, kind, x, y, face, moving, t, tag, idle, pose) {
+  const d = this.decoNow; if (!d || this.decoK !== kind) return this.draw0(c, kind, x, y, face, moving, t, tag, idle, pose);
+  this.decoNow = null; try { PetDeco.draw(c, kind, x, y, face, moving, t, tag, idle, pose, d); } finally { this.decoNow = d; }
+};
+Pets.actor0 = Pets.actor;
+Pets.actor = function (c, key, k, ox, oy, t, n) {
+  const R = this.actor0(c, key, k, ox, oy, t, n), d = PetDeco.ofKey(key, k);
+  if (R && R.d && PetDeco.any(d)) { const d0 = R.d; R.d = () => { Pets.decoNow = d; Pets.decoK = k; try { d0(); } finally { Pets.decoNow = null; } }; }
+  return R;
+};
+
+/* ===================== 👗 옷장 (v187, 사용자 2026-10-17 '메뉴 말고 다른 칸에서 하게 해야 하나? 메뉴라는 느낌이 아닌 거 같아') =====================
+ * 화면 오른쪽 위 '옷장' 버튼. 🧍 나: 옷 · 모자·머리 · 이펙트 / 🐾 펫: 데리고 다니는 펫의 눈 · 목 · 머리 · 털 색깔.
+ * 산 물건(편집숍 Store 'wardrobe')만 입을 수 있고, 안 산 건 자물쇠 + 값 (누르면 편집숍 구경). 바꾼 건 Profile에 있어 친구 화면에도 보인다. */
+const Closet = {
+  open_: false, tab: 'me', raf: 0, mv: false,
+  toggle() { if (this.open_) this.close(); else this.open(); },
+  open(tab) {
+    if (this.open_ || Game.busy || Dialog.open || Game.formOpen || PetBattle.open_) return; this.open_ = true; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
+    $('closet').classList.add('in'); this.render(); const loop = () => { if (!this.open_) return; this.paint(); this.raf = requestAnimationFrame(loop); }; this.raf = requestAnimationFrame(loop);
+  },
+  close() { if (!this.open_) return; this.open_ = false; Game.formOpen = false; cancelAnimationFrame(this.raf); $('closet').classList.remove('in'); Sound.play('flip'); },
+  kindName(k) { return (SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k; },
+  chips(list, cur, none, key) {
+    return `<button class="clChip${!cur ? ' on' : ''}" data-${key}="">${none}</button>` + list.map(it => { const own = Shop.has(it.id); return `<button class="clChip${cur === (it.v || it.id) ? ' on' : ''}${own ? '' : ' lock'}" data-${key}="${it.id}">${own ? '' : '🔒 '}${esc(it.name)}${own ? '' : ` <small>${fmtWon(it.price)}</small>`}</button>`; }).join('');
+  },
+  render() {
+    const p = Profile.get(), me = this.tab === 'me', el = $('closet'); let body;
+    if (me) body = `<div class="clRow"><b>👕 옷</b><div>${this.chips(SHOP_ITEMS.clothes, p.outfit, '기본 옷', 'out')}</div></div>
+      <div class="clRow"><b>🎩 모자·머리</b><div>${this.chips(SHOP_ITEMS.hat, p.hat, '안 써요', 'hat')}</div></div>
+      <div class="clRow"><b>✨ 이펙트</b><div>${this.chips(SHOP_ITEMS.fx, p.fx, '없음', 'fx')}</div></div>`;
+    else if (!p.pet) body = `<p class="clNone">데리고 다니는 펫이 없어요. 건대 편집숍 🐾 펫 칸에서 데려올 수 있어요.</p>`;
+    else { const k = PetDeco.target(), d = PetDeco.get(k), row = (slot, t, none) => `<div class="clRow"><b>${t}</b><div>${this.chips(SHOP_ITEMS.petdeco.filter(it => it.pd === slot), d[slot], none, 'pd-' + slot)}</div></div>`;
+      body = (p.pet2 ? `<div class="clPets">${[[1, p.pet, p.petName], [2, p.pet2, p.petName2]].map(([n, kk, nm]) => `<button class="clChip${(PetDeco.sel === 2 ? 2 : 1) === n ? ' on' : ''}" data-sel="${n}">🐾 ${esc(nm || this.kindName(kk))}</button>`).join('')}</div>` : '')
+        + row('eye', '👓 눈', '없음') + row('neck', '🧣 목', '없음') + row('head', '🎀 머리', '없음') + row('color', '🎨 털 색깔', '원래 색'); }
+    el.innerHTML = `<div class="rcpt"><div class="rcHead">👗 옷장</div><div class="shTabs"><button class="btn${me ? ' sel' : ''}" data-tab="me">🧍 나</button><button class="btn${me ? '' : ' sel'}" data-tab="pet">🐾 ${p.pet ? esc(this.kindName(PetDeco.target())) : '펫'}</button></div>
+      <div class="clPrev"><canvas id="clCv"></canvas><button class="btn clMv" id="clMv">${this.mv ? '⏸ 멈추기' : '🚶 걷기'}</button></div>
+      <div class="clBody">${body}</div><p class="shNote">🔒 칸은 건대 편집숍에서 번 돈으로 사요. 바꾼 모습은 친구 화면에도 보여요.</p>
+      <div class="pcBtns"><button class="btn" id="clShop">🛍️ 편집숍 구경하기</button><button class="btn gold" id="clClose">닫기</button></div></div>`;
+    el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
+    el.querySelectorAll('[data-sel]').forEach(b => (b.onclick = () => { PetDeco.sel = +b.dataset.sel; Sound.play('click'); this.render(); }));
+    const pick = (id, apply) => { if (id && !Shop.has(id)) { const it = SHOP_BY_ID[id]; Sound.play('deny'); Toast.show(`${it.name}은 건대 편집숍에서 사요 (${fmtWon(it.price)})`); return; } apply(id ? SHOP_BY_ID[id] : null); Pets.mineT = -1; Sound.play('pop'); this.render(); };
+    el.querySelectorAll('[data-out]').forEach(b => (b.onclick = () => pick(b.dataset.out, it => Profile.set('outfit', it ? it.id : null))));
+    el.querySelectorAll('[data-hat]').forEach(b => (b.onclick = () => pick(b.dataset.hat, it => Profile.set('hat', it ? it.id : null))));
+    el.querySelectorAll('[data-fx]').forEach(b => (b.onclick = () => pick(b.dataset.fx, it => Profile.set('fx', it ? it.id : null))));
+    for (const slot of ['eye', 'neck', 'head', 'color']) el.querySelectorAll(`[data-pd-${slot}]`).forEach(b => (b.onclick = () => pick(b.getAttribute('data-pd-' + slot), it => PetDeco.set(PetDeco.target(), slot, it ? it.v : null))));
+    $('clMv').onclick = () => { this.mv = !this.mv; this.render(); };
+    $('clShop').onclick = () => { const tab = me ? 'hat' : 'petdeco'; this.close(); Shop.open(tab, !Closet.atShop()); };
+    $('clClose').onclick = () => this.close();
+  },
+  atShop() { return !!(Game.room && Game.room.place && Game.room.place.kind === 'shop'); },
+  // 펫 + 꾸민 것 (상점 칸 그림에서도 쓴다). 160×104 논리 좌표
+  petPrev(x, kind, d, t, mv, idle, zoom) {
+    const hd = !!PET_HD[kind], big = ['trex', 'giraffe', 'elephant', 'dolphin'].includes(kind), k = Math.round((hd ? 4 : big ? 2 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 6 : 4) * (zoom || 1));
+    x.save(); x.translate(80 - (big ? 8 : 0), 96); x.scale(k, k); x.imageSmoothingEnabled = false;
+    PetDeco.draw(x, kind, 0, 0, 1, mv, t, '', idle || 0, kind === 'monkey' && mv ? 'ride' : undefined, d || {}); x.restore();
+  },
+  paint() {
+    const cv = $('clCv'); if (!cv) return; const S = Math.max(2, Math.min(8, Math.ceil((cv.clientWidth || 320) * (window.devicePixelRatio || 1) / 160))); if (cv.width !== 160 * S) { cv.width = 160 * S; cv.height = 104 * S; }
+    const x = cv.getContext('2d'), t = performance.now() / 1000, p = Profile.get(); x.setTransform(S, 0, 0, S, 0, 0); x.imageSmoothingEnabled = false;
+    x.fillStyle = '#e8dcc0'; x.fillRect(0, 0, 160, 104); x.fillStyle = '#d6c8a6'; x.fillRect(0, 88, 160, 16);
+    if (this.mv) { x.fillStyle = 'rgba(0,0,0,.1)'; const off = (t * 40) % 24; for (let X = -24; X < 184; X += 24) x.fillRect(Math.round(X - off), 94, 10, 2); }
+    if (this.tab === 'me') { Sprites.setPal('closet:me', Profile.pal(p)); const fr = this.mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = this.mv ? 2 : [0, 2, 3, 1][Math.floor(t / 1.6) % 4];
+      x.drawImage(Sprites.sheet('closet:me'), fr * 16, dir * 16, 16, 16, 56, 42, 48, 48);
+      if (p.fx && typeof FX_DRAW !== 'undefined' && SHOP_BY_ID[p.fx]) { x.save(); x.scale(3, 3); FX_DRAW[SHOP_BY_ID[p.fx].fx](x, 80 / 3, 90 / 3, t); x.restore(); } }
+    else if (p.pet) { const k = PetDeco.target(); this.petPrev(x, k, PetDeco.get(k), t, this.mv, this.mv ? 0 : 1, 1); }
+  },
+};
+
 /* ===================== 펫이 차에 치이면 화나서 운전자 공격 (v156, 사용자 2026-10-16 'npc 자동차가 펫 치면 펫이 화나서 운전자 공격하자') =====================
  * 걸어 다닐 때 내 펫(1·2번째)이 달리는 길가 차에 닿으면: 펫이 데굴 날아갔다가 💢 → 차가 서고 운전자가 내린다 → 펫이 운전자를 쫓아다니며 퍽퍽
  * → 운전자가 "잘못했어요!" 하고 차에 도로 타서 부리나케 도망 → 펫은 '흥!' 하고 다시 주인을 따라온다. 펫 하나당 4초에 한 번.
@@ -10950,7 +11169,7 @@ const PB_MODE_HELP = {
   sumo: ['방향키(WASD)로 움직이고 스페이스로 돌진! 원 밖으로 밀어내면 이겨요. 무거운 펫은 잘 안 밀려요.', '왼쪽 조이스틱으로 움직이고 돌진 버튼! 원 밖으로 밀어내면 이겨요.'],
   race: ['스페이스를 박자 맞춰 눌러 달려요 (너무 빨리 막 누르면 덜 나가요). 허들 앞에서 W(↑)로 점프!', '달리기 버튼을 박자 맞춰 누르고, 허들 앞에서 점프 버튼!'],
   tug: ['스페이스 연타! 아래 막대가 초록 칸에 있을 때 누르면 세 배로 당겨요.', '당기기 버튼 연타! 막대가 초록 칸에 있을 때 누르면 세 배로 당겨요.'],
-  dodge: ['방향키로 피하고 스페이스로 공을 던져요. 세 번 맞으면 져요.', '조이스틱으로 피하고 던지기 버튼! 세 번 맞으면 져요.'],
+  dodge: ['방향키로 피하고 스페이스로 공을 던져요. 세 번 맞으면 져요. 갈수록 공이 빨라져요!', '조이스틱으로 피하고 던지기 버튼! 세 번 맞으면 져요. 갈수록 공이 빨라져요!'],
 };
 const PB_ACT_KO = { sumo: '돌진', race: '달리기', tug: '당기기', dodge: '던지기' };
 const pbCl = v => Math.max(-1, Math.min(1, +v || 0));
@@ -11014,6 +11233,8 @@ const PetRT = {
     if (!w && G.left <= 0) { w = M.timeUp(G) || (Math.random() < 0.5 ? 'a' : 'b'); G.why = M.upWhy; }
     if (w) { G.ph = 'done'; G.win = w; G.snd++; G.sk = 'chime'; if (B.mode === 'net') Net.send({ t: 'pb', k: 'rx', to: B.foe, w, s: this.pack(G) }); setTimeout(() => { if (PetBattle.B === B) PetBattle.end(w, G.why); }, 1100); }
   },
+  // 피구: 시간이 갈수록 공이 빨라진다 (사용자 2026-10-17 '피구 점점 갈수록 공 빨라지게'): 처음 ×1 → 40초쯤 ×2.2까지
+  dodgeUp(G) { return Math.min(2.2, 1 + (G.t || 0) / 33); },
   pack(G) { return JSON.parse(JSON.stringify(G, (k, v) => typeof v === 'number' ? Math.round(v * 10) / 10 : v)); },
   onNet(B, m) {
     if (!B.rtMode) return;
@@ -11386,7 +11607,7 @@ const PetRT = {
         const s = G['s' + k], p = P[k], o = k === 'a' ? 'b' : 'a', sp = 100 * s.spd;
         G[k + 'x'] = Math.max(k === 'a' ? 16 : 172, Math.min(k === 'a' ? 148 : 304, G[k + 'x'] + p.x * sp * dt)); G[k + 'y'] = Math.max(52, Math.min(166, G[k + 'y'] + p.y * sp * dt));
         G[k + 'c'] = Math.max(0, G[k + 'c'] - dt); G[k + 'i'] = Math.max(0, G[k + 'i'] - dt);
-        if (p.act && G[k + 'c'] <= 0) { const dx = G[o + 'x'] - G[k + 'x'], dy = G[o + 'y'] - G[k + 'y'], n = Math.hypot(dx, dy) || 1, v = 190 * (0.8 + 0.2 * s.pow); G.balls.push({ x: G[k + 'x'] + dx / n * 12, y: G[k + 'y'] - 7, vx: dx / n * v, vy: dy / n * v, o: k }); G[k + 'c'] = 1.0; G.snd++; G.sk = 'flip'; }
+        if (p.act && G[k + 'c'] <= 0) { const dx = G[o + 'x'] - G[k + 'x'], dy = G[o + 'y'] - G[k + 'y'], n = Math.hypot(dx, dy) || 1, v = 190 * (0.8 + 0.2 * s.pow) * PetRT.dodgeUp(G); G.balls.push({ x: G[k + 'x'] + dx / n * 12, y: G[k + 'y'] - 7, vx: dx / n * v, vy: dy / n * v, o: k }); G[k + 'c'] = 1.0 / Math.sqrt(PetRT.dodgeUp(G)); G.snd++; G.sk = 'flip'; }
       }
       G.balls = G.balls.filter(b => {
         b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < -10 || b.x > 330 || b.y < 30 || b.y > 190) return false;
@@ -11404,7 +11625,7 @@ const PetRT = {
       if (A.t <= 0 && G[k + 'c'] <= 0) { A.an++; A.t = 0.3 + Math.random() * (1.4 - A.sk); }
       return { x: mx * A.sk, y: my * Math.min(1, A.sk + 0.2), an: A.an, jn: 0 };
     },
-    stat(G, k) { const n = Math.max(0, G[k + 'l']); return '♥'.repeat(n) + '♡'.repeat(Math.max(0, 3 - n)); },
+    stat(G, k) { const n = Math.max(0, G[k + 'l']), up = PetRT.dodgeUp(G); return '♥'.repeat(n) + '♡'.repeat(Math.max(0, 3 - n)) + (up > 1.1 ? `  ⚡공 ×${up.toFixed(1)}` : ''); },
     watch(G, B, F, dt) {
       const pv = F.pv, me = B.me, n = (G.balls || []).length;
       for (const k of ['a', 'b']) { const x = G[k + 'x'], y = G[k + 'y'];
@@ -11900,13 +12121,17 @@ const PA_HUM = { sword: { atk: { rg: 1.9, arc: 1.4, dmg: 12, cd: 0.5, wu: 0.1 },
 const PA_PAW = { mouse: '#c8beb4', beetle: '#3a2a1a', mantis: '#6ac04a', dog: '#c89058', cat: '#f0a050', lizard: '#6aa040', rabbit: '#f4f0ea', monkey: '#8a5a30', penguin: '#2a2a34', panda: '#222228', tiger: '#f08a20', giraffe: '#e8b860', elephant: '#9a9aa8', turtle: '#5a9a4a', dolphin: '#6a9ad0', trex: '#5a8a3a' };
 const paAng = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
 const paHash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return (h ^ (h >>> 16)) >>> 0; };
+// 부드러운 값 노이즈 (0~1) · 색 밝기 바꾸기
+const paN = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), a = paHash(xi, yi) & 255, b = paHash(xi + 1, yi) & 255, c = paHash(xi, yi + 1) & 255, d = paHash(xi + 1, yi + 1) & 255; return (a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v) / 255; };
+const paSS = (a, b, x) => { const v = Math.max(0, Math.min(1, (x - a) / (b - a))); return v * v * (3 - 2 * v); };
+const paShade = (hex, f) => { const n = parseInt(hex.slice(1), 16), c = v => Math.max(0, Math.min(255, Math.round(f > 1 ? v + (255 - v) * (f - 1) : v * f))); return `rgb(${c(n >> 16)},${c((n >> 8) & 255)},${c(n & 255)})`; };
 const paRGB = (r, g, b) => (255 << 24) | (Math.max(0, Math.min(255, b | 0)) << 16) | (Math.max(0, Math.min(255, g | 0)) << 8) | Math.max(0, Math.min(255, r | 0));
 
 /* ---- 시작 전 고르기: 누구로 싸울지 + 무기 ---- */
 const PetArena = {
   clean(c) { c = c || {}; return { ctl: c.ctl === 1 ? 1 : 0, wp: c.wp === 'fire' ? 'fire' : 'sword' }; },
   foe(B) { return B.me === 'a' ? 'b' : 'a'; },
-  pick(B, done) {
+  pick(B, done) { setTimeout(() => { try { PetRT.arena.tex(); } catch (e) {} }, 60); /* 고르는 동안 텍스처를 미리 굽는다 */
     B.apick = { ctl: Store.get('arenaCtl', 0) === 1 ? 1 : 0, wp: Store.get('arenaWp', 'sword') === 'fire' ? 'fire' : 'sword', t0: Date.now(), ok: false, done };
     B.ac = B.ac || {}; if (B.mode === 'npc') B.ac[this.foe(B)] = { ctl: 0, wp: Math.random() < 0.5 ? 'sword' : 'fire' };
     $('pbWin').classList.add('in'); this.render(B);
@@ -12119,7 +12344,9 @@ PetRT.arena = {
   full(c, W, H, B, G, t) {
     let R = this.R; if (!R) R = this.R = { seen: G.eid || 0, fx: [], nums: [], rings: [], bolts: [], hm: 0, hk: 0, dmg: 0, sh: 0, msg: null, lt: 0, kill: 0 };
     const now = performance.now(), dt = R.lt ? Math.min(0.05, (now - R.lt) / 1000) : 0; R.lt = now;
-    const k = Math.max(2, Math.round(H / 190)), iw = Math.ceil(W / k), ih = Math.ceil(H / k);
+    // v188 화질: 버퍼를 기기 픽셀 기준 400~480줄로 (느리면 저절로 한 단계 낮춘다). 캐릭터·손은 기기 해상도로 그린다
+    const dpr = c.getTransform().a || 1, DW = Math.round(W * dpr), DH = Math.round(H * dpr), touch = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+    const kd = Math.max(1, Math.min(8, Math.round(DH / (touch ? 340 : 470)) + (R.kq | 0))), k = kd / dpr, iw = Math.ceil(DW / kd), ih = Math.ceil(DH / kd);
     if (!R.cv || R.cv.width !== iw || R.cv.height !== ih) { R.cv = document.createElement('canvas'); R.cv.width = iw; R.cv.height = ih; R.x = R.cv.getContext('2d'); R.img = R.x.createImageData(iw, ih); R.u32 = new Uint32Array(R.img.data.buffer); R.zb = new Float32Array(iw); }
     if (!G.u || G.u.length !== 4) { c.fillStyle = '#14161e'; c.fillRect(0, 0, W, H); return; }
     const ci = this.cu(G, B.me), U = G.u[ci];
@@ -12129,13 +12356,19 @@ PetRT.arena = {
     const shk = R.sh > 0 ? (Math.random() - 0.5) * R.sh * 0.06 : 0, mvB = U.hp > 0 ? (U.mv || 0) : 0;
     const cam = { px: U.x, py: U.y, yaw: B.ya + shk, z: this.eye(U) + (U.z || 0) + Math.sin(t * 10) * 0.03 * mvB - (U.hp <= 0 ? this.eye(U) * 0.6 : 0), tanH: Math.tan(0.62), k, iw, ih };
     cam.dX = Math.cos(cam.yaw); cam.dY = Math.sin(cam.yaw); cam.f = (iw / 2) / cam.tanH; cam.hz = Math.round(ih * 0.5 + (R.sh > 0 ? (Math.random() - 0.5) * R.sh * 6 : 0)); R.cam = cam;
-    this.world(R, G, cam, t);
-    R.x.putImageData(R.img, 0, 0);
+    const w0 = performance.now(); this.world(R, G, cam, t); R.x.putImageData(R.img, 0, 0); this.adapt(R, performance.now() - w0, kd, DH);
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false; c.drawImage(R.cv, 0, 0, iw * kd, ih * kd);
+    c.setTransform(kd, 0, 0, kd, 0, 0); R.o = c; cam.kd = kd;
     this.sprites(R, G, B, ci, cam, t, dt);
     this.hands(R, G, B, U, cam, t);
-    c.imageSmoothingEnabled = false; c.drawImage(R.cv, 0, 0, iw * k, ih * k);
+    c.restore(); c.imageSmoothingEnabled = false;
     this.hud(c, W, H, R, G, B, ci, U, t, dt);
     PetRT.banner(c, PetRT.view(W, H, B), W, H, B, G, t);
+  },
+  // 바닥·벽 그리는 시간이 길면 버퍼를 한 단계 거칠게, 넉넉하면 다시 곱게 (2초마다)
+  adapt(R, ms, kd, DH) {
+    R.wm = R.wm ? R.wm * 0.9 + ms * 0.1 : ms; R.wn = (R.wn | 0) + 1; if (R.wn < 90) return; R.wn = 0;
+    if (R.wm > 11 && kd < 8) R.kq = (R.kq | 0) + 1; else if (kd > 1 && R.wm * Math.pow(kd / (kd - 1), 2) < 8 && DH / (kd - 1) <= 620 && (R.kq | 0) > -2) R.kq = (R.kq | 0) - 1;
   },
   // 새 사건: 소리·불꽃·숫자·맞힘 표시
   events(R, G, B, ci) {
@@ -12158,12 +12391,54 @@ PetRT.arena = {
     }
   },
   spark(R, x, y, z, n, col, sp) { for (let i = 0; i < n; i++) { const a = Math.random() * 7, v = (sp || 1) * (1 + Math.random() * 2); if (R.fx.length < 260) R.fx.push({ x, y, z, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vz: 1 + Math.random() * 2.5, g: 7, t: 0, life: 0.35 + Math.random() * 0.35, col, sz: 0.06 }); } },
-  // 바닥(픽셀마다) · 둥근 관중석 벽 · 기둥 → 픽셀 버퍼 + 열마다 깊이
+  // v188: 안 움직이는 바닥·벽·기둥·하늘은 처음 한 번 텍스처로 구워 두고, 그릴 때는 찾아보기만 한다 (픽셀마다 계산하면 너무 느림)
+  tex() {
+    if (this.TX) return this.TX; const T = this.TX = {}, sun = -2.2, sx0 = Math.cos(sun), sy0 = Math.sin(sun), shL = 4.2;
+    const crowdC = [[214, 58, 50], [56, 104, 214], [238, 196, 64], [84, 166, 86], [236, 236, 228], [164, 86, 186], [238, 136, 56], [58, 60, 74], [40, 170, 190], [250, 120, 160]];
+    const hairC = [[40, 28, 22], [70, 44, 26], [24, 22, 26], [150, 96, 44], [200, 170, 110]], skinC = [[244, 204, 168], [222, 172, 128], [176, 122, 84], [250, 220, 190]];
+    // 바닥 (18 m × 18 m)
+    const FS = 1024, fk = FS / (2 * PA_R), F = new Uint32Array(FS * FS), fp = 1 / fk;
+    for (let j = 0; j < FS; j++) for (let i = 0; i < FS; i++) {
+      const fx = (i + 0.5) / fk - PA_R, fy = (j + 0.5) / fk - PA_R, rr = Math.hypot(fx, fy);
+      const nz = paN(fx * 0.7, fy * 0.7) * 16 + paN(fx * 3.1, fy * 3.1) * 9 + paN(fx * 11, fy * 11) * 6 + ((paHash(i, j) & 15) - 7.5) * 0.9 + Math.sin(rr * 13) * 2.2 - 15;
+      let r = 218 + nz, g = 188 + nz * 0.9, bb = 132 + nz * 0.7;
+      const line = (R0, w) => Math.max(0, Math.min(1, (w / 2 - Math.abs(rr - R0)) / fp + 0.5)), ln = Math.max(line(8.4, 0.09), line(3, 0.07), line(1.2, 0.07));
+      if (ln > 0) { r -= 46 * ln; g -= 44 * ln; bb -= 32 * ln; } if (rr < 1.2) { r += 10; g += 6; } if (rr > 8.4) { r -= 12; g -= 12; bb -= 8; }
+      let m = rr > 8.3 ? 1 - paSS(8.3, PA_R, rr) * 0.32 : 1;
+      const b3 = fx * sx0 + fy * sy0, tW = -b3 + Math.sqrt(Math.max(0, b3 * b3 - (rr * rr - PA_R * PA_R))); if (tW < shL + 0.6) m *= 1 - 0.3 * paSS(shL + 0.6, shL - 0.2, tW);
+      for (let n = 0; n < 4; n++) { const [qx, qy] = PA_PIL[n], ox = fx - qx, oy = fy - qy, d0 = Math.hypot(ox, oy);
+        if (d0 < PA_PR + 0.45) m *= 0.74 + 0.26 * paSS(PA_PR, PA_PR + 0.45, d0);
+        const along = ox * -sx0 + oy * -sy0; if (along > 0 && along < PA_PH * 1.2) { const perp = Math.abs(ox * sy0 - oy * sx0); if (perp < PA_PR + 0.08) m *= 1 - 0.26 * paSS(PA_PR + 0.08, PA_PR - 0.08, perp) * (1 - along / (PA_PH * 1.2) * 0.4); } }
+      F[j * FS + i] = paRGB(r * m, g * m, bb * m); }
+    Object.assign(T, { F, FS, fk });
+    // 벽 (둘레 × 높이, 관중이 손 내린 판 / 든 판)
+    const WK = 48, WW = Math.ceil(2 * Math.PI * PA_R * WK), WH = Math.ceil(PA_WH * WK), W0 = new Uint32Array(WW * WH), W1 = new Uint32Array(WW * WH);
+    for (let i = 0; i < WW; i++) { const arc = (i + 0.5) / WK, ua = arc / PA_R - Math.PI, lw = 0.86 - 0.2 * Math.cos(ua - sun);
+      for (let j = 0; j < WH; j++) { const v = PA_WH - (j + 0.5) / WK; W0[j * WW + i] = this.wallPx(v, arc, lw, 0, crowdC, hairC, skinC, 1 / WK); W1[j * WW + i] = v >= 1.7 && v < 5.8 ? this.wallPx(v, arc, lw, 1, crowdC, hairC, skinC, 1 / WK) : W0[j * WW + i]; } }
+    Object.assign(T, { W0, W1, WK, WW, WH });
+    // 기둥 (각도 × 높이)
+    const PA = 256, PK = 64, PHt = Math.ceil(PA_PH * PK), PT = new Uint32Array(PA * PHt);
+    for (let i = 0; i < PA; i++) { const pn = (i + 0.5) / PA * Math.PI * 2 - Math.PI, pl = Math.max(0, Math.cos(pn - sun)), pL = 0.5 + 0.42 * pl + 0.22 * Math.pow(pl, 12), pF = 0.93 + 0.07 * Math.cos(pn * 22);
+      for (let j = 0; j < PHt; j++) { const v = PA_PH - (j + 0.5) / PK, ao = v < 0.9 ? 0.82 + 0.18 * v / 0.9 : 1; let col;
+        if (v > PA_PH - 0.42) { const band = v > PA_PH - 0.12 ? 1.06 : v > PA_PH - 0.2 ? 0.8 : v > PA_PH - 0.3 ? 1 : 0.86, l = pL * band; col = paRGB(214 * l, 194 * l, 152 * l); }
+        else if (v < 0.42) { const band = v > 0.36 ? 0.8 : v > 0.3 ? 1.04 : 0.92, l = pL * band * ao; col = paRGB(176 * l, 160 * l, 130 * l); }
+        else { const l = pL * pF * ao, n = paN(i * 9 / PA * 6.28, v * 3) * 10 - 5; col = paRGB(228 * l + n, 214 * l + n, 182 * l + n); }
+        PT[j * PA + i] = col; } }
+    Object.assign(T, { PT, PA, PK, PHt });
+    // 하늘 (방위 × 위아래), 구름은 둘레로 이어지게
+    const SA = 1024, SQ = 96, ST = new Uint32Array(SA * SQ), sky0 = [64, 132, 222], sky1 = [196, 226, 250], np = (x, y, per) => { const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), h = (a, b) => paHash(((a % per) + per) % per, b) & 255, A = h(xi, yi), B = h(xi + 1, yi), C = h(xi, yi + 1), D = h(xi + 1, yi + 1); return (A + (B - A) * u + (C - A) * v + (A - B - C + D) * u * v) / 255; };
+    for (let i = 0; i < SA; i++) { const ax = i / SA; for (let j = 0; j < SQ; j++) { const q = j / (SQ - 1), cl = paSS(0.55, 0.8, np(ax * 44, q * 3, 44) * 0.7 + np(ax * 107, q * 7, 107) * 0.3) * (1 - q * 0.6);
+      ST[j * SA + i] = paRGB(sky0[0] + (sky1[0] - sky0[0]) * q + (255 - sky0[0]) * cl, sky0[1] + (sky1[1] - sky0[1]) * q + (255 - sky0[1]) * cl, sky0[2] + (sky1[2] - sky0[2]) * q + (255 - sky0[2]) * cl); } }
+    Object.assign(T, { ST, SA, SQ });
+    return T;
+  },
   world(R, G, cam, t) {
-    const { iw, ih, f, hz, z: cz, px, py, dX, dY, tanH } = cam, P = R.u32, zb = R.zb, pX = -dY * tanH, pY = dX * tanH, sun = -2.2;
-    const shadows = G.u.filter(u => !(u.hp <= 0 && u.dead > 1.4 && !u.ash)).map(u => [u.x, u.y, u.r * (u.hp > 0 ? 1.15 : 1.4) / (1 + (u.z || 0) * 0.4), u.hp <= 0 && u.ash ? 2 : 1]);
-    const crowdC = [[220, 60, 50], [60, 110, 220], [240, 200, 70], [90, 170, 90], [235, 235, 230], [170, 90, 190], [240, 140, 60], [60, 60, 70]];
-    const sky0 = [70, 140, 225], sky1 = [200, 228, 248];
+    const { iw, ih, f, hz, z: cz, px, py, dX, dY, tanH } = cam, P = R.u32, zb = R.zb, pX = -dY * tanH, pY = dX * tanH, T = this.tex();
+    const { F, FS, fk, W0, W1, WK, WW, WH, PT, PA, PK, PHt, ST, SA, SQ } = T, TAU = Math.PI * 2, sOff = Math.floor(t * 2) % SA;
+    const shadows = G.u.filter(u => !(u.hp <= 0 && u.dead > 1.4 && !u.ash)).map(u => { const sr = u.r * (u.hp > 0 ? 1.15 : 1.4) / (1 + (u.z || 0) * 0.4); return [u.x, u.y, sr, u.hp <= 0 && u.ash ? 2 : 1, sr * sr]; });
+    // 줄마다 바닥 거리 · 안개
+    if (!R.rdA || R.rdA.length !== ih) { R.rdA = new Float32Array(ih); R.fgA = new Float32Array(ih); }
+    const rdA = R.rdA, fgA = R.fgA; for (let y = 0; y < ih; y++) { const rd = y > hz ? cz * f / (y - hz + 0.5) : 0; rdA[y] = rd; fgA[y] = Math.min(0.3, rd / 45); }
     for (let x = 0; x < iw; x++) {
       const cx = 2 * x / iw - 1, rx = dX + pX * cx, ry = dY + pY * cx, a = rx * rx + ry * ry, b = 2 * (rx * px + ry * py), cc = px * px + py * py - PA_R * PA_R;
       const tw = (-b + Math.sqrt(Math.max(0, b * b - 4 * a * cc))) / (2 * a), hx = px + rx * tw, hy = py + ry * tw, ua = Math.atan2(hy, hx), arc = (ua + Math.PI) * PA_R;
@@ -12172,49 +12447,60 @@ PetRT.arena = {
       if (pi >= 0) { const [qx, qy] = PA_PIL[pi], nx = (px + rx * tp - qx) / PA_PR, ny = (py + ry * tp - qy) / PA_PR; pn = Math.atan2(ny, nx); }
       zb[x] = Math.min(tw, tp);
       const wt = hz - (PA_WH - cz) * f / tw, wb = hz + cz * f / tw, pt = pi >= 0 ? hz - (PA_PH - cz) * f / tp : 0, pb = pi >= 0 ? hz + cz * f / tp : -1;
-      const lw = 0.78 + 0.22 * Math.cos(ua - sun), rayA = Math.atan2(ry, rx);
+      const wi = Math.min(WW - 1, Math.max(0, (arc * WK) | 0)), pci = pi >= 0 ? Math.min(PA - 1, ((pn + Math.PI) / TAU * PA) | 0) : 0, si = ((((Math.atan2(ry, rx) + Math.PI) / TAU * SA) | 0) + sOff) % SA;
+      let lastRow = -99, up = 0;
       for (let y = 0; y < ih; y++) {
         let col;
-        if (pi >= 0 && y >= pt && y <= pb) { const v = cz + (hz - y) * tp / f, l = 0.55 + 0.45 * Math.max(0, Math.cos(pn - sun)), fl = (Math.floor((pn + 7) * 3.2) % 2) ? 0.9 : 1;
-          if (v > PA_PH - 0.35) col = paRGB(200 * l, 180 * l, 140 * l); else if (v < 0.4) col = paRGB(150 * l, 135 * l, 110 * l); else col = paRGB(225 * l * fl, 210 * l * fl, 180 * l * fl); }
-        else if (y < wt) { const q = Math.max(0, Math.min(1, y / Math.max(1, hz))), cl = (Math.sin(rayA * 5 + t * 0.05) + Math.sin(rayA * 11 + 1.3)) > 1.1 && y < hz * 0.6 ? 0.35 : 0;
-          col = paRGB(sky0[0] + (sky1[0] - sky0[0]) * q + (255 - sky0[0]) * cl, sky0[1] + (sky1[1] - sky0[1]) * q + (255 - sky0[1]) * cl, sky0[2] + (sky1[2] - sky0[2]) * q + (255 - sky0[2]) * cl); }
-        else if (y <= wb) { const v = cz + (hz - y) * tw / f; col = this.wallPx(v, arc, lw, t, crowdC); }
-        else { const rd = cz * f / (y - hz + 0.5), fx = px + rx * rd, fy = py + ry * rd, rr = Math.hypot(fx, fy), h = paHash(Math.floor(fx * 6), Math.floor(fy * 6)) & 31;
-          let r = 214 + h * 0.6 - 9, g = 184 + h * 0.5 - 8, bb = 128 + h * 0.4 - 6;
-          if (Math.abs(rr - 8.4) < 0.07 || Math.abs(rr - 3) < 0.05 || (rr < 1.3 && Math.abs(rr - 1.2) < 0.06)) { r -= 40; g -= 40; bb -= 30; } else if (rr < 1.2) { r += 10; g += 6; }
-          if (rr > 8.4) { r -= 14; g -= 14; bb -= 10; }
-          for (const [sx, sy, sr, sk] of shadows) { const d = Math.hypot(fx - sx, fy - sy); if (d < sr) { const m = sk === 2 ? 0.35 : 0.62 + 0.3 * d / sr; r *= m; g *= m; bb *= m; } }
-          const fog = Math.min(0.35, rd / 40); r += (200 - r) * fog; g += (215 - g) * fog; bb += (225 - bb) * fog; col = paRGB(r, g, bb); }
+        if (pi >= 0 && y >= pt && y <= pb) { const v = cz + (hz - y) * tp / f; col = PT[Math.min(PHt - 1, Math.max(0, ((PA_PH - v) * PK) | 0)) * PA + pci]; }
+        else if (y < wt) col = ST[Math.min(SQ - 1, ((y / Math.max(1, hz)) * (SQ - 1)) | 0) * SA + si];
+        else if (y <= wb) { const v = cz + (hz - y) * tw / f, j = Math.min(WH - 1, Math.max(0, ((PA_WH - v) * WK) | 0));
+          if (v >= 1.8 && v < 5.8) { const row = ((v - 1.7) / 0.42) | 0; if (row !== lastRow) { lastRow = row; const h = paHash(Math.floor(arc * 2.6 + row * 0.37), row); up = Math.sin(t * (4 + (h & 3)) + (h & 63)) > 0.55; } col = (up ? W1 : W0)[j * WW + wi]; }
+          else col = W0[j * WW + wi]; }
+        else { const rd = rdA[y], fx = px + rx * rd, fy = py + ry * rd, i = Math.min(FS - 1, Math.max(0, ((fx + PA_R) * fk) | 0)), jj = Math.min(FS - 1, Math.max(0, ((fy + PA_R) * fk) | 0));
+          col = F[jj * FS + i]; let m = 1;
+          for (let n = 0; n < shadows.length; n++) { const S = shadows[n], ddx = fx - S[0], ddy = fy - S[1]; if (ddx > S[2] || ddx < -S[2] || ddy > S[2] || ddy < -S[2]) continue; const d2 = ddx * ddx + ddy * ddy; if (d2 < S[4]) m *= S[3] === 2 ? 0.35 : 0.55 + 0.45 * paSS(S[2] * 0.55, S[2], Math.sqrt(d2)); }
+          const fg = fgA[y]; if (m < 1 || fg > 0.01) { const k1 = m * (1 - fg); col = (255 << 24) | ((((col >> 16) & 255) * k1 + 225 * fg) << 16) | ((((col >> 8) & 255) * k1 + 215 * fg) << 8) | ((col & 255) * k1 + 200 * fg); } }
         P[y * iw + x] = col;
       }
     }
   },
-  // 벽 높이 v (m), 둘레 위치 arc (m)
-  wallPx(v, arc, l, t, CC) {
-    if (v < 0.12) return paRGB(90 * l, 80 * l, 70 * l);
-    if (v < 1.3) { const row = Math.floor(v / 0.4), bx = Math.floor((arc + row * 0.4) / 0.8), mo = (v % 0.4) < 0.04 || ((arc + row * 0.4) % 0.8) < 0.05, n = (paHash(bx, row) & 15) - 8; const s = mo ? 0.7 : 1; return paRGB((178 + n) * l * s, (160 + n) * l * s, (130 + n) * l * s); }
-    if (v < 1.48) return v > 1.44 ? paRGB(230 * l, 190 * l, 70 * l) : paRGB(160 * l, 40 * l, 34 * l);
-    if (v < 1.7) return paRGB(200 * l, 186 * l, 160 * l);
-    if (v < 5.8) { const rv = v - 1.7, row = Math.floor(rv / 0.42), lv = rv - row * 0.42, sect = Math.floor(arc / 7);
-      if (Math.abs(arc - sect * 7) < 0.35) return paRGB(170 * l, 156 * l, 132 * l); // 계단
-      if (lv < 0.1) return paRGB(190 * l * 0.92, 176 * l * 0.92, 150 * l * 0.92);
-      const seat = Math.floor(arc * 2.6 + row * 0.37), h = paHash(seat, row), sx = (arc * 2.6 + row * 0.37) - seat;
-      if ((h & 7) < 2 || sx < 0.15 || sx > 0.85) return paRGB(120 * l, 108 * l, 94 * l);
-      const up = Math.sin(t * (4 + (h & 3)) + (h & 63)) > 0.55 ? 0.05 : 0, c = CC[(h >> 3) & 7];
-      if (lv > 0.3 + up) { if (lv > 0.4) return paRGB(120 * l, 108 * l, 94 * l); const sk = (h >> 6) & 1 ? [240, 200, 160] : [190, 140, 100]; if (lv > 0.37 + up) return paRGB(40 * l, 30 * l, 25 * l); return paRGB(sk[0] * l, sk[1] * l, sk[2] * l); }
-      if (up && (sx < 0.25 || sx > 0.75) && lv > 0.22) return paRGB(c[0] * l, c[1] * l, c[2] * l);
-      return lv > 0.12 + up * 0.5 ? paRGB(c[0] * l, c[1] * l, c[2] * l) : paRGB(120 * l, 108 * l, 94 * l); }
+  // 벽 높이 v (m), 둘레 위치 arc (m), 픽셀 하나 크기 fp (m)
+  wallPx(v, arc, l, upF, CC, HC, SC, fp) {
+    if (v < 0.12) return paRGB(84 * l, 74 * l, 64 * l);
+    if (v < 1.3) { const row = Math.floor(v / 0.4), bxp = arc + (row & 1) * 0.4, bx = Math.floor(bxp / 0.8), lv = v - row * 0.4, lx = bxp - bx * 0.8, mo = Math.min(lv, lx) < Math.max(0.035, fp), n = paN(bxp * 4, v * 4) * 14 - 7 + (paHash(bx, row) & 15) - 8, top = lv > 0.36 ? 1.06 : 1; const s = mo ? 0.66 : top * (0.95 + 0.05 * lv / 0.4); return paRGB((176 + n) * l * s, (158 + n) * l * s, (128 + n) * l * s); }
+    if (v < 1.48) return v > 1.44 ? paRGB(236 * l, 196 * l, 76 * l) : v < 1.33 ? paRGB(120 * l, 28 * l, 26 * l) : paRGB(168 * l, 40 * l, 34 * l);
+    if (v < 1.7) return paRGB(204 * l * (v > 1.66 ? 1.08 : 1), 190 * l * (v > 1.66 ? 1.08 : 1), 162 * l);
+    if (v < 5.8) { const rv = v - 1.7, row = Math.floor(rv / 0.42), lv = rv - row * 0.42, sect = Math.floor(arc / 7), sd = arc - sect * 7;
+      const bench = l * (1 - row * 0.012);
+      if (Math.abs(sd) < 0.35 || sd > 6.65) { const st = lv < 0.21 ? 0.86 : 1.02; return paRGB(176 * bench * st, 162 * bench * st, 138 * bench * st); } // 계단
+      if (lv < 0.1) { const e = lv > 0.082 ? 1.12 : lv < 0.02 ? 0.8 : 0.95; return paRGB(196 * bench * e, 182 * bench * e, 156 * bench * e); }
+      const sp = arc * 2.6 + row * 0.37, seat = Math.floor(sp), h = paHash(seat, row), dx = (sp - seat - 0.5) * 0.385, back = 0.62 + 0.25 * (lv - 0.1) / 0.32;
+      const bgc = paRGB(118 * bench * back, 106 * bench * back, 92 * bench * back);
+      if ((h & 15) < 2) return bgc;
+      const up = upF ? 1 : 0, dy = lv - 0.1 - up * 0.025, adx = Math.abs(dx);
+      const c = CC[(h >>> 4) % CC.length], sk = SC[(h >>> 9) & 3], hc = HC[(h >>> 12) % HC.length], hy = dy - 0.235, hr = 0.064;
+      if (adx * adx + hy * hy < hr * hr) { const hairy = hy > hr * 0.15 || (adx > hr * 0.62 && hy > -hr * 0.3); const L = bench * (dx < 0 ? 1.04 : 0.94); return hairy ? paRGB(hc[0] * L, hc[1] * L, hc[2] * L) : paRGB(sk[0] * L, sk[1] * L, sk[2] * L); }
+      if (dy > 0.155 && dy < 0.18 && adx < 0.03) return paRGB(sk[0] * bench * 0.85, sk[1] * bench * 0.85, sk[2] * bench * 0.85);
+      if (dy >= 0 && dy < 0.165 - Math.max(0, adx - 0.07) * 1.1 && adx < 0.105) { const L = bench * (0.82 + 0.22 * dy / 0.165) * (dx < 0 ? 1.05 : 0.93); return paRGB(c[0] * L, c[1] * L, c[2] * L); }
+      if (up && adx > 0.1 && adx < 0.135 && dy > 0.12 && dy < 0.33) { const L = bench * (dy > 0.28 ? 1 : 0.9); return dy > 0.28 ? paRGB(sk[0] * L, sk[1] * L, sk[2] * L) : paRGB(c[0] * L * 0.85, c[1] * L * 0.85, c[2] * L * 0.85); }
+      if (!up && adx > 0.098 && adx < 0.125 && dy > 0.02 && dy < 0.15) { const L = bench * 0.78; return paRGB(c[0] * L, c[1] * L, c[2] * L); }
+      return bgc; }
     const m = arc % 1.7, ax = Math.abs(m - 0.85), top = 6.45 - ax * ax * 1.2;
-    if (v < 6.7 && ax < 0.5 && v < top) return paRGB(40 * l, 34 * l, 30 * l);
-    if (v > 6.85) return paRGB(150 * l, 40 * l, 34 * l);
-    return paRGB(210 * l, 194 * l, 166 * l);
+    if (v < 6.7 && ax < 0.5 && v < top) { const d = 0.35 + 0.4 * Math.max(0, (v - 5.8) / 0.65); return paRGB(40 * l * d + 20, 34 * l * d + 16, 30 * l * d + 14); }
+    if (v < 6.7 && ax < 0.56 && v < top + 0.06) return paRGB(236 * l, 220 * l, 190 * l);
+    if (v > 6.85) { const st = v > 6.95 ? 1.1 : 0.85; return paRGB(156 * l * st, 40 * l * st, 34 * l * st); }
+    const n = paN(arc * 3, v * 3) * 12 - 6, blk = Math.abs(((v - 5.8) % 0.35)) < Math.max(0.02, fp) ? 0.82 : 1;
+    return paRGB((212 + n) * l * blk, (196 + n) * l * blk, (168 + n) * l * blk);
   },
   // 다른 캐릭터·던진 것·불꽃 (먼 것부터, 기둥 뒤는 열마다 가린다)
   proj(cam, x, y) { const dx = x - cam.px, dy = y - cam.py, dp = dx * cam.dX + dy * cam.dY, lat = dx * -cam.dY + dy * cam.dX; return { dp, sx: cam.iw / 2 * (1 + lat / (dp * cam.tanH)), sc: cam.f / dp, gy: cam.hz + cam.z * cam.f / dp }; },
+  // 기둥 뒤에 가린 열은 잘라내고 그린다 (원본은 통째로: 아주 가까울 때 조각 원본이 반투명하게 번지는 걸 막는다)
   blit(R, src, sx, sy, sw, sh, dx, dy, dw, dh, dp) {
-    const x0 = Math.max(0, Math.floor(dx)), x1 = Math.min(R.cam.iw, Math.ceil(dx + dw)); let run = -1;
-    for (let x = x0; x <= x1; x++) { const vis = x < x1 && R.zb[x] > dp; if (vis && run < 0) run = x; else if (!vis && run >= 0) { const u0 = (run - dx) / dw, u1 = (x - dx) / dw; R.x.drawImage(src, sx + u0 * sw, sy, (u1 - u0) * sw, sh, run, dy, x - run, dh); run = -1; } }
+    const x0 = Math.max(0, Math.floor(dx)), x1 = Math.min(R.cam.iw, Math.ceil(dx + dw)), runs = []; let run = -1, all = true;
+    for (let x = x0; x <= x1; x++) { const vis = x < x1 && R.zb[x] > dp; if (!vis && x < x1) all = false; if (vis && run < 0) run = x; else if (!vis && run >= 0) { runs.push([run, x]); run = -1; } }
+    if (!runs.length) return; const o = R.o; o.save(); if (dp < 0.6) o.globalAlpha = Math.max(0, (dp - 0.25) / 0.35);
+    if (!all) { o.beginPath(); for (const [a, b] of runs) o.rect(a, -1, b - a, R.cam.ih + 2); o.clip(); }
+    o.drawImage(src, sx, sy, sw, sh, dx, dy, dw, dh); o.restore();
   },
   scratch() { if (!this.sc) { this.sc = document.createElement('canvas'); this.sc.width = 100; this.sc.height = 84; this.scx = this.sc.getContext('2d'); } return this.scx; },
   spr(B, tm) {
@@ -12237,6 +12523,12 @@ PetRT.arena = {
     else { const face = lat >= 0 ? 1 : -1; Pets.draw(x, u.k, 25, 40, face, mv, t, '', 0); ph = PetRT.petH(u.k); }
     x.restore(); x.setTransform(1, 0, 0, 1, 0, 0);
     const tint = (col, al) => { x.globalCompositeOperation = 'source-atop'; x.globalAlpha = al; x.fillStyle = col; x.fillRect(0, 0, 100, 84); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; };
+    // v188: 위는 밝고 아래는 어둡게 + 얇은 어두운 테두리 (멀리서도 또렷하게)
+    { const g = x.createLinearGradient(0, 10, 0, 82); g.addColorStop(0, 'rgba(255,250,235,.14)'); g.addColorStop(0.55, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(30,20,30,.22)'); x.globalCompositeOperation = 'source-atop'; x.fillStyle = g; x.fillRect(0, 0, 100, 84); x.globalCompositeOperation = 'source-over';
+      if (!this.sc2) { this.sc2 = document.createElement('canvas'); this.sc2.width = 100; this.sc2.height = 84; this.sc2x = this.sc2.getContext('2d'); }
+      const o = this.sc2x; o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, 100, 84); for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) o.drawImage(this.sc, ox, oy);
+      o.globalCompositeOperation = 'source-in'; o.fillStyle = 'rgba(26,18,24,.8)'; o.fillRect(0, 0, 100, 84); o.globalCompositeOperation = 'source-over'; o.drawImage(this.sc, 0, 0);
+      x.clearRect(0, 0, 100, 84); x.drawImage(this.sc2, 0, 0); }
     if (u.hp <= 0 && u.ash) tint('#1a1210', Math.min(1, u.ash / 0.6) * 0.92);
     else if (u.fl > 0) tint('#ffffff', Math.min(0.85, u.fl * 5));
     else if (u.sh > 0) tint('#9aff9a', 0.25 + Math.sin(t * 10) * 0.08);
@@ -12244,16 +12536,16 @@ PetRT.arena = {
     return ph;
   },
   sprites(R, G, B, ci, cam, t, dt) {
-    const L = [], x = R.x;
+    const L = [], x = R.o;
     G.u.forEach((u, i) => { if (i === ci) return; if (u.hp <= 0 && u.ash && u.ash > 1.6) { L.push({ k: 'pile', u, x: u.x, y: u.y }); return; } L.push({ k: 'u', u, i, x: u.x, y: u.y }); });
     for (const p of G.pr || []) L.push({ k: 'p', p, x: p.x, y: p.y });
     for (const p of R.fx) { p.t += dt; p.vz -= p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z = Math.max(0, p.z + p.vz * dt); if (!p.g) { p.vx *= 0.95; p.vy *= 0.95; } } R.fx = R.fx.filter(p => p.t < p.life);
     for (const p of R.fx) L.push({ k: 'f', p, x: p.x, y: p.y });
     for (const o of L) o.q = this.proj(cam, o.x, o.y); L.sort((a, b) => b.q.dp - a.q.dp); R.tags = [];
     for (const o of L) { const q = o.q; if (q.dp < 0.2) continue;
-      if (o.k === 'u') { const u = o.u, ph = this.drawUnit(B, u, cam, t), m = (u.k === 'hum' ? 1.75 : u.h) / (ph * 2), sc = q.sc * m, dw = 100 * sc, dh = 84 * sc, sink = u.hp <= 0 && u.ash ? Math.max(0, (u.ash - 0.8) / 0.8) : 0;
-        let dy = q.gy - (u.z || 0) * q.sc - 80 * sc; if (sink > 0) { const cut = 84 * (1 - sink * 0.9); dy += 84 * sc - cut * sc; this.blit(R, this.sc, 0, 0, 100, cut, q.sx - 50 * sc, dy, dw, cut * sc, q.dp); }
-        else this.blit(R, this.sc, 0, 0, 100, 84, q.sx - 50 * sc, dy, dw, dh, q.dp);
+      if (o.k === 'u') { const u = o.u, ph = this.drawUnit(B, u, cam, t), m = (u.k === 'hum' ? 1.75 : u.h) / (ph * 2), sc = Math.max(1, Math.round(q.sc * m * cam.kd)) / cam.kd, dw = 100 * sc, dh = 84 * sc, sink = u.hp <= 0 && u.ash ? Math.max(0, (u.ash - 0.8) / 0.8) : 0;
+        let dy = Math.round((q.gy - (u.z || 0) * q.sc - 80 * sc) * cam.kd) / cam.kd; if (sink > 0) { const cut = 84 * (1 - sink * 0.9); dy += 84 * sc - cut * sc; this.blit(R, this.sc, 0, 0, 100, cut, Math.round((q.sx - 50 * sc) * cam.kd) / cam.kd, dy, dw, cut * sc, q.dp); }
+        else this.blit(R, this.sc, 0, 0, 100, 84, Math.round((q.sx - 50 * sc) * cam.kd) / cam.kd, dy, dw, dh, q.dp);
         if (u.hp > 0 && q.sx > 0 && q.sx < cam.iw && R.zb[Math.max(0, Math.min(cam.iw - 1, Math.round(q.sx)))] > q.dp) R.tags.push({ u, sx: q.sx, sy: q.gy - ((u.k === 'hum' ? 1.75 : u.h) + (u.z || 0) + 0.15) * q.sc, dp: q.dp });
         if (u.hp <= 0 && !u.ash && u.dead < 3) { x.fillStyle = '#ffe066'; for (let n = 0; n < 3; n++) { const a = t * 5 + n * 2.1, sx = q.sx + Math.cos(a) * 0.3 * q.sc, sy = q.gy - 0.5 * q.sc + Math.sin(a) * 0.08 * q.sc; if (R.zb[Math.round(sx)] > q.dp) x.fillRect(Math.round(sx), Math.round(sy), Math.max(1, Math.round(q.sc * 0.06)), Math.max(1, Math.round(q.sc * 0.06))); } }
         continue; }
@@ -12264,7 +12556,7 @@ PetRT.arena = {
         else { const s = Math.max(2, Math.min(Math.round(cam.ih * 0.12), Math.round(p.r * 1.6 * q.sc))); this.glyph(x, p.g, Math.round(q.sx - s / 2), Math.round(cy - s / 2), s, t); }
         continue; }
       if (o.k === 'f') { const p = o.p, s = Math.max(1, Math.round(p.sz * q.sc)), cy = q.gy - p.z * q.sc; if (R.zb[Math.round(Math.max(0, Math.min(cam.iw - 1, q.sx)))] <= q.dp) continue; x.globalAlpha = Math.max(0, 1 - p.t / p.life); x.fillStyle = p.col;
-        if (p.plus) { x.fillRect(Math.round(q.sx - s), Math.round(cy), s * 3, s); x.fillRect(Math.round(q.sx), Math.round(cy - s), s, s * 3); } else x.fillRect(Math.round(q.sx), Math.round(cy), s, s); x.globalAlpha = 1; }
+        if (p.plus) { x.fillRect(Math.round(q.sx - s), Math.round(cy), s * 3, s); x.fillRect(Math.round(q.sx), Math.round(cy - s), s, s * 3); } else { const r = Math.min(p.sz * q.sc, cam.ih * 0.012) * 0.7; x.beginPath(); x.arc(q.sx, cy, Math.max(0.6, r), 0, 7); x.fill(); } x.globalAlpha = 1; }
     }
     // 땅 울림 고리 · 번개
     for (const g of R.rings) { g.t += dt; const u = g.t / g.l, r = g.r * u; x.strokeStyle = g.col; x.globalAlpha = Math.max(0, 1 - u); x.lineWidth = 1; x.beginPath(); let first = true;
@@ -12290,7 +12582,7 @@ PetRT.arena = {
   },
   // 1인칭 손/발 (버퍼 픽셀 위에)
   hands(R, G, B, U, cam, t) {
-    if (U.hp <= 0) return; const x = R.x, W = cam.iw, H = cam.ih, s = H / 100, mv = U.mv || 0, bx = Math.sin(t * 9) * mv * 2 * s, by = Math.abs(Math.cos(t * 9)) * mv * 2 * s;
+    if (U.hp <= 0) return; const x = R.o, W = cam.iw, H = cam.ih, s = H / 100, mv = U.mv || 0, bx = Math.sin(t * 9) * mv * 2 * s, by = Math.abs(Math.cos(t * 9)) * mv * 2 * s;
     const q = U.at > 0 ? 1 - U.at / (U.ak === 's' ? 0.45 : 0.3) : -1, ease = v => 1 - Math.pow(1 - v, 3), skin = (() => { try { return Profile.pal(Profile.get()).skin || '#f0c8a2'; } catch (e) { return '#f0c8a2'; } })();
     x.save();
     if (U.k === 'hum' && U.wp === 'sword') {
@@ -12311,11 +12603,33 @@ PetRT.arena = {
       x.globalCompositeOperation = 'source-over';
     } else {
       const P = PA_PET[U.k], col = PA_PAW[U.k] || skin, people = !PA_PAW[U.k], kind = P[0];
-      const paw = (px, py, flip) => { x.save(); x.translate(px, py); x.scale(flip, 1);
-        if (people) { x.fillStyle = skin; x.fillRect(-7 * s, -4 * s, 14 * s, 18 * s); for (let n = 0; n < 4; n++) x.fillRect((-7 + n * 3.6) * s, -8 * s, 3 * s, 5 * s); x.fillRect(6 * s, 0, 4 * s, 7 * s); }
-        else { x.fillStyle = col; x.beginPath(); x.ellipse(0, 4 * s, 10 * s, 13 * s, 0, 0, 7); x.fill(); if (U.k === 'tiger') { x.fillStyle = '#2a1a10'; for (let n = 0; n < 3; n++) x.fillRect(-9 * s, (2 + n * 5) * s, 6 * s, 1.6 * s); }
-          if (!['beetle', 'mantis', 'penguin', 'dolphin', 'turtle'].includes(U.k)) { x.fillStyle = '#f2a0a8'; x.beginPath(); x.ellipse(0, 2 * s, 4 * s, 3 * s, 0, 0, 7); x.fill(); for (let n = -1; n <= 1; n++) { x.beginPath(); x.arc(n * 4.5 * s, -4.5 * s, 2 * s, 0, 7); x.fill(); } }
-          if (kind === 'claw' || U.k === 'trex') { x.fillStyle = '#f4f0e0'; for (let n = -1; n <= 1; n++) x.fillRect((n * 4.5 - 0.6) * s, -10 * s, 1.4 * s, 3.5 * s); } }
+      // v188: 테두리 · 그라데이션 음영 · 털 · 발바닥 (기기 해상도로 그려져 부드럽다)
+      const fin = ['penguin', 'dolphin', 'turtle'].includes(U.k), ol = 'rgba(28,18,16,.6)';
+      const paw = (px, py, flip) => { x.save(); x.translate(px, py); x.scale(flip, 1); x.lineJoin = 'round'; x.lineWidth = 1.1 * s; x.strokeStyle = ol;
+        if (people) { const g = x.createLinearGradient(-8 * s, 0, 8 * s, 0); g.addColorStop(0, paShade(skin, 1.08)); g.addColorStop(1, paShade(skin, 0.8)); x.fillStyle = g;
+          for (let n = 0; n < 4; n++) { x.beginPath(); x.roundRect((-7 + n * 3.6) * s, (-9 + Math.abs(n - 1.5) * 0.8) * s, 3.1 * s, 8 * s, 1.5 * s); x.fill(); x.stroke(); }
+          x.beginPath(); x.roundRect(6 * s, -1 * s, 4.2 * s, 8 * s, 2 * s); x.fill(); x.stroke();
+          x.beginPath(); x.roundRect(-7.6 * s, -4 * s, 15 * s, 20 * s, 3.5 * s); x.fill(); x.stroke();
+          x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(-7 * s, 9 * s, 14 * s, 7 * s); }
+        else if (fin) { x.rotate(-0.35); const g = x.createLinearGradient(-8 * s, -14 * s, 8 * s, 10 * s); g.addColorStop(0, paShade(col, 1.25)); g.addColorStop(1, paShade(col, 0.7)); x.fillStyle = g;
+          x.beginPath(); x.moveTo(0, -15 * s); x.quadraticCurveTo(10 * s, -6 * s, 8 * s, 16 * s); x.lineTo(-8 * s, 16 * s); x.quadraticCurveTo(-9 * s, -4 * s, 0, -15 * s); x.fill(); x.stroke();
+          x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 1.4 * s; x.beginPath(); x.moveTo(-4 * s, -8 * s); x.quadraticCurveTo(-6 * s, 2 * s, -5 * s, 12 * s); x.stroke();
+          if (U.k === 'turtle') { x.fillStyle = 'rgba(30,60,20,.35)'; for (let n = 0; n < 3; n++) { x.beginPath(); x.arc((n - 1) * 3.5 * s, (n * 5 - 4) * s, 1.6 * s, 0, 7); x.fill(); } } }
+        else if (U.k === 'mantis') { const g = x.createLinearGradient(-6 * s, -14 * s, 6 * s, 14 * s); g.addColorStop(0, '#9ae070'); g.addColorStop(1, '#3a8a2a'); x.fillStyle = g;
+          x.beginPath(); x.moveTo(-3 * s, 16 * s); x.lineTo(-4 * s, -6 * s); x.quadraticCurveTo(2 * s, -16 * s, 7 * s, -12 * s); x.lineTo(2 * s, -4 * s); x.lineTo(3 * s, 16 * s); x.closePath(); x.fill(); x.stroke();
+          x.fillStyle = '#e8f8c0'; for (let n = 0; n < 4; n++) { x.beginPath(); x.moveTo(1.5 * s, (-6 + n * 3) * s); x.lineTo(4 * s, (-5 + n * 3) * s); x.lineTo(1.8 * s, (-4 + n * 3) * s); x.fill(); } }
+        else if (U.k === 'beetle') { x.fillStyle = '#3a2a1a'; for (const [y0, w] of [[-8, 4], [0, 5], [9, 6]]) { x.beginPath(); x.roundRect(-w / 2 * s, y0 * s, w * s, 8 * s, 2 * s); x.fill(); x.stroke(); } x.fillStyle = 'rgba(255,230,180,.35)'; x.fillRect(-1.5 * s, -7 * s, 1 * s, 22 * s);
+          x.fillStyle = '#2a1a0a'; x.beginPath(); x.moveTo(-2 * s, -8 * s); x.lineTo(-4 * s, -12 * s); x.lineTo(0, -9 * s); x.lineTo(4 * s, -12 * s); x.lineTo(2 * s, -8 * s); x.fill(); }
+        else { const g = x.createRadialGradient(-3 * s, -4 * s, 1 * s, 0, 4 * s, 15 * s); g.addColorStop(0, paShade(col, 1.22)); g.addColorStop(0.7, col); g.addColorStop(1, paShade(col, 0.68)); x.fillStyle = g;
+          x.beginPath(); x.ellipse(0, 4 * s, 10 * s, 13 * s, 0, 0, 7); x.fill();
+          x.strokeStyle = paShade(col, 0.6); x.lineWidth = 0.9 * s; for (let n = 0; n < 9; n++) { const a = -2.6 + n * 0.42, ex = Math.cos(a) * 10 * s, ey = 4 * s + Math.sin(a) * 13 * s; x.beginPath(); x.moveTo(ex * 0.85, ey * 0.9 + 0.4 * s); x.lineTo(ex * 1.08, ey * 1.02 - 1 * s); x.stroke(); }
+          x.strokeStyle = ol; x.lineWidth = 1.1 * s; x.beginPath(); x.ellipse(0, 4 * s, 10 * s, 13 * s, 0, 0, 7); x.stroke();
+          if (U.k === 'tiger') { x.fillStyle = '#2a1a10'; for (let n = 0; n < 3; n++) { x.beginPath(); x.moveTo(-10 * s, (2 + n * 5) * s); x.quadraticCurveTo(-5 * s, (1 + n * 5) * s, -3 * s, (3 + n * 5) * s); x.quadraticCurveTo(-6 * s, (3.6 + n * 5) * s, -10 * s, (4 + n * 5) * s); x.fill(); } }
+          if (U.k === 'panda') { x.fillStyle = 'rgba(255,255,255,.12)'; x.beginPath(); x.ellipse(-3 * s, -2 * s, 4 * s, 5 * s, -0.4, 0, 7); x.fill(); }
+          const bean = paShade('#f2a0a8', 1), beanD = '#c86a78'; x.fillStyle = bean; x.strokeStyle = beanD; x.lineWidth = 0.7 * s;
+          x.beginPath(); x.ellipse(0, 2.5 * s, 4.4 * s, 3.4 * s, 0, 0, 7); x.fill(); x.stroke(); for (let n = -1; n <= 1; n++) { x.beginPath(); x.ellipse(n * 4.6 * s, (-4 - (n ? 0 : 0.8)) * s, 1.9 * s, 2.3 * s, n * 0.25, 0, 7); x.fill(); x.stroke(); }
+          x.fillStyle = 'rgba(255,255,255,.45)'; x.beginPath(); x.ellipse(-1.2 * s, 1.5 * s, 1.4 * s, 0.9 * s, -0.3, 0, 7); x.fill();
+          if (kind === 'claw' || U.k === 'trex') { for (let n = -1; n <= 1; n++) { const cx0 = n * 4.6 * s, cy0 = -6.5 * s; x.fillStyle = '#fbf6e8'; x.strokeStyle = ol; x.beginPath(); x.moveTo(cx0 - 1 * s, cy0); x.quadraticCurveTo(cx0, cy0 - 5 * s, cx0 + 1.6 * s, cy0 - 5.5 * s); x.quadraticCurveTo(cx0 + 0.8 * s, cy0 - 2 * s, cx0 + 1 * s, cy0); x.closePath(); x.fill(); x.stroke(); } } }
         x.restore(); };
       let lx = W * 0.3 + bx, rx = W * 0.7 + bx, ly = H * 1.02 + by, ry = ly;
       if (q >= 0 && U.ak === 'a') { const e = Math.sin(Math.min(1, q) * Math.PI); if (kind === 'claw') { rx -= e * W * 0.18; ry -= e * H * 0.18; } else if (kind === 'throw') { ry -= e * H * 0.16; rx -= e * W * 0.08; } else if (kind === 'long') { rx -= e * W * 0.3; } else { ly += e * 6 * s; ry += e * 6 * s; } }
@@ -15315,6 +15629,7 @@ const Instance = {
   addEventListener('resize', () => SeoulMap.open && SeoulMap.resize());
   $('btnEndDay').onclick = async () => { Menu.toggle(false); await endDay(); };
   $('btnMenu').onclick = () => Menu.toggle();
+  $('btnCloset').onclick = () => Closet.toggle(); // 👗 옷장 (v187)
   const muteLabel = () => ($('btnMute').textContent = Settings.muted ? '소리 꺼짐' : '소리');
   $('btnMute').onclick = () => { Settings.muted = !Settings.muted; saveSettings(); Sound.applyVolumes(); muteLabel(); }; muteLabel();
   $('setSfx').value = Settings.sfx; $('setBgm').value = Settings.bgm; $('setShake').checked = Settings.shake; $('setText').value = Settings.textSpeed;

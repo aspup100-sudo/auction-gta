@@ -355,7 +355,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 body:has(#dialog.in) #tutor, .resultOn #tutor, .touchOn.chatOpen #tutor { visibility:hidden; }
 .clItem em.tutTag { color:#1a1408; background:var(--gold); border-radius:4px; padding:0 5px; font-style:normal; font-size:11px; margin-right:5px; }
 .tutEnd { background:#fff6d6; border:2px solid var(--gold); } .tutEnd b { display:block; margin-bottom:4px; } .tutEnd p { margin:0; }
-#quest.in { transform:none; } #quest b { color:var(--gold); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#quest.in { transform:none; } #quest b { color:var(--gold); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } #quest { pointer-events:auto; cursor:pointer; } #quest .qFold { font-style:normal; margin-left:6px; opacity:.8; font-size:11px; } #quest.fold .qMore { display:none; }
 .qItems { display:flex; flex-wrap:wrap; gap:3px 10px; margin-top:3px; } .qItems span { opacity:.6; } .qItems span.done { opacity:1; color:#9fe29a; } .qItems span.just { animation:bump .4s ease-out; }
 #balanceDue { top:var(--stackBd, 150px) !important; }
 #rankBox { position:absolute; top:190px; left:12px; width:186px; background:rgba(20,22,28,.86); border:1px solid #c9b98f; border-radius:8px; padding:5px 8px 6px; font-size:11.5px; line-height:1.35; color:var(--paper); pointer-events:auto; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.4); }
@@ -7209,9 +7209,12 @@ function drawHudExtras() {
   const q = $('quest');
   if (!c) { q.classList.remove('in'); return; }
   const prevDone = (prevKey.split('|')[2] || '');
-  q.innerHTML = `<b>★ ${c.name}</b><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>${Live.on && c.live ? `<div style="font-size:11px;opacity:.9">${c.closed ? '개찰 끝' : Live.isDday(c) ? `오늘 매각기일 · 개찰까지 ${Live.mmss(Live.left(c))} · ${COURTS[c.court].name}` : `매각기일까지 ${Live.mmss(Live.untilDday(c))} (${Live.dayLabel(c)} · ${mdText(c.saleDate)}) · ${COURTS[c.court].name}`}${Live.mine[c.live.key] ? ' · 입찰표 냈음' : ''}</div>` : ''}`;
-  q.classList.add('in');
+  q.innerHTML = `<b>★ ${c.name}<i class="qFold">${Quest.fold ? '▸' : '▾'}</i></b><div class="qMore"><div class="qItems">${items.map((it, i) => `<span class="${it[1] ? 'done' : ''} ${it[1] && prevDone[i] === '0' ? 'just' : ''}">${it[1] ? '✓ ' : '○ '}${it[0]}</span>`).join('')}</div>${Live.on && c.live ? `<div style="font-size:11px;opacity:.9">${c.closed ? '개찰 끝' : Live.isDday(c) ? `오늘 매각기일 · 개찰까지 ${Live.mmss(Live.left(c))} · ${COURTS[c.court].name}` : `매각기일까지 ${Live.mmss(Live.untilDday(c))} (${Live.dayLabel(c)} · ${mdText(c.saleDate)}) · ${COURTS[c.court].name}`}${Live.mine[c.live.key] ? ' · 입찰표 냈음' : ''}</div>` : ''}</div>`;
+  q.classList.add('in'); q.classList.toggle('fold', Quest.fold);
+  if (!q.dataset.bound) { q.dataset.bound = '1'; q.addEventListener('click', () => { Quest.fold = !Quest.fold; Store.set('questFold', Quest.fold); _hudKey = ''; Sound.play('click'); }); }
 }
+/* 조사 체크 카드 접기 (사용자 2026-10-17 '모바일은 화면이 작아서 접었다 펼 수 있게'): 카드를 누르면 물건 이름 한 줄만 남는다 */
+const Quest = { fold: !!Store.get('questFold', false) };
 
 /* ---- 레이더(좌하단) ---- */
 const Radar = {

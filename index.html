@@ -180,6 +180,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .panel { position:fixed; top:0; right:0; height:100%; width:min(420px, 100%); background:var(--paper); color:#1a1408; z-index:35; transform:translateX(105%); transition:transform .22s ease-out; padding:18px; box-shadow:-6px 0 0 rgba(0,0,0,.3); overflow:auto; pointer-events:auto; }
 .panel.in { transform:none; }
 .panel h2 { font-family:var(--serif); margin:0 0 12px; }
+#notebook .nbHead { position:sticky; top:-18px; z-index:4; display:flex; align-items:center; justify-content:space-between; gap:8px; margin:-18px -18px 0; padding:14px 18px 8px; background:var(--paper); } #notebook .nbHead h2 { margin:0; } /* 닫기는 맨 위, 스크롤해도 붙어 있게 (사용자 2026-10-17) */
 .panel .tabs { display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap; }
 .panel .tabs .btn { background:#e2d6bb; color:#1a1408; border-color:#c9b98f; padding:6px 10px; font-size:13px; }
 .panel .tabs .btn.on { background:var(--navy); color:#fff; }
@@ -1015,10 +1016,9 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div class="dlgBody"><div id="dlgName"></div><div id="dlgText"></div><div id="dlgChoices"></div><div id="dlgMore"></div></div>
 </div>
 <div id="notebook" class="panel">
-  <h2>수첩</h2>
+  <div class="nbHead"><h2>수첩</h2><button class="btn" onclick="Notebook.toggle(false)">닫기 (Tab)</button></div>
   <div class="tabs" id="nbTabs"></div>
   <div id="nbBody"></div>
-  <button class="btn" onclick="Notebook.toggle(false)">닫기 (Tab)</button>
 </div>
 <div id="menu" class="panel">
   <h2>설정</h2>

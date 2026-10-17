@@ -868,6 +868,12 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .winOpen:not(.chatOpen) #chatLines div:not(:nth-last-child(-n+2)) { display:none; } /* 상점·게임 창 위에서는 피드가 창을 덜 가리게 (v149) */
 #chatLog #chatLines { background:none; padding:0; margin:0; border-radius:0; } /* 빈 피드 상자가 게임 창 위에 줄처럼 보이던 것 */
 #pbWin { left:0; top:0; right:0; bottom:0; z-index:72; background:rgba(8,10,16,.82); display:flex; align-items:center; justify-content:center; font-family:var(--ui); } #pbWin:not(.in) { transform:scale(1.06); }
+#evoWin { left:0; top:0; right:0; bottom:0; z-index:84; background:radial-gradient(ellipse at 50% 55%, #26305a 0%, #0b0e1c 60%, #04050a 100%); font-family:var(--ui); color:#fff; } /* 펫 진화 (v194) */
+#evoWin canvas { position:absolute; left:0; top:0; width:100%; height:100%; image-rendering:pixelated; }
+#evoWin .evoTx { position:absolute; left:16px; right:16px; top:calc(10% + env(safe-area-inset-top)); text-align:center; font-size:clamp(20px, 5vw, 34px); font-weight:800; text-shadow:0 2px 0 #000, 0 0 18px rgba(255,220,120,.6); }
+#evoWin .evoSub { position:absolute; left:16px; right:16px; top:calc(10% + env(safe-area-inset-top) + clamp(34px, 8vw, 52px)); text-align:center; font-size:clamp(14px, 3.4vw, 18px); color:#ffe9a8; text-shadow:0 1px 0 #000; }
+#evoWin #evoOk { position:absolute; left:50%; bottom:calc(8% + env(safe-area-inset-bottom)); transform:translateX(-50%); min-width:140px; font-size:18px; opacity:0; pointer-events:none; transition:opacity .4s; }
+#evoWin.done #evoOk { opacity:1; pointer-events:auto; }
 .pbBox { width:min(760px, 96vw); height:min(560px, calc(var(--vh, 100vh) - 16px)); display:flex; flex-direction:column; background:#f8f4e8; border:4px solid #2a2a38; border-radius:14px; overflow:hidden; box-shadow:0 0 0 3px #e8d8a8, 0 14px 40px rgba(0,0,0,.6); }
 .pbScene { position:relative; flex:1; min-height:0; } #pbCv { position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; }
 .pbHud { position:absolute; width:min(260px, 42%); background:#fffbe8; border:3px solid #2a2a38; border-radius:10px 10px 10px 2px; padding:6px 10px; color:#1a1a24; font-size:12px; box-shadow:3px 3px 0 rgba(0,0,0,.25); } .pbHud.foe { left:12px; top:12px; } .pbHud.me { right:12px; bottom:12px; border-radius:10px 10px 2px 10px; }
@@ -4736,7 +4742,7 @@ const Net = {
     if (m.t === 'forget') { if (Live.on && p.name) Live.forget(p.name); return; } // PeerJS: 기록 지운 친구 (v178)
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
-      p.z = m.z; p.s = m.s; p.p = m.p; p.pf = m.pf | 0; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.kn = m.kn; p.sk = m.sk; p.hm = Array.isArray(m.hm) ? m.hm.slice(0, 3) : undefined; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
+      p.z = m.z; p.s = m.s; p.p = m.p; p.pf = m.pf | 0; p.pe = m.pe | 0; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.kn = m.kn; p.sk = m.sk; p.hm = Array.isArray(m.hm) ? m.hm.slice(0, 3) : undefined; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
       const moved = gap > 0.02 && p.z === p.lastZ && p.s === p.lastS;
       if (moved && !far(p.tx, p.ty, m.x, m.y)) { p.vx = (m.x - p.tx) / gap; p.vy = (m.y - p.ty) / gap; } else { p.vx = p.vy = 0; }
       if (moved && !far(p.tcx, p.tcy, m.cx, m.cy)) { p.vcx = (m.cx - p.tcx) / gap; p.vcy = (m.cy - p.tcy) / gap; p.vca = angDiff(m.ca, p.tca) / gap; } else { p.vcx = p.vcy = p.vca = 0; }
@@ -4794,7 +4800,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), pf: Profile.get().pet === 'penguin' || Profile.get().pet2 === 'penguin' ? PET_FAT.lv(PET_FAT.get()) || undefined : undefined, z: Game.zone.id, s: Mine.open_ ? 'mine' : Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, kn: pl.kneelT > performance.now() ? (pl.kneelN | 0) + 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ...MyHome.pos(), ts: Math.round(performance.now()) });
+    this.send({ t: 'pos', pal: Profile.get(), pf: Profile.get().pet === 'penguin' || Profile.get().pet2 === 'penguin' ? PET_FAT.lv(PET_FAT.get()) || undefined : undefined, z: Game.zone.id, s: Mine.open_ ? 'mine' : Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, kn: pl.kneelT > performance.now() ? (pl.kneelN | 0) + 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ...MyHome.pos(), ...PetEvo.pos(), ts: Math.round(performance.now()) });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -11325,6 +11331,7 @@ const PetBattle = {
     if (won && B.mode === 'net' && Net.on) Net.news(`펫 배틀에서 ${B.foeName}님의 ${foe.name}을(를) 이김 (${mine.name} Lv.${mine.lv})`);
     const L = this.lvs(), cur = this.lvOf(mine.kind); let lv = cur.lv, xp = cur.xp + gain, up = 0; if (lv >= 50) xp = 0; while (lv < 50 && xp >= this.need(lv)) { xp -= this.need(lv); lv++; up++; }
     L[mine.kind] = { lv, xp }; Store.set('petLv', L); lines.push(`${esc(mine.name)}은(는) 경험치 ${gain}을(를) 얻었다!`); if (up) { lines.push(`🎉 ${esc(mine.name)}의 레벨이 ${lv}(으)로 올랐다!`); Sound.play('chime'); }
+    if (typeof PetEvo !== 'undefined') PetEvo.check(mine, cur.lv, lv, lines); // 진화 (v194): Lv15 · Lv30
     B.result = { won, lv, xp, up }; Sound.play(won ? 'coins' : 'deny'); this.kneel = { won, w: B.mode === 'npc' ? B.w : null }; // 창을 닫으면 진 쪽이 무릎 꿇고 빈다 (v173)
     this.say(lines, () => this.render());
   },
@@ -11519,7 +11526,7 @@ const PetRT = {
   petK(kind, base) { return Math.max(2, 2 * Math.round(base * (['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 2 : ['trex', 'giraffe', 'elephant'].includes(kind) ? 0.5 : 1) / 2)); },
   petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7 }[kind] || 14; }, // 펫 키 (펫 픽셀)
   pet(c, V, P, x, y, face, mv, t, al, sx, rot) { // sx: 화면 x를 직접 줄 때
-    const k = this.petK(P.kind, V.k); c.save(); c.globalAlpha = al == null ? 1 : al; c.translate(Math.round(sx != null ? sx : V.X(x)), Math.round(V.Y(y))); if (rot) c.rotate(rot); c.scale(k, k); Pets.draw(c, P.kind, 0, 0, sx != null ? face : V.F(face), mv, t, '', 0); c.restore();
+    const k = this.petK(P.kind, V.k); c.save(); c.globalAlpha = al == null ? 1 : al; c.translate(Math.round(sx != null ? sx : V.X(x)), Math.round(V.Y(y))); if (rot) c.rotate(rot); c.scale(k, k); PetEvo.with(P.kind, PetEvo.stOf(P.lv), false, () => Pets.draw(c, P.kind, 0, 0, sx != null ? face : V.F(face), mv, t, '', 0)); c.restore();
   },
   topY(V, P, y) { return V.Y(y) - this.petH(P.kind) * this.petK(P.kind, V.k) - 8; }, // 펫 머리 위 (화면)
   rr(c, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); },
@@ -11773,7 +11780,7 @@ const PetRT = {
         if (sx > -30 * s && sx < W + 30 * s) {
           c.fillStyle = `rgba(0,0,0,${(0.3 - jy / 100).toFixed(2)})`; c.beginPath(); c.ellipse(sx, Y(gy), (8 - jy / 5) * s, 2.4 * s, 0, 0, 7); c.fill();
           if (v > 140 && !stun) { c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = Math.max(1, s * 0.8); for (let q = 0; q < 4; q++) { const yy = Y(gy - 4 - q * 4 - jy), L = (10 + ((t * 40 + q * 7) % 10)) * s; c.beginPath(); c.moveTo(sx - 10 * s, yy); c.lineTo(sx - 10 * s - L, yy); c.stroke(); } }
-          c.save(); c.translate(Math.round(sx), Math.round(Y(gy - jy))); if (stun) c.rotate(Math.sin(t * 30) * 0.18); else if (j > 0) c.rotate(-0.12); c.scale(kk, kk); Pets.draw(c, P.kind, 0, 0, 1, v > 10 && !stun, t * (0.6 + Math.min(1.4, v / 120)), '', 0); c.restore();
+          c.save(); c.translate(Math.round(sx), Math.round(Y(gy - jy))); if (stun) c.rotate(Math.sin(t * 30) * 0.18); else if (j > 0) c.rotate(-0.12); c.scale(kk, kk); PetEvo.with(P.kind, PetEvo.stOf(P.lv), false, () => Pets.draw(c, P.kind, 0, 0, 1, v > 10 && !stun, t * (0.6 + Math.min(1.4, v / 120)), '', 0)); c.restore();
           if (stun) for (let q = 0; q < 3; q++) { const a = t * 6 + q * 2.1; c.fillStyle = '#ffe066'; PetRT.star(c, sx + Math.cos(a) * 8 * s, Y(gy - jy) - PetRT.petH(P.kind) * kk - 2 * s + Math.sin(a) * 2.5 * s, 2.2 * s, a); }
           PetRT.nameTag(c, V, k === me ? '나' : B.foeName, sx, Y(gy - jy) - PetRT.petH(P.kind) * kk - 8, k === me);
         } else { const right = sx >= W + 30 * s, d = Math.round(Math.abs(x - G[me + 'x'])), ax = right ? W - 14 * s : 14 * s; c.fillStyle = '#e0483a'; PetRT.rr(c, ax - 14 * s, Y(gy - 18), 28 * s, 11 * s, 5 * s); c.fill(); PetRT.tag(c, `${right ? '▶' : '◀'} ${d}m`, ax, Y(gy - 10), '#fff', 6 * s); }
@@ -12458,7 +12465,8 @@ PetRT.arena = {
     const S = B.S[tm], sx = tm === 'a' ? -6 : 6, o = { tm, x: sx, y: pet ? 1.3 : -1.3, an: tm === 'a' ? 0 : Math.PI, cd: 0, sc: 0, scm: 1, at: 0, ak: '', wu: 0, wk: '', st: 0, sh: 0, ds: 0, lp: 0, z: 0, kx: 0, ky: 0, fl: 0, dead: 0, ash: 0, qa: 0, qs: 0, mv: 0 };
     if (!pet) return Object.assign(o, { k: 'hum', wp, nm: hn.slice(0, 8), hp: 140, mx: 140, sp: 3.6, dm: 1, df: 1, r: 0.35, h: 1.75, scm: PA_HUM[wp].sp.cd });
     const kind = PA_PET[S.kind] ? S.kind : 'dog', b = (PB_DEX[kind] || PB_DEX.dog).b, f = 1 + (S.lv - 5) * 0.01, hm = PA_HM[kind] || 0.8, mx = Math.round((110 + (b[0] - 40) * 1.2) * f);
-    return Object.assign(o, { k: kind, nm: String(S.name).slice(0, 8), hp: mx, mx, sp: (2.4 + b[3] / 100 * 2.2) * Math.min(1.1, f), dm: (0.75 + b[1] / 110 * 0.5) * f, df: Math.max(0.7, 1 - (b[2] - 40) / 250), r: Math.max(0.28, Math.min(0.75, 0.22 + hm * 0.2)), h: hm, scm: PA_S[PA_PET[kind][1]][0] });
+    const ev = typeof PetEvo !== 'undefined' ? PetEvo.stOf(S.lv) : 0; /* 진화한 펫은 조금 더 크게 (v194) */
+    return Object.assign(o, { k: kind, ev, nm: String(S.name).slice(0, 8), hp: mx, mx, sp: (2.4 + b[3] / 100 * 2.2) * Math.min(1.1, f), dm: (0.75 + b[1] / 110 * 0.5) * f, df: Math.max(0.7, 1 - (b[2] - 40) / 250), r: Math.max(0.28, Math.min(0.75, 0.22 + hm * 0.2)), h: hm * (1 + 0.12 * ev), scm: PA_S[PA_PET[kind][1]][0] });
   },
   cu(G, s) { const b = s === 'a' ? 0 : 2; let i = b + (G.ctl[s] | 0); if (G.u[i].hp <= 0) i = b + 1 - (G.ctl[s] | 0); return i; },
   ai() { return { x: 0, y: 0, an: 0, jn: 0, ds: 0, dl: '', ya: 0 }; }, // 트레이너전 상대 입력은 안 쓴다 (네 명 다 think가 움직인다)
@@ -12807,7 +12815,7 @@ PetRT.arena = {
       if (u.hp > 0) { const hx = dir === 2 ? 30 : dir === 1 ? 20 : dir === 0 ? 29 : 21, hy = 34;
         if (u.wp === 'fire') { const fl = Math.floor(t * 12) % 2; x.fillStyle = '#ff7a20'; x.fillRect(hx - 1, hy - 2 - fl, 3, 3); x.fillStyle = '#ffe070'; x.fillRect(hx, hy - 1 - fl, 1, 1); }
         else { const sw = u.at > 0 && u.ak ? 1 : 0; x.fillStyle = '#d8dce8'; if (sw) x.fillRect(dir === 1 ? hx - 7 : hx, hy - 1, 7, 1); else x.fillRect(hx, hy - 7, 1, 7); x.fillStyle = '#c8a040'; x.fillRect(hx - 1, hy, 3, 1); } } }
-    else { const face = lat >= 0 ? 1 : -1; Pets.draw(x, u.k, 25, 40, face, mv, t, '', 0); ph = PetRT.petH(u.k); }
+    else { const face = lat >= 0 ? 1 : -1; PetEvo.with(u.k, u.ev, true, () => Pets.draw(x, u.k, 25, 40, face, mv, t, '', 0)); ph = PetRT.petH(u.k); }
     x.restore(); x.setTransform(1, 0, 0, 1, 0, 0);
     const tint = (col, al) => { x.globalCompositeOperation = 'source-atop'; x.globalAlpha = al; x.fillStyle = col; x.fillRect(0, 0, 100, 84); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; };
     // v187: 위는 밝고 아래는 어둡게 + 얇은 어두운 테두리 (멀리서도 또렷하게)
@@ -13185,7 +13193,7 @@ Object.assign(PetRT.arena, {
     if (u.k === 'hum') { const view = Math.abs(rel) < Math.PI / 4 ? 'f' : Math.abs(rel) > Math.PI * 3 / 4 ? 'b' : side >= 0 ? 'r' : 'l';
       const pal = Sprites.PAL[this.spr(B, u.tm)] || Sprites.PAL.player; this.human(x, pal, view, mv ? t * 9 : 0, mv, t, u); m = 1.75 / 262; }
     else { const s = this.scratch(); s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'source-over'; s.globalAlpha = 1; s.clearRect(0, 0, 100, 84); s.imageSmoothingEnabled = false; s.setTransform(2, 0, 0, 2, 0, 0);
-      Pets.draw(s, u.k, 25, 40, side >= 0 ? 1 : -1, mv, t, '', 0); s.setTransform(1, 0, 0, 1, 0, 0);
+      PetEvo.with(u.k, u.ev, true, () => Pets.draw(s, u.k, 25, 40, side >= 0 ? 1 : -1, mv, t, '', 0)); s.setTransform(1, 0, 0, 1, 0, 0);
       x.drawImage(this.smooth(), 0, 0); m = u.h / (PetRT.petH(u.k) * 8); }
     x.restore();
     // 위는 밝게 · 아래는 살짝 어둡게, 얇은 테두리, 상태 색
@@ -13427,7 +13435,7 @@ Object.assign(PetRT.arena, {
   /* ---- 펫: 도트 그림(매끈하게 키운 것)을 두께를 주고 부풀린다. 같은 그림(프레임)은 기억 ---- */
   pet3(g, u, side, mv, t) {
     const s = this.scratch(); s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'source-over'; s.globalAlpha = 1; s.clearRect(0, 0, 100, 84); s.imageSmoothingEnabled = false; s.setTransform(2, 0, 0, 2, 0, 0);
-    Pets.draw(s, u.k, 25, 40, 1, mv, t, '', 0); s.setTransform(1, 0, 0, 1, 0, 0);
+    PetEvo.with(u.k, u.ev, true, () => Pets.draw(s, u.k, 25, 40, 1, mv, t, '', 0)); s.setTransform(1, 0, 0, 1, 0, 0);
     const I = new Uint32Array(this.scx.getImageData(0, 0, 100, 84).data.buffer); let hs = 2166136261; for (let i = 0; i < I.length; i++) if (I[i]) hs = Math.imul(hs ^ I[i] ^ i, 16777619);
     const M = g.M, C = M.pet; let hit = C.get(hs); if (hit) { C.delete(hs); C.set(hs, hit); return hit; }
     const sm = this.smooth(), gl = g.gl, A = sm.getContext('2d').getImageData(0, 0, 400, 336).data, GW = 200, GH = 168, op = new Uint8Array(GW * GH);
@@ -13500,6 +13508,147 @@ Object.assign(PetRT.arena, {
     gl.bindVertexArray(null); gl.frontFace(gl.CCW); gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND); gl.depthMask(true);
   },
 });
+
+/* ===================== 펫 진화 (v194, 사용자 2026-10-17 '이 펫 경험치로 뭘 할 수 있을까' → 카드에서 '진화') =====================
+ * 펫 배틀 경험치로 오른 레벨(Store 'petLv')이 Lv15면 1단계 진화(머리에 볏), Lv30이면 최종 진화(날개 + 빛 + 몸이 2배).
+ * 큰 펫(티라노·기린·코끼리)과 사람 펫은 크기는 그대로. 픽셀 그림은 정수 배율로만 키운다.
+ * 친구 화면: pos.pe = 첫 펫 단계 + 둘째 펫 단계 × 3. 콜로세움 3D는 볏·날개만 (움직이는 빛은 메시 기억을 깨니까 뺀다).
+ * 진화하는 순간: 배틀 창을 닫으면 하얀 실루엣이 옛 모습 ↔ 새 모습으로 깜빡이다 번쩍 (#evoWin). */
+const PET_EVO_AT = [15, 30];
+const PetEvo = {
+  NAME: ['', '진화', '최종 진화'],
+  BIG: ['trex', 'giraffe', 'elephant'], NOWING: ['dolphin'],
+  SHIFT: ['dolphin', 'penguin', 'panda'], // 움직일 때 몸 모양이 확 바뀌는 펫 (헤엄·배 미끄럼·데굴데굴): 그동안 볏·날개는 숨긴다
+  FRONT: ['monkey', 'penguin'], // 앞을 보는 펫: 날개 양쪽
+  WB: { giraffe: [-2, -15], elephant: [-1, -12], mantis: [-3, -7], panda: [1, -9], turtle: [-1, -7] }, // 날개 밑동 (기본: 목에서 등 쪽으로)
+  stOf(lv) { lv = +lv || 0; return lv >= PET_EVO_AT[1] ? 2 : lv >= PET_EVO_AT[0] ? 1 : 0; },
+  scOf(kind, st, pose) { return st >= 2 && PET_DRAW[kind] && !PET_HD[kind] && !PET_PEOPLE[kind] && !this.BIG.includes(kind) && pose !== 'ride' ? 2 : 1; },
+  cT: -1, cL: null,
+  lvs() { const now = performance.now(); if (!this.cL || now - this.cT > 1000) { this.cT = now; this.cL = typeof PetBattle !== 'undefined' ? PetBattle.lvs() : {}; } return this.cL; },
+  mine(kind) { if (!kind) return 0; const L = this.lvs()[kind]; return this.stOf((L && +L.lv) || 5); },
+  pos() { const p = Profile.get(), v = this.mine(p.pet) + 3 * this.mine(p.pet && p.pet2); return v ? { pe: v } : {}; },
+  trS: {},
+  // 그리는 펫의 주인 키 → 단계: 'me' · 'me#2' · 'f:이름' · 'f:이름#2' · 트레이너 'tr구:번호' (트레이너 레벨 = 내 펫 최고 레벨 + off)
+  ofKey(key, kind) {
+    if (key === 'me' || key === 'me#2') return this.mine(kind);
+    if (key.startsWith('f:') && typeof Net !== 'undefined') { const nm = key.slice(2).replace(/#2$/, ''), two = key.endsWith('#2'); for (const id in Net.players) { const q = Net.players[id]; if (q && q.name === nm) { const v = q.pe | 0; return two ? Math.floor(v / 3) % 3 : v % 3; } } return 0; }
+    if (key.startsWith('tr')) { const now = performance.now(), c = this.trS[key]; if (c && now - c.t < 1500) return c.s; let s = 0; const w = (Game.decor || []).find(d => d.trainer && d.trainer.key === key);
+      if (w && typeof PetBattle !== 'undefined') { const pets = PetBattle.myPets(), top = pets.length ? Math.max(...pets.map(x => x.lv)) : 5; s = this.stOf(top + w.trainer.off); } this.trS[key] = { t: now, s }; return s; }
+    return 0;
+  },
+  col(kind) { const D = typeof PB_DEX !== 'undefined' && PB_DEX[kind], T = D && PB_TYPES[D.t]; return (T && T[2]) || '#f2c230'; },
+  // 정해진 단계로 그리기 (미리보기 · 배틀 화면 · 콜로세움): fl = 움직이는 빛 없이
+  with(kind, st, fl, fn) { if (!st) return fn(); const e0 = Pets.evoNow, k0 = Pets.evoK; Pets.evoNow = { st, fl: !!fl, flat: true }; Pets.evoK = kind; try { return fn(); } finally { Pets.evoNow = e0; Pets.evoK = k0; } },
+  draw(c, kind, x, y, face, moving, t, tag, idle, pose, e) {
+    const st = e.st, sc = e.flat ? 1 : this.scOf(kind, st, pose), col = this.col(kind), A = PET_ANCH[kind], people = !!(PET_HD[kind] || PET_PEOPLE[kind]), lab = tag && typeof Net !== 'undefined';
+    c.save(); c.translate(snapPx(c, x), snapPx(c, y)); if (sc !== 1) c.scale(sc, sc);
+    if (st >= 2 && !e.fl) this.aura(c, kind, t, col, people);
+    const hide = moving && this.SHIFT.includes(kind);
+    if (st >= 2 && A && !people && !hide && !this.NOWING.includes(kind) && pose !== 'ride') { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.wings(c, kind, A, t, moving, col, e.fl); c.restore(); }
+    Pets.draw1(c, kind, 0, 0, face, moving, t, sc !== 1 ? '' : tag, idle, pose);
+    if (A && !people && !hide) { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.crest(c, A, st, col); c.restore(); }
+    if (!e.fl) this.motes(c, kind, st, t, col, A);
+    c.restore();
+    if (lab && sc !== 1) Net.petLabel(c, tag, x, y - PetDeco.labelY(kind) * sc);
+  },
+  light(hex, k) { return shade(hex, k); },
+  // 볏: 1단계는 불꽃 모양 한 갈래, 최종은 세 갈래 + 금빛 끝 (테두리를 둘러서 작아도 보이게)
+  crest(c, A, st, col) {
+    const [hx, hy] = A.h, dk = shade(col, -0.45), lt = shade(col, 0.5), px = []; // [x, y, 색]
+    if (st === 1) px.push([-1, -1, col], [0, -1, col], [1, -1, col], [0, -2, col], [1, -2, lt], [0, -3, lt], [1, -4, '#fff2a8']);
+    else px.push([-2, -1, col], [-1, -1, col], [0, -1, col], [1, -1, col], [-2, -2, lt], [-1, -2, col], [0, -2, col], [1, -2, lt], [-1, -3, lt], [0, -3, lt], [1, -3, '#ffe27a'], [0, -4, lt], [-2, -3, '#ffe27a'], [1, -5, '#fff2a8']);
+    const on = new Set(px.map(p => p[0] + ',' + p[1])); c.fillStyle = dk;
+    for (const [x, y] of px) for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1]]) if (!on.has((x + dx) + ',' + (y + dy))) c.fillRect(hx + x + dx, hy + y + dy, 1, 1);
+    for (const [x, y, cl] of px) { c.fillStyle = cl; c.fillRect(hx + x, hy + y, 1, 1); }
+  },
+  // 날개: 등에서 위·뒤로 (오른쪽 보기 기준 왼쪽). 하얀 깃털 + 타입 색 깃 끝. 두 장면으로 퍼덕 (걸을 때 빠르게)
+  WING: [ // [x, y, w] 줄 (밑동 = 0,0, 뒤쪽이 -x)
+    [[-3, -6, 2], [-5, -5, 4], [-6, -4, 6], [-6, -3, 7], [-5, -2, 6], [-3, -1, 4]],
+    [[-7, -3, 2], [-8, -2, 5], [-8, -1, 8], [-7, 0, 7], [-5, 1, 5], [-3, 2, 2]],
+  ],
+  wings(c, kind, A, t, mv, col, fl) {
+    const big = A.s >= 6 ? 2 : 1, f = fl ? 0 : Math.floor(t * (mv ? 7 : 2.5)) % 2, B = this.WB[kind] || [A.n[0] - Math.round(A.s * 0.9), A.n[1]], W = this.WING[f], ed = shade(col, -0.3);
+    const one = (bx, by, m) => { const R = (x, y, w, cl) => { c.fillStyle = cl; c.fillRect(m > 0 ? bx + x * big : bx - (x + w) * big, by + y * big, w * big, big); };
+      for (const [x, y, w] of W) R(x - 1, y, w + 1, '#5a6070'); // 테두리
+      for (let i = 0; i < W.length; i++) { const [x, y, w] = W[i]; R(x, y, w, i < 3 ? '#ffffff' : '#e6ecf6'); R(x, y, 1, i < 4 ? col : ed); if (i === W.length - 1) R(x, y, w, '#c8d2e2'); } };
+    if (this.FRONT.includes(kind)) { const hw = Math.max(3, A.s - 1); one(-hw + 2, B[1], 1); one(hw - 2, B[1], -1); } else one(B[0], B[1], 1);
+  },
+  aura(c, kind, t, col, people) {
+    const R = people ? 7 : kind === 'elephant' || kind === 'trex' ? 11 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 5 : 7, p = 0.5 + 0.5 * Math.sin(t * 3);
+    c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.28 + 0.14 * p; c.fillStyle = col; c.beginPath(); c.ellipse(0, 0, R + p, 2.6 + p * 0.5, 0, 0, 7); c.fill(); c.globalAlpha = 0.5; c.fillStyle = '#fff6c0'; c.beginPath(); c.ellipse(0, 0, R * 0.5, 1.2, 0, 0, 7); c.fill(); c.restore();
+  },
+  // 몸 둘레로 피어오르는 빛 알갱이 (1단계: 가끔 반짝 하나)
+  motes(c, kind, st, t, col, A) {
+    const h = typeof PetRT !== 'undefined' ? PetRT.petH(kind) : 14;
+    if (st === 1) { const n = Math.floor(t / 2.2), ph = (t / 2.2) % 1; if (ph > 0.25) return; const q = paHash(n, kind.length), X = A ? A.h[0] + ((q >> 2) % 7) - 3 : 0, Y = (A ? A.h[1] : -h) + ((q >> 5) % 5) - 1; c.fillStyle = '#fffbe0'; c.fillRect(X, Y - 1, 1, 3); c.fillRect(X - 1, Y, 3, 1); return; }
+    c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 5; i++) { const q = paHash(i * 31 + 7, kind.length), sp = 0.6 + ((q >> 3) % 5) * 0.12, ph = (t * sp + i / 5) % 1, X = ((q >> 6) % 13) - 6 + Math.round(Math.sin(t * 2 + i) * 1), Y = -Math.round(ph * (h + 6));
+      c.globalAlpha = Math.sin(ph * Math.PI) * 0.9; c.fillStyle = i % 2 ? col : '#fff4b0'; c.fillRect(X, Y, 1, 1); } c.restore();
+  },
+  /* ---- 진화하는 순간 ---- */
+  pend: null,
+  check(mine, lv0, lv1, lines) {
+    const a = this.stOf(lv0), b = this.stOf(lv1);
+    if (b > a) { this.pend = { kind: mine.kind, name: mine.name || PetBattle.kindName(mine.kind), from: a, to: b, lv: lv1 }; lines.push(`✨ ${esc(this.pend.name)}의 몸이 빛나기 시작했다…!`); }
+    else if (lv1 < PET_EVO_AT[1]) lines.push(`다음 진화까지: Lv.${lv1 < PET_EVO_AT[0] ? PET_EVO_AT[0] : PET_EVO_AT[1]}`);
+  },
+  open_: false,
+  show(q) {
+    q = q || this.pend; this.pend = null; if (!q) return; this.q = q; this.cL = null;
+    let el = $('evoWin'); if (!el) { el = document.createElement('div'); el.id = 'evoWin'; el.className = 'ovl'; el.innerHTML = '<canvas id="evoCv"></canvas><div class="evoTx" id="evoTx"></div><div class="evoSub" id="evoSub"></div><button class="btn gold" id="evoOk">좋아!</button>'; document.body.appendChild(el);
+      el.addEventListener('pointerdown', ev => { if (ev.target.id === 'evoOk') return; this.skip(); }); $('evoOk').onclick = () => this.close(); }
+    this.open_ = true; this.t0 = performance.now(); this.done = false; Game.formOpen = true; el.classList.add('in'); el.classList.remove('done'); $('evoTx').textContent = `어…? ${q.name}의 모습이…!`; $('evoSub').textContent = '';
+    this.key = ev => { if (!this.open_) return; const k = ev.key; if (k === 'e' || k === 'E' || k === 'ㄷ' || k === 'Enter' || k === ' ' || k === 'Escape') { ev.preventDefault(); ev.stopImmediatePropagation(); if (this.done) this.close(); else this.skip(); } };
+    window.addEventListener('keydown', this.key, true); Sound.play('whoosh');
+    if (typeof Net !== 'undefined' && Net.on) Net.news(`${q.name}이(가) ${this.NAME[q.to]}했어요 (Lv.${q.lv})`);
+    cancelAnimationFrame(this.raf); const loop = () => { if (!this.open_) return; this.paint(); this.raf = requestAnimationFrame(loop); }; loop();
+  },
+  END: 4.6,
+  skip() { const T = (performance.now() - this.t0) / 1000; if (T > 0.6 && T < this.END) this.t0 = performance.now() - this.END * 1000; else if (this.done) this.close(); },
+  close() { if (!this.open_) return; this.open_ = false; cancelAnimationFrame(this.raf); window.removeEventListener('keydown', this.key, true); $('evoWin').classList.remove('in'); Game.formOpen = false; Pets.mineT = -1; Sound.play('flip'); },
+  off: null,
+  paint() {
+    const cv = $('evoCv'), q = this.q, dpr = Math.min(3, window.devicePixelRatio || 1), Wc = innerWidth, Hc = innerHeight, W = Math.round(Wc * dpr), H = Math.round(Hc * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    const c = cv.getContext('2d'), T = (performance.now() - this.t0) / 1000, now = performance.now() / 1000, cx = W / 2, cy = H * 0.6;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H); c.imageSmoothingEnabled = false;
+    const h = PetRT.petH(q.kind), scN = this.scOf(q.kind, q.to), K = Math.max(2, Math.floor(Math.min(W * 0.72, H * 0.45) / ((h + 8) * scN))), col = this.col(q.kind);
+    // 뒤 빛줄기 (돌아가며 점점 세진다)
+    const pw = Math.min(1, T / this.END); c.save(); c.translate(cx, cy - h * K * scN * 0.5); c.rotate(now * 0.6); c.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 12; i++) { c.rotate(Math.PI / 6); c.globalAlpha = (T >= this.END ? 0.22 : 0.06 + pw * 0.2) * (i % 2 ? 0.6 : 1); c.fillStyle = i % 2 ? col : '#fff2b0'; c.beginPath(); c.moveTo(0, 0); c.lineTo(-W * 0.08, -Math.max(W, H)); c.lineTo(W * 0.08, -Math.max(W, H)); c.fill(); } c.restore();
+    const one = (st, white) => { const o = this.off || (this.off = document.createElement('canvas')); if (o.width !== W || o.height !== H) { o.width = W; o.height = H; } const x = o.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.clearRect(0, 0, W, H); x.imageSmoothingEnabled = false; x.setTransform(K, 0, 0, K, Math.round(cx), Math.round(cy));
+      const d = PetDeco.get(q.kind); Pets.decoNow = PetDeco.any(d) ? d : null; Pets.decoK = q.kind; const e0 = Pets.evoNow; Pets.evoNow = st ? { st, fl: !!white } : null; Pets.evoK = q.kind;
+      try { Pets.draw(x, q.kind, 0, 0, 1, false, now, '', 0); } finally { Pets.decoNow = null; Pets.evoNow = e0; }
+      x.setTransform(1, 0, 0, 1, 0, 0); if (white) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over'; } c.drawImage(o, 0, 0); };
+    if (T < 1.2) one(q.from, false);
+    else if (T < this.END - 0.4) { const u = (T - 1.2) / (this.END - 1.6), per = 0.55 * (1 - u) + 0.05, ph = Math.floor((T - 1.2) / per) % 2; one(ph ? q.to : q.from, true); }
+    else { one(q.to, T < this.END); if (!this.done && T >= this.END) { this.done = true; $('evoWin').classList.add('done'); $('evoTx').textContent = `🎉 ${q.name}이(가) ${this.NAME[q.to]}했다!`;
+      $('evoSub').textContent = q.to === 1 ? `Lv.${PET_EVO_AT[0]} 진화: 머리에 볏이 돋았어요. 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!` : (scN > 1 ? `Lv.${PET_EVO_AT[1]} 최종 진화: 날개가 돋고 몸이 두 배로 커졌어요!` : `Lv.${PET_EVO_AT[1]} 최종 진화: 날개가 돋고 온몸에서 빛이 나요!`); Sound.play('chime'); } }
+    // 번쩍 (새 모습이 드러나는 순간)
+    const fl = T - (this.END - 0.4); if (fl > 0 && fl < 1.2) { c.globalAlpha = fl < 0.4 ? fl / 0.4 : Math.max(0, 1 - (fl - 0.4) / 0.8); c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
+    if (this.done) { c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 14; i++) { const q2 = paHash(i * 13 + 5, 3), a = (i / 14) * Math.PI * 2 + now * 0.4, rr = (0.25 + ((q2 >> 3) % 10) / 30) * Math.min(W, H), tw = 0.5 + 0.5 * Math.sin(now * 4 + i), s = Math.max(2, Math.round(dpr * 2));
+      c.globalAlpha = tw; c.fillStyle = i % 2 ? col : '#fff6c8'; const X = Math.round(cx + Math.cos(a) * rr), Y = Math.round(cy - h * K * scN * 0.5 + Math.sin(a) * rr * 0.6); c.fillRect(X - s, Y, s * 3, s); c.fillRect(X, Y - s, s, s * 3); } c.globalAlpha = 1; c.globalCompositeOperation = 'source-over'; }
+  },
+};
+// Pets.draw · actor · step 감싸기 (펫 꾸미기 감싼 것 바깥): 진화 단계가 있는 펫만 크기·볏·날개·빛
+Pets.draw1 = Pets.draw;
+Pets.draw = function (c, kind, x, y, face, moving, t, tag, idle, pose) {
+  const e = this.evoNow; if (!e || !e.st || this.evoK !== kind) return this.draw1(c, kind, x, y, face, moving, t, tag, idle, pose);
+  this.evoNow = null; try { PetEvo.draw(c, kind, x, y, face, moving, t, tag, idle, pose, e); } finally { this.evoNow = e; }
+};
+Pets.actor1 = Pets.actor;
+Pets.actor = function (c, key, k, ox, oy, t, n) {
+  const R = this.actor1(c, key, k, ox, oy, t, n), st = PetEvo.ofKey(key, k);
+  if (R && R.d && st) { const d0 = R.d, e = { st }; R.d = () => { const e0 = Pets.evoNow, k0 = Pets.evoK; Pets.evoNow = e; Pets.evoK = k; try { d0(); } finally { Pets.evoNow = e0; Pets.evoK = k0; } }; }
+  return R;
+};
+Pets.step1 = Pets.step;
+Pets.step = function (key, ox, oy, t, kind) { // 두 배로 큰 펫은 주인과 조금 더 떨어져 따라온다
+  if (PetEvo.scOf(kind, PetEvo.ofKey(key, kind)) < 2) return this.step1(key, ox, oy, t, kind);
+  const cf = PET_FOLLOW[kind] || (PET_FOLLOW[kind] = {}), n0 = cf.near, f0 = cf.far; cf.near = (n0 || 16) + 8; if (f0) cf.far = f0 + 8;
+  try { return this.step1(key, ox, oy, t, kind); } finally { cf.near = n0; cf.far = f0; }
+};
+// 배틀 창을 닫으면 진화 장면 (진 쪽이 비는 동안은 기다렸다가)
+PetBattle.close0 = PetBattle.close;
+PetBattle.close = function () { const was = this.open_, K = this.kneel; this.close0(); if (was && PetEvo.pend) setTimeout(() => PetEvo.show(), K && !K.won ? 4800 : 450); };
 
 /* ===================== 게임장 가위바위보 · 카지노 홀짝 (사용자 2026-10-15) =====================
  * 가위바위보: 건대 게임장 기계에서 3판 2선승. 같은 게임장에 있는 친구(같이 하기·채널)에게 신청하거나 사장 장우준이랑 한다.

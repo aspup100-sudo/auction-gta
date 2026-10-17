@@ -12191,7 +12191,7 @@ PetRT.arena = {
     const ac = B.ac || {}, A = { a: PetArena.clean(ac.a), b: PetArena.clean(ac.b) }, foe = B.me === 'a' ? 'b' : 'a';
     const hn = { a: B.me === 'a' ? this.myName() : String(B.foeName || '상대'), b: B.me === 'b' ? this.myName() : String(B.foeName || '상대') };
     const u = []; for (const tm of ['a', 'b']) for (const pet of [0, 1]) u.push(this.mk(B, tm, pet, A[tm].wp, hn[tm]));
-    this.aiS = []; this.R = null; B.ya = B.me === 'a' ? 0 : Math.PI; this.look = { dx: 0 }; this.mb = {}; this.hold = {};
+    this.aiS = []; this.R = null; B.ya = B.me === 'a' ? 0 : Math.PI; this.look = { dx: 0, dy: 0 }; B.pi = 0; this.mb = {}; this.hold = {};
     const hum = { [B.me]: true, [foe]: B.mode === 'net' };
     return { u, ctl: { a: A.a.ctl, b: A.b.ctl }, hum, pr: [], ev: [], eid: 0, kf: [], pid: 0 };
   },
@@ -12308,6 +12308,7 @@ PetRT.arena = {
     const T = PetRT.tp, L = B.loc, K = Keys, k = (...n) => n.some(x => K[x]) ? 1 : 0, now = performance.now(), dt = L.rt ? Math.min(0.05, (now - L.rt) / 1000) : 0; L.rt = now;
     const f = k('w', 'ㅈ', 'ArrowUp') - k('s', 'ㄴ', 'ArrowDown'), sx = k('d', 'ㅇ') - k('a', 'ㅁ');
     B.ya += (k('ArrowRight') - k('ArrowLeft')) * 2.6 * dt + this.look.dx; this.look.dx = 0; B.ya = paAng(B.ya, 0);
+    B.pi = Math.max(-1.3, Math.min(1.3, (B.pi || 0) + (k('PageUp') - k('PageDown')) * 1.6 * dt - (this.look.dy || 0))); this.look.dy = 0; // v191: 위아래 보기 (보기만, 싸움엔 영향 없음)
     let x = sx + T.x, y = -f + T.y; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
     const ha = !!(k(' ', 'j', 'ㅓ') || this.mb[0] || this.hold.a), hs = !!(k('k', 'ㅏ', 'Shift') || this.mb[2] || this.hold.s);
     if (ha && (!L.pa || now - L.ta > 130)) { L.an++; L.ta = now; } if (hs && !L.pj) L.jn++; L.pa = ha; L.pj = hs; L.an += T.an; L.jn += T.jn; T.an = T.jn = 0;
@@ -12332,13 +12333,14 @@ PetRT.arena = {
   bind() {
     const cv = $('pbCv'); if (!cv) return; const me = this;
     for (const [id, key] of [['pbAct', 'a'], ['pbJmp', 's']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); me.hold[key] = true; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => { me.hold[key] = false; b.classList.remove('dn'); }; }
-    let tid = null, tx = 0;
+    let tid = null, tx = 0, ty = 0;
     cv.onpointerdown = e => {
-      if (e.pointerType === 'touch') { tid = e.pointerId; tx = e.clientX; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
+      if (e.pointerType === 'touch') { tid = e.pointerId; tx = e.clientX; ty = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
       if (document.pointerLockElement !== cv) { const B = PetBattle.B; if (B && B.G && B.G.ph !== 'done' && cv.requestPointerLock) { try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (er) {} } return; }
       me.mb[e.button] = true; e.preventDefault();
     };
-    cv.onpointermove = e => { if (e.pointerType === 'touch') { if (e.pointerId === tid) { me.look.dx += (e.clientX - tx) * 0.009; tx = e.clientX; } return; } if (document.pointerLockElement === cv) me.look.dx += (e.movementX || 0) * 0.0028; };
+    cv.onpointermove = e => { if (e.pointerType === 'touch') { if (e.pointerId === tid) { me.look.dx += (e.clientX - tx) * 0.009; me.look.dy += (e.clientY - ty) * 0.007; tx = e.clientX; ty = e.clientY; } return; }
+      if (document.pointerLockElement === cv || e.buttons) { me.look.dx += (e.movementX || 0) * 0.0028; me.look.dy += (e.movementY || 0) * 0.0028; } }; // 잠금이 안 돼도 끌면 둘러본다
     cv.onpointerup = cv.onpointercancel = e => { if (e.pointerType === 'touch') { if (e.pointerId === tid) tid = null; return; } me.mb[e.button] = false; };
     cv.oncontextmenu = e => e.preventDefault();
     cv.onmousedown = e => { if (document.pointerLockElement === cv) { me.mb[e.button] = true; e.preventDefault(); } };
@@ -12361,8 +12363,15 @@ PetRT.arena = {
     R.sh = Math.max(0, R.sh - dt * 2); R.dmg = Math.max(0, R.dmg - dt * 1.6); R.hm = Math.max(0, R.hm - dt); R.kill = Math.max(0, R.kill - dt);
     if (G.ph === 'done') this.unlock();
     const shk = R.sh > 0 ? (Math.random() - 0.5) * R.sh * 0.06 : 0, mvB = U.hp > 0 ? (U.mv || 0) : 0;
+    if (this.gl()) { // v191: 그래픽 카드로 기기 해상도 그대로 + 위아래 보기
+      const cam = { px: U.x, py: U.y, yaw: B.ya + shk, z: this.eye(U) + (U.z || 0) + Math.sin(t * 10) * 0.03 * mvB - (U.hp <= 0 ? this.eye(U) * 0.6 : 0), tanH: Math.tan(0.62), k: 1 / dpr, iw: DW, ih: DH, gl: true, kd: 1 };
+      cam.tanV = cam.tanH * DH / DW; cam.dX = Math.cos(cam.yaw); cam.dY = Math.sin(cam.yaw); cam.f = (DW / 2) / cam.tanH; cam.hz = DH / 2; this.cam3(cam, (B.pi || 0) + (R.sh > 0 ? (Math.random() - 0.5) * R.sh * 0.03 : 0)); R.cam = cam;
+      this.zcols(R, cam); const gcv = this.glDraw(R, G, B, ci, cam, t, dt);
+      c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, c.canvas.width, c.canvas.height); R.o = c;
+      this.sprites(R, G, B, ci, cam, t, dt); this.hands(R, G, B, U, cam, t);
+      c.restore(); c.imageSmoothingEnabled = false; this.hud(c, W, H, R, G, B, ci, U, t, dt); PetRT.banner(c, PetRT.view(W, H, B), W, H, B, G, t); return; }
     const cam = { px: U.x, py: U.y, yaw: B.ya + shk, z: this.eye(U) + (U.z || 0) + Math.sin(t * 10) * 0.03 * mvB - (U.hp <= 0 ? this.eye(U) * 0.6 : 0), tanH: Math.tan(0.62), k, iw, ih };
-    cam.dX = Math.cos(cam.yaw); cam.dY = Math.sin(cam.yaw); cam.f = (iw / 2) / cam.tanH; cam.hz = Math.round(ih * 0.5 + (R.sh > 0 ? (Math.random() - 0.5) * R.sh * 6 : 0)); R.cam = cam;
+    cam.dX = Math.cos(cam.yaw); cam.dY = Math.sin(cam.yaw); cam.f = (iw / 2) / cam.tanH; cam.hz = Math.round(ih * 0.5 + Math.tan(Math.max(-0.9, Math.min(0.9, B.pi || 0))) * cam.f + (R.sh > 0 ? (Math.random() - 0.5) * R.sh * 6 : 0)); R.cam = cam;
     const w0 = performance.now(); this.world(R, G, cam, t); R.x.putImageData(R.img, 0, 0); this.adapt(R, performance.now() - w0, kd, DH);
     c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false; c.drawImage(R.cv, 0, 0, iw * kd, ih * kd);
     c.setTransform(kd, 0, 0, kd, 0, 0); R.o = c; cam.kd = kd;
@@ -12500,7 +12509,8 @@ PetRT.arena = {
     return paRGB((212 + n) * l * blk, (196 + n) * l * blk, (168 + n) * l * blk);
   },
   // 다른 캐릭터·던진 것·불꽃 (먼 것부터, 기둥 뒤는 열마다 가린다)
-  proj(cam, x, y) { const dx = x - cam.px, dy = y - cam.py, dp = dx * cam.dX + dy * cam.dY, lat = dx * -cam.dY + dy * cam.dX; return { dp, sx: cam.iw / 2 * (1 + lat / (dp * cam.tanH)), sc: cam.f / dp, gy: cam.hz + cam.z * cam.f / dp }; },
+  proj(cam, x, y) { if (cam.gl) { const a = this.p3(cam, x, y, 0), b = this.p3(cam, x, y, 1), dpH = (x - cam.px) * cam.dX + (y - cam.py) * cam.dY; return { dp: a.w > 0.05 ? Math.max(0.21, dpH) : -1, sx: a.sx, sc: a.sy - b.sy, gy: a.sy }; }
+    const dx = x - cam.px, dy = y - cam.py, dp = dx * cam.dX + dy * cam.dY, lat = dx * -cam.dY + dy * cam.dX; return { dp, sx: cam.iw / 2 * (1 + lat / (dp * cam.tanH)), sc: cam.f / dp, gy: cam.hz + cam.z * cam.f / dp }; },
   // 기둥 뒤에 가린 열은 잘라내고 그린다 (원본은 통째로: 아주 가까울 때 조각 원본이 반투명하게 번지는 걸 막는다)
   blit(R, src, sx, sy, sw, sh, dx, dy, dw, dh, dp) {
     const x0 = Math.max(0, Math.floor(dx)), x1 = Math.min(R.cam.iw, Math.ceil(dx + dw)), runs = []; let run = -1, all = true;
@@ -12550,6 +12560,10 @@ PetRT.arena = {
     for (const p of R.fx) L.push({ k: 'f', p, x: p.x, y: p.y });
     for (const o of L) o.q = this.proj(cam, o.x, o.y); L.sort((a, b) => b.q.dp - a.q.dp); R.tags = [];
     for (const o of L) { const q = o.q; if (q.dp < 0.2) continue;
+      if (o.k === 'u' && cam.gl) { const u = o.u, hh = (u.k === 'hum' ? 1.75 : u.h) + (u.z || 0), top = this.p3(cam, u.x, u.y, hh + 0.15);
+        if (u.hp > 0 && top.w > 0.1 && q.sx > 0 && q.sx < cam.iw && this.los(cam.px, cam.py, u.x, u.y)) R.tags.push({ u, sx: top.sx, sy: top.sy, dp: q.dp });
+        if (u.hp <= 0 && !u.ash && u.dead < 3) { x.fillStyle = '#ffe066'; for (let n = 0; n < 3; n++) { const a = t * 5 + n * 2.1, p = this.p3(cam, u.x + Math.cos(a) * 0.3 * cam.dY, u.y - Math.cos(a) * 0.3 * cam.dX, 0.5 + Math.sin(a) * 0.08); if (p.w > 0.1) { x.beginPath(); x.arc(p.sx, p.sy, Math.max(2, cam.f * 0.035 / p.w), 0, 7); x.fill(); } } }
+        continue; }
       if (o.k === 'u') { const u = o.u, ph = this.drawUnit(B, u, cam, t), m = (u.k === 'hum' ? 1.75 : u.h) / (ph * 2), sc = Math.max(1, Math.round(q.sc * m * cam.kd)) / cam.kd, dw = 100 * sc, dh = 84 * sc, sink = u.hp <= 0 && u.ash ? Math.max(0, (u.ash - 0.8) / 0.8) : 0;
         let dy = Math.round((q.gy - (u.z || 0) * q.sc - 80 * sc) * cam.kd) / cam.kd; if (sink > 0) { const cut = 84 * (1 - sink * 0.9); dy += 84 * sc - cut * sc; this.blit(R, this.sc, 0, 0, 100, cut, Math.round((q.sx - 50 * sc) * cam.kd) / cam.kd, dy, dw, cut * sc, q.dp); }
         else this.blit(R, this.sc, 0, 0, 100, 84, Math.round((q.sx - 50 * sc) * cam.kd) / cam.kd, dy, dw, dh, q.dp);
@@ -12722,6 +12736,296 @@ PetRT.arena = {
     if (!touch && G.ph === 'play' && document.pointerLockElement !== $('pbCv')) { c.font = F(fs * 0.72, 800); c.textAlign = 'center'; const s = '🖱️ 화면을 클릭하면 마우스로 둘러봐요', w = c.measureText(s).width + fs * 1.4; c.fillStyle = 'rgba(10,14,24,.7)'; PetRT.rr(c, W / 2 - w / 2, H - fs * 7.4, w, fs * 1.5, fs * 0.75); c.fill(); c.fillStyle = '#fff'; c.fillText(s, W / 2, H - fs * 6.35); }
   },
 };
+
+/* ===================== 🏟️ 콜로세움 고화질 (v191, 사용자 2026-10-17 '여기 안에선 플레이어랑 펫들 화질이 진짜 엄청 좋았으면 … 관중들도 … 360도 자유롭게') =====================
+ * 바닥·벽·관중·기둥·하늘은 그래픽 카드(WebGL2) 픽셀 셰이더가 기기 해상도로 바로 그린다 (관중은 사람마다 머리·눈·옷·흔드는 팔).
+ * 캐릭터는 콜로세움 안에서만 고화질 그림 (사람: 큰 벡터 그림, 펫: 픽셀 그림을 EPX로 두 번 매끈하게 키움) → 깊이 버퍼로 기둥 뒤에 가려진다.
+ * 카메라는 좌우 + 위아래 (B.pi). WebGL2가 없으면 예전 CPU 그림 (petarena.js world)으로 그린다. */
+const PA_VS = `#version 300 es
+in vec2 aP; void main() { gl_Position = vec4(aP, 0.0, 1.0); }`;
+const PA_FS = `#version 300 es
+precision highp float;
+uniform vec3 uC, uF, uR, uU; uniform vec2 uTan, uRes; uniform float uT, uSun;
+uniform vec2 uPil[4]; uniform vec4 uSh[6]; uniform int uNS;
+out vec4 o;
+const float R = 9.0, WH = 7.0, PR = 0.5, PH = 3.4;
+float h21(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float h31(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float vn(vec2 p) { vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), u.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), u.x), u.y); }
+float vn3(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(h31(i), h31(i + vec3(1, 0, 0)), f.x), mix(h31(i + vec3(0, 1, 0)), h31(i + vec3(1, 1, 0)), f.x), f.y), mix(mix(h31(i + vec3(0, 0, 1)), h31(i + vec3(1, 0, 1)), f.x), mix(h31(i + vec3(0, 1, 1)), h31(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
+float cov(float d, float fp) { return clamp(0.5 - d / fp, 0.0, 1.0); }
+float sdBox(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+vec3 C(float r, float g, float b) { return vec3(r, g, b) / 255.0; }
+vec3 shirtC(float h) { int i = int(floor(h * 10.0));
+  if (i == 0) return C(214., 58., 50.); if (i == 1) return C(56., 104., 214.); if (i == 2) return C(238., 196., 64.); if (i == 3) return C(84., 166., 86.); if (i == 4) return C(236., 236., 228.);
+  if (i == 5) return C(164., 86., 186.); if (i == 6) return C(238., 136., 56.); if (i == 7) return C(58., 60., 74.); if (i == 8) return C(40., 170., 190.); return C(250., 120., 160.); }
+vec3 skinC(float h) { if (h < 0.3) return C(244., 204., 168.); if (h < 0.55) return C(222., 172., 128.); if (h < 0.75) return C(250., 220., 190.); return C(176., 122., 84.); }
+vec3 hairC(float h) { if (h < 0.3) return C(40., 28., 22.); if (h < 0.55) return C(24., 22., 26.); if (h < 0.75) return C(70., 44., 26.); if (h < 0.9) return C(150., 96., 44.); return C(206., 176., 116.); }
+// 관중 한 명 (자리 안 좌표: dx 가로 m, dy 의자 위 높이 m)
+vec3 person(vec3 bg, float dx, float dy, float seat, float row, float fp, float l) {
+  float h = h21(vec2(seat, row)); if (h < 0.1) return bg;
+  float up = sin(uT * (4.0 + floor(h * 4.0)) + h * 60.0) > 0.55 ? 1.0 : 0.0, cheer = up * (0.5 + 0.5 * sin(uT * 14.0 + h * 9.0));
+  dy -= up * 0.02 + cheer * 0.012;
+  vec3 sh = shirtC(h21(vec2(seat * 1.7, row + 3.1))), sk = skinC(h21(vec2(seat + 7.3, row * 2.1))), hc = hairC(h21(vec2(seat * 0.37, row + 9.7)));
+  vec3 col = bg; float s = dx < 0.0 ? 1.06 : 0.92;
+  vec2 p = vec2(dx, dy); float ax = abs(dx);
+  if (up < 0.5) col = mix(col, sh * 0.78 * l, cov(sdBox(vec2(ax - 0.112, dy - 0.085), vec2(0.014, 0.066), 0.012), fp));
+  else { col = mix(col, sh * 0.85 * l, cov(sdBox(vec2(ax - 0.12, dy - 0.225), vec2(0.015, 0.09), 0.013), fp)); col = mix(col, sk * l, cov(length(vec2(ax - 0.12, dy - 0.32)) - 0.022, fp)); }
+  col = mix(col, sh * (0.82 + 0.22 * clamp(dy / 0.17, 0.0, 1.0)) * s * l, cov(sdBox(vec2(dx, dy - 0.08), vec2(0.1, 0.085), 0.045), fp));
+  col = mix(col, sk * 0.86 * l, cov(sdBox(vec2(dx, dy - 0.168), vec2(0.024, 0.016), 0.006), fp));
+  float head = length(p - vec2(0.0, 0.235)) - 0.064; col = mix(col, sk * s * l, cov(head, fp));
+  float cap = max(length(p - vec2(0.0, 0.248)) - 0.067, -(length(p - vec2(0.0, 0.222)) - 0.058)); col = mix(col, hc * l, cov(max(cap, head - 0.004), fp));
+  float ef = clamp((0.02 - fp) / 0.012, 0.0, 1.0);
+  if (ef > 0.0) { float e = min(length(vec2(ax - 0.022, dy - 0.232)) - 0.0085, 1.0); col = mix(col, C(30., 22., 26.), cov(e, fp) * ef);
+    col = mix(col, C(200., 80., 80.) * l, cov(sdBox(vec2(dx, dy - 0.205), vec2(0.012 + cheer * 0.004, 0.003 + cheer * 0.006), 0.003), fp) * ef);
+    col = mix(col, C(255., 150., 150.) * l, cov(length(vec2(ax - 0.038, dy - 0.214)) - 0.011, fp) * ef * 0.35); }
+  return col;
+}
+vec3 wall(float v, float arc, float l, float fp) {
+  if (v < 0.12) return C(84., 74., 64.) * l;
+  if (v < 1.3) { float row = floor(v / 0.4), bxp = arc + mod(row, 2.0) * 0.4, bx = floor(bxp / 0.8), lv = v - row * 0.4, lx = bxp - bx * 0.8;
+    float n = vn(vec2(bxp * 4.0, v * 4.0)) * 14.0 - 7.0 + (h21(vec2(bx, row)) - 0.5) * 16.0;
+    vec3 b = C(176. + n, 158. + n, 128. + n) * (lv > 0.36 ? 1.06 : 0.95 + 0.05 * lv / 0.4) * l;
+    float m = max(cov(lv - 0.02, fp), cov(lx - 0.025, fp)); return mix(b, C(118., 104., 86.) * l, m); }
+  if (v < 1.48) return (v > 1.44 ? C(236., 196., 76.) : v < 1.33 ? C(120., 28., 26.) : C(168., 40., 34.)) * l;
+  if (v < 1.7) return C(204., 190., 162.) * l * (v > 1.66 ? 1.08 : 1.0);
+  if (v < 5.8) { float rv = v - 1.7, row = floor(rv / 0.42), lv = rv - row * 0.42, sd = mod(arc, 7.0), bench = l * (1.0 - row * 0.012);
+    if (sd < 0.35 || sd > 6.65) return C(176., 162., 138.) * bench * (lv < 0.21 ? 0.86 : 1.02);
+    if (lv < 0.1) return C(196., 182., 156.) * bench * (lv > 0.082 ? 1.12 : lv < 0.02 ? 0.8 : 0.95);
+    vec3 bg = C(118., 106., 92.) * bench * (0.62 + 0.25 * (lv - 0.1) / 0.32);
+    float sp = arc * 2.6 + row * 0.37, seat = floor(sp); return person(bg, (sp - seat - 0.5) * 0.385, lv - 0.1, seat, row, fp, bench); }
+  float m = mod(arc, 1.7), ax = abs(m - 0.85), top = 6.45 - ax * ax * 1.2;
+  if (v < 6.7 && ax < 0.5 && v < top) return mix(C(40., 34., 30.), C(70., 60., 52.), clamp((v - 5.8) / 0.65, 0.0, 1.0)) * l;
+  if (v < 6.7 && ax < 0.56 && v < top + 0.06) return C(236., 220., 190.) * l;
+  if (v > 6.85) return C(156., 40., 34.) * l * (v > 6.95 ? 1.1 : 0.85);
+  float n = vn(vec2(arc * 3.0, v * 3.0)) * 12.0 - 6.0; return C(212. + n, 196. + n, 168. + n) * l * (1.0 - 0.18 * cov(abs(mod(v - 5.8, 0.35)) - 0.012, fp));
+}
+vec3 sand(vec2 p, float fp) {
+  float rr = length(p), fa = clamp(1.0 - fp * 25.0, 0.0, 1.0), fb = clamp(1.0 - fp * 60.0, 0.0, 1.0);
+  float nz = vn(p * 0.7) * 16.0 + vn(p * 3.1) * 9.0 + vn(p * 11.0) * 6.0 * fa + (h21(floor(p * 48.0)) - 0.5) * 14.0 * fb + sin(rr * 13.0) * 2.2 * fa - 15.0;
+  vec3 c = vec3(218.0 + nz, 188.0 + nz * 0.9, 132.0 + nz * 0.7) / 255.0;
+  float ln = max(max(cov(abs(rr - 8.4) - 0.045, fp), cov(abs(rr - 3.0) - 0.035, fp)), cov(abs(rr - 1.2) - 0.035, fp));
+  c -= C(46., 44., 32.) * ln; if (rr < 1.2) c += C(10., 6., 0.); if (rr > 8.4) c -= C(12., 12., 8.);
+  float m = rr > 8.3 ? 1.0 - smoothstep(8.3, R, rr) * 0.32 : 1.0;
+  vec2 sd = vec2(cos(uSun), sin(uSun)); float b3 = dot(p, sd), tW = -b3 + sqrt(max(0.0, b3 * b3 - (rr * rr - R * R)));
+  m *= 1.0 - 0.3 * smoothstep(4.8, 4.0, tW);
+  for (int n = 0; n < 4; n++) { vec2 q = p - uPil[n]; float d0 = length(q); m *= 0.74 + 0.26 * smoothstep(PR, PR + 0.45, d0);
+    float al = -dot(q, sd); if (al > 0.0 && al < PH * 1.2) { float pe = abs(q.x * sd.y - q.y * sd.x); m *= 1.0 - 0.26 * smoothstep(PR + 0.08, PR - 0.08, pe) * (1.0 - al / (PH * 1.2) * 0.4); } }
+  for (int n = 0; n < 6; n++) { if (n >= uNS) break; vec4 s = uSh[n]; float d = length(p - s.xy); if (d < s.z) m *= s.w > 1.5 ? 0.35 : 0.55 + 0.45 * smoothstep(s.z * 0.55, s.z, d); }
+  return c * m;
+}
+vec3 pillar(float v, float pn, float fp) {
+  float pl = max(0.0, cos(pn - uSun)), pL = 0.5 + 0.42 * pl + 0.22 * pow(pl, 12.0), ao = v < 0.9 ? 0.82 + 0.18 * v / 0.9 : 1.0;
+  if (v > PH - 0.42) { float band = v > PH - 0.12 ? 1.06 : v > PH - 0.2 ? 0.8 : v > PH - 0.3 ? 1.0 : 0.86; return C(214., 194., 152.) * pL * band; }
+  if (v < 0.42) { float band = v > 0.36 ? 0.8 : v > 0.3 ? 1.04 : 0.92; return C(176., 160., 130.) * pL * band * ao; }
+  float fl = 1.0 - 0.07 * (0.5 - 0.5 * cos(pn * 22.0)) * clamp(1.0 - fp * 14.0, 0.0, 1.0), n = vn(vec2(pn * 9.0, v * 3.0)) * 10.0 - 5.0;
+  return (C(228., 214., 182.) * pL * fl * ao + n / 255.0);
+}
+vec3 sky(vec3 d) {
+  float e = clamp(d.z, 0.0, 1.0), q = smoothstep(0.0, 0.9, e);
+  vec3 c = mix(C(196., 226., 250.), C(64., 132., 222.), q);
+  float cl = smoothstep(0.52, 0.78, vn3(d * vec3(3.0, 3.0, 5.0) + vec3(uT * 0.02, 0.0, 0.0)) * 0.7 + vn3(d * 9.0) * 0.3) * (1.0 - q * 0.5);
+  return mix(c, vec3(1.0), cl);
+}
+void main() {
+  vec2 nd = gl_FragCoord.xy / uRes * 2.0 - 1.0; vec3 dir = uF + uR * nd.x * uTan.x + uU * nd.y * uTan.y;
+  float dl = length(dir), pa = 2.0 * uTan.x / uRes.x;
+  vec2 o2 = uC.xy, d2 = dir.xy; float a = dot(d2, d2), tb = 1e9; int kind = 0; float pn = 0.0;
+  if (a > 1e-6) { float b = 2.0 * dot(o2, d2), c = dot(o2, o2) - R * R, D = b * b - 4.0 * a * c; float tw = (-b + sqrt(max(D, 0.0))) / (2.0 * a);
+    float zw = uC.z + dir.z * tw; if (zw >= 0.0 && zw <= WH) { tb = tw; kind = 1; }
+    for (int n = 0; n < 4; n++) { vec2 oo = o2 - uPil[n]; float b2 = 2.0 * dot(oo, d2), c2 = dot(oo, oo) - PR * PR, D2 = b2 * b2 - 4.0 * a * c2; if (D2 <= 0.0) continue;
+      float tt = (-b2 - sqrt(D2)) / (2.0 * a), zz = uC.z + dir.z * tt; if (tt > 0.02 && tt < tb && zz >= 0.0 && zz <= PH) { tb = tt; kind = 2; vec2 hp = o2 + d2 * tt - uPil[n]; pn = atan(hp.y, hp.x); } } }
+  if (dir.z < 0.0) { float tf = -uC.z / dir.z; if (tf < tb) { vec2 fpnt = o2 + d2 * tf; if (dot(fpnt, fpnt) < R * R + 0.5) { tb = tf; kind = 3; } } }
+  vec3 col; float dist = tb * dl;
+  if (kind == 0) { col = sky(normalize(dir)); gl_FragDepth = 1.0; o = vec4(col, 1.0); return; }
+  vec3 P = uC + dir * tb, fogC = C(200., 215., 225.);
+  if (kind == 1) { float ua = atan(P.y, P.x); col = wall(P.z, (ua + 3.14159265) * R, 0.86 - 0.2 * cos(ua - uSun), dist * pa); }
+  else if (kind == 2) col = pillar(P.z, pn, dist * pa);
+  else col = sand(P.xy, dist * pa / max(0.2, -dir.z / dl));
+  col = mix(col, fogC, min(0.3, dist / 45.0));
+  gl_FragDepth = clamp(tb / 60.0, 0.0, 0.999); o = vec4(col, 1.0);
+}`;
+const PA_SVS = `#version 300 es
+in vec2 aQ; uniform vec3 uC, uF, uR, uU, uP; uniform vec2 uTan, uS; out vec2 vUV; out vec3 vW;
+void main() { vec3 rh = normalize(vec3(uR.xy, 0.0)); vec3 w = uP + rh * (aQ.x - 0.5) * uS.x + vec3(0.0, 0.0, aQ.y * uS.y); vec3 v = w - uC; float d = dot(v, uF);
+  gl_Position = vec4(dot(v, uR) / uTan.x, dot(v, uU) / uTan.y, d - 0.1, d); vUV = vec2(aQ.x, 1.0 - aQ.y); vW = w; }`;
+const PA_SFS = `#version 300 es
+precision highp float; uniform sampler2D uTx; uniform vec3 uC, uF; uniform float uA; in vec2 vUV; in vec3 vW; out vec4 o;
+void main() { vec4 c = texture(uTx, vUV); if (c.a < 0.03 || vW.z < -0.002) discard; float d = dot(vW - uC, uF); gl_FragDepth = clamp(d / 60.0, 0.0, 0.999);
+  o = vec4(mix(c.rgb, vec3(200.0, 215.0, 225.0) / 255.0, min(0.3, d / 45.0) * 0.6), c.a * uA); }`;
+
+Object.assign(PetRT.arena, {
+  // WebGL2 준비 (한 번). 안 되면 null → 예전 그림
+  gl() {
+    if (this.G3 !== undefined) return this.G3; this.G3 = null;
+    try {
+      const cv = document.createElement('canvas'), gl = cv.getContext('webgl2', { antialias: false, alpha: false, depth: true, premultipliedAlpha: false, preserveDrawingBuffer: false }); if (!gl) return null;
+      const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+      const prog = (v, f) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p; };
+      const W = prog(PA_VS, PA_FS), S = prog(PA_SVS, PA_SFS), U = (p, n) => gl.getUniformLocation(p, n);
+      const bW = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bW); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const bS = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bS); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+      const tx = [0, 1, 2, 3].map(() => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; });
+      const uw = {}, us = {}; for (const n of ['uC', 'uF', 'uR', 'uU', 'uTan', 'uRes', 'uT', 'uSun', 'uPil', 'uSh', 'uNS']) uw[n] = U(W, n); for (const n of ['uC', 'uF', 'uR', 'uU', 'uP', 'uTan', 'uS', 'uTx', 'uA']) us[n] = U(S, n);
+      this.G3 = { cv, gl, W, S, bW, bS, tx, uw, us, aW: gl.getAttribLocation(W, 'aP'), aS: gl.getAttribLocation(S, 'aQ') };
+    } catch (e) { console.warn('arena gl', e); this.G3 = null; }
+    return this.G3;
+  },
+  // 3D 카메라: 앞 F · 오른쪽 R · 위 U (z가 위, 오른쪽 = (-sin, cos) — CPU 그림과 같은 방향)
+  cam3(cam, pitch) {
+    const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    cam.F = [cy * cp, sy * cp, sp]; cam.R = [-sy, cy, 0]; cam.U = [-cy * sp, -sy * sp, cp]; cam.pitch = pitch;
+  },
+  // 화면 좌표 (기기 px). w = 앞쪽 깊이
+  p3(cam, x, y, z) { const vx = x - cam.px, vy = y - cam.py, vz = z - cam.z, F = cam.F, Rv = cam.R, Uv = cam.U, w = vx * F[0] + vy * F[1] + vz * F[2];
+    return { w, sx: cam.iw / 2 * (1 + (vx * Rv[0] + vy * Rv[1]) / (w * cam.tanH)), sy: cam.ih / 2 * (1 - (vx * Uv[0] + vy * Uv[1] + vz * Uv[2]) / (w * cam.tanV)) }; },
+  // 열마다 깊이 (가로 광선, 불꽃·이름표 가리기용)
+  zcols(R, cam) {
+    const iw = cam.iw; if (!R.zb || R.zb.length !== iw) R.zb = new Float32Array(iw); const px = cam.px, py = cam.py, dX = Math.cos(cam.yaw), dY = Math.sin(cam.yaw), th = cam.tanH;
+    for (let x = 0; x < iw; x++) { const cx = 2 * x / iw - 1, rx = dX - dY * th * cx, ry = dY + dX * th * cx, a = rx * rx + ry * ry, b = 2 * (rx * px + ry * py), cc = px * px + py * py - PA_R * PA_R; let tb = (-b + Math.sqrt(Math.max(0, b * b - 4 * a * cc))) / (2 * a);
+      for (let n = 0; n < 4; n++) { const [qx, qy] = PA_PIL[n], ox = px - qx, oy = py - qy, b2 = 2 * (rx * ox + ry * oy), c2 = ox * ox + oy * oy - PA_PR * PA_PR, D = b2 * b2 - 4 * a * c2; if (D <= 0) continue; const tt = (-b2 - Math.sqrt(D)) / (2 * a); if (tt > 0.05 && tt < tb) tb = tt; }
+      R.zb[x] = tb; }
+  },
+  // 바닥·벽·관중·기둥·하늘 + 캐릭터 (깊이 버퍼)
+  glDraw(R, G, B, ci, cam, t, dt) {
+    // 느리면 (프레임 30 ms 넘게) 해상도를 조금씩 낮추고, 넉넉하면 다시 올린다
+    R.fe = R.fe ? R.fe * 0.95 + dt * 1000 * 0.05 : 16; R.fn = (R.fn | 0) + 1; if (R.fn > 90) { R.fn = 0; if (R.fe > 30) R.gq = Math.max(0.5, (R.gq || 1) * 0.85); else if (R.fe < 19 && (R.gq || 1) < 1) R.gq = Math.min(1, R.gq * 1.1); }
+    const g = this.gl(), gl = g.gl, cv = g.cv, sc = Math.min(1, Math.sqrt(2.6e6 / (cam.iw * cam.ih))) * (R.gq || 1), w = Math.round(cam.iw * sc), h = Math.round(cam.ih * sc);
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    // 2D 캔버스 밑에 깔아 둔다 (그림을 2D로 복사하면 느린 기기가 있어서 겹쳐 보이게)
+    const top = $('pbCv'); if (top && cv.parentNode !== top.parentNode) { cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; top.parentNode.insertBefore(cv, top); }
+    gl.viewport(0, 0, w, h); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT); gl.disable(gl.BLEND);
+    const set = (u, c) => { gl.uniform3fv(u.uC, [cam.px, cam.py, cam.z]); gl.uniform3fv(u.uF, cam.F); gl.uniform3fv(u.uR, cam.R); gl.uniform3fv(u.uU, cam.U); gl.uniform2f(u.uTan, cam.tanH, cam.tanV); };
+    gl.useProgram(g.W); const uw = g.uw; set(uw); gl.uniform2f(uw.uRes, w, h); gl.uniform1f(uw.uT, t % 1000); gl.uniform1f(uw.uSun, -2.2); gl.uniform2fv(uw.uPil, PA_PIL.flat());
+    const shd = G.u.filter(u => !(u.hp <= 0 && u.dead > 1.4 && !u.ash)).slice(0, 6), arr = new Float32Array(24); shd.forEach((u, n) => { arr.set([u.x, u.y, u.r * (u.hp > 0 ? 1.15 : 1.4) / (1 + (u.z || 0) * 0.4), u.hp <= 0 && u.ash ? 2 : 1], n * 4); });
+    gl.uniform4fv(uw.uSh, arr); gl.uniform1i(uw.uNS, shd.length);
+    gl.bindBuffer(gl.ARRAY_BUFFER, g.bW); gl.enableVertexAttribArray(g.aW); gl.vertexAttribPointer(g.aW, 2, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); gl.disableVertexAttribArray(g.aW);
+    // 캐릭터 (먼 것부터, 반투명 가장자리)
+    gl.useProgram(g.S); const us = g.us; set(us); gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.bindBuffer(gl.ARRAY_BUFFER, g.bS); gl.enableVertexAttribArray(g.aS); gl.vertexAttribPointer(g.aS, 2, gl.FLOAT, false, 0, 0); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(us.uTx, 0);
+    const L = G.u.map((u, i) => ({ u, i, d: (u.x - cam.px) * cam.F[0] + (u.y - cam.py) * cam.F[1] })).filter(o => o.i !== ci && !(o.u.hp <= 0 && o.u.ash && o.u.ash > 1.6) && o.d > 0.15).sort((a, b) => b.d - a.d);
+    L.forEach((o, n) => { const u = o.u, T = this.unitTex(B, u, cam, t); if (!T) return; gl.bindTexture(gl.TEXTURE_2D, g.tx[n]); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, T.cv); gl.generateMipmap(gl.TEXTURE_2D);
+      const sink = u.hp <= 0 && u.ash ? Math.max(0, (u.ash - 0.8) / 0.8) * 0.9 : 0, Hm = T.cv.height * T.m;
+      gl.uniform3f(us.uP, u.x, u.y, (u.z || 0) - (T.cv.height - T.fy) * T.m - sink * Hm * 0.7); gl.uniform2f(us.uS, T.cv.width * T.m, Hm); gl.uniform1f(us.uA, o.d < 1.7 ? 0.28 + 0.72 * Math.max(0, (o.d - 0.45) / 1.25) : 1); /* 바로 옆 친구는 비치게 */ gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); });
+    gl.disableVertexAttribArray(g.aS); gl.disable(gl.BLEND);
+    return cv;
+  },
+  /* ---- 캐릭터 고화질 그림: 400×336, 발 = (200, 320) ---- */
+  bigCv() { if (!this.bc) { this.bc = document.createElement('canvas'); this.bc.width = 400; this.bc.height = 336; this.bcx = this.bc.getContext('2d'); this.bo = document.createElement('canvas'); this.bo.width = 400; this.bo.height = 336; this.box = this.bo.getContext('2d'); } return this.bcx; },
+  unitTex(B, u, cam, t) {
+    const x = this.bigCv(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, 400, 336);
+    const toCam = Math.atan2(cam.py - u.y, cam.px - u.x), rel = paAng(u.an, toCam), side = Math.cos(u.an) * cam.R[0] + Math.sin(u.an) * cam.R[1]; /* + : 화면 오른쪽을 본다 */
+    const mv = u.hp > 0 && u.mv > 0.15, fall = u.hp <= 0 && !u.ash ? Math.min(1, u.dead / 0.3) : 0, fs = side >= 0 ? 1 : -1; let m;
+    x.save(); if (fall) { x.translate(200 - fs * fall * 110, 320); x.rotate(-fs * fall * Math.PI / 2); x.translate(-200, -320); }
+    if (u.k === 'hum') { const view = Math.abs(rel) < Math.PI / 4 ? 'f' : Math.abs(rel) > Math.PI * 3 / 4 ? 'b' : side >= 0 ? 'r' : 'l';
+      const pal = Sprites.PAL[this.spr(B, u.tm)] || Sprites.PAL.player; this.human(x, pal, view, mv ? t * 9 : 0, mv, t, u); m = 1.75 / 262; }
+    else { const s = this.scratch(); s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'source-over'; s.globalAlpha = 1; s.clearRect(0, 0, 100, 84); s.imageSmoothingEnabled = false; s.setTransform(2, 0, 0, 2, 0, 0);
+      Pets.draw(s, u.k, 25, 40, side >= 0 ? 1 : -1, mv, t, '', 0); s.setTransform(1, 0, 0, 1, 0, 0);
+      x.drawImage(this.smooth(), 0, 0); m = u.h / (PetRT.petH(u.k) * 8); }
+    x.restore();
+    // 위는 밝게 · 아래는 살짝 어둡게, 얇은 테두리, 상태 색
+    const gr = x.createLinearGradient(0, 40, 0, 330); gr.addColorStop(0, 'rgba(255,250,235,.12)'); gr.addColorStop(0.6, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(30,20,30,.2)'); x.globalCompositeOperation = 'source-atop'; x.fillStyle = gr; x.fillRect(0, 0, 400, 336);
+    const tint = (col, al) => { x.globalAlpha = al; x.fillStyle = col; x.fillRect(0, 0, 400, 336); x.globalAlpha = 1; };
+    if (u.hp <= 0 && u.ash) tint('#1a1210', Math.min(1, u.ash / 0.6) * 0.92); else if (u.fl > 0) tint('#ffffff', Math.min(0.85, u.fl * 5)); else if (u.sh > 0) tint('#9aff9a', 0.25 + Math.sin(t * 10) * 0.08); else if (u.st > 0) tint('#ffe066', 0.2);
+    x.globalCompositeOperation = 'source-over';
+    const o = this.box; o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, 400, 336); for (const [ox, oy] of [[-3, 0], [3, 0], [0, -3], [0, 3], [-2, -2], [2, 2], [-2, 2], [2, -2]]) o.drawImage(this.bc, ox, oy);
+    o.globalCompositeOperation = 'source-in'; o.fillStyle = 'rgba(28,18,24,.85)'; o.fillRect(0, 0, 400, 336); o.globalCompositeOperation = 'source-over'; o.drawImage(this.bc, 0, 0);
+    return { cv: this.bo, m, fy: 320 };
+  },
+  // v191 펫 고화질: EPX 4배 → 흐리게 한 알파를 다시 날카롭게 잘라 매끈한 외곽선 + 색 경계 부드럽게. 같은 그림은 기억해 둔다
+  smooth() {
+    const sc = this.sc, I = new Uint32Array(this.scx.getImageData(0, 0, 100, 84).data.buffer); let hs = 2166136261; for (let i = 0; i < I.length; i++) if (I[i]) hs = Math.imul(hs ^ I[i] ^ i, 16777619);
+    const M = this.smc || (this.smc = new Map()); let hit = M.get(hs); if (hit) { M.delete(hs); M.set(hs, hit); return hit; }
+    const E = this.epx(this.epx(sc)), c = document.createElement('canvas'); c.width = 400; c.height = 336; const x = c.getContext('2d', { willReadFrequently: true });
+    x.filter = 'blur(1.3px)'; x.drawImage(E, 0, 0); const cl = x.getImageData(0, 0, 400, 336).data; x.clearRect(0, 0, 400, 336);
+    x.filter = 'blur(3.2px)'; x.drawImage(E, 0, 0); x.filter = 'none'; const bl = x.getImageData(0, 0, 400, 336), b = bl.data, e = E.getContext('2d').getImageData(0, 0, 400, 336).data;
+    for (let i = 0; i < b.length; i += 4) { const a = b[i + 3] / 255, A = a < 0.3 ? 0 : a > 0.62 ? 1 : (a - 0.3) / 0.32, src = e[i + 3] > 8 && cl[i + 3] > 200 ? 0 : -1;
+      if (!src) { b[i] = e[i] * 0.45 + cl[i] * 0.55; b[i + 1] = e[i + 1] * 0.45 + cl[i + 1] * 0.55; b[i + 2] = e[i + 2] * 0.45 + cl[i + 2] * 0.55; } else if (e[i + 3] > 8) { b[i] = e[i]; b[i + 1] = e[i + 1]; b[i + 2] = e[i + 2]; }
+      b[i + 3] = A * A * (3 - 2 * A) * 255; }
+    x.putImageData(bl, 0, 0); M.set(hs, c); if (M.size > 48) M.delete(M.keys().next().value); return c;
+  },
+  // 픽셀 그림 2배 매끈하게 (EPX/Scale2x): 계단 모서리를 둥글게
+  epx(src) {
+    const w = src.width, h = src.height, sx = src.getContext('2d'), I = new Uint32Array(sx.getImageData(0, 0, w, h).data.buffer), W2 = w * 2, H2 = h * 2;
+    const key = 'e' + W2 + 'x' + H2; let d = this[key]; if (!d) { const c = document.createElement('canvas'); c.width = W2; c.height = H2; d = this[key] = { c, x: c.getContext('2d') }; d.img = d.x.createImageData(W2, H2); d.o = new Uint32Array(d.img.data.buffer); }
+    const O = d.o;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const P = I[y * w + x], A = y > 0 ? I[(y - 1) * w + x] : P, Bq = x < w - 1 ? I[y * w + x + 1] : P, Cq = x > 0 ? I[y * w + x - 1] : P, D = y < h - 1 ? I[(y + 1) * w + x] : P;
+      const o0 = (y * 2) * W2 + x * 2; O[o0] = (Cq === A && Cq !== D && A !== Bq) ? A : P; O[o0 + 1] = (A === Bq && A !== Cq && Bq !== D) ? Bq : P; O[o0 + W2] = (D === Cq && D !== Bq && Cq !== A) ? Cq : P; O[o0 + W2 + 1] = (Bq === D && Bq !== A && D !== Cq) ? D : P; }
+    d.x.putImageData(d.img, 0, 0); return d.c;
+  },
+  // 사람 (콜로세움 전용 고화질): view f 앞 · b 뒤 · l/r 옆, ph 걸음 위상
+  human(x, P, view, ph, mv, t, u) {
+    const sk = P.skin || '#f0c8a2', hair = P.hair || '#2a1e18', sh = P.shirt || '#3a6ad0', sh2 = P.shirt2 || paShade(sh, 0.8), pants = P.pants || '#2a2e44', OL = 'rgba(30,20,24,.55)';
+    const side = view === 'l' || view === 'r', fl = view === 'l' ? -1 : 1, sw = mv ? Math.sin(ph) : 0, bob = mv ? Math.abs(Math.cos(ph)) * 4 : Math.sin(t * 2) * 1.2;
+    const rr = (X, Y, w, h, r, col, st) => { x.beginPath(); x.roundRect(X, Y, w, h, r); x.fillStyle = col; x.fill(); if (st !== false) { x.strokeStyle = OL; x.lineWidth = 2; x.stroke(); } };
+    const ell = (X, Y, rx, ry, col, st) => { x.beginPath(); x.ellipse(X, Y, rx, ry, 0, 0, 7); x.fillStyle = col; x.fill(); if (st !== false) { x.strokeStyle = OL; x.lineWidth = 2; x.stroke(); } };
+    const lin = (a, b, X0, Y0, X1, Y1) => { const g = x.createLinearGradient(X0, Y0, X1, Y1); g.addColorStop(0, a); g.addColorStop(1, b); return g; };
+    x.save(); x.translate(200, 320); x.lineJoin = 'round'; x.lineCap = 'round';
+    if (P.ghost) { // 유령 옷: 하얀 천
+      const yb = -bob - 4; x.beginPath(); x.moveTo(-62, yb); for (let n = 0; n <= 6; n++) x.quadraticCurveTo(-62 + n * 20.6 + 10, yb + (n % 2 ? 12 : -8) + Math.sin(t * 6 + n) * 3, -62 + (n + 1) * 20.6, yb); x.lineTo(62, yb); x.quadraticCurveTo(70, -150, 52, -210); x.quadraticCurveTo(0, -290, -52, -210); x.quadraticCurveTo(-70, -150, -62, yb); x.closePath();
+      x.fillStyle = lin('#ffffff', '#d8dce8', -60, 0, 60, 0); x.fill(); x.strokeStyle = OL; x.lineWidth = 2.5; x.stroke();
+      if (view !== 'b') { const ex = side ? fl * 18 : 0; for (const e of side ? [ex + fl * 8] : [-20, 20]) ell(e, -196 - bob, 9, 14, '#1a1a22', false); ell(side ? ex + fl * 4 : 0, -160 - bob, 10, 7, '#1a1a22', false); }
+      x.restore(); return; }
+    const bones = !!P.bones, shirt = bones ? '#1e1e24' : P.tux ? '#1a1a22' : sh, shirtD = bones ? '#121216' : P.tux ? '#101016' : sh2, pnt = bones ? '#1e1e24' : pants;
+    // 망토 (뒤)
+    if (P.cape) { x.beginPath(); x.moveTo(-40, -146 - bob); x.lineTo(40, -146 - bob); x.lineTo(56 + sw * 6, -40); x.lineTo(-56 + sw * 6, -40); x.closePath(); x.fillStyle = view === 'b' ? '#b0202a' : '#7a1218'; x.fill(); x.strokeStyle = OL; x.stroke(); }
+    // 다리 + 신발
+    const leg = (X, lift, back) => { const top = -74 - bob, y1 = -8 - lift; rr(X - 10, top, 20, y1 - top + 2, 8, back ? paShade(pnt, 0.82) : pnt); if (bones) { x.strokeStyle = '#f0f0e8'; x.lineWidth = 3; x.beginPath(); x.moveTo(X, top + 8); x.lineTo(X, y1 - 6); x.stroke(); }
+      ell(X + (side ? fl * 6 : 0), y1 - 2, side ? 17 : 14, 8, back ? '#1e1e24' : '#2a2a32'); };
+    if (side) { leg(-4 - sw * 14, Math.max(0, -sw) * 8, true); leg(4 + sw * 14, Math.max(0, sw) * 8, false); }
+    else { leg(-16, Math.max(0, sw) * 9, false); leg(16, Math.max(0, -sw) * 9, false); }
+    // 치마 (드레스)
+    if (P.dress) { x.beginPath(); x.moveTo(-36, -110 - bob); x.lineTo(36, -110 - bob); x.lineTo(54, -40 - bob); x.lineTo(-54, -40 - bob); x.closePath(); x.fillStyle = lin(P.dress, paShade(P.dress, 0.8), -50, 0, 50, 0); x.fill(); x.strokeStyle = OL; x.stroke(); }
+    // 팔 (뒤쪽 팔 먼저)
+    const atk = u && u.at > 0 && u.ak, sA = atk ? Math.sin(Math.min(1, 1 - u.at / 0.45) * Math.PI) : 0;
+    let HX = 0, HY = 0; const arm = (X, ang, back) => { x.save(); x.translate(X, -144 - bob); x.rotate(ang); rr(-9, -4, 18, 66, 9, back ? shirtD : shirt); ell(0, 66, 10, 10, back ? paShade(sk, 0.85) : sk); x.restore(); HX = X - 66 * Math.sin(ang); HY = -144 - bob + 66 * Math.cos(ang); };
+    if (side) arm(-fl * 4, -sw * 0.55 * fl, true); else if (view === 'b') { arm(-44, 0.14 + sw * 0.35, false); arm(44, -0.14 - sw * 0.35, false); }
+    // 몸통
+    const tg = lin(paShade(shirt, 1.08), shirtD, -40, 0, 40, 0); rr(-38 + (side ? 6 : 0), -156 - bob, side ? 64 : 76, 90, 20, tg);
+    if (bones) { x.strokeStyle = '#f0f0e8'; x.lineWidth = 4; for (let n = 0; n < 4; n++) { x.beginPath(); x.moveTo(-22, -136 - bob + n * 14); x.quadraticCurveTo(0, -130 - bob + n * 14, 22, -136 - bob + n * 14); x.stroke(); } x.beginPath(); x.moveTo(0, -150 - bob); x.lineTo(0, -80 - bob); x.stroke(); }
+    if (P.tux && view !== 'b') { x.fillStyle = '#ffffff'; x.beginPath(); x.moveTo(-14, -154 - bob); x.lineTo(14, -154 - bob); x.lineTo(0, -108 - bob); x.fill(); }
+    if ((P.tie || P.tux) && view === 'f') { x.fillStyle = P.tux ? '#1a1a22' : P.tie; x.beginPath(); x.moveTo(-6, -150 - bob); x.lineTo(6, -150 - bob); x.lineTo(8, -110 - bob); x.lineTo(0, -100 - bob); x.lineTo(-8, -110 - bob); x.fill(); }
+    if (view === 'f' && !bones && !P.tux) { x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(-30, -150 - bob, 60, 6); }
+    // 앞쪽 팔 + 무기
+    const hand = (X, ang) => { arm(X, ang, false); };
+    if (view === 'f') { hand(-44, 0.14 + sw * 0.35); hand(44, -0.14 - sw * 0.35 - sA * 1.6); }
+    else if (side) hand(fl * 6, sw * 0.55 * fl - sA * 1.9 * fl);
+    if (u && u.hp > 0) { const hx = HX, hy = HY;
+      if (u.wp === 'fire') { const r0 = 16 + Math.sin(t * 14) * 3; x.globalCompositeOperation = 'lighter'; const g2 = x.createRadialGradient(hx, hy - 10, 0, hx, hy - 10, r0 * 2.2); g2.addColorStop(0, 'rgba(255,250,210,1)'); g2.addColorStop(0.35, 'rgba(255,160,40,.9)'); g2.addColorStop(1, 'rgba(255,60,0,0)'); x.fillStyle = g2; x.beginPath(); x.arc(hx, hy - 10, r0 * 2.2, 0, 7); x.fill(); x.globalCompositeOperation = 'source-over'; }
+      else if (view !== 'b') { x.save(); x.translate(hx, hy); x.rotate(view === 'f' ? -0.25 - sA * 1.2 : fl * (-0.4 - sA * 1.4)); x.fillStyle = '#6a4220'; x.fillRect(-4, -4, 8, 22); x.fillStyle = '#d8b040'; x.fillRect(-14, -8, 28, 6);
+        x.beginPath(); x.moveTo(-6, -8); x.lineTo(-5, -96); x.lineTo(0, -108); x.lineTo(5, -96); x.lineTo(6, -8); x.closePath(); x.fillStyle = lin('#f4f8ff', '#9aa4b8', -6, 0, 6, 0); x.fill(); x.strokeStyle = OL; x.lineWidth = 1.5; x.stroke(); x.restore(); } }
+    // 목 + 머리
+    rr(-11, -172 - bob, 22, 20, 6, paShade(sk, 0.88), false);
+    const hy = -214 - bob, hp = P.hat, skull = hp === 'skull', pump = hp === 'pumpkin', face = skull ? '#f2f0e6' : sk;
+    if (pump) { x.beginPath(); x.ellipse(0, hy, 62, 52, 0, 0, 7); x.fillStyle = lin('#ffa040', '#d0601a', -50, -40, 50, 40); x.fill(); x.strokeStyle = OL; x.lineWidth = 2.5; x.stroke(); x.strokeStyle = 'rgba(150,60,10,.5)'; x.lineWidth = 3; for (const k of [-30, 0, 30]) { x.beginPath(); x.ellipse(k, hy, 12, 50, 0, 0, 7); x.stroke(); }
+      x.fillStyle = '#3a8a2a'; x.fillRect(-5, hy - 66, 10, 16);
+      if (view !== 'b') { x.fillStyle = '#2a1408'; const ex = side ? fl * 22 : 0; for (const e of side ? [ex] : [-22, 22]) { x.beginPath(); x.moveTo(e - 10, hy - 2); x.lineTo(e, hy - 18); x.lineTo(e + 10, hy - 2); x.fill(); } x.beginPath(); x.moveTo(ex - 26, hy + 16); for (let n = 0; n <= 4; n++) x.lineTo(ex - 26 + n * 13, hy + 16 + (n % 2 ? 10 : 0)); x.lineTo(ex + 26, hy + 26); x.lineTo(ex - 26, hy + 26); x.fill(); }
+      x.restore(); return; }
+    if (!side && view === 'f') { ell(-54, hy + 4, 9, 12, paShade(face, 0.92)); ell(54, hy + 4, 9, 12, paShade(face, 0.92)); } else if (side) ell(-fl * 6, hy + 4, 9, 12, paShade(face, 0.92));
+    x.beginPath(); x.roundRect(-54, hy - 50, 108, 100, 44); x.fillStyle = lin(paShade(face, 1.05), paShade(face, 0.9), -50, hy - 40, 50, hy + 50); x.fill(); x.strokeStyle = OL; x.lineWidth = 2.5; x.stroke();
+    // 머리카락
+    if (!skull) { x.fillStyle = hair; x.strokeStyle = OL; x.lineWidth = 2;
+      if (view === 'b') { x.beginPath(); x.roundRect(-57, hy - 54, 114, 96, 44); x.fill(); x.stroke(); }
+      else if (side) { x.beginPath(); x.moveTo(-56 * fl, hy + 20); x.quadraticCurveTo(-62 * fl, hy - 60, 6 * fl, hy - 56); x.quadraticCurveTo(52 * fl, hy - 52, 56 * fl, hy - 20); x.lineTo(26 * fl, hy - 26); x.lineTo(-14 * fl, hy - 16); x.lineTo(-20 * fl, hy + 18); x.closePath(); x.fill(); x.stroke(); }
+      else { x.beginPath(); x.moveTo(-58, hy + 6); x.quadraticCurveTo(-62, hy - 58, 0, hy - 58); x.quadraticCurveTo(62, hy - 58, 58, hy + 6); for (let n = 0; n <= 6; n++) x.lineTo(50 - n * 16.6, hy - 18 + (n % 2 ? 8 : -4)); x.closePath(); x.fill(); x.stroke();
+        x.fillStyle = 'rgba(255,255,255,.18)'; x.beginPath(); x.ellipse(-22, hy - 40, 16, 6, -0.3, 0, 7); x.fill(); } }
+    // 얼굴
+    if (view !== 'b') { const blink = (t * 1000 + (u ? u.x * 333 : 0)) % 3600 < 120, ex = side ? [fl * 26] : [-20, 20];
+      for (const e of ex) { if (skull) { ell(e, hy + 2, 13, 15, '#1a1a1e', false); continue; } if (blink) { x.fillStyle = '#1a1418'; x.fillRect(e - 7, hy + 2, 14, 3); continue; } ell(e, hy + 2, 7, 10, '#1a1418', false); ell(e + 2, hy - 2, 2.6, 3.2, '#ffffff', false); }
+      if (skull) { x.fillStyle = '#1a1a1e'; x.beginPath(); x.moveTo((side ? fl * 34 : 0) - 5, hy + 26); x.lineTo((side ? fl * 34 : 0) + 5, hy + 26); x.lineTo(side ? fl * 34 : 0, hy + 18); x.fill(); for (let n = -2; n <= 2; n++) x.fillRect((side ? fl * 30 : 0) + n * 7 - 2, hy + 34, 4, 8); }
+      else { if (!side) { x.fillStyle = 'rgba(255,120,130,.35)'; for (const e of [-34, 34]) { x.beginPath(); x.ellipse(e, hy + 22, 9, 5, 0, 0, 7); x.fill(); } }
+        x.strokeStyle = '#8a3a30'; x.lineWidth = 2.5; x.beginPath(); const mx = side ? fl * 30 : 0, op = u && u.at > 0; if (op) { x.fillStyle = '#7a2a24'; x.ellipse(mx, hy + 30, 6, 5, 0, 0, 7); x.fill(); } else { x.arc(mx, hy + 24, 7, 0.3, Math.PI - 0.3); x.stroke(); }
+        if (hp === 'clown') ell(side ? fl * 50 : 0, hy + 14, 9, 9, '#ff2a2a'); } }
+    // 모자
+    if (hp === 'crown') { x.fillStyle = lin('#ffe066', '#d8a020', 0, hy - 90, 0, hy - 50); x.beginPath(); x.moveTo(-40, hy - 46); x.lineTo(-44, hy - 84); x.lineTo(-22, hy - 66); x.lineTo(0, hy - 92); x.lineTo(22, hy - 66); x.lineTo(44, hy - 84); x.lineTo(40, hy - 46); x.closePath(); x.fill(); x.strokeStyle = OL; x.stroke(); ell(0, hy - 60, 6, 6, '#e0304a'); }
+    else if (hp === 'straw') { ell(0, hy - 46, 84, 16, '#e8c060'); x.beginPath(); x.roundRect(-40, hy - 82, 80, 40, 18); x.fillStyle = '#f0cc70'; x.fill(); x.stroke(); x.fillStyle = '#c03030'; x.fillRect(-40, hy - 56, 80, 9); }
+    else if (hp === 'party' || hp === 'witch') { const wi = hp === 'witch'; if (wi) ell(0, hy - 46, 80, 14, '#2a1a3a'); x.beginPath(); x.moveTo(-36, hy - 46); x.lineTo(wi ? 18 : 0, hy - (wi ? 140 : 128)); x.lineTo(36, hy - 46); x.closePath(); x.fillStyle = wi ? '#3a2450' : lin('#ff6aa0', '#5ab0ff', -30, 0, 30, 0); x.fill(); x.strokeStyle = OL; x.stroke();
+      if (!wi) { ell(0, hy - 130, 9, 9, '#ffe066'); x.fillStyle = '#ffffff'; for (let n = 0; n < 4; n++) ell(-14 + n * 9, hy - 60 - n * 18, 3.5, 3.5, '#ffffff', false); } else { x.fillStyle = '#e0a020'; x.fillRect(-36, hy - 60, 72, 8); } }
+    else if (hp === 'frank') { x.fillStyle = '#9a9aa8'; for (const e of [-1, 1]) x.fillRect(e * 56 - 6, hy + 10, 12, 16); x.fillStyle = '#2a2a2a'; x.fillRect(-46, hy - 54, 92, 16); }
+    x.restore();
+  },
+});
 
 /* ===================== 게임장 가위바위보 · 카지노 홀짝 (사용자 2026-10-15) =====================
  * 가위바위보: 건대 게임장 기계에서 3판 2선승. 같은 게임장에 있는 친구(같이 하기·채널)에게 신청하거나 사장 장우준이랑 한다.

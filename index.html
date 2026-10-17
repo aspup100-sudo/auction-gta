@@ -888,8 +888,9 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .pvCard:hover:not(:disabled) { transform:translateY(-2px); filter:brightness(1.12); } .pvCard.on { border-color:#ffd84a; box-shadow:0 0 0 2px #ffd84a, 0 0 18px rgba(255,216,74,.5); } .pvCard:disabled { cursor:default; opacity:.75; }
 .pvFoot { display:flex; align-items:center; gap:8px; } .pvFoot .gold { padding:9px 18px; font-weight:900; } .pvKey { margin-left:auto; font-size:11px; opacity:.6; }
 .pvBox.roll { align-items:stretch; } .pvRow { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; padding:10px 0; }
-.pvGrid.two, .pvRow.two { grid-template-columns:repeat(2, minmax(0, 240px)); justify-content:center; gap:16px; }
-.pvGrid.two .pvCard { min-height:150px; }
+.pvRow.two { grid-template-columns:repeat(2, minmax(0, 240px)); justify-content:center; gap:16px; }
+.pvGrid.few { grid-template-columns:repeat(var(--n), minmax(0, 220px)); justify-content:center; gap:14px; }
+.pvGrid.few .pvCard { min-height:150px; }
 .pvCard.big { min-height:170px; cursor:default; opacity:.55; transform:scale(.96); } .pvCard.big em { font-size:44px; margin-top:22px; } .pvCard.big b { font-size:17px; }
 .pvCard.big s { position:absolute; left:0; right:0; top:0; padding:4px 0; text-decoration:none; font:800 11px var(--ui); background:rgba(224,72,58,.85); } .pvCard.big s.me { background:rgba(47,127,224,.9); }
 .pvCard.hot { opacity:1; transform:scale(1.04); border-color:#fff; box-shadow:0 0 0 2px #fff, 0 0 26px rgba(255,255,255,.55); transition:none; }
@@ -12021,8 +12022,8 @@ const PB_APT = { // 그 게임에서 중요한 능력치 (b = [체력, 공격, �
   coins: ['빠르기·무게', b => b[3] * 0.7 + (b[0] + b[2]) * 0.15], balloon: ['힘', b => b[1]], bomb: ['빠르기', b => b[3]], memory: ['펫 상관없이 머리로!', null],
 };
 const PB_ART = { sumo: ['#d8a060', '#5a3418'], race: ['#6ac0ff', '#2a6a30'], tug: ['#8ad06a', '#2a5a2a'], dodge: ['#e0a868', '#3e4a68'], coins: ['#ffd84a', '#2a7ac0'], balloon: ['#d06ae0', '#2a1a4a'], bomb: ['#ff8a2a', '#1e2234'], memory: ['#6a8aff', '#1e1040'] };
-// v188: 게임이 둘뿐이라 (사용자 '배틀 콜로세움, 피구 빼고 다 없애자') 한 사람이 하나씩 고르고 두 장 중 하나를 뽑는다
-const PV_N = () => Math.max(1, Math.min(2, PB_MODES.length - 1));
+// v188: 게임이 셋뿐이라 (사용자 '콜로세움, 피구 빼고 다 없애자' → '스모는 나두자') 한 사람이 하나씩 고르고 두 장 중 하나를 뽑는다
+const PV_N = () => PB_MODES.length <= 3 ? 1 : 2;
 const PetVote = {
   aptRange: null,
   apt(m, kind) { const A = PB_APT[m]; if (!A || !A[1]) return 3; if (!this.aptRange) this.aptRange = {};
@@ -12046,7 +12047,7 @@ const PetVote = {
       const left = Math.max(0, Math.ceil((V.t0 + 15000 - Date.now()) / 1000));
       el.innerHTML = `<div class="pvBox"><div class="pvHead"><b>🎮 게임 고르기</b><span>${V.ph === 'wait' ? `${esc(B.foeName)}님이 고르는 중…` : (PV_N() === 1 ? '하나 골라요. 상대도 하나 골라서 둘 중 하나가 뽑혀요!' : '두 개를 골라요. 상대도 두 개를 골라서 넷 중 하나가 뽑혀요!')}</span>${V.ph === 'pick' ? `<i id="pvTime">${left}</i>` : ''}</div>
         <div class="pvPets"><span class="me">🐾 ${esc(me.name)} <small>Lv.${me.lv}</small></span><span class="foe">${esc(B.foeName)}의 ${esc(foe.name)} <small>Lv.${foe.lv}</small></span></div>
-        <div class="pvGrid${PB_MODES.length === 2 ? ' two' : ''}">${PB_MODES.map((m, i) => { const n = V.sel.indexOf(m), a = this.apt(m, me.kind), f = this.apt(m, foe.kind), A = PB_ART[m];
+        <div class="pvGrid${PB_MODES.length <= 3 ? ' few' : ''}" style="--n:${PB_MODES.length}">${PB_MODES.map((m, i) => { const n = V.sel.indexOf(m), a = this.apt(m, me.kind), f = this.apt(m, foe.kind), A = PB_ART[m];
           return `<button class="pvCard${n >= 0 ? ' on' : ''}" data-m="${m}" style="--c1:${A[0]};--c2:${A[1]}" ${V.ph === 'wait' ? 'disabled' : ''}><kbd>${i + 1}</kbd>${n >= 0 ? `<u>${n + 1}</u>` : ''}<em>${this.icon(m)}</em><b>${this.name(m)}</b><small>${PB_APT[m][0]}</small><span class="pvApt"><i class="me" title="내 펫">${this.stars(a)}</i><i class="foe" title="상대 펫">${this.stars(f)}</i></span></button>`; }).join('')}</div>
         <div class="pvFoot"><button class="btn gold" id="pvOk" ${V.ph === 'wait' || V.sel.length < PV_N() ? 'disabled' : ''}>${V.ph === 'wait' ? '기다리는 중…' : `✅ 이걸로! (${V.sel.length}/${PV_N()})`}</button><button class="btn" id="pvQuit">그만두기</button><span class="pvKey">★ 위: 내 펫 · 아래: 상대 펫 적성</span></div></div>`;
       el.querySelectorAll('.pvCard').forEach(b => (b.onclick = () => this.toggle(b.dataset.m)));
@@ -12100,7 +12101,7 @@ const PetVote = {
  * 네트워크: 호스트(a, 트레이너전은 나)가 네 명을 다 계산한다. 받은 쪽은 입력 {x,y,ya,an,jn}만 보낸다 (ya = 보는 방향, an/jn = 누른 횟수).
  * 화면: 낮은 해상도 버퍼(정수 배율로 키운다)에 레이캐스트 모래 바닥·원형 관중석 벽·기둥 + 빌보드 스프라이트, 그 위에 1인칭 손/발, 맨 위에 HUD (오버워치 느낌). */
 PB_MODES.push('arena');
-PB_MODES.splice(0, PB_MODES.length, 'arena', 'dodge'); // v188 (사용자 2026-10-17 '지금 배틀 콜로세움, 피구 빼고 다 없애자'): 다른 게임 코드는 남겨 두고 고르기에서만 뺀다
+PB_MODES.splice(0, PB_MODES.length, 'arena', 'dodge', 'sumo'); // v188 (사용자 2026-10-17 '지금 배틀 콜로세움, 피구 빼고 다 없애자' → '아 펫 스모는 나두자'): 다른 게임 코드는 남겨 두고 고르기에서만 뺀다
 PB_MODE_KO.arena = '🏟️ 콜로세움';
 PB_MODE_HELP.arena = ['WASD 이동 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 · 우클릭/K 특수기. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 공격·특수 버튼! 상대 팀 둘 다 쓰러뜨리면 이겨요.'];
 PB_ACT_KO.arena = '공격';

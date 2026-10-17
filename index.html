@@ -5061,7 +5061,7 @@ const Tip = {
   give(p) {
     const id = Net.idOf(p); if (!id) return;
     if (Date.now() - (this.sent[id] || 0) < 5000) return Toast.show(`${p.name}님한테 방금 줬어요. 조금 있다 다시 줄 수 있어요.`);
-    if (State.cash < this.AMT) return Toast.show('줄 돈이 없어요.');
+    if (mgFree() < this.AMT) return Toast.show('경매로 번 돈이 없어서 용돈을 못 줘요 (밑천은 못 써요).'); // v177
     const li = Math.floor(Math.random() * this.THANKS.length); this.sent[id] = Date.now(); p.bowT = performance.now() + 2400; /* 준 사람 화면에서도 바로 절하게 */ p.bubble = { text: this.line(li), t: FEEL.chatBubbleTime }; mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id, li }); Sound.play('coins');
     Net.myBubble = { text: '옛다 용돈!', t: FEEL.chatBubbleTime }; Net.pushLog(Net.me, `${p.name}님한테 용돈 1,000원을 줬어요 💸`, true, true, true);
   },
@@ -6370,7 +6370,7 @@ async function talkWalker(w) {
   const town = [`${dong}은 역이 가까워서 출퇴근은 편해요. 대신 밤에 큰길은 좀 시끄럽고요.`, `오래된 집이 많아서 골목이 좁아요. 주차가 늘 전쟁이에요.`, `학교랑 마트가 가까워서 애 키우는 집이 많아요.`, `요즘 카페가 많이 생겼어요. 동네가 좀 바뀌는 중이죠.`];
   const auction = [`글쎄요, 법원 앞에 사람 많더라고요. 서류 잘 보고 들어가야 한대요.`, `저도 잘은 몰라요. 싸다고 덥석 받으면 큰일 난다는 얘기만 들었어요.`, `등기부랑 전입 같은 건 직접 떼 보셔야죠. 남 말만 믿으면 안 돼요.`, `주민센터랑 중개사한테 물어보세요. 저는 그냥 지나가는 사람이라.`];
   if (pick === 'tip') { // 지나가는 사람한테도 용돈 (사용자 2026-10-15 'npc도 가능하게'). 받은 사람은 큰절
-    if (State.cash < 1000) await Dialog.say([{ name, sprite: w.sprite, text: '마음만 받을게요. 지갑이 비셨네요.' }]);
+    if (mgFree() < 1000) await Dialog.say([{ name, sprite: w.sprite, text: '마음만 받을게요. 경매로 번 돈이 아직 없으시잖아요.' }]); // v177: 용돈도 번 돈에서만 (사용자 2026-10-17 '수익이 0원인데 어떻게 줘?')
     else { mgCash(-1000, `용돈 (${name})`); Sound.play('coins'); w.bowT = performance.now() + 2400; w.ai.t = 3; Game.busy = false; w.bubble = { text: ['아이고 감사합니다!', '이걸 왜 저한테… 감사합니다!', '복 받으실 거예요!'][(i + State.day) % 3], t: 2.6 }; return; }
   } else if (pick === 'town') await Dialog.say([{ name, sprite: w.sprite, text: town[(i * 3 + State.day) % town.length] }]);
   else if (pick === 'auction') await Dialog.say([{ name, sprite: w.sprite, text: auction[(i * 5 + State.day) % auction.length] }]);
@@ -9666,7 +9666,7 @@ const Pets = {
     const pick = await Dialog.say([{ name, sprite: 'pet:buddy', text: ['야, 나 용돈 좀…', '돈 좀 줘~ 나중에 지분으로 갚을게', '친구 좋다는 게 뭐냐 ㅎㅎ'][Math.floor(Math.random() * 3)] }], [
       { label: '💸 1만 원 주기', value: 1e4 }, { label: '💸 10만 원 주기', value: 1e5 }, { label: '💸 100만 원 주기', value: 1e6 }]);
     const amt = +pick || 0;
-    if (amt && State.cash >= amt) { mgCash(-amt, `용돈 (${name})`); Sound.play('coins'); s.tip = { t: s.t, text: amt >= 1e6 ? '와 미쳤다! 평생 친구 하자!' : amt >= 1e5 ? '역시 경매왕! 사랑한다!' : '고마워! 커피는 내가 살게' }; s.say = null; }
+    if (amt && mgFree() >= amt) { /* v177: 번 돈에서만 */ mgCash(-amt, `용돈 (${name})`); Sound.play('coins'); s.tip = { t: s.t, text: amt >= 1e6 ? '와 미쳤다! 평생 친구 하자!' : amt >= 1e5 ? '역시 경매왕! 사랑한다!' : '고마워! 커피는 내가 살게' }; s.say = null; }
     else if (amt) s.tip = { t: s.t, text: '야… 너도 돈 없구나' };
     Game.busy = false;
   },

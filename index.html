@@ -2123,6 +2123,8 @@ const Sound = (() => {
     pick() { noise(0.09, { freq: 900, q: 1.2, vol: 0.5 }); noise(0.25, { freq: 260, type: 'lowpass', vol: 0.45, delay: 0.01 }); tone(1650 + Math.random() * 300, 0.09, { type: 'triangle', vol: 0.07 }); tone(180, 0.12, { type: 'square', vol: 0.06, slide: 90 }); },
     rubble() { for (let i = 0; i < 7; i++) noise(0.18 + Math.random() * 0.25, { freq: 180 + Math.random() * 420, type: 'lowpass', vol: 0.32, delay: i * 0.07 + Math.random() * 0.05 }); tone(55, 0.5, { type: 'sine', vol: 0.35, slide: 38 }); },
     whoosh() { noise(0.16, { freq: 1100, q: 0.9, vol: 0.06, attack: 0.06 }); },
+    fireball() { noise(0.32, { freq: 650, q: 0.7, vol: 0.11, attack: 0.03 }); tone(160, 0.22, { type: 'sawtooth', vol: 0.04, slide: 320 }); }, // 건대 파이터 불덩이 '화르륵'
+    burn() { noise(0.9, { freq: 900, q: 0.5, vol: 0.12, attack: 0.05 }); noise(0.6, { freq: 240, type: 'lowpass', vol: 0.35 }); for (let i = 0; i < 6; i++) noise(0.04, { freq: 2600 + Math.random() * 1500, q: 3, vol: 0.06, delay: 0.15 + i * 0.11 + Math.random() * 0.05 }); }, // 재가 되며 탁탁 튀는 소리
     drip() { const f = 1500 + Math.random() * 900; tone(f, 0.07, { type: 'sine', vol: 0.05, slide: f * 0.55 }); tone(f * 0.9, 0.06, { type: 'sine', vol: 0.018, slide: f * 0.5, delay: 0.21 }); },
     creak() { tone(85 + Math.random() * 30, 0.7, { type: 'sawtooth', vol: 0.02, slide: 62, attack: 0.2 }); noise(0.6, { freq: 700, q: 9, vol: 0.025, attack: 0.25 }); },
     rumble() { noise(1.4, { freq: 110, type: 'lowpass', vol: 0.4, attack: 0.3 }); tone(38, 1.2, { type: 'sine', vol: 0.25, attack: 0.3 }); },
@@ -12601,8 +12603,9 @@ const Titles = {
  * 넘어지면 맞은 쪽이 'ko'를 보낸다. 시간 초과 판정은 신청한 쪽(왼쪽)이 내린다. 판돈은 가위바위보와 같다. */
 const FIGHT_MOVES = { punch: { dur: 0.3, a0: 0.07, a1: 0.16, range: 30, dmg: 7, kb: 50 }, kick: { dur: 0.46, a0: 0.15, a1: 0.27, range: 42, dmg: 11, kb: 90 } };
 // v181 무기 (사용자 2026-10-17 '시작하기 전에 어떤 무기 쓸건지 고를수있게해', 불은 다음에). 칼은 멀리 닿고 세지만 느리다
-const FIGHT_W = { fist: FIGHT_MOVES, sword: { punch: { dur: 0.36, a0: 0.1, a1: 0.19, range: 46, dmg: 8, kb: 60 }, kick: { dur: 0.58, a0: 0.22, a1: 0.32, range: 54, dmg: 13, kb: 110 } } };
-const FIGHT_WP = [{ id: 'fist', icon: '👊', name: '맨손', note: '빠르고 가까이', keys: ['주먹', '발차기'], btn: ['👊', '🦵'] }, { id: 'sword', icon: '🗡️', name: '칼', note: '멀리 닿고 세게, 대신 느려요', keys: ['베기', '힘껏 베기'], btn: ['🗡️', '⚔️'] }, { id: 'fire', icon: '🔥', name: '불', note: '준비 중', soon: true }];
+const FIGHT_W = { fist: FIGHT_MOVES, sword: { punch: { dur: 0.36, a0: 0.1, a1: 0.19, range: 46, dmg: 8, kb: 60 }, kick: { dur: 0.58, a0: 0.22, a1: 0.32, range: 54, dmg: 13, kb: 110 } },
+  fire: { punch: { dur: 0.5, a0: 0.16, a1: 0.2, range: 300, dmg: 5, kb: 40, spd: 380 }, kick: { dur: 0.8, a0: 0.32, a1: 0.36, range: 340, dmg: 10, kb: 90, spd: 300 } } }; /* 불: a0에 손에서 불덩이가 나간다 (range = 날아가는 거리) */
+const FIGHT_WP = [{ id: 'fist', icon: '👊', name: '맨손', note: '빠르고 가까이', keys: ['주먹', '발차기'], btn: ['👊', '🦵'] }, { id: 'sword', icon: '🗡️', name: '칼', note: '멀리 닿고 세게, 대신 느려요', keys: ['베기', '힘껏 베기'], btn: ['🗡️', '⚔️'] }, { id: 'fire', icon: '🔥', name: '불', note: '멀리서 불덩이를 던져요. 가끔 크리티컬! 막으면 안 아파요', keys: ['불덩이', '큰 불덩이'], btn: ['🔥', '☄️'] }];
 const fightWp = w => (FIGHT_W[w] ? w : 'fist');
 const Fight = {
   open_: false, view: 'lobby', vs: 'house', stake: 0, weapon: null, g: null, pend: null, ask: null, timer: null, raf: 0, touch: {},
@@ -12643,15 +12646,15 @@ const Fight = {
   begin(o) {
     const mySpr = 'fight:me'; Sprites.setPal(mySpr, Profile.pal(Profile.get()));
     let opSpr = 'occ_young'; if (o.vs !== 'house') { const p = Net.players[o.vs]; if (p && p.pal) { opSpr = 'fight:op'; Sprites.setPal(opSpr, Profile.pal(p.pal)); } }
-    const opWp = o.vs === 'house' ? (Math.random() < 0.5 ? 'sword' : 'fist') : o.opWp; /* 사장은 그때그때 아무거나 */
+    const opWp = o.vs === 'house' ? ['fist', 'sword', 'fire'][(Math.random() * 3) | 0] : o.opWp; /* 사장은 그때그때 아무거나 */
     const me = this.fighter(o.left, '나', mySpr, this.weapon), op = this.fighter(!o.left, o.name, opSpr, opWp);
-    this.g = Object.assign({ me, op, round: 1, state: 'intro', t: 0, clock: this.ROUND_SEC, sendT: 0, ai: { t: 0, plan: 'walk' }, sparks: [], parts: [], nums: [], shakeT: 0, flashT: 0, lastFlash: 0, stopT: 0, silT: 0, silAt: null, banner: '1 라운드', lastRemote: performance.now() }, o);
+    this.g = Object.assign({ me, op, round: 1, state: 'intro', t: 0, clock: this.ROUND_SEC, sendT: 0, ai: { t: 0, plan: 'walk' }, sparks: [], parts: [], nums: [], shakeT: 0, flashT: 0, lastFlash: 0, stopT: 0, silT: 0, silAt: null, balls: [], booms: [], ash: [], scorch: null, banner: '1 라운드', lastRemote: performance.now() }, o);
     this.view = 'play'; this.render(); Sound.play('ding');
     cancelAnimationFrame(this.raf); let last = performance.now();
     const loop = now => { if (!this.open_ || !this.g || this.view !== 'play') return; const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; this.step(dt); this.draw(); this.raf = requestAnimationFrame(loop); };
     this.raf = requestAnimationFrame(loop);
   },
-  resetRound() { const g = this.g; for (const [f, left] of [[g.me, g.left], [g.op, !g.left]]) Object.assign(f, { x: left ? 140 : 340, y: this.FLOOR, vy: 0, hp: 100, ghost: 100, gHold: 0, lastHp: 100, act: 'idle', at: 0, hit: false, flash: 0, landT: 0, air: false }); g.clock = this.ROUND_SEC; g.state = 'intro'; g.t = 0; g.banner = `${g.round} 라운드`; },
+  resetRound() { const g = this.g; for (const [f, left] of [[g.me, g.left], [g.op, !g.left]]) Object.assign(f, { x: left ? 140 : 340, y: this.FLOOR, vy: 0, hp: 100, ghost: 100, gHold: 0, lastHp: 100, act: 'idle', at: 0, hit: false, flash: 0, landT: 0, air: false, burn: null, lastWp: null, crit: false }); Object.assign(g, { balls: [], booms: [], ash: [], scorch: null }); g.clock = this.ROUND_SEC; g.state = 'intro'; g.t = 0; g.banner = `${g.round} 라운드`; },
   input() {
     const T = this.touch, P = k => { const v = Pressed[k]; Pressed[k] = false; return v; };
     const r = { left: Keys.a || Keys.ArrowLeft || T.left, right: Keys.d || Keys.ArrowRight || T.right, up: Keys.w || Keys.ArrowUp || T.up, block: Keys.s || Keys.ArrowDown || T.block, punch: P('j') || T.punchP, kick: P('k') || T.kickP };
@@ -12662,12 +12665,12 @@ const Fight = {
     f.at += dt; f.flash = Math.max(0, f.flash - dt);
     if (f.act === 'ko') return;
     if (f.act === 'hurt') { if (f.at > 0.3) f.act = 'idle'; }
-    else if (f.act === 'punch' || f.act === 'kick') { const M = this.mv(f); if (f.at >= M.dur) f.act = 'idle'; }
+    else if (f.act === 'punch' || f.act === 'kick') { const M = this.mv(f); if (f.wp === 'fire' && !f.hit && f.at >= M.a0) { f.hit = true; this.cast(f); } if (f.at >= M.dur) f.act = 'idle'; }
     else {
       const ground = f.y >= this.FLOOR;
       const sw = f.wp === 'sword';
-      if (inp.punch) { f.act = 'punch'; f.at = 0; f.hit = false; Sound.play(sw ? 'whoosh' : 'blip', 1.4); }
-      else if (inp.kick) { f.act = 'kick'; f.at = 0; f.hit = false; if (sw) setTimeout(() => Sound.play('whoosh'), 150); else Sound.play('blip', 0.9); }
+      if (inp.punch) { f.act = 'punch'; f.at = 0; f.hit = false; if (f.wp !== 'fire') Sound.play(sw ? 'whoosh' : 'blip', 1.4); }
+      else if (inp.kick) { f.act = 'kick'; f.at = 0; f.hit = false; if (sw) setTimeout(() => Sound.play('whoosh'), 150); else if (f.wp !== 'fire') Sound.play('blip', 0.9); }
       else if (inp.block && ground) f.act = 'block';
       else { f.act = inp.left || inp.right ? 'walk' : 'idle'; if (inp.left) f.x -= 125 * dt; if (inp.right) f.x += 125 * dt; if (inp.up && ground) { f.vy = -340; Sound.play('step'); } }
     }
@@ -12677,7 +12680,7 @@ const Fight = {
   },
   // 공격 판정: 지금 공격의 유효 구간에 상대가 사거리 안이면 한 번만 맞는다
   strike(f, o) {
-    if (f.act !== 'punch' && f.act !== 'kick') return null; const M = this.mv(f);
+    if ((f.act !== 'punch' && f.act !== 'kick') || f.wp === 'fire') return null; const M = this.mv(f);
     if (f.hit || f.at < M.a0 || f.at > M.a1) return null; const dx = (o.x - f.x) * f.face;
     if (dx < 0 || dx > M.range + 12 || Math.abs(o.y - f.y) > 40) return null; f.hit = true; return { dmg: M.dmg, kb: M.kb, dir: f.face, kind: f.act, wp: f.wp };
   },
@@ -12695,22 +12698,57 @@ const Fight = {
   hitFx(f, h, blocked) {
     const g = this.g, x = f.x - h.dir * 8, y = f.y - 40, big = h.kind === 'kick', sw = h.wp === 'sword';
     if (sw && !blocked) { g.stopT = big ? 0.13 : 0.06; const now = performance.now(); if (big && !REDUCED_MOTION && now - g.lastFlash > 340) { g.silT = 0.09; g.silAt = { x, y }; g.lastFlash = now; } }
+    if (h.wp === 'fire') { g.booms.push({ x, y, t: 0, big, blocked }); if (big && !blocked) g.stopT = 0.05; }
     g.sparks.push({ x, y, t: 0, blocked }); this.burst(x, y, h.dir, blocked, big);
-    if (!blocked) f.flash = sw ? 0.2 : 0.15;
+    if (!blocked) { f.flash = sw ? 0.2 : 0.15; f.lastWp = h.wp; if (h.crit) f.crit = true; }
+  },
+  /* v182 불 (사용자 2026-10-17 두 번째 영상 'HOW TO: MAKE A MAGIC ATTACK'): 손에 불이 모였다가 불덩이가 꼬리를 끌며 날아가 터진다
+   * ⑧ 피해 숫자는 작고 톡 튀게, 크리티컬은 'CRIT!'을 달고 크게 · 체력이 다 떨어지면 재가 되어 흩어지고 바닥에 그을린 자국
+   * 판정: 던진 쪽에서 (친구 대전이면 내 불덩이만 내가 판정해 'hit'을 보내고, 친구 불덩이는 'fb'로 받아 그림만 그린다) */
+  cast(f) {
+    const g = this.g, M = this.mv(f), big = f.act === 'kick', b = { x: f.x + f.face * 16, y: f.y - 34, vx: f.face * M.spd, big, dist: 0, max: M.range, dmg: M.dmg, kb: M.kb, who: f === g.me ? 'me' : 'op', judge: true, t: 0 };
+    g.balls.push(b); Sound.play('fireball');
+    if (g.vs !== 'house') this.send('fb', g.vs, { gid: g.gid, r: g.round, x: Math.round(b.x), y: Math.round(b.y), d: f.face, big });
+  },
+  ballStep(dt, live) {
+    const g = this.g;
+    for (const b of g.balls) {
+      b.t += dt; b.x += b.vx * dt; b.dist += Math.abs(b.vx) * dt; const R = b.big ? 10 : 6;
+      for (let i = 0; i < (b.big ? 5 : 3); i++) g.parts.push({ x: b.x - Math.sign(b.vx) * (R + Math.random() * 4), y: b.y + (Math.random() - 0.5) * R * 1.6, vx: -b.vx * (0.05 + Math.random() * 0.1), vy: (Math.random() - 0.5) * 30, life: 0, max: 0.2 + Math.random() * (b.big ? 0.35 : 0.25), sz: b.big ? 4 : 3, fl: true }); /* 꼬리 불티 */
+      const o = b.who === 'me' ? g.op : g.me;
+      if (o.act === 'ko' || Math.abs(b.x - o.x) > R + 10 || Math.abs(b.y - (o.y - 32)) > 34) { if (b.dist > b.max || b.x < -20 || b.x > this.W + 20) b.dead = true; continue; }
+      b.dead = true; if (!live || !b.judge) continue;
+      const crit = Math.random() < 0.15, h = { dmg: crit ? b.dmg * 2 : b.dmg, kb: b.kb, dir: Math.sign(b.vx), kind: b.big ? 'kick' : 'punch', wp: 'fire', crit };
+      if (g.vs === 'house') { if (this.takeHit(o, h)) { g.balls = g.balls.filter(x => !x.dead); return this.roundOver(o === g.op); } }
+      else { this.send('hit', g.vs, Object.assign({ gid: g.gid, r: g.round }, h)); this.hitFx(g.op, h, g.op.act === 'block' && g.op.face === -h.dir); }
+    }
+    g.balls = g.balls.filter(b => !b.dead);
+  },
+  // 재가 되기: 도트 한 칸 한 칸이 아래서부터 달아올라 불티로 날아가고, 일부는 재로 바닥에 내려앉는다
+  burn(f) {
+    const g = this.g; if (f.burn != null) return; f.burn = g.ashT = g.t; Sound.play('burn');
+    const dir = f.face > 0 ? 2 : 1, sx = Math.round(f.x - 32), sy = Math.round(f.y - 64);
+    let px; try { px = Sprites.sheet(f.sprite).getContext('2d').getImageData(0, dir * 16, 16, 16).data; } catch (e) { px = null; }
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const i = (y * 16 + x) * 4; if (px && !px[i + 3]) continue; g.ash.push({ x: sx + x * 4, y: sy + y * 4, c: px ? [px[i], px[i + 1], px[i + 2]] : [200, 200, 200], d: 0.1 + Math.random() * 0.22 + (15 - y) * 0.028, vx: (Math.random() - 0.5) * 50, vy: -(20 + Math.random() * 70), fall: Math.random() < 0.3, life: 0.7 + Math.random() * 0.6 }); }
+    for (let i = 0; i < 34; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, v = 40 + Math.random() * 160; g.parts.push({ x: f.x + (Math.random() - 0.5) * 24, y: f.y - Math.random() * 50, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.4 + Math.random() * 0.5, sz: 3, fl: true }); }
+    g.scorch = { x: f.x, t: g.t };
   },
   aiInput(dt) {
     const g = this.g, a = g.op, m = g.me, ai = g.ai; ai.t -= dt; const d = Math.abs(m.x - a.x), inp = {}, reach = (FIGHT_W[a.wp] || FIGHT_MOVES).punch.range + 16;
     const atk = (m.act === 'punch' || m.act === 'kick') && d < (FIGHT_W[m.wp] || FIGHT_MOVES).kick.range + 28; if (atk && ai.plan !== 'block' && Math.random() < dt * 9) { ai.plan = 'block'; ai.t = 0.35; } /* 맞기 직전이면 반사적으로 막는다 */
+    if (ai.plan !== 'block' && g.balls.some(b => b.who === 'me' && Math.abs(b.x - a.x) < 90 && Math.sign(a.x - b.x) === Math.sign(b.vx)) && Math.random() < dt * 7) { ai.plan = 'block'; ai.t = 0.4; } /* 날아오는 불덩이도 막는다 */
+    if (ai.t <= 0 && a.wp === 'fire') { ai.t = 0.22 + Math.random() * 0.35; const r = Math.random(); ai.plan = d < 70 ? (r < 0.45 ? 'back' : r < 0.7 ? 'punch' : r < 0.85 ? 'jump' : 'block') : r < 0.33 ? 'punch' : r < 0.52 ? 'kick' : r < 0.7 ? 'wait' : r < 0.85 ? 'walk' : 'block'; } /* 불은 거리를 두고 던진다 */
     if (ai.t <= 0) { ai.t = 0.16 + Math.random() * 0.28; const r = Math.random(); ai.plan = d > reach ? (r < 0.8 ? 'walk' : r < 0.92 ? 'jump' : 'wait') : m.act === 'hurt' ? (r < 0.6 ? 'punch' : 'kick') : r < 0.4 ? 'punch' : r < 0.68 ? 'kick' : r < 0.85 ? 'block' : 'back'; }
     const toward = m.x > a.x ? 'right' : 'left', away = toward === 'right' ? 'left' : 'right';
     if (ai.plan === 'walk') inp[toward] = true; if (ai.plan === 'back') inp[away] = true; if (ai.plan === 'block') inp.block = true;
-    if (ai.plan === 'jump') { inp.up = true; inp[toward] = true; ai.plan = 'walk'; }
+    if (ai.plan === 'jump') { inp.up = true; inp[a.wp === 'fire' ? away : toward] = true; ai.plan = a.wp === 'fire' ? 'wait' : 'walk'; }
     if (ai.plan === 'punch' || ai.plan === 'kick') { inp[ai.plan] = true; ai.plan = 'wait'; }
     return inp;
   },
   step(dt) {
     const g = this.g; if (g.stopT > 0) { g.stopT -= dt; g.silT = Math.max(0, g.silT - dt); return; } /* 칼에 맞는 순간 화면이 멈춘다 */
     g.t += dt; for (const s of g.sparks) s.t += dt; g.sparks = g.sparks.filter(s => s.t < 0.3); this.fxStep(dt);
+    this.ballStep(dt, g.state === 'fight'); /* 판이 끝난 뒤에도 불덩이는 판정 없이 마저 날아간다 */
     if (g.state === 'intro') { g.banner = g.t < 1 ? `${g.round} 라운드` : '싸워라!'; if (g.t > 1.6) { g.state = 'fight'; g.banner = ''; } this.act(g.me, g.op, {}, dt); this.act(g.op, g.me, {}, dt); return; }
     if (g.state === 'ko') { this.act(g.me, g.op, {}, dt); if (g.vs === 'house') this.act(g.op, g.me, {}, dt); if (g.t > 2.2) this.nextRound(); return; }
     if (g.state === 'done') return;
@@ -12733,6 +12771,7 @@ const Fight = {
     const g = this.g; if (g.state !== 'fight') return; g.state = 'ko'; g.t = 0;
     if (meWon === true) { g.me.wins++; if (g.op.act !== 'ko' && !time) { g.op.act = 'ko'; g.op.at = 0; } } else if (meWon === false) { g.op.wins++; if (g.me.act !== 'ko' && !time) { g.me.act = 'ko'; g.me.at = 0; } }
     g.banner = time ? (meWon === null ? '시간 끝 · 무승부' : '시간 끝') : 'K.O.!'; Sound.play('drum');
+    const loser = meWon === true ? g.op : meWon === false ? g.me : null; if (loser && !time && loser.lastWp === 'fire') this.burn(loser);
   },
   nextRound() {
     const g = this.g;
@@ -12752,6 +12791,7 @@ const Fight = {
     if (m.k === 'ok') { if (!this.pend || this.pend.gid !== m.gid) return; const P = this.pend; this.pend = null; if (!this.open_) return this.send('quit', m.from, { gid: m.gid }); return this.begin({ gid: P.gid, vs: P.to, name: P.name, stake: P.stake, left: true, opWp: fightWp(m.wp) }); }
     const g = this.g; if (!g || g.gid !== m.gid) return; g.lastRemote = performance.now();
     if (m.k === 'st') { if (m.r !== g.round) return; g.op.net = m; if (typeof m.hp === 'number' && g.state === 'fight') g.op.hp = m.hp; if (g.op.net && g.op.x === undefined) g.op.x = m.x; return; }
+    if (m.k === 'fb' && m.r === g.round && g.state === 'fight') { const M = FIGHT_W.fire[m.big ? 'kick' : 'punch'], d = m.d > 0 ? 1 : -1; g.balls.push({ x: +m.x || 0, y: +m.y || 0, vx: d * M.spd, big: !!m.big, dist: 0, max: M.range, dmg: 0, kb: 0, who: 'op', judge: false, t: 0 }); Sound.play('fireball'); return; }
     if (m.k === 'hit' && g.state === 'fight' && m.r === g.round) { const ko = this.takeHit(g.me, m); this.send('st', g.vs, { gid: g.gid, r: g.round, x: Math.round(g.me.x), y: Math.round(g.me.y), act: g.me.act, at: 0, face: g.me.face, hp: g.me.hp }); if (ko) { this.send('ko', g.vs, { gid: g.gid, r: g.round }); this.roundOver(false); } return; }
     if (m.k === 'ko' && m.r === g.round) { g.op.hp = 0; this.roundOver(true); return; }
     if (m.k === 'time' && m.r === g.round) { this.roundOver(m.w === 'draw' ? null : m.w === 'b', true); return; }
@@ -12815,11 +12855,12 @@ const Fight = {
   },
   fxStep(dt) {
     const g = this.g;
-    for (const p of g.parts) { p.life += dt; p.vy += 420 * dt; p.vx *= 1 - 2.5 * dt; p.x += p.vx * dt; p.y += p.vy * dt; } g.parts = g.parts.filter(p => p.life < p.max);
+    for (const b of g.booms) b.t += dt; g.booms = g.booms.filter(b => b.t < 0.24);
+    for (const p of g.parts) { p.life += dt; p.vy += (p.fl ? -50 : 420) * dt; p.vx *= 1 - 2.5 * dt; p.x += p.vx * dt; p.y += p.vy * dt; } g.parts = g.parts.filter(p => p.life < p.max);
     for (const n of g.nums) n.t += dt; g.nums = g.nums.filter(n => n.t < 0.9);
     g.shakeT = Math.max(0, g.shakeT - dt); g.flashT = Math.max(0, g.flashT - dt); g.silT = Math.max(0, g.silT - dt);
     for (const f of [g.me, g.op]) {
-      if (f.hp < f.lastHp) { const d = f.lastHp - f.hp; f.gHold = 0.45; g.nums.push({ x: f.x + (Math.random() - 0.5) * 14, y: f.y - 66, v: d, t: 0, big: d >= 10 }); }
+      if (f.hp < f.lastHp) { const d = f.lastHp - f.hp; f.gHold = 0.45; g.nums.push({ x: f.x + (Math.random() - 0.5) * 14, y: f.y - 66, v: d, t: 0, big: d >= 10, crit: f.crit }); f.crit = false; }
       if (f.hp > f.lastHp) f.ghost = f.hp; f.lastHp = f.hp;
       if (f.ghost > f.hp) { if (f.gHold > 0) f.gHold -= dt; else f.ghost = Math.max(f.hp, f.ghost - 40 * dt); } else f.ghost = f.hp;
     }
@@ -12861,12 +12902,25 @@ const Fight = {
     c.fillStyle = '#2b2446'; c.fillRect(0, this.FLOOR, W, H - this.FLOOR); c.fillStyle = '#4a3a70'; c.fillRect(0, this.FLOOR, W, 3);
     this.drawBraziers(c, t);
     c.save(); if (g.shakeT > 0) { const k = g.shakeT / 0.2 * 4; c.translate(Math.round((Math.random() - 0.5) * k * 2), Math.round((Math.random() - 0.5) * k)); }
+    if (g.scorch) { const k = Math.min(1, (t - g.scorch.t) * 4), x = g.scorch.x; c.fillStyle = `rgba(10,4,8,${(0.6 * k).toFixed(2)})`; c.beginPath(); c.ellipse(x, this.FLOOR + 2, 30, 7, 0, 0, 7); c.fill(); /* 그을린 자국 + 남은 불씨 */
+      c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = `rgba(255,120,30,${(0.5 * k * (0.75 + Math.sin(t * 11) * 0.25)).toFixed(2)})`; c.lineWidth = 2; c.beginPath(); c.ellipse(x, this.FLOOR + 2, 24, 5, 0, 0, 7); c.stroke();
+      for (let i = 0; i < 9; i++) { const fl = Math.sin(t * (7 + i) + i * 3); if (fl < 0) continue; c.fillStyle = `rgba(255,${120 + i * 12},40,${(fl * k).toFixed(2)})`; c.fillRect(Math.round(x - 24 + i * 6 + (i % 2) * 2), this.FLOOR - 1 + (i % 3), 2, 2); } c.restore(); }
     for (const f of [g.me, g.op]) this.drawFighter(c, f, t);
+    this.drawAsh(c, t);
+    c.save(); c.globalCompositeOperation = 'lighter'; /* 불덩이: 바깥 빛 · 노란 몸 · 흰 심 / 터짐: 하얗게 번쩍 퍼지는 빛 */
+    for (const b of g.balls) { const R = b.big ? 10 : 6, fl = 1 + Math.sin(b.t * 40) * 0.12, d = Math.sign(b.vx); for (let i = 3; i >= 1; i--) { c.fillStyle = `rgba(255,${90 + i * 20},30,${(0.22 / i).toFixed(2)})`; c.beginPath(); c.arc(b.x - d * i * R * 0.9, b.y, R * (1.1 - i * 0.18), 0, 7); c.fill(); }
+      const gl = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, R * 2.6 * fl); gl.addColorStop(0, 'rgba(255,230,150,.9)'); gl.addColorStop(0.4, 'rgba(255,150,40,.55)'); gl.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = gl; c.beginPath(); c.arc(b.x, b.y, R * 2.6 * fl, 0, 7); c.fill();
+      c.fillStyle = '#fff6d8'; c.beginPath(); c.arc(b.x + d, b.y, R * 0.55, 0, 7); c.fill(); }
+    for (const b of g.booms) { const k = b.t / 0.24, R = (b.big ? 40 : 24) * (0.4 + k), gl = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, R); gl.addColorStop(0, b.blocked ? `rgba(200,230,255,${(1 - k).toFixed(2)})` : `rgba(255,255,240,${(1 - k).toFixed(2)})`); gl.addColorStop(0.35, b.blocked ? `rgba(90,160,255,${(0.6 * (1 - k)).toFixed(2)})` : `rgba(255,170,60,${(0.7 * (1 - k)).toFixed(2)})`); gl.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = gl; c.beginPath(); c.arc(b.x, b.y, R, 0, 7); c.fill(); }
+    c.restore();
     for (const s of g.sparks) { c.fillStyle = s.blocked ? 'rgba(160,220,255,.9)' : 'rgba(255,230,120,.95)'; const r = 6 + s.t * 40; c.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, rr = i % 2 ? r * 0.45 : r; c.lineTo(s.x + Math.cos(a) * rr, s.y + Math.sin(a) * rr); } c.fill(); if (s.blocked) { c.save(); c.font = 'bold 13px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#0a1a3a'; c.strokeText('막음!', s.x, s.y - 18 - s.t * 30); c.fillStyle = '#bfe6ff'; c.fillText('막음!', s.x, s.y - 18 - s.t * 30); c.restore(); } }
     c.save(); c.globalCompositeOperation = 'lighter'; /* 불티: 하얗게 태어나 노랑·주황·빨강으로 식으며 작아진다 (겹치면 더 밝게) */
     for (const p of g.parts) { const k = p.life / p.max, col = p.blue ? (k < 0.3 ? [220, 240, 255] : [90, 160, 255]) : k < 0.15 ? [255, 255, 230] : k < 0.4 ? [255, 210, 80] : k < 0.7 ? [255, 120, 30] : [200, 40, 20]; c.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${(1 - k * 0.7).toFixed(2)})`; const z = Math.max(1, Math.round(p.sz * (1 - k * 0.6))); c.fillRect(Math.round(p.x), Math.round(p.y), z, z); }
     c.restore(); c.restore();
-    for (const n of g.nums) { const k = n.t / 0.9, sz = n.big ? 22 : 14, y = n.y - n.t * 34 - (n.big ? Math.sin(Math.min(1, n.t * 6) * Math.PI) * 6 : 0); c.save(); c.globalAlpha = Math.min(1, (1 - k) * 2); c.font = `900 ${sz}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.lineWidth = n.big ? 5 : 4; c.strokeStyle = '#1a0a10'; c.strokeText('-' + n.v, n.x, y); c.fillStyle = n.big ? '#ffb02e' : '#ffffff'; c.fillText('-' + n.v, n.x, y); c.restore(); }
+    for (const n of g.nums) { /* 작고 톡 튀게 (처음 0.08초는 크게 찍혔다 줄어든다), 크리티컬은 'CRIT!'을 달고 더 크게 */
+      const k = n.t / 0.9, pop = n.t < 0.08 ? 1.6 - n.t * 7.5 : 1, sz = Math.round((n.crit ? 26 : n.big ? 22 : 14) * pop), y = n.y - n.t * 34 - (n.big || n.crit ? Math.sin(Math.min(1, n.t * 6) * Math.PI) * 6 : 0); c.save(); c.globalAlpha = Math.min(1, (1 - k) * 2); c.textAlign = 'center'; c.strokeStyle = '#1a0a10';
+      if (n.crit) { c.font = '900 10px "IBM Plex Sans KR", sans-serif'; c.lineWidth = 3; c.strokeText('CRIT!', n.x, y - sz + 2); c.fillStyle = '#ffd84a'; c.fillText('CRIT!', n.x, y - sz + 2); }
+      c.font = `900 ${sz}px "IBM Plex Sans KR", sans-serif`; c.lineWidth = n.big || n.crit ? 5 : 4; c.strokeText('-' + n.v, n.x, y); c.fillStyle = n.crit ? '#ff6a2a' : n.big ? '#ffb02e' : '#ffffff'; c.fillText('-' + n.v, n.x, y); c.restore(); }
     }
     const bar = (f, left) => { const x = left ? 16 : W - 16 - 190; c.fillStyle = '#000'; c.fillRect(x - 2, 14, 194, 16); c.fillStyle = '#5a1a1a'; c.fillRect(x, 16, 190, 12); const gw = 190 * Math.max(f.hp, f.ghost || 0) / 100; c.fillStyle = '#ff8a1e'; c.fillRect(left ? x : x + 190 - gw, 16, gw, 12); /* 방금 잃은 만큼 (주황, 잠깐 남았다 따라 내려온다) */ c.fillStyle = f.hp > 30 ? '#ffd84a' : '#ff5a4a'; const w = 190 * f.hp / 100; c.fillRect(left ? x : x + 190 - w, 16, w, 12); c.fillStyle = '#fff'; c.font = 'bold 11px "IBM Plex Sans KR", sans-serif'; c.textAlign = left ? 'left' : 'right'; c.fillText(f.name, left ? x : x + 190, 44); for (let i = 0; i < 2; i++) { c.fillStyle = i < f.wins ? '#ffd84a' : 'rgba(255,255,255,.2)'; c.beginPath(); c.arc(left ? x + 190 - 6 - i * 12 : x + 6 + i * 12, 44 - 4, 4, 0, 7); c.fill(); } };
     const L = g.left ? g.me : g.op, R = g.left ? g.op : g.me; bar(L, true); bar(R, false);
@@ -12881,6 +12935,7 @@ const Fight = {
     x.globalCompositeOperation = 'source-in'; x.fillStyle = col; x.fillRect(0, 0, 16, 16); x.globalCompositeOperation = 'source-over'; return T;
   },
   drawFighter(c, f, t, sil) {
+    if (f.burn != null) return; /* 재가 됐다 (drawAsh) */
     const S = 4, dir = f.face > 0 ? 2 : 1, moving = f.act === 'walk'; const frame = moving ? 1 + Math.floor(t * 8) % 4 : 0;
     const now = performance.now(), air = f.y < this.FLOOR - 1; if (f.air && !air && f.act !== 'ko') { f.landT = now; Sound.play('step', 'wood'); } f.air = air;
     const vy = f.vy || 0, land = now - (f.landT || 0) < 110; let tx = 4, ty = 4; /* 한 칸(텍셀) 크기: 가로 tx · 세로 ty (둘 다 정수) */
@@ -12896,8 +12951,32 @@ const Fight = {
     if (f.flash > 0 && !sil) { c.globalAlpha = Math.min(1, f.flash / 0.15) * 0.9; c.drawImage(this.tinted(f.sprite, frame, dir, '#fff'), sx, sy, 16 * tx, 16 * ty); c.globalAlpha = 1; }
     if (f.wp === 'sword') this.drawSword(c, f, lean, sil);
     c.restore();
-    if (f.wp !== 'sword' && (f.act === 'punch' || f.act === 'kick')) { const M = this.mv(f), on = f.at >= M.a0 && f.at <= M.a1, ext = on ? M.range : M.range * 0.4; c.fillStyle = sil || (f.act === 'punch' ? '#f2cda8' : '#2c3d63'); const y = f.act === 'punch' ? f.y - 40 : f.y - 18; c.fillRect(f.face > 0 ? f.x + 6 : f.x - 6 - ext, y, ext, f.act === 'punch' ? 7 : 9); if (f.act === 'punch') { c.fillStyle = sil || '#e8b890'; c.fillRect(f.face > 0 ? f.x + 6 + ext - 8 : f.x - 6 - ext, y - 2, 8, 11); } }
+    if (f.wp === 'fire') this.drawFire(c, f, t, lean, sil);
+    else if (f.wp !== 'sword' && (f.act === 'punch' || f.act === 'kick')) { const M = this.mv(f), on = f.at >= M.a0 && f.at <= M.a1, ext = on ? M.range : M.range * 0.4; c.fillStyle = sil || (f.act === 'punch' ? '#f2cda8' : '#2c3d63'); const y = f.act === 'punch' ? f.y - 40 : f.y - 18; c.fillRect(f.face > 0 ? f.x + 6 : f.x - 6 - ext, y, ext, f.act === 'punch' ? 7 : 9); if (f.act === 'punch') { c.fillStyle = sil || '#e8b890'; c.fillRect(f.face > 0 ? f.x + 6 + ext - 8 : f.x - 6 - ext, y - 2, 8, 11); } }
     if (f.act === 'block') { c.strokeStyle = sil || 'rgba(140,210,255,.8)'; c.lineWidth = 3; c.beginPath(); c.arc(f.x + f.face * 10, f.y - 34, 26, f.face > 0 ? -1.1 : Math.PI - 1.1, f.face > 0 ? 1.1 : Math.PI + 1.1); c.stroke(); }
+  },
+  // 불: 평소엔 손바닥 위에 작은 불꽃, 던질 땐 손을 내밀고 불이 소용돌이치며 모였다가(a0) 나간다
+  drawFire(c, f, t, lean, sil) {
+    const cast = (f.act === 'punch' || f.act === 'kick') && f.at < this.mv(f).a0 + 0.06, big = f.act === 'kick', hx = Math.round(f.x + f.face * (cast ? 18 : 10) + lean), hy = Math.round(f.y - (cast ? 36 : 28));
+    if (cast) { c.fillStyle = sil || '#f2cda8'; c.fillRect(f.face > 0 ? f.x + 6 : hx - 2, hy - 3, Math.abs(hx - f.x) - 4, 6); }
+    if (sil || f.act === 'ko' || f.act === 'hurt') return;
+    c.save(); c.globalCompositeOperation = 'lighter';
+    if (cast) { const k = Math.min(1, f.at / this.mv(f).a0), R = (big ? 16 : 11) * (1.3 - 0.7 * k), gl = c.createRadialGradient(hx, hy, 0, hx, hy, R * 1.6);
+      gl.addColorStop(0, `rgba(255,220,120,${(0.4 + 0.5 * k).toFixed(2)})`); gl.addColorStop(1, 'rgba(255,80,0,0)'); c.fillStyle = gl; c.beginPath(); c.arc(hx, hy, R * 1.6, 0, 7); c.fill();
+      c.lineWidth = 2; for (let i = 0; i < 3; i++) { const a = t * 18 * f.face + i * 2.1; c.strokeStyle = `rgba(255,${170 + i * 30},70,${(0.5 + 0.4 * k).toFixed(2)})`; c.beginPath(); c.arc(hx, hy, R * (1 - i * 0.18), a, a + 1.3); c.stroke(); } }
+    else for (let i = 0; i < 3; i++) { const h = 3 + ((Math.sin(t * 17 + i * 2.3) + 1) * 2.5) | 0; c.fillStyle = i === 1 ? 'rgba(255,230,140,.95)' : 'rgba(255,120,30,.8)'; c.fillRect(hx - 3 + i * 2, hy - h, 2, h); }
+    c.restore();
+  },
+  drawAsh(c, t) {
+    const g = this.g; if (!g.ash.length) return; const e = t - g.ashT; c.save();
+    for (const a of g.ash) {
+      if (e < a.d) { const k = e / a.d, w = k * k, hot = k > 0.85 ? [255, 240, 190] : [255, 140, 40]; c.fillStyle = `rgb(${a.c.map((v, i) => Math.round(v + (hot[i] - v) * w)).join(',')})`; c.fillRect(a.x, a.y, 4, 4); continue; } /* 아래서부터 달아오른다 */
+      const u = e - a.d;
+      if (a.fall) { const y = Math.min(this.FLOOR - 2, a.y + 60 * u + 220 * u * u), al = Math.max(0, 1 - Math.max(0, u - 2) / 1); if (al <= 0) continue; c.globalCompositeOperation = 'source-over'; c.fillStyle = `rgba(70,62,66,${al.toFixed(2)})`; c.fillRect(Math.round(a.x + a.vx * 0.3 * Math.min(u, 0.5)), Math.round(y), 2, 2); continue; } /* 재: 바닥에 내려앉는다 */
+      if (u > a.life) continue; const k = u / a.life, col = k < 0.25 ? [255, 220, 90] : k < 0.5 ? [255, 130, 30] : k < 0.75 ? [200, 50, 20] : [90, 70, 70], z = Math.max(1, Math.round(4 * (1 - k)));
+      c.globalCompositeOperation = k < 0.75 ? 'lighter' : 'source-over'; c.fillStyle = `rgba(${col.join(',')},${(1 - k * 0.6).toFixed(2)})`; c.fillRect(Math.round(a.x + a.vx * u), Math.round(a.y + a.vy * u), z, z); /* 불티: 위로 날아가며 식는다 */
+    }
+    c.restore();
   },
   // 칼 각도: 앞 = 0, 위 = −π/2, 뒤 = ±π (얼굴 방향으로 뒤집어서 그린다). 들어 올렸다가(뒤 위) → 앞 아래로 확 내려 벤다
   swordAng(f) {

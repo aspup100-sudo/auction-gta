@@ -3799,7 +3799,7 @@ const Nav = {
     const main = t.d === 0 ? `지금 ${word}` : tm <= 30 ? `잠시 후 ${word}` : `${fmtDist(tm)} 앞에서 ${word}`;
     this.show(NAV_ARROW[t.kind], main, sub, t.d > 0 ? fmtDist(tm) : '');
     const sk = Math.round(t.at[0] / 10) + ',' + Math.round(t.at[1] / 10); // 같은 회전은 한 번만 말한다
-    if (t.d > 0 && tm <= 100 && !this.said[sk]) { this.said[sk] = 1; Toast.show(`${fmtDist(tm)} 앞에서 ${word}입니다.`, 2000); Sound.play('tick'); }
+    if (t.d > 0 && tm <= 100 && !this.said[sk]) { this.said[sk] = 1; Sound.play('tick'); } // 화면 가운데 알림은 안 띄운다: 아래 안내판으로 충분 (사용자 2026-10-17 '괜히 시야 가린다')
   },
   drawRoute(ctx) {
     if (!Game.driving || this.path.length < 2) return;

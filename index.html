@@ -888,6 +888,8 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .pvCard:hover:not(:disabled) { transform:translateY(-2px); filter:brightness(1.12); } .pvCard.on { border-color:#ffd84a; box-shadow:0 0 0 2px #ffd84a, 0 0 18px rgba(255,216,74,.5); } .pvCard:disabled { cursor:default; opacity:.75; }
 .pvFoot { display:flex; align-items:center; gap:8px; } .pvFoot .gold { padding:9px 18px; font-weight:900; } .pvKey { margin-left:auto; font-size:11px; opacity:.6; }
 .pvBox.roll { align-items:stretch; } .pvRow { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; padding:10px 0; }
+.pvGrid.two, .pvRow.two { grid-template-columns:repeat(2, minmax(0, 240px)); justify-content:center; gap:16px; }
+.pvGrid.two .pvCard { min-height:150px; }
 .pvCard.big { min-height:170px; cursor:default; opacity:.55; transform:scale(.96); } .pvCard.big em { font-size:44px; margin-top:22px; } .pvCard.big b { font-size:17px; }
 .pvCard.big s { position:absolute; left:0; right:0; top:0; padding:4px 0; text-decoration:none; font:800 11px var(--ui); background:rgba(224,72,58,.85); } .pvCard.big s.me { background:rgba(47,127,224,.9); }
 .pvCard.hot { opacity:1; transform:scale(1.04); border-color:#fff; box-shadow:0 0 0 2px #fff, 0 0 26px rgba(255,255,255,.55); transition:none; }
@@ -12019,6 +12021,8 @@ const PB_APT = { // 그 게임에서 중요한 능력치 (b = [체력, 공격, �
   coins: ['빠르기·무게', b => b[3] * 0.7 + (b[0] + b[2]) * 0.15], balloon: ['힘', b => b[1]], bomb: ['빠르기', b => b[3]], memory: ['펫 상관없이 머리로!', null],
 };
 const PB_ART = { sumo: ['#d8a060', '#5a3418'], race: ['#6ac0ff', '#2a6a30'], tug: ['#8ad06a', '#2a5a2a'], dodge: ['#e0a868', '#3e4a68'], coins: ['#ffd84a', '#2a7ac0'], balloon: ['#d06ae0', '#2a1a4a'], bomb: ['#ff8a2a', '#1e2234'], memory: ['#6a8aff', '#1e1040'] };
+// v188: 게임이 둘뿐이라 (사용자 '배틀 콜로세움, 피구 빼고 다 없애자') 한 사람이 하나씩 고르고 두 장 중 하나를 뽑는다
+const PV_N = () => Math.max(1, Math.min(2, PB_MODES.length - 1));
 const PetVote = {
   aptRange: null,
   apt(m, kind) { const A = PB_APT[m]; if (!A || !A[1]) return 3; if (!this.aptRange) this.aptRange = {};
@@ -12028,57 +12032,57 @@ const PetVote = {
   on() { const B = PetBattle.B; return !!(PetBattle.open_ && B && B.voting && B.vote); },
   name(m) { return PB_MODE_KO[m].replace(/^\S+\s/, ''); },
   icon(m) { return PB_MODE_KO[m].split(' ')[0]; },
-  clean(v) { const L = (Array.isArray(v) ? v : []).filter(m => PB_MODES.includes(m)).slice(0, 2); while (L.length < 2) L.push(PB_MODES[Math.random() * PB_MODES.length | 0]); return L; },
-  aiVote(P) { return PB_MODES.map(m => [m, this.apt(m, P.kind) + Math.random() * 2.2]).sort((x, y) => y[1] - x[1]).slice(0, 2).map(x => x[0]); },
+  clean(v) { const L = (Array.isArray(v) ? v : []).filter(m => PB_MODES.includes(m)).slice(0, PV_N()); while (L.length < PV_N()) L.push(PB_MODES[Math.random() * PB_MODES.length | 0]); return L; },
+  aiVote(P) { return PB_MODES.map(m => [m, this.apt(m, P.kind) + Math.random() * 2.2]).sort((x, y) => y[1] - x[1]).slice(0, PV_N()).map(x => x[0]); },
   open(B, done) {
     B.voting = true; B.vote = { sel: [], mine: null, foe: null, ph: 'pick', t0: Date.now(), done };
     if (B.mode === 'npc') B.vote.foe = this.aiVote(B.S[B.me === 'a' ? 'b' : 'a']);
     $('pbWin').classList.add('in'); this.render();
   },
-  owner(B, i) { const k = i < 2 ? 'a' : 'b'; return k === B.me ? '나' : String(B.foeName || '상대'); },
+  owner(B, i) { const k = i < PV_N() ? 'a' : 'b'; return k === B.me ? '나' : String(B.foeName || '상대'); },
   render() {
     const B = PetBattle.B, V = B && B.vote; if (!V) return; const el = $('pbWin'), me = B.S[B.me], foe = B.S[B.me === 'a' ? 'b' : 'a'];
     if (V.ph === 'pick' || V.ph === 'wait') {
       const left = Math.max(0, Math.ceil((V.t0 + 15000 - Date.now()) / 1000));
-      el.innerHTML = `<div class="pvBox"><div class="pvHead"><b>🎮 게임 고르기</b><span>${V.ph === 'wait' ? `${esc(B.foeName)}님이 고르는 중…` : '두 개를 골라요. 상대도 두 개를 골라서 넷 중 하나가 뽑혀요!'}</span>${V.ph === 'pick' ? `<i id="pvTime">${left}</i>` : ''}</div>
+      el.innerHTML = `<div class="pvBox"><div class="pvHead"><b>🎮 게임 고르기</b><span>${V.ph === 'wait' ? `${esc(B.foeName)}님이 고르는 중…` : (PV_N() === 1 ? '하나 골라요. 상대도 하나 골라서 둘 중 하나가 뽑혀요!' : '두 개를 골라요. 상대도 두 개를 골라서 넷 중 하나가 뽑혀요!')}</span>${V.ph === 'pick' ? `<i id="pvTime">${left}</i>` : ''}</div>
         <div class="pvPets"><span class="me">🐾 ${esc(me.name)} <small>Lv.${me.lv}</small></span><span class="foe">${esc(B.foeName)}의 ${esc(foe.name)} <small>Lv.${foe.lv}</small></span></div>
-        <div class="pvGrid">${PB_MODES.map((m, i) => { const n = V.sel.indexOf(m), a = this.apt(m, me.kind), f = this.apt(m, foe.kind), A = PB_ART[m];
+        <div class="pvGrid${PB_MODES.length === 2 ? ' two' : ''}">${PB_MODES.map((m, i) => { const n = V.sel.indexOf(m), a = this.apt(m, me.kind), f = this.apt(m, foe.kind), A = PB_ART[m];
           return `<button class="pvCard${n >= 0 ? ' on' : ''}" data-m="${m}" style="--c1:${A[0]};--c2:${A[1]}" ${V.ph === 'wait' ? 'disabled' : ''}><kbd>${i + 1}</kbd>${n >= 0 ? `<u>${n + 1}</u>` : ''}<em>${this.icon(m)}</em><b>${this.name(m)}</b><small>${PB_APT[m][0]}</small><span class="pvApt"><i class="me" title="내 펫">${this.stars(a)}</i><i class="foe" title="상대 펫">${this.stars(f)}</i></span></button>`; }).join('')}</div>
-        <div class="pvFoot"><button class="btn gold" id="pvOk" ${V.ph === 'wait' || V.sel.length < 2 ? 'disabled' : ''}>${V.ph === 'wait' ? '기다리는 중…' : `✅ 이걸로! (${V.sel.length}/2)`}</button><button class="btn" id="pvQuit">그만두기</button><span class="pvKey">★ 위: 내 펫 · 아래: 상대 펫 적성</span></div></div>`;
+        <div class="pvFoot"><button class="btn gold" id="pvOk" ${V.ph === 'wait' || V.sel.length < PV_N() ? 'disabled' : ''}>${V.ph === 'wait' ? '기다리는 중…' : `✅ 이걸로! (${V.sel.length}/${PV_N()})`}</button><button class="btn" id="pvQuit">그만두기</button><span class="pvKey">★ 위: 내 펫 · 아래: 상대 펫 적성</span></div></div>`;
       el.querySelectorAll('.pvCard').forEach(b => (b.onclick = () => this.toggle(b.dataset.m)));
       $('pvOk').onclick = () => this.confirm(); $('pvQuit').onclick = () => PetBattle.quit(true); return;
     }
     // 룰렛
-    el.innerHTML = `<div class="pvBox roll"><div class="pvHead"><b>🎲 뭐가 걸릴까…</b><span>네 장 중에서 하나!</span></div><div class="pvRow">${V.list.map((m, i) => { const A = PB_ART[m];
-      return `<div class="pvCard big" id="pvR${i}" style="--c1:${A[0]};--c2:${A[1]}"><s class="${(i < 2 ? 'a' : 'b') === B.me ? 'me' : 'foe'}">${esc(this.owner(B, i))}의 선택</s><em>${this.icon(m)}</em><b>${this.name(m)}</b><small>${PB_APT[m][0]}</small><span class="pvApt"><i class="me">${this.stars(this.apt(m, me.kind))}</i></span></div>`; }).join('')}</div><div class="pvMsg" id="pvMsg">&nbsp;</div></div>`;
+    el.innerHTML = `<div class="pvBox roll"><div class="pvHead"><b>🎲 뭐가 걸릴까…</b><span>${V.list.length === 2 ? '두 장' : '네 장'} 중에서 하나!</span></div><div class="pvRow${V.list.length === 2 ? ' two' : ''}">${V.list.map((m, i) => { const A = PB_ART[m];
+      return `<div class="pvCard big" id="pvR${i}" style="--c1:${A[0]};--c2:${A[1]}"><s class="${(i < PV_N() ? 'a' : 'b') === B.me ? 'me' : 'foe'}">${esc(this.owner(B, i))}의 선택</s><em>${this.icon(m)}</em><b>${this.name(m)}</b><small>${PB_APT[m][0]}</small><span class="pvApt"><i class="me">${this.stars(this.apt(m, me.kind))}</i></span></div>`; }).join('')}</div><div class="pvMsg" id="pvMsg">&nbsp;</div></div>`;
   },
-  toggle(m) { const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'pick' || !PB_MODES.includes(m)) return; const i = V.sel.indexOf(m); if (i >= 0) V.sel.splice(i, 1); else { if (V.sel.length >= 2) V.sel.shift(); V.sel.push(m); } Sound.play('click'); this.render(); },
+  toggle(m) { const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'pick' || !PB_MODES.includes(m)) return; const i = V.sel.indexOf(m); if (i >= 0) V.sel.splice(i, 1); else { if (V.sel.length >= PV_N()) V.sel.shift(); V.sel.push(m); } Sound.play('click'); this.render(); },
   confirm(auto) {
-    const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'pick') return; if (V.sel.length < 2 && !auto) return;
-    const me = B.S[B.me]; while (V.sel.length < 2) { const best = PB_MODES.filter(m => !V.sel.includes(m)).sort((x, y) => this.apt(y, me.kind) - this.apt(x, me.kind))[0]; V.sel.push(best); }
+    const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'pick') return; if (V.sel.length < PV_N() && !auto) return;
+    const me = B.S[B.me]; while (V.sel.length < PV_N()) { const best = PB_MODES.filter(m => !V.sel.includes(m)).sort((x, y) => this.apt(y, me.kind) - this.apt(x, me.kind))[0]; V.sel.push(best); }
     V.mine = V.sel.slice(); V.ph = 'wait'; V.tw = Date.now(); Sound.play('ding'); if (B.mode === 'net') Net.send({ t: 'pb', k: 'vt', to: B.foe, v: V.mine });
     this.render(); this.check();
   },
   check() {
     const B = PetBattle.B, V = B && B.vote; if (!V || V.ph !== 'wait' || !V.mine || !V.foe || !(B.mode === 'npc' || B.me === 'a')) return;
-    const list = B.me === 'a' ? V.mine.concat(V.foe) : V.foe.concat(V.mine), i = B.mode === 'npc' ? Math.random() * 4 | 0 : (makeRng(((B.seed >>> 0) ^ 0x5bd1e995) >>> 0).next() * 4) | 0;
+    const list = B.me === 'a' ? V.mine.concat(V.foe) : V.foe.concat(V.mine), L = list.length, i = B.mode === 'npc' ? Math.random() * L | 0 : (makeRng(((B.seed >>> 0) ^ 0x5bd1e995) >>> 0).next() * L) | 0;
     if (B.mode === 'net') Net.send({ t: 'pb', k: 'vs', to: B.foe, l: list, i }); this.roll(list, i);
   },
   onNet(B, m) {
     const V = B.vote; if (!V || !B.voting) return;
     if (m.k === 'vt') { V.foe = this.clean(m.v); this.check(); return; }
-    if (m.k === 'vs' && B.me === 'b' && V.ph !== 'roll' && V.ph !== 'land') { const l = (Array.isArray(m.l) ? m.l : []).filter(x => PB_MODES.includes(x)); if (l.length !== 4) return; this.roll(l, Math.max(0, Math.min(3, m.i | 0))); }
+    if (m.k === 'vs' && B.me === 'b' && V.ph !== 'roll' && V.ph !== 'land') { const l = (Array.isArray(m.l) ? m.l : []).filter(x => PB_MODES.includes(x)); if (l.length !== PV_N() * 2) return; this.roll(l, Math.max(0, Math.min(l.length - 1, m.i | 0))); }
   },
   // 하이라이트가 빙글빙글 돌다가 점점 느려져서 i에서 멈춘다 (양쪽이 같은 순서)
   roll(list, idx) {
     const B = PetBattle.B, V = B.vote; V.ph = 'roll'; V.list = list; V.idx = idx; this.render();
-    const N = 4 * 4 + idx, delays = []; for (let s = 0; s <= N; s++) { const u = s / N; delays.push(55 + Math.pow(u, 2.6) * 460); }
-    let s = 0; const hop = () => { if (PetBattle.B !== B || !B.voting) return; const cur = s % 4; for (let j = 0; j < 4; j++) { const e = $('pvR' + j); if (e) e.classList.toggle('hot', j === cur); }
+    const L = list.length, N = L * (L === 2 ? 6 : 4) + idx, delays = []; for (let s = 0; s <= N; s++) { const u = s / N; delays.push(55 + Math.pow(u, 2.6) * 460); }
+    let s = 0; const hop = () => { if (PetBattle.B !== B || !B.voting) return; const cur = s % L; for (let j = 0; j < L; j++) { const e = $('pvR' + j); if (e) e.classList.toggle('hot', j === cur); }
       Sound.play('tick'); if (s >= N) return this.land(B); setTimeout(hop, delays[s++]); };
     setTimeout(hop, 400);
   },
   land(B) {
-    const V = B.vote, m = V.list[V.idx]; V.ph = 'land'; for (let j = 0; j < 4; j++) { const e = $('pvR' + j); if (e) { e.classList.remove('hot'); e.classList.toggle('win', j === V.idx); e.classList.toggle('lose', j !== V.idx); } }
+    const V = B.vote, m = V.list[V.idx]; V.ph = 'land'; for (let j = 0; j < V.list.length; j++) { const e = $('pvR' + j); if (e) { e.classList.remove('hot'); e.classList.toggle('win', j === V.idx); e.classList.toggle('lose', j !== V.idx); } }
     Sound.play('chime'); const msg = $('pvMsg'); if (msg) msg.innerHTML = `이번 대결은 <b>${PB_MODE_KO[m]}</b>! <small>(${esc(this.owner(B, V.idx))}의 선택)</small>`;
     setTimeout(() => { if (PetBattle.B !== B || !B.voting) return; B.voting = false; const done = V.done; B.vote = null; done(m); }, 1700);
   },
@@ -12096,6 +12100,7 @@ const PetVote = {
  * 네트워크: 호스트(a, 트레이너전은 나)가 네 명을 다 계산한다. 받은 쪽은 입력 {x,y,ya,an,jn}만 보낸다 (ya = 보는 방향, an/jn = 누른 횟수).
  * 화면: 낮은 해상도 버퍼(정수 배율로 키운다)에 레이캐스트 모래 바닥·원형 관중석 벽·기둥 + 빌보드 스프라이트, 그 위에 1인칭 손/발, 맨 위에 HUD (오버워치 느낌). */
 PB_MODES.push('arena');
+PB_MODES.splice(0, PB_MODES.length, 'arena', 'dodge'); // v188 (사용자 2026-10-17 '지금 배틀 콜로세움, 피구 빼고 다 없애자'): 다른 게임 코드는 남겨 두고 고르기에서만 뺀다
 PB_MODE_KO.arena = '🏟️ 콜로세움';
 PB_MODE_HELP.arena = ['WASD 이동 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 · 우클릭/K 특수기. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 공격·특수 버튼! 상대 팀 둘 다 쓰러뜨리면 이겨요.'];
 PB_ACT_KO.arena = '공격';
@@ -12344,7 +12349,7 @@ PetRT.arena = {
   full(c, W, H, B, G, t) {
     let R = this.R; if (!R) R = this.R = { seen: G.eid || 0, fx: [], nums: [], rings: [], bolts: [], hm: 0, hk: 0, dmg: 0, sh: 0, msg: null, lt: 0, kill: 0 };
     const now = performance.now(), dt = R.lt ? Math.min(0.05, (now - R.lt) / 1000) : 0; R.lt = now;
-    // v188 화질: 버퍼를 기기 픽셀 기준 400~480줄로 (느리면 저절로 한 단계 낮춘다). 캐릭터·손은 기기 해상도로 그린다
+    // v187 화질: 버퍼를 기기 픽셀 기준 400~480줄로 (느리면 저절로 한 단계 낮춘다). 캐릭터·손은 기기 해상도로 그린다
     const dpr = c.getTransform().a || 1, DW = Math.round(W * dpr), DH = Math.round(H * dpr), touch = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
     const kd = Math.max(1, Math.min(8, Math.round(DH / (touch ? 340 : 470)) + (R.kq | 0))), k = kd / dpr, iw = Math.ceil(DW / kd), ih = Math.ceil(DH / kd);
     if (!R.cv || R.cv.width !== iw || R.cv.height !== ih) { R.cv = document.createElement('canvas'); R.cv.width = iw; R.cv.height = ih; R.x = R.cv.getContext('2d'); R.img = R.x.createImageData(iw, ih); R.u32 = new Uint32Array(R.img.data.buffer); R.zb = new Float32Array(iw); }
@@ -12391,7 +12396,7 @@ PetRT.arena = {
     }
   },
   spark(R, x, y, z, n, col, sp) { for (let i = 0; i < n; i++) { const a = Math.random() * 7, v = (sp || 1) * (1 + Math.random() * 2); if (R.fx.length < 260) R.fx.push({ x, y, z, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vz: 1 + Math.random() * 2.5, g: 7, t: 0, life: 0.35 + Math.random() * 0.35, col, sz: 0.06 }); } },
-  // v188: 안 움직이는 바닥·벽·기둥·하늘은 처음 한 번 텍스처로 구워 두고, 그릴 때는 찾아보기만 한다 (픽셀마다 계산하면 너무 느림)
+  // v187: 안 움직이는 바닥·벽·기둥·하늘은 처음 한 번 텍스처로 구워 두고, 그릴 때는 찾아보기만 한다 (픽셀마다 계산하면 너무 느림)
   tex() {
     if (this.TX) return this.TX; const T = this.TX = {}, sun = -2.2, sx0 = Math.cos(sun), sy0 = Math.sin(sun), shL = 4.2;
     const crowdC = [[214, 58, 50], [56, 104, 214], [238, 196, 64], [84, 166, 86], [236, 236, 228], [164, 86, 186], [238, 136, 56], [58, 60, 74], [40, 170, 190], [250, 120, 160]];
@@ -12523,7 +12528,7 @@ PetRT.arena = {
     else { const face = lat >= 0 ? 1 : -1; Pets.draw(x, u.k, 25, 40, face, mv, t, '', 0); ph = PetRT.petH(u.k); }
     x.restore(); x.setTransform(1, 0, 0, 1, 0, 0);
     const tint = (col, al) => { x.globalCompositeOperation = 'source-atop'; x.globalAlpha = al; x.fillStyle = col; x.fillRect(0, 0, 100, 84); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; };
-    // v188: 위는 밝고 아래는 어둡게 + 얇은 어두운 테두리 (멀리서도 또렷하게)
+    // v187: 위는 밝고 아래는 어둡게 + 얇은 어두운 테두리 (멀리서도 또렷하게)
     { const g = x.createLinearGradient(0, 10, 0, 82); g.addColorStop(0, 'rgba(255,250,235,.14)'); g.addColorStop(0.55, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(30,20,30,.22)'); x.globalCompositeOperation = 'source-atop'; x.fillStyle = g; x.fillRect(0, 0, 100, 84); x.globalCompositeOperation = 'source-over';
       if (!this.sc2) { this.sc2 = document.createElement('canvas'); this.sc2.width = 100; this.sc2.height = 84; this.sc2x = this.sc2.getContext('2d'); }
       const o = this.sc2x; o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, 100, 84); for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) o.drawImage(this.sc, ox, oy);
@@ -12603,7 +12608,7 @@ PetRT.arena = {
       x.globalCompositeOperation = 'source-over';
     } else {
       const P = PA_PET[U.k], col = PA_PAW[U.k] || skin, people = !PA_PAW[U.k], kind = P[0];
-      // v188: 테두리 · 그라데이션 음영 · 털 · 발바닥 (기기 해상도로 그려져 부드럽다)
+      // v187: 테두리 · 그라데이션 음영 · 털 · 발바닥 (기기 해상도로 그려져 부드럽다)
       const fin = ['penguin', 'dolphin', 'turtle'].includes(U.k), ol = 'rgba(28,18,16,.6)';
       const paw = (px, py, flip) => { x.save(); x.translate(px, py); x.scale(flip, 1); x.lineJoin = 'round'; x.lineWidth = 1.1 * s; x.strokeStyle = ol;
         if (people) { const g = x.createLinearGradient(-8 * s, 0, 8 * s, 0); g.addColorStop(0, paShade(skin, 1.08)); g.addColorStop(1, paShade(skin, 0.8)); x.fillStyle = g;

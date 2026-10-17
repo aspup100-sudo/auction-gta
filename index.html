@@ -156,7 +156,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #dayCard .h { font-size:22px; letter-spacing:6px; opacity:.85; margin-top:8px; }
 #toasts { position:fixed; left:50%; bottom:22%; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; align-items:center; z-index:45; pointer-events:none; }
 .toast { background:rgba(20,22,28,.95); border:1px solid var(--gold); color:var(--paper); padding:8px 16px; border-radius:20px; font-size:14px; opacity:0; transform:translateY(10px); transition:opacity .2s ease-out, transform .2s ease-out; }
-.toast.in { opacity:1; transform:none; }
+.toast.in { opacity:1; transform:none; } .toast small { display:block; font-size:12px; color:#e8c872; margin-top:2px; text-align:center; } .toast { text-align:center; }
 
 /* 대화창 */
 #dialog { position:fixed; left:50%; bottom:calc(16px - var(--vgap, 0px)); width:min(760px, calc(100% - 32px)); transform:translate(-50%, 130%); background:rgba(20,22,28,.96); border:2px solid var(--gold); border-radius:12px; padding:14px 16px; z-index:30; display:flex; gap:14px; transition:transform .22s ease-out; box-shadow:0 6px 0 rgba(0,0,0,.4); pointer-events:auto; }
@@ -4026,9 +4026,16 @@ const Toast = {
   show(msg, ms = 2200) {
     if (typeof Money !== 'undefined') Money.lastToast = { text: String(msg), at: performance.now() };
     const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
-    $('toasts').appendChild(el); Sound.play('toast');
+    $('toasts').appendChild(el); Sound.play('toast'); this.lastEl = el; el._at = performance.now(); el._ms = ms;
     requestAnimationFrame(() => el.classList.add('in'));
-    setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 250); }, ms);
+    el._t = setTimeout(() => this.hide(el), ms);
+  },
+  hide(el) { el.classList.remove('in'); setTimeout(() => el.remove(), 250); },
+  // 방금 뜬 알림이 아직 떠 있으면 그 밑에 한 줄로 붙인다 (알림이 여러 개 쌓이지 않게, 사용자 2026-10-17 '문구가 너무 많아서 지저분')
+  tail(msg, ms = 3200) {
+    const el = this.lastEl; if (!el || !el.isConnected || performance.now() - el._at > 1500) return this.show(msg, ms);
+    const s = document.createElement('small'); s.textContent = msg; el.appendChild(s);
+    clearTimeout(el._t); el._t = setTimeout(() => this.hide(el), Math.max(ms, el._ms));
   },
 };
 
@@ -4740,8 +4747,9 @@ const Net = {
     this.myBubble = { text, t: FEEL.chatBubbleTime }; this.pushLog(this.me, text, true); this.send({ t: 'chat', text }); Sound.play('blip', 1.6);
   },
   // 왼쪽 위 피드: 채팅과 플레이어 소식(낙찰·잔금·명도·임대·매도)을 한 상자에 (사용자 2026-10-14 '플레이어 현황이랑 채팅 하나로 묶자')
-  pushLog(name, text, me, news, local) {
+  pushLog(name, text, me, news, local, quiet) {
     const e = { name, text, me, news: !!news, money: news === 'money' ? 1 : 0, minus: news === 'money' && /−/.test(text) ? 1 : 0, at: Date.now() }; if (local) e.local = 1; // local: 나한테만 의미 있는 줄 (입장·퇴장·콕) — 놓친 채팅으로 넘겨주지 않는다
+    if (quiet) { const h = this.hist(); h.push(e); if (h.length > 300) h.splice(0, h.length - 300); this.histSave(); if (ChatHist.open_) ChatHist.render(); return; } // 피드엔 안 띄우고 지난 기록에만 (v176)
     this.log.push(e); if (this.log.length > 5) this.log.shift();
     const h = this.hist(); h.push(e); if (h.length > 300) h.splice(0, h.length - 300); this.histSave();
     const el = $('chatLines'); if (!el) return;
@@ -4755,7 +4763,7 @@ const Net = {
   histKey() { return 'chatHist' + (Live.on ? Live.ch : 'room'); },
   hist() { const k = this.histKey(); if (this._hk !== k) { this._hk = k; this._h = Store.get(k, []) || []; } return this._h; },
   histSave() { clearTimeout(this._hsT); this._hsT = setTimeout(() => Store.set(this.histKey(), this._h || []), 800); },
-  news(text) { if (!this.on || !text) return; this.pushLog(this.me, text, true, true); this.send({ t: 'news', text: String(text).slice(0, 80) }); }, // 내 현황을 채널 모두에게
+  news(text) { if (!this.on || !text) return; this.pushLog(this.me, text, true, true, false, true); /* v176: 내 소식은 친구 화면에만 뜨고 내 피드엔 지난 기록으로만 */ this.send({ t: 'news', text: String(text).slice(0, 80) }); }, // 내 현황을 채널 모두에게
   sendBid(c, bid) { this.send({ t: 'bid', caseId: c.id, bid }); },
   sendNoBid() { this.send({ t: 'nobid' }); },
   // 개찰에 넣을 친구 입찰(같은 사건만)
@@ -5871,10 +5879,12 @@ const Money = {
     const d = v - this.last; this.last = v; if (!d) return;
     const label = this.pend.shift();
     if (label) return this.put(label, d, v);
-    const t0 = performance.now(); setTimeout(() => { const t = this.lastToast; this.put(t && Math.abs(t.at - t0) < 1500 ? t.text : '현금 변동', d, v); }, 350);
+    const t0 = performance.now(); setTimeout(() => { const t = this.lastToast, hit = t && Math.abs(t.at - t0) < 1500; this.put(hit ? t.text : '현금 변동', d, v, hit); }, 350);
   },
-  put(label, d, v) {
-    Net.pushLog('내 돈', `${label} · ${d > 0 ? '+' : '−'}${fmtWon(Math.abs(d))} → ${v < 0 ? '−' : ''}${fmtWon(Math.abs(v))}`, true, 'money');
+  // v176: 같은 일을 알림(Toast)이 이미 보여 줬으면 피드에는 안 띄우고 지난 기록에만 남긴다 (사용자 2026-10-17 '올라오는 문구가 너무 많아서 지저분')
+  put(label, d, v, quiet) {
+    const line = () => Net.pushLog('내 돈', `${label} · ${d > 0 ? '+' : '−'}${fmtWon(Math.abs(d))} → ${v < 0 ? '−' : ''}${fmtWon(Math.abs(v))}`, true, 'money', false, quiet);
+    if (quiet) return line(); const t0 = performance.now(); setTimeout(() => { const t = this.lastToast; quiet = t && Math.abs(t.at - t0) < 1500; line(); }, 80);
   },
 };
 const Debt = {
@@ -7348,7 +7358,7 @@ const Mine = {
     const can = Math.max(0, Math.min(fee, this.lim, Math.round(State.cash))); this.lim -= can; this.saveLim(); /* 한도가 남아도 자금이 모자라면 모자란 만큼은 땅굴 빚 */
     if (can > 0) { Money.why(`${label || '합의금'} · 땅굴 한도 ${fmtWon(this.lim)} 남음`); State.cash -= can; HUD.setCash(State.cash); }
     const rest = fee - can;
-    if (!rest) setTimeout(() => { if (!this.open_) Toast.show(this.lim > 0 ? `⛏ 땅굴 한도 ${fmtWon(this.lim)} 남음 · 이만큼 더 내면 석탄 땅굴` : '⛏ 땅굴 한도를 다 썼다 · 다음에 돈 낼 일이 생기면 바로 석탄 땅굴', 3200); }, 1500);
+    if (!rest) setTimeout(() => { if (!this.open_) Toast.tail(this.lim > 0 ? `⛏ 땅굴 한도 ${fmtWon(this.lim)} 남음` : '⛏ 땅굴 한도 다 씀 · 한 번 더 내면 석탄 땅굴', 3200); }, 0); /* v176: 따로 띄우지 않고 방금 뜬 알림 밑에 한 줄 */
     if (rest > 0) {
       const D = this.debt || (this.debt = { owe: 0, got: 0, why: [], at: Date.now() });
       D.owe += rest; D.fill = Math.max(0, FEEL.mineAllow - this.lim); D.why.push(label || '합의금'); D.why = D.why.slice(-4); this.saveDebt();

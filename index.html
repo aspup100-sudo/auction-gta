@@ -3705,7 +3705,7 @@ const NavPick = {
     const z = Game.zone; if (!z || Game.scene !== 'zone' || z.spec.court) return;
     const nd = State.navDest, cur = nd ? (nd.place ? 'p:' + nd.place : 'g:' + nd.gu) : '';
     let auto = null; { const keep = State.navDest; State.navDest = null; try { auto = Nav.goalOf(); } catch (e) {} State.navDest = keep; }
-    const ICON = { court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', shop: '🛍️', casino: '🎲', site: '📍' };
+    const ICON = { forsale: '🏷️', court: '⚖️', office: '🏢', registry: '📜', bank: '🏦', savings: '🏦', center: '🏛️', agent: '🏠', home: '🏡', arcade: '🕹️', hospital: '🏥', shop: '🛍️', casino: '🎲', site: '📍' };
     const btn = (attr, cls, label) => `<button ${attr} class="${cls}">${label}</button>`;
     let h = `<h3><span>어디로 갈까요?<small>누르면 바로 안내</small></span><button class="nx" id="navPickX" title="닫기">✕</button></h3>`;
     if (auto && !cur) h += `<div class="sec">추천</div><div class="grid">${btn('data-auto="1"', 'rec', '★ ' + esc(auto.label))}${btn('data-free="1"', Nav.free ? 'sel' : '', '🚗 그냥 운전하기 <small>목적지 없이</small>')}</div>`;
@@ -6708,7 +6708,7 @@ function update(dt) {
       if (!frozen) checkEdgeWalk(dt, z, p, ix, iy);
       const nearCar = !CarSwap.lent && Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
-      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'buddy') Pets.tipBuddy(tg); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
+      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'forsale') MyHome.visit(tg); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'buddy') Pets.tipBuddy(tg); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
       const ride = !frozen && Net.on ? Ride.near() : null; // 친구가 운전 중인 차 옆이면 F로 같이 타기 (운전자 포함 최대 5명, 사용자 2026-10-15)
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
       const sw = !frozen && !ride && !nearCar ? CarSwap.near() : null; // 세워 둔 친구 차 · 길가 차 (v138)
@@ -6915,7 +6915,7 @@ function drawFlag(c, X, Y, t, pl) {
   if (State.visited[pl.id]) { c.strokeStyle = '#7fe08a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(X + 3, Y - 13); c.lineTo(X + 5, Y - 11); c.lineTo(X + 9, Y - 16); c.stroke(); }
 }
 function drawPlaceIcon(c, X, Y, kind) {
-  const ICON = { court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'], arcade: ['#8a3ac0', '겜'], hospital: ['#e0405a', '+'], shop: ['#d94a8a', '숍'], casino: ['#b01e3a', '카'] }[kind]; if (!ICON) return;
+  const ICON = { forsale: ['#2a7a5a', '매'], court: ['#0f3358', '법'], office: ['#cdae70', '경'], registry: ['#0f3358', '등'], center: ['#1b5ea6', '민'], bank: ['#2a8a4a', '₩'], savings: ['#7a5a2a', '저'], agent: ['#b06a2a', '중'], home: ['#d08a3a', '집'], arcade: ['#8a3ac0', '겜'], hospital: ['#e0405a', '+'], shop: ['#d94a8a', '숍'], casino: ['#b01e3a', '카'] }[kind]; if (!ICON) return;
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.arc(X + 1, Y + 1, 8, 0, 7); c.fill();
   c.fillStyle = ICON[0]; c.beginPath(); c.arc(X, Y, 8, 0, 7); c.fill(); c.strokeStyle = '#fff'; c.lineWidth = 1; c.stroke();
   c.fillStyle = '#fff'; c.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ICON[1], X, Y + 0.5); c.textBaseline = 'alphabetic';
@@ -6976,6 +6976,7 @@ function promptWord(tg) {
   if (tg.kind === 'swap') return tg.label;
   if (tg.kind === 'obj') return tg.label || (tg.obj && tg.obj.label) || '사용';
   if (tg.kind === 'site') return Game.driving ? '물건 보기' : '들어가기';
+  if (tg.kind === 'forsale') return '매물 보기';
   return '들어가기';
 }
 function drawPrompt(t) {
@@ -7069,7 +7070,7 @@ const Radar = {
       const v = z.at(Math.floor(ptx + (xx - S / 2) / scale), Math.floor(pty + (yy - S / 2) / scale));
       if (v === T.ROAD) { x.fillStyle = '#7d8b84'; x.fillRect(xx, yy, 2, 2); } else if (v === T.ALLEY) { x.fillStyle = '#4c5d55'; x.fillRect(xx, yy, 2, 2); } else if (v === T.BLD) { x.fillStyle = '#26352d'; x.fillRect(xx, yy, 2, 2); }
     }
-    const ICON = { court: '#ffffff', bank: '#2ad06a', savings: '#c8a060', center: '#5aa0ff', agent: '#f0a040', registry: '#9ab0ff', office: '#cdae70', site: '#ff5a4a', shop: '#ff7ac0', home: '#f0c070', arcade: '#c070ff', hospital: '#ff6070', casino: '#ff4060' };
+    const ICON = { forsale: '#5ad0a0', court: '#ffffff', bank: '#2ad06a', savings: '#c8a060', center: '#5aa0ff', agent: '#f0a040', registry: '#9ab0ff', office: '#cdae70', site: '#ff5a4a', shop: '#ff7ac0', home: '#f0c070', arcade: '#c070ff', hospital: '#ff6070', casino: '#ff4060' };
     for (const pl of z.places) {
       let dx = (pl.door.tx - ptx) * scale, dy = (pl.door.ty - pty) * scale; const d = Math.hypot(dx, dy), R = S / 2 - 7;
       if (d > R) { dx = dx / d * R; dy = dy / d * R; }
@@ -9425,11 +9426,11 @@ const ShopPromo = {
  * 저장: Store 'myHome'+채널 {type, z, b(건물 번호), name, price, at}. 친구 화면에는 pos.hm [z, b, type]으로 'OO네 집' 이름표가 뜬다.
  * 혼자 하기는 원래대로 (내 집에서 자고 일어나야 날짜가 넘어가니까). */
 const HOME_TYPES = [
-  { id: 'oneroom', name: '원룸', price: 5000e4, minA: 9, maxA: 30, names: ['청춘원룸', '햇살하우스', '새봄원룸'], unit: n => `${2 + n % 3}0${1 + n % 4}호` },
-  { id: 'villa', name: '빌라', price: 1.2e8, minA: 12, maxA: 40, names: ['푸른빌라', '은행나무빌라', '다솜빌라'], unit: n => `${1 + n % 4}0${1 + n % 3}호` },
-  { id: 'apt', name: '아파트', price: 3e8, minA: 25, maxA: 999, names: ['푸른숲아파트', '한빛마을아파트', '느티마을아파트'], unit: n => `${101 + n % 5}동 ${7 + n % 12}0${1 + n % 4}호` },
-  { id: 'house', name: '단독주택', price: 6e8, minA: 16, maxA: 60, names: ['마당 있는 단독주택', '2층 단독주택', '정원 단독주택'], unit: () => '' },
-  { id: 'pent', name: '펜트하우스', price: 12e8, minA: 30, maxA: 999, names: ['스카이팰리스', '구름위 레지던스', '하늘정원타워'], unit: () => '꼭대기층' },
+  { id: 'oneroom', desc: '방 하나에 작은 주방이 붙어 있어요. 혼자 살기 딱 좋고, 역이 가까워요.', name: '원룸', price: 5000e4, minA: 9, maxA: 30, names: ['청춘원룸', '햇살하우스', '새봄원룸'], unit: n => `${2 + n % 3}0${1 + n % 4}호` },
+  { id: 'villa', desc: '방 두 개에 거실이 있는 3층짜리 빌라예요. 엘리베이터는 없지만 관리비가 싸요.', name: '빌라', price: 1.2e8, minA: 12, maxA: 40, names: ['푸른빌라', '은행나무빌라', '다솜빌라'], unit: n => `${1 + n % 4}0${1 + n % 3}호` },
+  { id: 'apt', desc: '방 세 개, 화장실 두 개. 단지 안에 놀이터랑 관리사무소가 있어요.', name: '아파트', price: 3e8, minA: 25, maxA: 999, names: ['푸른숲아파트', '한빛마을아파트', '느티마을아파트'], unit: n => `${101 + n % 5}동 ${7 + n % 12}0${1 + n % 4}호` },
+  { id: 'house', desc: '마당이 딸린 2층 집이에요. 옥상에서 고기 구워 먹어도 아무도 뭐라 안 해요.', name: '단독주택', price: 6e8, minA: 16, maxA: 60, names: ['마당 있는 단독주택', '2층 단독주택', '정원 단독주택'], unit: () => '' },
+  { id: 'pent', desc: '맨 꼭대기 층 전체가 한 집이에요. 거실 창으로 한강까지 보여요.', name: '펜트하우스', price: 12e8, minA: 30, maxA: 999, names: ['스카이팰리스', '구름위 레지던스', '하늘정원타워'], unit: () => '꼭대기층' },
 ];
 const MyHome = {
   key() { return 'myHome' + (Live.ch || 0); },
@@ -9448,7 +9449,7 @@ const MyHome = {
   },
   // 이 구역 매물: 집 종류마다 하나씩 (구역·종류로 정해서 다시 와도 같은 건물)
   listings() {
-    const z = Game.zone; if (!z) return []; const used = new Set(z.places.map(p => p.building)), hz = [...String(z.id)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+    const z = Game.zone; if (!z) return []; const used = new Set(z.places.filter(p => p.id !== 'forsale').map(p => p.building)), hz = [...String(z.id)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
     return HOME_TYPES.map((T, i) => { const R = makeRng((hz + i * 977 + (Live.ch || 0) * 31) >>> 0), near = [R.next() * z.W * 0.8 + z.W * 0.1, R.next() * z.H * 0.8 + z.H * 0.1];
       let best = null, bd = 1e9; for (const b of z.buildings) { const A = b.w * b.h; if (used.has(b.id) || b.place || A < T.minA || A > T.maxA) continue; const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]); if (d < bd && z.doorOf(b)) { bd = d; best = b; } }
       if (!best) return null; used.add(best.id); const n = (R.next() * 1000) | 0, unit = T.unit(n); return { T, b: best.id, name: `${T.names[n % T.names.length]}${unit ? ' ' + unit : ''}`, price: T.price }; }).filter(Boolean);
@@ -9466,14 +9467,44 @@ const MyHome = {
     if (pick === 'mine') { await this.mine(); return 'done'; }
     return pick === 'inv' ? 'inv' : 'done';
   },
+  // v179 (사용자 2026-10-17 '이거 매물 볼 수 있어?'): 돈이 모자라도 매물은 다 눌러서 구경한다. 지도에 표시하고 직접 가서 볼 수도 있다
   async buy() {
-    const L = this.listings(), sp = this.spendable(); if (!L.length) { await Dialog.say([say('agent', '지금 이 동네엔 나온 집이 없네요. 다른 구 부동산에도 가 봐요.')]); return; }
-    const pick = await Dialog.say([say('agent', `이 동네 매물이에요. 경매 밑천은 못 쓰고, 번 돈으로만 살 수 있어요. 지금 번 돈 ${fmtWon(sp)}.`)],
-      [...L.map((x, i) => ({ label: `${x.T.name} · ${x.name} <small>${fmtWon(x.price)}</small>`, value: 'h' + i, disabled: x.price > sp })), { label: '다음에 올게요', value: null }]);
-    if (!pick) return; const x = L[+pick.slice(1)]; if (!x) return;
+    for (;;) {
+      const L = this.listings(), sp = this.spendable(); if (!L.length) { await Dialog.say([say('agent', '지금 이 동네엔 나온 집이 없네요. 다른 구 부동산에도 가 봐요.')]); return; }
+      const pick = await Dialog.say([say('agent', `이 동네 매물이에요. 눌러서 구경해 봐요. 사는 건 경매로 번 돈으로만 돼요. 지금 번 돈 ${fmtWon(sp)}.`)],
+        [...L.map((x, i) => ({ label: `${x.T.name} · ${x.name} <small>${fmtWon(x.price)}${x.price > sp ? ' · 구경만' : ''}</small>`, value: 'h' + i })), { label: '다음에 올게요', value: null }]);
+      if (!pick) return; const x = L[+pick.slice(1)]; if (!x) return;
+      const r = await this.detail(x, false); if (r !== 'back') return;
+    }
+  },
+  where(x) { const z = Game.zone, b = z && z.buildings[x.b]; const dong = (z && z.spec && z.spec.dongLabel ? z.spec.dongLabel[0] : (z ? z.name : '')).replace(/\s/g, ''); return { dong, b }; },
+  async detail(x, atDoor) {
+    const sp = this.spendable(), can = sp >= x.price && !this.get(), { dong } = this.where(x);
+    const money = this.get() ? '이미 내 집이 있어서 지금은 구경만 할 수 있어요. 팔고 나면 살 수 있어요.' : can ? `계약하면 번 돈이 ${fmtWon(sp - x.price)} 남아요.` : `지금 번 돈으로는 ${fmtWon(x.price - sp)}이 모자라요. 경매로 더 벌어서 와요.`;
+    const who = atDoor ? { name: '매물', text: `${x.T.name} · ${x.name} (${dong}). ${x.T.desc} 값은 ${fmtWon(x.price)}. ${money}` } : say('agent', `${x.T.name} · ${x.name}, ${dong}에 있어요. ${x.T.desc} 값은 ${fmtWon(x.price)}. ${money}`);
+    const opts = can ? [{ label: '✍️ 계약하기', value: 'buy' }] : [];
+    if (!atDoor) opts.push({ label: '📍 직접 가서 볼게요 (지도에 표시)', value: 'go' });
+    opts.push(atDoor ? { label: '그냥 둘러보고 갈게요', value: null } : { label: '다른 매물 볼래요', value: 'back' });
+    if (opts.length < 3 && !atDoor) opts.push({ label: '다음에 올게요', value: null });
+    const pick = await Dialog.say([who], opts);
+    if (pick === 'go') { this.mark(x); return 'done'; }
+    if (pick === 'buy') { await this.contract(x); return 'done'; }
+    return pick;
+  },
+  // 매물 건물을 지도에 표시: 그 앞에 가면 '매물 보기' (game.js tg.kind 'forsale')
+  mark(x) {
+    const z = Game.zone, b = z.buildings[x.b], door = b && z.doorOf(b); if (!door) return;
+    for (let i = z.places.length - 1; i >= 0; i--) if (z.places[i].id === 'forsale') z.places.splice(i, 1);
+    z.places.push({ id: 'forsale', kind: 'forsale', name: `매물 · ${x.T.name} ${x.name}`, building: b.id, door, listing: x }); State.targetPlace = 'forsale'; z.chunks && z.chunks.clear();
+    Toast.show(`${x.name}을(를) 지도에 표시했어요. 노란 화살표를 따라가 봐요.`);
+  },
+  async visit(pl) { if (Game.busy || !pl.listing) return; Game.busy = true; try { await this.detail(pl.listing, true); } finally { Game.busy = false; } },
+  async contract(x) {
+    const sp = this.spendable();
     const ok = await Dialog.say([say('agent', `${x.name} (${x.T.name}), ${fmtWon(x.price)}. 계약하면 번 돈이 ${fmtWon(sp - x.price)} 남아요. 도장 찍을까요?`)], [{ label: '✍️ 계약하기', value: 'y' }, { label: '조금 더 생각해 볼게요', value: null }]);
     if (ok !== 'y') return; if (this.get()) return; if (this.spendable() < x.price) { Sound.play('deny'); Toast.show('번 돈이 모자라요.'); return; }
     if (typeof Money !== 'undefined') Money.why(`내 집 매매 (${x.T.name})`); State.cash -= x.price; HUD.setCash(State.cash); Sound.play('coins');
+    { const z = Game.zone; for (let i = z.places.length - 1; i >= 0; i--) if (z.places[i].id === 'forsale') z.places.splice(i, 1); }
     Store.set(this.key(), { type: x.T.id, z: Game.zone.id, b: x.b, name: x.name, price: x.price, at: Date.now() }); if (Live.on) Live.save(); this.sync(true); Game.zone.chunks.clear();
     State.targetPlace = 'myhome'; if (typeof Net !== 'undefined' && Net.news) Net.news(`${Net.me || '누군가'}님이 ${x.T.name}을(를) 샀다! 🏡`);
     await Dialog.say([say('agent', `축하해요! 이제 ${x.name}이(가) 사장님 집이에요. 지도에 '내 집'으로 표시해 뒀어요.`)]);

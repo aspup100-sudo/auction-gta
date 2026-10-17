@@ -7998,7 +7998,7 @@ const Mine = {
 
 /* v171 (사용자 2026-10-16 '나올 때 땅굴 출구가 만들어져서 나오는 걸로'): 떨어진 자리에 출구 구멍이 뚫리고 사다리로 기어 나온다. 구멍은 그 구에 남는다 (이 기기에서만, 최근 12개) */
 const MineExit = {
-  DUR: 2600, list: [], rise: null,
+  DUR: 2600, LIFE: 180, FADE: 30, list: [], rise: null, // 출구는 3분 뒤 30초에 걸쳐 흐려지며 사라진다 (사용자 2026-10-17)
   add(z, x, y) {
     x = Math.round(x); y = Math.round(y) + 3; const now = performance.now();
     const hd = Math.random() < 0.5 ? -1 : 1, ent = { z, x, y, t: now, s: Math.floor(Math.random() * 1e4), hx: x + hd * (16 + Math.round(Math.random() * 6)), hy: y - 1 + Math.round(Math.random() * 4), hd, hr: hd * (2.2 + Math.random()) };
@@ -8009,9 +8009,11 @@ const MineExit = {
   },
   clear() { this.rise = null; },
   draw(c, x0, y0, x1, y1) {
-    const zid = Game.zone && Game.zone.id; if (!zid) return; const now = performance.now();
+    const zid = Game.zone && Game.zone.id; if (!zid) return; const now = performance.now(), end = (this.LIFE + this.FADE) * 1000;
+    if (this.list.length && now - this.list[0].t > end) this.list = this.list.filter(e => now - e.t < end || (this.rise && this.rise.e === e));
     for (const e of this.list) {
       if (e.z !== zid || e.x < x0 - 30 || e.x > x1 + 30 || e.y < y0 - 30 || e.y > y1 + 30) continue;
+      const fade = Math.min(1, Math.max(0, (end - (now - e.t)) / (this.FADE * 1000))); c.save(); c.globalAlpha = fade;
       const X = e.x, Y = e.y, r = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(X + a, Y + b, w, h); }, H = n => ((Math.sin(e.s * 12.9 + n * 78.2) * 43758.5) % 1 + 1) % 1;
       // 흩어진 흙 · 깨진 바닥
       for (let i = 0; i < 16; i++) { const a = H(i) * 6.28, d = 11 + H(i + 20) * 8; r(Math.round(Math.cos(a) * d), Math.round(Math.sin(a) * d * 0.6), 2 + (i % 2), 1 + (i % 3 === 0), i % 3 ? '#6e4e2c' : '#55524e'); }
@@ -8027,6 +8029,7 @@ const MineExit = {
       if (now - e.t > this.DUR * 0.9) this.helmet(c, e.hx, e.hy, e.hr, true); // 벗어 던진 광부 헬멧 (바닥에 뒹군다)
       // 갓 뚫린 구멍에서 피어오르는 먼지
       const age = (now - e.t) / 1000; if (age < 4) { const n = 6; for (let i = 0; i < n; i++) { const ph = (age * 0.7 + i / n) % 1, al = (1 - ph) * Math.max(0, 1 - age / 4) * 0.5; c.fillStyle = `rgba(150,128,100,${al.toFixed(2)})`; c.beginPath(); c.arc(X + Math.sin(i * 2.3 + age) * 6, Y - 4 - ph * 22, 3 + ph * 6, 0, 7); c.fill(); } }
+      c.restore();
     }
   },
   // 광부 헬멧 (노란 안전모 + 앞 랜턴). ground: 바닥에 떨어져 뒹구는 모양

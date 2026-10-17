@@ -11358,11 +11358,13 @@ const PetBattle = {
   quit(now) {
     const B = this.B; if (!B) return; if (B.over) return this.close();
     if (B.voting || B.apick) { if (B.mode === 'net') Net.send({ t: 'pb', k: 'quit', to: B.foe }); return this.end(B.me === 'a' ? 'b' : 'a', '배틀을 그만뒀어요.'); }
-    if (!B.qArm) { B.qArm = Date.now(); this.render(); return; } // 한 번 더 누르면 항복
+    if (!B.qArm || Date.now() - B.qArm >= 4000) { B.qArm = Date.now(); this.render(); return; } // 4초 안에 한 번 더 누르면 항복
     if (B.mode === 'net') Net.send({ t: 'pb', k: 'quit', to: B.foe });
     this.end(B.me === 'a' ? 'b' : 'a', '항복했다…');
   },
-  esc() { const B = this.B; if (!B) return; if (B.over) this.close(); else this.quit(); },
+  esc() { const B = this.B; if (!B) return; if (B.over) return this.close();
+    if (B.rtMode === 'arena' && !B.apick && !B.voting) { PetRT.arena.unlock(); Toast.show('마우스를 풀었어요. 화면을 누르면 다시 둘러봐요 · 그만두려면 🏳 항복 버튼'); return; } // v197: 콜로세움에서 Esc는 마우스 풀기만 (사용자 'esc 누르니까 멈추는데')
+    this.quit(); },
   close() { if (!this.open_) return; PetRT.arena.unlock(); const K = this.kneel; this.kneel = null; if (K) setTimeout(() => this.beg(K), 250); this.open_ = false; this.B = null; this.sayNext = null; clearTimeout(this.sayT); clearInterval(this.tmr); Game.formOpen = false; $('pbWin').classList.remove('in'); cancelAnimationFrame(this.raf); Sound.play('flip'); },
   // 상대가 사라지거나 너무 오래 안 고르면 / 내가 30초 안 고르면 아무거나
   tick() {

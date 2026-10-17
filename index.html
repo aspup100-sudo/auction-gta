@@ -6945,11 +6945,12 @@ function drawRoom(t) {
 function drawGameTags(r) {
   if (!['arcade', 'casino'].includes(r.place.kind)) return;
   if (!r._tags) { const objs = r.objs.filter(o => ['arcade', 'holjjak', 'casino'].includes(o.type)).sort((a, b) => a.ty - b.ty || a.tx - b.tx); const out = [];
-    for (const o of objs) { const g = out[out.length - 1]; if (g && g.ty === o.ty && g.label === o.label && o.tx === g.x1 + 1 && o.type !== 'arcade') g.x1 = o.tx; else out.push({ ty: o.ty, x0: o.tx, x1: o.tx, label: o.label }); }
+    for (const o of objs) { const g = out[out.length - 1]; if (g && g.ty === o.ty && g.label === o.label && o.tx <= g.x1 + (o.type === 'arcade' ? 2 : 1)) g.x1 = o.tx; /* 게임기는 한 칸 띄워 놓여서 2칸까지 (사용자 2026-10-17 '너무 꽉 차 보여': 같은 게임 여러 대는 간판 하나) */ else out.push({ ty: o.ty, x0: o.tx, x1: o.tx, label: o.label }); }
     r._tags = out; }
   const cas = r.place.kind === 'casino'; /* 카지노는 딜러가 테이블 뒤에 서 있어서 테이블 아래에, 게임기는 촘촘해서 작은 글씨로 위에 */
   ctx.save(); ctx.font = `bold ${cas ? 6 : 5}px "IBM Plex Sans KR", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const g of r._tags) { const x = (g.x0 + g.x1 + 1) * TILE / 2, y = cas ? (g.ty + 1) * TILE + 4 : g.ty * TILE - 3, w = ctx.measureText(g.label).width + 4;
+    if (!cas && g.x1 > g.x0) { ctx.fillStyle = 'rgba(143,240,255,.35)'; ctx.fillRect(g.x0 * TILE + 3, y, (g.x1 + 1 - g.x0) * TILE - 6, 1); } /* 여러 대 묶음: 간판 양옆으로 가는 줄 */
     ctx.fillStyle = 'rgba(10,8,20,.72)'; ctx.fillRect(Math.round(x - w / 2), y - 4, Math.round(w), 8); ctx.fillStyle = r.place.kind === 'casino' ? '#ffd84a' : '#8ff0ff'; ctx.fillText(g.label, Math.round(x), y + 0.5); }
   ctx.restore();
 }

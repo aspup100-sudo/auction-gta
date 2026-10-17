@@ -868,6 +868,9 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .winOpen:not(.chatOpen) #chatLines div:not(:nth-last-child(-n+2)) { display:none; } /* 상점·게임 창 위에서는 피드가 창을 덜 가리게 (v149) */
 #chatLog #chatLines { background:none; padding:0; margin:0; border-radius:0; } /* 빈 피드 상자가 게임 창 위에 줄처럼 보이던 것 */
 #pbWin { left:0; top:0; right:0; bottom:0; z-index:72; background:rgba(8,10,16,.82); display:flex; align-items:center; justify-content:center; font-family:var(--ui); } #pbWin:not(.in) { transform:scale(1.06); }
+.lsChip { position:absolute; right:10px; top:46%; z-index:6; display:flex; align-items:center; gap:6px; padding:5px 9px; border-radius:999px; background:rgba(10,12,20,.62); color:#fff; font:700 12px var(--ui); pointer-events:auto; } /* 둘러보기 감도 (v195) */
+.lsChip input { width:86px; accent-color:#ffd24a; margin:0; } .lsChip b { min-width:30px; color:#ffd24a; font-weight:800; }
+@media (pointer:coarse) { .lsChip { top:34%; } .lsChip input { width:72px; } }
 #evoWin { left:0; top:0; right:0; bottom:0; z-index:84; background:radial-gradient(ellipse at 50% 55%, #26305a 0%, #0b0e1c 60%, #04050a 100%); font-family:var(--ui); color:#fff; } /* 펫 진화 (v194) */
 #evoWin canvas { position:absolute; left:0; top:0; width:100%; height:100%; image-rendering:pixelated; }
 #evoWin .evoTx { position:absolute; left:16px; right:16px; top:calc(10% + env(safe-area-inset-top)); text-align:center; font-size:clamp(20px, 5vw, 34px); font-weight:800; text-shadow:0 2px 0 #000, 0 0 18px rgba(255,220,120,.6); }
@@ -7616,7 +7619,7 @@ const Mine = {
       <div class="mnLift"><button class="mnLiftB" data-d="-1"><i>🛗</i><b>위층</b></button><button class="mnLiftB" data-d="1"><i>🛗</i><b>아래층</b></button></div>
       <button class="mnCartB mnCartR">🛒 광차 타기</button>
       <button class="mnDig" id="mnDig"><i>⛏</i><b>캐기</b><small>꾹 누르면 계속</small></button>
-      <p class="mnKeys">W S 앞뒤 · A D 옆걸음 · 마우스로 위아래 360° 둘러보기 · 클릭/Space 꾹 캐기 (많이 숙이면 바닥) · R 위층 · V 아래층 · C 광차 · M 지도</p>
+      <p class="mnKeys">W S 앞뒤 · A D 옆걸음 · 마우스로 위아래 360° 둘러보기 · 클릭/Space 꾹 캐기 (많이 숙이면 바닥) · R 위층 · V 아래층 · C 광차 · M 지도 · [ ] 감도</p>
       <div class="mnBig"><div class="mbIn"><div class="mbHead"><b>땅굴 지도</b><span class="mbInfo"></span><button class="mbX" aria-label="지도 닫기">✕</button></div>
       <canvas id="mnBigCv"></canvas>
       <div class="mbFoot"><span class="mbLeg"><i class="me"></i>나 <i class="ot"></i>다른 광부 <i class="lp"></i>등 <i class="ev"></i>엘리베이터 <i class="tp"></i>마지막으로 판 곳</span><span class="mbZ"><button data-z="-1" aria-label="작게">－</button><button data-z="0">내 위치</button><button data-z="1" aria-label="크게">＋</button></span></div></div></div>
@@ -7639,11 +7642,11 @@ const Mine = {
       }
       cv.setPointerCapture(e.pointerId); look.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now(), mv: 0 });
     };
-    cv.onmousemove = e => { if (document.pointerLockElement !== cv || this.ph !== 'play' || this.bigOn) return; this.ang += (e.movementX || 0) * 0.0032; this.pi = Math.max(-1.45, Math.min(1.45, (this.pi || 0) - (e.movementY || 0) * 0.0032)); this.tr = null; this.lastAct = performance.now(); };
+    cv.onmousemove = e => { if (document.pointerLockElement !== cv || this.ph !== 'play' || this.bigOn) return; const ks = 0.0032 * LookSens.k(); this.ang += (e.movementX || 0) * ks; this.pi = Math.max(-1.45, Math.min(1.45, (this.pi || 0) - (e.movementY || 0) * ks)); this.tr = null; this.lastAct = performance.now(); };
     cv.onmouseup = () => { if (document.pointerLockElement === cv) this.hold = false; };
-    cv.onpointermove = e => { const q = look.get(e.pointerId); if (!q || this.ph !== 'play' || this.bigOn) return; const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; q.mv += Math.abs(dx) + Math.abs(dy); if (q.mv > 6) { this.ang += dx * MINE_LOOK; this.pi = Math.max(-1.45, Math.min(1.45, (this.pi || 0) - dy * MINE_LOOK)); /* v192: 위아래도 끝까지 (바로 위 천장·발밑까지) */ this.tr = null; this.lastAct = performance.now(); this.lookOff(); } };
+    cv.onpointermove = e => { const q = look.get(e.pointerId); if (!q || this.ph !== 'play' || this.bigOn) return; const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; q.mv += Math.abs(dx) + Math.abs(dy); if (q.mv > 6) { const ks = MINE_LOOK * LookSens.k(); this.ang += dx * ks; this.pi = Math.max(-1.45, Math.min(1.45, (this.pi || 0) - dy * ks)); /* v192: 위아래도 끝까지 (바로 위 천장·발밑까지) */ this.tr = null; this.lastAct = performance.now(); this.lookOff(); } };
     cv.onpointerup = cv.onpointercancel = e => { const q = look.get(e.pointerId); look.delete(e.pointerId); if (q && e.type === 'pointerup' && q.mv <= 6 && performance.now() - q.t < 350 && this.ph === 'play') this.swing(); };
-    el.querySelector('.mnCartB').onclick = () => this.cartToggle();
+    el.querySelector('.mnCartB').onclick = () => this.cartToggle(); LookSens.chip(el); // v195 둘러보기 감도
     for (const b of el.querySelectorAll('.mnLiftB')) b.onclick = e => { e.stopPropagation(); this.liftGo(+b.dataset.d); };
     $('mnUp').onclick = () => { if (this.ph === 'play' && this.debt && this.debt.more) { this.hold = false; this.finish(false); } };
     $('mnMap').onpointerdown = $('mnMapB').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); this.bigMap(true); };
@@ -12370,7 +12373,7 @@ const PetVote = {
 PB_MODES.push('arena');
 PB_MODES.splice(0, PB_MODES.length, 'arena', 'dodge', 'sumo'); // v188 (사용자 2026-10-17 '지금 배틀 콜로세움, 피구 빼고 다 없애자' → '아 펫 스모는 나두자'): 다른 게임 코드는 남겨 두고 고르기에서만 뺀다
 PB_MODE_KO.arena = '🏟️ 콜로세움';
-PB_MODE_HELP.arena = ['WASD 이동 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 · 우클릭/K 특수기 · V 1인칭/3인칭. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 공격·특수 버튼, 시점 버튼으로 1인칭/3인칭! 상대 팀 둘 다 쓰러뜨리면 이겨요.'];
+PB_MODE_HELP.arena = ['WASD 이동 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 · 우클릭/K 특수기 · V 1인칭/3인칭 · [ ] 마우스 감도. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 공격·특수 버튼, 시점 버튼으로 1인칭/3인칭! 상대 팀 둘 다 쓰러뜨리면 이겨요.'];
 PB_ACT_KO.arena = '공격';
 PB_APT.arena = ['펫 + 내 실력', b => b[0] * 0.3 + b[1] * 0.45 + b[3] * 0.25];
 PB_ART.arena = ['#e8b070', '#5a2a18'];
@@ -12602,14 +12605,15 @@ PetRT.arena = {
     const cv = $('pbCv'); if (!cv) return; const me = this;
     for (const [id, key] of [['pbAct', 'a'], ['pbJmp', 's']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); me.hold[key] = true; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => { me.hold[key] = false; b.classList.remove('dn'); }; }
     const vb = $('pbView'); if (vb) vb.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); me.fp = !me.fp; Store.set('arenaFP', me.fp); Sound.play('click'); }; // v192: 폰에서 1인칭/3인칭
+    LookSens.chip(cv.parentElement); // v195 둘러보기 감도
     let tid = null, tx = 0, ty = 0;
     cv.onpointerdown = e => {
       if (e.pointerType === 'touch') { tid = e.pointerId; tx = e.clientX; ty = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
       if (document.pointerLockElement !== cv) { const B = PetBattle.B; if (B && B.G && B.G.ph !== 'done' && cv.requestPointerLock) { try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (er) {} } return; }
       me.mb[e.button] = true; e.preventDefault();
     };
-    cv.onpointermove = e => { if (e.pointerType === 'touch') { if (e.pointerId === tid) { me.look.dx += (e.clientX - tx) * 0.009; me.look.dy += (e.clientY - ty) * 0.007; tx = e.clientX; ty = e.clientY; } return; }
-      if (document.pointerLockElement === cv || e.buttons) { me.look.dx += (e.movementX || 0) * 0.0028; me.look.dy += (e.movementY || 0) * 0.0028; } }; // 잠금이 안 돼도 끌면 둘러본다
+    cv.onpointermove = e => { if (e.pointerType === 'touch') { if (e.pointerId === tid) { const ks = LookSens.k(); me.look.dx += (e.clientX - tx) * 0.009 * ks; me.look.dy += (e.clientY - ty) * 0.007 * ks; tx = e.clientX; ty = e.clientY; } return; }
+      if (document.pointerLockElement === cv || e.buttons) { const ks = 0.0028 * LookSens.k(); me.look.dx += (e.movementX || 0) * ks; me.look.dy += (e.movementY || 0) * ks; } }; // 잠금이 안 돼도 끌면 둘러본다
     cv.onpointerup = cv.onpointercancel = e => { if (e.pointerType === 'touch') { if (e.pointerId === tid) tid = null; return; } me.mb[e.button] = false; };
     cv.oncontextmenu = e => e.preventDefault();
     cv.onmousedown = e => { if (document.pointerLockElement === cv) { me.mb[e.button] = true; e.preventDefault(); } };
@@ -13649,6 +13653,26 @@ Pets.step = function (key, ox, oy, t, kind) { // 두 배로 큰 펫은 주인과
 // 배틀 창을 닫으면 진화 장면 (진 쪽이 비는 동안은 기다렸다가)
 PetBattle.close0 = PetBattle.close;
 PetBattle.close = function () { const was = this.open_, K = this.kneel; this.close0(); if (was && PetEvo.pend) setTimeout(() => PetEvo.show(), K && !K.won ? 4800 : 450); };
+
+/* ===================== 둘러보기 감도 (v195, 사용자 2026-10-17 '360도 하는 거, 감도 조절할 수 있게 마우스') =====================
+ * 땅굴 · 콜로세움에서 마우스(그리고 손가락 끌기)로 둘러보는 빠르기. Store 'lookSens' ×0.2 ~ ×3 (기본 ×1).
+ * 화면 오른쪽 '🖱 감도' 막대로 바꾸거나, 아무 때나 [ ] 키 (마우스 잠금 중에도). */
+const LookSens = {
+  MIN: 0.2, MAX: 3,
+  k() { const v = +Store.get('lookSens', 1); return Number.isFinite(v) ? Math.max(this.MIN, Math.min(this.MAX, v)) : 1; },
+  set(v) { v = Math.round(Math.max(this.MIN, Math.min(this.MAX, v)) * 10) / 10; Store.set('lookSens', v); for (const el of document.querySelectorAll('.lsChip')) this.sync(el); return v; },
+  sync(el) { const v = this.k(); el.querySelector('input').value = v; el.querySelector('b').textContent = '×' + v.toFixed(1); },
+  chip(parent) {
+    if (!parent) return; let el = parent.querySelector(':scope > .lsChip');
+    if (!el) { el = document.createElement('div'); el.className = 'lsChip'; el.innerHTML = `<span>🎯 감도</span><input type="range" min="${this.MIN}" max="${this.MAX}" step="0.1" aria-label="둘러보기 감도"><b></b>`; parent.appendChild(el);
+      for (const ev of ['pointerdown', 'mousedown', 'touchstart', 'click']) el.addEventListener(ev, e => e.stopPropagation());
+      const inp = el.querySelector('input'); inp.oninput = () => this.set(+inp.value); inp.onchange = () => { this.set(+inp.value); inp.blur(); Sound.play('click'); }; inp.onkeydown = e => e.stopPropagation(); }
+    this.sync(el);
+  },
+  on() { return (typeof Mine !== 'undefined' && Mine.open_) || (typeof PetBattle !== 'undefined' && PetBattle.B && PetBattle.B.rtMode === 'arena'); },
+};
+window.addEventListener('keydown', e => { if ((e.key !== '[' && e.key !== ']') || !LookSens.on() || /INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) return;
+  const v = LookSens.set(LookSens.k() + (e.key === ']' ? 0.1 : -0.1)); Toast.show(`🎯 둘러보기 감도 ×${v.toFixed(1)}  ([ 느리게 · ] 빠르게)`); e.preventDefault(); }, true);
 
 /* ===================== 게임장 가위바위보 · 카지노 홀짝 (사용자 2026-10-15) =====================
  * 가위바위보: 건대 게임장 기계에서 3판 2선승. 같은 게임장에 있는 친구(같이 하기·채널)에게 신청하거나 사장 장우준이랑 한다.

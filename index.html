@@ -5383,7 +5383,7 @@ const Live = {
   storeKey() { return 'live' + this.ch; },
   save() { try { this.saveInv(); } catch (e) {} Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, tomb: this.tomb, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0, aliveAt: Date.now() }); },
   saved(ch) { return Store.get('live' + ch, null); },
-  reset(ch) { Store.set('live' + ch, null); Store.set('liveInv' + ch, null); Mine.reset(ch); },
+  reset(ch) { Store.set('live' + ch, null); Store.set('liveInv' + ch, null); Store.set('vipLock' + ch, 0); Mine.reset(ch); },
   /* 조사 기록(뗀 서류·현장 메모·수첩·내 판단): 나갔다 와도 남게 채널별로 따로 저장 (사용자 2026-10-15 '나갔다 와도 조사했던거 저장') */
   invKeep() { const ids = new Set(State.week.cases.map(c => c.id)); for (const key in this.mine) { const [, k, n] = key.split(':').map(Number); ids.add(`2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`); } return ids; },
   saveInv(force) {
@@ -6253,6 +6253,7 @@ const Game = {
 function startGame(capital, opts = {}) {
   State.capital = capital; State.cash = capital; HUD.setCash(capital, false);
   State.seed = opts.tutorial ? TUT_SEED : (opts.seed || (Date.now() & 0x7fffffff)); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자. 튜토리얼: 늘 같은 연습 물건
+  State.vipLock = 0; /* 이혁진 룰렛 딴 돈 잠금 (혼자 하기는 판마다 새로) */
   if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed, traps: !opts.tutorial }); /* 연습 물건엔 등기 함정을 씌우지 않는다 */ // 채널: 실제 시간으로 돌아가는 세계
   $('btnEndDay').hidden = Live.on;
   if (Net.on) { $('mpInfo').hidden = false; document.body.classList.add('netOn'); $('chatLines').innerHTML = Net.hist().slice(-5).map(l => Net.logRow(l, false, true)).join(''); } // 채팅 버튼 대신 왼쪽 입력줄 (v80)
@@ -13765,7 +13766,14 @@ Menu.toggle0 = Menu.toggle; Menu.toggle = function (v) { const r = this.toggle0.
  * 홀짝: 게임장 옆 건대 카지노 테이블. 주사위 두 개 합이 홀인지 짝인지 맞히면 건 돈만큼 받고, 틀리면 잃는다 (1:1).
  */
 // 카지노·게임장·이혁진 판돈은 번 돈(현금 − 경매 밑천)으로만 건다 (사용자 2026-10-16 '카지노랑 이혁진 게임도 내가 번 돈만')
-function mgFree() { return typeof Shop !== 'undefined' && Shop.spendable ? Shop.spendable() : Math.max(0, State.cash); }
+function mgFree() { return Math.max(0, (typeof Shop !== 'undefined' && Shop.spendable ? Shop.spendable() : Math.max(0, State.cash)) - VipLock.get()); }
+/* 이혁진 룰렛으로 딴 돈은 다시 판돈으로 못 건다 (사용자 2026-10-17 '그 이혁진 게임해서 건 돈만큼은 이제 돈 못걸게'): 딴 만큼 쌓고 진 만큼 덜어 낸다. 채널마다 따로, 혼자 하기는 판마다 */
+const VipLock = {
+  key() { return Live.on ? 'vipLock' + Live.ch : null; },
+  get() { const k = this.key(); return Math.max(0, k ? +Store.get(k, 0) || 0 : State.vipLock || 0); },
+  add(d) { const v = Math.max(0, this.get() + d), k = this.key(); if (k) Store.set(k, v); else State.vipLock = v; },
+  note() { const v = this.get(); return v ? ` · ${castName('vip')} 룰렛에서 딴 ${fmtWon(v)}은 못 걸어요` : ''; },
+};
 function mgCash(d, label) {
   if (!d) return;
   if (Live.on && typeof Money !== 'undefined') Money.why(label);
@@ -13821,7 +13829,7 @@ const Rps = {
     if (this.view === 'lobby' && sig !== this.sig) { this.sig = sig; if (this.size === 2 && !this.friends().some(f => f.id === this.vs) && this.friends().length) this.vs = this.friends()[0].id; this.render(); }
   },
   start() {
-    if (this.stake > mgFree()) { Sound.play('deny'); return this.render('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
+    if (this.stake > mgFree()) { Sound.play('deny'); return this.render('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요' + VipLock.note() + ').'); }
     if (this.size > 2) { if (Party.create('rps', this.size, this.stake)) { this.view = 'party'; return this.render(); } return this.render('같이 하기는 채널이나 친구 방에서만 돼요.'); }
     if (this.size === 1) return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: this.stake });
     const f = this.friends().find(x => x.id === this.vs); if (f && this.stake > PvpCap.room(f.name)) { Sound.play('deny'); return this.render(PvpCap.note(f.name)); }
@@ -14326,7 +14334,7 @@ const VipDuel = {
   async end(won) {
     const S = this.s; S.busy = true; S.over = won ? 'win' : 'lose'; S.overT = performance.now(); S.aim = null; Sound.play(won ? 'chime' : 'deny');
     this.render(won ? `${castName('vip')}의 번개가 다 꺼졌다. 털썩 주저앉더니… 웃으면서 일어난다. 내가 이겼다!` : '눈앞이 하얘졌다… 정신을 차려 보니 테이블 앞. 내가 졌다.'); await this.wait(2200);
-    mgCash(won ? FEEL.vipDuelStake : -FEEL.vipDuelStake, won ? `${castName('vip')} 룰렛 승` : `${castName('vip')} 룰렛 패`); Sound.play(won ? 'coins' : 'deny');
+    mgCash(won ? FEEL.vipDuelStake : -FEEL.vipDuelStake, won ? `${castName('vip')} 룰렛 승` : `${castName('vip')} 룰렛 패`); Sound.play(won ? 'coins' : 'deny'); VipLock.add(won ? FEEL.vipDuelStake : -FEEL.vipDuelStake);
     this.open_ = false; Game.formOpen = false; $('duelWin').classList.remove('in'); const d = this.done; this.done = null; this.s = null; if (d) d(won);
   },
   /* ---------- v89 장면 (사용자 '벅샷처럼 창이 아니라 그 상황 속에 들어가게'): 어두운 방, 전등 하나, 맞은편에 이혁진, 테이블 위에 총.
@@ -14565,7 +14573,7 @@ const Fight = {
   },
   stop(msg) { cancelAnimationFrame(this.raf); this.g = null; this.view = 'lobby'; Sound.play('deny'); this.render(msg); },
   start() {
-    if (this.stake > mgFree()) { Sound.play('deny'); return this.render('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요).'); }
+    if (this.stake > mgFree()) { Sound.play('deny'); return this.render('판돈이 번 돈보다 많아요 (경매 밑천은 못 걸어요' + VipLock.note() + ').'); }
     if (this.vs === 'house') { this.stake = 0; return this.begin({ gid: 'h' + Date.now(), vs: 'house', name: castName('arcade'), stake: 0, left: true }); } // 사장이랑은 판돈 없이 (사용자 2026-10-15 '사장이랑 해서 돈 못 따게, 친구랑만')
     const f = Rps.friends().find(x => x.id === this.vs); if (!f) { this.vs = 'house'; return this.render('그 친구가 게임장에 없어요.'); }
     if (this.stake > PvpCap.room(f.name)) { Sound.play('deny'); return this.render(PvpCap.note(f.name)); }

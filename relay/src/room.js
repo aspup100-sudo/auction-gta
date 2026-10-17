@@ -68,8 +68,8 @@ export class RoomLogic {
         return;
       }
       if (m.t === 'mdig') { // 굴 한 칸(또는 끊긴 동안 판 칸들)을 뚫었다: 새 칸만 저장하고 다른 사람에게 알린다
-        const add = []; if (Array.isArray(m.c)) for (const k of m.c.slice(0, 600)) { if (typeof k !== 'string' || !/^-?\d{1,3},-?\d{1,3}$/.test(k) || this.mcells.has(k) || this.mcells.size >= MINE_MAX) continue; const [x, y] = k.split(',').map(Number); if (Math.abs(x) > MINE_LIM || Math.abs(y) > MINE_LIM) continue; this.mcells.add(k); add.push(k); }
-        const l = Array.isArray(m.l) && m.l.length === 3 && m.l.every(n => Number.isInteger(n) && Math.abs(n) <= MINE_LIM) ? m.l : null; if (l) this.mlast = l;
+        const add = []; if (Array.isArray(m.c)) for (const k of m.c.slice(0, 600)) { if (typeof k !== 'string' || !/^-?\d{1,3},-?\d{1,3}(,[1-7])?$/.test(k) || this.mcells.has(k) || this.mcells.size >= MINE_MAX) continue; const [x, y] = k.split(',').map(Number); if (Math.abs(x) > MINE_LIM || Math.abs(y) > MINE_LIM) continue; this.mcells.add(k); add.push(k); }
+        const l = Array.isArray(m.l) && (m.l.length === 3 || m.l.length === 4) && m.l.every(n => Number.isInteger(n) && Math.abs(n) <= MINE_LIM) ? m.l : null; // v192: 4번째 = 층 (아래층 굴) if (l) this.mlast = l;
         if (add.length || l) { this.mdirty = true; this.dirty = true; this.broadcast({ t: 'mdig', c: add, l, from: s.id, name: s.name }, s); }
         return;
       }

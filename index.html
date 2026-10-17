@@ -916,6 +916,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .paBox .paLbl { font-size:12.5px; font-weight:800; opacity:.85; } .paBox .paLbl small { font-weight:600; opacity:.7; } .paRow { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .paRow .pvCard { min-height:96px; } .paRow .pvCard.on { box-shadow:0 0 0 3px #ffd84a, 0 0 18px rgba(255,216,74,.55); }
 .pbBox.rt.arena { width:min(1400px, 99vw); height:calc(var(--vh, 100vh) - 8px); } .short .pbBox.rt.arena { position:relative; } .short .pbBox.rt.arena .pbMsg { display:none; } .short .pbBox.rt.arena .pbBot { position:absolute; left:50%; top:66px; transform:translateX(-50%); background:none; padding:0; z-index:3; } .short .pbBox.rt.arena .pbQuit { padding:4px 10px; font-size:12px; opacity:.85; }
 .paMv { line-height:1.35; text-align:center; } .paMv b { font-size:11px; color:#ffe58a; } .paMv small { font-size:10px; opacity:.75; }
+.pbView { position:absolute; right:14px; bottom:120px; width:52px; height:52px; border-radius:50%; border:2px solid rgba(255,255,255,.9); background:rgba(20,24,34,.6); color:#fff; font:800 11px var(--ui); pointer-events:auto; touch-action:none; } .short .pbView { bottom:92px; right:8px; width:44px; height:44px; }
 .pbPad.m-arena .pbB1, .pbPad.m-arena .pbB2 { font-size:12px; line-height:1.15; padding:4px; word-break:keep-all; } .pbB2.cd { background:rgba(60,60,70,.8); } .pbBox.rt:has(.m-arena) #pbCv { cursor:crosshair; }
 .short .pbStick { width:80px; height:80px; left:8px; bottom:8px; } .short .pbB1 { width:70px; height:70px; font-size:13px; } .short .pbB2 { width:56px; height:56px; } .short .pbBtns { right:8px; bottom:8px; }
 #pbAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
@@ -7365,6 +7366,10 @@ const MINE_DX = [1, 0, -1, 0], MINE_DY = [0, 1, 0, -1];
 const MINE_RAIL_MIN = 40, MINE_RAIL_SKIP = 10, MINE_CART = 4.6; // v172 레일: 굴이 40칸 넘으면 깔린다 (막장 쪽 새로 판 10칸 빼고) · 광차 속도(칸/초)
 const MINE_RAD = 0.3, MINE_REACH = 1.05, MINE_SPD = 1.7, MINE_TURN = 2.4, MINE_LOOK = 0.0062; // v170 자유 시야: 몸 반지름 · 곡괭이 닿는 거리 · 걷기(칸/초) · 키 돌기(rad/초) · 드래그 감도(rad/px)
 const MINE_START = ['0,0', '1,0', '2,0', '3,0'];
+// v192 아래층 (사용자 '땅굴 지하로도 팔 수 있게 … 위아래로 내려갈 수 있는 모노레일'): 층 L(0~7)의 칸 키는 맨 위 'x,y', 아래층 'x,y,L'. 위아래로 뚫린 칸엔 승강기(세로 레일 + 철망 발판)
+const MINE_DEPTH = 8, MINE_KEY = /^-?\d{1,3},-?\d{1,3}(,[1-7])?$/, MINE_LIFT = 1.9, MINE_STEEP = 0.62; // 층 수 · 키 모양 · 한 층 오르내리는 시간(초) · 이보다 많이 숙이거나 들면 바닥·천장을 판다
+function mineK(x, y, L) { return L ? x + ',' + y + ',' + L : x + ',' + y; }
+function mineP(k) { const a = k.split(','); return [+a[0], +a[1], +(a[2] || 0)]; }
 const MINE_BOSS = '반장';
 const MINE_SAY = {
   arrive: ['앞사람이 판 데까지 데려다줬다. 여기서부터 이어서 파.', '여기가 막장이다. 앞사람이 여기까지 팠어. 이어서 캐.', '빚 다 캐기 전엔 저 위로 못 올라간다. 시작해.'],
@@ -7375,6 +7380,10 @@ const MINE_SAY = {
   far: '벽에 더 붙어서 쳐. 허공에 휘두르면 돈 안 나온다.',
   wall: '막혔다. 캐야 지나간다.',
   rock: '여긴 암반이라 안 파진다. 다른 쪽으로 파.',
+  top: '위는 지상 바로 밑이라 무너진다. 위로는 못 뚫어.',
+  deep: '더 내려가면 물이 찬다. 여기가 맨 밑바닥이다.',
+  lift: '구멍 뚫었으면 승강기 달아 주마. 철망 밟고 🛗 버튼으로 오르내려.',
+  down: '아래층이다. 여기도 앞사람 없으니 네가 길 내.',
   half: '반 왔다. 조금만 더 버텨.',
   tired: '헉… 헉… 숨이 턱까지 찬다.',
 };
@@ -7399,8 +7408,8 @@ const Mine = {
   load(ch) {
     this.ch = ch; const mp = Store.get('mineMap' + ch, null);
     this.cells = new Set(MINE_START);
-    if (mp && typeof mp.c === 'string' && mp.c) for (const k of mp.c.split(';')) if (/^-?\d{1,3},-?\d{1,3}$/.test(k)) this.cells.add(k);
-    this.last = mp && Array.isArray(mp.l) && mp.l.length === 3 ? mp.l : null;
+    if (mp && typeof mp.c === 'string' && mp.c) for (const k of mp.c.split(';')) if (MINE_KEY.test(k)) this.cells.add(k);
+    this.last = mp && Array.isArray(mp.l) && mp.l.length >= 3 ? mp.l : null;
     this.debt = Store.get('mineDebt' + ch, null); if (this.debt && !(this.debt.owe > 0)) this.debt = null;
     const lm = Store.get('mineLim' + ch, null); this.lim = typeof lm === 'number' && lm >= 0 ? Math.min(FEEL.mineAllow, lm) : FEEL.mineAllow;
     if (this.debt && this.debt.fill == null) this.debt.fill = Math.max(0, FEEL.mineAllow - this.lim);
@@ -7453,14 +7462,16 @@ const Mine = {
   },
 
   /* ---- 굴 지도 ---- */
-  isOpen(x, y) { return this.cells.has(x + ',' + y); },
-  isCoal(x, y) { return mineNoise(x / 4.2 + 31.7, y / 4.2 - 12.3, 5) > 0.63; },
-  isLamp(x, y) { return Math.abs(x) + Math.abs(y) > 1 && mineHash(x, y, 77) < 0.15; },
+  lv: 0, // 지금 있는 층 (0 = 맨 위)
+  isOpen(x, y, L = this.lv | 0) { return this.cells.has(mineK(x, y, L)); },
+  isCoal(x, y, L = this.lv | 0) { return mineNoise(x / 4.2 + 31.7 + L * 23.1, y / 4.2 - 12.3 - L * 7.7, 5) > 0.63; },
+  isLamp(x, y, L = this.lv | 0) { return Math.abs(x) + Math.abs(y) > 1 && mineHash(x, y, 77 + L * 13) < 0.15; },
+  k(x, y, L = this.lv | 0) { return mineK(x, y, L); },
   inLim(x, y) { return Math.abs(x) <= MINE_LIM && Math.abs(y) <= MINE_LIM; },
   addCells(list, l) {
     let n = 0;
-    for (const k of list || []) { if (typeof k !== 'string' || !/^-?\d{1,3},-?\d{1,3}$/.test(k) || this.cells.has(k) || this.cells.size >= MINE_MAX) continue; const [x, y] = k.split(',').map(Number); if (!this.inLim(x, y)) continue; this.cells.add(k); n++; if (this.open_ && Math.abs(x - this.px) + Math.abs(y - this.py) < 12) this.rubble.push({ x: x + 0.5, y: y + 0.5, t: performance.now(), s: mineHash(x, y, 3) }); }
-    if (Array.isArray(l) && l.length === 3 && l.every(v => Number.isInteger(v))) this.last = l;
+    for (const k of list || []) { if (typeof k !== 'string' || !MINE_KEY.test(k) || this.cells.has(k) || this.cells.size >= MINE_MAX) continue; const [x, y, L] = mineP(k); if (!this.inLim(x, y)) continue; this.cells.add(k); n++; if (this.open_ && Math.abs(x - this.px) + Math.abs(y - this.py) < 12) this.rubble.push({ x: x + 0.5, y: y + 0.5, l: L, t: performance.now(), s: mineHash(x, y, 3) }); }
+    if (Array.isArray(l) && (l.length === 3 || l.length === 4) && l.every(v => Number.isInteger(v))) this.last = l;
     if (n || l) { this.gridDirty = true; this.saveMap(); }
     return n;
   },
@@ -7469,7 +7480,7 @@ const Mine = {
   onPos(m, p) {
     if (m.out || !this.open_) { delete this.others[m.from]; return; }
     const o = this.others[m.from] || (this.others[m.from] = { x: +m.x, y: +m.y, a: +m.a || 0 });
-    o.name = (p && p.name) || m.name || '광부'; o.tx = +m.x; o.ty = +m.y; o.ta = +m.a || 0; o.sw = !!m.sw; o.at = performance.now();
+    o.name = (p && p.name) || m.name || '광부'; o.tx = +m.x; o.ty = +m.y; o.ta = +m.a || 0; o.sw = !!m.sw; o.l = Math.max(0, Math.min(MINE_DEPTH - 1, m.l | 0)); o.at = performance.now();
     if (this.open_ && !o.told) { o.told = true; this.say(`옆 굴에 ${o.name}도 끌려와서 캐고 있다.`, 2600); }
   },
   sync() {
@@ -7478,13 +7489,22 @@ const Mine = {
     const mine = [...this.cells].filter(k => !MINE_START.includes(k)).slice(-900); for (let i = 0; i < mine.length; i += 300) Net.send({ t: 'mdig', c: mine.slice(i, i + 300), l: i + 300 >= mine.length ? this.last : undefined }); // 서버가 모르는 칸(끊겼을 때 판 것)도 올린다 (서버 메시지는 4,000자까지)
   },
   buildGrid() {
-    const S = MINE_R * 2, g = this.grid || (this.grid = new Uint8Array(S * S)); this.gx0 = this.px - MINE_R; this.gy0 = this.py - MINE_R; g.fill(0);
-    for (const k of this.cells) { const i = k.indexOf(','), x = +k.slice(0, i) - this.gx0, y = +k.slice(i + 1) - this.gy0; if (x >= 0 && y >= 0 && x < S && y < S) g[y * S + x] = 1; }
-    // 광차 레일 (v172, 사용자 '굴이 커지면 탈 수 있는 레일'): 굴이 MINE_RAIL_MIN칸을 넘으면, 판 순서로 막장 쪽 MINE_RAIL_SKIP칸을 뺀 칸마다. rg 비트: 1 레일 · 2 가로 · 4 세로
-    const rg = this.rg || (this.rg = new Uint8Array(S * S)); rg.fill(0); const rs = this.railSet = new Set();
-    if (this.cells.size >= MINE_RAIL_MIN) { let n = this.cells.size - MINE_RAIL_SKIP; for (const k of this.cells) { if (n-- <= 0) break; rs.add(k); } }
-    for (const k of rs) { const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1), gx = x - this.gx0, gy = y - this.gy0; if (gx < 0 || gy < 0 || gx >= S || gy >= S) continue; const ew = rs.has((x - 1) + ',' + y) || rs.has((x + 1) + ',' + y), ns = rs.has(x + ',' + (y - 1)) || rs.has(x + ',' + (y + 1)); rg[gy * S + gx] = 1 | (ew || !ns ? 2 : 0) | (ns ? 4 : 0); }
-    this.gridDirty = false;
+    const S = MINE_R * 2, D = MINE_DEPTH, g = this.grid || (this.grid = new Uint8Array(S * S)), L0 = this.lv | 0; this.gx0 = this.px - MINE_R; this.gy0 = this.py - MINE_R; g.fill(0);
+    // 층별로 판 순서대로 나눈다 (레일은 층마다 따로)
+    const by = []; for (let L = 0; L < D; L++) by.push([]); const lift = this.liftSet = new Set();
+    for (const k of this.cells) { const P = mineP(k); if (P[2] < D) by[P[2]].push(P); if (this.cells.has(mineK(P[0], P[1], P[2] + 1))) lift.add(P[0] + ',' + P[1]); }
+    for (const [cx, cy] of by[L0]) { const x = cx - this.gx0, y = cy - this.gy0; if (x >= 0 && y >= 0 && x < S && y < S) g[y * S + x] = 1; }
+    // 광차 레일 (v172, 사용자 '굴이 커지면 탈 수 있는 레일'): 층마다 굴이 MINE_RAIL_MIN칸을 넘으면, 판 순서로 막장 쪽 MINE_RAIL_SKIP칸을 뺀 칸마다. rg 비트: 1 레일 · 2 가로 · 4 세로
+    const rg = this.rg || (this.rg = new Uint8Array(S * S)); rg.fill(0); const sets = [];
+    for (let L = 0; L < D; L++) { const rs = new Set(), A = by[L]; if (A.length >= MINE_RAIL_MIN) for (let i = 0; i < A.length - MINE_RAIL_SKIP; i++) rs.add(mineK(A[i][0], A[i][1], L)); sets.push(rs); }
+    this.railSet = sets[L0];
+    const rbit = (x, y, L) => { const rs = sets[L], k = mineK(x, y, L); if (!rs.has(k)) return 0; const ew = rs.has(mineK(x - 1, y, L)) || rs.has(mineK(x + 1, y, L)), ns = rs.has(mineK(x, y - 1, L)) || rs.has(mineK(x, y + 1, L)); return 1 | (ew || !ns ? 2 : 0) | (ns ? 4 : 0); };
+    for (const k of sets[L0]) { const [x, y] = mineP(k), gx = x - this.gx0, gy = y - this.gy0; if (gx < 0 || gy < 0 || gx >= S || gy >= S) continue; rg[gy * S + gx] = rbit(x, y, L0); }
+    // 3D 격자 (그래픽 카드용): 1 뚫림 · 2 석탄(막힌 칸) · 4 등 · 8 레일 · 16 가로 · 32 세로 · 64 승강기 칸
+    const g3 = this.g3 || (this.g3 = new Uint8Array(S * S * D)); g3.fill(0);
+    for (let L = 0; L < D; L++) for (const [cx, cy] of by[L]) { const x = cx - this.gx0, y = cy - this.gy0; if (x < 0 || y < 0 || x >= S || y >= S) continue; const r = rbit(cx, cy, L); g3[(L * S + y) * S + x] = 1 | (this.isLamp(cx, cy, L) ? 4 : 0) | (r ? 8 | (r & 2 ? 16 : 0) | (r & 4 ? 32 : 0) : 0) | (lift.has(cx + ',' + cy) ? 64 : 0); }
+    for (let L = 0; L < D; L++) for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const i = (L * S + y) * S + x; if (!g3[i] && this.isCoal(x + this.gx0, y + this.gy0, L)) g3[i] = 2; }
+    this.g3v = (this.g3v || 0) + 1; this.gridDirty = false;
   },
   rail(x, y) { const S = MINE_R * 2, gx = x - this.gx0, gy = y - this.gy0; return this.rg && gx >= 0 && gy >= 0 && gx < S && gy < S ? this.rg[gy * S + gx] : 0; },
   g(x, y) { const S = MINE_R * 2, gx = x - this.gx0, gy = y - this.gy0; return gx >= 0 && gy >= 0 && gx < S && gy < S ? this.grid[gy * S + gx] : 0; },
@@ -7560,9 +7580,10 @@ const Mine = {
     await this.wait(2900);
     clearInterval(this.rumbleIv); Sound.play('cage'); Sound.play('slam');
     // 앞사람이 판 데(막장)에서 시작
-    let l = this.last; if (!l || !this.isOpen(l[0], l[1])) l = [3, 0, 0];
-    { const busy = Object.values(this.others).some(o => Math.floor(o.x) === l[0] && Math.floor(o.y) === l[1]), bx = l[0] - MINE_DX[l[2] & 3], by = l[1] - MINE_DY[l[2] & 3]; if (busy && this.isOpen(bx, by)) l = [bx, by, l[2]]; } // 막장에 누가 있으면 한 칸 뒤에서
-    this.px = l[0]; this.py = l[1]; this.d = l[2] & 3; this.ang = this.d * Math.PI / 2; this.cx = this.px + 0.5; this.cy = this.py + 0.5; this.mv = null; this.tr = null; this.sw = null; this.gridDirty = true; this.keys = {}; this.joy = null; this.auto = null; this.pitch = 0; this.cart = null; this.stepPh = 0; this.walk = 0; this.walkK = 0;
+    let l = this.last; if (!l || !this.isOpen(l[0], l[1], l[3] | 0)) l = [3, 0, 0, 0];
+    { const L = l[3] | 0, busy = Object.values(this.others).some(o => Math.floor(o.x) === l[0] && Math.floor(o.y) === l[1] && (o.l | 0) === L), bx = l[0] - MINE_DX[l[2] & 3], by = l[1] - MINE_DY[l[2] & 3]; if (busy && this.isOpen(bx, by, L)) l = [bx, by, l[2], L]; } // 막장에 누가 있으면 한 칸 뒤에서
+    this.lv = Math.max(0, Math.min(MINE_DEPTH - 1, l[3] | 0)); this.lz = null; this.lift = null; this.pi = 0;
+    this.px = l[0]; this.py = l[1]; this.d = l[2] & 3; this.ang = this.d * Math.PI / 2; this.cx = this.px + 0.5; this.cy = this.py + 0.5; this.mv = null; this.tr = null; this.sw = null; this.gridDirty = true; this.keys = {}; this.joy = null; this.auto = null; this.pitch = 0; this.pi = 0; this.cart = null; this.stepPh = 0; this.walk = 0; this.walkK = 0;
     this.ph = 'play'; this.phT = performance.now(); this.fade = 1; this.lastAct = performance.now(); this.nextAny = performance.now() + 16000; this.nextDrip = 0; this.nextCreak = performance.now() + 7000; this.nextQuake = performance.now() + 20000 + Math.random() * 15000;
     setTimeout(() => { const lk = this.el && this.el.querySelector('.mnLook'); if (lk) lk.classList.add('off'); }, 9000);
     Sound.playBgm('mine'); this.say(MINE_SAY.arrive[Math.floor(Math.random() * MINE_SAY.arrive.length)], 4200, true);
@@ -7585,10 +7606,11 @@ const Mine = {
     el.innerHTML = `<div class="mn"><canvas id="mnCv"></canvas><canvas id="mnFx"></canvas>
       <div class="mnTop"><div class="mnDebt"></div><div class="mnMapW"><canvas id="mnMap" width="224" height="224"></canvas><button class="mnMapB" id="mnMapB">🗺 큰 지도</button><button class="mnMapB mnUp" id="mnUp">⬆ 올라가기</button></div></div>
       <p class="mnSub"></p><div class="mnPops"></div>
-      <div class="mnJoy" aria-label="걷기 조이스틱"><i class="mjKnob"></i><span class="mjU">▲</span><span class="mjD">▼</span><span class="mjL">◀</span><span class="mjR">▶</span></div><p class="mnLook">화면을 끌면 둘러보기</p>
+      <div class="mnJoy" aria-label="걷기 조이스틱"><i class="mjKnob"></i><span class="mjU">▲</span><span class="mjD">▼</span><span class="mjL">◀</span><span class="mjR">▶</span></div><p class="mnLook">${this.fine() ? '화면을 클릭하면 마우스로 360° 둘러봐요 · Esc 풀기' : '화면을 끌면 위아래까지 둘러보기'}</p>
+      <div class="mnLift"><button class="mnLiftB" data-d="-1"><i>🛗</i><b>위층</b></button><button class="mnLiftB" data-d="1"><i>🛗</i><b>아래층</b></button></div>
       <button class="mnCartB mnCartR">🛒 광차 타기</button>
       <button class="mnDig" id="mnDig"><i>⛏</i><b>캐기</b><small>꾹 누르면 계속</small></button>
-      <p class="mnKeys">W S 앞뒤 · A D 옆걸음 · ← → 또는 마우스로 끌어서 둘러보기 · Space 꾹 캐기 · C 광차 · M 지도</p>
+      <p class="mnKeys">W S 앞뒤 · A D 옆걸음 · 마우스로 위아래 360° 둘러보기 · 클릭/Space 꾹 캐기 (많이 숙이면 바닥) · R 위층 · V 아래층 · C 광차 · M 지도</p>
       <div class="mnBig"><div class="mbIn"><div class="mbHead"><b>땅굴 지도</b><span class="mbInfo"></span><button class="mbX" aria-label="지도 닫기">✕</button></div>
       <canvas id="mnBigCv"></canvas>
       <div class="mbFoot"><span class="mbLeg"><i class="me"></i>나 <i class="ot"></i>다른 광부 <i class="lp"></i>등 <i class="ev"></i>엘리베이터 <i class="tp"></i>마지막으로 판 곳</span><span class="mbZ"><button data-z="-1" aria-label="작게">－</button><button data-z="0">내 위치</button><button data-z="1" aria-label="크게">＋</button></span></div></div></div>
@@ -7603,10 +7625,20 @@ const Mine = {
     dig.onpointerdown = on; dig.onpointerup = off; dig.onpointerleave = off; dig.onpointercancel = off;
     // 화면 끌기 = 둘러보기, 짧게 톡 = 캐기
     const cv = $('mnCv'), look = new Map();
-    cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); look.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now(), mv: 0 }); };
-    cv.onpointermove = e => { const q = look.get(e.pointerId); if (!q || this.ph !== 'play' || this.bigOn) return; const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; q.mv += Math.abs(dx) + Math.abs(dy); if (q.mv > 6) { this.ang += dx * MINE_LOOK; this.pitch = Math.max(-this.H * 0.4, Math.min(this.H * 0.4, (this.pitch || 0) - dy * (this.H / innerHeight) * 1.1)); /* 위아래 보기 (v172) */ this.tr = null; this.lastAct = performance.now(); if (!this.lookSaid) { this.lookSaid = true; this.el.querySelector('.mnLook').classList.add('off'); } } };
+    cv.onpointerdown = e => {
+      e.preventDefault();
+      if (e.pointerType === 'mouse' && this.fine() && this.ph === 'play' && !this.bigOn) { // PC: 클릭하면 마우스 잠금 → 움직이면 둘러보기, 누르고 있으면 캐기
+        if (document.pointerLockElement !== cv) { try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (er) {} this.lookOff(); return; }
+        this.hold = true; this.swing(); return;
+      }
+      cv.setPointerCapture(e.pointerId); look.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now(), mv: 0 });
+    };
+    cv.onmousemove = e => { if (document.pointerLockElement !== cv || this.ph !== 'play' || this.bigOn) return; this.ang += (e.movementX || 0) * 0.0032; this.pi = Math.max(-1.45, Math.min(1.45, (this.pi || 0) - (e.movementY || 0) * 0.0032)); this.tr = null; this.lastAct = performance.now(); };
+    cv.onmouseup = () => { if (document.pointerLockElement === cv) this.hold = false; };
+    cv.onpointermove = e => { const q = look.get(e.pointerId); if (!q || this.ph !== 'play' || this.bigOn) return; const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY; q.mv += Math.abs(dx) + Math.abs(dy); if (q.mv > 6) { this.ang += dx * MINE_LOOK; this.pi = Math.max(-1.45, Math.min(1.45, (this.pi || 0) - dy * MINE_LOOK)); /* v192: 위아래도 끝까지 (바로 위 천장·발밑까지) */ this.tr = null; this.lastAct = performance.now(); this.lookOff(); } };
     cv.onpointerup = cv.onpointercancel = e => { const q = look.get(e.pointerId); look.delete(e.pointerId); if (q && e.type === 'pointerup' && q.mv <= 6 && performance.now() - q.t < 350 && this.ph === 'play') this.swing(); };
     el.querySelector('.mnCartB').onclick = () => this.cartToggle();
+    for (const b of el.querySelectorAll('.mnLiftB')) b.onclick = e => { e.stopPropagation(); this.liftGo(+b.dataset.d); };
     $('mnUp').onclick = () => { if (this.ph === 'play' && this.debt && this.debt.more) { this.hold = false; this.finish(false); } };
     $('mnMap').onpointerdown = $('mnMapB').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); this.bigMap(true); };
     const big = el.querySelector('.mnBig'), bc = $('mnBigCv'), ptr = new Map(); let pinch = 0;
@@ -7629,6 +7661,7 @@ const Mine = {
         if (k === 'm' || k === 'ㅡ' || (k === 'Escape' && this.bigOn)) { if (down && !e.repeat) { e.preventDefault(); this.bigMap(k === 'Escape' ? false : !this.bigOn); } return; }
         if (this.bigOn) return;
         if (k === 'c' || k === 'ㅊ') { if (down && !e.repeat) { e.preventDefault(); this.cartToggle(); } return; }
+        if (k === 'r' || k === 'ㄱ' || k === 'PageUp' || k === 'v' || k === 'ㅍ' || k === 'PageDown') { if (down && !e.repeat) { e.preventDefault(); this.liftGo(k === 'r' || k === 'ㄱ' || k === 'PageUp' ? -1 : 1); } return; }
         if (k === ' ' || k === 'f' || k === 'ㄹ' || k === 'j') { e.preventDefault(); this.hold = down; if (down && !e.repeat) this.swing(); return; }
         const m = { ArrowLeft: 'TL', q: 'TL', 'ㅂ': 'TL', ArrowRight: 'TR', e: 'TR', 'ㄷ': 'TR', a: 'SL', 'ㅁ': 'SL', d: 'SR', 'ㅇ': 'SR', ArrowUp: 'F', w: 'F', 'ㅈ': 'F', ArrowDown: 'B', s: 'B', 'ㄴ': 'B' }[k];
         if (m) { e.preventDefault(); (this.keys || (this.keys = {}))[m] = down; }
@@ -7638,6 +7671,9 @@ const Mine = {
     const loop = now => { if (!this.open_ || !$('mnCv')) return; try { this.frame(now); } catch (e) { console.error(e); } requestAnimationFrame(loop); };
     this.t0 = performance.now(); this.prevT = this.t0; requestAnimationFrame(loop);
   },
+  fine() { return !!(window.matchMedia && matchMedia('(pointer: fine)').matches) && !document.body.classList.contains('touchOn'); },
+  lookOff() { if (this.lookSaid || !this.el) return; this.lookSaid = true; const lk = this.el.querySelector('.mnLook'); if (lk) lk.classList.add('off'); },
+  unlock() { try { if (document.pointerLockElement && document.pointerLockElement.id === 'mnCv') document.exitPointerLock(); } catch (e) {} },
   size() {
     const cv = $('mnCv'), fx = $('mnFx'), vw = innerWidth, vh = innerHeight, H = vh < 500 ? 168 : 190, W = Math.max(200, Math.min(440, Math.round(H * vw / vh)));
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; this.W = W; this.H = H; this.img = null; }
@@ -7647,8 +7683,8 @@ const Mine = {
   hud() {
     const D = this.debt; if (!D || !this.el) return; const box = this.el.querySelector('.mnDebt'); if (!box) return;
     const N = this.need(D), k = Math.min(1, D.got / N), total = this.cells.size;
-    if (D.more) { const x = Math.max(0, D.got - N), k2 = Math.min(1, x / FEEL.mineMore); box.innerHTML = `<h4>⛏ 석탄 땅굴 · 빚 다 갚음</h4><div class="nums"><span>더 번 돈 <b>${fmtWon(x)}</b></span><span>한도 <b>${fmtWon(FEEL.mineMore)}</b></span></div><div class="bar"><i style="width:${(k2 * 100).toFixed(1)}%"></i></div><small>이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`; const up = this.el.querySelector('.mnUp'); if (up) up.classList.add('on'); return; }
-    box.innerHTML = `<h4>⛏ 석탄 땅굴</h4><div class="nums"><span>캔 돈 <b>${fmtWon(Math.min(D.got, N))}</b></span><span>남은 돈 <b>${fmtWon(this.owed())}</b></span></div><div class="bar"><i style="width:${(k * 100).toFixed(1)}%"></i></div><small>빚 ${fmtWon(D.owe)}${D.fill ? ` + 땅굴 한도 채우기 ${fmtWon(D.fill)}` : ''} · 이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`;
+    if (D.more) { const x = Math.max(0, D.got - N), k2 = Math.min(1, x / FEEL.mineMore); box.innerHTML = `<h4>⛏ 석탄 땅굴 · 지하 ${(this.lv | 0) + 1}층 · 빚 다 갚음</h4><div class="nums"><span>더 번 돈 <b>${fmtWon(x)}</b></span><span>한도 <b>${fmtWon(FEEL.mineMore)}</b></span></div><div class="bar"><i style="width:${(k2 * 100).toFixed(1)}%"></i></div><small>이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`; const up = this.el.querySelector('.mnUp'); if (up) up.classList.add('on'); return; }
+    box.innerHTML = `<h4>⛏ 석탄 땅굴 · 지하 ${(this.lv | 0) + 1}층</h4><div class="nums"><span>캔 돈 <b>${fmtWon(Math.min(D.got, N))}</b></span><span>남은 돈 <b>${fmtWon(this.owed())}</b></span></div><div class="bar"><i style="width:${(k * 100).toFixed(1)}%"></i></div><small>빚 ${fmtWon(D.owe)}${D.fill ? ` + 땅굴 한도 채우기 ${fmtWon(D.fill)}` : ''} · 이 굴 ${total.toLocaleString()}칸 · 내가 뚫은 칸 ${this.dug || 0} · 곡괭이질 ${this.swings || 0}번</small>`;
   },
 
   /* ---- 움직이기 ---- */
@@ -7662,16 +7698,16 @@ const Mine = {
   // 광차: 레일 칸 가운데에서 가운데로. 갈림길에선 보는 쪽에 가장 가까운 길, 끝에 닿으면 내린다
   cartToggle() {
     if (this.ph !== 'play') return; if (this.cart) return this.cartOff('내렸다.');
-    const x = Math.floor(this.cx), y = Math.floor(this.cy); if (!this.railSet || !this.railSet.has(x + ',' + y)) return;
+    const x = Math.floor(this.cx), y = Math.floor(this.cy); if (this.lift || !this.railSet || !this.railSet.has(this.k(x, y))) return;
     this.hold = false; this.sw = null; this.cart = { ax: this.cx, ay: this.cy, bx: x + 0.5, by: y + 0.5, k: 0, L: Math.hypot(x + 0.5 - this.cx, y + 0.5 - this.cy) || 0.01, prev: null, cur: [x, y], v: 0 };
     Sound.play('cage'); this.say('광차에 올라탔다. 덜컹거린다.', 1800, false); this.cartBtn();
   },
   cartOff(msg) { if (!this.cart) return; this.cart = null; Sound.play('slam'); if (msg) this.say(msg, 1600, false); this.cartBtn(); },
-  cartBtn() { const b = this.el && this.el.querySelector('.mnCartB'); if (!b) return; const on = !!this.cart, can = on || (this.ph === 'play' && this.railSet && this.railSet.has(Math.floor(this.cx) + ',' + Math.floor(this.cy))); b.classList.toggle('on', can); b.classList.toggle('riding', on); const txt = on ? '🛑 내리기' : '🛒 광차 타기'; if (b.dataset.t !== txt) { b.dataset.t = txt; b.innerHTML = on ? '<i>🛑</i><b>내리기</b>' : '<i>🛒</i><b>광차 타기</b>'; } }, /* v185: 캐기 버튼 바로 옆 둥근 버튼 (사용자 2026-10-17 '수레 타는 거 곡괭이 캐는 거 근처에 버튼') */
+  cartBtn() { const b = this.el && this.el.querySelector('.mnCartB'); if (!b) return; const on = !!this.cart, can = on || (this.ph === 'play' && !this.lift && this.railSet && this.railSet.has(this.k(Math.floor(this.cx), Math.floor(this.cy)))); b.classList.toggle('on', can); b.classList.toggle('riding', on); const txt = on ? '🛑 내리기' : '🛒 광차 타기'; if (b.dataset.t !== txt) { b.dataset.t = txt; b.innerHTML = on ? '<i>🛑</i><b>내리기</b>' : '<i>🛒</i><b>광차 타기</b>'; } }, /* v185: 캐기 버튼 바로 옆 둥근 버튼 (사용자 2026-10-17 '수레 타는 거 곡괭이 캐는 거 근처에 버튼') */
   cartStep(now, dt) {
     const C = this.cart; C.v = Math.min(MINE_CART, C.v + dt * 3.2); C.k += C.v * dt / C.L;
     while (C.k >= 1 && this.cart) {
-      const [x, y] = C.cur, nb = [[1, 0], [0, 1], [-1, 0], [0, -1]].map(([a, b]) => [x + a, y + b]).filter(([a, b]) => this.railSet.has(a + ',' + b) && !(C.prev && C.prev[0] === a && C.prev[1] === b));
+      const [x, y] = C.cur, nb = [[1, 0], [0, 1], [-1, 0], [0, -1]].map(([a, b]) => [x + a, y + b]).filter(([a, b]) => this.railSet.has(this.k(a, b)) && !(C.prev && C.prev[0] === a && C.prev[1] === b));
       if (!nb.length) { this.cx = x + 0.5; this.cy = y + 0.5; this.cartOff('레일 끝이다. 내렸다.'); return; }
       const hx = Math.cos(this.ang), hy = Math.sin(this.ang); nb.sort((p, q) => ((q[0] - x) * hx + (q[1] - y) * hy) - ((p[0] - x) * hx + (p[1] - y) * hy));
       const [nx, ny] = nb[0]; C.k -= 1; C.ax = x + 0.5; C.ay = y + 0.5; C.bx = nx + 0.5; C.by = ny + 0.5; C.L = 1; C.prev = [x, y]; C.cur = [nx, ny]; Sound.play('step', (nx + ny) & 1 ? 'wood' : undefined);
@@ -7684,9 +7720,23 @@ const Mine = {
     this.px = Math.floor(this.cx); this.py = Math.floor(this.cy); this.d = ((Math.round(this.ang / (Math.PI / 2)) % 4) + 4) % 4;
     if (Math.abs(this.px - this.gx0 - MINE_R) > MINE_R / 2 || Math.abs(this.py - this.gy0 - MINE_R) > MINE_R / 2) this.gridDirty = true;
   },
+  // 승강기 (v192): 위아래가 뚫린 칸에 서면 🛗 위층/아래층. 철망 발판째로 한 층씩 오르내린다
+  liftCan(dir) { if (this.ph !== 'play' || this.cart || this.lift || this.bigOn) return false; const L = (this.lv | 0) + dir; return L >= 0 && L < MINE_DEPTH && this.isOpen(this.px, this.py, L); },
+  liftGo(dir) {
+    if (!this.liftCan(dir)) return; this.hold = false; this.sw = null; const dig = $('mnDig'); if (dig) dig.classList.remove('on');
+    this.lift = { a: this.lv | 0, b: (this.lv | 0) + dir, t0: performance.now() }; Sound.play('cage'); Sound.play('rumble'); this.say(dir > 0 ? '승강기가 덜컹거리며 내려간다.' : '승강기가 끼익 올라간다.', 1700, false); this.liftBtn(); this.lastAct = performance.now();
+  },
+  liftStep(now, dt) {
+    const F = this.lift, k = Math.min(1, (now - F.t0) / 1000 / MINE_LIFT), e = k * k * (3 - 2 * k), m = Math.min(1, dt * 6);
+    this.lz = F.a + (F.b - F.a) * e; this.cx += (this.px + 0.5 - this.cx) * m; this.cy += (this.py + 0.5 - this.cy) * m; this.walk = Math.sin(now / 55) * 0.18 * Math.sin(k * Math.PI); this.walkK = 0;
+    if (now > (this.cartSnd || 0)) { this.cartSnd = now + 650; Sound.play('rumble'); }
+    if (k >= 1) { this.lv = F.b; this.lz = null; this.lift = null; this.gridDirty = true; Sound.play('slam'); this.shake = 0.6; this.hud(); this.liftBtn(); this.cartBtn(); if (!this.seenLv) this.seenLv = {}; if (!this.seenLv[this.lv] && this.lv > 0) { this.seenLv[this.lv] = 1; this.say(MINE_SAY.down, 2600); } }
+  },
+  liftBtn() { if (!this.el) return; for (const b of this.el.querySelectorAll('.mnLiftB')) { const d = +b.dataset.d, on = this.liftCan(d); b.classList.toggle('on', on); } const w = this.el.querySelector('.mnLift'); if (w) w.classList.toggle('riding', !!this.lift); },
   steer(now, dt) {
+    if (this.lift) { this.liftStep(now, dt); return; }
     if (this.cart) { this.cartStep(now, dt); this.cartBtn(); return; }
-    if (((now / 250) | 0) !== this.cbT) { this.cbT = (now / 250) | 0; this.cartBtn(); }
+    if (((now / 250) | 0) !== this.cbT) { this.cbT = (now / 250) | 0; this.cartBtn(); this.liftBtn(); }
     const K = this.keys || {}, j = this.joy, a = this.auto && now < this.auto.until ? this.auto : (this.auto = null);
     let f = (K.F ? 1 : 0) - (K.B ? 1 : 0) + (j ? -j.y : 0) + (a ? a.f : 0), st = (K.SR ? 1 : 0) - (K.SL ? 1 : 0) + (j ? j.x * 0.8 : 0);
     const tn = (K.TR ? 1 : 0) - (K.TL ? 1 : 0); if (tn) { this.ang += tn * MINE_TURN * dt; this.tr = null; this.lastAct = now; }
@@ -7703,26 +7753,30 @@ const Mine = {
     this.px = Math.floor(this.cx); this.py = Math.floor(this.cy); this.d = ((Math.round(this.ang / (Math.PI / 2)) % 4) + 4) % 4;
     if (Math.abs(this.px - this.gx0 - MINE_R) > MINE_R / 2 || Math.abs(this.py - this.gy0 - MINE_R) > MINE_R / 2) this.gridDirty = true;
   },
-  // 보는 쪽으로 처음 막힌 칸 (곡괭이가 닿는지는 d로)
+  // 보는 쪽으로 처음 막힌 칸 (곡괭이가 닿는지는 d로). v192: 많이 숙이면 바닥(아래층), 많이 들면 천장(위층)
   aim() {
-    const dx = Math.cos(this.ang), dy = Math.sin(this.ang); let mx = Math.floor(this.cx), my = Math.floor(this.cy);
+    const p = this.pi || 0, cp = Math.cos(p), dx = Math.cos(this.ang), dy = Math.sin(this.ang), L0 = this.lv | 0; let mx = Math.floor(this.cx), my = Math.floor(this.cy), wall = null;
     const ddx = Math.abs(1 / (dx || 1e-9)), ddy = Math.abs(1 / (dy || 1e-9)), sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
     let sdx = dx < 0 ? (this.cx - mx) * ddx : (mx + 1 - this.cx) * ddx, sdy = dy < 0 ? (this.cy - my) * ddy : (my + 1 - this.cy) * ddy;
-    for (let i = 0; i < 10; i++) { let d; if (sdx < sdy) { d = sdx; sdx += ddx; mx += sx; } else { d = sdy; sdy += ddy; my += sy; } if (!this.isOpen(mx, my)) return { x: mx, y: my, d }; }
-    return null;
+    for (let i = 0; i < 10; i++) { let d; if (sdx < sdy) { d = sdx; sdx += ddx; mx += sx; } else { d = sdy; sdy += ddy; my += sy; } if (!this.isOpen(mx, my)) { wall = { x: mx, y: my, L: L0, d: Math.abs(p) > MINE_STEEP ? d / Math.max(0.2, cp) : d, f: 'w' }; break; } }
+    if (Math.abs(p) > MINE_STEEP && !this.lift) { // 바닥/천장까지 거리 (눈높이 MINE_EYE)
+      const up = p > 0, t = up ? (MINE_WALL - MINE_EYE) / Math.sin(p) : MINE_EYE / -Math.sin(p), hx = Math.floor(this.cx + dx * cp * t), hy = Math.floor(this.cy + dy * cp * t);
+      if (!wall || t < wall.d) { const L = L0 + (up ? -1 : 1); if (this.isOpen(hx, hy) && !(L >= 0 && L < MINE_DEPTH && this.isOpen(hx, hy, L))) return { x: hx, y: hy, L, d: t, f: up ? 'c' : 'f' }; return null; }
+    }
+    return wall;
   },
-  front() { const a = this.aim(); return a ? [a.x, a.y] : [this.px + MINE_DX[this.d], this.py + MINE_DY[this.d]]; },
+  front() { const a = this.aim(); return a ? [a.x, a.y, a.L] : [this.px + MINE_DX[this.d], this.py + MINE_DY[this.d], this.lv | 0]; },
   swing() {
-    if (this.ph !== 'play' || this.sw || this.bigOn || this.cart) return; const now = performance.now();
+    if (this.ph !== 'play' || this.sw || this.bigOn || this.cart || this.lift) return; const now = performance.now();
     if (this.tired && now < this.tired) return;
     this.sw = { t0: now, hit: false }; this.lastAct = now; Sound.play('whoosh');
   },
   impact(now) {
     const a = this.aim(); if (!a || a.d > MINE_REACH) { if (now > (this.farSaid || 0)) { this.farSaid = now + 5000; this.say(MINE_SAY.far, 2200); } return; }
-    const fx = a.x, fy = a.y, key = fx + ',' + fy;
-    if (!this.inLim(fx, fy)) { Sound.play('pick'); this.shake = 0.5; this.spark(10); this.say(MINE_SAY.rock, 2200); return; }
+    const fx = a.x, fy = a.y, fL = a.L, key = mineK(fx, fy, fL);
+    if (!this.inLim(fx, fy) || fL < 0 || fL >= MINE_DEPTH) { Sound.play('pick'); this.shake = 0.5; this.spark(10); this.say(fL < 0 ? MINE_SAY.top : fL >= MINE_DEPTH ? MINE_SAY.deep : MINE_SAY.rock, 2200); return; }
     const D = this.debt; if (!D) return;
-    const coal = this.isCoal(fx, fy), gold = Math.random() < FEEL.mineGoldP;
+    const coal = this.isCoal(fx, fy, fL), gold = Math.random() < FEEL.mineGoldP;
     let amt = gold ? FEEL.mineGold : Math.round((coal ? FEEL.mineCoalMin + Math.random() * (FEEL.mineCoalMax - FEEL.mineCoalMin) : FEEL.mineSwingMin + Math.random() * (FEEL.mineSwingMax - FEEL.mineSwingMin)) / 1000) * 1000;
     const N = this.need(D), cap = N + FEEL.mineMore; if (!gold) amt = Math.max(0, Math.min(amt, (D.more ? cap : N) - D.got)); // 곡괭이질은 남은 돈까지만 (땅굴이 새 돈벌이가 되지 않게, v171). 금은 그대로 1천만 원 (사용자 '금은 놔두자')
     D.got += amt; this.swings++; this.saveDebt();
@@ -7730,9 +7784,10 @@ const Mine = {
     if (gold) { this.goldHit = now; this.goldCell = key; Sound.play('gold'); this.pop(`금이다!! +${fmtWon(amt)}`, 'gold'); this.say('…금이다. 진짜 금이다.', 3600); }
     else this.pop(`+${fmtWon(amt)}${coal ? ' · 석탄' : ''}`, coal ? 'coal' : '');
     if (this.prog[key] >= FEEL.mineHits) { // 한 칸 뚫림
-      delete this.prog[key]; this.addCells([key], [fx, fy, this.d]); this.dug++;
-      if (Net.on) Net.send({ t: 'mdig', c: [key], l: [fx, fy, this.d] });
-      this.rubble.push({ x: fx + 0.5, y: fy + 0.5, t: now, s: mineHash(fx, fy, 3) }); Sound.play('rubble'); this.shake = 1.4; // 뚫린 칸으로 걸어 들어가는 건 직접 (조이스틱)
+      const lst = fL ? [fx, fy, this.d, fL] : [fx, fy, this.d]; delete this.prog[key]; this.addCells([key], lst); this.dug++;
+      if (Net.on) Net.send({ t: 'mdig', c: [key], l: lst });
+      if (a.f !== 'w') { this.gridDirty = true; Sound.play('cage'); if (!this.liftSaid) { this.liftSaid = true; setTimeout(() => this.open_ && this.say(MINE_SAY.lift, 3600), 900); } setTimeout(() => this.liftBtn(), 50); }
+      if (a.f !== 'c') this.rubble.push({ x: fx + 0.5, y: fy + 0.5, l: fL, t: now, s: mineHash(fx, fy, 3) }); Sound.play('rubble'); this.shake = 1.4; // 뚫린 칸으로 걸어 들어가는 건 직접 (조이스틱)
       for (let i = 0; i < 26; i++) this.dust.push({ x: Math.random(), y: 0.3 + Math.random() * 0.5, vx: (Math.random() - 0.5) * 0.06, vy: -0.01 - Math.random() * 0.03, life: 2 + Math.random() * 2, t: now, r: 2 + Math.random() * 5, big: 1 });
     }
     if (this.swings % 28 === 0 && !gold) { this.tired = now + 1300; Sound.play('breath'); this.say(MINE_SAY.tired, 1600, false); }
@@ -7760,7 +7815,7 @@ const Mine = {
     $('mnMore').onclick = () => { el.classList.remove('on'); Sound.play('click'); D.more = true; this.saveDebt(); this.ph = 'play'; this.lastAct = performance.now(); this.hud(); this.say(`좋아, 더 캐. 대신 ${fmtWon(FEEL.mineMore)}까지만이다.`, 3000); };
   },
   async finish(gold) {
-    if (this.ph !== 'play') return; this.ph = 'done'; this.hold = false; const D = this.debt, N = this.need(D), left = Math.max(0, D.more ? Math.min(D.got, N + FEEL.mineMore) - N : D.got - N); /* 넘친 건 금 몫뿐 (곡괭이질은 남은 돈까지만) */
+    if (this.ph !== 'play') return; this.ph = 'done'; this.hold = false; this.unlock(); this.lift = null; this.lz = null; const D = this.debt, N = this.need(D), left = Math.max(0, D.more ? Math.min(D.got, N + FEEL.mineMore) - N : D.got - N); /* 넘친 건 금 몫뿐 (곡괭이질은 남은 돈까지만) */
     if (left > 0) { Money.why(`석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left; HUD.setCash(State.cash); }
     this.lim = Math.min(FEEL.mineAllow, this.lim + (D.fill || 0)); this.saveLim(); // 땅굴 한도도 다시 찼다
     this.debt = null; this.saveDebt(); Live.save(); if (Net.on) Net.news(`석탄 땅굴에서 빚 ${fmtWon(D.owe)} 다 갚고 나옴${gold ? ' (금 캠!)' : ''}`);
@@ -7771,7 +7826,7 @@ const Mine = {
     this.close(left);
   },
   close(left) {
-    if (Net.on) Net.send({ t: 'mpos', out: 1 });
+    if (Net.on) Net.send({ t: 'mpos', out: 1 }); this.unlock(); this.lift = null; this.lz = null;
     let at = null; try { at = this.dropRemote(); } catch (e) { console.error(e); }
     this.open_ = false; this.hold = false; this.ph = null; $('mineWin').classList.remove('in'); this.el.innerHTML = '';
     for (const k in Pressed) Pressed[k] = false; for (const k in Keys) Keys[k] = false;
@@ -7825,7 +7880,7 @@ const Mine = {
       if (this.sw) { const k = (now - this.sw.t0) / 1000 / MINE_SW; if (!this.sw.hit && k >= 0.52) { this.sw.hit = true; this.impact(now); } if (k >= 1) { this.sw = null; if (this.hold) this.swing(); } }
       if (this.gridDirty) this.buildGrid();
       this.ambient(now);
-      if (Net.on) { this.posT = (this.posT || 0) - dt; if (this.posT <= 0) { this.posT = 0.25; Net.send({ t: 'mpos', x: +this.cx.toFixed(2), y: +this.cy.toFixed(2), a: +this.ang.toFixed(2), sw: this.sw ? 1 : 0 }); } }
+      if (Net.on) { this.posT = (this.posT || 0) - dt; if (this.posT <= 0) { this.posT = 0.25; Net.send({ t: 'mpos', x: +this.cx.toFixed(2), y: +this.cy.toFixed(2), a: +this.ang.toFixed(2), sw: this.sw ? 1 : 0, l: this.lv | 0 }); } }
       for (const id in this.others) { const o = this.others[id]; if (now - o.at > 6000) { delete this.others[id]; continue; } const k = Math.min(1, dt * 8); o.x += (o.tx - o.x) * k; o.y += (o.ty - o.y) * k; let da = o.ta - o.a; da -= Math.round(da / (Math.PI * 2)) * Math.PI * 2; o.a += da * k; }
       this.render(c, now, dt); this.fx(now); this.map(now); if (this.bigOn) { if (this.ph === 'play') this.drawBig(now); else this.bigMap(false); }
       if (this.fade > 0) this.fade = Math.max(0, this.fade - dt * 0.9);
@@ -7837,7 +7892,7 @@ const Mine = {
     if (now > this.nextQuake && this.ph === 'play') { this.nextQuake = now + 26000 + Math.random() * 24000; Sound.play('rumble'); this.shake = 1.6; this.quake = now; for (let i = 0; i < 40; i++) this.dust.push({ x: Math.random(), y: Math.random() * 0.2, vx: (Math.random() - 0.5) * 0.02, vy: 0.04 + Math.random() * 0.08, life: 2.5, t: now, r: 1 + Math.random() * 2, fall: 1 }); setTimeout(() => this.open_ && this.ph === 'play' && this.say(MINE_SAY.any[2], 2400), 700); }
     if (this.ph === 'play' && now - this.lastAct > 9000 && now > (this.idleSaid || 0)) { this.idleSaid = now + 14000; this.say(MINE_SAY.idle[Math.floor(Math.random() * MINE_SAY.idle.length)], 2800); }
     else if (this.ph === 'play' && now > this.nextAny) { this.nextAny = now + 22000 + Math.random() * 20000; this.say(MINE_SAY.any[Math.floor(Math.random() * MINE_SAY.any.length)], 3200); }
-    if (this.ph === 'play' && !this.coalSaid) { const [fx, fy] = this.front(); if (!this.isOpen(fx, fy) && this.isCoal(fx, fy)) { this.coalSaid = true; setTimeout(() => this.open_ && this.say(MINE_SAY.coal, 3400), 1500); } }
+    if (this.ph === 'play' && !this.coalSaid) { const [fx, fy, fl] = this.front(); if (!this.isOpen(fx, fy, fl) && this.isCoal(fx, fy, fl)) { this.coalSaid = true; setTimeout(() => this.open_ && this.say(MINE_SAY.coal, 3400), 1500); } }
   },
 
   // 빛: 매달린 등 + 다른 광부 헤드랜턴 (가까운 것만)
@@ -7848,10 +7903,11 @@ const Mine = {
       const s = mineHash(x, y, 81), fl = (Math.sin(now / 1000 * (9 + s * 6) + s * 40) > 0.97 - (s < 0.2 ? 0.25 : 0) ? 0.55 : 1) * (0.92 + Math.sin(now / 1000 * 3 + s * 9) * 0.05);
       L.push({ x: x + 0.5, y: y + 0.5, z: 0.92, I: 1.25 * fl, r: 1.0, g: 0.64, b: 0.3, lamp: 1, s, d2: (x + 0.5 - camx) ** 2 + (y + 0.5 - camy) ** 2 });
     }
-    for (const id in this.others) { const o = this.others[id]; const d2 = (o.x - camx) ** 2 + (o.y - camy) ** 2; if (d2 < 100) L.push({ x: o.x + Math.cos(o.a) * 0.3, y: o.y + Math.sin(o.a) * 0.3, z: 0.85, I: 0.9, r: 1, g: 0.92, b: 0.75, d2 }); }
+    for (const id in this.others) { const o = this.others[id]; const d2 = (o.x - camx) ** 2 + (o.y - camy) ** 2; if (d2 < 100 && (o.l | 0) === (this.lv | 0)) L.push({ x: o.x + Math.cos(o.a) * 0.3, y: o.y + Math.sin(o.a) * 0.3, z: 0.85, I: 0.9, r: 1, g: 0.92, b: 0.75, d2 }); }
     L.sort((a, b) => a.d2 - b.d2); return L.slice(0, 5);
   },
   render(c, now, dt) {
+    if (this.glOn() && this.renderGL(c, now, dt)) return; // v192: 그래픽 카드 3D (위아래 360°, 승강기 구멍으로 아래층이 보인다)
     const W = this.W, H = this.H, B = this.buf, zb = this.zb, T = this.tex, N = MINE_TS, M = N - 1, lut = this.lut;
     this.labels = []; const t = now / 1000, walk = this.walk || 0;
     const breathe = Math.sin(t * 1.6) * 0.006, bobZ = walk * 0.022 + breathe;
@@ -7864,8 +7920,8 @@ const Mine = {
     this.back = this.back == null || backT < this.back ? backT : this.back + (backT - this.back) * Math.min(1, dt * 5);
     const ang = this.ang + (Math.random() - 0.5) * 0.012 * shk, dX = Math.cos(ang), dY = Math.sin(ang), pX = -dY * MINE_PLANE, pY = dX * MINE_PLANE;
     const camx = this.cx - Math.cos(this.ang) * (this.back - bump), camy = this.cy - Math.sin(this.ang) * (this.back - bump), camZ = MINE_EYE + bobZ;
-    const K = (W / 2) / MINE_PLANE, Kv = K * 0.8, hz = H * 0.42 + (this.pitch || 0) + (Math.random() - 0.5) * 3 * shk + walk * 1.5, Ls = this.lights(now, camx, camy), nL = Ls.length;
-    const [ffx, ffy] = this.front(), fkey = ffx + ',' + ffy, fprog = this.prog[fkey] || 0, goldOn = this.goldCell === fkey;
+    const K = (W / 2) / MINE_PLANE, Kv = K * 0.8, hz = H * 0.42 + Math.max(-H * 0.4, Math.min(H * 0.4, Math.tan(Math.max(-1.2, Math.min(1.2, this.pi || 0))) * Kv)) + (Math.random() - 0.5) * 3 * shk + walk * 1.5, Ls = this.lights(now, camx, camy), nL = Ls.length;
+    const [ffx, ffy, ffl] = this.front(), fkey = mineK(ffx, ffy, ffl), fside = ffl === (this.lv | 0), fprog = fside ? this.prog[fkey] || 0 : 0, goldOn = fside && this.goldCell === fkey;
     // 헤드랜턴: 화면 가운데 둥근 빛 + 넓게 번지는 빛 (가로·세로 따로 계산해 곱한다)
     const sx = this.sx || (this.sx = new Float32Array(480)), sy = this.sy || (this.sy = new Float32Array(480)), sx2 = this.sx2 || (this.sx2 = new Float32Array(480)), sy2 = this.sy2 || (this.sy2 = new Float32Array(480));
     const lcx = W * 0.5 + Math.sin(t * 0.7) * W * 0.012, lcy = H * 0.5 + walk * 2, fl = 0.97 + Math.sin(t * 23) * 0.015 + Math.sin(t * 7.3) * 0.015;
@@ -7886,7 +7942,7 @@ const Mine = {
       const sc = Kv / perp, y0 = hz - (MINE_WALL - camZ) * sc, y1 = hz + camZ * sc;
       let wx = side === 0 ? camy + perp * rdy : camx + perp * rdx; wx -= Math.floor(wx); if ((side === 0 && rdx > 0) || (side === 1 && rdy < 0)) wx = 1 - wx;
       const hx = camx + perp * rdx, hy = camy + perp * rdy, coal = this.isCoal(mx, my), vr = Math.floor(mineHash(mx, my, side + 1) * 3), tex = coal ? T.coal[vr] : T.rock[vr];
-      const isFace = mx === ffx && my === ffy, post = (wx < 0.09 || wx > 0.91) && !isFace, cm = isFace && fprog ? T.crack[Math.min(1, fprog - 1)] : null;
+      const isFace = fside && mx === ffx && my === ffy, post = (wx < 0.09 || wx > 0.91) && !isFace, cm = isFace && fprog ? T.crack[Math.min(1, fprog - 1)] : null;
       const tX = Math.floor(wx * N) & M, tXp = Math.floor((wx < 0.09 ? wx / 0.09 : (1 - wx) / 0.09) * 22) & M;
       const shade = side ? 0.78 : 1, hdW = HD / (1 + HK * perp * perp);
       for (let i = 0; i < nL; i++) { const L = Ls[i]; lx[i] = (hx - L.x) ** 2 + (hy - L.y) ** 2; }
@@ -7936,8 +7992,8 @@ const Mine = {
     const lightAt = (x, y, z, d) => { let r = AR, g = AG, b = AB; for (const L of Ls) { const q = L.I / (1 + LK * ((x - L.x) ** 2 + (y - L.y) ** 2 + (z - L.z) ** 2)); r += q * L.r; g += q * L.g; b += q * L.b; } const hd = 0.8 * HD / (1 + HK * d * d); return [(r + hd) * 2, (g + hd * 0.9) * 2, (b + hd * 0.72) * 2]; };
     const glows = [], sprites = [];
     for (const L of Ls) if (L.lamp && !(Math.floor(L.x) === this.px && Math.floor(L.y) === this.py)) sprites.push({ k: 'lamp', L, d: (L.x - camx) * dX + (L.y - camy) * dY }); // 내 머리 바로 위 등은 안 그린다 (눈부심)
-    for (const id in this.others) { const o = this.others[id], d = (o.x - camx) * dX + (o.y - camy) * dY; if (d > 0.75) sprites.push({ k: 'miner', o, d }); } // 바로 옆(같은 칸)에 겹친 사람은 화면을 가리니 안 그린다
-    this.rubble = this.rubble.filter(r => now - r.t < 90000); for (const r of this.rubble) sprites.push({ k: 'rub', r, d: (r.x - camx) * dX + (r.y - camy) * dY });
+    for (const id in this.others) { const o = this.others[id], d = (o.x - camx) * dX + (o.y - camy) * dY; if (d > 0.75 && (o.l | 0) === (this.lv | 0)) sprites.push({ k: 'miner', o, d }); } // 바로 옆(같은 칸)에 겹친 사람은 화면을 가리니 안 그린다
+    this.rubble = this.rubble.filter(r => now - r.t < 90000); for (const r of this.rubble) if ((r.l | 0) === (this.lv | 0)) sprites.push({ k: 'rub', r, d: (r.x - camx) * dX + (r.y - camy) * dY });
     sprites.sort((a, b) => b.d - a.d);
     for (const s of sprites) {
       if (s.k === 'lamp') { const L = s.L, br = Math.min(1, L.I / 1.15), P = bill(L.x, L.y, 0.74, MINE_WALL, 0.12, null, (u, v) => { if (v < 0.4) return Math.abs(u - 0.5) < 0.09 ? [14, 12, 10, 1] : null; const cu = (u - 0.5) / 0.5, cv = (v - 0.72) / 0.3, rr = cu * cu + cv * cv; if (rr > 1) return null; if ((Math.abs(cu) > 0.6 && Math.abs(cu) < 0.8) || Math.abs(v - 0.62) < 0.035 || v > 0.96) return [34, 28, 20, 1]; const k = br * (1 - rr * 0.4); return [255 * k | 0, 196 * k | 0, 110 * k | 0, 1]; }); if (P) glows.push({ x: P.sx, y: hz - (0.84 - camZ) * Kv / P.d, r: 0.85 * K / P.d, a: 0.42 * br, d: P.d }); }
@@ -7948,6 +8004,13 @@ const Mine = {
     // 등불 번짐
     c.save(); c.globalCompositeOperation = 'lighter';
     for (const gw of glows) { if (!isFinite(gw.x) || !isFinite(gw.y) || !isFinite(gw.r)) continue; const xi = Math.max(0, Math.min(W - 1, Math.round(gw.x))); if (gw.d > zb[xi] + 0.05) continue; const r = Math.max(2, Math.min(W, gw.r)), g = c.createRadialGradient(gw.x, gw.y, 0, gw.x, gw.y, r); g.addColorStop(0, gw.cool ? `rgba(255,240,200,${gw.a})` : `rgba(255,170,70,${gw.a})`); g.addColorStop(0.3, gw.cool ? `rgba(255,220,160,${gw.a * 0.22})` : `rgba(255,120,40,${gw.a * 0.25})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(gw.x - r, gw.y - r, r * 2, r * 2); }
+    c.restore();
+    this.over(c, now, dt, walk);
+  },
+  // 화면 위에 덧그리는 것: 먼지 · 튀는 돌 · 곡괭이 · 가장자리 어둠 (예전 그림·3D 그림 둘 다)
+  over(c, now, dt, walk) {
+    const W = this.W, H = this.H, t = now / 1000;
+    c.save(); c.globalCompositeOperation = 'lighter';
     // 헤드랜턴 빛줄기 속 먼지 · 무너질 때 흙먼지
     if (this.dust.length < 30) this.dust.push({ x: 0.32 + Math.random() * 0.36, y: 0.25 + Math.random() * 0.5, vx: (Math.random() - 0.5) * 0.01, vy: (Math.random() - 0.5) * 0.008, life: 3 + Math.random() * 4, t: now, r: 0.6 + Math.random() * 0.8 });
     this.dust = this.dust.filter(p => (now - p.t) / 1000 < p.life).slice(-170);
@@ -7963,7 +8026,7 @@ const Mine = {
     const br = c.createLinearGradient(0, 0, 0, H * 0.22); br.addColorStop(0, 'rgba(0,0,0,.96)'); br.addColorStop(0.5, 'rgba(0,0,0,.6)'); br.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = br; c.beginPath(); c.moveTo(0, 0); c.lineTo(W, 0); c.lineTo(W, H * 0.13); c.quadraticCurveTo(W / 2, H * 0.27, 0, H * 0.13); c.closePath(); c.fill();
     if (this.goldHit && now - this.goldHit < 2400) { const k = (now - this.goldHit) / 2400, a = (1 - k) * 0.45; c.fillStyle = `rgba(255,196,60,${a})`; c.fillRect(0, 0, W, H); for (let i = 0; i < 24; i++) { const gx = mineHash(i, Math.floor(now / 90), 4) * W, gy = mineHash(i, 3, Math.floor(now / 90)) * H; c.fillStyle = `rgba(255,240,170,${1 - k})`; c.fillRect(gx | 0, gy | 0, 1, 1); } }
     if (this.fade > 0) { c.fillStyle = `rgba(0,0,0,${this.fade})`; c.fillRect(0, 0, W, H); }
-  },
+    },
   // 광차 탄 1인칭: 아래쪽에 광차 앞 테두리 + 손잡이 잡은 두 손 (덜컹덜컹)
   drawCart(c, now) {
     const W = this.W, H = this.H, t = now / 1000, sp = this.cart ? this.cart.v / MINE_CART : 0, jig = Math.round(Math.sin(t * 31) * sp * 1.5 + Math.sin(t * 13) * sp), y0 = Math.round(H * 0.74) + jig;
@@ -8037,8 +8100,8 @@ const Mine = {
     const el = this.el && this.el.querySelector('.mnBig'); if (!el) return; if (on && this.ph !== 'play') return;
     this.bigOn = !!on; el.classList.toggle('on', this.bigOn); Sound.play('click');
     if (!on) return;
-    this.hold = false; const dig = $('mnDig'); if (dig) dig.classList.remove('on');
-    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const k of this.cells) { const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1); if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    this.hold = false; this.unlock(); const dig = $('mnDig'); if (dig) dig.classList.remove('on');
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const k of this.cells) { const [x, y, L] = mineP(k); if (L !== (this.lv | 0)) continue; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
     const bc = $('mnBigCv'), r = bc.getBoundingClientRect(), w = r.width || innerWidth * 0.8, h = r.height || innerHeight * 0.6;
     this.bm = { x: (x0 + x1 + 1) / 2, y: (y0 + y1 + 1) / 2, cs: Math.max(3, Math.min(26, Math.min(w / (x1 - x0 + 5), h / (y1 - y0 + 5)))) };
   },
@@ -8047,25 +8110,27 @@ const Mine = {
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
     const c = cv.getContext('2d'), bm = this.bm, cs = bm.cs * dpr, X = x => W / 2 + (x - bm.x) * cs, Y = y => H / 2 + (y - bm.y) * cs;
     c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#0b0805'; c.fillRect(0, 0, W, H);
-    const gx0 = Math.floor(bm.x - W / 2 / cs) - 1, gx1 = Math.ceil(bm.x + W / 2 / cs) + 1, gy0 = Math.floor(bm.y - H / 2 / cs) - 1, gy1 = Math.ceil(bm.y + H / 2 / cs) + 1, has = (x, y) => this.cells.has(x + ',' + y);
-    const pts = []; for (const k of this.cells) { const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1); if (x >= gx0 && x <= gx1 && y >= gy0 && y <= gy1) pts.push(x, y); }
+    const gx0 = Math.floor(bm.x - W / 2 / cs) - 1, gx1 = Math.ceil(bm.x + W / 2 / cs) + 1, gy0 = Math.floor(bm.y - H / 2 / cs) - 1, gy1 = Math.ceil(bm.y + H / 2 / cs) + 1, has = (x, y) => this.cells.has(this.k(x, y));
+    const pts = []; for (const k of this.cells) { const [x, y, L] = mineP(k); if (L === (this.lv | 0) && x >= gx0 && x <= gx1 && y >= gy0 && y <= gy1) pts.push(x, y); }
     // 굴 가장자리 바위 (석탄은 검게)
     for (let i = 0; i < pts.length; i += 2) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = pts[i] + a, y = pts[i + 1] + b; if (has(x, y)) continue; c.fillStyle = this.isCoal(x, y) ? '#1c1a1b' : '#2a2117'; c.fillRect(Math.floor(X(x)), Math.floor(Y(y)), Math.ceil(cs) + 1, Math.ceil(cs) + 1); }
     for (let i = 0; i < pts.length; i += 2) { const x = pts[i], y = pts[i + 1]; c.fillStyle = (x + y) & 1 ? '#715b3b' : '#6b5638'; c.fillRect(Math.floor(X(x)), Math.floor(Y(y)), Math.ceil(cs) + 1, Math.ceil(cs) + 1); }
     for (let i = 0; i < pts.length; i += 2) { const x = pts[i], y = pts[i + 1]; if (!this.isLamp(x, y)) continue; c.fillStyle = 'rgba(255,190,80,.22)'; c.beginPath(); c.arc(X(x + 0.5), Y(y + 0.5), cs * 1.1, 0, 7); c.fill(); c.fillStyle = '#ffc35a'; c.beginPath(); c.arc(X(x + 0.5), Y(y + 0.5), Math.max(1.5 * dpr, cs * 0.2), 0, 7); c.fill(); }
     const f = Math.round(12 * dpr), tag = (t, x, y, col) => { c.font = `700 ${f}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.lineWidth = f * 0.3; c.strokeStyle = 'rgba(0,0,0,.85)'; c.strokeText(t, x, y); c.fillStyle = col; c.fillText(t, x, y); };
     // 광차 레일
-    if (this.railSet && this.railSet.size) { c.strokeStyle = 'rgba(190,190,200,.75)'; c.lineWidth = Math.max(1, cs * 0.12); c.beginPath(); for (const k of this.railSet) { const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1); if (x < gx0 || x > gx1 || y < gy0 || y > gy1) continue; for (const [a, b] of [[1, 0], [0, 1]]) if (this.railSet.has((x + a) + ',' + (y + b))) { c.moveTo(X(x + 0.5), Y(y + 0.5)); c.lineTo(X(x + a + 0.5), Y(y + b + 0.5)); } } c.stroke(); }
-    // 엘리베이터 (0,0)
-    c.fillStyle = '#6c8a5a'; c.fillRect(Math.floor(X(0)), Math.floor(Y(0)), Math.ceil(cs) + 1, Math.ceil(cs) + 1); c.strokeStyle = '#b8e09a'; c.lineWidth = Math.max(1, dpr); c.strokeRect(X(0) + 1, Y(0) + 1, cs - 2, cs - 2); tag('엘리베이터', X(0.5), Y(0) - 5 * dpr, '#cdeeb4');
+    if (this.railSet && this.railSet.size) { c.strokeStyle = 'rgba(190,190,200,.75)'; c.lineWidth = Math.max(1, cs * 0.12); c.beginPath(); for (const k of this.railSet) { const [x, y] = mineP(k); if (x < gx0 || x > gx1 || y < gy0 || y > gy1) continue; for (const [a, b] of [[1, 0], [0, 1]]) if (this.railSet.has(this.k(x + a, y + b))) { c.moveTo(X(x + 0.5), Y(y + 0.5)); c.lineTo(X(x + a + 0.5), Y(y + b + 0.5)); } } c.stroke(); }
+    // 승강기 (위아래로 뚫린 칸)
+    if (this.liftSet) for (const k of this.liftSet) { const [x, y] = mineP(k); if (!has(x, y)) continue; c.strokeStyle = '#ffd34a'; c.lineWidth = Math.max(1.5, cs * 0.12); c.strokeRect(X(x) + cs * 0.15, Y(y) + cs * 0.15, cs * 0.7, cs * 0.7); c.beginPath(); c.moveTo(X(x) + cs * 0.15, Y(y) + cs * 0.15); c.lineTo(X(x) + cs * 0.85, Y(y) + cs * 0.85); c.moveTo(X(x) + cs * 0.85, Y(y) + cs * 0.15); c.lineTo(X(x) + cs * 0.15, Y(y) + cs * 0.85); c.stroke(); if (cs > 9 * dpr) tag('승강기', X(x + 0.5), Y(y) - 4 * dpr, '#ffe28a'); }
+    // 엘리베이터 (0,0): 맨 위층에만
+    if (!this.lv) { c.fillStyle = '#6c8a5a'; c.fillRect(Math.floor(X(0)), Math.floor(Y(0)), Math.ceil(cs) + 1, Math.ceil(cs) + 1); c.strokeStyle = '#b8e09a'; c.lineWidth = Math.max(1, dpr); c.strokeRect(X(0) + 1, Y(0) + 1, cs - 2, cs - 2); tag('엘리베이터', X(0.5), Y(0) - 5 * dpr, '#cdeeb4'); }
     // 마지막으로 판 곳
-    if (this.last) { const [lx, ly] = this.last, p = 0.5 + 0.5 * Math.sin(now / 300); c.strokeStyle = `rgba(255,120,60,${0.5 + p * 0.5})`; c.lineWidth = 2 * dpr; c.strokeRect(X(lx) + 1, Y(ly) + 1, cs - 2, cs - 2); }
+    if (this.last && (this.last[3] | 0) === (this.lv | 0)) { const [lx, ly] = this.last, p = 0.5 + 0.5 * Math.sin(now / 300); c.strokeStyle = `rgba(255,120,60,${0.5 + p * 0.5})`; c.lineWidth = 2 * dpr; c.strokeRect(X(lx) + 1, Y(ly) + 1, cs - 2, cs - 2); }
     // 다른 광부
-    for (const id in this.others) { const o = this.others[id]; c.fillStyle = '#7fd4ff'; c.beginPath(); c.arc(X(o.x), Y(o.y), Math.max(4 * dpr, cs * 0.32), 0, 7); c.fill(); tag(o.name, X(o.x), Y(o.y) - Math.max(7 * dpr, cs * 0.45), '#bfe8ff'); }
+    for (const id in this.others) { const o = this.others[id]; if ((o.l | 0) !== (this.lv | 0)) continue; c.fillStyle = '#7fd4ff'; c.beginPath(); c.arc(X(o.x), Y(o.y), Math.max(4 * dpr, cs * 0.32), 0, 7); c.fill(); tag(o.name, X(o.x), Y(o.y) - Math.max(7 * dpr, cs * 0.45), '#bfe8ff'); }
     // 나
     const ms = Math.max(7 * dpr, cs * 0.55); c.save(); c.translate(X(this.cx), Y(this.cy)); c.rotate(this.ang); c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = dpr; c.beginPath(); c.moveTo(ms, 0); c.lineTo(-ms * 0.65, -ms * 0.65); c.lineTo(-ms * 0.3, 0); c.lineTo(-ms * 0.65, ms * 0.65); c.closePath(); c.fill(); c.stroke(); c.restore();
     tag('나', X(this.cx), Y(this.cy) - ms - 4 * dpr, '#fff');
-    const n = Object.keys(this.others).length, inf = this.el.querySelector('.mbInfo'), txt = `판 굴 ${(this.cells.size).toLocaleString()}칸 · 지금 ${n + 1}명이 캐는 중`; if (inf && inf.textContent !== txt) inf.textContent = txt;
+    const n = Object.keys(this.others).length, inf = this.el.querySelector('.mbInfo'), txt = `지하 ${(this.lv | 0) + 1}층 · 판 굴 ${(this.cells.size).toLocaleString()}칸 · 지금 ${n + 1}명이 캐는 중`; if (inf && inf.textContent !== txt) inf.textContent = txt;
   },
   // 작은 지도: 굴 모양 · 등 · 나 · 다른 광부
   map(now) {
@@ -8074,10 +8139,11 @@ const Mine = {
     const ox = this.cx - 0.5, oy = this.cy - 0.5, X = x => S / 2 + (x - ox - 0.5) * cs, Y = y => S / 2 + (y - oy - 0.5) * cs;
     for (let y = Math.floor(oy) - R - 1; y <= Math.floor(oy) + R + 1; y++) for (let x = Math.floor(ox) - R - 1; x <= Math.floor(ox) + R + 1; x++) {
       if (!this.g(x, y)) { if (this.isCoal(x, y) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => this.g(x + a, y + b))) { c.fillStyle = '#1d1b1c'; c.fillRect(X(x), Y(y), cs + 0.5, cs + 0.5); } continue; }
-      c.fillStyle = x === 0 && y === 0 ? '#6c8a5a' : '#6b5638'; c.fillRect(X(x), Y(y), cs + 0.5, cs + 0.5);
+      c.fillStyle = x === 0 && y === 0 && !this.lv ? '#6c8a5a' : '#6b5638'; c.fillRect(X(x), Y(y), cs + 0.5, cs + 0.5);
+      if (this.liftSet && this.liftSet.has(x + ',' + y)) { c.strokeStyle = '#ffd34a'; c.lineWidth = 2; c.strokeRect(X(x) + 2, Y(y) + 2, cs - 4, cs - 4); c.beginPath(); c.moveTo(X(x) + 4, Y(y) + 4); c.lineTo(X(x) + cs - 4, Y(y) + cs - 4); c.moveTo(X(x) + cs - 4, Y(y) + 4); c.lineTo(X(x) + 4, Y(y) + cs - 4); c.stroke(); }
       if (this.isLamp(x, y)) { c.fillStyle = '#ffc35a'; c.fillRect(X(x) + cs * 0.35, Y(y) + cs * 0.35, cs * 0.3, cs * 0.3); }
     }
-    for (const id in this.others) { const o = this.others[id]; c.fillStyle = '#7fd4ff'; c.beginPath(); c.arc(X(o.x - 0.5) + cs / 2, Y(o.y - 0.5) + cs / 2, cs * 0.35, 0, 7); c.fill(); }
+    for (const id in this.others) { const o = this.others[id]; if ((o.l | 0) !== (this.lv | 0)) continue; c.fillStyle = '#7fd4ff'; c.beginPath(); c.arc(X(o.x - 0.5) + cs / 2, Y(o.y - 0.5) + cs / 2, cs * 0.35, 0, 7); c.fill(); }
     c.translate(S / 2 + cs * 0, S / 2); c.rotate(this.ang); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(cs * 0.7, 0); c.lineTo(-cs * 0.45, -cs * 0.45); c.lineTo(-cs * 0.2, 0); c.lineTo(-cs * 0.45, cs * 0.45); c.closePath(); c.fill();
     c.restore();
   },
@@ -8140,6 +8206,193 @@ const MineExit = {
     return true;
   },
 };
+
+/* ============================================================
+ * 석탄 땅굴 3D 그림 (v192, 사용자 '땅굴도 360도 둘러볼 수 있게' + '지하로도 팔 수 있게'):
+ * 그래픽 카드에서 칸(복셀)마다 빛을 쏘아 그린다. 위아래 끝까지 보이고, 승강기 구멍으로 아래층이 내려다보인다.
+ * 화면은 예전처럼 낮은 해상도 그대로 (도트 느낌). WebGL2가 없으면 예전 그림(render)으로.
+ * 좌표: x·y는 칸, z는 높이. 층 L은 z ∈ [−L·MINE_WALL, (1−L)·MINE_WALL]
+ * ============================================================ */
+const MG_VS = `#version 300 es
+in vec2 aP; void main() { gl_Position = vec4(aP, 0.0, 1.0); }`;
+const MG_FS = `#version 300 es
+precision highp float; precision highp int; precision highp usampler3D;
+uniform usampler3D uG; uniform sampler2D uA;
+uniform vec3 uC, uF, uR, uU; uniform vec2 uTan, uRes, uO, uHo; uniform int uS, uD, uNL;
+uniform vec4 uL[8], uLc[8], uFace; uniform float uGold, uPlat, uT; uniform vec3 uHd;
+out vec4 o;
+const float HW = ${MINE_WALL.toFixed(3)};
+uint cell(ivec3 c) { if (c.x < 0 || c.y < 0 || c.z < 0 || c.x >= uS || c.y >= uS || c.z >= uD) return 0u; return texelFetch(uG, c, 0).r; }
+float h31(vec3 p) { p = fract(p * vec3(.1031, .1030, .0973)); p += dot(p, p.yxz + 33.33); return fract((p.x + p.y) * p.z); }
+vec4 tx(int t, vec2 uv) { ivec2 i = clamp(ivec2(fract(uv) * 128.0), ivec2(0), ivec2(127)); vec4 c = texelFetch(uA, ivec2(t * 128 + i.x, i.y), 0); return vec4(c.rgb * 0.5, c.a * 3.0); }
+vec4 mk(vec2 uv) { ivec2 i = clamp(ivec2(fract(uv) * 128.0), ivec2(0), ivec2(127)); return texelFetch(uA, ivec2(9 * 128 + i.x, i.y), 0); }
+float flick(vec3 id) { float s = h31(id + 7.0); return (sin(uT * (9.0 + s * 6.0) + s * 40.0) > 0.97 - (s < 0.2 ? 0.25 : 0.0) ? 0.55 : 1.0) * (0.92 + sin(uT * 3.0 + s * 9.0) * 0.05); }
+void main() {
+  vec2 nd = gl_FragCoord.xy / uRes * 2.0 - 1.0;
+  vec3 rd = normalize(uF + uR * nd.x * uTan.x + uU * nd.y * uTan.y);
+  vec3 q0 = vec3(uC.x - uO.x, uC.y - uO.y, 1.0 - uC.z / HW), d = vec3(rd.x, rd.y, -rd.z / HW);
+  ivec3 c = ivec3(floor(q0)), pc = c; vec3 st = vec3(d.x < 0.0 ? -1.0 : 1.0, d.y < 0.0 ? -1.0 : 1.0, d.z < 0.0 ? -1.0 : 1.0);
+  vec3 td = 1.0 / max(abs(d), vec3(1e-6)), tm = (st * (vec3(c) - q0) + st * 0.5 + 0.5) * td;
+  uint pv = cell(c), hv = 0u; float t = 0.0, tH = 80.0; int ax = -1, kind = 0; vec3 glow = vec3(0.0); float lfl = 1.0; vec2 puv = vec2(0.0);
+  for (int i = 0; i < 90; i++) {
+    float te = min(tm.x, min(tm.y, tm.z));
+    vec3 cw = vec3(vec2(c.xy) + uO, 0.0);
+    if ((pv & 4u) != 0u) { // 매달린 등: 갓 + 전구 + 번지는 빛
+      vec3 b = vec3(cw.xy + 0.5, (1.0 - float(c.z)) * HW - 0.21), oc = uC - b; float bb = dot(oc, rd), tc = max(-bb, 0.0); vec3 cl = oc + rd * tc; float dm = dot(cl, cl), fl = flick(vec3(cw.xy, float(c.z)));
+      float sh = bb * bb - dot(oc, oc) + 0.0064; bool got = false;
+      if (sh > 0.0) { float tb = -bb - sqrt(sh); vec3 P = uC + rd * tb; if (tb > 0.0 && P.z > b.z + 0.005) { tH = tb; kind = 4; got = true; } }
+      float hb = bb * bb - dot(oc, oc) + 0.0028; if (!got && hb > 0.0) { float tb = -bb - sqrt(hb); if (tb > 0.0) { tH = tb; kind = 3; lfl = fl; got = true; } }
+      glow += vec3(1.0, 0.6, 0.26) * fl * (0.0022 / (dm + 0.0022) * 0.55 + 0.05 / (1.0 + dm * 22.0));
+      if (got) break;
+    }
+    if ((pv & 64u) != 0u) { // 승강기: 철망 발판 + 네 귀퉁이 노란 기둥 (내가 있는 높이)
+      float tp = abs(rd.z) > 1e-5 ? (uPlat - uC.z) / rd.z : -1.0;
+      if (tp > t && tp < te) { vec2 f = fract(uC.xy + rd.xy * tp); float e = min(min(f.x, f.y), min(1.0 - f.x, 1.0 - f.y)); if (e < 0.07 || fract(f.x * 7.0) < 0.26 || fract(f.y * 7.0) < 0.26) { tH = tp; kind = 2; puv = f; break; } }
+      float best = te;
+      for (int k = 0; k < 4; k++) { vec2 pc2 = cw.xy + vec2(k == 0 || k == 3 ? 0.07 : 0.93, k < 2 ? 0.07 : 0.93), oc = uC.xy - pc2; float a = dot(rd.xy, rd.xy), b2 = dot(oc, rd.xy), cc = dot(oc, oc) - 0.0012, hh = b2 * b2 - a * cc;
+        if (hh > 0.0 && a > 1e-6) { float tk = (-b2 - sqrt(hh)) / a; float zk = uC.z + rd.z * tk; if (tk > t && tk < best && zk > uPlat && zk < uPlat + 0.95) { best = tk; } } }
+      if (best < te) { tH = best; kind = 5; break; }
+    }
+    t = te; pc = c;
+    if (tm.x < tm.y && tm.x < tm.z) { ax = 0; c.x += int(st.x); tm.x += td.x; } else if (tm.y < tm.z) { ax = 1; c.y += int(st.y); tm.y += td.y; } else { ax = 2; c.z += int(st.z); tm.z += td.z; }
+    uint v = cell(c); if ((v & 1u) == 0u) { tH = t; hv = v; kind = 1; break; }
+    pv = v;
+  }
+  vec3 P = uC + rd * tH, alb = vec3(0.0); float gl = 0.0; int lvS = pc.z; vec3 col;
+  if (kind == 3) { o = vec4(vec3(1.0, 0.77, 0.43) * lfl + glow, 1.0); gl_FragDepth = clamp(tH / 40.0, 0.0, 0.999); return; }
+  if (kind == 0) { o = vec4(glow, 1.0); gl_FragDepth = 0.999; return; }
+  if (kind == 4) { alb = vec3(0.07, 0.06, 0.05); gl = 0.4; }
+  else if (kind == 2) { float e = min(min(puv.x, puv.y), min(1.0 - puv.x, 1.0 - puv.y)); if (e < 0.07) { bool y = fract((puv.x + puv.y) * 3.0) < 0.5; alb = y ? vec3(0.55, 0.42, 0.06) : vec3(0.04, 0.035, 0.03); gl = 0.5; } else { alb = vec3(0.2, 0.21, 0.22); gl = 1.1; } }
+  else if (kind == 5) { alb = vec3(0.5, 0.38, 0.06); gl = 0.7; if (fract(P.z * 4.0) < 0.12) alb *= 0.35; }
+  else if (ax == 2) {
+    vec2 f = fract(P.xy); bool face = all(equal(c, ivec3(uFace.xyz)));
+    if (st.z > 0.0) { // 바닥 (젖은 흙 · 레일)
+      vec4 A = tx(7, f); alb = A.rgb; gl = A.a;
+      if ((pv & 8u) != 0u) { bool ew = (pv & 16u) != 0u, ns = (pv & 32u) != 0u; float a = ew ? f.y : f.x, b = ew ? f.x : f.y, a2 = ns && ew ? f.x : -9.0;
+        bool steel = abs(a - 0.33) < 0.035 || abs(a - 0.67) < 0.035 || (a2 > -1.0 && (abs(a2 - 0.33) < 0.035 || abs(a2 - 0.67) < 0.035)), slp = (fract(b * 5.0) < 0.34 && a > 0.2 && a < 0.8) || (a2 > -1.0 && fract(f.y * 5.0) < 0.34 && a2 > 0.2 && a2 < 0.8);
+        if (steel) { alb = vec3(0.27, 0.26, 0.25); gl = 1.2; } else if (slp) { alb = vec3(0.17, 0.11, 0.06); gl = 0.1; } }
+    } else { // 천장 + 칸 경계 들보
+      bool beam = f.x < 0.08 || f.x > 0.92 || f.y < 0.08 || f.y > 0.92; vec4 A = beam ? tx(6, f) : tx(8, f); alb = A.rgb * (beam ? 0.8 : 1.0); gl = A.a;
+    }
+    if (face && uFace.w > 0.5) { vec4 m = mk(f); if ((uFace.w < 1.5 ? m.r : m.g) > 0.5) { alb *= 0.15; gl = 0.0; } }
+  } else { // 벽 (바위 · 석탄 줄기 · 버팀목 · 승강기 레일)
+    float u = fract(ax == 0 ? P.y : P.x); if ((ax == 0 && rd.x > 0.0) || (ax == 1 && rd.y < 0.0)) u = 1.0 - u;
+    float zl = P.z + float(pc.z) * HW, v = clamp(1.0 - zl / HW, 0.0, 0.999); bool coal = (hv & 2u) != 0u, face = all(equal(c, ivec3(uFace.xyz))), lift = (pv & 64u) != 0u;
+    int vr = int(h31(vec3(vec2(c.xy) + uO, float(c.z * 4 + ax))) * 3.0); bool post = (u < 0.09 || u > 0.91) && !face && !lift;
+    vec4 A = post ? tx(6, vec2((u < 0.09 ? u / 0.09 : (1.0 - u) / 0.09) * 22.0 / 128.0, v * HW)) : tx(coal ? 3 + vr : vr, vec2(u, v * HW));
+    alb = A.rgb * (ax == 1 ? 0.78 : 1.0) * (post && u < 0.09 ? 0.9 : 1.0); gl = A.a;
+    vec4 m = mk(vec2(u, v * HW));
+    if (face && uFace.w > 0.5 && (uFace.w < 1.5 ? m.r : m.g) > 0.5) { alb *= 0.15; gl = 0.0; }
+    if (face && uGold > 0.5 && m.b > 0.5) { alb = vec3(0.9, 0.66, 0.16); gl = 2.6; }
+    if (lift) { float r1 = abs(u - 0.38), r2 = abs(u - 0.62); if (r1 < 0.02 || r2 < 0.02) { alb = vec3(0.13, 0.13, 0.14); gl = 0.5; } else if (u > 0.36 && u < 0.64 && fract(P.z * 2.5) < 0.07) { alb = vec3(0.07, 0.07, 0.08); gl = 0.3; } }
+  }
+  vec3 Lc = vec3(0.011, 0.012, 0.017);
+  for (int i = 0; i < 8; i++) { if (i >= uNL) break; if (abs(uL[i].w - float(lvS)) > 0.5) continue; vec3 dv = P - uL[i].xyz; Lc += uLc[i].rgb * (uLc[i].w / (1.0 + 3.0 * dot(dv, dv))); }
+  vec3 dv = P - uC; float dd = length(dv); vec3 sa = normalize(uF + uR * uHo.x * uTan.x + uU * uHo.y * uTan.y); float an = acos(clamp(dot(dv / max(dd, 1e-4), sa), -1.0, 1.0));
+  Lc += uHd * ((exp(-pow(an / 0.36, 2.0)) + 0.18 * exp(-pow(an / 0.8, 2.0))) * 1.55 / (1.0 + 0.55 * dd * dd));
+  col = (alb + gl * 0.11) * Lc;
+  o = vec4(pow(1.0 - exp(-2.3 * col), vec3(0.95)) + glow, 1.0);
+  gl_FragDepth = clamp(tH / 40.0, 0.0, 0.999);
+}`;
+const MG_SVS = `#version 300 es
+in vec2 aQ; uniform vec3 uC, uF, uR, uU, uP; uniform vec2 uTan, uS; out vec2 vUV;
+void main() { vec3 rh = normalize(vec3(uR.xy, 0.0)); vec3 w = uP + rh * (aQ.x - 0.5) * uS.x + vec3(0.0, 0.0, aQ.y * uS.y); vec3 v = w - uC; float d = dot(v, uF);
+  gl_Position = vec4(dot(v, uR) / uTan.x, dot(v, uU) / uTan.y, d - 0.05, d); vUV = vec2(aQ.x, 1.0 - aQ.y); }`;
+const MG_SFS = `#version 300 es
+precision highp float; uniform sampler2D uTx; uniform vec3 uC, uF, uSh; in vec2 vUV; out vec4 o;
+void main() { vec4 c = texture(uTx, vUV); if (c.a < 0.5) discard; float d = gl_FragCoord.z; vec3 col = c.a < 0.95 ? c.rgb : pow(1.0 - exp(-2.3 * c.rgb * 0.32 * uSh), vec3(0.95));
+  o = vec4(col, 1.0); }`;
+
+Object.assign(Mine, {
+  // WebGL2 준비 (한 번). 안 되면 false → 예전 그림
+  glOn() {
+    if (this.G3 !== undefined) return !!this.G3; this.G3 = null;
+    try {
+      const cv = document.createElement('canvas'); cv.id = 'mnGl'; const gl = cv.getContext('webgl2', { antialias: false, alpha: false, depth: true, preserveDrawingBuffer: false }); if (!gl) return false;
+      const sh = (t, src) => { const s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+      const prog = (v, f) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p; };
+      const W = prog(MG_VS, MG_FS), S = prog(MG_SVS, MG_SFS), U = (p, n) => gl.getUniformLocation(p, n);
+      const bW = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bW); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const bS = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bS); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
+      const uw = {}, us = {}; for (const n of ['uG', 'uA', 'uC', 'uF', 'uR', 'uU', 'uTan', 'uRes', 'uO', 'uHo', 'uS', 'uD', 'uNL', 'uL', 'uLc', 'uFace', 'uGold', 'uPlat', 'uT', 'uHd']) uw[n] = U(W, n); for (const n of ['uC', 'uF', 'uR', 'uU', 'uP', 'uTan', 'uS', 'uTx', 'uSh']) us[n] = U(S, n);
+      const tex = () => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; };
+      const g3 = gl.createTexture(); gl.bindTexture(gl.TEXTURE_3D, g3); for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_3D, k, v);
+      this.G3 = { cv, gl, W, S, uw, us, bW, bS, aW: gl.getAttribLocation(W, 'aP'), aS: gl.getAttribLocation(S, 'aQ'), at: tex(), g3, sp: [tex(), tex(), tex()], atOk: false, gv: -1 };
+    } catch (e) { console.warn('땅굴 3D 그림 못 씀', e); this.G3 = null; }
+    return !!this.G3;
+  },
+  // 텍스처 묶음: 바위 3 · 석탄 3 · 나무 · 바닥 · 천장 · (금 간 자국·금) — 128씩 가로로
+  glAtlas(g) {
+    const gl = g.gl, T = this.tex, N = MINE_TS, A = new Uint8Array(10 * N * N * 4), put = (t, src) => { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const i = (y * N + x) * 4, o = (y * N * 10 + t * N + x) * 4; A[o] = Math.min(255, src[i] * 510); A[o + 1] = Math.min(255, src[i + 1] * 510); A[o + 2] = Math.min(255, src[i + 2] * 510); A[o + 3] = Math.min(255, src[i + 3] / 3 * 255); } };
+    T.rock.forEach((r, i) => put(i, r)); T.coal.forEach((r, i) => put(3 + i, r)); put(6, T.wood); put(7, T.floor); put(8, T.ceil);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const o = (y * N * 10 + 9 * N + x) * 4, j = y * N + x; A[o] = T.crack[0][j] * 255; A[o + 1] = T.crack[1][j] * 255; A[o + 2] = T.gold[j] * 255; A[o + 3] = 255; }
+    gl.bindTexture(gl.TEXTURE_2D, g.at); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 10 * N, N, 0, gl.RGBA, gl.UNSIGNED_BYTE, A);
+    // 다른 광부 2장 (불빛 나는 칸은 알파 200) + 돌무더기
+    T.miner.forEach((sp, n) => { const px = new Uint8Array(sp.px); for (let i = 0; i < sp.W * sp.H; i++) if (px[i * 4 + 3] && sp.em[i]) px[i * 4 + 3] = 200; gl.bindTexture(gl.TEXTURE_2D, g.sp[n]); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, sp.W, sp.H, 0, gl.RGBA, gl.UNSIGNED_BYTE, px); });
+    const RW = 48, RH = 10, rb = new Uint8Array(RW * RH * 4); for (let y = 0; y < RH; y++) for (let x = 0; x < RW; x++) { const u = (x + 0.5) / RW, v = (y + 0.5) / RH, n = mineHash(Math.floor(u * 16 + 15), Math.floor(v * 5), 7), hgt = 1 - Math.abs(u - 0.5) * 1.9 + (n - 0.5) * 0.45; if (1 - v > hgt) continue; const k = 0.45 + n * 0.7, o = (y * RW + x) * 4, cc = n > 0.86 ? [12, 12, 14] : [56 * k, 48 * k, 40 * k]; rb[o] = cc[0]; rb[o + 1] = cc[1]; rb[o + 2] = cc[2]; rb[o + 3] = 255; }
+    gl.bindTexture(gl.TEXTURE_2D, g.sp[2]); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, RW, RH, 0, gl.RGBA, gl.UNSIGNED_BYTE, rb);
+    g.atOk = true;
+  },
+  // 빛: 가까운 등 (층마다) + 다른 광부 헤드랜턴. w = 층
+  glLights(now, cx, cy, cz) {
+    const L = [], r = 7, x0 = Math.floor(cx), y0 = Math.floor(cy), lv = this.lv | 0;
+    for (let l = Math.max(0, lv - 2); l <= Math.min(MINE_DEPTH - 1, lv + 2); l++) for (let y = y0 - r; y <= y0 + r; y++) for (let x = x0 - r; x <= x0 + r; x++) {
+      if (!this.isLamp(x, y, l) || !this.isOpen(x, y, l)) continue;
+      const s = mineHash(x, y, 81), fl = (Math.sin(now / 1000 * (9 + s * 6) + s * 40) > 0.97 - (s < 0.2 ? 0.25 : 0) ? 0.55 : 1) * (0.92 + Math.sin(now / 1000 * 3 + s * 9) * 0.05), z = -l * MINE_WALL + 0.92;
+      L.push({ p: [x + 0.5, y + 0.5, z, l], c: [1.0, 0.64, 0.3, 1.25 * fl], d2: (x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 + (z - cz) ** 2 * 4 });
+    }
+    for (const id in this.others) { const o = this.others[id], l = o.l | 0, z = -l * MINE_WALL + 0.85, d2 = (o.x - cx) ** 2 + (o.y - cy) ** 2 + (z - cz) ** 2; if (d2 < 120) L.push({ p: [o.x + Math.cos(o.a) * 0.3, o.y + Math.sin(o.a) * 0.3, z, l], c: [1, 0.92, 0.75, 0.9], d2 }); }
+    L.sort((a, b) => a.d2 - b.d2); return L.slice(0, 8);
+  },
+  // 한 프레임 (그렸으면 true)
+  renderGL(c, now, dt) {
+    const g = this.G3, gl = g.gl, W = this.W, H = this.H, mn = this.el && this.el.querySelector('.mn'); if (!mn) return false;
+    if (g.cv.parentNode !== mn) mn.insertBefore(g.cv, $('mnCv'));
+    if (g.cv.width !== W || g.cv.height !== H) { g.cv.width = W; g.cv.height = H; }
+    if (!g.atOk) this.glAtlas(g);
+    const S = MINE_R * 2;
+    if (g.gv !== this.g3v) { gl.bindTexture(gl.TEXTURE_3D, g.g3); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); gl.texImage3D(gl.TEXTURE_3D, 0, gl.R8UI, S, S, MINE_DEPTH, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, this.g3); g.gv = this.g3v; }
+    this.labels = []; const t = now / 1000, walk = this.walk || 0, breathe = Math.sin(t * 1.6) * 0.006, bobZ = walk * 0.022 + breathe;
+    if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 4.5);
+    const shk = (this.shake || 0) * (Settings.shake === false ? 0.3 : 1), bump = this.bump && now - this.bump < 200 ? Math.sin((now - this.bump) / 200 * Math.PI) * 0.06 : 0;
+    // 카메라: 몸 안에서 조금 뒤 (벽을 뚫고 보지 않게), 승강기 타는 중엔 칸 가운데
+    const okAt = b => { const x = this.cx - Math.cos(this.ang) * b, y = this.cy - Math.sin(this.ang) * b, e = 0.06; return this.isOpen(Math.floor(x - e), Math.floor(y - e)) && this.isOpen(Math.floor(x + e), Math.floor(y - e)) && this.isOpen(Math.floor(x - e), Math.floor(y + e)) && this.isOpen(Math.floor(x + e), Math.floor(y + e)); };
+    let backT = 0.1; if (this.lift) backT = 0; else for (const b of [0.34, 0.28, 0.22, 0.16]) if (okAt(b)) { backT = b; break; }
+    this.back = this.back == null || backT < this.back ? backT : this.back + (backT - this.back) * Math.min(1, dt * 5);
+    const yaw = this.ang + (Math.random() - 0.5) * 0.012 * shk, pit = Math.max(-1.45, Math.min(1.45, (this.pi || 0) + (Math.random() - 0.5) * 0.012 * shk + walk * 0.008));
+    const lvF = this.lz != null ? this.lz : (this.lv | 0), foot = -lvF * MINE_WALL, camx = this.cx - Math.cos(this.ang) * (this.back - bump), camy = this.cy - Math.sin(this.ang) * (this.back - bump), camz = foot + MINE_EYE + bobZ;
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pit), sp = Math.sin(pit), F = [cy * cp, sy * cp, sp], R = [-sy, cy, 0], U = [-cy * sp, -sy * sp, cp], tanH = MINE_PLANE, tanV = MINE_PLANE * H / W / 0.9;
+    const [ffx, ffy, ffl] = this.front(), fkey = mineK(ffx, ffy, ffl), fprog = this.prog[fkey] || 0;
+    const Ls = this.glLights(now, camx, camy, camz), fl = 0.97 + Math.sin(t * 23) * 0.015 + Math.sin(t * 7.3) * 0.015;
+    gl.viewport(0, 0, W, H); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+    gl.useProgram(g.W); const u = g.uw;
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_3D, g.g3); gl.uniform1i(u.uG, 0); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, g.at); gl.uniform1i(u.uA, 1);
+    gl.uniform3f(u.uC, camx, camy, camz); gl.uniform3fv(u.uF, F); gl.uniform3fv(u.uR, R); gl.uniform3fv(u.uU, U); gl.uniform2f(u.uTan, tanH, tanV); gl.uniform2f(u.uRes, W, H); gl.uniform2f(u.uO, this.gx0, this.gy0);
+    gl.uniform2f(u.uHo, Math.sin(t * 0.7) * 0.024, -walk * 4 / H); gl.uniform1i(u.uS, S); gl.uniform1i(u.uD, MINE_DEPTH); gl.uniform1i(u.uNL, Ls.length);
+    const lp = new Float32Array(32), lc = new Float32Array(32); Ls.forEach((L, i) => { lp.set(L.p, i * 4); lc.set(L.c, i * 4); }); gl.uniform4fv(u.uL, lp); gl.uniform4fv(u.uLc, lc);
+    gl.uniform4f(u.uFace, ffx - this.gx0, ffy - this.gy0, ffl, fprog); gl.uniform1f(u.uGold, this.goldCell === fkey ? 1 : 0); gl.uniform1f(u.uPlat, foot); gl.uniform1f(u.uT, t % 1000); gl.uniform3f(u.uHd, 1.0 * fl, 0.9 * fl, 0.72 * fl);
+    gl.bindBuffer(gl.ARRAY_BUFFER, g.bW); gl.enableVertexAttribArray(g.aW); gl.vertexAttribPointer(g.aW, 2, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); gl.disableVertexAttribArray(g.aW);
+    // 다른 광부 · 돌무더기 (층 높이에 세운 판)
+    const lightAt = (x, y, z, l, d) => { let r = 0.011, gg = 0.012, b = 0.017; for (const L of Ls) { if (L.p[3] !== l) continue; const q = L.c[3] / (1 + 3 * ((x - L.p[0]) ** 2 + (y - L.p[1]) ** 2 + (z - L.p[2]) ** 2)); r += q * L.c[0]; gg += q * L.c[1]; b += q * L.c[2]; } const hd = 0.8 * 1.55 / (1 + 0.55 * d * d); return [(r + hd) * 2, (gg + hd * 0.9) * 2, (b + hd * 0.72) * 2]; };
+    const proj = (x, y, z) => { const vx = x - camx, vy = y - camy, vz = z - camz, d = vx * F[0] + vy * F[1] + vz * F[2]; if (d < 0.05) return null; return { x: (1 + (vx * R[0] + vy * R[1]) / d / tanH) * W / 2, y: (1 - (vx * U[0] + vy * U[1] + vz * U[2]) / d / tanV) * H / 2, d }; };
+    const L2 = [];
+    for (const id in this.others) { const o = this.others[id], l = o.l | 0, z = -l * MINE_WALL, d = (o.x - camx) * F[0] + (o.y - camy) * F[1] + (z + 0.5 - camz) * F[2], dist = Math.hypot(o.x - camx, o.y - camy, z + 0.5 - camz); if (dist < 0.75 && l === (this.lv | 0)) continue; L2.push({ tx: g.sp[o.sw && Math.floor(now / 160) % 2 ? 1 : 0], x: o.x, y: o.y, z, w: 0.66, h: 0.98, sh: lightAt(o.x, o.y, z + 0.5, l, dist), d });
+      const P = proj(o.x, o.y, z + 1.05); if (P && dist < 9) this.labels.push({ x: P.x, y: P.y, name: o.name, d: dist }); }
+    this.rubble = this.rubble.filter(r => now - r.t < 90000); for (const r of this.rubble) { const l = r.l | 0, z = -l * MINE_WALL, dist = Math.hypot(r.x - camx, r.y - camy, z - camz); L2.push({ tx: g.sp[2], x: r.x, y: r.y, z, w: 0.85, h: 0.15, sh: lightAt(r.x, r.y, z + 0.05, l, dist), d: (r.x - camx) * F[0] + (r.y - camy) * F[1] });
+    }
+    if (L2.length) {
+      gl.useProgram(g.S); const s = g.us; gl.uniform3f(s.uC, camx, camy, camz); gl.uniform3fv(s.uF, F); gl.uniform3fv(s.uR, R); gl.uniform3fv(s.uU, U); gl.uniform2f(s.uTan, tanH, tanV); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(s.uTx, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, g.bS); gl.enableVertexAttribArray(g.aS); gl.vertexAttribPointer(g.aS, 2, gl.FLOAT, false, 0, 0);
+      for (const q of L2) { if (q.d < 0.1) continue; gl.bindTexture(gl.TEXTURE_2D, q.tx); gl.uniform3f(s.uP, q.x, q.y, q.z); gl.uniform2f(s.uS, q.w, q.h); gl.uniform3fv(s.uSh, q.sh); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+      gl.disableVertexAttribArray(g.aS);
+    }
+    gl.disable(gl.DEPTH_TEST);
+    c.clearRect(0, 0, W, H);
+    if (this.lift) { const k = Math.min(1, (now - this.lift.t0) / 1000 / MINE_LIFT), up = this.lift.b < this.lift.a; c.fillStyle = 'rgba(255,214,90,.9)'; c.font = '700 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`🛗 지하 ${this.lift.b + 1}층으로 ${up ? '올라가는 중' : '내려가는 중'}`, W / 2, H * 0.36); c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(W * 0.35, H * 0.39, W * 0.3, 3); c.fillStyle = '#ffd34a'; c.fillRect(W * 0.35, H * 0.39, W * 0.3 * k, 3); }
+    this.over(c, now, dt, walk);
+    return true;
+  },
+});
 
 /* ===================== 3단계: 장소별 조사하기 =====================
  * 정보는 그 장소에서만 얻는다. 얻은 서류는 수첩에 원문 그대로 쌓인다.
@@ -12110,7 +12363,7 @@ const PetVote = {
 PB_MODES.push('arena');
 PB_MODES.splice(0, PB_MODES.length, 'arena', 'dodge', 'sumo'); // v188 (사용자 2026-10-17 '지금 배틀 콜로세움, 피구 빼고 다 없애자' → '아 펫 스모는 나두자'): 다른 게임 코드는 남겨 두고 고르기에서만 뺀다
 PB_MODE_KO.arena = '🏟️ 콜로세움';
-PB_MODE_HELP.arena = ['WASD 이동 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 · 우클릭/K 특수기. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 공격·특수 버튼! 상대 팀 둘 다 쓰러뜨리면 이겨요.'];
+PB_MODE_HELP.arena = ['WASD 이동 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 · 우클릭/K 특수기 · V 1인칭/3인칭. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 공격·특수 버튼, 시점 버튼으로 1인칭/3인칭! 상대 팀 둘 다 쓰러뜨리면 이겨요.'];
 PB_ACT_KO.arena = '공격';
 PB_APT.arena = ['펫 + 내 실력', b => b[0] * 0.3 + b[1] * 0.45 + b[3] * 0.25];
 PB_ART.arena = ['#e8b070', '#5a2a18'];
@@ -12154,7 +12407,7 @@ const PetArena = {
     const P = B.apick; if (!P) return; const el = $('pbWin'), me = B.S[B.me], fo = B.S[this.foe(B)], left = Math.max(0, Math.ceil((P.t0 + 15000 - Date.now()) / 1000)), dis = P.ok ? 'disabled' : '';
     el.innerHTML = `<div class="pvBox paBox"><div class="pvHead"><b>🏟️ 콜로세움 2대2</b><span>${P.ok ? `${esc(B.foeName)}님이 고르는 중…` : '누구로 싸울지 골라요. 안 고른 쪽은 알아서 싸워요!'}</span>${P.ok ? '' : `<i id="paTime">${left}</i>`}</div>
       <div class="pvPets"><span class="me">나 + 🐾 ${esc(me.name)} <small>Lv.${me.lv}</small></span><span class="foe">${esc(B.foeName)} + ${esc(fo.name)} <small>Lv.${fo.lv}</small></span></div>
-      <div class="paLbl">🎮 1인칭으로 조종할 캐릭터</div>
+      <div class="paLbl">🎮 내가 조종할 캐릭터</div>
       <div class="paRow"><button class="pvCard paC${P.ctl === 0 ? ' on' : ''}" data-ctl="0" style="--c1:#6ab0ff;--c2:#1a2a58" ${dis}><kbd>1</kbd><em>🧍</em><b>나 (플레이어)</b><small>${P.wp === 'fire' ? '🔥 불' : '🗡️ 칼'}로 싸워요</small></button>
         <button class="pvCard paC${P.ctl === 1 ? ' on' : ''}" data-ctl="1" style="--c1:#ffc070;--c2:#5a2a10" ${dis}><kbd>2</kbd><em>🐾</em><b>${esc(me.name)}</b><small class="paMv">${this.petMv(me.kind)}</small></button></div>
       <div class="paLbl">⚔️ 내 무기 <small>(펫을 조종해도 나는 이걸 들고 싸워요)</small></div>
@@ -12336,10 +12589,11 @@ PetRT.arena = {
     if (B.fresh) { D.pr = (S.pr || []).map(p => Object.assign({}, p)); B.fresh = false; } else for (const p of D.pr || []) { p.x += p.vx * dt; p.y += p.vy * dt; }
   },
   /* ---- 폰 버튼 + 마우스 ---- */
-  pad() { return `<div class="pbPad m-arena"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns"><button class="pbB2" id="pbJmp">특수</button><button class="pbB1" id="pbAct">공격</button></div></div>`; },
+  pad() { return `<div class="pbPad m-arena"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns"><button class="pbB2" id="pbJmp">특수</button><button class="pbB1" id="pbAct">공격</button></div><button class="pbView" id="pbView">시점</button></div>`; },
   bind() {
     const cv = $('pbCv'); if (!cv) return; const me = this;
     for (const [id, key] of [['pbAct', 'a'], ['pbJmp', 's']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); me.hold[key] = true; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => { me.hold[key] = false; b.classList.remove('dn'); }; }
+    const vb = $('pbView'); if (vb) vb.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); me.fp = !me.fp; Store.set('arenaFP', me.fp); Sound.play('click'); }; // v192: 폰에서 1인칭/3인칭
     let tid = null, tx = 0, ty = 0;
     cv.onpointerdown = e => {
       if (e.pointerType === 'touch') { tid = e.pointerId; tx = e.clientX; ty = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }

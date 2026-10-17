@@ -3392,7 +3392,7 @@ const SeoulMap = {
     $('mapDest').onclick = () => { setNavDest({ gu: to, place: h.court ? 'court' : null, label: name }); $('mapConfirm').classList.remove('in'); this.sel = null; this.toggle(false); };
     $('mapGo').onclick = () => this.go(); $('mapCancel').onclick = () => { $('mapConfirm').classList.remove('in'); this.sel = null; };
   },
-  courtAt(L, id) { const [x, y] = L.center(COURT_GU[id]); return [x, y + Math.max(17, L.ts * 0.25)]; }, // 구 이름 바로 아래
+  courtAt(L, id, gu) { const [x, y] = L.center(gu || COURT_GU[id]); return [x, y + Math.max(17, L.ts * 0.25)]; }, // 구 이름 바로 아래
   canDepart() {
     if (Game.scene !== 'zone') return '건물 밖으로 나가서 차까지 가세요.';
     if (!Game.driving && Math.hypot(Game.car.x - Game.player.x, Game.car.y - Game.player.y) > 60) return '차까지 걸어가세요.';
@@ -3460,6 +3460,8 @@ const SeoulMap = {
       x.fillStyle = '#0f3358'; x.fillRect(px - 10, py - 7, 20, 14); x.fillStyle = '#efe6d2'; x.fillRect(px - 8, py - 3, 16, 2); for (let i = 0; i < 4; i++) x.fillRect(px - 7 + i * 4, py - 1, 2, 6);
       x.strokeStyle = '#efe6d2'; x.lineWidth = 1.5; x.strokeRect(px - 10, py - 7, 20, 14);
     }
+    // 선배네 경매 사무실 (광진구, 사용자 2026-10-17 '구 지도에 사무실도 표시'): 구 이름 바로 아래, 법원 아이콘 자리
+    { const [ox, oy] = this.courtAt(L, null, 'gwangjin'); drawPlaceIcon(x, ox, oy, 'office'); x.font = 'bold 10px "IBM Plex Sans KR", sans-serif'; const w = x.measureText('사무실').width + 6; x.fillStyle = 'rgba(10,12,14,.75)'; x.fillRect(ox - w / 2, oy + 10, w, 13); x.fillStyle = '#f3e9c8'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('사무실', ox, oy + 17); x.textBaseline = 'alphabetic'; }
     // 이동 애니메이션
     if (this.anim) {
       const a = this.anim; const k = Math.max(0, Math.min(1, (performance.now() - a.t0) / a.dur));

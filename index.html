@@ -5305,6 +5305,7 @@ const DRIVE_GUS = ['gwangjin', 'gangnam', 'mapo', 'gwanak'];
 const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3, 0.6, 2.5];
 // 자리 0~6은 처음부터 있던 자리라 시각 오프셋(k·W/7)과 구 순서((n·7+k)%4)를 바꾸면 이미 가진 집·낸 입찰표의 사건이 달라진다. 그래서 7은 고정(LIVE_BASE)이고 나중에 더한 자리(7, 8…)는 그 사이 중간 시각에 끼운다.
 const LIVE_TRAPS_FROM = Date.UTC(2026, 9, 15, 6, 50); // v84 배포 직후 (UTC)
+const LIVE_SMALL_FIX = '1:7:1493540'; // 채널 1 신림동 라온아파트 109동 302호
 const LIVE_SMALL_FROM = Date.UTC(2026, 9, 17, 15, 25); // v199 소액임차인 최우선변제: 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
 /* 채널 달력 (v94, 사용자 2026-10-15 '지금 몇일인지 모르지않아?'): 게임 하루(= 1주/7)가 지나면 달력도 하루 넘어간다.
  * 오늘 = 2025-01-01 + ((LIVE_DATES_FROM 날부터 센 일수 + 60) mod 728) → 배포 시각이 2025-03-02, 2년(2025~2026)을 돌고 처음으로 (약 35시간마다). 이 시각 뒤에 시작한 회차의 매각기일은 그 회차 D-day의 날짜 (전엔 모두 2025-11-11 고정 → 그 회차들은 그대로) */
@@ -5330,6 +5331,7 @@ const Live = {
     const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025', noSmall: cyc.t0 < LIVE_SMALL_FROM }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
     c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
     if (cyc.t0 >= LIVE_TRAPS_FROM) Generator.applyTraps(c); // 정리본 2묶음 함정은 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
+    if (this.key(k, n) === LIVE_SMALL_FIX) c.data.small = true; // 신림동 라온아파트 (2025타경30820): 최우선변제 넣기 전에 낙찰된 집이라 계산만 바로잡는다 (경쟁 입찰은 그대로) — 사용자 2026-10-17
     c.live = cyc; this.closed[c.id] = c;
     return c;
   },
@@ -5391,6 +5393,7 @@ const Live = {
     else { State.capital = capital; State.cash = capital; }
     if (sv && !Store.get('topup163_' + this.ch, false)) { Store.set('topup163_' + this.ch, true); if (State.cash < 1e8) { this.topup = Math.round(1e8 - State.cash); Money.why('자금 다시 채워 줌 (1억까지)'); State.cash = 1e8; } } // 한 번만: 돈이 1억 밑이면 1억으로 (사용자 2026-10-16 '자금 1억 밑인 사람 1억으로 다시')
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('adj9k_1', false)) { Store.set('adj9k_1', true); Money.why('운영자 조정 (자금 9천만 원으로)'); State.cash = 9e7; setTimeout(() => HUD.page('운영자가 자금을 9천만 원으로 맞췄어요. 이제부터 합의금·병원비가 모자라면 석탄 땅굴로 끌려가요.', '알림'), 4500); } // 사용자 2026-10-16 '에센티아 이 사람 9천만 원 만들어 봐': 채널 1의 에센티아만, 한 번만
+    { const fm = this.mine[LIVE_SMALL_FIX], fe = fm && fm.evictState; if (sv && this.ch === 1 && fe && fe.paidAssume > 0 && !Store.get('fixSmall199', false)) { Store.set('fixSmall199', true); const amt = fe.paidAssume; if (!fm.done) fe.paidAssume = 0; /* 정산이 끝났으면 그때 인수액이 빠졌으니 돈만 돌려준다 */ Money.why('인수 보증금 돌려받음 (신림동 · 소액임차인 최우선변제)'); State.cash += amt; setTimeout(() => this.save(), 0); setTimeout(() => HUD.page(`신림동 라온아파트 세입자는 소액임차인이라 보증금을 배당에서 먼저 받아요. 낸 인수 보증금 ${fmtWon(amt)}을 돌려드렸어요.`, '알림'), 4500); } } // v199 사용자 2026-10-17 '돈 빠져나간 2500만원은 다시 돌려줘'
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
     this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;

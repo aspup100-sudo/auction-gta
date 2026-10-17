@@ -4622,6 +4622,7 @@ const Net = {
     if (m.t === 'ping') { const hp = this.players[m.from]; if (hp) hp.gone = false; this.relay(m, conn); return; } // 방장 심장박동 (제목 화면에 있어도 손님이 방장 생사를 안다)
     if (m.from === 'server') { // 중계 서버가 직접 보낸 것 (사람 목록은 아래 players에서)
       if (m.t === 'lbook') Live.onBook(m);
+      else if (m.t === 'forget') { if (Live.on) Live.forget(m.who, m.at); } // 기록 지운 이름 (v178)
       else if (m.t === 'mine') Mine.onDig(m); // 석탄 땅굴: 서버가 들고 있는 굴 (v168)
       else if (m.t === 'noroom') { this.noRoom = true; this.setStatus('error', '그 코드의 방이 없어요. 코드를 다시 확인해 주세요.'); }
       else if (m.t === 'hostgone') { if (Game.scene !== 'title') Toast.show('방장이 나갔어요. 돌아오면 다시 이어져요.'); }
@@ -4664,6 +4665,7 @@ const Net = {
     if (m.t === 'punch') { Punch.onPunch(m, p); return; } // 때리기 (v139)
     if (m.t === 'pcnt') { Punch.onCnt(m, p); return; } // 맞은 사람 누적 (v163)
     if (m.t === 'lbook') { Live.onBook(m); return; }
+    if (m.t === 'forget') { if (Live.on && p.name) Live.forget(p.name); return; } // PeerJS: 기록 지운 친구 (v178)
     if (m.t === 'pos') { // 위치 신호는 초당 6~8번만 온다 → 목표와 속도를 기억해 두고 tick()이 매 프레임 부드럽게 따라간다 (사용자 2026-10-14 '다른 사람이 너무 끊겨 보여')
       const now = performance.now(), gap = p.at ? Math.min(0.5, (now - p.at) / 1000) : 0, far = (x1, y1, x2, y2) => x1 === undefined || Math.hypot(x2 - x1, y2 - y1) > FEEL.netSnapPx;
       p.z = m.z; p.s = m.s; p.p = m.p; p.pf = m.pf | 0; p.tt = m.tt || ''; if (m.pal) { p.pal = m.pal; p.car = m.pal.car; } p.d = m.d; p.f = m.f; p.m = m.m; p.dr = m.dr; p.rd = m.rd; p.bo = m.bo; p.kn = m.kn; p.sk = m.sk; p.hm = Array.isArray(m.hm) ? m.hm.slice(0, 3) : undefined; p.oc = m.oc; p.ln = m.ln; p.bw = m.bw; { const pc = +m.pc || 0; if (p.pc !== undefined && pc !== p.pc) { p.punchT = performance.now() + 300; p.punchHit = !!m.ph; } p.pc = pc; } p.day = m.day; p.half = m.half; p.pnl = m.pn; if (m.cs !== undefined) p.cash = m.cs; if (m.ea !== undefined) p.earn = m.ea; p.last = now;
@@ -5200,7 +5202,7 @@ const LIVE_DATES_FROM = Date.UTC(2026, 9, 15, 11, 40);
 const LIVE_BASE = 7;
 function slotOff(k, W) { return k < LIVE_BASE ? Math.round(k * W / LIVE_BASE) : Math.round((2 * (k - LIVE_BASE) * 3 + 1) * W / (2 * LIVE_BASE)); } // 자리별 가격대 배수 (채널 자본 × 배수 × 0.65~1.7 = 감정가) → 자본의 약 0.5배 ~ 10배가 늘 섞임
 const Live = {
-  on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], rentLog: [], closed: {}, seen: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0, bdT: 0,
+  on: false, ch: 0, book: {}, mine: {}, used: 0, dayIdx: 0, results: [], rentLog: [], closed: {}, seen: {}, tomb: {}, ready: false, readyT: 0, queue: [], opening: false, pnlT: 0, bdT: 0,
   capOf(ch) { return ch * 1e8; }, // 채널 N = 자본 N억 (사용자 요청)
   weekMs() { return FEEL.liveWeekMin * 60000; },
   dayMs() { return this.weekMs() / 7; },
@@ -5253,7 +5255,7 @@ const Live = {
 
   /* ---- 저장 (채널별, 이 기기) ---- */
   storeKey() { return 'live' + this.ch; },
-  save() { try { this.saveInv(); } catch (e) {} Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0, aliveAt: Date.now() }); },
+  save() { try { this.saveInv(); } catch (e) {} Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, tomb: this.tomb, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0, aliveAt: Date.now() }); },
   saved(ch) { return Store.get('live' + ch, null); },
   reset(ch) { Store.set('live' + ch, null); Store.set('liveInv' + ch, null); Mine.reset(ch); },
   /* 조사 기록(뗀 서류·현장 메모·수첩·내 판단): 나갔다 와도 남게 채널별로 따로 저장 (사용자 2026-10-15 '나갔다 와도 조사했던거 저장') */
@@ -5275,7 +5277,7 @@ const Live = {
     this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.rentLog = []; this.closed = {}; this.queue = []; this.ready = false; this.readyT = 2.5;
     let sv = this.saved(this.ch); if (sv && sv.capital !== capital) sv = null; // 예전 규칙으로 저장된 기록은 새로
     this.offGap = sv ? Date.now() - Math.max(sv.aliveAt || 0, Store.get('liveAlive' + this.ch, 0) || 0) : 0; if (sv && !sv.aliveAt && !Store.get('liveAlive' + this.ch, 0)) this.offGap = 0; this.wallT = Date.now(); // 꺼 둔 시간 (예전 저장분은 모름 → 0)
-    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.rentLog = sv.rentLog || []; this.seen = sv.seen || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
+    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.rentLog = sv.rentLog || []; this.seen = sv.seen || {}; this.tomb = sv.tomb || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
     else { State.capital = capital; State.cash = capital; }
     if (sv && !Store.get('topup163_' + this.ch, false)) { Store.set('topup163_' + this.ch, true); if (State.cash < 1e8) { this.topup = Math.round(1e8 - State.cash); Money.why('자금 다시 채워 줌 (1억까지)'); State.cash = 1e8; } } // 한 번만: 돈이 1억 밑이면 1억으로 (사용자 2026-10-16 '자금 1억 밑인 사람 1억으로 다시')
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('adj9k_1', false)) { Store.set('adj9k_1', true); Money.why('운영자 조정 (자금 9천만 원으로)'); State.cash = 9e7; setTimeout(() => HUD.page('운영자가 자금을 9천만 원으로 맞췄어요. 이제부터 합의금·병원비가 모자라면 석탄 땅굴로 끌려가요.', '알림'), 4500); } // 사용자 2026-10-16 '에센티아 이 사람 9천만 원 만들어 봐': 채널 1의 에센티아만, 한 번만
@@ -5316,7 +5318,7 @@ const Live = {
     this.assetTick(dt); Debt.tick(dt);
     if (!Game.busy && !Dialog.open && Game.player) for (const k in this.mine) { const m = this.mine[k]; if (m.second && !m.done && !m.won && this.now() >= m.second.until) this.resolveSecond(k); }
     this.bdT -= dt; if (this.bdT <= 0) { this.bdT = 0.5; const rb = $('rankBox'); if (!rb.hidden) { const h = this.miniBoard(); if (rb.innerHTML !== h) rb.innerHTML = h; } const pw = this.pending() || this.owned()[0]; const bd = $('balanceDue'); if (pw && pw.phase === 'own') { const t = this.assetLine(pw); if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (pw) { const t = pw.phase === 'forced' ? `강제집행 중 · ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))} 뒤 정산` : pw.phase === 'evict' ? `명도 중 · ${pw.name.split(' ')[0]} 현장 초인종${pw.order ? ' · 인도명령 받음' : ''}` : `잔금 ${fmtWon(pw.bid - pw.deposit)} · 기한 ${this.mmss(this.payLeft(pw))} · ${this.canPay(pw) ? '법원으로' : '은행부터'}`; if (bd.textContent !== t) bd.textContent = t; bd.classList.add('in'); bd.classList.remove('over'); } else if (bd.classList.contains('in') && !bd.classList.contains('over')) bd.classList.remove('in'); }
-    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; try { this.saveInv(); } catch (e) {} for (const p of Object.values(Net.players)) if (!p.gone && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, earn: p.earn !== undefined ? p.earn : this.earnOf(this.seen[p.name]), at: this.now(), as: p.assets || (this.seen[p.name] && this.seen[p.name].as) }; Net.send({ t: 'asset', list: this.assetSummary() }); this.save(); }
+    this.pnlT -= dt; if (this.pnlT <= 0) { this.pnlT = 5; try { this.saveInv(); } catch (e) {} for (const p of Object.values(Net.players)) if (!p.gone && !p.forgot && this.cashOf(p) !== undefined) this.seen[p.name] = { cash: this.cashOf(p), pnl: p.pnl, earn: p.earn !== undefined ? p.earn : this.earnOf(this.seen[p.name]), at: this.now(), as: p.assets || (this.seen[p.name] && this.seen[p.name].as) }; Net.send({ t: 'asset', list: this.assetSummary() }); this.save(); }
   },
   // 회차가 끝났다: 그 물건은 닫고 같은 자리에 다음 회차 물건을 올린다
   roll(k) {
@@ -5383,8 +5385,11 @@ const Live = {
   onBook(m) {
     if (!this.on) return;
     for (const key in m.book || {}) { const b = this.book[key] = this.book[key] || {}; for (const id in m.book[key]) if (id !== Net.myId) b[id] = m.book[key][id]; }
-    for (const n in m.seen || {}) { const cur = this.seen[n], inc = m.seen[n]; if (n !== Net.me && (!cur || cur.at < inc.at)) this.seen[n] = (!inc.as && cur && cur.as) ? Object.assign({}, inc, { as: cur.as }) : inc; } // 순위표는 서로 나눠 가진다 (자산 요약은 없으면 전 것을 유지)
+    for (const n in m.gone || {}) this.forget(n, m.gone[n]);
+    for (const n in m.seen || {}) { const cur = this.seen[n], inc = m.seen[n], tb = this.tomb[n]; if (tb && (inc.at || 0) <= tb) continue; if (n !== Net.me && (!cur || cur.at < inc.at)) this.seen[n] = (!inc.as && cur && cur.as) ? Object.assign({}, inc, { as: cur.as }) : inc; } // 순위표는 서로 나눠 가진다 (자산 요약은 없으면 전 것을 유지)
   },
+  // v178 (사용자 2026-10-17 '랭킹, 아이디 삭제한 건 없애 줘'): 기록을 지우거나 파산한 이름은 순위표에서 뺀다. 그 뒤에 다시 그 이름으로 하면 새로 올라온다
+  forget(n, at) { if (!n) return; at = at || this.now(); const tb = this.tomb || (this.tomb = {}); if (!tb[n] || tb[n] < at) tb[n] = at; const cur = this.seen[n]; if (cur && (cur.at || 0) <= tb[n]) delete this.seen[n]; for (const p of Object.values(Net.players)) if (p.name === n) p.forgot = true; /* 지금 붙어 있는 그 사람(같은 연결) 것은 다시 안 올린다 */ for (const k in tb) if (this.now() - tb[k] > 30 * 86400e3) delete tb[k]; },
   bookOut() { const out = {}; for (const key in this.book) { out[key] = Object.assign({}, this.book[key]); if (this.mine[key]) out[key][Net.myId] = { name: Net.me, bid: this.mine[key].bid }; } return out; },
   // 남에게 보여 주는 내 자산 요약 (순위 창에서 사람을 누르면 보인다, 사용자 2026-10-14) — 작게: 이름·단계·낙찰가·월세·대출
   assetSummary() {
@@ -5927,7 +5932,7 @@ const Debt = {
     await DocViewer.show(`<div class="doc court"><div class="docHead">서울회생법원</div><h2>파 산 선 고</h2><p>채무자 ${esc(Net.me)}은(는) 현금 ${fmtWon(short)}이 모자라고 처분할 재산(집)이 없어 빚을 갚을 수 없다.</p><p class="small">채널 ${Live.ch} 기록(현금·집·조사 기록)을 지우고 처음부터 다시 시작합니다.</p></div>`, { title: '파산' });
     Net.news('파산 · 처음부터 다시');
     Titles.note('bankrupt'); Live.reset(Live.ch); Live.on = false; Store.set('chatHist' + Live.ch, []);
-    try { Net.send({ t: 'bye' }); } catch (e) {}
+    try { Net.send({ t: 'forget' }); Net.send({ t: 'bye' }); } catch (e) {} /* v178: 파산한 기록도 순위표에서 뺀다 */
     setTimeout(() => { if (location.hash) history.replaceState(null, '', location.pathname); location.reload(); }, 600);
   },
 };
@@ -14494,7 +14499,7 @@ const Instance = {
     const b = e.target.closest('button'); if (!b) return; const wrap = b.parentElement;
     if (b.id === 'liveReset') { resetPrev = wrap.innerHTML; wrap.innerHTML = `<b style="color:#ff8a7a">정말 기록을 지우고 새로 시작할까요?</b> 누적 손익과 입찰 기록이 모두 사라져요. <button class="btn" id="liveResetYes">네, 새로 시작</button> <button class="btn" id="liveResetNo">아니요</button>`; }
     else if (b.id === 'liveResetYes') { // 기록을 지우면 채널에서 나와 이름부터 다시 정하고 들어가게 (사용자 요청 2026-10-14)
-      const ch = Net.ch; if (Store.get('live' + ch, null)) Titles.note('reset'); Live.reset(ch); Sound.play('paper'); /* 기록을 지우면 칭호 점수 +1 */
+      const ch = Net.ch; if (Store.get('live' + ch, null)) Titles.note('reset'); try { if (Net.on && Net.mode === 'channel') Net.send({ t: 'forget' }); } catch (e) {} /* v178: 순위표에서 내 이름 빼기 */ Live.reset(ch); Sound.play('paper'); /* 기록을 지우면 칭호 점수 +1 */
       const sel = document.querySelector('#chBox .ch.sel'); if (sel && Net.leave()) chReset(sel);
       lockName(''); $('mpName').value = ''; Store.set('mpName', ''); refreshChSaved();
       $('chStatus').textContent = `채널 ${ch} 기록을 지웠어요. 이름을 새로 정하고 채널을 다시 골라 주세요.`; $('mpName').focus();

@@ -799,7 +799,21 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .csStage { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:auto; padding-top:4px; } .csStage > .felt { width:min(100%, 660px); z-index:1; } .csStage > .slotCab { width:min(100%, 470px); } .csStage > .vpCab { width:min(100%, 540px); }
 .csHud { flex:none; width:min(300px, 36vw); display:flex; flex-direction:column; justify-content:center; gap:4px; overflow:auto; padding:4px 2px 4px 10px; border-left:1px solid rgba(201,162,74,.25); background:linear-gradient(90deg, rgba(0,0,0,.25), rgba(0,0,0,.45)); }
 .csHud .csTabs { display:grid; grid-template-columns:repeat(3, 1fr); } .csHud .hjPick { flex-wrap:wrap; gap:6px; margin-top:6px; } .csHud .hjPick .btn { flex:1 1 40%; } .csHud .mgNote { font-size:11px; }
-.cs:not(.t-slot):not(.t-pk) .csHud .mgMsg { display:none; }
+.cs:not(.t-slot):not(.t-pk):not(.t-th) .csHud .mgMsg { display:none; }
+/* v250 텍사스 홀덤 테이블: 위에 손님 셋, 가운데 바닥 다섯 장 + 팟, 아래 내 두 장 */
+.csStage > .thFelt { width:min(100%, 620px); } .cs .thFelt { border-radius:130px / 80px; padding:8px 22px 10px; }
+.thTop { display:flex; justify-content:space-around; gap:6px; } .thSeat { position:relative; display:flex; flex-direction:column; align-items:center; gap:1px; min-width:88px; padding:3px 6px 4px; border-radius:10px; }
+.thSeat canvas { width:40px; height:40px; image-rendering:pixelated; } .thSeat > b { font-size:11px; color:#fff; } .thSeat.turn, .thMe.turn { box-shadow:0 0 0 2px #ffd86b; background:rgba(0,0,0,.22); } .thSeat.out, .thMe.out { opacity:.45; } .thSeat.win, .thMe.win { box-shadow:0 0 0 2px #7aff9a; background:rgba(120,255,160,.16); }
+.thMini { display:flex; gap:2px; min-height:42px; } .thMini i.card { width:30px; height:42px; border-radius:4px; } .thMini i.card .ci { font-size:8px; left:2px; top:2px; } .thMini i.card .ci.rt { display:none; } .thMini i.card .cc { font-size:15px; } .thMini i.card em { font-size:11px; padding:1px 2px; } .thMini i.card.back { border-width:2px; }
+.thAct { position:absolute; top:-4px; right:-6px; background:#fff; color:#15151c; font:700 10px var(--ui); border-radius:8px; padding:1px 6px; box-shadow:0 1px 3px rgba(0,0,0,.4); } .thAct:empty { display:none; } .thAct.me { position:static; }
+.thBet { font:700 10px var(--ui); color:#ffd86b; } .thHn { font:700 11px var(--ui); color:#fff; background:rgba(0,0,0,.4); border-radius:8px; padding:1px 7px; white-space:nowrap; }
+.thMid { display:flex; align-items:center; justify-content:center; gap:10px; margin:6px 0; } .thBoard { display:flex; gap:4px; } i.card.slot { background:rgba(0,0,0,.18); border:1.5px dashed rgba(255,255,255,.3); box-shadow:none; }
+.thPot { font:800 12px var(--ui); color:#ffd86b; background:rgba(0,0,0,.38); border-radius:10px; padding:3px 10px; white-space:nowrap; }
+.thMe { position:relative; display:flex; align-items:center; justify-content:center; gap:10px; width:max-content; margin:0 auto; padding:4px 10px; border-radius:10px; } .thMeInfo { display:flex; flex-direction:column; align-items:flex-start; gap:3px; }
+.thBtn { position:absolute; left:-4px; top:-5px; width:16px; height:16px; border-radius:50%; background:#fff; color:#000; font:900 10px/16px var(--ui); font-style:normal; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.5); }
+.csHud .hjPick.thPick { flex-wrap:nowrap; } .csHud .thPick .btn { flex:1 1 0; min-width:0; font-size:16px; padding:8px 0; } .short .csHud .thPick .btn { font-size:13px; padding:5px 0; }
+.thRank { font-size:11px; color:rgba(255,255,255,.75); margin-top:2px; } .thRank summary { cursor:pointer; } .thRank p { margin:3px 0 0; }
+.short .cs .thFelt { padding:4px 16px 6px; } .short .thSeat { min-width:74px; padding:2px 4px; } .short .thSeat canvas { width:26px; height:26px; } .short .thMini { min-height:34px; } .short .thMini i.card { width:24px; height:34px; } .short .thMini i.card .cc { font-size:12px; } .short .thMid { margin:3px 0; } .short .thMe { padding:2px 8px; } .short .thMid i.card, .short .thMe i.card { width:34px; height:48px; } .short .thMid i.card .cc, .short .thMe i.card .cc { font-size:17px; } .short .thMid i.card .ci.rt, .short .thMe i.card .ci.rt { display:none; }
 .dealer { position:relative; flex:none; display:flex; flex-direction:column; align-items:center; margin-bottom:-24px; z-index:0; } .dealer canvas { width:124px; height:124px; image-rendering:pixelated; filter:drop-shadow(0 0 22px rgba(255,200,120,.3)); }
 .dName { position:absolute; bottom:28px; font:700 10px var(--ui); color:#ffd86b; background:rgba(0,0,0,.65); border-radius:8px; padding:1px 7px; white-space:nowrap; }
 .bubble { position:absolute; left:calc(50% + 62px); top:8px; width:max-content; max-width:min(250px, 28vw); margin:0; padding:7px 11px; border-radius:12px; background:#fbf8f0; color:#1a1408; font:700 12.5px/1.4 var(--ui); box-shadow:0 4px 10px rgba(0,0,0,.5); animation:bubIn .25s ease-out; } .bubble::before { content:''; position:absolute; left:-7px; top:12px; border:7px solid transparent; border-left:0; border-right-color:#fbf8f0; } .bubble.win { color:#1a7a34; } .bubble.lose { color:#b0301a; } @keyframes bubIn { from { transform:scale(.8); opacity:0; } }
@@ -1031,7 +1045,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v249</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v250</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -14923,7 +14937,7 @@ const HJ_BETS = [1e4, 10e4, 50e4, 100e4];
 const CHIP_CLS = { 10000: 'c1', 100000: 'c10', 500000: 'c50', 1000000: 'c100' };
 const chipCls = v => CHIP_CLS[HJ_BETS.filter(b => b <= v).pop() || HJ_BETS[0]]; // 쌓인 금액에서 가장 큰 칩 색
 const chipLabel = v => (v >= 1e4 ? `${v / 1e4}만` : String(v));
-const CASINO_TABS = [['hol', '🎲 홀짝'], ['slot', '🎰 슬롯'], ['bj', '🃏 블랙잭'], ['rl', '🎡 룰렛'], ['pk', '♠ 포커']];
+const CASINO_TABS = [['hol', '🎲 홀짝'], ['slot', '🎰 슬롯'], ['bj', '🃏 블랙잭'], ['rl', '🎡 룰렛'], ['pk', '♣ 포커'], ['th', '♠ 홀덤']];
 const SLOT_SYM = [['🍒', 28, 6], ['🍋', 26, 12], ['🔔', 20, 18], ['⭐', 13, 36], ['💎', 9, 80], ['7️⃣', 4, 300]];
 const symHtml = s => (s === '7️⃣' ? '<b class="s7">7</b>' : s);
 const RL_RED = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
@@ -14940,6 +14954,27 @@ function pkRank(h) {
   if (straight && flush) return rs[0] === 10 ? 0 : 1; if (v[0] === 4) return 2; if (v[0] === 3 && v[1] === 2) return 3; if (flush) return 4; if (straight) return 5; if (v[0] === 3) return 6; if (v[0] === 2 && v[1] === 2) return 7;
   if (v[0] === 2) { const pr = Number(Object.keys(cnt).find(k => cnt[k] === 2)); if (pr >= 11) return 8; } return -1;
 }
+/* 텍사스 홀덤 (v250, 사용자 '포커 원래 족보 있는지 없는지 하는 거 말고 다른 거 있지 않나' → '추가해'): 내 두 장 + 바닥 다섯 장 중 제일 좋은 다섯 장으로 겨룬다 */
+const TH_CAT = ['하이카드', '원페어', '투페어', '트리플', '스트레이트', '플러시', '풀하우스', '포카드', '스트레이트 플러시'];
+const TH_NPC = [{ name: '김 사장', agg: 0.5, loose: 0.3, bluff: 0.06 }, { name: '박 여사', agg: 0.2, loose: 0.6, bluff: 0.04 }, { name: '최 부장', agg: 0.8, loose: 0.2, bluff: 0.12 }];
+function thEval5(h) { // 점수가 클수록 센 패 (족보 × 15^5 + 높은 숫자 순서)
+  const cnt = {}; for (const c of h) cnt[c.r] = (cnt[c.r] || 0) + 1; const g = Object.keys(cnt).map(Number).sort((a, b) => cnt[b] - cnt[a] || b - a), rs = h.map(c => c.r).sort((a, b) => b - a);
+  const flush = h.every(c => c.s === h[0].s), wheel = rs.join() === '14,5,4,3,2', straight = g.length === 5 && (rs[0] - rs[4] === 4 || wheel), top = wheel ? 5 : rs[0];
+  const cat = straight && flush ? 8 : cnt[g[0]] === 4 ? 7 : cnt[g[0]] === 3 && cnt[g[1]] === 2 ? 6 : flush ? 5 : straight ? 4 : cnt[g[0]] === 3 ? 3 : cnt[g[0]] === 2 && cnt[g[1]] === 2 ? 2 : cnt[g[0]] === 2 ? 1 : 0;
+  const tb = straight ? [top] : g; let sc = cat; for (let i = 0; i < 5; i++) sc = sc * 15 + (tb[i] || 0); return { s: sc, cat, royal: cat === 8 && top === 14 };
+}
+function thBest(cs) { const n = cs.length; if (n <= 5) return thEval5(cs); let b = null; // 6·7장 중 빼낼 카드를 골라 제일 센 다섯 장
+  const tryF = f => { const e = thEval5(f); if (!b || e.s > b.s) b = e; };
+  for (let a = 0; a < n; a++) { if (n === 6) { tryF(cs.filter((_, i) => i !== a)); continue; } for (let z = a + 1; z < n; z++) tryF(cs.filter((_, i) => i !== a && i !== z)); } return b; }
+const thName = e => (e.royal ? '로열 스트레이트 플러시' : TH_CAT[e.cat]);
+function thEquity(hand, board, nOpp, sims = 150) { // 남은 카드를 아무렇게나 깔아 보고 이기는 비율 (손님들 판단용)
+  const used = new Set([...hand, ...board].map(c => c.r + c.s)), rest = cDeck().filter(c => !used.has(c.r + c.s)), need = 5 - board.length + nOpp * 2; let won = 0;
+  for (let k = 0; k < sims; k++) { for (let i = 0; i < need; i++) { const j = i + Math.floor(Math.random() * (rest.length - i)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+    const B = board.concat(rest.slice(0, 5 - board.length)), me = thBest(hand.concat(B)).s; let tie = 0, lose = false;
+    for (let o = 0; o < nOpp && !lose; o++) { const i0 = 5 - board.length + o * 2, os = thBest([rest[i0], rest[i0 + 1]].concat(B)).s; if (os > me) lose = true; else if (os === me) tie++; }
+    if (!lose) won += 1 / (tie + 1); }
+  return won / sims;
+}
 // 주사위 눈 (3×3 칸에 점)
 const DIE_PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const dieHtml = n => `<i class="die">${Array.from({ length: 9 }, (_, i) => `<b class="${DIE_PIPS[n].includes(i) ? 'on' : ''}"></b>`).join('')}</i>`;
@@ -14954,17 +14989,18 @@ const Casino = {
     if (tab) this.tab = tab; if (Party.p && PARTY_GAMES[Party.p.game].kind === 'casino') this.tab = Party.p.game; if (this.open_) return this.render(); this.open_ = true; Game.formOpen = true; Sound.play('paper');
     this.fixBet(); $('hjWin').classList.add('in'); this.render();
   },
-  close() { if (!this.open_ || this.busy) return; if (this.bj && this.bj.state === 'play') return this.render('블랙잭 판을 먼저 끝내세요.'); if (this.pk && this.pk.state === 'hold') return this.render('포커 카드를 먼저 바꾸세요.'); if (Party.p && PARTY_GAMES[Party.p.game].kind === 'casino') Party.leave(); this.recruit = false; this.open_ = false; Game.formOpen = false; $('hjWin').classList.remove('in'); Sound.play('flip'); },
+  close() { if (!this.open_ || this.busy) return; if (this.bj && this.bj.state === 'play') return this.render('블랙잭 판을 먼저 끝내세요.'); if (this.pk && this.pk.state === 'hold') return this.render('포커 카드를 먼저 바꾸세요.'); if (this.th && this.th.state === 'play') return this.render('홀덤 판을 먼저 끝내세요 (폴드하면 바로 끝나요).'); if (Party.p && PARTY_GAMES[Party.p.game].kind === 'casino') Party.leave(); this.recruit = false; this.open_ = false; Game.formOpen = false; $('hjWin').classList.remove('in'); Sound.play('flip'); },
   fixBet() { if (this.bet > mgFree()) this.bet = HJ_BETS.filter(b => b <= mgFree()).pop() || HJ_BETS[0]; },
   can(n = 1) { return this.bet * n <= mgFree(); },
   pay(d, label) { mgCash(d, label); if (Net.on && Math.abs(d) >= 50e4) Net.news(`카지노 ${label} ${d > 0 ? '+' : '−'}${fmtWon(Math.abs(d))}`); },
-  locked() { return this.busy || (this.bj && this.bj.state === 'play') || (this.pk && this.pk.state === 'hold'); },
-  key(k) { // 숫자 키: 홀짝 1·2, 슬롯 1, 블랙잭 1 받기 2 멈춤 3 더블, 룰렛 1 돌리기, 포커 1~5 고르기
+  locked() { return this.busy || (this.bj && this.bj.state === 'play') || (this.pk && this.pk.state === 'hold') || (this.th && this.th.state === 'play'); },
+  key(k) { // 숫자 키: 홀짝 1·2, 슬롯 1, 블랙잭 1 받기 2 멈춤 3 더블, 룰렛 1 돌리기, 포커 1~5 고르기, 홀덤 1 폴드 2 체크·콜 3 벳·레이즈
     if (this.tab === 'hol' && (k === '1' || k === '2')) return this.holPlay(k === '1' ? 'hol' : 'jjak');
     if (this.tab === 'slot' && k === '1') return this.slotSpin();
     if (this.tab === 'bj') { if (!this.bj || this.bj.state !== 'play') { if (k === '1') this.bjDeal(); return; } if (k === '1') this.bjHit(); if (k === '2') this.bjStand(); if (k === '3') this.bjDouble(); return; }
     if (this.tab === 'rl' && k === '1') return this.rlSpin();
     if (this.tab === 'pk') { if (this.pk && this.pk.state === 'hold' && '12345'.includes(k)) { this.pk.hold[+k - 1] = !this.pk.hold[+k - 1]; Sound.play('click'); return this.render(); } if (k === '1' && (!this.pk || this.pk.state === 'done')) this.pkDeal(); }
+    if (this.tab === 'th') { const T = this.th; if (!T || T.state !== 'play') { if (k === '1') this.thDeal(); return; } if (T.cur === 0) { if (k === '1') this.thAct('fold'); if (k === '2') this.thAct('call'); if (k === '3') this.thAct('raise'); } }
   },
   /* ---------- 홀짝 ---------- */
   holPlay(side) {
@@ -15134,11 +15170,84 @@ const Casino = {
       html: `<div class="vpCab"><div class="vpTitle">JACKS OR BETTER</div>${table}<div class="cRow pk">${cards}</div><div class="vpLeds"><span>BET ${fmtWon(bet)}</span><span>CREDIT ${fmtWon(mgFree())}</span></div></div>`,
       btns: hold ? `<div class="hjPick"><button class="btn gold big" data-do="pkdraw">DRAW · 바꾸기</button></div>` : `<div class="hjPick"><button class="btn gold big" data-do="pkdeal" ${!this.can() ? 'disabled' : ''}>DEAL · ${P ? '한 판 더' : '카드 받기'}<small>1</small></button></div>`, foot: P ? `판돈 ${fmtWon(P.bet)}` : '' };
   },
+  /* ---------- 텍사스 홀덤: 나 + 손님 셋, 리밋 (벳·레이즈는 플랍까지 큰 블라인드만큼, 턴·리버는 두 배, 한 바퀴에 네 번까지) ----------
+   * 손님 돈은 카지노가 대 주고, 내 돈만 판이 끝날 때 한 번에 정산 (딴 팟 − 내가 넣은 돈). 내가 넣는 돈은 번 돈을 못 넘는다. */
+  thDeal() {
+    if (this.locked()) return; if (!this.can(2)) { Sound.play('deny'); return this.render('큰 블라인드 두 배는 번 돈이 있어야 앉을 수 있어요.'); }
+    const d = cDeck(), bb = this.bet, sb = bb / 2, btn = this.th ? (this.th.btn + 1) % 4 : Math.floor(Math.random() * 4);
+    const seats = [{ name: '나', me: 1 }, ...TH_NPC].map(p => ({ ...p, hand: [d.pop(), d.pop()], in: true, bet: 0, tot: 0, act: '' }));
+    const T = this.th = { deck: d, seats, board: [], street: 0, bb, sb, btn, hi: 0, raises: 1, pot: 0, need: [true, true, true, true], cur: (btn + 3) % 4, state: 'play', msg: '', shownB: 0, shownMe: false };
+    this.thPut((btn + 1) % 4, sb, '스몰'); this.thPut((btn + 2) % 4, bb, '빅'); T.hi = bb;
+    Sound.play('paper'); this.thStep();
+  },
+  thPut(i, amt, act) { const T = this.th, s = T.seats[i]; s.bet += amt; s.tot += amt; T.pot += amt; if (act) s.act = act; },
+  thApply(i, kind) {
+    const T = this.th, s = T.seats[i], call = T.hi - s.bet, size = T.street < 2 ? T.bb : T.bb * 2;
+    if (kind === 'fold') { s.in = false; s.act = '폴드'; T.need[i] = false; }
+    else if (kind === 'raise') { this.thPut(i, call + size, call ? '레이즈' : '벳'); T.hi = s.bet; T.raises++; T.need = T.seats.map((p, j) => p.in && j !== i); }
+    else { if (call) this.thPut(i, call, '콜'); else s.act = '체크'; T.need[i] = false; }
+    T.cur = (i + 1) % 4;
+  },
+  thAct(kind) {
+    const T = this.th; if (!T || T.state !== 'play' || T.cur !== 0) return; const me = T.seats[0], call = T.hi - me.bet, size = T.street < 2 ? T.bb : T.bb * 2;
+    if (kind === 'call' && me.tot + call > mgFree()) { Sound.play('deny'); return this.render('콜할 돈이 번 돈보다 많아요.'); }
+    if (kind === 'raise' && (T.raises >= 4 || me.tot + call + size > mgFree())) { Sound.play('deny'); return this.render(T.raises >= 4 ? '이번 바퀴는 더 못 올려요 (4번까지).' : '올릴 돈이 번 돈보다 많아요.'); }
+    Sound.play(kind === 'fold' ? 'flip' : 'click'); this.thApply(0, kind);
+    if (kind === 'fold') return this.thEnd(); this.thStep();
+  },
+  thNpc(i) { // 손님 판단: 이길 확률(몇 명 남았는지 감안) + 팟 대비 콜 값 + 성격 (공격적·느슨함·블러핑)
+    const T = this.th, s = T.seats[i], live = T.seats.filter(p => p.in).length, eq = thEquity(s.hand, T.board, live - 1, 150), share = eq * live, call = T.hi - s.bet, odds = call / (T.pot + call), r = Math.random(), up = T.raises < 4;
+    if (!call) return up && (share > 1.45 - s.agg * 0.3 || r < s.bluff) ? 'raise' : 'call';
+    if (up && share > 1.75 - s.agg * 0.3 && r > 0.15) return 'raise';
+    return eq + s.loose * 0.08 >= odds || (T.street === 0 && share > 0.75 - s.loose * 0.2) || r < s.bluff * 0.5 ? 'call' : 'fold';
+  },
+  thStep() {
+    const T = this.th; clearTimeout(this.thT); if (!T || T.state !== 'play') return;
+    if (T.seats.filter(p => p.in).length === 1) return this.thEnd();
+    if (!T.need.some(Boolean)) { // 한 바퀴 끝: 다음 카드
+      if (T.street === 3) return this.thEnd();
+      T.street++; for (let k = T.street === 1 ? 3 : 1; k > 0; k--) T.board.push(T.deck.pop());
+      T.seats.forEach(p => { p.bet = 0; if (p.in) p.act = ''; }); T.hi = 0; T.raises = 0; T.need = T.seats.map(p => p.in); T.cur = (T.btn + 1) % 4;
+      Sound.play('paper'); this.render(); this.thT = setTimeout(() => this.thStep(), 650); return; }
+    while (!T.need[T.cur]) T.cur = (T.cur + 1) % 4;
+    this.render(); if (T.cur === 0) return; // 내 차례: 버튼 기다리기
+    const i = T.cur; this.thT = setTimeout(() => { if (this.th !== T || T.state !== 'play') return; this.thApply(i, this.thNpc(i)); Sound.play('pop', 1.4); this.thStep(); }, 700);
+  },
+  thEnd() {
+    const T = this.th; clearTimeout(this.thT); T.state = 'done'; const me = T.seats[0], live = T.seats.filter(p => p.in);
+    if (!me.in) { T.win = []; T.msg = me.tot ? `폴드 −${fmtWon(me.tot)}` : '폴드 · 넣은 돈 없음'; if (me.tot) this.pay(-me.tot, '홀덤 폴드'); Sound.play('flip'); this.fixBet(); return this.render(); }
+    T.show = live.length > 1; live.forEach(p => (p.best = T.show ? thBest(p.hand.concat(T.board)) : null));
+    const top = T.show ? Math.max(...live.map(p => p.best.s)) : 0; T.win = T.show ? live.filter(p => p.best.s === top) : live;
+    const mine = T.win.includes(me) ? Math.floor(T.pot / T.win.length) : 0, net = mine - me.tot, w0 = T.win[0];
+    T.msg = mine ? `${T.win.length > 1 ? '팟 나눠 가짐' : '이겼어요'}${T.show ? ` (${thName(me.best)})` : ' · 다 죽었어요'} ${net >= 0 ? '+' : '−'}${fmtWon(Math.abs(net))}` : `${w0.name} ${thName(w0.best)} 승 · −${fmtWon(me.tot)}`;
+    if (net) this.pay(net, net > 0 ? '홀덤 승' : '홀덤 패'); Sound.play(net > 0 ? 'coins' : net < 0 ? 'deny' : 'pop'); this.fixBet(); this.render();
+  },
+  thBody() {
+    const T = this.th, play = T && T.state === 'play', done = T && T.state === 'done', bb = T ? T.bb : this.bet;
+    const seat = i => { const p = T ? T.seats[i] : TH_NPC[i - 1], open = done && T.show && p.in, win = done && T.win.includes(p);
+      const cards = T ? p.hand.map(c => cHtml(c, !open)).join('') : '';
+      return `<div class="thSeat${T && !p.in ? ' out' : ''}${play && T.cur === i ? ' turn' : ''}${win ? ' win' : ''}"><canvas class="pt" data-pt="walker${i}" width="32" height="32"></canvas>${T && T.btn === i ? '<i class="thBtn">D</i>' : ''}<b>${p.name}</b><div class="thMini">${cards}</div><span class="thAct">${T ? (play && T.cur === i ? '…' : p.act) : ''}</span>${open ? `<span class="thHn">${thName(p.best)}</span>` : T && p.bet ? `<span class="thBet">${fmtWon(p.bet)}</span>` : ''}</div>`; };
+    const board = Array.from({ length: 5 }, (_, i) => (T && T.board[i] ? cHtml(T.board[i], false, i >= T.shownB) : '<i class="card slot"></i>')).join('');
+    const me = T && T.seats[0], call = T ? T.hi - me.bet : 0, size = T && T.street < 2 ? bb : bb * 2, hn = me ? (T.board.length ? thName(thBest(me.hand.concat(T.board))) : me.hand[0].r === me.hand[1].r ? '포켓 페어' : '') : '';
+    const meH = me ? me.hand.map(c => cHtml(c, false, !T.shownMe)).join('') : `${cHtml(null, true)}${cHtml(null, true)}`;
+    if (T) { T.shownB = T.board.length; T.shownMe = true; }
+    const myTurn = play && T.cur === 0, canCall = myTurn && me.tot + call <= mgFree(), canUp = myTurn && T.raises < 4 && me.tot + call + size <= mgFree();
+    const html = `<div class="felt thFelt"><div class="thTop">${[1, 2, 3].map(seat).join('')}</div>
+      <div class="thMid"><div class="thBoard">${board}</div><span class="thPot">팟 ${fmtWon(T ? T.pot : 0)}</span></div>
+      <div class="thMe${myTurn ? ' turn' : ''}${done && T.win.includes(me) ? ' win' : ''}${me && !me.in ? ' out' : ''}">${T && T.btn === 0 ? '<i class="thBtn">D</i>' : ''}<div class="hand">${meH}</div><div class="thMeInfo">${hn ? `<span class="thHn">${hn}</span>` : ''}${me && me.act && !myTurn ? `<span class="thAct me">${me.act}</span>` : ''}<span class="thBet">넣은 돈 ${fmtWon(me ? me.tot : 0)}</span></div></div></div>
+      <details class="thRank"><summary>족보 (센 순서)</summary><p>로열 스트레이트 플러시 · 스트레이트 플러시 · 포카드 · 풀하우스 · 플러시 · 스트레이트 · 트리플 · 투페어 · 원페어 · 하이카드</p></details>`;
+    const btns = myTurn ? `<div class="hjPick thPick"><button class="btn" data-do="thfold">폴드<small>1 · 포기</small></button><button class="btn gold" data-do="thcall" ${canCall ? '' : 'disabled'}>${call ? `콜 ${fmtWon(call)}` : '체크'}<small>2</small></button><button class="btn" data-do="thraise" ${canUp ? '' : 'disabled'}>${T.hi ? '레이즈' : '벳'} ${fmtWon(call + size)}<small>3</small></button></div>`
+      : play ? `<div class="hjPick"><button class="btn big" disabled>${T.seats[T.cur].name} 생각 중…</button></div>`
+      : `<div class="hjPick"><button class="btn gold big" data-do="thdeal" ${this.can(2) ? '' : 'disabled'}>DEAL · ${T ? '다음 판' : '한 판 하기'}<small>1</small></button></div>`;
+    const line = !T ? '두 장 받고, 바닥 다섯 장이랑 합쳐 제일 좋은 다섯 장으로 겨뤄요.' : myTurn ? (call ? `내 차례 · 콜 ${fmtWon(call)}` : '내 차례 · 체크하거나 벳') : play ? (T.street ? ['', '플랍', '턴', '리버'][T.street] : '프리플랍') : T.msg;
+    const cls = done ? (T.msg.includes('+') ? 'win' : T.msg.includes('−') ? 'lose' : '') : '';
+    return { cls, line, html, btns, foot: `블라인드 ${fmtWon(bb / 2)} / ${fmtWon(bb)} · 벳·레이즈는 플랍까지 ${fmtWon(bb)}, 턴·리버 ${fmtWon(bb * 2)}` };
+  },
   // v88 (사용자 '창이 아니라 그 상황 속에 들어간 것처럼'): 화면 전체가 카지노 테이블 앞 자리. 왼쪽은 테이블·기계와 맞은편 딜러, 오른쪽은 내 칩과 손.
   render(msg) {
     if (!this.open_) return; const el = $('hjWin'), lock = this.locked(); arcKeep(el, this.tab);
-    const B = { hol: () => this.holBody(), slot: () => this.slotBody(), bj: () => this.bjBody(), rl: () => this.rlBody(), pk: () => this.pkBody() }[this.tab]();
-    const say = esc(msg || '') || B.line, machine = this.tab === 'slot' || this.tab === 'pk', P = Party.p && PARTY_GAMES[Party.p.game].kind === 'casino' ? Party.p : null, shared = this.tab === 'rl' || this.tab === 'hol';
+    const B = { hol: () => this.holBody(), slot: () => this.slotBody(), bj: () => this.bjBody(), rl: () => this.rlBody(), pk: () => this.pkBody(), th: () => this.thBody() }[this.tab]();
+    const say = esc(msg || '') || B.line, machine = this.tab === 'slot' || this.tab === 'pk' || this.tab === 'th', P = Party.p && PARTY_GAMES[Party.p.game].kind === 'casino' ? Party.p : null, shared = this.tab === 'rl' || this.tab === 'hol';
     const party = P ? Party.seatsHtml() : shared && Net.on ? `<button class="btn ptBtn" data-do="ptnew" ${lock ? 'disabled' : ''}>👥 친구랑 같은 테이블에서 하기</button>` : '';
     const recruit = this.recruit && !P ? `<div class="ptPick"><b>몇 명이서 할까요?</b><small>${this.tab === 'rl' ? '룰렛' : '홀짝'} 테이블에 자리를 만들고 친구에게 초대장을 보내요. 방장이 ${this.tab === 'rl' ? '돌리면' : '던지면'} 모두 같은 결과가 나오고, 각자 자기 칩만 정산해요.</small><div>${PARTY_GAMES[this.tab].sizes.map(n => `<button class="btn" data-ptsz="${n}">${n}명</button>`).join('')}</div><button class="btn" data-do="ptcancel">취소</button></div>` : '';
     const dealer = machine ? '' : `<div class="dealer"><canvas class="pt" data-pt="dealer" width="32" height="32"></canvas><span class="dName">${castName('casino')}</span><p class="bubble ${msg ? 'lose' : B.cls}">${say}</p></div>`;
@@ -15156,7 +15265,7 @@ const Casino = {
     el.querySelectorAll('[data-ptsz]').forEach(b => (b.onclick = () => { this.recruit = false; Party.create(this.tab, Number(b.dataset.ptsz)); this.render(); }));
     el.querySelectorAll('[data-inv]').forEach(b => (b.onclick = () => Party.invite(b.dataset.inv)));
     if ($('ptX')) $('ptX').onclick = () => { Party.leave(true); this.render(); };
-    const act = { ptnew: () => { this.recruit = true; Sound.play('paper'); this.render(); }, ptcancel: () => { this.recruit = false; this.render(); }, holroll: () => this.holThrow(), hol: () => this.holPlay('hol'), jjak: () => this.holPlay('jjak'), spin: () => this.slotSpin(), deal: () => this.bjDeal(), hit: () => this.bjHit(), stand: () => this.bjStand(), double: () => this.bjDouble(), rl: () => this.rlSpin(), rlclear: () => this.rlClear(), rlrebet: () => this.rlRebet(), pkdeal: () => this.pkDeal(), pkdraw: () => this.pkDraw() };
+    const act = { ptnew: () => { this.recruit = true; Sound.play('paper'); this.render(); }, ptcancel: () => { this.recruit = false; this.render(); }, holroll: () => this.holThrow(), hol: () => this.holPlay('hol'), jjak: () => this.holPlay('jjak'), spin: () => this.slotSpin(), deal: () => this.bjDeal(), hit: () => this.bjHit(), stand: () => this.bjStand(), double: () => this.bjDouble(), rl: () => this.rlSpin(), rlclear: () => this.rlClear(), rlrebet: () => this.rlRebet(), pkdeal: () => this.pkDeal(), pkdraw: () => this.pkDraw(), thdeal: () => this.thDeal(), thfold: () => this.thAct('fold'), thcall: () => this.thAct('call'), thraise: () => this.thAct('raise') };
     el.querySelectorAll('[data-do]').forEach(b => (b.onclick = () => act[b.dataset.do]()));
     const slot = el.querySelector('.dealerSlot'), dl = el.querySelector('.dealer'); if (slot && dl) slot.appendChild(dl);
     $('hjX').onclick = () => this.close(); mgPortraits(el);

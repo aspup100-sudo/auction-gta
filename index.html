@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v231</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v232</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2946,7 +2946,7 @@ function carCorners(c, pad = 0) {
   const L = 11 + pad, W = 6 + pad, ca = Math.cos(c.a), sa = Math.sin(c.a);
   return [[L, W], [L, -W], [-L, W], [-L, -W], [L, 0], [-L, 0]].map(([lx, ly]) => [c.x + lx * ca - ly * sa, c.y + lx * sa + ly * ca]);
 }
-function carBlocked(z, c) { return carCorners(c).some(([x, y]) => { const v = z.at(Math.floor(x / TILE), Math.floor(y / TILE)); return v === T.BLD; }); }
+function carBlocked(z, c) { return carCorners(c).some(([x, y]) => { const tx = Math.floor(x / TILE), ty = Math.floor(y / TILE); if (tx < 0 || ty < 0 || tx >= z.W || ty >= z.H) return false; /* v232: 구역 밖은 벽이 아니다 (사용자 '구 지나갈때 왜 박냐고': 경계를 건물로 봐서 수리비) */ return z.at(tx, ty) === T.BLD; }); }
 // 차 두 대(회전 사각형)가 겹치는지: 서로의 모서리·변 중점이 상대 안에 들어가는지로 판정
 function pointInCar(px, py, cx, cy, a, hl, hw) { const dx = px - cx, dy = py - cy; const lx = dx * Math.cos(a) + dy * Math.sin(a), ly = -dx * Math.sin(a) + dy * Math.cos(a); return Math.abs(lx) <= hl && Math.abs(ly) <= hw; }
 function boxPts(x, y, a, l, w) { const ca = Math.cos(a), sa = Math.sin(a); return [[l, w], [l, -w], [-l, w], [-l, -w], [0, w], [0, -w], [l, 0], [-l, 0], [0, 0]].map(([lx, ly]) => [x + lx * ca - ly * sa, y + lx * sa + ly * ca]); }
@@ -6717,6 +6717,7 @@ function checkEdgeWalk(dt, z, p, ix, iy) {
 async function driveAcross(toGu) {
   if (Game.busy || Game.edgeGoing) return; Game.edgeGoing = true; Game.busy = true;
   const el = $('edgeSign'); el.classList.remove('in'); el.dataset.k = '';
+  const oc = Game.car; if (oc) { oc.vx = oc.vy = 0; oc.speed = 0; oc.hitCd = 99; oc.fineCd = 99; } /* v232: 넘어가는 동안 옛 차는 멈춰 둔다 (화면이 닫히는 사이 경계에 비벼 수리비) */
   const from = currentGu(); const { slot } = travelCost(from, toGu);
   const fuel = fuelCost('drive'); // 직접 운전은 주유비가 적다
   await iris(true);
@@ -12686,6 +12687,7 @@ PB_ACT_KO.arena = '공격';
 PB_APT.arena = ['펫 + 내 실력', b => b[0] * 0.3 + b[1] * 0.45 + b[3] * 0.25];
 PB_ART.arena = ['#e8b070', '#5a2a18'];
 
+const PA_HS = 0.85; /* v232: 사용자 '배틀 콜로세움 플레이어 크기 조금 줄이자' → 사람 키 1.75 → 1.5 */
 const PA_R = 9, PA_WH = 7, PA_PR = 0.5, PA_PH = 3.4, PA_PIL = [[3.7, 3.7], [-3.7, 3.7], [3.7, -3.7], [-3.7, -3.7]];
 const PA_HM = { mouse: 0.45, beetle: 0.45, lizard: 0.4, mantis: 0.6, turtle: 0.55, penguin: 0.8, rabbit: 0.6, cat: 0.6, dog: 0.75, monkey: 0.95, panda: 1.2, tiger: 1.1, giraffe: 2.6, elephant: 1.9, trex: 2.4, dolphin: 1.0, buddy: 1.65, kid: 1.15, gf: 1.6, bf: 1.7 };
 // [기본 공격, 특수기, 기본 이름, 특수 이름, 던지는 물건]
@@ -12774,7 +12776,7 @@ PetRT.arena = {
   },
   mk(B, tm, pet, wp, hn) {
     const S = B.S[tm], sx = tm === 'a' ? -6 : 6, o = { tm, x: sx, y: pet ? 1.3 : -1.3, an: tm === 'a' ? 0 : Math.PI, cd: 0, sc: 0, scm: 1, at: 0, ak: '', wu: 0, wk: '', st: 0, sh: 0, ds: 0, lp: 0, z: 0, kx: 0, ky: 0, fl: 0, dead: 0, ash: 0, qa: 0, qs: 0, mv: 0, vx: 0, vy: 0, vz: 0, ph: 0, ld: 0 }; /* v231: vx·vy 속도 (가속), vz 점프, ph 걸음 위상, ld 착지 */
-    if (!pet) return Object.assign(o, { k: 'hum', wp, nm: hn.slice(0, 8), hp: 140, mx: 140, sp: 3.6, dm: 1, df: 1, r: 0.35, h: 1.75, scm: PA_HUM[wp].sp.cd });
+    if (!pet) return Object.assign(o, { k: 'hum', wp, nm: hn.slice(0, 8), hp: 140, mx: 140, sp: 3.6, dm: 1, df: 1, r: 0.35, h: 1.75 * PA_HS, scm: PA_HUM[wp].sp.cd });
     const kind = PA_PET[S.kind] ? S.kind : 'dog', b = (PB_DEX[kind] || PB_DEX.dog).b, f = 1 + (S.lv - 5) * 0.01, hm = PA_HM[kind] || 0.8, mx = Math.round((110 + (b[0] - 40) * 1.2) * f);
     const ev = typeof PetEvo !== 'undefined' ? PetEvo.stOf(S.lv) : 0; /* 진화한 펫은 조금 더 크게 (v194) */
     return Object.assign(o, { k: kind, ev, nm: String(S.name).slice(0, 8), hp: mx, mx, sp: (2.4 + b[3] / 100 * 2.2) * Math.min(1.1, f), dm: (0.75 + b[1] / 110 * 0.5) * f, df: Math.max(0.7, 1 - (b[2] - 40) / 250), r: Math.max(0.28, Math.min(0.75, 0.22 + hm * 0.2)), h: hm * (1 + 0.12 * ev), scm: PA_S[PA_PET[kind][1]][0] });
@@ -12838,7 +12840,7 @@ PetRT.arena = {
   },
   shoot(G, i, d, an) {
     const u = G.u[i], g = u.k === 'hum' ? 'fire' : PA_PET[u.k][4] || 'star';
-    G.pr.push({ id: ++G.pid, x: u.x + Math.cos(an) * (u.r + 0.2), y: u.y + Math.sin(an) * (u.r + 0.2), z: u.k === 'hum' ? 1.25 : Math.max(0.3, u.h * 0.6), vx: Math.cos(an) * d.spd, vy: Math.sin(an) * d.spd, o: i, tm: u.tm, dmg: d.dmg * u.dm, g, r: d.big ? 0.45 : 0.25, life: 1.6, spl: d.spl || 0, big: d.big ? 1 : 0 });
+    G.pr.push({ id: ++G.pid, x: u.x + Math.cos(an) * (u.r + 0.2), y: u.y + Math.sin(an) * (u.r + 0.2), z: u.k === 'hum' ? 1.25 * PA_HS : Math.max(0.3, u.h * 0.6), vx: Math.cos(an) * d.spd, vy: Math.sin(an) * d.spd, o: i, tm: u.tm, dmg: d.dmg * u.dm, g, r: d.big ? 0.45 : 0.25, life: 1.6, spl: d.spl || 0, big: d.big ? 1 : 0 });
   },
   shots(G, dt) {
     const keep = [];
@@ -12940,13 +12942,13 @@ PetRT.arena = {
   /* ================= 그리기 ================= */
   // 3인칭 카메라: 내 캐릭터 머리 위 뒤쪽. 벽·기둥에 닿으면 당겨 온다, 흔들림 없이 부드럽게
   tpCam(cam, U, R, dt) {
-    const head = (U.z || 0) + (U.k === 'hum' ? 1.35 : Math.max(0.55, U.h * 0.85)), want = U.k === 'hum' ? 4.6 : 2.3 + U.h * 1.8, F = cam.F;
+    const head = (U.z || 0) + (U.k === 'hum' ? 1.35 * PA_HS : Math.max(0.55, U.h * 0.85)), want = U.k === 'hum' ? 4.3 : 2.3 + U.h * 1.8, F = cam.F;
     let d = want; const ok = dd => { const x = U.x - F[0] * dd, y = U.y - F[1] * dd, z = head - F[2] * dd; if (Math.hypot(x, y) > PA_R - 0.45 || z < 0.25 || z > 6.6) return false; for (const [qx, qy] of PA_PIL) if (Math.hypot(x - qx, y - qy) < PA_PR + 0.3) return false; return true; };
     while (d > 0.6 && !ok(d)) d -= 0.15; R.tcd = R.tcd == null || d < R.tcd ? d : R.tcd + (d - R.tcd) * Math.min(1, dt * 4);
     R.tz = R.tz == null ? head : R.tz + (head - R.tz) * Math.min(1, dt * 9); /* v231: 점프해도 카메라는 부드럽게 따라온다 */
     cam.px = U.x - F[0] * R.tcd; cam.py = U.y - F[1] * R.tcd; cam.z = R.tz - F[2] * R.tcd;
   },
-  eye(u) { return u.k === 'hum' ? 1.55 : Math.max(0.35, Math.min(2.3, u.h * 0.82)); },
+  eye(u) { return u.k === 'hum' ? 1.55 * PA_HS : Math.max(0.35, Math.min(2.3, u.h * 0.82)); },
   full(c, W, H, B, G, t) {
     let R = this.R; if (!R) R = this.R = { seen: G.eid || 0, fx: [], nums: [], rings: [], bolts: [], hm: 0, hk: 0, dmg: 0, sh: 0, msg: null, lt: 0, kill: 0 };
     const now = performance.now(), dt = R.lt ? Math.min(0.05, (now - R.lt) / 1000) : 0; R.lt = now;
@@ -13165,14 +13167,14 @@ PetRT.arena = {
     for (const p of R.fx) L.push({ k: 'f', p, x: p.x, y: p.y });
     for (const o of L) o.q = this.proj(cam, o.x, o.y); L.sort((a, b) => b.q.dp - a.q.dp); R.tags = [];
     for (const o of L) { const q = o.q; if (q.dp < 0.2) continue;
-      if (o.k === 'u' && cam.gl) { const u = o.u, hh = (u.k === 'hum' ? 1.75 : u.h) + (u.z || 0), top = this.p3(cam, u.x, u.y, hh + 0.15);
+      if (o.k === 'u' && cam.gl) { const u = o.u, hh = u.h + (u.z || 0), top = this.p3(cam, u.x, u.y, hh + 0.15);
         if (u.hp > 0 && top.w > 0.1 && q.sx > 0 && q.sx < cam.iw && this.los(cam.px, cam.py, u.x, u.y)) R.tags.push({ u, sx: top.sx, sy: top.sy, dp: q.dp });
         if (u.hp <= 0 && !u.ash && u.dead < 3) { x.fillStyle = '#ffe066'; for (let n = 0; n < 3; n++) { const a = t * 5 + n * 2.1, p = this.p3(cam, u.x + Math.cos(a) * 0.3 * cam.dY, u.y - Math.cos(a) * 0.3 * cam.dX, 0.5 + Math.sin(a) * 0.08); if (p.w > 0.1) { x.beginPath(); x.arc(p.sx, p.sy, Math.max(2, cam.f * 0.035 / p.w), 0, 7); x.fill(); } } }
         continue; }
-      if (o.k === 'u') { const u = o.u, ph = this.drawUnit(B, u, cam, t), m = (u.k === 'hum' ? 1.75 : u.h) / (ph * 2), sc = Math.max(1, Math.round(q.sc * m * cam.kd)) / cam.kd, dw = 100 * sc, dh = 84 * sc, sink = u.hp <= 0 && u.ash ? Math.max(0, (u.ash - 0.8) / 0.8) : 0;
+      if (o.k === 'u') { const u = o.u, ph = this.drawUnit(B, u, cam, t), m = u.h / (ph * 2), sc = Math.max(1, Math.round(q.sc * m * cam.kd)) / cam.kd, dw = 100 * sc, dh = 84 * sc, sink = u.hp <= 0 && u.ash ? Math.max(0, (u.ash - 0.8) / 0.8) : 0;
         let dy = Math.round((q.gy - (u.z || 0) * q.sc - 80 * sc) * cam.kd) / cam.kd; if (sink > 0) { const cut = 84 * (1 - sink * 0.9); dy += 84 * sc - cut * sc; this.blit(R, this.sc, 0, 0, 100, cut, Math.round((q.sx - 50 * sc) * cam.kd) / cam.kd, dy, dw, cut * sc, q.dp); }
         else this.blit(R, this.sc, 0, 0, 100, 84, Math.round((q.sx - 50 * sc) * cam.kd) / cam.kd, dy, dw, dh, q.dp);
-        if (u.hp > 0 && q.sx > 0 && q.sx < cam.iw && R.zb[Math.max(0, Math.min(cam.iw - 1, Math.round(q.sx)))] > q.dp) R.tags.push({ u, sx: q.sx, sy: q.gy - ((u.k === 'hum' ? 1.75 : u.h) + (u.z || 0) + 0.15) * q.sc, dp: q.dp });
+        if (u.hp > 0 && q.sx > 0 && q.sx < cam.iw && R.zb[Math.max(0, Math.min(cam.iw - 1, Math.round(q.sx)))] > q.dp) R.tags.push({ u, sx: q.sx, sy: q.gy - (u.h + (u.z || 0) + 0.15) * q.sc, dp: q.dp });
         if (u.hp <= 0 && !u.ash && u.dead < 3) { x.fillStyle = '#ffe066'; for (let n = 0; n < 3; n++) { const a = t * 5 + n * 2.1, sx = q.sx + Math.cos(a) * 0.3 * q.sc, sy = q.gy - 0.5 * q.sc + Math.sin(a) * 0.08 * q.sc; if (R.zb[Math.round(sx)] > q.dp) x.fillRect(Math.round(sx), Math.round(sy), Math.max(1, Math.round(q.sc * 0.06)), Math.max(1, Math.round(q.sc * 0.06))); } }
         continue; }
       if (o.k === 'pile') { const w = 0.7 * q.sc, h = Math.max(1, 0.18 * q.sc); if (R.zb[Math.round(q.sx)] > q.dp) { x.fillStyle = '#3a3230'; x.beginPath(); x.ellipse(q.sx, q.gy - h * 0.3, w / 2, h, 0, Math.PI, 0); x.fill(); x.fillStyle = '#5a504a'; x.fillRect(Math.round(q.sx - w * 0.15), Math.round(q.gy - h), Math.max(1, Math.round(w * 0.2)), Math.max(1, Math.round(h * 0.4))); } continue; }
@@ -13521,7 +13523,7 @@ Object.assign(PetRT.arena, {
     const mv = u.hp > 0 && u.mv > 0.15, fall = u.hp <= 0 && !u.ash ? Math.min(1, u.dead / 0.3) : 0, fs = side >= 0 ? 1 : -1; let m;
     x.save(); if (fall) { x.translate(200 - fs * fall * 110, 320); x.rotate(-fs * fall * Math.PI / 2); x.translate(-200, -320); }
     if (u.k === 'hum') { const view = Math.abs(rel) < Math.PI / 4 ? 'f' : Math.abs(rel) > Math.PI * 3 / 4 ? 'b' : side >= 0 ? 'r' : 'l';
-      const pal = Sprites.PAL[this.spr(B, u.tm)] || Sprites.PAL.player; this.human(x, pal, view, mv ? t * 9 : 0, mv, t, u); m = 1.75 / 262; }
+      const pal = Sprites.PAL[this.spr(B, u.tm)] || Sprites.PAL.player; this.human(x, pal, view, mv ? t * 9 : 0, mv, t, u); m = 1.75 * PA_HS / 262; }
     else { const s = this.scratch(); s.setTransform(1, 0, 0, 1, 0, 0); s.globalCompositeOperation = 'source-over'; s.globalAlpha = 1; s.clearRect(0, 0, 100, 84); s.imageSmoothingEnabled = false; s.setTransform(2, 0, 0, 2, 0, 0);
       PetEvo.with(u.k, u.ev, true, () => Pets.draw(s, u.k, 25, 40, side >= 0 ? 1 : -1, mv, t, '', 0)); s.setTransform(1, 0, 0, 1, 0, 0);
       x.drawImage(this.smooth(), 0, 0); m = u.h / (PetRT.petH(u.k) * 8); }
@@ -13822,7 +13824,7 @@ Object.assign(PetRT.arena, {
       const squash = a3Sc(1 + ldq * 0.1, 1 + ldq * 0.1, 1 - ldq * 0.16), lean = a3Ch(a3Ry(vf * 0.14 + (air ? -(v.vz || 0) * 0.025 : 0)), a3Rx(-vs * 0.12));
       if (v.k === 'hum') {
         const P = Sprites.PAL[this.spr(B, v.tm)] || Sprites.PAL.player, m = this.human3(g, P, v.wp), sw = Math.sin(ph) * amp, bob = Math.abs(Math.cos(ph)) * 0.035 * amp + (1 - amp) * Math.sin(t * 2.2) * 0.006;
-        const base = a3Ch(a3T(v.x, v.y, (v.z || 0) - sink * 1.6), a3Rz(v.an), a3Rx(fall * Math.PI / 2 * (v.tm === 'a' ? 1 : -1)), squash, lean, a3T(0, 0, bob));
+        const base = a3Ch(a3T(v.x, v.y, (v.z || 0) - sink * 1.6), a3Rz(v.an), a3Rx(fall * Math.PI / 2 * (v.tm === 'a' ? 1 : -1)), a3Sc(PA_HS, PA_HS, PA_HS), squash, lean, a3T(0, 0, bob));
         const atk = v.at > 0 && v.ak, pa = atk ? Math.min(1, 1 - v.at / 0.3) : 0, wu = v.wu > 0, fire = v.wp === 'fire';
         let aR = fire ? -0.35 : -0.5; if (wu) aR = fire ? -1.2 : -2.75; else if (atk) aR = fire ? -1.55 + Math.sin(pa * Math.PI) * 0.2 : -2.75 + Math.min(1, pa * 1.7) * 2.45; else aR += air ? -0.45 : sw * 0.15;
         const aL = air ? -0.75 : -sw * 0.55 - (1 - amp) * (0.08 - Math.sin(t * 2) * 0.04);

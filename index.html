@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v244</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v245</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -9956,6 +9956,7 @@ const SHOP_ITEMS = {
     { id: 'p_snowman', name: '눈사람 올라푸', new: '2026-10-18', nb: 233, price: 1.2e8, pet: 'snowman' },
     { id: 'p_sponge', name: '스폰지빵', new: '2026-10-18', nb: 243, price: 1.5e8, pet: 'sponge' }, // v243 (사용자 '스폰지밥, 핑핑이 만들자'): 이름은 패러디
     { id: 'p_gary', name: '달팽이 띵띵이', new: '2026-10-18', nb: 243, price: 8000e4, pet: 'gary' },
+    { id: 'p_parrot', name: '앵무새', new: '2026-10-18', nb: 245, price: 6000e4, pet: 'parrot' }, // v245 (사용자 '앵무새도 만들자'): 날아다니며 따라오고 말 따라 하고, 가만히 있으면 지붕에 앉는다
     { id: 'p_dora', name: '도라애몽 (주머니 도구)', new: '2026-10-18', nb: 234, price: 3e8, pet: 'dora' }, // v234 (사용자 '도라에몽도 펫에 넣자'): 이름은 패러디, 도구는 dora.js
   ],
   car: [
@@ -10462,6 +10463,7 @@ const Pets = {
     if (k === 'trex' && s.moving) Prints.lay(key, s.x, s.y);
     if (k === 'penguin') { this.fish(c, s, idle, key); if (key.startsWith('me')) { if (s.moving && s.lx != null) { const d = Math.hypot(s.x - s.lx, s.y - s.ly); if (d < 40 && PET_FAT.get() > 0) PET_FAT.add(-d / 1400, s); } s.lx = s.x; s.ly = s.y; } } // 많이 걸으면 살이 빠진다
     if (k === 'dora' && typeof Dora !== 'undefined') { const R = Dora.run(c, s, key, k, t, n, idle, ox, oy); if (R) return R; } // 도라애몽: 주머니 도구 (v234)
+    if (k === 'parrot' && typeof Parrot !== 'undefined') return Parrot.run(c, s, key, k, t, n, idle, ox, oy); // 앵무새: 날아다니고 지붕에 앉기 (v245)
     if ((k === 'sponge' || k === 'gary') && typeof Sponge !== 'undefined') { const R = Sponge.run(c, s, key, k, t, n, idle, ox, oy); if (R) return R; } // 스폰지빵 · 띵띵이 (v243)
     if (typeof PNPC !== 'undefined' && PNPC[k]) { const R = PetNPC.run(c, s, key, k, t, n, idle, k !== 'monkey' || t - s.oStill >= 5); if (R) return R; } // 지나가는 행인이랑 놀기 (v159, 원숭이는 머리에서 내려와 있을 때만)
     const TS = k === 'turtle' ? this.turtle(c, s, key, idle, t) : null;
@@ -10727,7 +10729,7 @@ const Pets = {
       if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - 22); return;
     }
     const f0 = PET_DRAW[kind]; if (!f0) return; const rec = this.accRec, f = rec ? (...a) => { f0(...a); rec(a[3], a[4]); } : f0; /* v224: 펫 꾸미기가 몸을 그린 자리(기울기·뛰기 포함)를 알 수 있게 */ PET_FAT.n = kind === 'penguin' && pose && pose.fat ? pose.fat : 0;
-    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15 }[kind] || 15));
+    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13 }[kind] || 15));
     const step = moving ? Math.floor(t * 8) % 2 : 0;
     c.save(); c.translate(snapPx(c, x), snapPx(c, y));
     if (pose !== 'ride' && kind !== 'dolphin' && !((kind === 'mouse' || kind === 'beetle') && !moving && idle > 5)) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' || kind === 'turtle' || kind === 'tiger' ? 6 + (kind === 'tiger') * 2 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill(); }
@@ -11268,7 +11270,7 @@ const PET_ANCH = { // e: 눈 (e2: 앞을 보는 펫의 다른 눈), h: 머리 �
   gf: { e: [-1, -19], e2: [1, -19], h: [0, -22], n: [0, -15], s: 4 }, bf: { e: [-2, -20], e2: [1, -20], h: [0, -23], n: [0, -15], s: 4 }, turtle: { e: [7, -5], h: [7, -6], n: [5, -4], s: 3 },
   dolphin: { e: [2, -9], h: [1, -11], n: [1, -6], s: 4 }, trex: { e: [6, -24], h: [6, -30], n: [3, -18], s: 7 },
   dora: { e: [2, -16], e2: [4, -16], h: [0, -18], n: [0, -8], s: 5 }, snowman: { e: [2, -15], h: [1, -18], n: [0, -11], s: 4 }, croc: { e: [7, -5], h: [6, -6], n: [5, -3], s: 3 },
-  sponge: { e: [1, -14], e2: [4, -14], h: [0, -18], n: [2, -7], s: 5 }, gary: { e: [5, -10], e2: [7, -10], h: [6, -12], n: [5, -3], s: 2 },
+  sponge: { e: [1, -14], e2: [4, -14], h: [0, -18], n: [2, -7], s: 5 }, gary: { e: [5, -10], e2: [7, -10], h: [6, -12], n: [5, -3], s: 2 }, parrot: { e: [1.5, -9.5], h: [1, -11.5], n: [0.5, -7], s: 3 },
 };
 // 움직일 때 몸 모양이 확 바뀌는 펫 (v197, 사용자 '이거 장착되어 있어야 하는데 이상해' — 배로 미끄러지는 펭귄 위에 안경이 떠 있었다): 펭귄은 미끄러지는 자세의 머리 자리, 판다(데굴데굴)·돌고래(헤엄)는 그동안 숨긴다
 const PET_ANCH_MV = { penguin: { e: [6, -4], h: [6, -6], n: [4, -3], s: 4 }, panda: null, dolphin: null };
@@ -11289,7 +11291,7 @@ const PetDeco = {
     if (key.startsWith('f:') && typeof Net !== 'undefined') { const nm = key.slice(2).replace(/#2$/, ''); for (const id in Net.players) { const q = Net.players[id]; if (q && q.name === nm && q.pal) return this.get(kind, q.pal); } }
     return null;
   },
-  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15 }[kind] || 15); },
+  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13 }[kind] || 15); },
   draw(c, kind, x, y, face, moving, t, tag, idle, pose, d) {
     // v224 (사용자 '서 있을 때, 움직일 때 같이 따라가야지' — 물고기 낚는 펭귄이 기울어도 목도리는 제자리였다): 몸을 그릴 때의 변환(뒤집기·기울기·폴짝)을 받아 두고 그대로 덧그린다. 몸 그림 없이 따로 그리는 자세(앉은 강아지 등)는 예전처럼
     let rec = null, off = null; if (d.eye || d.neck || d.head) Pets.accRec = (cx, mv) => { if (cx && cx.getTransform) rec = { cx, m: cx.getTransform(), mv }; };
@@ -11525,7 +11527,7 @@ const PetNPC = {
   end(s, S) { this.free(S, false); s.npc = null; s.npcNext = performance.now() + 5000 + Math.random() * 4000; },
   free(S, flee) { if (S.freed) return; S.freed = true; const w = S.w; if (Game.decor.includes(w)) w.x = S.wx; delete w.petNpc;
     if (w.ai) { w.ai.t = flee ? 1.6 : 0.3; if (flee) { w.ai.ix = Math.sign(w.x - S.px) || 1; w.ai.iy = Math.sign(w.y - S.py); w.ai.flee = true; } } },
-  LH: { sponge: 25, gary: 19, tiger: 26, dora: 24, snowman: 26, croc: 12, trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
+  LH: { sponge: 25, gary: 19, parrot: 17, tiger: 26, dora: 24, snowman: 26, croc: 12, trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
   // 장면에서 쓰는 도구: 시간 구간, 오가기, 던지기, 말풍선, 하트
   api(c, s, S, e, now, k) {
     const H = S.H, W = S.W, side = S.side, ex = Pets.extra, A = {
@@ -11981,6 +11983,69 @@ Object.assign(PET_ACT, {
 });
 PET_FOLLOW.gary = { v: 0.6 };
 
+/* ===================== 앵무새 펫 (v245, 사용자 2026-10-18 '앵무새도 만들자 막 날아다니면서 따라오고 말 따라하고 막 여기저기 날라다니면서 가만히 있으면 건물 위에 앉아있어') =====================
+ * 걷는 동안: 주인 머리 위를 이리저리 날아다니며 따라온다 (공중이라 그림자만 땅에).
+ * 주인이 가만히 있으면: 근처 건물 지붕으로 날아가 앉는다 (지붕이 없으면 주인 옆 땅에). 움직이면 다시 날아온다.
+ * 말 따라 하기: 근처에서 나온 말풍선(내 채팅 · 친구 채팅 · 행인 말)을 '○○! ○○!' 하고 따라 한다. 가끔 혼자 '깍! 깍!'.
+ * 그리는 자리 = 펫 자리(s) + S.dx/dy, 높이 S.h — 목표 쪽으로 일정 속도로 옮긴다 (순간이동 없이). */
+const PARROT_SAY = ['깍! 깍!', '안녕~ 안녕~', '부자 되세요! 깍!', '경매 최고! 깍!', '낙찰! 낙찰!', '배고파~ 깍!'];
+const Parrot = {
+  S: {},
+  roof(z, s) { // 지붕 자리: 사방이 건물인 칸 (가장자리 말고 지붕 위)
+    for (let r = 28; r <= 140; r += 12) { const c = []; for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2 + r, x = s.x + Math.cos(a) * r, y = s.y + Math.sin(a) * r * 0.8, tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
+      if (z.at(tx, ty) === T.BLD && z.at(tx + 1, ty) === T.BLD && z.at(tx - 1, ty) === T.BLD && z.at(tx, ty + 1) === T.BLD && z.at(tx, ty - 1) === T.BLD) c.push({ x, y }); }
+      if (c.length) return c[Math.floor(Math.random() * c.length)]; } // 가까운 지붕부터
+    return null; },
+  heard(S, t, bx, by) { // 새로 나온 말풍선 하나 고르기
+    const seen = S.seen || (S.seen = new WeakSet()), take = b => { if (!b || !b.text || seen.has(b)) return null; seen.add(b); return b.text; };
+    let txt = take(Net.myBubble); if (txt) return txt;
+    for (const id in Net.players) { const p = Net.players[id]; if (!p || p.gone || !p.bubble) continue; if (Math.hypot(p.x - bx, p.y - by) > 160) { seen.add(p.bubble); continue; } if ((txt = take(p.bubble))) return txt; }
+    for (const w of Game.decor || []) { if (!w.bubble) continue; if (Math.hypot(w.x - bx, w.y - by) > 110) { seen.add(w.bubble); continue; } if ((txt = take(w.bubble))) return txt; }
+    return null; },
+  run(c, s, key, k, t, n, idle, ox, oy) {
+    const S = this.S[key] || (this.S[key] = { dx: 0, dy: -4, h: 16, omv: t, sq: t + 6 + Math.random() * 6, f0: t }), z = Game.scene === 'zone' && Game.zone, X = Pets.extra;
+    const dt = S.t1 != null ? Math.min(0.1, Math.max(0, t - S.t1)) : 0; S.t1 = t;
+    if (S.ox == null || Math.hypot(ox - S.ox, oy - S.oy) > 0.3) S.omv = t; S.ox = ox; S.oy = oy;
+    const still = t - S.omv;
+    // 목표: 걷는 중엔 머리 위를 이리저리, 가만히 2.5초 → 지붕
+    if (still < 2.5 || !z) { S.perch = null; S.pt = null; }
+    else if (!S.perch && !S.pt) { S.pt = 1; S.perch = this.roof(z, s) || { x: s.x + 10, y: s.y + 2, ground: 1 }; }
+    let tx, ty, th, sp;
+    if (S.perch) { tx = S.perch.x - s.x; ty = S.perch.y - s.y; th = Math.hypot(tx - S.dx, ty - S.dy) < 3 ? 0 : 14; sp = 90; }
+    else { const e = t - S.f0, side = S.q || (S.say && t < S.say.until + 0.5) ? (S.dx >= 0 ? 42 : -42) : 0; tx = side || Math.sin(e * 1.3) * 18; ty = side ? -6 : Math.sin(e * 1.9) * 8 - 4; /* 따라 할 땐 주인 말풍선이랑 안 겹치게 옆으로 */ th = side ? 28 : 16 + Math.sin(e * 3) * 2; sp = 120; }
+    const ddx = tx - S.dx, ddy = ty - S.dy, dd = Math.hypot(ddx, ddy), st = Math.min(dd, sp * dt); if (dd > 0.01) { S.dx += ddx / dd * st; S.dy += ddy / dd * st; if (Math.abs(ddx) > 0.5) S.fc = ddx > 0 ? 1 : -1; }
+    S.h += Math.max(-30 * dt, Math.min(30 * dt, th - S.h));
+    const x = s.x + S.dx, y = s.y + S.dy, sit = S.perch && S.h < 0.5, fly = !sit, face = sit ? (ox > x ? 1 : -1) : S.fc || s.face || 1;
+    // 말 따라 하기 · 혼자 깍깍
+    const heard = this.heard(S, t, x, y); if (heard && !(S.say && t < S.say.until) && t > (S.qcd || 0)) { const w = heard.replace(/[!?~.…♥]+$/g, '').slice(0, 8); S.q = { text: `${w}! ${w}!${w.length <= 4 ? ' 깍!' : ''}`, at: t + 0.9 }; S.qcd = t + 3; }
+    if (S.q && t >= S.q.at) { S.say = { text: S.q.text, until: t + 2.4 }; S.q = null; if (key.startsWith('me')) Sound.play('blip', 2.2); }
+    if (!(S.say && t < S.say.until) && t > S.sq) { S.sq = t + 8 + Math.random() * 7; S.say = { text: PARROT_SAY[Math.floor(Math.random() * PARROT_SAY.length)], until: t + 1.8 }; }
+    const talk = S.say && t < S.say.until, yb = y - S.h;
+    X.push({ top: 1, y: y + 60, d: () => { this.draw(c, x, yb, face, fly ? 'fly' : talk ? 'talk' : 'sit', t); if (n) Net.petLabel(c, n, x, yb - 13); if (talk) Net.bubble(c, S.say.text, x, yb - (n ? 19 : 14)); } });
+    return { y, d: () => { if (S.perch && !S.perch.ground) return; const a = Math.max(0.08, 0.25 - S.h / 100); c.fillStyle = `rgba(0,0,0,${a})`; c.beginPath(); c.ellipse(x, y, 3.5 - Math.min(1.5, S.h / 14), 1.3, 0, 0, 7); c.fill(); } };
+  },
+  draw(c, x, y, face, pose, t) { c.save(); c.translate(snapPx(c, x), snapPx(c, y)); c.scale(face < 0 ? -1 : 1, 1); const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); }; PET_DRAW.parrot(r, 0, t, c, pose === 'fly', 0, pose); c.restore(); },
+};
+Object.assign(PET_DRAW, {
+  parrot(r, s, t, c, mv, idle = 0, a = '') { // 앵무새: 초록 몸, 빨간 이마, 노란 배, 파란 날개 끝·꼬리, 굽은 회색 부리
+    const G = '#3cb04a', GD = '#2a8a38', B = '#3a6ad8', R = '#e04040', YL = '#c8e050', K = '#1a1a1a', BK = '#4a4a52', W = '#ffffff';
+    if (a === 'fly') { const f = [0, 1, 2, 1][Math.floor(t * 14) % 4];
+      r(-6, -7.5, 3, 1, G); r(-8, -7, 2.5, 1, B); r(-8.5, -6.5, 1, 0.5, R); // 꼬리
+      r(-3, -8, 6, 3.5, G); r(-2, -8.5, 4, 0.5, G); r(-1, -5, 3, 1, YL); // 몸
+      r(2, -10, 3.5, 3.5, G); r(3, -10.5, 2.5, 1, R); r(3.8, -9.3, 1.2, 1.2, W); r(4.3, -9, 0.6, 0.7, K); r(5.5, -9, 1.2, 1.3, BK); r(6.2, -8.2, 0.6, 1, BK); // 머리 + 부리
+      if (f === 0) { r(-2, -12.5, 3.5, 4.5, GD); r(-2.5, -13.5, 3, 1, B); } else if (f === 1) { r(-2.5, -8.5, 5, 1.5, GD); r(-3.5, -8.3, 1.2, 1, B); } else { r(-2, -5, 3.5, 3.5, GD); r(-2.5, -1.8, 3, 1, B); } // 날개 퍼덕
+      return; }
+    const talk = a === 'talk', bob = !mv && a !== 'talk' && Math.floor(t * 1.2) % 5 === 0 ? 0.5 : 0;
+    r(-1.5, -1, 1, 1, '#8a8a90'); r(0.5, -1, 1, 1, '#8a8a90'); r(-2, -0.5, 1, 0.5, '#8a8a90'); r(1.5, -0.5, 0.8, 0.5, '#8a8a90'); // 발
+    r(-5, -3, 2, 1, G); r(-6.5, -2, 2, 1, B); r(-7.5, -1, 1.5, 1, B); r(-8, -0.5, 0.8, 0.5, R); // 꼬리
+    r(-3, -7, 5, 6, G); r(-2.5, -7.5, 4, 0.5, G); r(0, -5.5, 2, 4, YL); // 몸 + 배
+    r(-3, -6.5, 3.5, 4, GD); r(-3.5, -3, 2.5, 1, B); r(-3, -2.5, 1.5, 0.5, B); // 날개 (접은 것)
+    const hy = bob; r(-1, -11 + hy, 4, 4, G); r(0, -11.5 + hy, 2.5, 1, R); r(-0.5, -11 + hy, 1, 0.5, R); // 머리 + 빨간 이마
+    r(1, -10 + hy, 1.4, 1.4, W); r(1.5, -9.6 + hy, 0.6, 0.7, K); // 눈
+    r(3, -10 + hy, 1.5, 1.5, BK); r(4, -9 + hy, 0.8, 1.2, BK); if (talk && Math.floor(t * 8) % 2) { r(3, -8 + hy, 1, 0.7, '#6a6a72'); r(3.2, -8.6 + hy, 0.6, 0.5, '#d05050'); } else r(3, -8.6 + hy, 1, 0.8, '#6a6a72'); // 부리 (말할 땐 뻐끔)
+  },
+});
+
 /* ===================== 펫 배틀 (v147, 사용자 2026-10-16 '펫끼리 싸울 수 있게 할까? 포켓몬처럼', 카드에서 '턴제 배틀') =====================
  * 데리고 다니는 첫 번째 펫(Profile.pet)이 나간다. 펫마다 타입 하나 · 기술 4개 · 능력치(체력/공격/방어/스피드)가 있고, 이기면 경험치로 레벨이 오른다 (Store 'petLv').
  * 상대 1) 펫 트레이너: 동네 행인 중 몇 명이 펫을 데리고 다닌다. 말을 걸면 '⚔️ 배틀!' (이기면 상금, 트레이너마다 한 번).
@@ -12016,6 +12081,7 @@ const PB_DEX = {
   dora: { t: 'N', b: [80, 80, 75, 70], m: [['공기포', 'N', 75, 95], ['빅라이트 박치기', 'N', 85, 90], ['도라야키 냠냠', 'N', 0, 100, 'heal'], ['투명 망토', 'N', 0, 100, 'acc-']] },
   snowman: { t: 'W', b: [70, 70, 70, 60], m: [['눈덩이 던지기', 'W', 70, 100], ['고드름 찌르기', 'W', 85, 90], ['따뜻한 포옹', 'N', 0, 100, 'heal'], ['당근 코 박치기', 'N', 55, 100]] },
   sponge: { t: 'W', b: [75, 70, 80, 75], m: [['게살버거 던지기', 'N', 70, 100], ['가라테 촙', 'N', 85, 90], ['비눗방울', 'W', 65, 100], ['아하하하 웃기', 'N', 0, 100, 'heal']] },
+  parrot: { t: 'N', b: [65, 80, 60, 95], m: [['부리 쪼기', 'N', 70, 100], ['깃털 던지기', 'N', 60, 100], ['따라 하기', 'N', 0, 100, 'atk-'], ['급강하', 'N', 90, 85]] },
   gary: { t: 'W', b: [70, 60, 95, 40], m: [['끈적 박치기', 'W', 70, 100], ['야옹~', 'N', 0, 100, 'atk-'], ['껍데기 숨기', 'N', 0, 100, 'heal'], ['끈적이 뿌리기', 'W', 80, 90]] },
   croc: { t: 'W', b: [85, 95, 80, 45], m: [['악어 물기', 'N', 85, 95], ['꼬리 치기', 'W', 70, 100], ['죽음의 회전', 'W', 95, 80], ['악어의 눈물', 'N', 0, 100, 'atk-']] },
   trex: { t: 'R', b: [95, 110, 90, 60], m: [['꼬리 휘두르기', 'R', 90, 90], ['공룡 물기', 'N', 85, 95], ['쿵쿵 발구르기', 'R', 60, 100], ['크앙!', 'N', 0, 100, 'atk-']] },
@@ -12447,7 +12513,7 @@ const PetRT = {
   /* ---- 그리기 공통 (v154, 사용자 2026-10-16 '펫 배틀 퀄리티 더 올리자, 너무 투박해'): 큰 펫, 관중·무대, 효과(먼지·별·땀·색종이), 화면 흔들림, 이름표 카드, 카운트다운·승리 연출 ---- */
   view(W, H, B) { const s = Math.min(W / 320, H / 180), ox = (W - 320 * s) / 2, oy = (H - 180 * s) / 2, mir = !!B.mir; return { s, ox, oy, mir, k: Math.max(2, 2 * Math.round(s * 0.9)), X: x => ox + (mir ? 320 - x : x) * s, Y: y => oy + y * s, F: f => (mir ? -f : f), SX: x => ox + x * s }; },
   petK(kind, base) { return Math.max(2, 2 * Math.round(base * (['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 2 : ['trex', 'giraffe', 'elephant'].includes(kind) ? 0.5 : 1) / 2)); },
-  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7, snowman: 20, croc: 7, dora: 18, sponge: 18, gary: 11 }[kind] || 14; }, // 펫 키 (펫 픽셀)
+  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7, snowman: 20, croc: 7, dora: 18, sponge: 18, gary: 11, parrot: 11 }[kind] || 14; }, // 펫 키 (펫 픽셀)
   pet(c, V, P, x, y, face, mv, t, al, sx, rot) { // sx: 화면 x를 직접 줄 때
     const k = this.petK(P.kind, V.k); c.save(); c.globalAlpha = al == null ? 1 : al; c.translate(Math.round(sx != null ? sx : V.X(x)), Math.round(V.Y(y))); if (rot) c.rotate(rot); c.scale(k, k); PetEvo.with(P.kind, PetEvo.stOf(P.lv), false, () => Pets.draw(c, P.kind, 0, 0, sx != null ? face : V.F(face), mv, t, '', 0)); c.restore();
   },
@@ -13300,7 +13366,7 @@ PB_ART.arena = ['#e8b070', '#5a2a18'];
 
 const PA_HS = 0.85; /* v232: 사용자 '배틀 콜로세움 플레이어 크기 조금 줄이자' → 사람 키 1.75 → 1.5 */
 const PA_R = 9, PA_WH = 7, PA_PR = 0.5, PA_PH = 3.4, PA_PIL = [[3.7, 3.7], [-3.7, 3.7], [3.7, -3.7], [-3.7, -3.7]];
-const PA_HM = { mouse: 0.45, beetle: 0.45, lizard: 0.4, mantis: 0.6, turtle: 0.55, penguin: 0.8, rabbit: 0.6, cat: 0.6, dog: 0.75, monkey: 0.95, panda: 1.2, tiger: 1.5, giraffe: 2.6, elephant: 1.9, trex: 2.4, dolphin: 1.0, snowman: 1.05, croc: 0.5, dora: 0.95, sponge: 1.0, gary: 0.55, buddy: 1.65, kid: 1.15, gf: 1.6, bf: 1.7 };
+const PA_HM = { mouse: 0.45, beetle: 0.45, lizard: 0.4, mantis: 0.6, turtle: 0.55, penguin: 0.8, rabbit: 0.6, cat: 0.6, dog: 0.75, monkey: 0.95, panda: 1.2, tiger: 1.5, giraffe: 2.6, elephant: 1.9, trex: 2.4, dolphin: 1.0, snowman: 1.05, croc: 0.5, dora: 0.95, sponge: 1.0, gary: 0.55, parrot: 0.5, buddy: 1.65, kid: 1.15, gf: 1.6, bf: 1.7 };
 // [기본 공격, 특수기, 기본 이름, 특수 이름, 던지는 물건]
 const PA_PET = {
   mouse: ['claw', 'zap', '찌릿 할퀴기', '백만 볼트'], beetle: ['horn', 'dash', '뿔 들이받기', '장수 돌진'], mantis: ['claw', 'leap', '낫 베기', '사마귀 점프'],
@@ -13311,13 +13377,13 @@ const PA_PET = {
   gf: ['throw', 'drain', '애교 공격', '뽀뽀', 'heart'], bf: ['throw', 'shell', '윙크', '듬직한 어깨', 'star'], turtle: ['bite', 'shell', '느릿느릿 깨물기', '등껍질 숨기'],
   dolphin: ['throw', 'leap', '물대포', '점프 다이빙', 'water'], trex: ['bite', 'roar', '공룡 물기', '크앙!'],
   dora: ['throw', 'volley', '공기포', '공기포 연발', 'air'], snowman: ['throw', 'heal', '눈덩이 던지기', '따뜻한 포옹', 'snow'], croc: ['bite', 'dash', '악어 물기', '죽음의 회전'],
-  sponge: ['throw', 'volley', '게살버거 던지기', '비눗방울 연발', 'burger'], gary: ['bite', 'shell', '끈적 박치기', '껍데기 숨기'],
+  sponge: ['throw', 'volley', '게살버거 던지기', '비눗방울 연발', 'burger'], gary: ['bite', 'shell', '끈적 박치기', '껍데기 숨기'], parrot: ['throw', 'volley', '깃털 던지기', '깍깍 깃털 폭풍', 'feather'],
 };
 const PA_P = { bite: { rg: 1.5, arc: 1.2, dmg: 11, cd: 0.55, wu: 0.12 }, claw: { rg: 1.5, arc: 1.5, dmg: 8, cd: 0.38, wu: 0.08 }, horn: { rg: 1.7, arc: 1.1, dmg: 13, cd: 0.7, wu: 0.15, kb: 4 }, long: { rg: 2.5, arc: 1.1, dmg: 11, cd: 0.7, wu: 0.18, kb: 2 }, throw: { dmg: 8, cd: 0.6, spd: 11, pr: 1 } };
 const PA_PK = { bite: '가까이서 콱 물기', claw: '빠르게 슥슥 할퀴기', horn: '들이받아 밀쳐내기', long: '멀리까지 휘두르기', throw: '멀리서 던지기' };
 const PA_S = { zap: [6, '앞의 상대에게 번개 (잠깐 기절)'], dash: [5, '앞으로 쭉 돌진해서 들이받기'], leap: [6, '높이 뛰어 쿵 내려찍기'], roar: [8, '크게 울어서 가까운 상대 기절'], stomp: [6, '쿵! 주변을 전부 밀쳐내기'], heal: [9, '나랑 같은 편 체력 회복'], volley: [6, '다섯 개를 한꺼번에 던지기'], shell: [9, '잠깐 단단해져서 덜 아파요'], drain: [6, '물어서 빼앗은 만큼 회복'] };
 const PA_HUM = { sword: { atk: { rg: 1.9, arc: 1.4, dmg: 12, cd: 0.5, wu: 0.1 }, sp: { rg: 2.5, arc: 1.9, dmg: 24, cd: 4, wu: 0.25, kb: 6 }, n: ['베기', '힘껏 베기'] }, fire: { atk: { dmg: 9, cd: 0.55, spd: 13, pr: 1 }, sp: { dmg: 18, cd: 4.5, spd: 10, pr: 1, big: 1, spl: 1.8 }, n: ['불덩이', '큰 불덩이'] } };
-const PA_PAW = { mouse: '#c8beb4', beetle: '#3a2a1a', mantis: '#6ac04a', dog: '#c89058', cat: '#f0a050', lizard: '#6aa040', rabbit: '#f4f0ea', monkey: '#8a5a30', penguin: '#2a2a34', panda: '#222228', tiger: '#f08a20', giraffe: '#e8b860', elephant: '#9a9aa8', turtle: '#5a9a4a', dolphin: '#6a9ad0', trex: '#5a8a3a', snowman: '#f4f8ff', croc: '#4a8a3a', dora: '#f4f6f8', sponge: '#f4e04a', gary: '#9ecfd8' };
+const PA_PAW = { mouse: '#c8beb4', beetle: '#3a2a1a', mantis: '#6ac04a', dog: '#c89058', cat: '#f0a050', lizard: '#6aa040', rabbit: '#f4f0ea', monkey: '#8a5a30', penguin: '#2a2a34', panda: '#222228', tiger: '#f08a20', giraffe: '#e8b860', elephant: '#9a9aa8', turtle: '#5a9a4a', dolphin: '#6a9ad0', trex: '#5a8a3a', snowman: '#f4f8ff', croc: '#4a8a3a', dora: '#f4f6f8', sponge: '#f4e04a', gary: '#9ecfd8', parrot: '#3cb04a' };
 const paAng = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
 const paHash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return (h ^ (h >>> 16)) >>> 0; };
 // 부드러운 값 노이즈 (0~1) · 색 밝기 바꾸기
@@ -13820,6 +13886,7 @@ PetRT.arena = {
     else if (g === 'sand') { for (let n = 0; n < 7; n++) { const h = paHash(n, Math.floor(t * 10)); r(h % 7, (h >> 3) % 7, 1.4, 1.4, n % 2 ? '#e0c890' : '#c8a060'); } }
     else if (g === 'air') { r(1, 1, 6, 1, '#dff0ff'); r(0, 2, 1, 4, '#dff0ff'); r(7, 2, 1, 4, '#dff0ff'); r(1, 6, 6, 1, '#dff0ff'); r(2, 3, 4, 2, 'rgba(220,240,255,.5)'); }
     else if (g === 'snow') { r(2, 1, 4, 6, '#f6f9ff'); r(1, 2, 6, 4, '#f6f9ff'); r(2, 2, 2, 1, '#ffffff'); r(5, 5, 1, 1, '#c8d6ea'); }
+    else if (g === 'feather') { r(1, 5, 1, 1, '#2a8a38'); r(2, 4, 2, 2, '#3cb04a'); r(3, 2, 2, 3, '#3cb04a'); r(5, 1, 2, 2, '#3a6ad8'); r(6, 0, 1, 1, '#e04040'); }
     else if (g === 'burger') { r(1, 1, 6, 2, '#e0a040'); r(2, 1, 1, 1, '#fff4c0'); r(0, 3, 8, 1, '#5ac040'); r(0, 4, 8, 1.4, '#6a3a1a'); r(0, 5.4, 8, 0.6, '#ffd040'); r(1, 6, 6, 1.4, '#d89038'); }
     else if (g === 'toy') { r(1, 1, 3, 3, '#ff4a4a'); r(4, 1, 3, 3, '#4a8aff'); r(1, 4, 3, 3, '#ffd84a'); r(4, 4, 3, 3, '#5ac05a'); }
     else { r(3, 0, 2, 8, '#ffe066'); r(0, 3, 8, 2, '#ffe066'); r(2, 2, 4, 4, '#ffe066'); r(3, 3, 2, 2, '#fff8c0'); }

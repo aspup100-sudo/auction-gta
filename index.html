@@ -5834,8 +5834,9 @@ const Live = {
     if (credit < 1000) return;
     const sum = () => this.owned().reduce((t, m) => { const a = m.asset || {}; t.r += a.rentTotal || 0; t.i += a.intPaid || 0; return t; }, { r: 0, i: 0 }), b0 = sum();
     for (const m of rented) m.asset.held = (m.asset.held || 0) + credit;
-    this.quiet = true; try { for (let n = 0; n < 2000; n++) { const h = JSON.stringify(rented.map(m => [m.asset.rentHeld, m.asset.intHeld, m.asset.leaseEnd])); this.assetTick(0); if (h === JSON.stringify(rented.map(m => [m.asset.rentHeld, m.asset.intHeld, m.asset.leaseEnd]))) break; } } finally { this.quiet = false; }
+    this.quiet = true; Money.mute = true; /* v222: 밀린 달마다 '내 돈' 줄이 수십 개 찍히던 것 (사용자 '자리 비운 동안 얼마 받음 이렇게만') → 끝나고 한 줄 */ try { for (let n = 0; n < 2000; n++) { const h = JSON.stringify(rented.map(m => [m.asset.rentHeld, m.asset.intHeld, m.asset.leaseEnd])); this.assetTick(0); if (h === JSON.stringify(rented.map(m => [m.asset.rentHeld, m.asset.intHeld, m.asset.leaseEnd]))) break; } } finally { this.quiet = false; Money.mute = false; }
     const b1 = sum(), dr = b1.r - b0.r, di = b1.i - b0.i;
+    if (dr - di) Money.put(`자리 비운 동안 월세 ${fmtWon(dr)}${di ? ` · 이자 −${fmtWon(di)}` : ''}`, dr - di, State.cash, true);
     this.save();
     const note = cut ? (why === '자정' ? ' 접속 안 한 채 자정을 넘겨서 그 뒤로는 월세·이자가 멈췄어요.' : ` ${why} 넘게 접속 안 해서 그 뒤로는 월세·이자가 멈췄어요.`) : '';
     if (dr || di || cut) { HUD.page(`자리 비운 동안 월세 ${fmtWon(dr)} 들어왔어요${di ? ` · 대출 이자 −${fmtWon(di)}` : ''}.${note}`, '알림'); if (dr) Sound.play('coins'); if (Net.on && dr) Net.news(`자리 비운 동안 월세 ${fmtWon(dr)} 받음`); }
@@ -6091,7 +6092,7 @@ const Money = {
   last: null, pend: [], lastToast: null, q: [],
   why(label) { this.pend.push(label); },
   onSet(v, animate) {
-    if (!Live.on || animate === false) { this.last = v; this.pend.length = 0; return; } // 기준점: 그 전에 쌓인 이름표는 버린다 (안 그러면 다음 돈 변동에 엉뚱한 이름이 붙었다, 사용자 2026-10-18)
+    if (!Live.on || animate === false || this.mute) { this.last = v; this.pend.length = 0; return; } // 기준점: 그 전에 쌓인 이름표는 버린다 (안 그러면 다음 돈 변동에 엉뚱한 이름이 붙었다, 사용자 2026-10-18)
     if (this.last === null) { this.last = v; this.pend.length = 0; return; }
     const d = v - this.last; this.last = v; if (!d) return;
     const label = this.pend.shift();

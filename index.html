@@ -2092,6 +2092,7 @@ Object.assign(FEEL, {
   mineAllow: 10000000, // v170 (사용자 2026-10-16): 자금과 따로 도는 '땅굴 한도'. 합의금·병원비·수리비·과태료가 이 한도를 깎고, 넘는 만큼이 땅굴 빚. 매각 수익·월세가 번 만큼 다시 채운다
   mineSwingMin: 80000, mineSwingMax: 150000, mineCoalMin: 200000, mineCoalMax: 350000, /* v171 단가 올림 (한도까지 채우려면 오래 걸려서) */ mineHits: 3, mineGoldP: 0.004, mineGold: 10000000, mineMore: 0, // 빚 다 갚고 '더 캐기'로 더 벌 수 있는 한도 (v170 1천만 → 사용자 '500만 원으로' → v171 '경매로만 돈 벌게': 0 = 더 캐기 없음)
   hitKnock: 22,           // 치였을 때 튕겨 나가는 거리(px)
+  pedFeeSpeed: 46,        // 보행자: 이 속도(≈16km/h) 밑으로 닿으면 사람이 비켜서고 합의금 없음 (사용자 2026-10-18 '차 안 박았는데 돈 냈다')
   hitSpeed: 15,           // 이 속도 미만으로 닿으면 치인 것으로 치지 않음
   pedMin: 300000, pedMax: 1000000, // 내 차로 보행자를 쳤을 때 합의금(원)
   pedKnock: 26,           // 친 보행자가 튕겨 나가는 거리(px)
@@ -2943,7 +2944,7 @@ function collideTraffic(c, z) {
     o.jx = (o.jx || 0) - nx * FEEL.npcShove; o.jy = (o.jy || 0) - ny * FEEL.npcShove;
     const along = -(nx * Math.cos(p.a) + ny * Math.sin(p.a)); if (along > 0.5) o.v = Math.max(o.v, sp * 0.5);
     o.angryCd = o.angryCd || 0; if (sp > FEEL.bumpSpeed && o.angryCd <= 0) { o.angryCd = 3; setTimeout(() => Sound.play('horn'), 250); }
-    if (sp > 70 && c.hitCd <= 0) crashFx(c, sp);
+    if (sp > 70 && -rel > 50 && c.hitCd <= 0) crashFx(c, sp); // 내가 그 차 쪽으로 들이받을 때만 수리비: 옆을 스치거나 그 차가 와서 받으면 쿵만 (사용자 2026-10-18)
     else if (sp > FEEL.bumpSpeed && c.hitCd <= 0) { c.hitCd = 0.5; shake(2, 0.15); Sound.play('carDoor'); c.rock = 1; }
   }
 }
@@ -6953,7 +6954,9 @@ function updateDecor(dt) {
     // 내 차에 치임: 튕겨 나가 잠시 쓰러지고, 나는 합의금을 문다
     if (Game.driving && Game.car.speed > FEEL.hitSpeed && w.hurtCd <= 0) {
       const c = Game.car;
-      if (pointInCar(w.x, w.y, c.x, c.y, c.a, 14, 9)) {
+      /* 차 몸통(11×6)에 2px만 더한 칸 + 차가 그 사람 쪽으로 가고 있을 때만. 예전엔 14×9로 넓어서 옆을 지나가는 사람도 치인 걸로 쳤다 (사용자 2026-10-18 '차 안 박았는데 돈 냈다', 횡단보도 7km/h) */
+      if (pointInCar(w.x, w.y, c.x, c.y, c.a, 13, 8) && (w.x - c.x) * c.vx + (w.y - c.y) * c.vy > 0) {
+        if (c.speed < FEEL.pedFeeSpeed) { /* 기어가듯 닿으면 사람이 비켜서고 차가 멈춘다 (돈 안 냄) */ let nx = w.x - c.x, ny = w.y - c.y; const d = Math.hypot(nx, ny) || 1; w.x += nx / d * 6; w.y += ny / d * 6; w.hurtCd = 1.5; w.ai.t = 1; w.ai.flee = true; c.vx *= 0.2; c.vy *= 0.2; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1; if (!c.pedWarnT || Game.t - c.pedWarnT > 4) { c.pedWarnT = Game.t; Sound.play('horn'); Toast.show('앗, 사람이 지나간다! 천천히 가요.'); } continue; }
         let nx = w.x - c.x, ny = w.y - c.y; const d = Math.hypot(nx, ny) || 1; nx = nx / d * 0.6 + Math.cos(c.a) * 0.8; ny = ny / d * 0.6 + Math.sin(c.a) * 0.8; const L = Math.hypot(nx, ny) || 1;
         w.x += nx / L * FEEL.pedKnock; w.y += ny / L * FEEL.pedKnock; w.vx = w.vy = 0; w.stun = FEEL.pedStun; w.hurtCd = 3; w.ai.t = 1.5; w.ai.ix = Math.sign(nx) || 1; w.ai.iy = Math.sign(ny); w.ai.flee = true;
         c.vx *= 0.6; c.vy *= 0.6; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1;

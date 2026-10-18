@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v235</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v236</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2978,6 +2978,20 @@ const BusStop = {
     return A;
   }
 };
+// 부캉이(상어) 탈것 물줄기 (v235 사용자 '부캉이도 2명, 물줄기'): 지나간 자리에 파란 물줄기, 1초 뒤 맨 끝부터 사라진다 (거북이 길처럼)
+const Wake = {
+  LIFE: 1, FADE: 0.3, GAP: 4, MAX: 600, pts: [], last: {},
+  lay(key, x, y, a, spd) { if (spd < 4) return; const now = performance.now() / 1000, L = this.last[key]; const bx = x - Math.cos(a) * 12, by = y - Math.sin(a) * 12;
+    if (L && Math.hypot(bx - L.x, by - L.y) < this.GAP) return; const brk = !L || Math.hypot(bx - L.x, by - L.y) > 30 || now - L.t > 0.6;
+    const p = { x: bx, y: by, t: now, z: Game.zone && Game.zone.id, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p; if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null; },
+  clear() { this.last = {}; },
+  draw(c, x0, y0, x1, y1) { const now = performance.now() / 1000, zid = Game.zone && Game.zone.id; let cut = 0; while (cut < this.pts.length && now - this.pts[cut].t > this.LIFE) cut++; if (cut) this.pts.splice(0, cut); if (!this.pts.length) return;
+    c.save(); c.lineCap = 'round';
+    for (const p of this.pts) { const q = p.prev; if (!q || p.z !== zid || now - q.t > this.LIFE || Math.max(p.x, q.x) < x0 - 10 || Math.min(p.x, q.x) > x1 + 10 || Math.max(p.y, q.y) < y0 - 10 || Math.min(p.y, q.y) > y1 + 10) continue;
+      const k = Math.min(1, (this.LIFE - (now - q.t)) / this.FADE); c.globalAlpha = k; c.strokeStyle = 'rgba(70,150,230,.75)'; c.lineWidth = 5 * k + 1; c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(p.x, p.y); c.stroke();
+      c.strokeStyle = 'rgba(190,230,255,.9)'; c.lineWidth = 1.6 * k + 0.4; c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(p.x, p.y); c.stroke(); if ((p.t * 7) % 1 < 0.3) { c.fillStyle = '#fff'; c.fillRect(p.x - 0.5 + Math.sin(p.t * 9) * 2.5, p.y - 0.5, 1, 1); } }
+    c.restore(); }
+};
 // 금빛 리무진 (v234 사용자 '타면 돈이 나풀나풀 거리게'): 달리면 뒤로 지폐(만 원·오만 원)가 날려 뒤집히며 살랑살랑 떨어진다. z = 땅에서 높이
 const Bills = {
   pts: [], lt: 0,
@@ -2996,7 +3010,7 @@ const Bills = {
 // 기차 탈것이 지나간 자리에 깔리는 철로. v170 (사용자 2026-10-16 '드리프트 타이어 자국처럼 남게') · v171 ('다른 구로 넘어가면 없어지는 게 아니라 시간 지나면 없어지게'):
 // 구마다 남아 있다가 LIFE초 지나면 FADE초 동안 흐려지며 사라진다 (오래된 것부터 MAX개까지)
 const Rails = {
-  LIFE: 180, FADE: 30, GAP: 7, MAX: 1600, pts: [], last: {},
+  LIFE: 1, FADE: 0.3, GAP: 7, MAX: 1600, pts: [], last: {}, /* v235 사용자 '철도 1초 뒤에 없어지게 거북이처럼': 1초 뒤 맨 끝부터 하나씩 */
   lay(key, x, y, a, spd) {
     if (spd < 4) return; const now = performance.now() / 1000, L = this.last[key];
     if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
@@ -3060,8 +3074,10 @@ function collideTraffic(c, z) {
   }
 }
 
+// 천사 날개 (v235 사용자 '천사는 날 수 있으니까 안 박는 걸로'): 건물·차·사람 위로 날아간다 (부딪힘·수리비·합의금·신호 과태료 없음, 지붕 위에 그린다)
+function carFlying() { return Game.driving && typeof Shop !== 'undefined' && !(typeof CarSwap !== 'undefined' && CarSwap.stolen()) && Shop.myCar(true).ride === 'wings'; }
 function updateMyCar(dt, z, input) {
-  const c = Game.car;
+  const c = Game.car, fly = carFlying(), carBlocked = fly ? () => false : window.carBlocked;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
   const fwd0 = c.vx * fx + c.vy * fy; // 진행 방향 속도
   let fwd = fwd0;
@@ -3091,7 +3107,7 @@ function updateMyCar(dt, z, input) {
   c.vx = nfx * f1 - nfy * lat; c.vy = nfy * f1 + nfx * lat;
   c.speed = Math.hypot(c.vx, c.vy);
   const lateral = Math.abs(-c.vx * nfy + c.vy * nfx);
-  if (lateral > 40 && c.speed > 60) { const rr = c === Game.car && typeof Shop !== 'undefined' ? Shop.myCar(true).ride : null, r1 = ['bike', 'scooter', 'moto', 'uni'].includes(rr), hoof = rr === 'horse' || rr === 'bull' || rr === 'wolf'; /* v234 사용자 '자전거는 트랙이 하나로', '말은 트랙 자국이 아니라 말발굽 자국': 바퀴 한 줄 탈것은 뒷바퀴 자국 한 줄, 말·황소는 발굽 자국 (띄엄띄엄 좌우) */ if (hoof) { const L = Skids[Skids.length - 1], hx = c.x - Math.cos(c.a) * 6, hy = c.y - Math.sin(c.a) * 6; if (!L || !L.h || Math.hypot(L.x - hx, L.y - hy) > 5) { const sd = L && L.h ? -L.h : 1; Skids.push({ x: hx - Math.sin(c.a) * 2.5 * sd, y: hy + Math.cos(c.a) * 2.5 * sd, a: c.a, h: sd, cl: rr === 'bull' ? 1 : rr === 'wolf' ? 2 : 0, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } } else for (const [px, py] of r1 ? [[c.x - Math.cos(c.a) * 7, c.y - Math.sin(c.a) * 7]] : carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); if (Skids.length > 1400) Skids.splice(0, Skids.length - 1400); if (Math.random() < 0.3) Sound.play('skid'); }
+  if (lateral > 40 && c.speed > 60) { const rr = c === Game.car && typeof Shop !== 'undefined' ? Shop.myCar(true).ride : null; if (rr === 'shark' || rr === 'wings' || rr === 'dragon') { /* 부캉이는 물줄기만 (Wake), 날개·용은 날아서 자국 없음 (v235 '용도 트랙 어색하다') */ } else { const  r1 = ['bike', 'scooter', 'moto', 'uni'].includes(rr), hoof = rr === 'horse' || rr === 'bull' || rr === 'wolf'; /* v234 사용자 '자전거는 트랙이 하나로', '말은 트랙 자국이 아니라 말발굽 자국': 바퀴 한 줄 탈것은 뒷바퀴 자국 한 줄, 말·황소는 발굽 자국 (띄엄띄엄 좌우) */ if (hoof) { const L = Skids[Skids.length - 1], hx = c.x - Math.cos(c.a) * 6, hy = c.y - Math.sin(c.a) * 6; if (!L || !L.h || Math.hypot(L.x - hx, L.y - hy) > 5) { const sd = L && L.h ? -L.h : 1; Skids.push({ x: hx - Math.sin(c.a) * 2.5 * sd, y: hy + Math.cos(c.a) * 2.5 * sd, a: c.a, h: sd, cl: rr === 'bull' ? 1 : rr === 'wolf' ? 2 : 0, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } } else for (const [px, py] of r1 ? [[c.x - Math.cos(c.a) * 7, c.y - Math.sin(c.a) * 7]] : carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } if (Skids.length > 1400) Skids.splice(0, Skids.length - 1400); if (Math.random() < 0.3) Sound.play('skid'); }
   // 이동 + 충돌
   c.hitCd -= dt; c.fineCd -= dt; c.unstickCd = (c.unstickCd || 0) - dt;
   const ox = c.x, oy = c.y;
@@ -3099,14 +3115,14 @@ function updateMyCar(dt, z, input) {
   c.y += c.vy * dt; if (carBlocked(z, c)) { c.y = oy; hit(c, 'y'); }
   c.x = Math.max(12, Math.min(z.W * TILE - 12, c.x)); c.y = Math.max(12, Math.min(z.H * TILE - 12, c.y));
   if (carBlocked(z, c)) { c.x = ox; c.y = oy; }
-  collideTraffic(c, z);
+  if (!fly) collideTraffic(c, z);
   // 끼임 구제: 페달을 밟는데도 안 움직이면(또는 이미 건물 안에 물려 있으면) 가장 가까운 빈 자리로 빼낸다
   c.stuckT = ((up || down) && Math.hypot(c.x - ox, c.y - oy) < 40 * dt) ? (c.stuckT || 0) + dt : 0;
   if (c.stuckT > FEEL.carStuckSec) unstickCar(c, z);
   c.exhaustT -= dt; if (c.exhaustT <= 0 && (up || c.speed > 20)) { c.exhaustT = 0.08; puff(c.x - nfx * 13, c.y - nfy * 13, 'rgba(120,120,125,', 1); }
   c.rock = Math.max(0, c.rock - dt * 4);
   Engine_sfx(c);
-  checkTrafficFines(c, z);
+  if (!fly) checkTrafficFines(c, z);
 }
 // 차가 끼었을 때: 주변을 돌며 차가 들어갈 수 있고 길(인도 포함) 위인 가장 가까운 자리를 찾아 옮긴다
 function unstickCar(c, z) {
@@ -3372,7 +3388,7 @@ function drawRideHD(c, ride, t, mv, still, rd, pax) { const rd0 = rd, px = pax &
     case 'piggy': { sh(0, 0, 18, 12); const st = mv ? Math.sin(t * 12) * 4 : 0; R(-2 + st, -10, 8, 4, '#2b3a6e'); R(-2 - st, 6, 8, 4, '#2b3a6e'); R(4 + st, -10, 2, 4, '#15151c'); R(4 - st, 6, 2, 4, '#15151c'); E(0, 0, 7, 12, '#257a48'); E(0, 0, 6, 11, '#2f9a5a'); R(-3, -9, 4, 18, '#3ab06a'); E(8, 0, 6.5, 6.5, '#3a2a1a'); E(9, -2, 3, 2, '#5a4030'); R(-4, -16, 6, 4, '#f0c8a0'); R(-4, 12, 6, 4, '#f0c8a0');
       if (rd) { E(-6, 0, 4, 7, rd.shirt); R(-2, -9, 9, 3, rd.shirt); R(-2, 6, 9, 3, rd.shirt); R(6, -9, 2, 3, rd.skin); R(6, 6, 2, 3, rd.skin); E(-5, 0, 4.5, 4.5, rd.hair); R(-7, -2.5, 3, 1.5, 'rgba(255,255,255,.22)'); } break; }
     case 'wolf': { sh(0, 0, 24, 10); const st = mv ? Math.sin(t * 14) * 4 : 0; for (const [lx, ly, s] of [[10, -10, st], [10, 7, -st], [-13, -10, -st], [-13, 7, st]]) { R(lx + s, ly, 6, 3, '#4a4f59'); R(lx + s + 5, ly, 2, 3, '#2a2e36'); } E(0, 0, 18, 9, '#6a707a'); E(0, -1, 17, 8, '#8a8f99'); E(-2, 0, 13, 3, '#5a5f69'); for (let i = -12; i < 12; i += 4) R(i, -8, 2, 2, '#9aa0aa'); const tw = Math.sin(t * 8) * 3; P([-16, -3, -32, -5 + tw, -34, 0 + tw, -32, 5 + tw, -16, 3], '#8a8f99'); P([-28, -3 + tw, -34, 0 + tw, -28, 3 + tw], '#d8dce4'); E(19, 0, 7, 6.5, '#9aa0aa'); E(18, -1, 5, 4.5, '#b0b6c0'); P([24, -3, 32, -1, 32, 1, 24, 3], '#c8ccd4'); R(31, -1, 2, 2, '#111'); P([14, -6, 17, -11, 19, -5], '#5a5f69'); P([14, 6, 17, 11, 19, 5], '#5a5f69'); R(21, -3, 2, 1.5, '#ffd84a'); R(21, 1.5, 2, 1.5, '#ffd84a'); if (px) me(-11, 1, true, px); me(-2); break; } // v234 뒤에 한 명 더
-    case 'shark': { const sw = Math.sin(t * (mv ? 10 : 3)) * 5; E(0, 0, 33, 16, 'rgba(110,190,255,.28)'); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(0, 0, 33, 16, 0, 0, 7); c.stroke(); E(2, 0, 24, 9, '#3a5a74'); E(2, -1, 23, 8, '#5a7890'); E(4, -3, 16, 3, '#7a9ab4'); E(4, 0, 18, 3, '#e8f0f4'); P([-20, 0, -34, -10 + sw, -30, 0, -34, 10 + sw], '#4a6880'); P([4, -8, -6, -18, -4, -8], '#4a6880'); P([4, 8, -6, 18, -4, 8], '#4a6880'); P([0, -2, -6, -1, 0, 2], '#3a5a74'); for (const X of [10, 12, 14]) R(X, -6, 1, 3, '#3a5a74'); for (const X of [10, 12, 14]) R(X, 3, 1, 3, '#3a5a74'); R(19, -5, 2, 2, '#111'); R(19, 3, 2, 2, '#111'); R(19.5, -5, 1, 1, '#fff'); for (let i = 0; i < 4; i++) R(22 + i * 1.5, -1.5, 1, 1, '#fff'); for (let i = 0; i < 4; i++) R(22 + i * 1.5, 0.5, 1, 1, '#fff'); me(0); break; }
+    case 'shark': { const sw = Math.sin(t * (mv ? 10 : 3)) * 5; E(0, 0, 33, 16, 'rgba(110,190,255,.28)'); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(0, 0, 33, 16, 0, 0, 7); c.stroke(); E(2, 0, 24, 9, '#3a5a74'); E(2, -1, 23, 8, '#5a7890'); E(4, -3, 16, 3, '#7a9ab4'); E(4, 0, 18, 3, '#e8f0f4'); P([-20, 0, -34, -10 + sw, -30, 0, -34, 10 + sw], '#4a6880'); P([4, -8, -6, -18, -4, -8], '#4a6880'); P([4, 8, -6, 18, -4, 8], '#4a6880'); P([0, -2, -6, -1, 0, 2], '#3a5a74'); for (const X of [10, 12, 14]) R(X, -6, 1, 3, '#3a5a74'); for (const X of [10, 12, 14]) R(X, 3, 1, 3, '#3a5a74'); R(19, -5, 2, 2, '#111'); R(19, 3, 2, 2, '#111'); R(19.5, -5, 1, 1, '#fff'); for (let i = 0; i < 4; i++) R(22 + i * 1.5, -1.5, 1, 1, '#fff'); for (let i = 0; i < 4; i++) R(22 + i * 1.5, 0.5, 1, 1, '#fff'); if (px) me(-10, 1, true, px); me(0); break; } // v235 뒤에 한 명 더
     case 'ferrari': { sh(0, 0, 27, 12); E(0, 0, 26, 11, '#8a0a14'); E(0, -0.5, 25.5, 10.5, '#d81a24'); E(-2, -4, 18, 4, '#ff4a54'); E(6, -6, 8, 1.5, '#ff8a90'); R(-9, -7, 15, 14, '#1a0e10'); R(-8, -6, 13, 3, '#3a2a30'); R(-8, -6, 4, 12, 'rgba(255,255,255,.07)'); R(6, -6, 4, 12, '#4a3a4a'); R(7, -5, 2, 10, '#9a8ab0'); R(-24, -7, 4, 14, '#6a0a10'); R(-24, -8, 5, 2, '#2a0a0e'); R(-24, 6, 5, 2, '#2a0a0e'); R(16, -1, 3, 2, '#ffd84a'); R(16.5, -0.5, 2, 1, '#1a1a1a'); R(22, -7, 2, 3, '#fff3a0'); R(22, 4, 2, 3, '#fff3a0'); R(-26, -5, 2, 3, '#ff3a3a'); R(-26, 2, 2, 3, '#ff3a3a'); R(-4, -11, 10, 1.5, '#1a1a1a'); R(-4, 9.5, 10, 1.5, '#1a1a1a'); break; }
     case 'train': { sh(-2, 0, 36, 11); if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 3 + k / 3) % 1; E(24 - ph * 28, Math.sin(k * 2) * 3, 3 + ph * 6, 3 + ph * 6, `rgba(240,240,240,${0.6 * (1 - ph)})`); } R(-35, -10.5, 33, 21, '#1a3a6a'); R(-34, -10, 31, 20, '#2f6ab0'); R(-34, -10, 31, 3, '#4a8ad0'); R(-34, -2, 31, 4, '#24508a'); for (let i = 0; i < 5; i++) { R(-32 + i * 6, -10, 4, 2, '#cfe8ff'); R(-32 + i * 6, 8, 4, 2, '#cfe8ff'); } R(-2, -2, 4, 4, '#333'); R(1, -10.5, 31, 21, '#7a1018'); R(2, -10, 29, 20, '#d8323a'); R(2, -10, 29, 3, '#ff5a60'); R(2, -2, 29, 4, '#f4f4f4'); R(3, -8, 10, 16, '#15151c'); R(4, -7, 8, 2, '#3a3a44'); E(22, 0, 7, 7, '#2a2a30'); E(22, 0, 5, 5, '#44444c'); E(21, -1, 2, 2, '#6a6a74'); R(30, -8, 5, 16, '#b02028'); R(34, -2, 2, 4, '#fff3a0'); R(33, -10, 2, 20, '#c8ccd4'); if (rd) E(8, 0, 4, 4, rd.hair); break; }
     case 'lambo': { sh(0, 0, 28, 12); P([-27, -10.5, 18, -10.5, 28, -4, 28, 4, 18, 10.5, -27, 10.5], '#8a6a0a'); P([-26, -10, 18, -10, 27, -4, 27, 4, 18, 10, -26, 10], '#f0b81a'); P([-26, -10, 18, -10, 24, -6, -20, -6], '#ffd84a'); P([-26, 10, 18, 10, 24, 6, -20, 6], '#c8960a'); P([-6, -7, 8, -6, 12, 0, 8, 6, -6, 7], '#15151c'); P([-5, -6, 6, -5, 9, 0, 0, 0], '#3a3a48'); P([8, -6, 12, 0, 8, 6, 10, 0], '#5a6a7a'); P([-18, -10, -12, -10, -14, -7], '#1a1a22'); P([-18, 10, -12, 10, -14, 7], '#1a1a22'); R(-27, -9, 3, 18, '#1a1a22'); R(-27, -4, 2, 8, '#d8323a'); L(18, -9, 26, -3, '#fff3a0', 1.2); L(18, 9, 26, 3, '#fff3a0', 1.2); R(-24, -3, 14, 6, '#c8960a'); R(-23, -2, 12, 1, '#ffd84a'); break; }
@@ -5121,7 +5137,7 @@ const Net = {
   drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
-    if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs, pax: fc.ride ? Ride.pax(this.idOf(p)) : null }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); if (fc.ride === 'shark') Wake.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs, pax: fc.ride ? Ride.pax(this.idOf(p)) : null }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0, kneelT: p.kn ? Infinity : 0, punchT: p.punchT, punchHit: p.punchHit }, t);
     this.label(c, Friends.has(p.name) ? '🤝 ' + p.name : p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
@@ -5287,7 +5303,7 @@ const ChatHist = {
  */
 const Ride = {
   with: null, MAX: 5,
-  cap(p) { const it = p && !(p.sk && p.sk.col) && SHOP_BY_ID[p.sk ? p.sk.c : p.car], r = it && it.ride; return r === 'bike' || r === 'uni' || r === 'chair' ? 1 : r === 'cart' || r === 'moto' || r === 'scooter' || r === 'cabrio' || r === 'horse' || r === 'bull' || r === 'wolf' ? 2 : r === 'bus' ? 6 : Ride.MAX; }, // v234 사용자 '카트는 탑승자·운전자 2명, 버스는 6명, 오토바이도 2명', '자전거는 같이 못 타게, 킥보드는 두 명, 외발자전거는 못 타게', '의자도 못 타', '오픈카는 두 명까지', '말도 2명', '황소도 2명', '늑구도 2명' (운전자 포함)
+  cap(p) { const it = p && !(p.sk && p.sk.col) && SHOP_BY_ID[p.sk ? p.sk.c : p.car], r = it && it.ride; return r === 'bike' || r === 'uni' || r === 'chair' ? 1 : r === 'cart' || r === 'moto' || r === 'scooter' || r === 'cabrio' || r === 'horse' || r === 'bull' || r === 'wolf' || r === 'shark' ? 2 : r === 'bus' ? 6 : r === 'train' ? 8 : r === 'dragon' ? 3 : Ride.MAX; }, // v234 사용자 '카트는 탑승자·운전자 2명, 버스는 6명, 오토바이도 2명', '자전거는 같이 못 타게, 킥보드는 두 명, 외발자전거는 못 타게', '의자도 못 타', '오픈카는 두 명까지', '말도 2명', '황소도 2명', '늑구도 2명', '부캉이도 2명', '기차 8명', '용은 3명까지' (운전자 포함)
   pax(id) { const L = []; if (Ride.with && Ride.with === id) L.push(Profile.pal(Profile.get())); for (const q in Net.players) { const o = Net.players[q]; if (!o.gone && o.rd && o.rd === id && o.pal) L.push(Profile.pal(o.pal)); } return L; }, // 같이 탄 사람들 옷 (카트 바구니 · 오토바이 뒷자리에 그린다)
   count(id) { if (!id) return 0; let n = Ride.with === id ? 1 : 0; for (const q in Net.players) { const o = Net.players[q]; if (!o.gone && o.rd === id) n++; } return n; },
   near() {
@@ -5302,7 +5318,7 @@ const Ride = {
   follow() {
     const p = Net.players[Ride.with]; if (!p || p.gone || !p.dr) return Ride.leave(false, p);
     if (p.s === 'zone' && p.z && Game.zone && p.z !== Game.zone.id) { // 운전자가 옆 구로 넘어갔다: 같이 넘어간다
-      const z = getZone(p.z); Game.zone = z; Rails.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z); Banner.area(...z.spec.dongLabel); Game.zonePos = null;
+      const z = getZone(p.z); Game.zone = z; Rails.clear(); Wake.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z); Banner.area(...z.spec.dongLabel); Game.zonePos = null;
     }
     const pl = Game.player; pl.x = p.cx; pl.y = p.cy; pl.moving = false;
   },
@@ -6521,7 +6537,7 @@ async function arriveZone(id, fromGu) {
   Game.car = makeCar((ex + ux * 4) * TILE - uy * laneOff, (ey + uy * 4) * TILE + ux * laneOff, Math.atan2(uy, ux));
   Game.car.vx = ux * 120; Game.car.vy = uy * 120; Game.car.fineCd = 5; Game.car.hitCd = 3; // 진입 직후 신호 과태료·수리비 유예 (v79: 1.5→3초)
   Game.driving = true; Game.player = makeWalker('player', Game.car.x, Game.car.y);
-  Rails.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z);
+  Rails.clear(); Wake.clear(); Prints.clear(); Beach.clear(); spawnDecor(); Game.traffic = spawnTraffic(z);
   clearEntry(Game.car); // 진입한 큰길 앞을 비워 둔다: 화면이 열리기도 전에 앞차를 받던 문제 (사용자 2026-10-15 '다른 지역 넘어갈때 부딪혀')
   Cam.x = Game.car.x; Cam.y = Game.car.y; Cam.zoom = FEEL.zoom * 1.4;
   State.targetPlace = courtPlaceHere() ? 'court' : State.target && z.places.some(p => p.id === 'case:' + State.target) ? 'case:' + State.target : (z.places.some(p => p.id === State.targetPlace) ? State.targetPlace : null);
@@ -6942,6 +6958,7 @@ function exitCar() {
     const px = c.x + Math.cos(c.a + Math.PI / 2 * side) * 16 * (side ? 1 : 0) - (side ? 0 : Math.cos(c.a) * 18), py = c.y + Math.sin(c.a + Math.PI / 2 * side) * 16 * (side ? 1 : 0) - (side ? 0 : Math.sin(c.a) * 18);
     if (z.at(Math.floor(px / TILE), Math.floor(py / TILE)) !== T.BLD) { Game.player.x = px; Game.player.y = py; break; }
   }
+  if (z.at(Math.floor(Game.player.x / TILE), Math.floor(Game.player.y / TILE)) === T.BLD || Math.hypot(Game.player.x - c.x, Game.player.y - c.y) > 30) { const tx0 = Math.floor(c.x / TILE), ty0 = Math.floor(c.y / TILE); let done = false; for (let r = 1; r < 40 && !done; r++) for (let dy = -r; dy <= r && !done; dy++) for (let dx = -r; dx <= r && !done; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue; const v = z.at(tx0 + dx, ty0 + dy); if (v !== undefined && v !== T.BLD) { Game.player.x = (tx0 + dx + 0.5) * TILE; Game.player.y = (ty0 + dy + 0.5) * TILE; done = true; } } } // v235 날개 타고 건물 위에서 내리면 가장 가까운 길로
   Game.driving = false; Game.player.vx = Game.player.vy = 0; Sound.play('carDoor'); NavPick.close(); if (ZoneMap.pick) ZoneMap.toggle(false); Nav.free = false;
   const es = $('edgeSign'); es.classList.remove('in'); es.dataset.k = '';
   CarSwap.release(); // 남의 차였으면 그 자리에 두고 내 차로 (v138)
@@ -7134,7 +7151,7 @@ function updateDecor(dt) {
     if (w.vip && !(w.stun > 0) && VipNet.step(w, dt)) continue; // 채널: 모두에게 같은 자리 (위)
     if (w.stun > 0) { w.stun -= dt; w.moving = false; continue; }
     // 내 차에 치임: 튕겨 나가 잠시 쓰러지고, 나는 합의금을 문다
-    if (Game.driving && Game.car.speed > FEEL.hitSpeed && w.hurtCd <= 0) {
+    if (Game.driving && Game.car.speed > FEEL.hitSpeed && w.hurtCd <= 0 && !carFlying()) {
       const c = Game.car;
       /* 차 몸통(11×6)에 2px만 더한 칸 + 차가 그 사람 쪽으로 가고 있을 때만. 예전엔 14×9로 넓어서 옆을 지나가는 사람도 치인 걸로 쳤다 (사용자 2026-10-18 '차 안 박았는데 돈 냈다', 횡단보도 7km/h) */
       if (pointInCar(w.x, w.y, c.x, c.y, c.a, 13, 8) && (w.x - c.x) * c.vx + (w.y - c.y) * c.vy > 0) {
@@ -7204,6 +7221,7 @@ function drawZone(t) {
   { const now = performance.now() / 1000, zid = z.id; while (Skids.length && now - (Skids[0].t || 0) > 180) Skids.shift(); // v171: 구마다 남았다가 3분 지나면 사라진다 (마지막 30초 흐려짐)
     for (const m of Skids) { if (m.z !== zid || m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillStyle = `rgba(20,20,22,${(0.45 * Math.min(1, (180 - (now - m.t)) / 30)).toFixed(3)})`; if (m.h) { ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.a); if (m.cl === 2) { ctx.fillRect(-1.6, -1, 2, 2); ctx.fillRect(0.8, -1.9, 0.9, 0.9); ctx.fillRect(1.2, -0.7, 0.9, 0.7); ctx.fillRect(1.2, 0.3, 0.9, 0.7); ctx.fillRect(0.8, 1, 0.9, 0.9); ctx.restore(); continue; } /* 늑구: 발바닥 + 발가락 넷 */ if (m.cl) { ctx.fillRect(-1.2, -1.6, 2.4, 1.2); ctx.fillRect(-1.2, 0.4, 2.4, 1.2); ctx.restore(); continue; } /* 황소: 갈라진 두 쪽 발굽 */ ctx.fillRect(-1.5, -1.5, 1, 3); ctx.fillRect(-0.5, -1.5, 2, 0.8); ctx.fillRect(-0.5, 0.7, 2, 0.8); ctx.restore(); } else ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); } } // v234 m.h = 말발굽 (U자, 앞쪽이 열림)
   Rails.draw(ctx, x0, y0, x1, y1); // 기차 철로
+  Wake.draw(ctx, x0, y0, x1, y1); // v235 부캉이 물줄기
   Prints.draw(ctx, x0, y0, x1, y1); // 티라노 발자국
   Beach.draw(ctx, x0, y0, x1, y1); // 거북이 모래·물길
   MineExit.draw(ctx, x0, y0, x1, y1); // 석탄 땅굴 출구 (v171)
@@ -7211,7 +7229,7 @@ function drawZone(t) {
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
   PetRage.drawCars(ctx, x0, y0, x1, y1); // 친구 펫을 친 차 (v157)
-  if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0, pax: mc.ride && Game.driving && Net.on ? Ride.pax(Net.myId) : null }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
+  if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); if (Game.driving && mc.ride === 'shark') Wake.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); Game.flyD = null; { const dm = () => drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0, pax: mc.ride && Game.driving && Net.on ? Ride.pax(Net.myId) : null }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (carFlying()) Game.flyD = dm; else dm(); } if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
@@ -7243,6 +7261,7 @@ function drawZone(t) {
   if (State.carHint > 0 && !Game.driving) { State.carHint -= 1 / 60; const c = Game.car, bob = Math.sin(t * 6) * 3; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.moveTo(c.x - 6, c.y - 26 + bob); ctx.lineTo(c.x + 6, c.y - 26 + bob); ctx.lineTo(c.x, c.y - 16 + bob); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   // 가로수 (흔들림)
   for (const tr of z.trees) { if (tr.x < x0 || tr.x > x1 || tr.y < y0 || tr.y > y1) continue; const f = Math.round(Math.sin(t * 1.3 + tr.phase) + 1); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(tr.x + 4, tr.y + 5, 10, 7, 0, 0, 7); ctx.fill(); ctx.drawImage(Sprites.tree(f), tr.x - 12, tr.y - 12); }
+  if (Game.flyD) Game.flyD(); // v235 천사 날개는 지붕 위로
   tops.forEach(a => a.d()); // v234 말풍선·이름표는 지붕·가로수 위에
   // 장소 이름표 (가까울 때)
   const p = Game.player; ctx.textAlign = 'center';
@@ -8159,7 +8178,7 @@ const Mine = {
     if (typeof Ride !== 'undefined' && Ride.with) Ride.leave(false);
     if (Game.room) { Game.room = null; State.siteSession = null; }
     Game.scene = 'zone'; Game.driving = false; if (typeof CarSwap !== 'undefined') CarSwap.reset(); if (typeof NavPick !== 'undefined') NavPick.close(); if (typeof Nav !== 'undefined') Nav.free = false;
-    Game.zone = z; Game.zonePos = null; Rails.clear(); Prints.clear(); Beach.clear();
+    Game.zone = z; Game.zonePos = null; Rails.clear(); Wake.clear(); Prints.clear(); Beach.clear();
     const p = Game.player; p.x = best[0] * TILE + 8; p.y = best[1] * TILE + 8; p.vx = p.vy = 0; p.dir = 0; p.sit = false;
     Game.car = placeCarNear(z, best[0], best[1]); spawnDecor(); Game.traffic = spawnTraffic(z);
     Cam.x = p.x; Cam.y = p.y; Game.prompt = { target: null, t: 0 }; $('edgeSign').classList.remove('in');

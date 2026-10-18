@@ -424,7 +424,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 #tHit { position:absolute; right:196px; bottom:56px; width:52px; height:52px; border-radius:50%; background:rgba(255,90,90,.55); color:#fff; font-size:22px; border:1px solid rgba(255,200,200,.6); pointer-events:auto; } .touchOn.driving #tHit { display:none; } .layoutEdit #tHit { display:block !important; outline:2px dashed #ffd84a; outline-offset:3px; cursor:move; pointer-events:auto; }
 #tCar { position:absolute; right:120px; bottom:48px; width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,.18); color:#fff; font-weight:700; border:1px solid rgba(255,255,255,.3); pointer-events:auto; font-size:12px; }
 #pedals { position:absolute; right:20px; bottom:24px; display:none; flex-direction:column; gap:8px; pointer-events:auto; }
-#pedals button { touch-action:none; -webkit-touch-callout:none; width:92px; height:54px; border-radius:12px; border:none; font-weight:700; color:#1a1408; background:rgba(205,174,112,.8); }
+#pedals button, #stick, #tAct, #tCar, #tHit { touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; } #pedals button { touch-action:none; -webkit-touch-callout:none; width:92px; height:54px; border-radius:12px; border:none; font-weight:700; color:#1a1408; background:rgba(205,174,112,.8); }
 #tBrake { background:rgba(255,106,80,.8) !important; } #tHb { height:40px !important; background:rgba(255,255,255,.35) !important; color:#fff !important; }
 .touchOn.driving #pedals { display:flex; } .touchOn.driving #tAct { display:none; } .touchOn.driving #tCar { right:120px; bottom:150px; }
 #devPage .wrap { max-width:1100px; margin:0 auto; padding:24px 16px 60px; }
@@ -3041,9 +3041,10 @@ function unstickCar(c, z) {
   c.unstickCd = 3;
 }
 function hit(c, axis) {
-  const sp = c.speed;
+  const sp = c.speed, vn = Math.abs(axis === 'x' ? c.vx : c.vy); // 벽에 수직으로 박는 속도 (사용자 2026-10-18 '아무것도 없는데 우회전했는데 돈 나갔다': 돌다가 모서리를 스쳐도 수리비였다)
   if (axis === 'x') c.vx = -c.vx * FEEL.carBounce; else c.vy = -c.vy * FEEL.carBounce;
-  if (sp > 70 && c.hitCd <= 0) crashFx(c, sp);
+  if (vn > 70 && c.hitCd <= 0) crashFx(c, sp);
+  else if (sp > FEEL.bumpSpeed && c.hitCd <= 0) { c.hitCd = 0.5; shake(2, 0.15); Sound.play('carDoor'); c.rock = 1; }
 }
 function crashFx(c, sp) {
   {
@@ -3083,7 +3084,11 @@ function checkTrafficFines(c, z) {
     // 진입 방향과 더 평행한 도로 = 내가 달리던 도로
     const fx = Math.cos(c.a), fy = Math.sin(c.a);
     const along = Math.abs(fx * inside.da[0] + fy * inside.da[1]) > Math.abs(fx * inside.db[0] + fy * inside.db[1]) ? inside.a : inside.b;
-    if (signalState(inside, along, Game.t) === 'r' && c.fineCd <= 0) { c.fineCd = 6; issueFine('신호위반', FEEL.fineSignal); }
+    if (signalState(inside, along, Game.t) === 'r' && c.fineCd <= 0) c.redIn = { a: c.a, t: Game.t }; // 빨간불 진입: 나갈 때 정한다
+  }
+  if (!inside && c.inCross && c.redIn) { /* 교차로를 빠져나갈 때: 우회전은 빨간불에도 된다 (현실처럼, 사용자 2026-10-18 '그냥 우회전했는데 돈 나갔다'). 직진·좌회전·유턴만 신호위반 */
+    let da = c.a - c.redIn.a; da = Math.atan2(Math.sin(da), Math.cos(da)); const right = da > 0.6 && da < 2.4; // 화면 좌표(y 아래)에서 시계 방향 = 오른쪽
+    if (!right && c.fineCd <= 0) { c.fineCd = 6; issueFine('신호위반', FEEL.fineSignal); } c.redIn = null;
   }
   c.inCross = !!inside;
   if (c.speed > FEEL.carMaxSpeed * 0.62 && c.fineCd <= 0 && Game.decor.some(w => Math.hypot(w.x - c.x, w.y - c.y) < 34)) { c.fineCd = 6; issueFine('보행자 근처 과속', FEEL.fineSpeed); }
@@ -3497,7 +3502,8 @@ const SeoulMap = {
       x.strokeStyle = '#efe6d2'; x.lineWidth = 1.5; x.strokeRect(px - 10, py - 7, 20, 14);
     }
     // 선배네 경매 사무실 (광진구, 사용자 2026-10-17 '구 지도에 사무실도 표시'): 구 이름 바로 아래, 법원 아이콘 자리
-    { const [ox, oy] = this.courtAt(L, null, 'gwangjin'); drawPlaceIcon(x, ox, oy, 'office'); x.font = 'bold 10px "IBM Plex Sans KR", sans-serif'; const w = x.measureText('사무실').width + 6; x.fillStyle = 'rgba(10,12,14,.75)'; x.fillRect(ox - w / 2, oy + 10, w, 13); x.fillStyle = '#f3e9c8'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('사무실', ox, oy + 17); x.textBaseline = 'alphabetic'; }
+    { const [gx, gy] = L.center('gwangjin'), fs = Math.max(10, Math.min(15, L.ts * 0.15)), ox = gx - fs * 0.45, oy = gy - fs * 1.35; /* v216 (사용자 2026-10-18 '사무실 위치 조정해'): 이름 아래는 한강·강남에 걸쳐서, 광진구 이름 위 (물건 핀은 오른쪽 위라 피해서 왼쪽 위) */
+      drawPlaceIcon(x, ox, oy, 'office'); x.font = 'bold 8px "IBM Plex Sans KR", sans-serif'; const w = x.measureText('사무실').width + 4; x.fillStyle = 'rgba(10,12,14,.78)'; x.fillRect(ox - w / 2, oy - 21, w, 10); x.fillStyle = '#f3e9c8'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('사무실', ox, oy - 16); x.textBaseline = 'alphabetic'; }
     // 이동 애니메이션
     if (this.anim) {
       const a = this.anim; const k = Math.max(0, Math.min(1, (performance.now() - a.t0) / a.dur));
@@ -5449,6 +5455,7 @@ const Live = {
       if (sv && this.ch === 1 && fm && fm.done && !fm.won && !Store.get('fix20877', false)) { Store.set('fix20877', true); fm.done = false; fm.opened = true; fm.won = true; fm.bid = 6e7; fm.profit = undefined; fm.phase = 'won'; fm.loanState = null; fm.payBy = this.now() + this.payMs(); fm.fix = 'v214';
         Money.why('입찰보증금 다시 법원에 (자양동 늘봄아파트 6천만 원 낙찰로 정정)'); State.cash -= fm.deposit; this.results = this.results.filter(r => r.caseNo !== '2025타경20877');
         setTimeout(() => { const c = this.caseFor(fk); State.target = c.id; State.targetPlace = null; this.save(); HUD.page(`${c.name} 6천만 원에 낙찰받은 걸로 고쳤어요. 돌려받았던 보증금 ${fmtWon(fm.deposit)}은 다시 법원에 들어갔어요. ${FEEL.livePayMin}분 안에 ${courtOf(c).name}에 잔금 ${fmtWon(fm.bid - fm.deposit)} 내세요.`, '법원'); }, 4800); } }
+    if (sv && this.ch === 1 && Store.get('fix20877', false) && !Store.get('fix216', false)) { Store.set('fix216', true); State.cash += 102000; setTimeout(() => { this.save(); HUD.page('우회전하다 빠진 수리비 4만 2,000원 + 신호위반 6만 원, 합쳐서 10만 2,000원 돌려드렸어요. 이제 빨간불 우회전은 괜찮고, 모서리를 스치는 건 수리비가 안 나가요.', '알림'); }, 5200); } // 사용자 2026-10-18 '아무것도 없는데 그냥 우회전했는데 돈 나갔다' (v216에서 고침), 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
     this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;
@@ -6056,8 +6063,8 @@ const Money = {
   last: null, pend: [], lastToast: null, q: [],
   why(label) { this.pend.push(label); },
   onSet(v, animate) {
-    if (!Live.on || animate === false) { this.last = v; return; }
-    if (this.last === null) { this.last = v; return; }
+    if (!Live.on || animate === false) { this.last = v; this.pend.length = 0; return; } // 기준점: 그 전에 쌓인 이름표는 버린다 (안 그러면 다음 돈 변동에 엉뚱한 이름이 붙었다, 사용자 2026-10-18)
+    if (this.last === null) { this.last = v; this.pend.length = 0; return; }
     const d = v - this.last; this.last = v; if (!d) return;
     const label = this.pend.shift();
     if (label) return this.put(label, d, v);
@@ -16778,6 +16785,8 @@ const Instance = {
     const b = $(id); let pid = null; const on = e => { e.preventDefault(); pid = e.pointerId; try { b.setPointerCapture(pid); } catch (err) {} Touch[key] = true; Sound.init(); }; const off = e => { if (pid != null && e && e.pointerId !== pid) return; pid = null; Touch[key] = false; };
     b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off); b.addEventListener('contextmenu', e => e.preventDefault());
   }
+  // 아이폰: 페달·조이스틱을 꾹 누르면 돋보기(텍스트 확대경)가 뜨고 화면이 밀렸다 (사용자 2026-10-18). pointer 이벤트는 그대로 오고, 브라우저 기본 동작만 막는다 (채팅 버튼은 click을 써서 뺀다)
+  for (const id of ['tGas', 'tBrake', 'tHb', 'stick', 'tAct', 'tCar', 'tHit']) { const el = $(id); el.addEventListener('touchstart', e => { if (!Layout.editing) e.preventDefault(); }, { passive: false }); el.addEventListener('touchmove', e => { if (!Layout.editing) e.preventDefault(); }, { passive: false }); }
   requestAnimationFrame(frame);
 })();
 

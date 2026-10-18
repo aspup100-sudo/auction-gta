@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v243</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v244</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -11811,7 +11811,7 @@ const Dora = {
  * 띵띵이: 느릿느릿, 지나간 자리에 끈적한 자국(Slime, 6초 뒤 사라짐). 서 있으면 가끔 '야옹~'. 자국 밟은 행인은 '으앗 끈적끈적해!'.
  * 행인 효과는 내 화면에서만. 돈은 안 오간다. */
 const Slime = {
-  LIFE: 6, FADE: 2, GAP: 3, MAX: 900, pts: [], last: {},
+  LIFE: 10, FADE: 2, GAP: 3, MAX: 1400, /* v244 '티라노 발자국처럼': 10초 남았다가 2초 동안 흐려진다 */ pts: [], last: {},
   lay(key, x, y) { const now = performance.now() / 1000, L = this.last[key]; if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
     const brk = !L || Math.hypot(x - L.x, y - L.y) > 20 || now - L.t > 1.5; const p = { x, y: y - 0.5, t: now, z: Game.zone && Game.zone.id, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p; if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null; },
   clear() { this.pts.length = 0; this.last = {}; },
@@ -11820,6 +11820,8 @@ const Slime = {
     for (const [w, col] of [[5, 'rgba(190,160,230,.28)'], [3, 'rgba(215,195,245,.38)'], [1, 'rgba(255,255,255,.55)']]) { c.strokeStyle = col;
       for (const p of this.pts) { const q = p.prev; if (!q || p.z !== zid || now - q.t > this.LIFE) continue; if (Math.max(p.x, q.x) < x0 - 8 || Math.min(p.x, q.x) > x1 + 8 || Math.max(p.y, q.y) < y0 - 8 || Math.min(p.y, q.y) > y1 + 8) continue;
         const al = Math.min(1, (this.LIFE - (now - q.t)) / this.FADE), lw = w * al; if (lw < 0.4) continue; c.lineWidth = lw; c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(p.x, p.y); c.stroke(); } }
+    for (let i = 0; i < this.pts.length; i += 3) { const p = this.pts[i]; if (p.z !== zid || p.x < x0 - 8 || p.x > x1 + 8 || p.y < y0 - 8 || p.y > y1 + 8) continue; const al = Math.min(1, (this.LIFE - (now - p.t)) / this.FADE), h = (i * 7919) % 5; // 끈적한 방울 (군데군데 뭉쳐서 반들반들)
+      c.fillStyle = `rgba(185,150,230,${0.42 * al})`; c.beginPath(); c.ellipse(p.x + (h - 2) * 0.8, p.y + (h % 2 ? 1.6 : -1.6), 1.4 + (h % 3) * 0.5, 1, 0, 0, 7); c.fill(); c.fillStyle = `rgba(255,255,255,${0.6 * al})`; c.fillRect(p.x + (h - 2) * 0.8 - 0.5, p.y + (h % 2 ? 1.6 : -1.6) - 0.6, 0.6, 0.4); }
     c.fillStyle = 'rgba(255,255,255,.7)'; for (let i = 0; i < this.pts.length; i += 4) { const p = this.pts[i]; if (p.z !== zid || now - p.t > this.LIFE - this.FADE) continue; if (Math.sin(now * 3 + i) > 0.6) c.fillRect(Math.round(p.x + (i % 3) - 1), Math.round(p.y - 1), 1, 1); } // 반짝
     c.restore(); },
   SAY: ['으앗! 끈적끈적해!', '뭐야 이거 미끄러워!', '신발에 뭐 묻었다…', '으~ 달팽이 지나갔나?'],
@@ -11833,7 +11835,7 @@ const Slime = {
 };
 const Sponge = {
   S: {},
-  near(s, lo, hi) { return Dora.near(s, lo, hi); },
+  near(s, lo, hi) { let b = null, bd = hi; for (const w of Game.decor || []) { if (!Dora.ok(w) || w.trainer) continue; const d = Math.hypot(w.x - s.x, w.y - s.y); if (d >= lo && d < bd) { bd = d; b = w; } } return b; }, // 펫 트레이너는 빼고
   bubbles(c, S, t) { // 비눗방울: 장면이 끝나도 날아가던 건 마저 날아간다
     if (!S.bub || !S.bub.length) return; S.bub = S.bub.filter(b => t - b.t0 < b.life);
     for (const b of S.bub) { const e = t - b.t0, x = b.x + b.vx * e + Math.sin(e * 2.4 + b.ph) * 2, y = b.y - e * b.vy, end = b.life - e < 0.12;
@@ -11846,47 +11848,90 @@ const Sponge = {
     c.fillStyle = '#e060a8'; c.fillRect(X - 2 + w * 0.5, Y + 0.5, 0.5, 2); c.fillRect(X - 0.25, Y + 0.5, 0.5, 2.5 - w * 0.5); c.fillRect(X + 1.5 - w * 0.5, Y + 0.5, 0.5, 2); },
   run(c, s, key, k, t, n, idle, ox, oy) { return k === 'gary' ? this.gary(c, s, key, k, t, n, idle) : this.sponge(c, s, key, k, t, n, idle); },
   pal(key) { const o = key.endsWith('#2') ? key.slice(0, -2) : key + '#2', ps = Pets.st[o]; return ps && (key.startsWith('me') ? (key === 'me' ? Pets.mineK2 : Pets.mineK) === 'gary' : false) ? { key: o, s: ps } : null; },
+  LAUGH: '따↗하하하하하↘~',
+  hold(w) { if (w.ai) { w.ai.ix = w.ai.iy = 0; w.ai.t = 0.3; } w.moving = false; },
+  /* v244 사용자 '스폰지빵은 시도 때도 없이 따↗하하하하하↘~ 시끄럽게, npc한테 가서 폐급짓 (꾸벅하다 턱 치기 · 동전 줍다 넘어지기), 그래도 계속 웃고 월요일이 좋다고, 가만히 있을 땐 막 뛰어다녀'
+   * 그리는 자리 = 펫 자리(s) + S.dx/dy. 뛰어다니기·행인한테 달려가기는 이 오프셋을 목표 쪽으로 일정 속도로 옮겨서 (순간이동 없이) 보여 준다. */
   sponge(c, s, key, k, t, n, idle) {
-    const S = this.S[key] || (this.S[key] = { cd: t + 3 + Math.random() * 3, wcd: 0 }), z = Game.scene === 'zone' && Game.zone, X = Pets.extra;
+    const S = this.S[key] || (this.S[key] = { cd: t + 3 + Math.random() * 3, wcd: 0, dx: 0, dy: 0, lt: t + 2, fc: 1 }), z = Game.scene === 'zone' && Game.zone, X = Pets.extra;
+    const dt = S.t1 != null ? Math.min(0.1, Math.max(0, t - S.t1)) : 0; S.t1 = t;
     this.bubbles(c, S, t);
     if (S.g && !z) S.g = null;
     if (S.g && s.moving && !S.g.walk) { S.g = null; S.cd = t + 3; } // 걷기 시작하면 그만
-    if (!S.g && z && t > S.wcd) { const w = this.near(s, 12, s.moving ? 70 : 100), now = performance.now(); S.wcd = t + 0.8;
-      if (w && !(w.spongeT > now) && (s.moving || idle > 1.5)) { w.spongeT = now + 40000; S.wcd = t + 6 + Math.random() * 4; S.g = { id: Math.random() < 0.5 ? 'hi' : 'burger', t0: t, w, walk: 1 }; } }
-    if (!S.g && z && !s.moving && idle > 2 && t > S.cd) { const G = this.pal(key), opts = ['bubble', 'laugh', 'jelly'].concat(G ? ['pat', 'pat'] : []).filter(g => g !== S.last), id = opts[Math.floor(Math.random() * opts.length)]; S.last = id; S.g = { id, t0: t, f: s.face || 1, pal: G }; }
-    if (!S.g) return null;
-    const G = S.g, e = t - G.t0, f = G.f || s.face || 1, done = (cd = 6 + Math.random() * 4) => { S.g = null; S.cd = Math.max(S.cd, t + cd); };
-    const me = (pose, face = s.face, dy = 0) => ({ y: s.y, d: () => Pets.draw(c, k, s.x, s.y + dy, face, s.moving, t, n, s.moving ? 0 : idle, pose) });
-    if (G.id === 'hi' || G.id === 'burger') { const w = G.w, ff = s.moving ? s.face : w.x > s.x ? 1 : -1; if (!Dora.ok(w) && !G.hit) { S.g = null; return null; }
-      if (G.id === 'hi') { if (e < 1.5) X.push({ top: 1, y: s.y + 60, d: () => Net.bubble(c, '좋은 아침이에요~!!', s.x, s.y - 28) }); else if (e < 3.3) X.push({ top: 1, y: w.y + 60, d: () => Net.bubble(c, ['어… 안녕?', '기분 좋아 보이네!', '헐 스폰지빵이다!!'][Math.floor(G.t0 * 7) % 3], w.x, w.y - 30) });
-        if (e > 1.5 && !G.hit) { G.hit = 1; w.dir = w.x > s.x ? 1 : 2; } if (e > 3.3) done(); return me(e < 1.5 ? { a: 'wave' } : undefined, ff); }
-      const q = Math.min(1, Math.max(0, e - 0.6) / 0.7), ix = s.x + ff * 6 + (w.x - s.x - ff * 6) * q, iy = s.y - 9 + (w.y - 14 - s.y + 9) * q - Math.sin(q * Math.PI) * 9;
-      if (e < 0.6) X.push({ top: 1, y: s.y + 60, d: () => Net.bubble(c, '게살버거 나왔습니다~!', s.x, s.y - 28) });
-      if (e < 1.3) X.push({ top: 1, y: s.y + 61, d: () => this.burger(c, ix, iy) });
+    if (S.g && S.g.w && (Math.hypot(S.g.w.x - s.x, S.g.w.y - s.y) > 130 || (!Dora.ok(S.g.w) && !S.g.hit))) { S.g = null; S.wcd = t + 3; } // 주인이 멀리 가 버리면 그만
+    if (!S.g && z && t > S.wcd) { const w = this.near(s, 12, s.moving ? 80 : 110), now = performance.now(); S.wcd = t + 0.8;
+      if (w && !(w.spongeT > now) && (s.moving || idle > 1)) { w.spongeT = now + 40000; S.wcd = t + 6 + Math.random() * 4; const id = ['bow', 'coin', 'monday', 'burger'].filter(g => g !== S.lastW)[Math.floor(Math.random() * 3)]; S.lastW = id; S.g = { id, t0: t, w, walk: 1, side: w.x > s.x ? 1 : -1 }; } }
+    if (!S.g && z && !s.moving && idle > 3 && t > S.cd) { const G = this.pal(key), opts = ['bubble', 'jelly'].concat(G ? ['pat'] : []).filter(g => g !== S.last), id = opts[Math.floor(Math.random() * opts.length)]; S.last = id; S.g = { id, t0: t, f: s.face || 1, pal: G }; }
+    const G = S.g, run = !G && z && !s.moving && idle > 1.2;
+    // 목표 오프셋: 뛰어다니기 (주인 옆을 8자로) · 행인 앞 · 제자리
+    let tx = 0, ty = 0, sp = 150;
+    if (run) { if (S.r0 == null) S.r0 = t; const e = t - S.r0, A = Math.min(1, e / 0.6); tx = Math.sin(e * 1.9) * 22 * A; ty = Math.sin(e * 2.9) * 8 * A; sp = 75; if (!Dora.walk(z, s.x + tx, s.y + ty)) { tx = S.tx || 0; ty = S.ty || 0; } }
+    else S.r0 = null;
+    if (G && G.w && G.id !== 'burger') { const back = G.end; if (!back) { tx = G.w.x - G.side * (G.id === 'coin' ? 16 : 8) - s.x; ty = G.w.y + 1 - s.y; sp = 130; } }
+    S.tx = tx; S.ty = ty; const ddx = tx - S.dx, ddy = ty - S.dy, dd = Math.hypot(ddx, ddy), stepD = Math.min(dd, sp * dt);
+    if (dd > 0.01) { S.dx += ddx / dd * stepD; S.dy += ddy / dd * stepD; if (Math.abs(ddx) > 0.3) S.fc = ddx > 0 ? 1 : -1; }
+    const going = stepD > 0.02 && dd > 1, x = s.x + S.dx, y = s.y + S.dy, mv = s.moving || going;
+    // 시도 때도 없이 웃기
+    if (!G && t > S.lt) { S.lt = t + 3 + Math.random() * 3; S.lu = t + 1.6; }
+    const laughing = !G && S.lu > t;
+    if (laughing) X.push({ top: 1, y: y + 60, d: () => Net.label(c, this.LAUGH, x, y - 26) });
+    const me = (pose, face, rot = 0, dy = 0) => ({ y, d: () => { if (rot) { c.save(); c.translate(x, y); c.rotate(rot); c.translate(-x, -y); } Pets.draw(c, k, x, y + dy, face, rot ? false : mv, t, rot ? '' : n, mv ? 0 : idle, pose); if (rot) c.restore(); } });
+    const faceNow = going ? S.fc : s.moving ? s.face : (G && G.w ? (G.w.x > x ? 1 : -1) : s.face);
+    if (!G) { if (!run && !laughing && Math.abs(S.dx) + Math.abs(S.dy) < 0.3) { S.dx = S.dy = 0; return null; } return me(laughing ? { a: 'laugh' } : undefined, going ? S.fc : s.face, 0, laughing ? -(Math.floor(t * 8) % 2) * 0.5 : 0); }
+    const e = t - G.t0, f = G.f || s.face || 1, done = (cd = 6 + Math.random() * 4) => { S.g = null; S.cd = Math.max(S.cd, t + cd); S.lt = t + 2; };
+    const laughAt = () => X.push({ top: 1, y: y + 60, d: () => Net.label(c, this.LAUGH, x, y - 26) }), bounce = () => -(Math.floor(t * 8) % 2) * 0.5;
+    if (G.w && G.id !== 'burger') { const w = G.w; this.hold(w);
+      if (G.ta == null) { if (dd > 1.5 && e < 1.6) return me(undefined, faceNow); G.ta = t; w.dir = w.x > x ? 1 : 2; }
+      const u = t - G.ta, ff = w.x > x ? 1 : -1;
+      if (G.id === 'bow') { // 안녕하세요 꾸벅 → 일어나다 턱을 퍽
+        if (u < 0.9) { X.push({ top: 1, y: y + 60, d: () => Net.bubble(c, '안녕하세요~!', x, y - 28) }); w.bubble = null; return me(undefined, ff, Math.min(1, u / 0.3) * 0.65 * ff); }
+        if (!G.hit) { G.hit = 1; const z2 = Game.zone; for (let m = 8; m > 0; m -= 2) { const nx = w.x + ff * m; if (Dora.walk(z2, nx, w.y)) { w.x = nx; break; } } w.stun = 1.6; w.bubble = { text: '아악!! 내 턱!!', t: 2.2 }; Dora.puff(w.x, w.y - 16, '#fff6c0'); Sound.play('slam'); shake(1.5, 0.12); }
+        if (u < 1.7) X.push({ top: 1, y: w.y + 60, d: () => { Net.label(c, '퍽!', w.x, w.y - 32); c.fillStyle = '#ffd84a'; for (let i = 0; i < 3; i++) { const a = t * 6 + i * 2.1; c.fillRect(Math.round(w.x + Math.cos(a) * 6), Math.round(w.y - 18 + Math.sin(a) * 2), 1, 1); } } });
+        if (u > 1.05) laughAt();
+        if (u > 3.2) { G.end = 1; done(); } return me(u > 1.05 ? { a: 'laugh' } : undefined, ff, u < 1.05 ? Math.max(0, 1 - (u - 0.9) / 0.15) * 0.65 * ff : 0, u > 1.05 ? bounce() : 0); }
+      if (G.id === 'coin') { // 어 동전이다! → 줍다가 꽈당 → 벌떡 일어나서 또 웃기
+        const cx = x + ff * 6, cy = y; if (u < 2.4) X.push({ y: cy - 0.5, d: () => { c.fillStyle = '#e0b030'; c.fillRect(Math.round(cx) - 1, Math.round(cy) - 1, 2, 1); if (Math.floor(t * 4) % 2) { c.fillStyle = '#fff8c0'; c.fillRect(Math.round(cx), Math.round(cy) - 2, 1, 1); } } });
+        if (u < 0.8) { X.push({ top: 1, y: y + 60, d: () => Net.bubble(c, '어? 동전이다!', x, y - 28) }); return me(undefined, ff); }
+        if (u < 1.05) return me(undefined, ff, (u - 0.8) / 0.25 * 0.55 * ff);
+        if (!G.fall) { G.fall = 1; G.hit = 1; Sound.play('slam'); Dora.puff(x + ff * 8, y - 2, '#d8d0c0'); }
+        const rot = u < 1.25 ? (0.55 + (u - 1.05) / 0.2 * 1.02) * ff : u < 2.4 ? 1.57 * ff : u < 2.7 ? (1 - (u - 2.4) / 0.3) * 1.57 * ff : 0;
+        if (u < 2.4) X.push({ top: 1, y: y + 60, d: () => { if (u < 1.9) Net.label(c, '쿠당탕!', x + ff * 6, y - 14); c.fillStyle = '#ffd84a'; for (let i = 0; i < 3; i++) { const a = t * 5 + i * 2.1; c.fillRect(Math.round(x + ff * 12 + Math.cos(a) * 4), Math.round(y - 5 + Math.sin(a) * 1.5), 1, 1); } } });
+        if (u > 1.5 && u < 3) X.push({ top: 1, y: w.y + 60, d: () => Net.bubble(c, '…괜찮아요?', w.x, w.y - 30) });
+        if (u > 2.7) X.push({ top: 1, y: y + 60, d: () => Net.label(c, u < 3.6 ? '괜찮아요~! ' + this.LAUGH : this.LAUGH, x, y - 26) });
+        if (u > 4.6) { G.end = 1; done(); } return me(u > 2.7 ? { a: 'laugh' } : undefined, ff, rot, u > 2.7 ? bounce() : 0); }
+      // 월요일
+      if (u < 1.8) X.push({ top: 1, y: y + 60, d: () => Net.bubble(c, '오늘 월요일이다~!! 월요일 너무 좋아!!', x, y - 28) });
+      else if (u < 3.4) X.push({ top: 1, y: w.y + 60, d: () => Net.bubble(c, ['…월요일이 좋다고?', '이 사람 뭐야…', '월요일이… 좋아…?'][Math.floor(G.t0 * 7) % 3], w.x, w.y - 30) });
+      if (u > 2.6) laughAt(); if (u > 1.8 && !G.hit) G.hit = 1;
+      if (u > 4.2) { G.end = 1; done(); } return me(u < 1.8 ? { a: 'wave' } : u > 2.6 ? { a: 'laugh' } : undefined, ff, 0, u > 2.6 ? bounce() : 0); }
+    if (G.id === 'burger') { const w = G.w, ff = s.moving ? s.face : w.x > x ? 1 : -1;
+      const q = Math.min(1, Math.max(0, e - 0.6) / 0.7), ix = x + ff * 6 + (w.x - x - ff * 6) * q, iy = y - 9 + (w.y - 14 - y + 9) * q - Math.sin(q * Math.PI) * 9;
+      if (e < 0.6) X.push({ top: 1, y: y + 60, d: () => Net.bubble(c, '게살버거 나왔습니다~!', x, y - 28) });
+      if (e < 1.3) X.push({ top: 1, y: y + 61, d: () => this.burger(c, ix, iy) });
       else if (e < 3.4) X.push({ top: 1, y: w.y + 60, d: () => { Net.bubble(c, e < 2.3 ? '게살버거다!!' : '냠냠… 진짜 맛있다!', w.x, w.y - 30); Dora.heart(c, w.x + 5, w.y - 24 - ((t * 10) % 6)); } });
-      if (e >= 1.3 && !G.hit) { G.hit = 1; Sound.play('pop'); } if (e > 3.4) done(); return me(e < 1.3 ? { a: 'give' } : undefined, ff); }
-    if (G.id === 'bubble') { if (e < 4) { S.bub = S.bub || []; if (e > 0.4 && t - (S.bt || 0) > 0.22 && S.bub.length < 16) { S.bt = t; S.bub.push({ x: s.x + f * 9, y: s.y - 13, vx: f * (3 + Math.random() * 5), vy: 5 + Math.random() * 5, r: 1 + Math.floor(Math.random() * 3), ph: Math.random() * 6, t0: t, life: 2.4 + Math.random() * 1.4 }); }
-        if (e < 1.6) X.push({ top: 1, y: s.y + 60, d: () => Net.label(c, '후~', s.x, s.y - 26) }); return me({ a: 'blow' }, f); }
+      if (e > 2.4) laughAt();
+      if (e >= 1.3 && !G.hit) { G.hit = 1; Sound.play('pop'); } if (e > 3.4) done(); return me(e < 1.3 ? { a: 'give' } : e > 2.4 ? { a: 'laugh' } : undefined, ff); }
+    if (G.id === 'bubble') { if (e < 4) { S.bub = S.bub || []; if (e > 0.4 && t - (S.bt || 0) > 0.22 && S.bub.length < 16) { S.bt = t; S.bub.push({ x: x + f * 9, y: y - 13, vx: f * (3 + Math.random() * 5), vy: 5 + Math.random() * 5, r: 1 + Math.floor(Math.random() * 3), ph: Math.random() * 6, t0: t, life: 2.4 + Math.random() * 1.4 }); }
+        if (e < 1.6) X.push({ top: 1, y: y + 60, d: () => Net.label(c, '후~', x, y - 26) }); return me({ a: 'blow' }, f); }
       done(); return null; }
-    if (G.id === 'laugh') { if (e < 2.4) { const b = Math.floor(e * 8) % 2 ? -0.5 : 0; X.push({ top: 1, y: s.y + 60, d: () => Net.label(c, '아하하하하하!', s.x, s.y - 26) }); return me({ a: 'laugh' }, f, b); } done(); return null; }
-    if (G.id === 'jelly') { const L = 3.6, a = e * 2.2, jx = s.x + f * 10 + Math.cos(a) * 9, jy = s.y - 16 + Math.sin(a * 2) * 4;
-      if (e < L) { X.push({ top: 1, y: s.y + 60, d: () => { this.jelly(c, jx, jy, t); Net.label(c, e < 1.8 ? '해파리 잡자~!' : '거의 다 잡았다…!', s.x, s.y - 26); } }); return me({ a: 'net', sw: Math.sin(e * 6) }, jx > s.x ? 1 : -1); }
-      if (e < L + 1.4) { X.push({ top: 1, y: s.y + 60, d: () => { this.jelly(c, jx, jy - (e - L) * 10, t); Net.label(c, '찌릿!!', s.x, s.y - 26); c.fillStyle = '#fff36a'; for (let i = 0; i < 6; i++) { const r = 7 + (i % 2) * 3, an = i * 1.05 + t * 9; c.fillRect(Math.round(s.x + Math.cos(an) * r), Math.round(s.y - 9 + Math.sin(an) * r * 0.8), 1, 2); } } }); if (!G.zap) { G.zap = 1; Sound.play('pop'); } return me({ a: 'zap' }, f); }
+    if (G.id === 'jelly') { const L = 3.6, a = e * 2.2, jx = x + f * 10 + Math.cos(a) * 9, jy = y - 16 + Math.sin(a * 2) * 4;
+      if (e < L) { X.push({ top: 1, y: y + 60, d: () => { this.jelly(c, jx, jy, t); Net.label(c, e < 1.8 ? '해파리 잡자~!' : '거의 다 잡았다…!', x, y - 26); } }); return me({ a: 'net' }, jx > x ? 1 : -1); }
+      if (e < L + 1.8) { X.push({ top: 1, y: y + 60, d: () => { this.jelly(c, jx, jy - (e - L) * 10, t); Net.label(c, e < L + 0.8 ? '찌릿!!' : this.LAUGH, x, y - 26); if (e < L + 0.8) { c.fillStyle = '#fff36a'; for (let i = 0; i < 6; i++) { const r = 7 + (i % 2) * 3, an = i * 1.05 + t * 9; c.fillRect(Math.round(x + Math.cos(an) * r), Math.round(y - 9 + Math.sin(an) * r * 0.8), 1, 2); } } } }); if (!G.zap) { G.zap = 1; Sound.play('pop'); } return me({ a: e < L + 0.8 ? 'zap' : 'laugh' }, f); }
       done(); return null; }
-    if (G.id === 'pat') { const P = G.pal, gs = P && Pets.st[P.key]; if (!gs || e > 3.2) { done(); return null; } const ff = gs.x > s.x ? 1 : -1;
-      if (e < 1.6) X.push({ top: 1, y: s.y + 60, d: () => Net.bubble(c, '띵띵아~ 착하지!', s.x, s.y - 28) });
+    if (G.id === 'pat') { const P = G.pal, gs = P && Pets.st[P.key]; if (!gs || e > 3.2) { done(); return null; } const ff = gs.x > x ? 1 : -1;
+      if (e < 1.6) X.push({ top: 1, y: y + 60, d: () => Net.bubble(c, '띵띵아~ 착하지!', x, y - 28) });
       if (e > 1.2) { const gS = this.S[P.key] || (this.S[P.key] = {}); if (!gS.mt || t - gS.mt > 3) gS.mt = t; gS.love = 1; }
       return me({ a: 'wave' }, ff); }
     done(); return null;
   },
-  gary(c, s, key, k, t, n, idle) {
+  gary(c, s, key, k, t, n, idle) { // v244 사용자 '핑핑이는 미아웅 거리고 지나간 자리 끈적한 느낌으로, 티라노 발자국처럼, 가만히 있으면 눈 두 개가 튕기면서 메트로놈같이'
     const S = this.S[key] || (this.S[key] = {}), z = Game.scene === 'zone' && Game.zone;
     if (s.moving) Slime.lay(key, s.x, s.y);
     if (key.startsWith('me')) Slime.watch();
     if (!S.mcd) S.mcd = t + 4 + Math.random() * 4;
-    if (z && !s.moving && idle > 2 && t > S.mcd && !(S.mt && t - S.mt < 3)) { S.mt = t; S.love = 0; S.mcd = t + 7 + Math.random() * 6; }
+    if (z && t > S.mcd && !(S.mt && t - S.mt < 3)) { S.mt = t; S.love = 0; S.mcd = t + (s.moving ? 5 : 6) + Math.random() * 5; }
     if (!(S.mt && t - S.mt < 1.6)) return null;
-    const lv = S.love; Pets.extra.push({ top: 1, y: s.y + 60, d: () => Net.label(c, lv ? '야옹♥' : '야옹~', s.x, s.y - 18) });
+    const lv = S.love; Pets.extra.push({ top: 1, y: s.y + 60, d: () => Net.label(c, lv ? '미아웅♥' : '미아웅~', s.x, s.y - 18) });
     return { y: s.y, d: () => Pets.draw(c, k, s.x, s.y, s.face, s.moving, t, n, s.moving ? 0 : idle, { a: 'meow' }) };
   },
 };
@@ -11921,8 +11966,9 @@ Object.assign(PET_DRAW, {
   gary(r, s, t, c, mv, idle = 0, a = '') { // 띵띵이 (패러디): 연파랑 달팽이 몸, 분홍 소용돌이 껍데기, 눈자루 끝 노란 눈·빨간 눈동자
     const B = '#9ecfd8', BD = '#6aa8b8', P = '#f08aa0', PD = '#b04a6a', PL = '#ffc4d4', st = mv ? (Math.floor(t * 4) % 2) * 0.5 : 0, sw = mv ? Math.sin(t * 6) * 0.5 : Math.sin(t * 1.5) * 0.3;
     r(-7, -2, 13 + st, 2, B); r(-7.5, -1, 1, 1, B); r(-7, -0.5, 13.5 + st, 0.5, BD); r(3.5 + st, -4, 3.5, 2.5, B); r(6.5 + st, -3.5, 0.5, 2, B); // 몸 + 머리
-    r(5 + st + sw, -9.5, 0.5, 5.5, B); r(6.5 + st + sw * 1.3, -9.5, 0.5, 5.5, B); // 눈자루
-    const ey = -11.3; r(4.4 + st + sw, ey, 1.6, 1.8, '#f0eaa0'); r(6 + st + sw * 1.3, ey, 1.6, 1.8, '#f0eaa0'); r(5.2 + st + sw, ey + 0.6, 0.6, 0.8, '#d03030'); r(6.8 + st + sw * 1.3, ey + 0.6, 0.6, 0.8, '#d03030'); // 눈
+    const met = !mv && idle > 1, ph = Math.sin((idle - 1) * 5.2), ang = met ? Math.sign(ph) * Math.pow(Math.abs(ph), 0.6) * 0.6 : 0, pop = met && Math.abs(ph) > 0.93 ? -0.5 : 0; // v244 가만히 있으면 두 눈이 메트로놈처럼 똑딱 (끝에서 톡 튕긴다)
+    for (const [bx, k2] of [[5.2, 1], [6.7, 1.3]]) { const L = 5.5, ox = met ? 0 : sw * k2; for (let i = 0; i < L; i += 0.5) r(bx + st + ox + Math.sin(ang) * i, -4.5 - Math.cos(ang) * i, 0.5, 0.5, B); // 눈자루
+      const ex = bx + st + ox + Math.sin(ang) * L, ey = -4.5 - Math.cos(ang) * L + pop; r(ex - 0.8, ey - 1.6, 1.6, 1.8, '#f0eaa0'); r(ex - 0.2 + (met ? Math.sign(ang) * 0.3 : 0), ey - 1, 0.6, 0.8, '#d03030'); } // 눈
     if (a === 'meow') { r(6.3 + st, -2.9, 1, 0.9, '#5a2a3a'); } else r(6.2 + st, -2.4, 1, 0.3, '#3a6a78'); // 입 (야옹)
     r(-6, -8.5, 8, 6, P); r(-5.5, -9, 7, 0.5, P); r(-5, -10, 6, 1, P); r(-4, -10.5, 4, 0.5, P); r(-6.5, -7.5, 0.5, 3.5, P); r(2, -7.5, 0.5, 3.5, P); r(-6, -2.5, 8, 0.5, PD); // 껍데기
     r(-4.5, -8.5, 5, 0.5, PD); r(0, -8.5, 0.5, 4.5, PD); r(-4.5, -4.5, 5, 0.5, PD); r(-4.5, -8, 0.5, 3.5, PD); r(-3, -7, 2, 0.5, PD); r(-1.5, -7, 0.5, 1.5, PD); r(-3, -6, 1.5, 0.5, PD); // 소용돌이

@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v238</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v239</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -7607,6 +7607,7 @@ const Punch = {
     if (Game.scene !== 'zone' || Game.driving || Ride.with || Game.busy || !Game.player) return null; const pl = Game.player; let best = null, bd = 22;
     if (Net.on) for (const v of Net.visible('zone')) { const p = v.p || v; if (!p || p.dr || p.rd) continue; const id = Net.idOf(p); if (!id) continue; const d = Math.hypot(p.x - pl.x, p.y - pl.y); if (d < bd) { bd = d; best = { kind: 'player', id, p, x: p.x, y: p.y }; } }
     for (const w of Game.decor) { if (w.vip || w.promo || w.esc || w.gone) continue; const d = Math.hypot(w.x - pl.x, w.y - pl.y); if (d < bd) { bd = d; best = { kind: 'npc', w, x: w.x, y: w.y }; } }
+    if (typeof Pets !== 'undefined') for (const key of ['me', 'me#2']) { const s = Pets.st[key]; if ((key === 'me' ? Pets.mineK : Pets.mineK2) !== 'buddy' || !s || s.x == null) continue; const d = Math.hypot(s.x - pl.x, s.y - pl.y); if (d < bd) { bd = d; best = { kind: 'pet', s, x: s.x, y: s.y }; } } // v238 펫 친구: 맞기만 한다
     return best;
   },
   tick(dt) { this.cd = Math.max(0, this.cd - dt); this.tg = this.target(); },
@@ -7628,6 +7629,10 @@ const Punch = {
   async go() {
     if (this.cd > 0) return; const t = this.tg || this.target(); if (!t) return this.whiff(); this.cd = 0.55; this.pow(t.x, t.y);
     const pl = Game.player, dx = t.x - pl.x, dy = t.y - pl.y, L = Math.hypot(dx, dy) || 1;
+    if (t.kind === 'pet') { // v238 (사용자 '펫 친구는 때릴 수 있게, 합의금·병원 이런 거 안 가, 그냥 타격만'): 넘어졌다 일어나서 투덜, 세지도 않고 돈도 없다
+      const S = t.s, z = Game.zone, nx = S.x + dx / L * 8, ny = S.y + dy / L * 8; if (z.at(Math.floor(nx / TILE), Math.floor(ny / TILE)) !== T.BLD) { S.x = nx; S.y = ny; }
+      const tt = S.t || 0; S.fall = { t: tt, x: S.x, y: S.y }; S.face = dx > 0 ? -1 : 1; S.say = { text: ['아야! 왜 때려~', '친구끼리 이러기야?', '으아 내 얼굴!', '야!! 아프잖아', '나 삐졌어…'][Math.floor(Math.random() * 5)], t: tt }; S.sayT = tt + 4; return;
+    }
     if (t.kind === 'npc') {
       const w = t.w, z = Game.zone, nx = w.x + dx / L * 10, ny = w.y + dy / L * 10; if (z.at(Math.floor(nx / TILE), Math.floor(ny / TILE)) !== T.BLD) { w.x = nx; w.y = ny; }
       w.stun = 0.9; w.hurtCd = 1; w.punched = (w.punched || 0) + 1;

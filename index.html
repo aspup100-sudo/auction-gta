@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v234</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v235</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2931,6 +2931,68 @@ function drawCourtRoof(ctx, b) {
 
 /* ===================== 운전: 내 차 · NPC 차량 · 신호등 · 스키드 ===================== */
 const Skids = [];
+// 버스 탈것 (v234 사용자 '버스는 가만히 있으면 버스정류장 stop 표지판 생기고 npc들이 타는 걸로, 내리기도'): 멈춘 지 1초면 문 쪽(오른쪽)에 정류장 표지판이 서고,
+// 손님이 내려서 걸어가고, 행인이 표지판 옆에 줄 섰다가 한 명씩 탄다. 그러다 출발하면 못 탄 사람은 '어어, 버스 가네!' (내 화면에만)
+const BusStop = {
+  s: null, rid: 2, V: 24,
+  step(t) {
+    const c = Game.car, on = Game.driving && Game.scene === 'zone' && typeof Shop !== 'undefined' && !CarSwap.stolen() && Shop.myCar(true).ride === 'bus';
+    if (!on) { if (this.s && !this.s.gone) this.leave(t); this.still = null; }
+    else if (Math.abs(c.speed || 0) > 3) { this.still = null; if (this.s && !this.s.gone) this.leave(t); }
+    else if (this.still == null) this.still = t;
+    if (on && !this.s && this.still != null && t - this.still > 1) this.open(c, t);
+    const S = this.s; if (!S) return;
+    for (const p of S.ppl) this.move(p, t);
+    S.ppl = S.ppl.filter(p => !(p.out && t - p.out > 1.2));
+    if (S.gone && t - S.gone > 2.5) this.s = null;
+    else if (!S.gone && t - S.t0 > 14 && S.ppl.every(p => p.out)) { this.s = null; this.still = t - 1; } // 계속 서 있으면 다음 손님
+  },
+  open(c, t) {
+    const f = [Math.cos(c.a), Math.sin(c.a)], r = [-f[1], f[0]], at = (u, v) => [c.x + f[0] * u + r[0] * v, c.y + f[1] * u + r[1] * v];
+    const door = at(9, 7), out = at(9, 20), sign = at(1, 27), W = ['walker1', 'walker2', 'walker3'], rnd = n => Math.floor(Math.random() * n), S = { t0: t, sign, ppl: [], gone: 0 };
+    const off = Math.min(this.rid, rnd(3)), on = 1 + rnd(3); this.rid -= off;
+    for (let i = 0; i < off; i++) { const sd = Math.random() < 0.5 ? -1 : 1, end = at(9 + sd * (50 + rnd(30)), 22 + rnd(6)); S.ppl.push({ sp: W[rnd(3)], x: door[0], y: door[1], t0: t + 0.6 + i * 1.0, legs: [{ to: out }, { to: end }], k: 'off', say: i === 0 ? '감사합니다~' : '수고하세요!' }); }
+    for (let i = 0; i < on; i++) { const sd = Math.random() < 0.5 ? -1 : 1, st = at(1 + sd * (40 + rnd(30)), 26 + rnd(10)), q = at(-4 - i * 7, 22); S.ppl.push({ sp: W[rnd(3)], x: st[0], y: st[1], t0: t + 0.2 + i * 0.3, legs: [{ to: q, until: t + 2.6 + off * 1.0 + i * 1.1 }, { to: out }, { to: door }], k: 'on', say: i === 0 ? '기사님 안녕하세요!' : '삑!' }); }
+    this.s = S;
+  },
+  leave(t) { const S = this.s; S.gone = t; for (const p of S.ppl) if (p.k === 'on' && !p.out && t < p.t0) p.out = t; else if (p.k === 'on' && !p.out) { p.miss = t; p.legs = []; p.moving = false; } },
+  move(p, t) {
+    if (t < p.t0 || p.out) return; const L = p.legs[0];
+    if (!L) { if (!p.out && !p.miss) { p.out = t; if (p.k === 'on') { this.rid = Math.min(9, this.rid + 1); p.beep = t; } } if (p.miss && t - p.miss > 1.6) p.out = t; p.moving = false; return; }
+    if (p.k === 'on' && p.legs.length === 1 && !p.sayT) p.sayT = t;
+    const dx = L.to[0] - p.x, dy = L.to[1] - p.y, d = Math.hypot(dx, dy), st = this.V * Math.min(0.05, t - (p.lt || t)); p.lt = t;
+    if (d <= st + 0.3) { p.x = L.to[0]; p.y = L.to[1]; if (L.until && t < L.until) { p.moving = false; p.dir = 3; return; } p.legs.shift(); return; }
+    p.x += dx / d * st; p.y += dy / d * st; p.moving = true; p.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0);
+    if (p.k === 'off' && !p.sayT) p.sayT = t;
+  },
+  actors(c, t) {
+    this.step(t); const S = this.s; if (!S) return []; const A = [], [sx, sy] = S.sign, pop = Math.min(1, (t - S.t0) / 0.3), fade = S.gone ? Math.max(0, 1 - (t - S.gone) / 2.5) : 1;
+    A.push({ y: sy, d: () => { c.save(); c.globalAlpha = fade; c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(Math.round(sx) - 1, Math.round(sy), 4, 1.5); c.translate(Math.round(sx), Math.round(sy)); c.scale(1, pop);
+      c.translate(0, 4); c.fillStyle = '#5a5f68'; c.fillRect(0, -14, 1.5, 10); c.fillStyle = '#1f5fbf'; c.fillRect(-4, -21, 9.5, 7.5); c.fillStyle = '#3b7be0'; c.fillRect(-4, -21, 9.5, 1); // 기둥 · 파란 판
+      c.fillStyle = '#fff'; c.fillRect(-2.5, -19.8, 6.5, 3); c.fillStyle = '#1f5fbf'; c.fillRect(-2, -19.3, 1.5, 1); c.fillRect(0, -19.3, 1.5, 1); c.fillRect(2, -19.3, 1.5, 1); c.fillStyle = '#222'; c.fillRect(-1.8, -16.9, 1.2, 0.8); c.fillRect(2.2, -16.9, 1.2, 0.8); // 버스 그림
+      c.fillStyle = '#fff'; c.font = 'bold 2.6px sans-serif'; c.textAlign = 'center'; c.fillText('STOP', 0.75, -13.9); c.fillStyle = '#ffd84a'; c.fillRect(-1.5, -11, 4.5, 2.5); c.restore(); } }); // 노란 시간표 판
+    for (const p of S.ppl) { if (t < p.t0 || (p.out && p.k === 'on' && !p.miss)) { if (p.beep && t - p.beep < 0.9) A.push({ top: 1, y: p.y + 60, d: () => Net.label(c, '삑!', p.x, p.y - 22) }); continue; }
+      const al = p.out ? Math.max(0, 1 - (t - p.out) / 1.2) : p.k === 'off' && t - p.t0 < 0.3 ? (t - p.t0) / 0.3 : 1, w = { sprite: p.sp, x: p.x, y: p.y, dir: p.dir || 0, frame: p.moving ? 1 + Math.floor(t * 8) % 4 : 0, moving: p.moving };
+      A.push({ y: p.y, d: () => { c.save(); c.globalAlpha = al; drawWalker(c, w, t); c.restore(); } });
+      const say = p.miss ? (t - p.miss < 1.6 ? '어어, 버스 가네!' : null) : p.sayT && t - p.sayT < 1.6 ? p.say : null; if (say) A.push({ top: 1, y: p.y + 60, d: () => Net.bubble(c, say, p.x, p.y - 30) }); }
+    return A;
+  }
+};
+// 금빛 리무진 (v234 사용자 '타면 돈이 나풀나풀 거리게'): 달리면 뒤로 지폐(만 원·오만 원)가 날려 뒤집히며 살랑살랑 떨어진다. z = 땅에서 높이
+const Bills = {
+  pts: [], lt: 0,
+  spawn(x, y, a, spd) { if (REDUCED_MOTION || spd < 6 || this.pts.length > 140) return; const now = performance.now() / 1000, n = (2.5 + spd / 22) * Math.min(0.05, Math.max(0, now - (this.lt || now))); this.lt = now; this.acc = (this.acc || 0) + n;
+    while (this.acc >= 1) { this.acc--; const bx = x - Math.cos(a) * 11 + (Math.random() - 0.5) * 6 * Math.sin(a), by = y - Math.sin(a) * 11 + (Math.random() - 0.5) * 6 * Math.cos(a), sp = 10 + Math.random() * 18;
+      this.pts.push({ x: bx, y: by, z: 4 + Math.random() * 4, vx: -Math.cos(a) * sp + (Math.random() - 0.5) * 16, vy: -Math.sin(a) * sp + (Math.random() - 0.5) * 16, vz: 14 + Math.random() * 16, ph: Math.random() * 7, rot: Math.random() * 7, va: (Math.random() - 0.5) * 6, t: now, k: Math.random() < 0.5 ? 1 : 0, zid: Game.zone && Game.zone.id }); } },
+  draw(c) { if (!this.pts.length) return; const now = performance.now() / 1000, dt = Math.min(0.05, now - (this.dt0 || now)), zid = Game.zone && Game.zone.id; this.dt0 = now;
+    this.pts = this.pts.filter(p => now - p.t < 2.4 && p.zid === zid);
+    for (const p of this.pts) { p.vz -= 26 * dt; if (p.vz < -7) p.vz = -7; p.z = Math.max(0, p.z + p.vz * dt); const air = p.z > 0; if (air) { p.x += (p.vx + Math.sin(now * 5 + p.ph) * 14) * dt; p.y += p.vy * dt; p.vx *= 1 - 1.6 * dt; p.vy *= 1 - 1.6 * dt; p.rot += p.va * dt; }
+      const al = Math.min(1, (2.4 - (now - p.t)) / 0.5), fl = air ? Math.cos(now * 9 + p.ph) : 1; c.save(); c.globalAlpha = al;
+      if (air) { c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(Math.round(p.x - 2), Math.round(p.y), 4, 1); }
+      c.translate(p.x, p.y - p.z); c.rotate(p.rot); c.scale(Math.max(0.15, Math.abs(fl)), 1);
+      c.fillStyle = p.k ? '#e9c46a' : '#8fc48a'; c.fillRect(-3, -1.5, 6, 3); c.fillStyle = p.k ? '#c48a2a' : '#4e8a4a'; c.fillRect(-3, -1.5, 6, 0.5); c.fillRect(-3, 1, 6, 0.5); c.fillRect(-0.8, -0.8, 1.6, 1.6); c.fillStyle = fl < 0 ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,0)'; c.fillRect(-3, -1.5, 6, 3);
+      c.restore(); } }
+};
 // 기차 탈것이 지나간 자리에 깔리는 철로. v170 (사용자 2026-10-16 '드리프트 타이어 자국처럼 남게') · v171 ('다른 구로 넘어가면 없어지는 게 아니라 시간 지나면 없어지게'):
 // 구마다 남아 있다가 LIFE초 지나면 FADE초 동안 흐려지며 사라진다 (오래된 것부터 MAX개까지)
 const Rails = {
@@ -3029,7 +3091,7 @@ function updateMyCar(dt, z, input) {
   c.vx = nfx * f1 - nfy * lat; c.vy = nfy * f1 + nfx * lat;
   c.speed = Math.hypot(c.vx, c.vy);
   const lateral = Math.abs(-c.vx * nfy + c.vy * nfx);
-  if (lateral > 40 && c.speed > 60) { for (const [px, py] of carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); if (Skids.length > 1400) Skids.splice(0, Skids.length - 1400); if (Math.random() < 0.3) Sound.play('skid'); }
+  if (lateral > 40 && c.speed > 60) { const rr = c === Game.car && typeof Shop !== 'undefined' ? Shop.myCar(true).ride : null, r1 = ['bike', 'scooter', 'moto', 'uni'].includes(rr), hoof = rr === 'horse' || rr === 'bull' || rr === 'wolf'; /* v234 사용자 '자전거는 트랙이 하나로', '말은 트랙 자국이 아니라 말발굽 자국': 바퀴 한 줄 탈것은 뒷바퀴 자국 한 줄, 말·황소는 발굽 자국 (띄엄띄엄 좌우) */ if (hoof) { const L = Skids[Skids.length - 1], hx = c.x - Math.cos(c.a) * 6, hy = c.y - Math.sin(c.a) * 6; if (!L || !L.h || Math.hypot(L.x - hx, L.y - hy) > 5) { const sd = L && L.h ? -L.h : 1; Skids.push({ x: hx - Math.sin(c.a) * 2.5 * sd, y: hy + Math.cos(c.a) * 2.5 * sd, a: c.a, h: sd, cl: rr === 'bull' ? 1 : rr === 'wolf' ? 2 : 0, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } } else for (const [px, py] of r1 ? [[c.x - Math.cos(c.a) * 7, c.y - Math.sin(c.a) * 7]] : carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); if (Skids.length > 1400) Skids.splice(0, Skids.length - 1400); if (Math.random() < 0.3) Sound.play('skid'); }
   // 이동 + 충돌
   c.hitCd -= dt; c.fineCd -= dt; c.unstickCd = (c.unstickCd || 0) - dt;
   const ox = c.x, oy = c.y;
@@ -3238,7 +3300,8 @@ function updateTraffic(dt, z) {
   });
 }
 function drawCarSprite(c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
-  if (col && typeof col === 'object' && col.ride) return drawRide(c, x, y, a, col.ride, col.spd || 0, col.rider, col.tag); // spd: 실제 속력 (주차·미리보기는 0) // 재치 탈것 스킨
+  if (col && typeof col === 'object' && col.bills && col.spd > 6) Bills.spawn(x, y, a, col.spd);
+  if (col && typeof col === 'object' && col.ride) return drawRide(c, x, y, a, col.ride, col.spd || 0, col.rider, col.tag, col.pax); // spd: 실제 속력 (주차·미리보기는 0) // 재치 탈것 스킨
   let stripe = null; if (col && typeof col === 'object') { stripe = col.stripe || null; col = col.col; } // 상점 차 스킨: { col, stripe }
   c.save(); c.translate(x, y); c.rotate(a);
   c.fillStyle = 'rgba(0,0,0,.32)'; c.fillRect(-len / 2 + 2, -wid / 2 + 2, len, wid);
@@ -3266,7 +3329,7 @@ function drawSignals(c, z, t) {
  * 상점 차 스킨에 ride가 있으면 차 대신 이걸 그린다. 모양만 바뀌고 속도·부딪힘은 차와 같다.
  * 위에서 본 모습, 앞이 +x. rider {hair, shirt}가 있으면 위에 탄 내 머리·어깨를 그린다 (주차해 둔 건 빈 채로). */
 // 탈것 그림 (v108, 사용자 '좀 더 멋있게'): 반 픽셀 단위(2배 해상도)로 그린다. 앞쪽이 +x, 가운데 (0,0). 기본 확대 ×2에서 화면 1픽셀 = 반 픽셀.
-function drawRideHD(c, ride, t, mv, still, rd) {
+function drawRideHD(c, ride, t, mv, still, rd, pax) { const rd0 = rd, px = pax && pax[0]; // pax: 같이 탄 사람 (v234 카트 바구니 · 오토바이 뒷자리)
   c.save(); c.scale(0.5, 0.5);
   const R = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
   const E = (X, Y, rx, ry, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(X, Y, rx, ry, 0, 0, 7); c.fill(); };
@@ -3275,7 +3338,7 @@ function drawRideHD(c, ride, t, mv, still, rd) {
   const sh = (X, Y, rx, ry) => E(X + 3, Y + 4, rx, ry, 'rgba(0,0,0,.26)');
   const wheel = (X, Y, w = 7, h = 3) => { R(X - w / 2, Y - h / 2, w, h, '#18181c'); R(X - w / 2 + 1, Y - h / 2, w - 2, 1, '#3a3a44'); };
   // 위에서 본 타는 사람: 어깨(옷) + 팔(손) + 머리(머리카락, 윤기)
-  const me = (X = 0, k = 1, hands = true) => { if (!rd) return; // 타는 나는 걸어 다닐 때처럼 도트(화면 1픽셀 = 반 픽셀 2칸)로 그린다 (사용자 2026-10-15 '타고 있는 나는 원래 저화질로')
+  const me = (X = 0, k = 1, hands = true, rd = rd0) => { if (!rd) return; // 타는 나는 걸어 다닐 때처럼 도트(화면 1픽셀 = 반 픽셀 2칸)로 그린다 (사용자 2026-10-15 '타고 있는 나는 원래 저화질로')
     const q = n => Math.round(n * k / 2) * 2, x0 = Math.round(X / 2) * 2, B = (dx, dy, w, h, col) => R(x0 + q(dx), q(dy), q(w), q(h), col);
     B(-6, -6, 6, 12, rd.shirt); B(-4, -8, 4, 16, rd.shirt); B(-6, -4, 2, 8, rd.shirt2 || rd.shirt);
     if (hands) { B(0, -8, 6, 2, rd.shirt); B(0, 6, 6, 2, rd.shirt); B(6, -8, 2, 2, rd.skin); B(6, 6, 2, 2, rd.skin); }
@@ -3283,30 +3346,32 @@ function drawRideHD(c, ride, t, mv, still, rd) {
   const wob = Math.sin(t * 9) * (mv ? 1 : 0.3);
   switch (ride) {
     case 'bike': { sh(0, 0, 22, 5); wheel(-14, 0, 12, 3); wheel(14, 0, 12, 3); L(-14, 0, -2, 0, '#c8202a', 2.5); L(-2, 0, 12, 0, '#e8323a', 2.5); R(-6, -1.5, 6, 3, '#1a1a1a'); R(11, -11, 2.5, 22, '#4a4a52'); R(10, -12, 4, 3, '#18181c'); R(10, 9, 4, 3, '#18181c'); R(13, -1, 2, 2, '#fff3a0'); R(-1, -0.5, 9, 1, '#ff7a80'); me(-2); break; }
-    case 'scooter': { sh(0, 0, 18, 5); R(-18, -3.5, 4, 7, '#18181c'); R(13, -3, 4, 6, '#18181c'); R(-15, -4, 28, 8, '#2a6ac8'); R(-14, -3, 26, 6, '#3b7dd8'); R(-13, -2, 22, 4, '#2a2a30'); R(-13, -2, 22, 1, '#44444c'); R(11, -12, 2.5, 24, '#6a6a74'); R(10, -13, 4, 3, '#18181c'); R(10, 10, 4, 3, '#18181c'); R(14, -1, 2, 2, '#fff3a0'); me(-1); break; }
+    case 'scooter': { sh(0, 0, 18, 5); R(-18, -3.5, 4, 7, '#18181c'); R(13, -3, 4, 6, '#18181c'); R(-15, -4, 28, 8, '#2a6ac8'); R(-14, -3, 26, 6, '#3b7dd8'); R(-13, -2, 22, 4, '#2a2a30'); R(-13, -2, 22, 1, '#44444c'); R(11, -12, 2.5, 24, '#6a6a74'); R(10, -13, 4, 3, '#18181c'); R(10, 10, 4, 3, '#18181c'); R(14, -1, 2, 2, '#fff3a0'); if (px) me(-11, 1, true, px); me(-1); break; }
     case 'moto': { sh(0, 0, 25, 7); wheel(-21, 0, 10, 6); wheel(19, 0, 10, 5); R(13, -12, 2.5, 24, '#9aa0aa'); R(12, -13, 4, 3, '#18181c'); R(12, 10, 4, 3, '#18181c'); E(-2, 0, 15, 6.5, '#15151c'); E(4, 0, 7, 5.5, '#d82a2a'); E(3, -1.5, 5, 2.5, '#ff6a6a'); R(-19, 3, 12, 2.5, '#c8ccd4'); R(-19, 3, 12, 1, '#fff'); R(20, -2, 3, 4, '#fff3a0'); R(-22, -2, 2, 4, '#e83a3a');
+      if (px) { E(-14, 0, 4, 6.5, px.shirt); R(-12, -6.5, 8, 2, px.shirt); R(-12, 4.5, 8, 2, px.shirt); R(-5, -6.5, 2, 2, px.skin); R(-5, 4.5, 2, 2, px.skin); E(-12, 0, 5.5, 5.5, '#3a6ad8'); E(-11, -1.5, 3, 2, '#8ab0ff'); } // v234 뒷자리: 파란 헬멧, 운전자 허리 붙잡기
       if (rd) { E(-5, 0, 4, 7, rd.shirt); R(-3, -7.5, 7, 2, rd.shirt); R(-3, 5.5, 7, 2, rd.shirt); E(-3, 0, 6, 6, '#e03030'); E(-2, -1.5, 3.5, 2.5, '#ff7a7a'); R(1, -2.5, 3, 5, '#2a3a5a'); R(1.5, -2, 1.5, 2, '#9ad0ff'); } break; }
     case 'uni': { sh(0, 0, 8, 5); c.save(); c.rotate(wob * 0.12); R(-6, -2.5, 12, 5, '#18181c'); R(-5, -2.5, 10, 1, '#3a3a44'); R(-2, -3, 4, 6, '#9aa0aa'); if (rd) { R(-2, -18 - wob * 2, 3, 12, rd.shirt); R(-2, 6 + wob * 2, 3, 12, rd.shirt); R(-2, -19 - wob * 2, 3, 2, rd.skin); R(-2, 17 + wob * 2, 3, 2, rd.skin); } me(0, 1, false); c.restore(); break; }
     case 'bus': { sh(0, 0, 32, 12); R(-31, -12.5, 62, 25, '#1e5a36'); R(-30, -12, 60, 24, '#2f9a5a'); R(-30, -12, 60, 3, '#3ab06a'); R(-30, 9, 60, 3, '#257a48'); R(-25, -8, 46, 16, '#eef2ee'); R(-25, -8, 46, 1, '#ffffff'); for (const X of [-21, -9, 3]) { R(X, -5, 8, 10, '#c8d0cc'); R(X + 1, -4, 6, 1, '#e8ece8'); } R(14, -6, 5, 12, '#d8dcd8'); R(25, -11, 5, 22, '#2a4a6a'); R(26, -10, 2, 20, '#6ab0e8'); R(29, -11, 2, 4, '#fff3a0'); R(29, 7, 2, 4, '#fff3a0'); R(-31, -10, 2, 4, '#e83a3a'); R(-31, 6, 2, 4, '#e83a3a'); R(22, -14, 4, 2, '#18181c'); R(22, 12, 4, 2, '#18181c'); for (let i = 0; i < 7; i++) { R(-27 + i * 7.5, -12.5, 5, 1.5, '#bfe4ff'); R(-27 + i * 7.5, 11, 5, 1.5, '#bfe4ff'); } R(-6, -1, 14, 2, '#ffd84a'); if (rd) E(20, 0, 4, 4, rd.hair); break; }
     case 'cart': { sh(0, 0, 20, 14); R(-14, -12, 28, 24, 'rgba(200,206,216,.25)'); c.strokeStyle = '#b8bec8'; c.lineWidth = 1.5; c.strokeRect(-14, -12, 28, 24); c.lineWidth = 0.8; for (let i = -10; i < 14; i += 4) L(i, -12, i, 12, '#c8ced8', 0.8); for (let j = -8; j < 12; j += 4) L(-14, j, 14, j, '#c8ced8', 0.8); R(-14, -12, 6, 24, 'rgba(216,50,58,.25)'); R(-21, -13, 4, 26, '#d8323a'); R(-21, -13, 4, 2, '#ff6a70'); R(-17, -12, 3, 24, '#8a8f99'); for (const [X, Y] of [[-14, -14], [10, -14], [-14, 12], [10, 12]]) R(X, Y, 4, 2.5, '#18181c');
-      if (rd && mv) { const st = Math.sin(t * 12) * 3; R(-31 + st, -5, 5, 3, rd.pants || '#2b3a6e'); R(-31 - st, 2, 5, 3, rd.pants || '#2b3a6e'); me(-28, 1); } // 달릴 땐 뒤에서 밀고 간다 (사용자 2026-10-15)
+      if (px) me(2, 1, true, px); // v234 같이 탄 사람은 바구니 안에 (사용자 '같이 타면 카트 안에 타는 걸로')
+      if (rd && (mv || px)) { const st = mv ? Math.sin(t * 12) * 3 : 0; R(-31 + st, -5, 5, 3, rd.pants || '#2b3a6e'); R(-31 - st, 2, 5, 3, rd.pants || '#2b3a6e'); me(-28, 1); } // 달릴 땐 뒤에서 밀고 간다 (사용자 2026-10-15)
       else if (rd) me(-2, 1); // 멈추면 카트에 올라탄다
       else { R(-10, -8, 6, 6, '#e8402a'); R(-2, 2, 8, 6, '#e8c060'); R(4, -8, 4, 8, '#4ab04a'); R(-8, 2, 4, 6, '#f4f4f4'); } // 빈 카트: 장 본 물건
       break; }
     case 'chair': { sh(0, 0, 17, 17); c.save(); c.rotate(t * (mv ? 6 : 0.5)); for (let k = 0; k < 5; k++) { c.rotate(Math.PI * 2 / 5); R(0, -1.5, 16, 3, '#2a2a30'); R(1, -1.5, 14, 1, '#4a4a52'); E(16, 0, 2.5, 2.5, '#111'); } c.restore(); E(0, 0, 11, 11, '#1d2a4a'); E(0, 0, 10, 10, '#2b3a6e'); E(-2, -2, 6, 6, '#3a4c86'); R(-15, -11, 5, 22, '#152040'); R(-14, -10, 2, 20, '#2b3a6e'); R(-4, -12, 10, 2.5, '#152040'); R(-4, 9.5, 10, 2.5, '#152040'); me(0, 0.9); break; }
     case 'cabrio': { sh(0, 0, 26, 12); R(-25, -10.5, 50, 21, '#a8204a'); R(-24, -10, 48, 20, '#e83a6a'); R(-24, -10, 48, 2, '#ff7a9a'); R(-24, 8, 48, 2, '#b82a52'); R(-16, -8, 24, 16, '#f4e8d4'); R(-16, -8, 24, 1, '#fff8ec'); R(-12, -7, 7, 6, '#e0d0b4'); R(-12, 1, 7, 6, '#e0d0b4'); R(-19, -6, 3, 12, '#c8b898'); R(8, -9, 2, 18, '#c8ccd4'); R(9, -8, 1.5, 16, '#9ad0ff'); R(14, -9, 8, 2, '#c8204a'); R(14, 7, 8, 2, '#c8204a'); R(22, -8, 2, 4, '#fff3a0'); R(22, 4, 2, 4, '#fff3a0'); R(-25, -8, 2, 3, '#ff3a3a'); R(-25, 5, 2, 3, '#ff3a3a'); for (const [X, Y] of [[-17, -12], [11, -12], [-17, 10], [11, 10]]) R(X, Y, 6, 2, '#18181c');
-      if (rd) { E(-4, -4, 3.5, 4, rd.shirt); E(-2, -4, 3.8, 3.8, rd.hair); R(-3, -6, 2, 1, 'rgba(255,255,255,.25)'); } E(-4, 4, 3.5, 4, '#2f6ab0'); E(-2, 4, 3.8, 3.8, '#5a3020'); R(-3, 2, 2, 1, 'rgba(255,255,255,.25)'); break; }
-    case 'horse': { sh(0, 0, 24, 10); const st = mv ? Math.sin(t * 16) * 5 : 0; for (const [lx, ly, s] of [[9, -10, st], [9, 7, -st], [-14, -10, -st], [-14, 7, st]]) { R(lx + s, ly, 6, 3, '#5a3418'); R(lx + s + 5, ly, 2, 3, '#2a1a0e'); } E(0, 0, 19, 9, '#7a4420'); E(0, -1, 18, 8, '#9a5a2a'); E(-2, -3, 13, 4, '#b06a34'); R(-34, -2 + Math.sin(t * 9) * 3, 14, 4, '#2a1a0e'); R(-32, -3 + Math.sin(t * 9) * 3, 10, 2, '#3a2416'); R(14, -4, 12, 8, '#9a5a2a'); R(24, -3, 8, 6, '#8a4a1e'); R(30, -1, 2, 2, '#2a1a0e'); R(25, -1, 5, 2, '#f4ece0'); R(20, -6, 3, 3, '#9a5a2a'); R(20, 3, 3, 3, '#9a5a2a'); R(21, -5, 1, 1, '#2a1a0e'); R(21, 4, 1, 1, '#2a1a0e'); R(4, -2, 20, 4, '#2a1a0e'); R(6, -1, 16, 1, '#4a3020'); R(-9, -9, 12, 18, '#8a2a2a'); R(-8, -8, 10, 2, '#b04040'); R(-3, -11, 2, 3, '#c8ccd4'); R(-3, 8, 2, 3, '#c8ccd4'); me(-2); break; }
+      if (rd) { E(-4, -4, 3.5, 4, rd.shirt); E(-2, -4, 3.8, 3.8, rd.hair); R(-3, -6, 2, 1, 'rgba(255,255,255,.25)'); } E(-4, 4, 3.5, 4, px ? px.shirt : '#2f6ab0'); E(-2, 4, 3.8, 3.8, px ? px.hair : '#5a3020'); R(-3, 2, 2, 1, 'rgba(255,255,255,.25)'); break; } // v234 옆자리: 같이 탄 친구 옷
+    case 'horse': { sh(0, 0, 24, 10); const st = mv ? Math.sin(t * 16) * 5 : 0; for (const [lx, ly, s] of [[9, -10, st], [9, 7, -st], [-14, -10, -st], [-14, 7, st]]) { R(lx + s, ly, 6, 3, '#5a3418'); R(lx + s + 5, ly, 2, 3, '#2a1a0e'); } E(0, 0, 19, 9, '#7a4420'); E(0, -1, 18, 8, '#9a5a2a'); E(-2, -3, 13, 4, '#b06a34'); R(-34, -2 + Math.sin(t * 9) * 3, 14, 4, '#2a1a0e'); R(-32, -3 + Math.sin(t * 9) * 3, 10, 2, '#3a2416'); R(14, -4, 12, 8, '#9a5a2a'); R(24, -3, 8, 6, '#8a4a1e'); R(30, -1, 2, 2, '#2a1a0e'); R(25, -1, 5, 2, '#f4ece0'); R(20, -6, 3, 3, '#9a5a2a'); R(20, 3, 3, 3, '#9a5a2a'); R(21, -5, 1, 1, '#2a1a0e'); R(21, 4, 1, 1, '#2a1a0e'); R(4, -2, 20, 4, '#2a1a0e'); R(6, -1, 16, 1, '#4a3020'); R(-9, -9, 12, 18, '#8a2a2a'); R(-8, -8, 10, 2, '#b04040'); R(-3, -11, 2, 3, '#c8ccd4'); R(-3, 8, 2, 3, '#c8ccd4'); if (px) me(-11, 1, true, px); me(-2); break; } // v234 뒤에 한 명 더
     case 'bull': { sh(0, 0, 25, 11); const st = mv ? Math.sin(t * 15) * 5 : 0; for (const [lx, ly, s] of [[9, -11, st], [9, 8, -st], [-14, -11, -st], [-14, 8, st]]) { R(lx + s, ly, 6, 3, '#2a1a12'); R(lx + s + 5, ly, 2, 3, '#0e0806'); } // 황소 (사용자 2026-10-17 '탈것에 황소도'): 검붉은 몸 · 앞으로 휜 뿔 · 분홍 코에 금 코뚜레 · 빨간 안장 담요
       const tw = Math.sin(t * 8) * 3; R(-33, -1 + tw, 13, 2, '#1a0e08'); E(-34, tw, 3, 2.5, '#0e0806'); E(0, 0, 20, 10, '#2a1810'); E(0, -1, 19, 9, '#4a2a1a'); E(-2, -3, 14, 4.5, '#5e3a24'); E(6, 0, 9, 8, '#3e2416');
       R(13, -7, 11, 14, '#4a2a1a'); R(13, -7, 11, 2, '#5e3a24'); R(22, -5, 8, 10, '#3e2416'); R(28, -3.5, 5, 7, '#c89a8a'); R(29, -2, 1.5, 1.5, '#5a2a2a'); R(29, 1, 1.5, 1.5, '#5a2a2a');
       c.strokeStyle = '#f0c840'; c.lineWidth = 1.2; c.beginPath(); c.arc(33, 0, 2, -1.3, 1.3); c.stroke();
       for (const sy of [-1, 1]) { R(17, sy > 0 ? 6 : -10, 4, 4, '#d8c8a8'); R(20, sy > 0 ? 9 : -13, 3, 4, '#e8dcc0'); R(23, sy > 0 ? 12 : -15, 3, 3, '#f4ecd8'); R(25, sy > 0 ? 13 : -15, 2, 2, '#fffaf0'); R(21, sy > 0 ? 3.5 : -5, 1.5, 1.5, '#ff3a2a'); }
-      R(-9, -10, 12, 20, '#a01818'); R(-8, -9, 10, 2, '#e04a3a'); R(-9, 8, 12, 2, '#701010'); for (let i = -7; i < 3; i += 3) R(i, -10, 1, 20, 'rgba(255,210,80,.55)'); R(-3, -12, 2, 3, '#c8ccd4'); R(-3, 9, 2, 3, '#c8ccd4'); me(-2); break; }
+      R(-9, -10, 12, 20, '#a01818'); R(-8, -9, 10, 2, '#e04a3a'); R(-9, 8, 12, 2, '#701010'); for (let i = -7; i < 3; i += 3) R(i, -10, 1, 20, 'rgba(255,210,80,.55)'); R(-3, -12, 2, 3, '#c8ccd4'); R(-3, 9, 2, 3, '#c8ccd4'); if (px) me(-11, 1, true, px); me(-2); break; } // v234 뒤에 한 명 더
     case 'benz': { sh(0, 0, 27, 12); R(-26, -11.5, 52, 23, '#7a808a'); R(-25, -11, 50, 22, '#c8ccd4'); R(-25, -11, 50, 3, '#eef0f4'); R(-25, 8, 50, 3, '#9aa0aa'); R(-12, -8, 22, 16, '#1a1e28'); R(-11, -7, 20, 3, '#3a4458'); R(-11, -7, 6, 14, 'rgba(255,255,255,.06)'); R(10, -7, 4, 14, '#4a5a6a'); R(11, -6, 2, 12, '#8ab0d0'); R(-16, -7, 4, 14, '#4a5a6a'); L(14, -6, 23, -5, '#aab0ba', 1); L(14, 6, 23, 5, '#aab0ba', 1); R(23, -6, 2, 12, '#e8ecf4'); for (let j = -5; j < 6; j += 2) R(23.5, j, 1.5, 1, '#7a808a'); E(21, 0, 2.6, 2.6, '#f4f6fa'); L(21, 0, 21, -2.4, '#555', 0.7); L(21, 0, 19, 1.4, '#555', 0.7); L(21, 0, 23, 1.4, '#555', 0.7); R(24, -9, 2, 4, '#fff3a0'); R(24, 5, 2, 4, '#fff3a0'); R(-26, -9, 2, 4, '#d8323a'); R(-26, 5, 2, 4, '#d8323a'); R(-2, -13, 4, 2, '#7a808a'); R(-2, 11, 4, 2, '#7a808a'); break; }
     case 'piggy': { sh(0, 0, 18, 12); const st = mv ? Math.sin(t * 12) * 4 : 0; R(-2 + st, -10, 8, 4, '#2b3a6e'); R(-2 - st, 6, 8, 4, '#2b3a6e'); R(4 + st, -10, 2, 4, '#15151c'); R(4 - st, 6, 2, 4, '#15151c'); E(0, 0, 7, 12, '#257a48'); E(0, 0, 6, 11, '#2f9a5a'); R(-3, -9, 4, 18, '#3ab06a'); E(8, 0, 6.5, 6.5, '#3a2a1a'); E(9, -2, 3, 2, '#5a4030'); R(-4, -16, 6, 4, '#f0c8a0'); R(-4, 12, 6, 4, '#f0c8a0');
       if (rd) { E(-6, 0, 4, 7, rd.shirt); R(-2, -9, 9, 3, rd.shirt); R(-2, 6, 9, 3, rd.shirt); R(6, -9, 2, 3, rd.skin); R(6, 6, 2, 3, rd.skin); E(-5, 0, 4.5, 4.5, rd.hair); R(-7, -2.5, 3, 1.5, 'rgba(255,255,255,.22)'); } break; }
-    case 'wolf': { sh(0, 0, 24, 10); const st = mv ? Math.sin(t * 14) * 4 : 0; for (const [lx, ly, s] of [[10, -10, st], [10, 7, -st], [-13, -10, -st], [-13, 7, st]]) { R(lx + s, ly, 6, 3, '#4a4f59'); R(lx + s + 5, ly, 2, 3, '#2a2e36'); } E(0, 0, 18, 9, '#6a707a'); E(0, -1, 17, 8, '#8a8f99'); E(-2, 0, 13, 3, '#5a5f69'); for (let i = -12; i < 12; i += 4) R(i, -8, 2, 2, '#9aa0aa'); const tw = Math.sin(t * 8) * 3; P([-16, -3, -32, -5 + tw, -34, 0 + tw, -32, 5 + tw, -16, 3], '#8a8f99'); P([-28, -3 + tw, -34, 0 + tw, -28, 3 + tw], '#d8dce4'); E(19, 0, 7, 6.5, '#9aa0aa'); E(18, -1, 5, 4.5, '#b0b6c0'); P([24, -3, 32, -1, 32, 1, 24, 3], '#c8ccd4'); R(31, -1, 2, 2, '#111'); P([14, -6, 17, -11, 19, -5], '#5a5f69'); P([14, 6, 17, 11, 19, 5], '#5a5f69'); R(21, -3, 2, 1.5, '#ffd84a'); R(21, 1.5, 2, 1.5, '#ffd84a'); me(-2); break; }
+    case 'wolf': { sh(0, 0, 24, 10); const st = mv ? Math.sin(t * 14) * 4 : 0; for (const [lx, ly, s] of [[10, -10, st], [10, 7, -st], [-13, -10, -st], [-13, 7, st]]) { R(lx + s, ly, 6, 3, '#4a4f59'); R(lx + s + 5, ly, 2, 3, '#2a2e36'); } E(0, 0, 18, 9, '#6a707a'); E(0, -1, 17, 8, '#8a8f99'); E(-2, 0, 13, 3, '#5a5f69'); for (let i = -12; i < 12; i += 4) R(i, -8, 2, 2, '#9aa0aa'); const tw = Math.sin(t * 8) * 3; P([-16, -3, -32, -5 + tw, -34, 0 + tw, -32, 5 + tw, -16, 3], '#8a8f99'); P([-28, -3 + tw, -34, 0 + tw, -28, 3 + tw], '#d8dce4'); E(19, 0, 7, 6.5, '#9aa0aa'); E(18, -1, 5, 4.5, '#b0b6c0'); P([24, -3, 32, -1, 32, 1, 24, 3], '#c8ccd4'); R(31, -1, 2, 2, '#111'); P([14, -6, 17, -11, 19, -5], '#5a5f69'); P([14, 6, 17, 11, 19, 5], '#5a5f69'); R(21, -3, 2, 1.5, '#ffd84a'); R(21, 1.5, 2, 1.5, '#ffd84a'); if (px) me(-11, 1, true, px); me(-2); break; } // v234 뒤에 한 명 더
     case 'shark': { const sw = Math.sin(t * (mv ? 10 : 3)) * 5; E(0, 0, 33, 16, 'rgba(110,190,255,.28)'); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(0, 0, 33, 16, 0, 0, 7); c.stroke(); E(2, 0, 24, 9, '#3a5a74'); E(2, -1, 23, 8, '#5a7890'); E(4, -3, 16, 3, '#7a9ab4'); E(4, 0, 18, 3, '#e8f0f4'); P([-20, 0, -34, -10 + sw, -30, 0, -34, 10 + sw], '#4a6880'); P([4, -8, -6, -18, -4, -8], '#4a6880'); P([4, 8, -6, 18, -4, 8], '#4a6880'); P([0, -2, -6, -1, 0, 2], '#3a5a74'); for (const X of [10, 12, 14]) R(X, -6, 1, 3, '#3a5a74'); for (const X of [10, 12, 14]) R(X, 3, 1, 3, '#3a5a74'); R(19, -5, 2, 2, '#111'); R(19, 3, 2, 2, '#111'); R(19.5, -5, 1, 1, '#fff'); for (let i = 0; i < 4; i++) R(22 + i * 1.5, -1.5, 1, 1, '#fff'); for (let i = 0; i < 4; i++) R(22 + i * 1.5, 0.5, 1, 1, '#fff'); me(0); break; }
     case 'ferrari': { sh(0, 0, 27, 12); E(0, 0, 26, 11, '#8a0a14'); E(0, -0.5, 25.5, 10.5, '#d81a24'); E(-2, -4, 18, 4, '#ff4a54'); E(6, -6, 8, 1.5, '#ff8a90'); R(-9, -7, 15, 14, '#1a0e10'); R(-8, -6, 13, 3, '#3a2a30'); R(-8, -6, 4, 12, 'rgba(255,255,255,.07)'); R(6, -6, 4, 12, '#4a3a4a'); R(7, -5, 2, 10, '#9a8ab0'); R(-24, -7, 4, 14, '#6a0a10'); R(-24, -8, 5, 2, '#2a0a0e'); R(-24, 6, 5, 2, '#2a0a0e'); R(16, -1, 3, 2, '#ffd84a'); R(16.5, -0.5, 2, 1, '#1a1a1a'); R(22, -7, 2, 3, '#fff3a0'); R(22, 4, 2, 3, '#fff3a0'); R(-26, -5, 2, 3, '#ff3a3a'); R(-26, 2, 2, 3, '#ff3a3a'); R(-4, -11, 10, 1.5, '#1a1a1a'); R(-4, 9.5, 10, 1.5, '#1a1a1a'); break; }
     case 'train': { sh(-2, 0, 36, 11); if (mv) for (let k = 0; k < 3; k++) { const ph = (t * 3 + k / 3) % 1; E(24 - ph * 28, Math.sin(k * 2) * 3, 3 + ph * 6, 3 + ph * 6, `rgba(240,240,240,${0.6 * (1 - ph)})`); } R(-35, -10.5, 33, 21, '#1a3a6a'); R(-34, -10, 31, 20, '#2f6ab0'); R(-34, -10, 31, 3, '#4a8ad0'); R(-34, -2, 31, 4, '#24508a'); for (let i = 0; i < 5; i++) { R(-32 + i * 6, -10, 4, 2, '#cfe8ff'); R(-32 + i * 6, 8, 4, 2, '#cfe8ff'); } R(-2, -2, 4, 4, '#333'); R(1, -10.5, 31, 21, '#7a1018'); R(2, -10, 29, 20, '#d8323a'); R(2, -10, 29, 3, '#ff5a60'); R(2, -2, 29, 4, '#f4f4f4'); R(3, -8, 10, 16, '#15151c'); R(4, -7, 8, 2, '#3a3a44'); E(22, 0, 7, 7, '#2a2a30'); E(22, 0, 5, 5, '#44444c'); E(21, -1, 2, 2, '#6a6a74'); R(30, -8, 5, 16, '#b02028'); R(34, -2, 2, 4, '#fff3a0'); R(33, -10, 2, 20, '#c8ccd4'); if (rd) E(8, 0, 4, 4, rd.hair); break; }
@@ -3350,7 +3415,7 @@ function rideFx(c, ride, mv, still, t, speed, r, circ, rd) {
   }
   return '';
 }
-function drawRide(c, x, y, a, ride, speed, rider, tag) {
+function drawRide(c, x, y, a, ride, speed, rider, tag, pax) {
   const t = performance.now() / 1000, mv = Math.abs(speed) > 4, still = !mv && !!rider;
   c.save(); c.translate(x, y); c.rotate(a);
   if (still && (ride === 'moto' || ride === 'ferrari')) c.translate(Math.sin(t * 40) * 0.4, 0); // 공회전 들썩
@@ -3360,7 +3425,7 @@ function drawRide(c, x, y, a, ride, speed, rider, tag) {
   const shadow = (W, H) => { c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(2, 2, W, H, 0, 0, 7); c.fill(); };
   const me = (X = 0, s = 1) => { if (!rider) return; r(X - 2.5 * s, -3.5 * s, 4 * s, 7 * s, rider.shirt); circ(X + 0.5 * s, 0, 2.6 * s, rider.hair); };
   const wob = Math.sin(t * 9) * (mv ? 1 : 0.3);
-  if (!drawRideHD(c, ride, t, mv, still, rider)) switch (ride) { // 예전 1배 그림은 HD가 없는 탈것만
+  if (!drawRideHD(c, ride, t, mv, still, rider, pax)) switch (ride) { // 예전 1배 그림은 HD가 없는 탈것만
     case 'bike': shadow(10, 3); r(-10, -1, 6, 2, '#222'); r(4, -1, 6, 2, '#222'); r(-6, -0.5, 12, 1, '#d8323a'); r(5, -5, 1.5, 10, '#444'); me(-1); break;
     case 'scooter': shadow(9, 3); r(-8, -2, 13, 4, '#3b7dd8'); r(-9, -1, 2, 2, '#222'); r(6, -1, 2, 2, '#222'); r(5, -5, 1.5, 10, '#555'); r(4.5, -5.5, 2.5, 1.5, '#222'); r(4.5, 4, 2.5, 1.5, '#222'); me(-1); break;
     case 'moto': shadow(12, 4); r(-12, -1.5, 4, 3, '#222'); r(9, -1.5, 4, 3, '#222'); r(-9, -3, 17, 6, '#15151c'); r(-2, -2.5, 6, 5, '#e03a3a'); r(6, -6, 1.5, 12, '#888'); r(-10, 2, 4, 1.5, '#aaa'); if (rider) { r(-4.5, -3.5, 4, 7, rider.shirt); circ(-1.5, 0, 3, '#e03a3a'); r(-0.5, -1, 1.5, 2, '#9ad0ff'); } if (mv) r(-14 - Math.random() * 3, 1.5, 2, 1, 'rgba(160,160,160,.6)'); break;
@@ -5056,7 +5121,7 @@ const Net = {
   drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
-    if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs, pax: fc.ride ? Ride.pax(this.idOf(p)) : null }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0, kneelT: p.kn ? Infinity : 0, punchT: p.punchT, punchHit: p.punchHit }, t);
     this.label(c, Friends.has(p.name) ? '🤝 ' + p.name : p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
@@ -5222,6 +5287,8 @@ const ChatHist = {
  */
 const Ride = {
   with: null, MAX: 5,
+  cap(p) { const it = p && !(p.sk && p.sk.col) && SHOP_BY_ID[p.sk ? p.sk.c : p.car], r = it && it.ride; return r === 'bike' || r === 'uni' || r === 'chair' ? 1 : r === 'cart' || r === 'moto' || r === 'scooter' || r === 'cabrio' || r === 'horse' || r === 'bull' || r === 'wolf' ? 2 : r === 'bus' ? 6 : Ride.MAX; }, // v234 사용자 '카트는 탑승자·운전자 2명, 버스는 6명, 오토바이도 2명', '자전거는 같이 못 타게, 킥보드는 두 명, 외발자전거는 못 타게', '의자도 못 타', '오픈카는 두 명까지', '말도 2명', '황소도 2명', '늑구도 2명' (운전자 포함)
+  pax(id) { const L = []; if (Ride.with && Ride.with === id) L.push(Profile.pal(Profile.get())); for (const q in Net.players) { const o = Net.players[q]; if (!o.gone && o.rd && o.rd === id && o.pal) L.push(Profile.pal(o.pal)); } return L; }, // 같이 탄 사람들 옷 (카트 바구니 · 오토바이 뒷자리에 그린다)
   count(id) { if (!id) return 0; let n = Ride.with === id ? 1 : 0; for (const q in Net.players) { const o = Net.players[q]; if (!o.gone && o.rd === id) n++; } return n; },
   near() {
     if (!Net.on || Ride.with || Game.driving || !Game.zone || Game.scene !== 'zone') return null; const pl = Game.player; let best = null, bd = 40;
@@ -5229,7 +5296,7 @@ const Ride = {
     return best;
   },
   board(p) {
-    const id = p._id || Net.idOf(p); if (Ride.count(id) + 1 >= Ride.MAX) { Toast.show(`${p.name} 차는 자리가 없어요 (운전자 포함 최대 ${Ride.MAX}명)`); Sound.play('deny'); return; }
+    const id = p._id || Net.idOf(p); const cap = Ride.cap(p); if (Ride.count(id) + 1 >= cap) { Toast.show(cap < 2 ? `${p.name}님 탈것은 혼자만 탈 수 있어요.` : `${p.name} 차는 자리가 없어요 (운전자 포함 최대 ${cap}명)`); Sound.play('deny'); return; }
     Ride.with = id; Sound.play('carDoor'); Toast.show(`${p.name} 차에 탔어요 · F로 내리기`, 2600); Net.news(`${p.name} 차에 같이 탐`); Ride.follow();
   },
   follow() {
@@ -7135,7 +7202,7 @@ function drawZone(t) {
   ctx.restore();
   // 스키드 자국
   { const now = performance.now() / 1000, zid = z.id; while (Skids.length && now - (Skids[0].t || 0) > 180) Skids.shift(); // v171: 구마다 남았다가 3분 지나면 사라진다 (마지막 30초 흐려짐)
-    for (const m of Skids) { if (m.z !== zid || m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillStyle = `rgba(20,20,22,${(0.45 * Math.min(1, (180 - (now - m.t)) / 30)).toFixed(3)})`; ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); } }
+    for (const m of Skids) { if (m.z !== zid || m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillStyle = `rgba(20,20,22,${(0.45 * Math.min(1, (180 - (now - m.t)) / 30)).toFixed(3)})`; if (m.h) { ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.a); if (m.cl === 2) { ctx.fillRect(-1.6, -1, 2, 2); ctx.fillRect(0.8, -1.9, 0.9, 0.9); ctx.fillRect(1.2, -0.7, 0.9, 0.7); ctx.fillRect(1.2, 0.3, 0.9, 0.7); ctx.fillRect(0.8, 1, 0.9, 0.9); ctx.restore(); continue; } /* 늑구: 발바닥 + 발가락 넷 */ if (m.cl) { ctx.fillRect(-1.2, -1.6, 2.4, 1.2); ctx.fillRect(-1.2, 0.4, 2.4, 1.2); ctx.restore(); continue; } /* 황소: 갈라진 두 쪽 발굽 */ ctx.fillRect(-1.5, -1.5, 1, 3); ctx.fillRect(-0.5, -1.5, 2, 0.8); ctx.fillRect(-0.5, 0.7, 2, 0.8); ctx.restore(); } else ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); } } // v234 m.h = 말발굽 (U자, 앞쪽이 열림)
   Rails.draw(ctx, x0, y0, x1, y1); // 기차 철로
   Prints.draw(ctx, x0, y0, x1, y1); // 티라노 발자국
   Beach.draw(ctx, x0, y0, x1, y1); // 거북이 모래·물길
@@ -7144,7 +7211,7 @@ function drawZone(t) {
   drawSignals(ctx, z, t);
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
   PetRage.drawCars(ctx, x0, y0, x1, y1); // 친구 펫을 친 차 (v157)
-  if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0 }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
+  if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0, pax: mc.ride && Game.driving && Net.on ? Ride.pax(Net.myId) : null }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 사람·고양이 (y 정렬)
@@ -7152,10 +7219,12 @@ function drawZone(t) {
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
     ...Pets.actors(ctx, Net.visible('zone'), t),
     ...Fx.actors(ctx, Net.visible('zone'), t),
+    ...BusStop.actors(ctx, performance.now() / 1000), // v234 버스 정류장
     ...Net.parkedCars().map(p => ({ y: p.cy, d: () => Net.drawParkedCar(ctx, p) })),
     ...Game.cats.map(c => ({ y: c.y, d: () => { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(c.x - 4, c.y + 2, 9, 2); const img = Sprites.cat(c.sit ? 0 : Math.floor(t * 6) % 2); ctx.save(); ctx.translate(c.x, c.y); if (c.vx < 0) ctx.scale(-1, 1); ctx.drawImage(img, -5, -5); ctx.restore(); } }))];
   const tops = []; actors.sort((a, b) => a.y - b.y).forEach(a => a.top ? tops.push(a) : a.d()); // v234: top = 말풍선·이름표·나는 새 → 지붕 위에
   for (const q of Particles) { ctx.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
+  Bills.draw(ctx); // v234 금빛 리무진 지폐
   // 건물 지붕 (사람 위로)
   for (const b of z.buildings) {
     const X = b.x * TILE, Y = b.y * TILE; if (X > x1 || Y > y1 || X + b.w * TILE + 30 < x0 || Y + b.h * TILE + 30 < y0) continue;
@@ -9874,7 +9943,7 @@ const SHOP_ITEMS = {
     { id: 'k_black', name: '검정 세단', price: 2000e4, col: '#15151c', stripe: '#c9a24a' },
     { id: 'k_purple', name: '보라 튜닝', price: 2500e4, col: '#6a3fb5', stripe: '#e26a9a' },
     { id: 'k_sky', name: '하늘색 레이싱', price: 3000e4, col: '#5fb4f0', stripe: '#15151c' },
-    { id: 'k_gold', name: '금빛 리무진', price: 1e8, col: '#ffd84a', stripe: '#fff6c0' },
+    { id: 'k_gold', name: '금빛 리무진', price: 1e8, col: '#ffd84a', stripe: '#fff6c0', bills: 1 },
     // 재치 있는 탈것: 모양만 바뀌고 속도는 차와 같다 (사용자 2026-10-15, 재치 있을수록 비싸게). 그림은 vehicle.js drawRide
     { id: 'r_bike', name: '자전거', price: 500e4, ride: 'bike' },
     { id: 'r_scooter', name: '킥보드', price: 800e4, ride: 'scooter' },
@@ -9950,7 +10019,7 @@ const Shop = {
   },
   has(id) { return this.owned().includes(id); },
   // 차 색: 내 차(기본 은색) / 친구 차(기본 금색). 스킨이 있으면 그 색 (줄무늬 포함)
-  carOf(id, fallback, pal) { const it = id && SHOP_BY_ID[id]; if (it && it.ride) return { ride: it.ride, rider: pal ? Profile.pal(pal) : null, tag: pal && it.ride === 'piggy' ? String(pal.rideName || '').slice(0, 10) : '' }; return it && it.col ? { col: it.col, stripe: it.stripe } : { col: fallback }; },
+  carOf(id, fallback, pal) { const it = id && SHOP_BY_ID[id]; if (it && it.ride) return { ride: it.ride, rider: pal ? Profile.pal(pal) : null, tag: pal && it.ride === 'piggy' ? String(pal.rideName || '').slice(0, 10) : '' }; return it && it.col ? { col: it.col, stripe: it.stripe, bills: it.bills } : { col: fallback }; },
   myCar(riding) { return this.carOf(Profile.get().car, '#c8ccd2', riding ? Profile.get() : null); },
   open(tab, look) { // look: 가게 밖에서 구경만 (사는 건 편집숍 안에서만, 사용자 2026-10-16)
     if (this.open_) return; this.open_ = true; this.look = !!look; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');

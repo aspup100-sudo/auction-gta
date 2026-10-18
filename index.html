@@ -238,7 +238,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .nbCase small { color:#7a6a4a; margin-left:6px; } .nbCase ul { margin:6px 0 0; padding-left:18px; } .nbCase li { margin:3px 0; font-size:14px; }
 .nbCase a { color:var(--navy); text-decoration:underline; cursor:pointer; } .nbCase li.clue { font-size:13px; }
 .nbCase a.rvLink { font-weight:700; color:var(--seal); } details.nbCase summary { cursor:pointer; font-size:14px; color:#5a4a2a; }
-.doc.review .rvBig { background:#fff4e0; border:1px solid #e0c48a; border-radius:6px; padding:8px 10px; font-size:13.5px; line-height:1.7; } .doc.review .warn { color:var(--seal); font-weight:500; } .doc.review ul { padding-left:18px; margin:6px 0; } .doc.review li { margin:4px 0; } .doc.review details summary { cursor:pointer; color:var(--navy); margin:8px 0; }
+.doc.review .rvBig { background:#fff4e0; border:1px solid #e0c48a; border-radius:6px; padding:8px 10px; font-size:13.5px; line-height:1.7; } .doc.review .warn { color:var(--seal); font-weight:500; } .doc.review .red { color:var(--seal); } .rvCalc { position:sticky; top:-1px; z-index:2; background:#eef2f8; border:1px solid #9aa3b2; border-radius:6px; padding:8px 10px; margin:8px 0; font-size:13.5px; } .rvCalc input { width:150px; font:inherit; padding:3px 6px; border:1px solid #9aa3b2; border-radius:4px; } .rvCalc b { color:var(--navy); margin-left:6px; } .rvQuick { margin-top:6px; display:flex; gap:6px; flex-wrap:wrap; } .rvQuick .btn { padding:3px 10px; font-size:12.5px; } .doc.review ul { padding-left:18px; margin:6px 0; } .doc.review li { margin:4px 0; } .doc.review details summary { cursor:pointer; color:var(--navy); margin:8px 0; }
 .panel .jq { margin:12px 0; display:flex; flex-direction:column; gap:6px; } .panel .row { display:flex; gap:8px; align-items:center; }
 .panel select, .panel input[type=number] { font:inherit; color:#1a1408; padding:6px 8px; border:1px solid #c9b98f; border-radius:6px; background:#fffaf0; }
 .panel .chk { display:flex; gap:6px; align-items:center; font-size:14px; } .panel .dim { color:#7a6a4a; opacity:1; }
@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v227</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v228</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -9463,11 +9463,25 @@ function reviewBid(c) {
   return top >= c.minPrice ? [top, '낙찰가'] : [c.minPrice, '최저가 (유찰)'];
 }
 function reviewHtml(c) {
-  const [bid, bidWhat] = reviewBid(c); const a = Engine.analyze(c.data, bid); const fair = fairBid(c);
-  const base = a.base ? `${ymd(a.base.date)} ${a.base.label} ${a.base.holder || ''}`.trim() : '';
+  const [bid, bidWhat] = reviewBid(c);
   let h = `<div class="doc review"><div class="docHead">돌아보기 · ${c.caseNo}</div><h2>${c.name}</h2>`;
   h += `<p>난이도 <b>${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)}</b> · ${c.risks.length ? c.risks.map(r => RISK_NAME(r) + (r === 'lien' ? (c.lien.real ? ' (진짜)' : ' (허위)') : '')).join(' · ') : '깨끗한 물건'}</p>`;
-  h += `<p class="rvBig">낙찰자가 떠안을 돈(인수액): <b>${fmtWon(a.assumeTotal)}</b><br>적정 입찰가: <b>${fair < c.minPrice ? `입찰 비추천 (적정가 ${fmtWon(fair)} &lt; 최저가 ${fmtWon(c.minPrice)})` : `${fmtWon(fair)} 안팎`}</b></p>`;
+  // v228 (사용자 '내가 낮게 썼으면 어떻게 되는지 위에 낙찰가 적을 수 있는 거'): 낙찰가를 바꾸면 아래가 전부 다시 계산된다
+  h += `<div class="rvCalc"><label>낙찰가가 이랬다면 <input id="rvBid" type="number" min="0" step="1000000" value="${bid}"> 원</label> <b id="rvBidTxt">${fmtWon(bid)}</b><div class="rvQuick"><button class="btn" data-rvb="${c.minPrice}">최저가</button>${fairBid(c) >= c.minPrice ? `<button class="btn" data-rvb="${fairBid(c)}">적정가</button>` : ''}<button class="btn" data-rvb="${bid}">${bidWhat}</button></div></div>`;
+  return h + `<div id="rvBody">${reviewBody(c, bid, bidWhat)}</div></div>`;
+}
+function reviewBind(c) {
+  const inp = $('rvBid'); if (!inp) return; let tm = 0;
+  const go = v => { const b = Math.max(0, Math.round(+v || 0)); $('rvBidTxt').textContent = fmtWon(b); const open = [...document.querySelectorAll('#rvBody details')].map(d => d.open); $('rvBody').innerHTML = b ? reviewBody(c, b, '입력한 낙찰가') : '<p class="dim">낙찰가를 넣어 보세요.</p>'; document.querySelectorAll('#rvBody details').forEach((d, i) => { if (open[i]) d.open = true; }); };
+  inp.oninput = () => { clearTimeout(tm); tm = setTimeout(() => go(inp.value), 200); };
+  document.querySelectorAll('[data-rvb]').forEach(btn => btn.onclick = () => { inp.value = btn.dataset.rvb; go(inp.value); Sound.play('click'); });
+}
+function reviewBody(c, bid, bidWhat) {
+  const a = Engine.analyze(c.data, bid); const fair = fairBid(c);
+  const base = a.base ? `${ymd(a.base.date)} ${a.base.label} ${a.base.holder || ''}`.trim() : '';
+  const dv0 = Generator.disposalValue(c), fine0 = c.illegal ? c.illegal.fine : 0, cost = bid + a.assumeTotal + fine0;
+  let h = `<p class="rvBig">${fmtWon(bid)}에 낙찰받으면 떠안을 돈(인수액): <b>${fmtWon(a.assumeTotal)}</b><br>낙찰가 + 인수액${fine0 ? ' + 이행강제금' : ''} = <b>${fmtWon(cost)}</b> <small>(처분가치 ${fmtWon(dv0)}보다 ${cost <= dv0 ? `${fmtWon(dv0 - cost)} 싸다` : `<span class="red">${fmtWon(cost - dv0)} 비싸다</span>`}. 세금·수리·이자는 따로)</small><br>적정 입찰가: <b>${fair < c.minPrice ? `입찰 비추천 (적정가 ${fmtWon(fair)} &lt; 최저가 ${fmtWon(c.minPrice)})` : `${fmtWon(fair)} 안팎`}</b></p>`;
+  if (bid < c.minPrice) h += `<p class="warn">최저가 ${fmtWon(c.minPrice)}보다 낮아서 실제로는 쓸 수 없는 금액이다.</p>`;
   // 1. 말소기준
   h += `<h3>1. 말소기준권리 찾기</h3><p>${base ? `<b>${base}</b>` : '<b>없음</b> (말소기준이 될 권리가 없어서 모든 권리가 그대로 남는다)'}</p><p class="small">근저당·가압류·압류·담보가등기·경매개시결정 등기(배당요구한 선순위 전세권 포함) 중 가장 빠른 것이 말소기준이다. 이보다 앞선 권리는 낙찰자가 떠안고, 뒤의 권리는 매각으로 모두 지워진다.${c.risks.includes('daewi') ? ' 이 물건은 1순위 근저당이 대위변제로 말소돼 말소기준이 뒤로 밀렸다.' : ''}</p>`;
   // 2. 등기
@@ -9497,11 +9511,15 @@ function reviewHtml(c) {
   }
   for (const r of c.risks) if (TRAP_WHY[r]) h += `<p class="small">📘 ${TRAP_WHY[r]}</p>`;
   // 4. 인수액
-  h += `<h3>4. 인수액 합계</h3><p><b>${fmtWon(a.assumeTotal)}</b> = 임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)}${a.assumeOther ? ` + 가등기·가처분 정리 ${fmtWon(a.assumeOther)}` : ''}</p><p class="small">${bidWhat} ${fmtWon(bid)} 기준이다. 배당액은 낙찰가에 따라 조금씩 달라진다.</p>`;
+  h += `<h3>4. 인수액 합계</h3><p><b>${fmtWon(a.assumeTotal)}</b> = 임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)}${a.assumeOther ? ` + 가등기·가처분 정리 ${fmtWon(a.assumeOther)}` : ''}</p><p class="small">${bidWhat} ${fmtWon(bid)} 기준이다.</p>`;
+  // 낙찰가에 따라 인수액이 바뀌는 물건 (대항력 있는 임차인이 배당을 덜 받을 때): 어디부터 안 바뀌는지 알려 준다
+  const hiA = Engine.analyze(c.data, Math.max(bid, c.market * 2)).assumeTotal, loA = Engine.analyze(c.data, c.minPrice).assumeTotal;
+  if (loA !== hiA) { let edge = c.minPrice; for (let x = Math.ceil(c.minPrice / 1e6) * 1e6; x <= c.market * 2; x += 1e6) if (Engine.analyze(c.data, x).assumeTotal === hiA) { edge = x; break; }
+    h += `<p class="small">📘 이 물건은 낙찰가가 낮을수록 대항력 있는 임차인이 배당을 덜 받아서, 못 받은 만큼 낙찰자가 더 떠안는다. 최저가 ${fmtWon(c.minPrice)}이면 인수액 ${fmtWon(loA)}, 약 ${fmtWon(edge)} 이상이면 ${fmtWon(hiA)}에서 더 줄지 않는다.${a.tenants.some(t => t.small) ? ' 소액임차인 최우선변제는 낙찰가의 절반까지만 먼저 받기 때문이다.' : ''}</p>`; }
   // 5. 적정 입찰가
   const dv = Generator.disposalValue(c), fine = c.illegal ? c.illegal.fine : 0;
   const dvWhy = c.share ? `시세 ${fmtWon(c.market)} × 지분 ${c.share.num}/${c.share.den} × 0.7. 지분만 사면 혼자 쓰지도 팔지도 못해 30% 깎는다.` : c.super ? `시세 ${fmtWon(c.market)} × 0.6. 땅 위 남의 건물에 법정지상권이 생길 수 있어 땅을 마음대로 못 쓴다.` : c.tomb ? `시세 ${fmtWon(c.market)} × 0.7. 분묘 자리는 못 쓴다.` : c.lien && c.lien.real ? `시세 ${fmtWon(c.market)} − 유치권 ${fmtWon(c.lien.amount)}. 진짜 유치권이라 공사대금을 물어 줘야 집을 넘겨받는다.` : `시세 ${fmtWon(c.market)} 그대로.${c.lien ? ' 유치권 신고는 허위라서 빼지 않는다.' : ''}`;
-  h += `<h3>5. 적정 입찰가</h3><p class="small">처분가치: ${dvWhy}${fine ? ` 이행강제금 ${fmtWon(fine)}은 ${c.illegal.what} 때문이다.` : ''}</p><p>(처분가치 ${fmtWon(dv)} − 인수액 ${fmtWon(a.assumeTotal)}${fine ? ` − 이행강제금 ${fmtWon(fine)}` : ''}) × 0.85 = <b>${fmtWon(fair)}</b></p><p class="small">0.85는 부대비용·수리·금융비용 약 8%와 목표 수익 7%를 뺀 것이다. 최저가는 ${fmtWon(c.minPrice)}.</p>`;
+  h += `<h3>5. 적정 입찰가</h3><p class="small">처분가치: ${dvWhy}${fine ? ` 이행강제금 ${fmtWon(fine)}은 ${c.illegal.what} 때문이다.` : ''}</p><p>(처분가치 ${fmtWon(dv)} − 인수액 ${fmtWon(loA)}${fine ? ` − 이행강제금 ${fmtWon(fine)}` : ''}) × 0.85 = <b>${fmtWon(fair)}</b></p><p class="small">${loA !== a.assumeTotal ? `여기 인수액은 최저가로 낙찰됐을 때(${fmtWon(loA)}) 기준이다. ` : ''}0.85는 부대비용·수리·금융비용 약 8%와 목표 수익 7%를 뺀 것이다. 최저가는 ${fmtWon(c.minPrice)}.</p>`;
   h += `<details><summary>배당표 보기</summary><table class="rt"><tr><th>순위</th><th>채권자</th><th>기준일</th><th>채권액</th><th>배당액</th></tr>${a.distribution.map((d, i) => `<tr><td>${i + 1}</td><td>${d.label}${d.note ? ` <small>(${d.note})</small>` : ''}</td><td>${ymd(d.date)}</td><td class="num">${fmtWon(d.claim)}</td><td class="num">${fmtWon(d.paid)}</td></tr>`).join('')}<tr><td colspan="4">잉여금 (소유자 반환)</td><td class="num">${fmtWon(a.surplus)}</td></tr></table></details>`;
   // 내 판단 · 놓친 곳
   const j = State.judgment[c.id];
@@ -9629,7 +9647,7 @@ const Notebook = {
     else if (this.tab === 2) body.innerHTML = this.judgeHtml();
     else body.innerHTML = this.missedHtml();
     body.querySelectorAll('[data-doc]').forEach(a => a.onclick = () => { const d = State.docs.find(x => x.id === +a.dataset.doc); this.toggle(false); DocViewer.show(d.html, { title: d.title, toNotebook: false }); });
-    body.querySelectorAll('[data-review]').forEach(a => a.onclick = () => { const c = nbCase(a.dataset.review); if (!c || !caseOver(c)) return; this.toggle(false); DocViewer.show(reviewHtml(c), { title: `돌아보기 · ${c.name}`, toNotebook: false }); });
+    body.querySelectorAll('[data-review]').forEach(a => a.onclick = () => { const c = nbCase(a.dataset.review); if (!c || !caseOver(c)) return; this.toggle(false); DocViewer.show(reviewHtml(c), { title: `돌아보기 · ${c.name}`, toNotebook: false }); reviewBind(c); });
     body.querySelectorAll('[data-info]').forEach(a => a.onclick = () => { const c = caseById(a.dataset.info); if (!c) return; this.toggle(false); DocViewer.show(docInfo(c), { title: `물건 기본정보 · ${c.name}`, toNotebook: false }); });
     body.querySelectorAll('[data-both]').forEach(a => a.onclick = () => { const id = a.dataset.both; const s = State.docs.find(x => x.caseId === id && x.kind === 'spec'), v = State.docs.find(x => x.caseId === id && x.kind === 'survey'); this.toggle(false); DocViewer.show(docPair(s.html, v.html), { title: `매각물건명세서 + 현황조사서 · ${caseById(id).name}`, toNotebook: false, wide: true }); });
     if (this.tab === 2) this.bindJudge();

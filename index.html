@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v245</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v246</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3193,11 +3193,10 @@ function checkTrafficFines(c, z) {
     if (signalState(inside, along, Game.t) === 'r' && c.fineCd <= 0) c.redIn = { a: c.a, t: Game.t }; // 빨간불 진입: 나갈 때 정한다
   }
   if (!inside && c.inCross && c.redIn) { /* 교차로를 빠져나갈 때: 우회전은 빨간불에도 된다 (현실처럼, 사용자 2026-10-18 '그냥 우회전했는데 돈 나갔다'). 직진·좌회전·유턴만 신호위반 */
-    let da = c.a - c.redIn.a; da = Math.atan2(Math.sin(da), Math.cos(da)); const right = da > 0.6 && da < 2.4; // 화면 좌표(y 아래)에서 시계 방향 = 오른쪽
-    if (!right && c.fineCd <= 0) { c.fineCd = 6; issueFine('신호위반', FEEL.fineSignal); } c.redIn = null;
+    /* v246 사용자 '차 타고 횡단보도 지나는 거 돈 안 나가게': 교차로(횡단보도) 신호위반 과태료는 안 매긴다 */ c.redIn = null;
   }
   c.inCross = !!inside;
-  if (c.speed > FEEL.carMaxSpeed * 0.62 && c.fineCd <= 0 && Game.decor.some(w => Math.hypot(w.x - c.x, w.y - c.y) < 34)) { c.fineCd = 6; issueFine('보행자 근처 과속', FEEL.fineSpeed); }
+  if (c.speed > FEEL.carMaxSpeed * 0.62 && c.fineCd <= 0 && !nearestCrossing(z, c.x, c.y, 4) && Game.decor.some(w => Math.hypot(w.x - c.x, w.y - c.y) < 34)) { c.fineCd = 6; issueFine('보행자 근처 과속', FEEL.fineSpeed); }
 }
 function issueFine(why, amt) {
   Mine.charge(amt, `과태료 (${why})`);
@@ -7152,7 +7151,7 @@ function updateDecor(dt) {
       const c = Game.car;
       /* 차 몸통(11×6)에 2px만 더한 칸 + 차가 그 사람 쪽으로 가고 있을 때만. 예전엔 14×9로 넓어서 옆을 지나가는 사람도 치인 걸로 쳤다 (사용자 2026-10-18 '차 안 박았는데 돈 냈다', 횡단보도 7km/h) */
       if (pointInCar(w.x, w.y, c.x, c.y, c.a, 13, 8) && (w.x - c.x) * c.vx + (w.y - c.y) * c.vy > 0) {
-        if (c.speed < FEEL.pedFeeSpeed) { /* 기어가듯 닿으면 사람이 비켜서고 차가 멈춘다 (돈 안 냄) */ let nx = w.x - c.x, ny = w.y - c.y; const d = Math.hypot(nx, ny) || 1; w.x += nx / d * 6; w.y += ny / d * 6; w.hurtCd = 1.5; w.ai.t = 1; w.ai.flee = true; c.vx *= 0.2; c.vy *= 0.2; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1; if (!c.pedWarnT || Game.t - c.pedWarnT > 4) { c.pedWarnT = Game.t; Sound.play('horn'); Toast.show('앗, 사람이 지나간다! 천천히 가요.'); } continue; }
+        if (c.speed < FEEL.pedFeeSpeed || nearestCrossing(Game.zone, w.x, w.y, 4)) { /* v246 횡단보도(교차로 둘레)에선 속도와 상관없이 사람이 비켜서고 돈 안 냄 (사용자 2026-10-18 '차 타고 횡단보도 지나는 거 돈 안 나가게'). 기어가듯 닿으면 사람이 비켜서고 차가 멈춘다 (돈 안 냄) */ let nx = w.x - c.x, ny = w.y - c.y; const d = Math.hypot(nx, ny) || 1; w.x += nx / d * 6; w.y += ny / d * 6; w.hurtCd = 1.5; w.ai.t = 1; w.ai.flee = true; c.vx *= 0.2; c.vy *= 0.2; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1; if (!c.pedWarnT || Game.t - c.pedWarnT > 4) { c.pedWarnT = Game.t; Sound.play('horn'); Toast.show('앗, 사람이 지나간다! 천천히 가요.'); } continue; }
         let nx = w.x - c.x, ny = w.y - c.y; const d = Math.hypot(nx, ny) || 1; nx = nx / d * 0.6 + Math.cos(c.a) * 0.8; ny = ny / d * 0.6 + Math.sin(c.a) * 0.8; const L = Math.hypot(nx, ny) || 1;
         w.x += nx / L * FEEL.pedKnock; w.y += ny / L * FEEL.pedKnock; w.vx = w.vy = 0; w.stun = FEEL.pedStun; w.hurtCd = 3; w.ai.t = 1.5; w.ai.ix = Math.sign(nx) || 1; w.ai.iy = Math.sign(ny); w.ai.flee = true;
         c.vx *= 0.6; c.vy *= 0.6; c.speed = Math.hypot(c.vx, c.vy); c.rock = 1;

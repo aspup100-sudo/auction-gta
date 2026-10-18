@@ -1030,7 +1030,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v247</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v248</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -4809,7 +4809,7 @@ const Net = {
       ws.onopen = () => {
         settled = true; clearTimeout(to); this.hostSeen = performance.now(); this.gotPlayers = false;
         this.setStatus('open', this.mode === 'channel' ? this.chText() : this.host ? '방 준비 완료' : '방에 들어왔어요. 방장이 시작하면 같이 시작해요.');
-        this.send({ t: 'hello', name: this.me, host: this.host, cash: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined }); if (Live.on && Live.ready) Live.announce(); res(true);
+        this.send({ t: 'hello', name: this.me, host: this.host, cash: Live.on ? State.cash : undefined, ea: Live.on ? Live.earnRank() : undefined }); if (Live.on && Live.ready) Live.announce(); res(true);
       };
       ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } this.handle(m); };
       ws.onerror = () => {};
@@ -5038,7 +5038,7 @@ const Net = {
     if (!this.started || !Game.player) return;
     this.posT -= dt; if (this.posT > 0) return; this.posT = 1 / (this.transport === 'ws' ? FEEL.wsPosHz : 8);
     const pl = Game.player, c = Game.car;
-    this.send({ t: 'pos', pal: Profile.get(), pf: Profile.get().pet === 'penguin' || Profile.get().pet2 === 'penguin' ? PET_FAT.lv(PET_FAT.get()) || undefined : undefined, z: Game.zone.id, s: Mine.open_ ? 'mine' : Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, kn: pl.kneelT > performance.now() ? (pl.kneelN | 0) + 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earn() : undefined, ...CarSwap.pos(), ...Punch.pos(), ...MyHome.pos(), ...PetEvo.pos(), ts: Math.round(performance.now()) });
+    this.send({ t: 'pos', pal: Profile.get(), pf: Profile.get().pet === 'penguin' || Profile.get().pet2 === 'penguin' ? PET_FAT.lv(PET_FAT.get()) || undefined : undefined, z: Game.zone.id, s: Mine.open_ ? 'mine' : Game.scene, p: Game.room ? Game.room.place.id : '', x: Math.round(pl.x), y: Math.round(pl.y), tt: Titles.mine() || undefined, d: pl.dir, f: pl.frame, m: pl.moving, dr: !!Game.driving, rd: Ride.with || undefined, bw: pl.bowT > performance.now() ? 1 : undefined, kn: pl.kneelT > performance.now() ? (pl.kneelN | 0) + 1 : undefined, cx: Math.round(c.x), cy: Math.round(c.y), ca: Math.round(c.a * 100) / 100, day: State.day, half: State.half, pn: Live.on ? Live.pnl() : undefined, cs: Live.on ? State.cash : undefined, ea: Live.on ? Live.earnRank() : undefined, ...CarSwap.pos(), ...Punch.pos(), ...MyHome.pos(), ...PetEvo.pos(), ts: Math.round(performance.now()) });
   },
   /* ---- 플레이어끼리 인사 (사용자 요청 2026-10-14: 만나면 상호작용으로 '안녕하세요?') ---- */
   idOf(p) { for (const id in this.players) if (this.players[id] === p) return id; return ''; },
@@ -5577,6 +5577,7 @@ const Live = {
   // 순위 점수 = 경매로 번 돈만 (사용자 2026-10-15 '랭킹은 경매로만 차익 본 사람, 임대수익으로 돈 번 거 누적'): 정산 끝난 물건 손익(§11, 월세 포함) + 보증금 몰수 + 아직 들고 있는 집에서 받은 월세. 카지노·게임·용돈은 안 들어간다
   // v220 번 돈 장부 (사용자 '1억이 기준이 아니라 낙찰·매매로 난 수익이랑 월세가 번 돈'): 편집숍·게임장·카지노·내 집 매매처럼 번 돈에서 쓰고 받은 돈만 더한다
   addXtra(d) { if (this.on && d) this.xtra = Math.round((this.xtra || 0) + d); },
+  earnRank() { return Math.round(Math.min(State.cash, this.earn() + (this.xtra || 0))); }, // v248 사용자 '여기 보이는 수익도 카지노 할 때 쓰는 돈 그 로직이랑 똑같이': 순위 = 번 돈 (Shop.spendable과 같은 계산, 손해면 음수로 둔다)
   earn() { let v = 0; for (const m of Object.values(this.mine || {})) { if (m.done) v += m.profit || 0; else if (m.phase === 'own' && m.asset) v += m.asset.rentTotal || 0; } return v; },
   earnOf(v) { return v && typeof v.earn === 'number' ? v.earn : undefined; },
   // 순위는 지금 가진 돈(현금)으로 (사용자 요청 2026-10-14 '수익 말고 지금 가진 자본을 랭킹에'). 예전 기록·예전 버전은 손익만 있어 시작 자본을 더해 맞춘다
@@ -5751,7 +5752,7 @@ const Live = {
     if (!L.length) return cl + '<div class="al"><span>집 없음</span></div>';
     return cl + L.map(e => `<div class="al"><span>${esc(e.n)} <small>${S[e.s] || e.s}${e.c && this.COND[e.c] ? ' · ' + this.COND[e.c].label : ''}</small></span><b>${f(e.b)}${e.r ? ` <i class="up">월세 ${f(e.r)}</i>` : ''}${e.l ? ` <i class="down">대출 ${f(e.l)}</i>` : ''}</b></div>`).join('');
   },
-  seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { cash: State.cash, pnl: this.pnl(), earn: this.earn(), at: this.now(), as: this.assetSummary() }; return o; },
+  seenOut() { const o = Object.assign({}, this.seen); o[Net.me] = { cash: State.cash, pnl: this.pnl(), earn: this.earnRank(), at: this.now(), as: this.assetSummary() }; return o; },
   announce() { if (!this.on) return; for (const key in this.mine) if (!this.mine[key].done) Net.send({ t: 'lbid', key, bid: this.mine[key].bid, caseNo: this.mine[key].caseId }); Net.send({ t: 'lbook', book: this.bookOut(), seen: this.seenOut() }); if (Net.transport === 'ws') Net.send({ t: 'getbook' }); }, // 중계 서버: 서버가 들고 있는 장부·순위표를 받는다
 
   /* ---- 개찰: 결정적(모두 같은 결과) ---- */
@@ -6109,7 +6110,7 @@ const Live = {
     const here = Object.values(Net.players).filter(p => Net.inGame(p) && p.name && p.name !== Net.me) /* 연결만 있고 게임 밖(제목 화면·앱 내려 둠)이면 접속 아님 (v107) */.map(p => { const c = this.cashOf(p), sv = this.seen[p.name], e = this.earnOf(p); return { name: p.name, cash: c !== undefined ? c : sv ? this.cashOf(sv) : undefined, earn: e !== undefined ? e : this.earnOf(sv), doing: this.doing(p) }; }).filter(r => r.cash !== undefined || r.earn !== undefined);
     const away = Object.entries(this.seen).filter(([n]) => n !== Net.me && !here.some(h => h.name === n)).map(([n, v]) => ({ name: n, cash: this.cashOf(v), earn: this.earnOf(v), away: true })).filter(r => r.cash !== undefined || r.earn !== undefined); // 전에 만난 사람(마지막으로 본 기록)
     const k = r => r.earn !== undefined ? r.earn : -1e15;
-    return [{ name: Net.me, cash: State.cash, earn: this.earn(), me: true, doing: '나' }, ...here, ...away].sort((a, b) => k(b) - k(a));
+    return [{ name: Net.me, cash: State.cash, earn: this.earnRank(), me: true, doing: '나' }, ...here, ...away].sort((a, b) => k(b) - k(a));
   },
   earnTxt(v) { return v === undefined ? '기록 없음' : (v > 0 ? '+' : v < 0 ? '−' : '') + fmtWon(Math.abs(v)); },
   rankCls(v) { return v === undefined ? 'dim' : v > 0 ? 'up' : v < 0 ? 'down' : ''; }, // 경매로 벌었으면 초록, 잃었으면 빨강
@@ -6144,7 +6145,7 @@ const Live = {
     const cls = v => this.rankCls(v); // .plus는 현금 팝업 애니메이션 클래스라 피한다
     const st = { open: '연결됨', connecting: '연결 중', lost: '다시 연결 중', error: '오류' }[Net.status] || Net.status;
     const on = this.online();
-    return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · 접속 ${1 + on.length}명</span><span class="lvSub">경매 차익 + 월세 누적 순위 · 카지노·게임·용돈은 안 쳐요 · 내 현금 ${fmtWon(State.cash)} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
+    return `<div class="lvHead"><span class="lvCh">채널 ${this.ch}</span><span class="lvPill ${Net.status === 'open' ? 'on' : ''}">${st} · 접속 ${1 + on.length}명</span><span class="lvSub">번 돈 순위 (카지노에서 쓰는 번 돈과 같아요: 경매 수익 + 월세 + 카지노·게임·편집숍) · 내 현금 ${fmtWon(State.cash)} · 1주 = 실제 ${FEEL.liveWeekMin}분</span></div>
       <table class="lvRank">${rows.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${r.away ? 'away' : ''}${RankWin.sel === r.name ? ' sel' : ''}" data-who="${esc(r.name)}"><td class="rk"><span class="md r${i + 1}">${i + 1}</span></td><td class="nm">${esc(r.name)}${Titles.badge(r.name, Titles.ttOf(r.name))}${r.me ? ' <small>나</small>' : r.away ? ' <small>접속 안 함</small>' : r.doing ? ` <small>${this.onDot(r.doing)}${esc(r.doing)}</small>` : ''}</td><td class="pn ${cls(r.earn)}">${f(r.earn)}</td></tr>${RankWin.sel === r.name ? `<tr class="lvAs"><td colspan="3">${this.assetCard(r.name, r.cash)}</td></tr>` : ''}`).join('')}</table>
       <div class="lvFoot">사람을 누르면 현금과 가진 집·대출이 보여요</div>
       ${all.length > rows.length ? `<div class="lvFoot">외 ${all.length - rows.length}명</div>` : ''}

@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v228</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v229</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -16860,7 +16860,7 @@ const Instance = {
   $('btnNote').onclick = () => Notebook.toggle();
   $('minimap').onclick = () => SeoulMap.toggle(true);
   $('radar').onclick = () => { Sound.init(); if (Game.scene !== 'zone') { SeoulMap.toggle(true); return; } if (Game.driving && !CarSwap.stolen()) { ZoneMap.pickOpen(); return; } /* v225: 운전 중엔 지도를 누르면 목적지 다시 고르기 (아래 내비는 없앴다) */ ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; }; // 폰에선 이 레이더가 유일한 지도 버튼: 동네 밖이면 서울 지도
-  $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
+  $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap') { const r = $('zoneCanvas').getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) { ZoneMap.click(e); return; } } /* v229: PC 마우스는 pointer capture 때문에 click이 지도 그림이 아니라 #zoneMap으로 와서, 장소를 눌러도 고르지 않고 닫혔다 (사용자 '이거 아직 안 고쳐진 거 같다') */ if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
   // 지도 탭: 동네 지도 ↔ 서울 전체 (한 지도처럼; 사용자 2026-10-14)
   document.querySelectorAll('.mapTabs .btn[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); Sound.init(); if (b.dataset.go === 'seoul') { ZoneMap.toggle(false); SeoulMap.toggle(true); } else { if (Game.scene !== 'zone') { Toast.show('건물 밖에서만 동네 지도를 볼 수 있어요.'); return; } SeoulMap.toggle(false); ZoneMap.toggle(true); } });
   $('zoneCanvas').addEventListener('click', e => { if (!ZoneMap.dragged) ZoneMap.click(e); });

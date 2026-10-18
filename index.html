@@ -284,6 +284,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .touchOn #btnChat { display:none !important; } /* 폰은 터치 채팅 버튼 */
 .touchOn #radar { top:12px; right:16px; width:120px; height:120px; }
 #stick { position:absolute; left:24px; bottom:24px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.2); pointer-events:auto; }
+#stick::before, .mnJoy::before, .pbStick::before { content:''; position:absolute; inset:-40px; border-radius:50%; } /* 조이스틱 둘레를 살짝 벗어나 눌러도 그 자리에서 움직이게: 안 보이는 터치 영역 (사용자 2026-10-18). 뒤에 오는 버튼들이 위라 버튼은 그대로 눌린다 */ .layoutEdit #stick::before { inset:0; }
 #knob { position:absolute; left:35px; top:35px; width:50px; height:50px; border-radius:50%; background:rgba(205,174,112,.6); }
 #tAct { position:absolute; right:24px; bottom:36px; width:84px; height:84px; border-radius:50%; background:rgba(205,174,112,.75); color:#1a1408; font-weight:700; border:none; pointer-events:auto; } #tAct { padding:6px; line-height:1.15; word-break:keep-all; overflow-wrap:normal; white-space:normal; } #tAct.long { font-size:12px; } .short #tAct.long { font-size:11px; } /* v218: '차 스킨 구 / 경'처럼 낱글자가 떨어지지 않게 */
 .touchOn #roadSign { bottom:140px; }
@@ -1030,7 +1031,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v248</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v249</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>

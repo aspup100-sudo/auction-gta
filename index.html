@@ -98,6 +98,8 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #hudCash.down { color:#ff6a50; }
 #hudTime { position:absolute; top:188px; right:16px; font:600 15px var(--ui); color:#fff; text-shadow:0 1px 0 #000, 0 0 4px #000; }
 #hudTime.flip { animation:flip .5s ease-out; }
+#tgtChip { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom, 0px) + 6px); transform:translateX(-50%); z-index:10000; pointer-events:none; background:rgba(12,14,20,.82); color:#ffd76a; font:700 13px var(--ui); padding:5px 12px; border-radius:14px; border:1px solid rgba(255,215,106,.45); white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+#tgtChip.hurry { color:#fff; background:rgba(170,30,30,.9); border-color:#ff8a8a; }
 @keyframes flip { 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
 body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 켠다 */
 #pager { position:absolute; top:12px; left:12px; width:min(330px, 60vw); background:#9fb08a; border:3px solid #2b2f2a; border-radius:8px; padding:6px 8px; box-shadow:0 3px 0 #000; font:500 12.5px/1.5 var(--ui); color:#1f2b18; }
@@ -984,6 +986,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div class="stMain"><div class="stList" id="stList"></div><div class="stBody" id="stBody"></div></div>
 </div></div>
 <div id="rotate"><div class="ph"></div><b>폰을 가로로 돌려 주세요</b><small>이 게임은 가로 화면에 맞춰져 있어요</small></div>
+<div id="tgtChip" hidden></div>
 <div id="hud">
   <div id="pager"><div id="pagerText"></div></div>
   <div id="tutor"></div>
@@ -1027,7 +1030,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v246</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v247</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5553,9 +5556,17 @@ const Live = {
   // 하루 안의 시계: 9:00 → 18:00
   clock() { const f = (this.now() % this.dayMs()) / this.dayMs(); const m = 9 * 60 + Math.floor(f * 9 * 60); const h = Math.floor(m / 60) % 12 || 12; return `${h}:${String(m % 60).padStart(2, '0')}`; },
   hudText() { return `${mdText(this.today())} ${this.hudText0()}`; },
+  /* v247 사용자 '내가 하려고 하는 물건 입찰 시간 얼마나 남았는지 알 수 있었으면': 노리는 물건(State.target, 없으면 내가 입찰한 물건) 남은 시간 */
+  tgtCase() { const L = State.week && State.week.cases ? State.week.cases.filter(c => c.live && !c.closed) : []; let c = L.find(c => c.id === State.target); if (c) return c;
+    return L.filter(c => { const m = this.mine[c.live.key]; return m && !m.opened && !m.done; }).sort((a, b) => a.live.tEnd - b.live.tEnd)[0] || null; },
+  tgtInfo() { const c = this.tgtCase(); if (!c) return null; const m = this.mine[c.live.key], nm = c.name.split(' ').slice(0, 2).join(' ');
+    if (m && !m.opened && !m.done) return { c, ms: this.left(c), text: `${nm} · 입찰함 · 개찰까지 ${this.mmss(this.left(c))}` };
+    if (this.isDday(c)) return { c, ms: this.left(c), text: `${nm} · 오늘 입찰 · 마감까지 ${this.mmss(this.left(c))}` };
+    return { c, ms: 1e9, text: `${nm} · 입찰일까지 ${this.mmss(this.untilDday(c))}` }; },
   hudText0() {
     const live = State.week.cases.filter(c => c.live && !c.closed);
     const pw = this.pending(); if (pw) return pw.phase === 'forced' ? `${this.clock()} · 강제집행 ${this.mmss(Math.max(0, pw.forcedUntil - this.now()))}` : pw.phase === 'evict' ? `${this.clock()} · 명도 중 · 현장으로` : `${this.clock()} · 잔금 기한 ${this.mmss(this.payLeft(pw))} · ${this.payWhere(pw)}`;
+    const T = this.tgtInfo(); if (T) return `${this.clock()} · ${T.text}`;
     const open = live.filter(c => this.isDday(c)).sort((a, b) => a.live.tEnd - b.live.tEnd)[0];
     if (open) return `${this.clock()} · ${open.name.split(' ')[0]} 입찰 중 · 개찰 ${this.mmss(this.left(open))}`;
     const nx = live.sort((a, b) => this.untilDday(a) - this.untilDday(b))[0];
@@ -17604,6 +17615,7 @@ const Instance = {
     const cv = box.querySelector('canvas'); const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = false; cx.drawImage(Sprites.portrait('player'), 0, 0);
   });
   document.addEventListener('click', e => { const b = e.target.closest('.profileBox button'); if (!b) return; if (b.dataset.reset) Profile.reset(); else if (b.dataset.off) Profile.set(b.dataset.off, null); else Profile.set(b.dataset.k, b.dataset.c); Sound.play('tick'); drawProfile(); });
+  setInterval(() => { const el = $('tgtChip'); if (!el) return; const T = Live.on && (Game.formOpen || Game.scene !== 'zone') ? Live.tgtInfo() : null; /* v247 카지노·게임장 같은 창 위에서도 노리는 물건 남은 시간 */ el.hidden = !T; if (T) { const s = '⏰ ' + T.text; if (el.textContent !== s) el.textContent = s; el.classList.toggle('hurry', T.ms < 60000); } }, 500);
   Shop.ungift(); Profile.redraw = drawProfile; Profile.apply(); drawProfile();
   $('btnProfile').onclick = () => { const el = $('profileTitle'); el.hidden = !el.hidden; Sound.play('paper'); };
   // 채널 기록 지우기: 한 번 더 묻는다 (confirm 대신 버튼 교체; 상태 글이 다시 그려져도 되게 위임)

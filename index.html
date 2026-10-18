@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v239</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v240</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -10429,7 +10429,7 @@ const Pets = {
   // 그릴 목록에 넣을 펫들: 나(걸을 때) + 보이는 친구(걷는 중이고 펫이 있으면)
   actors(c, vis, t) {
     this.extra = []; const out = [], k = this.mine(), P = Game.player; if (typeof Prints !== 'undefined') Prints.watch(c); if (typeof ShopPromo !== 'undefined') ShopPromo.step();
-    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { out.push(this.actor(c, 'me', k, P.x, P.y, t, this.mineN)); if (this.mineK2) out.push(this.second(c, 'me', this.mineK2, P.x, P.y, t, this.mineN2)); }
+    if (k && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) { out.push(this.actor(c, 'me', k, P.x, P.y, t, this.mineN)); if (this.mineK2) out.push(this.second(c, 'me', this.mineK2, P.x, P.y, t, this.mineN2)); this.romance(c, t); }
     for (const { p } of vis) { const pk = p.pal && p.pal.pet; if (!pk || p.rd || (p.dr && p.s === 'zone')) continue; out.push(this.actor(c, 'f:' + p.name, pk, p.x, p.y, t, String(p.pal.petName || '').slice(0, 10))); if (p.pal.pet2) out.push(this.second(c, 'f:' + p.name, p.pal.pet2, p.x, p.y, t, String(p.pal.petName2 || '').slice(0, 10))); }
     if (typeof PetBattle !== 'undefined') PetBattle.actors(c, t, out); // 트레이너 펫 · 투닥투닥
     if (typeof PetRage !== 'undefined') PetRage.extras(c, out);
@@ -10458,7 +10458,7 @@ const Pets = {
     const CB = k === 'croc' ? this.crocBird(c, s, idle, t) : null; if (k === 'snowman') this.melt(c, s, idle, t); // v234 악어새 입 청소 · 녹는 올라푸
     if (k === 'buddy') { const B = this.buddy(c, s, k, key, ox, oy, t, n, idle); if (B) return B; }
     if (k === 'kid') { const K = this.noona(c, s, k, ox, oy, t, n, idle); if (K) return K; }
-    if (k === 'gf' || k === 'bf') { const L = this.lover(c, s, k, ox, oy, t, n, idle); if (L) return L; }
+    if (k === 'gf' || k === 'bf') { const pair = (key === 'me' || key === 'me#2') && ((this.mineK === 'gf' && this.mineK2 === 'bf') || (this.mineK === 'bf' && this.mineK2 === 'gf')), L = this.lover(c, s, k, ox, oy, t, n, idle, pair && (key === 'me' ? this.inLove() : !this.inLove())); if (L) return L; } // v239 둘이 같이면: 사랑에 빠지기 전엔 둘째가 첫째한테 뽀뽀 안 하고, 빠진 뒤엔 첫째가 주인 대신 둘째랑 (둘째는 첫째를 따라다녀서 ox,oy = 첫째)
     if (k === 'monkey') { if (s.ox == null || Math.hypot(ox - s.ox, oy - s.oy) > 0.3) { s.oStill = t; if (s.ox != null && Math.abs(ox - s.ox) > 0.3) s.face = ox > s.ox ? 1 : -1; } s.ox = ox; s.oy = oy; } // 원숭이는 '주인'이 가만히 있은 시간으로 정한다
     if (k === 'monkey' && t - s.oStill < 5) { s.x = ox - 10 * s.face; s.y = oy + 2; s.still = t; return { y: oy + 0.5, d: () => this.draw(c, k, ox, oy - 15, s.face, false, t, n, 0, 'ride') }; } // 주인이 움직이는 동안(그리고 멈춘 뒤 5초까지) 머리 위에 올라타서 다닌다
     if (k === 'dog' && idle > 5 && idle < 6.6) { const a = (idle - 5) / 1.6 * Math.PI * 2, x = ox - Math.cos(a) * 14, y = oy + 2 - Math.sin(a) * 7; return { y, d: () => this.draw(c, k, x, y, Math.sin(a) > 0 ? 1 : -1, true, t, n, 0) }; } // 주인 주위를 한 바퀴
@@ -10469,11 +10469,33 @@ const Pets = {
     return { y: s.y, d: () => { this.draw(c, k, s.x, s.y, s.face, s.moving, t, n, idle, pose); if (roar && typeof Net !== 'undefined') Net.label(c, k === 'trex' ? '크앙!' : '어흥!', s.x, s.y - (k === 'trex' ? 40 : 22)); if (fs && typeof Net !== 'undefined') Net.label(c, fs, s.x, s.y - 24); } };
   },
   // 여친·남친 (사용자 2026-10-16): 주인이 서 있다가 움직이면 "어디가? 같이가~" 하며 뛰어오고, 5초 서 있으면 다가와 뽀뽀 (꽃다발·하트는 그대로)
-  lover(c, s, k, ox, oy, t, n, idle) {
+  // 남친 + 여친 같이 (v239 사용자 '남자친구랑 여자친구 같이 달면 둘이 가면 갈수록 묘한 기류 있게 해서 둘이 사랑에 빠지게'): 같이 다닌 시간만큼 love(0~1)가 차오른다 (8분, 이 기기에 저장)
+  // ~0.35 힐끔힐끔 · ~0.8 볼 빨개지고 어색한 대화·작은 하트 · 0.8 고백 → 사랑에 빠짐 (그 뒤로 둘이 뽀뽀, 주인한테는 안 함)
+  love: null, LOVE_TALK: [['오늘따라… 좀 멋있네?', '어? 너, 너도… 예뻐'], ['우리 자꾸 눈 마주친다?', '그, 그러게…'], ['손 시렵지 않아?', '…조금?'], ['주인님 몰래 산책 갈래?', '…응 좋아'], ['너 향수 바꿨어?', '어떻게 알았어…?']], LOVE_SAY: [['사랑해♥', '나도♥'], ['우리 평생 같이 다니자', '약속♥'], ['너밖에 없어', '♥♥♥']],
+  inLove() { return this.love != null && this.love >= 0.8; },
+  romance(c, t) {
+    const a = this.mineK, b = this.mineK2; if (!((a === 'gf' && b === 'bf') || (a === 'bf' && b === 'gf'))) { this.lt = null; return; }
+    const s1 = this.st.me, s2 = this.st['me#2']; if (!s1 || !s2) return;
+    if (this.love == null) this.love = +Store.get('love239', 0) || 0;
+    const dt = this.lt != null ? Math.min(0.1, Math.max(0, t - this.lt)) : 0; this.lt = t; const L0 = this.love; this.love = Math.min(1, L0 + dt / 480);
+    if ((this.svT = (this.svT || 0) + dt) > 5) { this.svT = 0; Store.set('love239', this.love); }
+    if (L0 < 0.8 && this.love >= 0.8) { this.conf = t; Store.set('love239', this.love); if (typeof HUD !== 'undefined') setTimeout(() => HUD.page('💘 남친이랑 여친이 사랑에 빠졌어요! 이제 둘이 뽀뽀해요.', '알림'), 3200); }
+    const L = this.love, g = a === 'gf' ? s1 : s2, m = a === 'gf' ? s2 : s1, X = this.extra;
+    if (this.conf != null && t - this.conf < 4.5) { const u = t - this.conf; // 고백: 남친이 먼저, 여친이 대답, 큰 하트
+      if (u < 2) X.push({ top: 1, y: m.y + 60, d: () => Net.bubble(c, '나… 너 좋아해!', m.x, m.y - 30) }); else X.push({ top: 1, y: g.y + 60, d: () => Net.bubble(c, '나도… 좋아♥', g.x, g.y - 30) });
+      if (u > 2) { const q = (u - 2) / 2.5; X.push({ top: 1, y: g.y + 60, d: () => { this.heart(c, (g.x + m.x) / 2, (g.y + m.y) / 2 - 22 - q * 14, 1 - q * 0.5, 1.6 + q * 1.2); for (let i = 0; i < 6; i++) { const aa = i / 6 * 7 + u * 2; this.heart(c, (g.x + m.x) / 2 + Math.cos(aa) * (6 + q * 16), (g.y + m.y) / 2 - 20 + Math.sin(aa) * (4 + q * 10), 1 - q, 0.6); } } }); }
+      return; }
+    if (L >= 0.35) X.push({ y: Math.max(g.y, m.y) + 0.5, d: () => { for (const s of [g, m]) { c.fillStyle = `rgba(255,110,150,${(0.45 + Math.min(0.45, (L - 0.35))).toFixed(2)})`; c.fillRect(Math.round(s.x + (s.face || 1) * 2) - 1, Math.round(s.y) - 9, 2, 1); } } }); // 볼 빨개짐
+    if (L >= 0.8 || (L >= 0.35 && Math.sin(t * 0.9) > 0.6)) { const ph = (t * 0.6) % 1, hx = (g.x + m.x) / 2 + Math.sin(t * 2) * 3, hy = Math.min(g.y, m.y) - 20 - ph * 12; X.push({ top: 1, y: g.y + 60, d: () => this.heart(c, hx, hy, (1 - ph) * (L >= 0.8 ? 0.95 : 0.6), L >= 0.8 ? 0.8 : 0.55) }); } // 둥실 하트
+    if (this.talkT == null || t < this.talkT - 30) this.talkT = t + 6;
+    if (t > this.talkT) { this.talkT = t + 9 + Math.random() * 5; const P = L < 0.35 ? [['(힐끔)', '(힐끔…)'], ['…', '…'], ['저기…', '응?']] : L < 0.8 ? this.LOVE_TALK : this.LOVE_SAY; this.talk = { t, p: P[Math.floor(Math.random() * P.length)], first: Math.random() < 0.5 ? m : g }; }
+    const T = this.talk; if (T && t - T.t < 3.2) { const u = t - T.t, A1 = T.first, B1 = A1 === g ? m : g; if (u < 1.6) X.push({ top: 1, y: A1.y + 60, d: () => Net.bubble(c, T.p[0], A1.x, A1.y - 30) }); else X.push({ top: 1, y: B1.y + 60, d: () => Net.bubble(c, T.p[1], B1.x, B1.y - 30) }); }
+  },
+  lover(c, s, k, ox, oy, t, n, idle, noKiss) {
     if (s.lx != null && Math.hypot(ox - s.lx, oy - s.ly) > 0.3) { if (t - s.lStill > 1.5 && !(t - s.callT < 4)) s.callT = t; s.lStill = t; } else if (s.lx == null) s.lStill = t;
     s.lx = ox; s.ly = oy;
     const call = t - s.callT < 2.2, ph = (idle - 5) % 14;
-    if (!s.moving && idle > 5 && ph < 3.6) { // 뽀뽀: 1초 다가가고 1.6초 쪽, 1초 돌아간다
+    if (!noKiss && !s.moving && idle > 5 && ph < 3.6) { // 뽀뽀: 1초 다가가고 1.6초 쪽, 1초 돌아간다
       const sd = s.x < ox ? -1 : 1, tx = ox + sd * 7, ty = oy + 1, e = ph < 1 ? ph : ph < 2.6 ? 1 : 3.6 - ph, a = e * e * (3 - 2 * e);
       const x = s.x + (tx - s.x) * a, y = s.y + (ty - s.y) * a, kiss = ph >= 1 && ph < 2.6, face = ph > 2.6 ? sd : -sd;
       return { y, d: () => { this.draw(c, k, x, y, face, !kiss, t, n, kiss ? 0 : idle); if (kiss) { const q = (ph - 1) / 1.6; this.heart(c, ox + sd * 3.5, oy - 21 - q * 10, 1 - q * 0.6, 1.1 + q * 0.6); this.heart(c, ox + sd * 3.5 - 5, oy - 17 - ((q * 1.7) % 1) * 9, 0.7 * (1 - ((q * 1.7) % 1)), 0.7); if (typeof Net !== 'undefined') Net.label(c, '쪽♥', ox + sd * 3.5, oy - 34); } } };
@@ -11455,7 +11477,7 @@ const PetRage = {
       Pets.draw(c, kind, x, y - R.h, s.face, !!s.moving, t, '', 0);
       const top = y - ({ trex: 34, giraffe: 34, elephant: 24 }[kind] || 18) - R.h, sh = R.ph === 'mad' ? Math.sin(t * 40) * 1 : 0;
       c.save(); c.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText('💢', x + 6 + sh, top); c.restore();
-      if (R.ph === 'mad') Net.label(c, '으르렁!', x, top - 9);
+      if (R.ph === 'mad') { if (PET_PEOPLE[kind] || PET_HD[kind]) Net.bubble(c, R.hs || (R.hs = this.pick(['지금 뭐 하시는 거예요!!', '사람을 치고 어딜 가요!!', '눈 똑바로 뜨고 운전하세요!!', '아니 지금 뭐 하시는 거냐고요!!'])), x, y - 30 - R.h); else Net.label(c, '으르렁!', x, top - 9); } // v240 사용자 '펫 사람은 으르렁이 아니라 지금 뭐 하시는 거예요!!'
       if (R.pow) { c.save(); c.globalAlpha = Math.min(1, R.pow.t / 0.15); c.font = '900 9px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2.5; c.strokeStyle = '#5a1a00'; c.strokeText('퍽!', R.pow.x, R.pow.y - (0.3 - R.pow.t) * 20); c.fillStyle = '#ffd84a'; c.fillText('퍽!', R.pow.x, R.pow.y - (0.3 - R.pow.t) * 20); c.restore(); }
     } };
   },

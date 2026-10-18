@@ -1464,8 +1464,8 @@ const Generator = (() => {
     if (opts.useCapital && opts.capital) appraisal = opts.capital * R.U(0.65, 1.7);
     else { const [lo, hi] = APPRAISAL_RANGE[type]; appraisal = R.U(lo, hi) * M * TIER_FACTOR[gu.tier]; }
     appraisal = Math.round(appraisal / 100000) * 100000; // 10만원 단위
-    const failCount = R.weighted([[0, 35], [1, 40], [2, 20], [3, 5]]);
-    const minPrice = Math.floor(appraisal * Math.pow(0.8, failCount) / 1000) * 1000;
+    let failCount = R.weighted([[0, 35], [1, 40], [2, 20], [3, 5]]);
+    let minPrice = Math.floor(appraisal * Math.pow(0.8, failCount) / 1000) * 1000;
     const [aLo, aHi] = AREA_RANGE[type];
     const area = Math.round(R.U(aLo, aHi) * 100) / 100;
 
@@ -1474,6 +1474,10 @@ const Generator = (() => {
     // 시세: 지분이면 전체 물건 기준 시세
     const wholeBase = share ? appraisal * share.den / share.num : appraisal;
     const market = Math.round(wholeBase * R.U(0.95, 1.55) / 100000) * 100000;
+    /* v214 (사용자 2026-10-18 '최저가 4천인데 시세로 사? 이건 아니지'): 하자 없는 물건이 시세보다 한참 싸면 몇 번씩 유찰될 리 없다.
+     * 시세가 감정가의 1.25배 이상이면 신건, 1.1배 이상이면 1번 유찰까지만. 난수는 더 안 써서 다른 값은 그대로다 (opts.oldBids면 예전대로). */
+    const mk2 = !opts.oldBids;
+    if (mk2 && !risks.length) { const r = market / wholeBase, cap = r >= 1.25 ? 0 : r >= 1.1 ? 1 : 3; if (failCount > cap) { failCount = cap; minPrice = Math.floor(appraisal * Math.pow(0.8, failCount) / 1000) * 1000; } }
     const trades = [0, 1, 2].map(i => ({
       date: dateMinus(saleDate, R.RI(20, 330)),
       area: Math.round(area * R.U(0.9, 1.1) * 100) / 100,
@@ -1611,6 +1615,7 @@ const Generator = (() => {
       name: makeName(R, type, dong), area, appraisal, failCount, minPrice, saleDate, market, trades,
       owner, startDate, deadline, risks, critical, stars, share, lien, illegal, heir, super: superRisk, daewi,
       occupant, survey, rumor,
+      ...(mk2 ? { mk2: true } : {}), // v214 경쟁자 입찰 현실화
       data: { deadline, reg, tenants, ...(opts.noSmall ? {} : { small: true }) }, // 엔진 입력 (입찰일 기준 최종 상태). small: 소액임차인 최우선변제 (v199부터 만든 물건)
     };
     c.competition = makeCompetition(R, c, gu);
@@ -1711,8 +1716,24 @@ const Generator = (() => {
       const b = Math.max(c.minPrice * R.U(1.03, 1.15), unit * c.area * R.U(0.80, 0.97));
       bids.push({ name: personName(R), bid: Math.floor(b / 1000) * 1000 });
     }
+    if (c.mk2) return realBids(c, bids, value, data === c.data ? 0 : 1);
     bids.sort((a, b) => b.bid - a.bid);
     return { count: n, bids };
+  }
+  /* v214 경쟁자 입찰 (사용자 2026-10-18): 실제 입찰자는 세금·명도비·이자·수익을 남겨야 해서 시세(인수액 뺀 값)의 70~90%를 쓰고,
+   * 절반쯤은 최저가에 몇 %만 얹어 쓴다(최저가 +2~22%). 남는 게 없으면(값의 93%가 최저가 밑) 아예 안 들어온다.
+   * 최저가가 값보다 한참 싸면 사람이 더 몰린다. 사람 수·이름은 예전 난수 그대로 두고, 금액은 사건번호로 만든 별도 난수로. */
+  function realBids(c, old, value, salt) {
+    let s = 2140 + salt; for (const ch of c.caseNo + ':' + c.appraisal) s = (s * 31 + ch.charCodeAt(0)) >>> 0; const Q = makeRng(s);
+    const gap = value / c.minPrice; let m = old.length + (old.length && gap > 1.6 ? 1 : 0) + (old.length && gap > 2.2 ? 1 : 0); m = Math.min(9, m);
+    const top = value * 0.93, bids = [];
+    for (let i = 0; i < m; i++) {
+      const low = Q.chance(0.45); let b = low ? c.minPrice * Q.U(1.02, 1.22) : value * Q.U(0.70, 0.90); b = Math.min(b, top);
+      const name = i < old.length ? old[i].name : personName(Q);
+      if (b < c.minPrice) { if (value > c.minPrice && Q.chance(0.35)) b = c.minPrice * Q.U(1.0, 1.04); else continue; } /* 남는 게 거의 없어도 낙관적인 사람은 최저가 언저리로 들어온다 */ bids.push({ name, bid: Math.floor(b / 1000) * 1000 });
+    }
+    bids.sort((a, b) => b.bid - a.bid);
+    return { count: bids.length, bids };
   }
 
   /** 이번 주 물건 20~30건 */
@@ -5335,6 +5356,7 @@ const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3, 0.6, 2.5];
 // 자리 0~6은 처음부터 있던 자리라 시각 오프셋(k·W/7)과 구 순서((n·7+k)%4)를 바꾸면 이미 가진 집·낸 입찰표의 사건이 달라진다. 그래서 7은 고정(LIVE_BASE)이고 나중에 더한 자리(7, 8…)는 그 사이 중간 시각에 끼운다.
 const LIVE_TRAPS_FROM = Date.UTC(2026, 9, 15, 6, 50); // v84 배포 직후 (UTC)
 const LIVE_SMALL_FIX = '1:7:1493540'; // 채널 1 신림동 라온아파트 109동 302호
+const LIVE_BIDS_FROM = Date.UTC(2026, 9, 18, 3, 40); // v214 경쟁자 입찰 현실화·유찰 횟수: 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
 const LIVE_SMALL_FROM = Date.UTC(2026, 9, 17, 15, 25); // v199 소액임차인 최우선변제: 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
 /* 채널 달력 (v94, 사용자 2026-10-15 '지금 몇일인지 모르지않아?'): 게임 하루(= 1주/7)가 지나면 달력도 하루 넘어간다.
  * 오늘 = 2025-01-01 + ((LIVE_DATES_FROM 날부터 센 일수 + 60) mod 728) → 배포 시각이 2025-03-02, 2년(2025~2026)을 돌고 처음으로 (약 35시간마다). 이 시각 뒤에 시작한 회차의 매각기일은 그 회차 D-day의 날짜 (전엔 모두 2025-11-11 고정 → 그 회차들은 그대로) */
@@ -5357,7 +5379,7 @@ const Live = {
     const seed = ((this.ch * 1000003 + k * 7919 + n * 104729) ^ 0x3c3c) & 0x7fffffff; const R = makeRng(seed);
     const gu = DRIVE_GUS[(n * LIVE_BASE + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
     const saleDate = cyc.t0 >= LIVE_DATES_FROM ? this.calDate(Math.floor(cyc.t0 / this.dayMs() + 0.01) + 6) : '2025-11-11';
-    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025', noSmall: cyc.t0 < LIVE_SMALL_FROM }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
+    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025', noSmall: cyc.t0 < LIVE_SMALL_FROM, oldBids: cyc.t0 < LIVE_BIDS_FROM }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
     c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
     if (cyc.t0 >= LIVE_TRAPS_FROM) Generator.applyTraps(c); // 정리본 2묶음 함정은 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
     if (this.key(k, n) === LIVE_SMALL_FIX) c.data.small = true; // 신림동 라온아파트 (2025타경30820): 최우선변제 넣기 전에 낙찰된 집이라 계산만 바로잡는다 (경쟁 입찰은 그대로) — 사용자 2026-10-17

@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v232</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v233</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2135,6 +2135,7 @@ const PROFILE_SWATCHES = {
   shirt: ['#2f4f86', '#9b3b3b', '#2f7d4f', '#d9a441', '#6a3fb5', '#e26a9a', '#f1f1f1', '#15151c'],
   pants: ['#3a3a46', '#2b3a6e', '#6b4a2b', '#1c1c22', '#8a8a95', '#5a2b2b'],
 };
+const PAL_FLAGS = ['robot', 'beach', 'mummy', 'space', 'captain', 'fox', 'ogre', 'rapunzel']; // v233 옷 그림 표시 (sprites.js wearables, arena3d human3)
 const PROFILE_LABEL = { hair: '머리', skin: '피부', shirt: '옷', pants: '바지' };
 const Profile = {
   get() { return Store.get('profile', {}); },
@@ -2146,7 +2147,8 @@ const Profile = {
   // v187: 할로윈 옷(뼈·망토·유령) + 모자·머리(Profile.hat). 좀비·프랑켄슈타인·삐에로는 피부·머리색도 바꾼다
   pal(p) { p = p || {}; const r = this.pal0(p), o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit], h = p.hat && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.hat];
     r.bones = r.cape = r.ghost = r.hat = undefined; /* setPal은 이전 팔레트에 덮어쓰니 벗을 때도 키를 꼭 둔다 */
-    if (o && o.pal) { if (o.pal.bones) r.bones = true; if (o.pal.cape) r.cape = o.pal.cape; if (o.pal.ghost) r.ghost = true; }
+    if (o && o.pal) { if (o.pal.bones) r.bones = true; if (o.pal.cape) r.cape = o.pal.cape; if (o.pal.ghost) r.ghost = true; if (o.pal.skin) r.skin = o.pal.skin; if (o.pal.hairC) r.hair = o.pal.hairC; } /* v233: 로봇·미라·초록 괴물·라푼젤은 피부·머리색도 */
+    for (const k of PAL_FLAGS) r[k] = o && o.pal && o.pal[k] || undefined;
     if (h && h.hat) { r.hat = h.hat; if (h.skin) r.skin = h.skin; if (h.hairC) r.hair = h.hairC; }
     return r; },
   pal0(p) { p = p || {}; const base = Sprites.PLAYER_DEFAULT; const o = p.outfit && typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[p.outfit]; const shirt = p.shirt || base.shirt; return { hair: p.hair || base.hair, skin: p.skin || base.skin, shirt: o ? o.pal.shirt : shirt, shirt2: o ? o.pal.shirt2 : shade(shirt, -0.18), pants: o ? o.pal.pants : (p.pants || base.pants), tie: o && o.pal.tie ? o.pal.tie : undefined, dress: o && o.pal.dress || undefined, veil: o && o.pal.veil || undefined, tux: o && o.pal.tux || undefined, camo: o && o.pal.camo || undefined }; },
@@ -2312,8 +2314,30 @@ const Sprites = (() => {
     if (pal.cape) { const C = '#15151c', R = pal.cape; if (side) { P(C, 10, 8, 2, 7); P(R, 10, 8, 1, 6); P(R, 9, 7, 3, 1); } else if (front) { P(R, 4, 7, 1, 2); P(R, 11, 7, 1, 2); P(C, 3, 8, 1, 7); P(C, 12, 8, 1, 7); P(R, 3, 14, 1, 1); P(R, 12, 14, 1, 1); } else { P(C, 4, 8, 8, 7); P(R, 4, 14, 8, 1); P(R, 4, 7, 8, 1); } }
     if (pal.ghost) { const G = '#f6f6fa', S = '#d8d8e4'; P(G, 5, 1, 6, 1); P(G, 4, 2, 8, 12); P(S, 4, 12, 8, 1); for (let i = 0; i < 8; i++) P(G, 4 + i, 14, 1, (i + (arm > 0 ? 1 : 0)) % 2 ? 2 : 1);
       if (side) { P('#1a1a22', 5, 5, 1, 1); P('#1a1a22', 5, 8, 1, 1); } else if (front) { P('#1a1a22', 6, 5, 1, 2); P('#1a1a22', 9, 5, 1, 2); P('#1a1a22', 7, 8, 2, 2); } }
+    /* v233 옷 (사용자 2026-10-18 '로봇 스킨, 해변옷, 한복, 미라, 우주복, 우주복 머리, 선장, 구미호, 슈렉, 라푼젤') */
+    const K = '#15151c';
+    if (pal.robot) { const M = '#b8c2d0', D = '#7a8494', V = '#3ad8ff'; P(D, 4, 1, 8, 7); P(M, 5, 1, 6, 6); P('#ff4a4a', 7, 0, 2, 1);
+      if (side) { P(V, 4, 4, 3, 1); P(D, 9, 3, 1, 2); } else if (front) { P(V, 5, 4, 6, 1); P('#e8f8ff', 6, 4, 1, 1); P(D, 6, 6, 4, 1); P('#ffd040', 6, 9, 1, 1); P('#40ff80', 9, 9, 1, 1); P(D, 7, 10, 2, 1); } else { P(D, 6, 3, 4, 2); P(D, 6, 9, 4, 2); } }
+    if (pal.beach) { const F1 = '#fff4a0', F2 = '#ffffff', F3 = '#ff4a8a'; if (side) { P(F1, 7, 9, 1, 1); P(F3, 8, 11, 1, 1); P(K, 4, 5, 3, 1); } else if (front) { P(F1, 6, 9, 1, 1); P(F2, 9, 10, 1, 1); P(F3, 7, 11, 1, 1); P(F3, 10, 8, 1, 1); P(K, 5, 5, 2, 1); P(K, 9, 5, 2, 1); P(K, 7, 5, 2, 1); } else { P(F1, 6, 9, 1, 1); P(F3, 9, 10, 1, 1); P(F2, 7, 11, 1, 1); } }
+    if (pal.mummy) { const L = '#b8ac90'; P(L, 5, 2, 6, 1); P(L, 5, 4, 1, 1); P(L, 10, 4, 1, 1); P(L, 5, 7, 6, 1); P(L, 5, 9, 6, 1); P(L, 5, 11, 6, 1); P(L, 5, 13, 2, 1); P(L, 9, 13, 2, 1); P(L, 4, 9, 1, 1); P(L, 11, 10, 1, 1);
+      if (front) { P(L, 7, 3, 2, 1); P('#ff4a3a', 6, 5, 1, 1); P('#ff4a3a', 9, 5, 1, 1); } else if (back) { P(L, 5, 5, 6, 1); } }
+    if (pal.space) { const D = '#c8ccd6', B = '#3a6ad8'; if (side) { P(D, 10, 8, 2, 4); P('#ff8a20', 7, 10, 1, 1); } else if (front) { P(B, 6, 9, 4, 1); P('#ff4040', 9, 9, 1, 1); P('#9aa0ac', 5, 11, 6, 1); } else { P(D, 5, 8, 6, 4); P('#9aa0ac', 6, 9, 4, 1); } }
+    if (pal.captain) { const Gd = '#f2c230'; if (side) { P(Gd, 7, 8, 2, 1); P(Gd, 6, 9, 1, 1); P(Gd, 6, 11, 1, 1); } else if (front) { P(Gd, 4, 8, 2, 1); P(Gd, 10, 8, 2, 1); P(Gd, 6, 9, 1, 1); P(Gd, 9, 9, 1, 1); P(Gd, 6, 11, 1, 1); P(Gd, 9, 11, 1, 1); P('#f4f4f4', 7, 8, 2, 3); } else { P(Gd, 4, 8, 2, 1); P(Gd, 10, 8, 2, 1); } }
+    if (pal.fox) { const O = '#f4a040', W = '#fff4e0', Pk = '#ff9aa6';
+      if (side) { P(O, 8, 0, 2, 2); P(Pk, 8, 1, 1, 1); P(O, 11, 9, 3, 4); P(O, 12, 8, 3, 2); P(W, 13, 7, 2, 1); P(O, 11, 12, 4, 2); P(W, 14, 11, 1, 2); }
+      else if (front) { P(O, 4, 0, 2, 2); P(O, 10, 0, 2, 2); P(Pk, 5, 1, 1, 1); P(Pk, 10, 1, 1, 1); P(O, 2, 10, 2, 4); P(W, 2, 9, 2, 1); P(O, 12, 10, 2, 4); P(W, 12, 9, 2, 1); }
+      else { P(O, 4, 0, 2, 2); P(O, 10, 0, 2, 2); for (let i = 0; i < 5; i++) { const x0 = 2 + i * 2.5 | 0; P(O, x0, 8 + Math.abs(2 - i), 3, 6 - Math.abs(2 - i)); P(W, x0, 7 + Math.abs(2 - i), 3, 1); } } }
+    if (pal.ogre) { const G = pal.skin || '#8ab83a', V = '#6a4a2a';
+      if (side) { P(G, 10, 4, 1, 1); P(G, 11, 3, 1, 2); P(V, 8, 8, 2, 4); P('#3a2a1a', 6, 11, 4, 1); }
+      else { P(G, 3, 4, 1, 2); P(G, 2, 3, 1, 2); P(G, 12, 4, 1, 2); P(G, 13, 3, 1, 2); if (front) { P(V, 5, 8, 2, 4); P(V, 9, 8, 2, 4); P('#3a2a1a', 5, 11, 6, 1); } else P(V, 5, 8, 6, 3); } }
+    if (pal.rapunzel) { const H = pal.hair || '#f2d060', Fl = '#ff8ab0';
+      if (side) { P(H, 10, 6, 2, 10); P(Fl, 10, 8, 1, 1); P(Fl, 11, 12, 1, 1); }
+      else if (front) { P(H, 4, 5, 1, 7); P(H, 11, 5, 1, 7); P(H, 12, 12, 2, 4); P(Fl, 4, 7, 1, 1); }
+      else { P(H, 6, 7, 4, 9); P(H, 5, 7, 1, 4); P(H, 10, 7, 1, 4); P(Fl, 7, 9, 1, 1); P(Fl, 8, 12, 1, 1); P(Fl, 7, 14, 1, 1); } }
     const h = pal.hat; if (!h) return;
     const E = '#1b1420';
+    if (h === 'space') { const G = 'rgba(190,225,255,.38)', E2 = 'rgba(255,255,255,.75)'; P(G, 4, 1, 8, 7); P(E2, 5, 0, 6, 1); P(E2, 3, 1, 1, 7); P(E2, 12, 1, 1, 7); P('#ffffff', side ? 5 : 5, 2, 1, 2); P('#d8dce4', 4, 8, 8, 1); return; }
+    if (h === 'captain') { const Wt = '#f4f4f4'; P(Wt, 4, 0, 8, 2); P(Wt, 3, 1, 10, 1); P(K, 4, 2, 8, 1); P('#f2c230', side ? 5 : 7, 1, 2, 1); if (front) P(K, 5, 3, 6, 1); else if (side) P(K, 3, 3, 3, 1); return; }
     if (h === 'crown') { const Gd = '#f2c230', Dk = '#c8941a'; P(Gd, 5, 1, 6, 1); P(Dk, 5, 2, 6, 1); if (side) { P(Gd, 5, 0, 1, 1); P(Gd, 7, 0, 1, 1); P(Gd, 10, 0, 1, 1); P('#e03a3a', 7, 1, 1, 1); } else { P(Gd, 5, 0, 1, 1); P(Gd, 7, 0, 2, 1); P(Gd, 10, 0, 1, 1); P('#e03a3a', 7, 1, 2, 1); P('#3a8ae0', 5, 2, 1, 1); P('#3a8ae0', 10, 2, 1, 1); } }
     else if (h === 'straw') { const Y = '#e8c870', D = '#c8a050'; P(Y, 5, 0, 6, 2); P('#c0392b', 5, 1, 6, 1); P(Y, 3, 2, 10, 1); P(D, 3, 2, 1, 1); P(D, 12, 2, 1, 1); }
     else if (h === 'party') { const Pk = '#ff5a8a', Yl = '#ffd84a'; P(Pk, 6, 2, 4, 1); P(Yl, 7, 2, 1, 1); P(Pk, 7, 1, 2, 1); P(Yl, 8, 1, 1, 1); P('#ffffff', 7, 0, 2, 1); }
@@ -5502,6 +5526,10 @@ const Live = {
     if (sv && !Store.get('fix226i_' + this.ch, false)) { Store.set('fix226i_' + this.ch, true); let back = 0, paid = 0; // v226 한 번만: 위 버그로 한꺼번에 빠진 이자를 돌려주고, 그 때문에 받은 추가 대출부터 갚는다 (경락잔금대출 없이 추가 대출만 있는 집)
       for (const m of Object.values(this.mine)) { const a = m.asset, L = m.loanState || {}; if (!a || m.done || m.phase !== 'own' || (L.bank || 0) + (L.savings || 0) > 0 || !(a.intPaid > 0)) continue; const one = this.monthlyInterest(m), r = Math.max(0, a.intPaid - one); if (!r) continue; a.intPaid -= r; a.intHeld = a.held || 0; const rep = Math.min(m.extraLoan || 0, r); m.extraLoan = (m.extraLoan || 0) - rep; back += r; paid += rep; }
       if (back) { Money.why(`잘못 빠진 대출 이자 ${fmtWon(back)} 돌려받음${paid ? ` (추가 대출 ${fmtWon(paid)} 먼저 갚음)` : ''}`); State.cash += back - paid; setTimeout(() => { this.save(); HUD.page(`이자가 한꺼번에 빠지던 버그가 있었어요. 잘못 빠진 이자 ${fmtWon(back)}을 돌려드렸고${paid ? `, 그 때문에 받은 집 담보 추가 대출 ${fmtWon(paid)}은 그 돈으로 먼저 갚았어요` : ''}.`, '알림'); }, 6800); } }
+    if (Net.me === '에센티아' && !Store.get('gift233t', false)) { Store.set('gift233t', true); /* v233 사용자 2026-10-18 '나한테 거북이 줘': 거북이 펫 선물 (되팔기 막음) */
+      if (!Shop.has('p_turtle')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_turtle'), src: Object.assign({}, w.src || {}, { p_turtle: 'gift' }) }); }
+      const pf = Profile.get(), slot = pf.pet === 'turtle' || pf.pet2 === 'turtle' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'turtle'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
+      setTimeout(() => HUD.page(slot ? '🐢 거북이 선물이에요! 지금 옆에서 따라와요.' : '🐢 거북이 선물이에요! 펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.', '선물'), 7600); }
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('fix218m', false)) { Store.set('fix218m', true); Money.why('석탄 땅굴에서 되찾은 돈 (예전에 캔 땅굴 한도 몫)'); State.cash += 1e7; setTimeout(() => { this.save(); HUD.page('땅굴에서 한도 1천만 원을 채워 캔 돈을 현금으로 돌려드렸어요. 이제부터는 땅굴에서 한도를 채우면 그만큼 현금으로도 돌아와요.', '알림'); }, 6200); } // 사용자 2026-10-18 '빚 천만원 갚고 오면 내 돈 추가돼야 하는 거 아니야, 원래 내 돈이었는데 합의금·수리비로 나간 거잖아', 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
@@ -9767,6 +9795,16 @@ const SHOP_ITEMS = {
     { id: 'c_pumpkin', name: '호박 옷 (할로윈)', new: '2026-10-17', nb: 187, price: 1200e4, pal: { shirt: '#f08a20', shirt2: '#c8601a', pants: '#2a2a1a', tie: '#4a8a30' } },
     { id: 'c_witch', name: '마녀 옷 (할로윈)', new: '2026-10-17', nb: 187, price: 1500e4, pal: { shirt: '#4a2a6a', shirt2: '#ff8a20', pants: '#2a1a3a', dress: '#4a2a6a' } },
     { id: 'c_vamp', name: '드라큘라 망토 (할로윈)', new: '2026-10-17', nb: 187, price: 2000e4, pal: { shirt: '#f4f4f4', shirt2: '#15151c', pants: '#15151c', tie: '#b01a2a', cape: '#b01a2a' } },
+    // v233 (사용자 2026-10-18 '로봇 스킨, 해변옷, 한복, 미라, 우주복, 우주복 머리, 선장 구미호, 슈렉, 라푼젤'). 이름은 패러디만
+    { id: 'c_beach', name: '해변옷 (하와이안 셔츠·선글라스)', new: '2026-10-18', nb: 233, price: 500e4, pal: { shirt: '#ff7a3a', shirt2: '#ff9a5a', pants: '#3ab0e0', beach: true } },
+    { id: 'c_hanbok', name: '한복', new: '2026-10-18', nb: 233, price: 2000e4, pal: { shirt: '#fff0b0', shirt2: '#3a8ad8', pants: '#e84a6a', tie: '#d0303a', dress: '#e84a6a' } },
+    { id: 'c_mummy', name: '미라 붕대', new: '2026-10-18', nb: 233, price: 1500e4, pal: { shirt: '#e6dcc4', shirt2: '#d4c8aa', pants: '#e6dcc4', skin: '#e6dcc4', hairC: '#e6dcc4', mummy: true } },
+    { id: 'c_captain', name: '선장 옷', new: '2026-10-18', nb: 233, price: 2500e4, pal: { shirt: '#1d2a4a', shirt2: '#e0b43a', pants: '#f4f4f4', captain: true } },
+    { id: 'c_robot', name: '로봇 옷', new: '2026-10-18', nb: 233, price: 3000e4, pal: { shirt: '#aeb8c6', shirt2: '#8a94a4', pants: '#8a94a4', skin: '#aeb8c6', hairC: '#7a8494', robot: true } },
+    { id: 'c_ogre', name: '초록 괴물 슈랙', new: '2026-10-18', nb: 233, price: 3000e4, pal: { shirt: '#e8dcb8', shirt2: '#6a4a2a', pants: '#6a4a2a', skin: '#8ab83a', hairC: '#7aa830', ogre: true } },
+    { id: 'c_gumiho', name: '구미호 (꼬리 아홉)', new: '2026-10-18', nb: 233, price: 4000e4, pal: { shirt: '#f6f2ea', shirt2: '#d83a3a', pants: '#f6f2ea', dress: '#f6f2ea', hairC: '#1a1418', fox: true } },
+    { id: 'c_rapunzel', name: '라푼젤 드레스 (긴 머리)', new: '2026-10-18', nb: 233, price: 4000e4, pal: { shirt: '#9a6ad8', shirt2: '#e8c8f0', pants: '#9a6ad8', dress: '#9a6ad8', hairC: '#f2d060', rapunzel: true } },
+    { id: 'c_space', name: '우주복', new: '2026-10-18', nb: 233, price: 5000e4, pal: { shirt: '#f2f4f8', shirt2: '#d0d4dc', pants: '#f2f4f8', space: true } },
   ],
   hat: [ // 모자·머리 (사용자 2026-10-17 '왕관, 밀짚모자, 생일축하 꼬깔, 삐에로 분장 얼굴, 할로윈 모자, 호박머리, 해골 머리, 좀비 머리, 프랑켄슈타인'). 그림은 sprites.js wearables
     { id: 'h_straw', name: '밀짚모자', new: '2026-10-17', nb: 187, price: 300e4, hat: 'straw' },
@@ -9778,6 +9816,8 @@ const SHOP_ITEMS = {
     { id: 'h_zombie', name: '좀비 머리', new: '2026-10-17', nb: 187, price: 2000e4, hat: 'zombie', skin: '#8ab070', hairC: '#3a3a2a' },
     { id: 'h_frank', name: '프랑켄슈타인', new: '2026-10-17', nb: 187, price: 2500e4, hat: 'frank', skin: '#7ab06a', hairC: '#151515' },
     { id: 'h_crown', name: '왕관', new: '2026-10-17', nb: 187, price: 5000e4, hat: 'crown' },
+    { id: 'h_captain', name: '선장 모자', new: '2026-10-18', nb: 233, price: 800e4, hat: 'captain' },
+    { id: 'h_space', name: '우주 헬멧', new: '2026-10-18', nb: 233, price: 3000e4, hat: 'space' },
   ],
   petdeco: [ // 펫 꾸미기 (사용자 2026-10-17 '안경, 목줄, 목도리, 펫 색깔 변경 황금색도'). 데리고 다니는 펫에 단다. 그림은 petdeco.js
     { id: 'd_glasses', name: '동그란 안경', new: '2026-10-17', nb: 187, price: 200e4, pd: 'eye', v: 'glasses' },
@@ -9816,6 +9856,8 @@ const SHOP_ITEMS = {
     { id: 'p_bf', name: '남자친구 (명찰)', price: 1e8, pet: 'bf' },
     { id: 'p_dolphin', name: '돌고래', price: 2e8, pet: 'dolphin' },
     { id: 'p_trex', name: '티라노', price: 5e8, pet: 'trex' },
+    { id: 'p_croc', name: '악어', new: '2026-10-18', nb: 233, price: 6000e4, pet: 'croc' }, // v233 (사용자 2026-10-18 '펫으로 올라프도 만들어 악어도')
+    { id: 'p_snowman', name: '눈사람 올라푸', new: '2026-10-18', nb: 233, price: 1.2e8, pet: 'snowman' },
   ],
   car: [
     { id: 'k_white', name: '흰색', price: 300e4, col: '#f2f2f2' },
@@ -9890,6 +9932,7 @@ const Shop = {
   sell(it) {
     if (this.look) { Toast.show('되파는 것도 건대 편집숍에 직접 가야 해요'); return; }
     if (!this.has(it.id)) return; const src = this.srcOf(it.id);
+    if (src === 'gift') { Sound.play('deny'); Toast.show(`선물 받은 ${it.name}, 되팔 수 없어요.`, 2600); return; }
     if (src && src !== this.here()) { Sound.play('deny'); Toast.show(`${it.name}은 ${this.hereKo(src)}에서 샀어요. 산 곳에서만 되팔 수 있어요.`, 3000); return; }
     if (this.sellArm !== it.id || Date.now() - this.sellArmT > 5000) { this.sellArm = it.id; this.sellArmT = Date.now(); Sound.play('click'); this.render(); return; } // 한 번 더 눌러야 판다
     this.sellArm = null; const p = Profile.get(), got = this.resell(it);
@@ -9967,7 +10010,7 @@ const Shop = {
   },
   // 펫 큰 미리보기 장면 (사용자 2026-10-16 '미리보기에 펫 가졌을 때 나타나는 모습 전부가 안 나타난다'): 게임 속 Pets.actor 동작을 대본으로 다시 보여 준다
   petScene(x, kind, t, mv, idle, moveT) {
-    const big = ['trex', 'giraffe', 'elephant', 'dolphin'].includes(kind), k = big ? 2 : 3, Hw = 80 / k, now = performance.now();
+    const big = ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(kind), k = big ? 2 : 3, Hw = 80 / k, now = performance.now();
     const PX = big ? -Hw + 9 : -15, NX = Hw - 7, petX = big ? (kind === 'trex' ? 4 : 2) : 5; // 나 · 행인 · 펫 자리 (펫 단위 좌표)
     const sh = n => { Sprites.setPal(n === 'me' ? 'shop:me' : n, n === 'me' ? Profile.pal(Profile.get()) : undefined); return Sprites.sheet(n === 'me' ? 'shop:me' : n); };
     const person = (n, X, row, fr, rot) => { x.save(); x.translate(X, 0); if (rot) x.rotate(rot); x.fillStyle = 'rgba(0,0,0,.22)'; if (!rot) { x.beginPath(); x.ellipse(0, 0, 5, 1.8, 0, 0, 7); x.fill(); } x.imageSmoothingEnabled = false; x.drawImage(sh(n), fr * 16, row * 16, 16, 16, -8, -16, 16, 16); x.restore(); };
@@ -10007,7 +10050,7 @@ const Shop = {
     else if (mv) { x.fillStyle = 'rgba(0,0,0,.12)'; const off = (t * 40) % 24; for (let X = -24; X < 184; X += 24) x.fillRect(Math.round(X - off), 92, 10, 2); }
     if (it.ride) { x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); const pal = Profile.pal(Profile.get()); drawRide(x, 0, 0, 0, it.ride, mv ? 80 : 0, pal, it.ride === 'piggy' ? String(Profile.get().rideName || '').slice(0, 10) : ''); x.restore(); return; }
     if (it.pet && !thumb) return this.petScene(x, it.pet, t, mv, idle, this.moveT || 0); // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
-    if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = thumb ? (hd ? 6 : ['trex', 'giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 3 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 8 : 5) : hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin'].includes(it.pet) ? 2 : it.pet === 'beetle' ? 3.5 : ['mouse', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, thumb ? 98 : 96); /* 칸 그림은 더 크게 (뭔지 한눈에) */ x.scale(hd ? k / 2 : k, hd ? k / 2 : k); if (it.pet === 'monkey' && !thumb) { /* 원숭이: 내 캐릭터와 같이 — 걸을 땐 머리 위에 타고, 서 있으면 내려와 바나나 */ Sprites.setPal('shop:me', Profile.pal(Profile.get())); const sh = Sprites.sheet('shop:me'); x.imageSmoothingEnabled = false; if (mv) { x.drawImage(sh, (1 + Math.floor(t * 8) % 4) * 16, 32, 16, 16, -8, -16, 16, 16); Pets.draw(x, 'monkey', 0, -15, 1, false, t, '', 0, 'ride'); } else { x.drawImage(sh, 0, 0, 16, 16, -14, -16, 16, 16); Pets.draw(x, 'monkey', 8, 0, 1, false, t, '', idle); } x.restore(); return; }
+    if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = thumb ? (hd ? 6 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 3 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 8 : 5) : hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 2 : it.pet === 'beetle' ? 3.5 : ['mouse', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, thumb ? 98 : 96); /* 칸 그림은 더 크게 (뭔지 한눈에) */ x.scale(hd ? k / 2 : k, hd ? k / 2 : k); if (it.pet === 'monkey' && !thumb) { /* 원숭이: 내 캐릭터와 같이 — 걸을 땐 머리 위에 타고, 서 있으면 내려와 바나나 */ Sprites.setPal('shop:me', Profile.pal(Profile.get())); const sh = Sprites.sheet('shop:me'); x.imageSmoothingEnabled = false; if (mv) { x.drawImage(sh, (1 + Math.floor(t * 8) % 4) * 16, 32, 16, 16, -8, -16, 16, 16); Pets.draw(x, 'monkey', 0, -15, 1, false, t, '', 0, 'ride'); } else { x.drawImage(sh, 0, 0, 16, 16, -14, -16, 16, 16); Pets.draw(x, 'monkey', 8, 0, 1, false, t, '', idle); } x.restore(); return; }
       Pets.draw(x, it.pet, 0, 0, 1, mv, t, '', idle, it.pet === 'monkey' && mv ? 'ride' : undefined); if (it.pet === 'trex' && !mv && !thumb) Pets.ptero(x, { x: 0, y: 12 }, idle, t); /* 서 있으면 익룡 (미리보기에도) */ x.restore(); return; }
     if (it.fx) { this.fxPrev(x, it, t, thumb ? 3 : 2.5); return; }
     if (it.hat) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { hat: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, thumb ? 40 : 56, thumb ? 18 : 40, thumb ? 80 : 48, thumb ? 80 : 48); return; }
@@ -10509,7 +10552,7 @@ const Pets = {
       if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - 22); return;
     }
     const f0 = PET_DRAW[kind]; if (!f0) return; const rec = this.accRec, f = rec ? (...a) => { f0(...a); rec(a[3], a[4]); } : f0; /* v224: 펫 꾸미기가 몸을 그린 자리(기울기·뛰기 포함)를 알 수 있게 */ PET_FAT.n = kind === 'penguin' && pose && pose.fat ? pose.fat : 0;
-    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12 }[kind] || 15));
+    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23 }[kind] || 15));
     const step = moving ? Math.floor(t * 8) % 2 : 0;
     c.save(); c.translate(snapPx(c, x), snapPx(c, y));
     if (pose !== 'ride' && kind !== 'dolphin' && !((kind === 'mouse' || kind === 'beetle') && !moving && idle > 5)) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' || kind === 'turtle' ? 6 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill(); }
@@ -10559,7 +10602,7 @@ const Beach = {
     c.fillStyle = 'rgba(160,130,80,.55)'; for (let i = 0; i < segs.length; i += 3) { const [ax, ay, bx, by, al] = segs[i]; if (al < 0.5) continue; const nx = -(by - ay), ny = bx - ax, n = Math.hypot(nx, ny) || 1, o = (i % 2 ? 4.2 : -4.2) * al; c.fillRect(Math.round(ax + nx / n * o), Math.round(ay + ny / n * o), 1, 1); } // 모래알
     c.restore(); },
 };
-const PET_FOLLOW = { cat: { near: 14, far: 46 }, mouse: { near: 9 }, giraffe: { v: 0.6 }, mantis: { v: 0.65 }, elephant: { v: 0.85 }, turtle: { v: 0.8 } }; // 따라오는 버릇
+const PET_FOLLOW = { cat: { near: 14, far: 46 }, mouse: { near: 9 }, giraffe: { v: 0.6 }, mantis: { v: 0.65 }, elephant: { v: 0.85 }, turtle: { v: 0.8 }, croc: { v: 0.85 } }; // 따라오는 버릇
 // 펫마다 하나씩 특징 (사용자 2026-10-15 '펫마다 특징'): 따라올 때 / 5초 넘게 서 있을 때. true를 돌려주면 직접 다 그린 것.
 // 펭귄 살찌기 (v157, 사용자 2026-10-16 '펭귄 너무 많이 받아먹으면 뚱뚱해지게, 그러다 많이 움직이면 다시 돌아오고'):
 // 물고기 한 마리 +0.15 (3마리 통통 · 5마리 뚱뚱), 걸은 거리 1400px(≈90m 남짓)마다 −1. 내 건 이 기기에 저장(Store 'penguinFat'), 친구 화면엔 pos.pf로 단계만.
@@ -10854,6 +10897,30 @@ const PET_DRAW = {
     r(10, -8, 2.5, 1, N); r(12, -8.5, 0.8, 0.6, N); // 상아
   },
 
+  snowman(r, s, t, c, mv, idle = 0) { // v233 눈사람 올라푸 (사용자 '펫으로 올라프도'): 눈덩이 셋, 당근 코, 나뭇가지 팔·머리털, 활짝 웃는 입. 서 있으면 손 흔들기
+    const W = '#f6f9ff', S = '#d2deee', K = '#1c1c24', O = '#ff8a2a', BR = '#7a5030', b = mv ? (Math.floor(t * 6) % 2) * 0.5 : 0, wave = !mv && Math.floor(t * 3) % 2;
+    r(-3.5 + (mv ? s : 0), -1, 2.5, 1, W); r(1 - (mv ? s : 0), -1, 2.5, 1, W); // 발 (눈덩이)
+    r(-4.5, -6, 9, 5, W); r(-3.5, -6.5, 7, 0.5, W); r(-4, -1, 8, 0.5, S); r(-4.5, -2.5, 9, 1.5, S); r(-3.5, -5.5, 2, 1, '#ffffff'); // 아래 눈덩이
+    r(-3, -10 - b, 6, 4, W); r(-2.5, -10.5 - b, 5, 0.5, W); r(-3, -6.5 - b, 6, 0.5, S); r(1.8, -9.2 - b, 0.9, 0.9, K); r(1.8, -7.6 - b, 0.9, 0.9, K); // 가운데 눈덩이 + 단추
+    r(-6, -9 - b, 3, 0.5, BR); r(-6.5, -10 - b, 0.5, 1, BR); r(-5, -9.6 - b, 0.5, 0.6, BR); // 뒤쪽 팔
+    if (wave) { r(3, -9.5 - b, 1.5, 0.5, BR); r(4.5, -11.5 - b, 0.5, 2, BR); r(5, -12.5 - b, 0.5, 1, BR); r(4, -12 - b, 0.5, 0.6, BR); } else { r(3, -9 - b, 3, 0.5, BR); r(5.5, -10 - b, 0.5, 1, BR); r(6, -10.5 - b, 0.5, 0.5, BR); } // 앞쪽 팔
+    r(-3, -16.5 - b, 7, 5, W); r(-2.5, -17 - b, 6, 0.5, W); r(4, -15 - b, 1, 2.5, W); r(-2.5, -12 - b, 6.5, 0.5, S); r(-2, -16 - b, 1.5, 1, '#ffffff'); // 머리 (갸름하게 앞으로)
+    r(1.3, -15.2 - b, 1, 1.3, K); r(3, -15.2 - b, 1, 1.3, K); r(1.5, -15.1 - b, 0.4, 0.4, '#fff'); r(3.2, -15.1 - b, 0.4, 0.4, '#fff'); r(1.1, -16.2 - b, 1.3, 0.35, K); r(2.9, -16.2 - b, 1.3, 0.35, K); // 눈·눈썹
+    r(4.5, -14 - b, 2.5, 1, O); r(7, -13.8 - b, 1, 0.6, O); // 당근 코
+    r(1.3, -12.9 - b, 3.4, 0.5, K); r(1.6, -12.4 - b, 2.8, 0.5, '#5a2a2a'); r(2.6, -12.4 - b, 0.9, 0.7, '#ffffff'); // 활짝 웃는 입 + 앞니
+    r(0, -18.5 - b, 0.5, 1.5, BR); r(-1, -19 - b, 0.5, 1.5, BR); r(1, -19.5 - b, 0.5, 2, BR); r(1.5, -19.5 - b, 0.5, 0.5, BR); // 나뭇가지 머리털
+  },
+  croc(r, s, t, c, mv, idle = 0) { // v233 악어: 길고 낮은 초록 몸, 등 돌기, 긴 주둥이·이빨, 노란 눈. 서 있으면 가끔 입을 쩍
+    const G = '#4a8a3a', D = '#2e6224', L = '#c4d88a', K = '#141a10', w = mv ? (Math.floor(t * 6) % 2) * 0.5 : 0, open = !mv && idle > 1.5 && Math.floor(t * 1.2) % 3 === 0;
+    r(-15, -1.8 + w, 1.5, 0.6, G); r(-14, -2.3 + w, 2.5, 1, G); r(-12, -2.8, 4, 1.6, G); // 꼬리 (살랑)
+    r(-7 + s, -1, 1.5, 1, D); r(0 - s, -1, 1.5, 1, D); // 건너편 다리
+    r(-8, -4.2, 13, 3.6, G); r(-7, -4.7, 11, 0.5, G); r(-7, -1, 11, 0.5, L); r(-8, -1.8, 13, 0.8, '#3c7a2e'); // 몸 + 배
+    for (let i = 0; i < 7; i++) r(-11 + i * 2.2, i < 2 ? -3.4 : -5.2, 1, 0.6, D); // 등 돌기
+    r(-6 - s, -1, 1.5, 1.2, G); r(-6.5 - s, -0.4, 2.2, 0.4, D); r(1 + s, -1, 1.5, 1.2, G); r(0.5 + s, -0.4, 2.2, 0.4, D); // 앞쪽 다리
+    r(5, -4.2, 3.5, 3.4, G); r(5.8, -5.6, 1.8, 1.6, G); r(6.2, -5.3, 1, 0.9, '#ffe040'); r(6.6, -5.3, 0.35, 0.9, K); // 머리 + 툭 튀어나온 눈
+    if (open) { r(8, -5, 5, 1.3, G); r(12.4, -5.2, 0.5, 0.4, D); r(8, -3.7, 4.6, 1.2, '#d04848'); for (let i = 0; i < 4; i++) { r(8.6 + i * 1.1, -3.7, 0.4, 0.5, '#fff'); r(9 + i * 1.1, -2.9, 0.4, 0.5, '#fff'); } r(8, -2.4, 5, 1, G); } // 입 쩍
+    else { r(8, -3.8, 5, 1.4, G); r(8, -2.4, 5, 1, G); r(12.4, -3.9, 0.5, 0.4, D); r(8, -2.5, 5, 0.25, D); for (let i = 0; i < 4; i++) r(8.6 + i * 1.1, -2.7, 0.4, 0.45, '#fff'); } // 다문 입 + 삐죽 이빨
+  },
   turtle(r, s, t, c, mv, idle, h = 0) { // 거북이: 초록 등껍질(무늬 칸), 노란 테두리, 올리브색 머리·네 발·꼬리. h = 등껍질 속으로 숨은 정도 (0~1)
     const SK = '#8fae4c', SKD = '#6c8a34', SH = '#4c7a32', SL = '#69974a', SD = '#2f5420', RM = '#d2bc6c', RMD = '#a8924a', k = Math.min(1, Math.max(0, h));
     const sy = k > 0.7 ? 1 : 0, lh = Math.max(0, 2.5 - k * 5), a = mv && s ? 0.8 : 0, b = mv && !s ? 0.8 : 0, bob = mv ? (Math.floor(t * 4) % 2) * 0.5 : 0;
@@ -10996,6 +11063,7 @@ const PET_ANCH = { // e: 눈 (e2: 앞을 보는 펫의 다른 눈), h: 머리 �
   elephant: { e: [9, -12], h: [8, -15], n: [7, -8], s: 6 }, buddy: { e: [1, -10], h: [0, -14], n: [0, -7], s: 5 }, kid: { e: [-2, -11], e2: [1, -11], h: [0, -15], n: [0, -7], s: 6 },
   gf: { e: [-1, -19], e2: [1, -19], h: [0, -22], n: [0, -15], s: 4 }, bf: { e: [-2, -20], e2: [1, -20], h: [0, -23], n: [0, -15], s: 4 }, turtle: { e: [7, -5], h: [7, -6], n: [5, -4], s: 3 },
   dolphin: { e: [2, -9], h: [1, -11], n: [1, -6], s: 4 }, trex: { e: [6, -24], h: [6, -30], n: [3, -18], s: 7 },
+  snowman: { e: [2, -15], h: [1, -18], n: [0, -11], s: 4 }, croc: { e: [7, -5], h: [6, -6], n: [5, -3], s: 3 },
 };
 // 움직일 때 몸 모양이 확 바뀌는 펫 (v197, 사용자 '이거 장착되어 있어야 하는데 이상해' — 배로 미끄러지는 펭귄 위에 안경이 떠 있었다): 펭귄은 미끄러지는 자세의 머리 자리, 판다(데굴데굴)·돌고래(헤엄)는 그동안 숨긴다
 const PET_ANCH_MV = { penguin: { e: [6, -4], h: [6, -6], n: [4, -3], s: 4 }, panda: null, dolphin: null };
@@ -11016,7 +11084,7 @@ const PetDeco = {
     if (key.startsWith('f:') && typeof Net !== 'undefined') { const nm = key.slice(2).replace(/#2$/, ''); for (const id in Net.players) { const q = Net.players[id]; if (q && q.name === nm && q.pal) return this.get(kind, q.pal); } }
     return null;
   },
-  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12 }[kind] || 15); },
+  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23 }[kind] || 15); },
   draw(c, kind, x, y, face, moving, t, tag, idle, pose, d) {
     // v224 (사용자 '서 있을 때, 움직일 때 같이 따라가야지' — 물고기 낚는 펭귄이 기울어도 목도리는 제자리였다): 몸을 그릴 때의 변환(뒤집기·기울기·폴짝)을 받아 두고 그대로 덧그린다. 몸 그림 없이 따로 그리는 자세(앉은 강아지 등)는 예전처럼
     let rec = null, off = null; if (d.eye || d.neck || d.head) Pets.accRec = (cx, mv) => { if (cx && cx.getTransform) rec = { cx, m: cx.getTransform(), mv }; };
@@ -11124,7 +11192,7 @@ const Closet = {
   atShop() { return !!(Game.room && Game.room.place && Game.room.place.kind === 'shop'); },
   // 펫 + 꾸민 것 (상점 칸 그림에서도 쓴다). 160×104 논리 좌표
   petPrev(x, kind, d, t, mv, idle, zoom) {
-    const hd = !!PET_HD[kind], big = ['trex', 'giraffe', 'elephant', 'dolphin'].includes(kind), k = Math.round((hd ? 4 : big ? 2 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 6 : 4) * (zoom || 1));
+    const hd = !!PET_HD[kind], big = ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(kind), k = Math.round((hd ? 4 : big ? 2 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 6 : 4) * (zoom || 1));
     x.save(); x.translate(80 - (big ? 8 : 0), 96); x.scale(k, k); x.imageSmoothingEnabled = false;
     PetDeco.draw(x, kind, 0, 0, 1, mv, t, '', idle || 0, kind === 'monkey' && mv ? 'ride' : undefined, d || {}); x.restore();
   },
@@ -11252,7 +11320,7 @@ const PetNPC = {
   end(s, S) { this.free(S, false); s.npc = null; s.npcNext = performance.now() + 5000 + Math.random() * 4000; },
   free(S, flee) { if (S.freed) return; S.freed = true; const w = S.w; if (Game.decor.includes(w)) w.x = S.wx; delete w.petNpc;
     if (w.ai) { w.ai.t = flee ? 1.6 : 0.3; if (flee) { w.ai.ix = Math.sign(w.x - S.px) || 1; w.ai.iy = Math.sign(w.y - S.py); w.ai.flee = true; } } },
-  LH: { trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
+  LH: { snowman: 26, croc: 12, trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
   // 장면에서 쓰는 도구: 시간 구간, 오가기, 던지기, 말풍선, 하트
   api(c, s, S, e, now, k) {
     const H = S.H, W = S.W, side = S.side, ex = Pets.extra, A = {
@@ -11407,6 +11475,8 @@ const PB_DEX = {
   bf: { t: 'H', b: [70, 75, 65, 70], m: [['윙크', 'H', 75, 95], ['백허그', 'H', 45, 100, 'drain'], ['듬직한 어깨', 'N', 0, 100, 'def+'], ['꽃다발 휘두르기', 'G', 60, 100]] },
   turtle: { t: 'W', b: [85, 55, 100, 30], m: [['등껍질 박치기', 'N', 65, 100], ['물 뿌리기', 'W', 70, 95], ['등껍질 숨기', 'N', 0, 100, 'def+'], ['느릿느릿 깨물기', 'N', 55, 100]] },
   dolphin: { t: 'W', b: [75, 85, 65, 90], m: [['물대포', 'W', 80, 95], ['점프 다이빙', 'W', 95, 85], ['꼬리 치기', 'N', 60, 100], ['초음파', 'W', 0, 100, 'acc-']] },
+  snowman: { t: 'W', b: [70, 70, 70, 60], m: [['눈덩이 던지기', 'W', 70, 100], ['고드름 찌르기', 'W', 85, 90], ['따뜻한 포옹', 'N', 0, 100, 'heal'], ['당근 코 박치기', 'N', 55, 100]] },
+  croc: { t: 'W', b: [85, 95, 80, 45], m: [['악어 물기', 'N', 85, 95], ['꼬리 치기', 'W', 70, 100], ['죽음의 회전', 'W', 95, 80], ['악어의 눈물', 'N', 0, 100, 'atk-']] },
   trex: { t: 'R', b: [95, 110, 90, 60], m: [['꼬리 휘두르기', 'R', 90, 90], ['공룡 물기', 'N', 85, 95], ['쿵쿵 발구르기', 'R', 60, 100], ['크앙!', 'N', 0, 100, 'atk-']] },
 };
 const PB_STAT = { atk: '공격', def: '방어', spd: '스피드', acc: '명중' };
@@ -11836,7 +11906,7 @@ const PetRT = {
   /* ---- 그리기 공통 (v154, 사용자 2026-10-16 '펫 배틀 퀄리티 더 올리자, 너무 투박해'): 큰 펫, 관중·무대, 효과(먼지·별·땀·색종이), 화면 흔들림, 이름표 카드, 카운트다운·승리 연출 ---- */
   view(W, H, B) { const s = Math.min(W / 320, H / 180), ox = (W - 320 * s) / 2, oy = (H - 180 * s) / 2, mir = !!B.mir; return { s, ox, oy, mir, k: Math.max(2, 2 * Math.round(s * 0.9)), X: x => ox + (mir ? 320 - x : x) * s, Y: y => oy + y * s, F: f => (mir ? -f : f), SX: x => ox + x * s }; },
   petK(kind, base) { return Math.max(2, 2 * Math.round(base * (['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 2 : ['trex', 'giraffe', 'elephant'].includes(kind) ? 0.5 : 1) / 2)); },
-  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7 }[kind] || 14; }, // 펫 키 (펫 픽셀)
+  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7, snowman: 20, croc: 7 }[kind] || 14; }, // 펫 키 (펫 픽셀)
   pet(c, V, P, x, y, face, mv, t, al, sx, rot) { // sx: 화면 x를 직접 줄 때
     const k = this.petK(P.kind, V.k); c.save(); c.globalAlpha = al == null ? 1 : al; c.translate(Math.round(sx != null ? sx : V.X(x)), Math.round(V.Y(y))); if (rot) c.rotate(rot); c.scale(k, k); PetEvo.with(P.kind, PetEvo.stOf(P.lv), false, () => Pets.draw(c, P.kind, 0, 0, sx != null ? face : V.F(face), mv, t, '', 0)); c.restore();
   },
@@ -12689,7 +12759,7 @@ PB_ART.arena = ['#e8b070', '#5a2a18'];
 
 const PA_HS = 0.85; /* v232: 사용자 '배틀 콜로세움 플레이어 크기 조금 줄이자' → 사람 키 1.75 → 1.5 */
 const PA_R = 9, PA_WH = 7, PA_PR = 0.5, PA_PH = 3.4, PA_PIL = [[3.7, 3.7], [-3.7, 3.7], [3.7, -3.7], [-3.7, -3.7]];
-const PA_HM = { mouse: 0.45, beetle: 0.45, lizard: 0.4, mantis: 0.6, turtle: 0.55, penguin: 0.8, rabbit: 0.6, cat: 0.6, dog: 0.75, monkey: 0.95, panda: 1.2, tiger: 1.1, giraffe: 2.6, elephant: 1.9, trex: 2.4, dolphin: 1.0, buddy: 1.65, kid: 1.15, gf: 1.6, bf: 1.7 };
+const PA_HM = { mouse: 0.45, beetle: 0.45, lizard: 0.4, mantis: 0.6, turtle: 0.55, penguin: 0.8, rabbit: 0.6, cat: 0.6, dog: 0.75, monkey: 0.95, panda: 1.2, tiger: 1.1, giraffe: 2.6, elephant: 1.9, trex: 2.4, dolphin: 1.0, snowman: 1.05, croc: 0.5, buddy: 1.65, kid: 1.15, gf: 1.6, bf: 1.7 };
 // [기본 공격, 특수기, 기본 이름, 특수 이름, 던지는 물건]
 const PA_PET = {
   mouse: ['claw', 'zap', '찌릿 할퀴기', '백만 볼트'], beetle: ['horn', 'dash', '뿔 들이받기', '장수 돌진'], mantis: ['claw', 'leap', '낫 베기', '사마귀 점프'],
@@ -12699,12 +12769,13 @@ const PA_PET = {
   elephant: ['throw', 'stomp', '코로 물 뿜기', '지진 쿵쿵', 'water'], buddy: ['horn', 'drain', '꽈당 몸통', '용돈 조르기'], kid: ['throw', 'heal', '장난감 던지기', '초코과자 먹기', 'toy'],
   gf: ['throw', 'drain', '애교 공격', '뽀뽀', 'heart'], bf: ['throw', 'shell', '윙크', '듬직한 어깨', 'star'], turtle: ['bite', 'shell', '느릿느릿 깨물기', '등껍질 숨기'],
   dolphin: ['throw', 'leap', '물대포', '점프 다이빙', 'water'], trex: ['bite', 'roar', '공룡 물기', '크앙!'],
+  snowman: ['throw', 'heal', '눈덩이 던지기', '따뜻한 포옹', 'snow'], croc: ['bite', 'dash', '악어 물기', '죽음의 회전'],
 };
 const PA_P = { bite: { rg: 1.5, arc: 1.2, dmg: 11, cd: 0.55, wu: 0.12 }, claw: { rg: 1.5, arc: 1.5, dmg: 8, cd: 0.38, wu: 0.08 }, horn: { rg: 1.7, arc: 1.1, dmg: 13, cd: 0.7, wu: 0.15, kb: 4 }, long: { rg: 2.5, arc: 1.1, dmg: 11, cd: 0.7, wu: 0.18, kb: 2 }, throw: { dmg: 8, cd: 0.6, spd: 11, pr: 1 } };
 const PA_PK = { bite: '가까이서 콱 물기', claw: '빠르게 슥슥 할퀴기', horn: '들이받아 밀쳐내기', long: '멀리까지 휘두르기', throw: '멀리서 던지기' };
 const PA_S = { zap: [6, '앞의 상대에게 번개 (잠깐 기절)'], dash: [5, '앞으로 쭉 돌진해서 들이받기'], leap: [6, '높이 뛰어 쿵 내려찍기'], roar: [8, '크게 울어서 가까운 상대 기절'], stomp: [6, '쿵! 주변을 전부 밀쳐내기'], heal: [9, '나랑 같은 편 체력 회복'], volley: [6, '다섯 개를 한꺼번에 던지기'], shell: [9, '잠깐 단단해져서 덜 아파요'], drain: [6, '물어서 빼앗은 만큼 회복'] };
 const PA_HUM = { sword: { atk: { rg: 1.9, arc: 1.4, dmg: 12, cd: 0.5, wu: 0.1 }, sp: { rg: 2.5, arc: 1.9, dmg: 24, cd: 4, wu: 0.25, kb: 6 }, n: ['베기', '힘껏 베기'] }, fire: { atk: { dmg: 9, cd: 0.55, spd: 13, pr: 1 }, sp: { dmg: 18, cd: 4.5, spd: 10, pr: 1, big: 1, spl: 1.8 }, n: ['불덩이', '큰 불덩이'] } };
-const PA_PAW = { mouse: '#c8beb4', beetle: '#3a2a1a', mantis: '#6ac04a', dog: '#c89058', cat: '#f0a050', lizard: '#6aa040', rabbit: '#f4f0ea', monkey: '#8a5a30', penguin: '#2a2a34', panda: '#222228', tiger: '#f08a20', giraffe: '#e8b860', elephant: '#9a9aa8', turtle: '#5a9a4a', dolphin: '#6a9ad0', trex: '#5a8a3a' };
+const PA_PAW = { mouse: '#c8beb4', beetle: '#3a2a1a', mantis: '#6ac04a', dog: '#c89058', cat: '#f0a050', lizard: '#6aa040', rabbit: '#f4f0ea', monkey: '#8a5a30', penguin: '#2a2a34', panda: '#222228', tiger: '#f08a20', giraffe: '#e8b860', elephant: '#9a9aa8', turtle: '#5a9a4a', dolphin: '#6a9ad0', trex: '#5a8a3a', snowman: '#f4f8ff', croc: '#4a8a3a' };
 const paAng = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
 const paHash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return (h ^ (h >>> 16)) >>> 0; };
 // 부드러운 값 노이즈 (0~1) · 색 밝기 바꾸기
@@ -13205,6 +13276,7 @@ PetRT.arena = {
     else if (g === 'heart') { r(1, 2, 2, 2, '#ff5a8a'); r(5, 2, 2, 2, '#ff5a8a'); r(1, 3, 6, 2, '#ff5a8a'); r(2, 5, 4, 1, '#ff5a8a'); r(3, 6, 2, 1, '#ff5a8a'); r(2, 2, 1, 1, '#ffc0d0'); }
     else if (g === 'water') { r(2, 2, 4, 4, '#5ab0ff'); r(3, 1, 2, 6, '#5ab0ff'); r(1, 3, 6, 2, '#5ab0ff'); r(3, 2, 1, 1, '#dff2ff'); }
     else if (g === 'sand') { for (let n = 0; n < 7; n++) { const h = paHash(n, Math.floor(t * 10)); r(h % 7, (h >> 3) % 7, 1.4, 1.4, n % 2 ? '#e0c890' : '#c8a060'); } }
+    else if (g === 'snow') { r(2, 1, 4, 6, '#f6f9ff'); r(1, 2, 6, 4, '#f6f9ff'); r(2, 2, 2, 1, '#ffffff'); r(5, 5, 1, 1, '#c8d6ea'); }
     else if (g === 'toy') { r(1, 1, 3, 3, '#ff4a4a'); r(4, 1, 3, 3, '#4a8aff'); r(1, 4, 3, 3, '#ffd84a'); r(4, 4, 3, 3, '#5ac05a'); }
     else { r(3, 0, 2, 8, '#ffe066'); r(0, 3, 8, 2, '#ffe066'); r(2, 2, 4, 4, '#ffe066'); r(3, 3, 2, 2, '#fff8c0'); }
   },
@@ -13713,7 +13785,7 @@ Object.assign(PetRT.arena, {
 
   /* ---- 사람 모델: 부위별 (몸통·머리 / 팔·다리 따로 돈다) ---- */
   human3(g, P, wp) {
-    const key = JSON.stringify([P.skin, P.hair, P.shirt, P.shirt2, P.pants, P.shoe, P.hat, P.tie, P.tux, P.dress, P.cape, P.bones, P.ghost, P.hardhat, wp]), M = g.M; if (M.hum[key]) return M.hum[key];
+    const key = JSON.stringify([P.skin, P.hair, P.shirt, P.shirt2, P.pants, P.shoe, P.hat, P.tie, P.tux, P.dress, P.cape, P.bones, P.ghost, P.hardhat, P.robot, P.beach, P.mummy, P.space, P.captain, P.fox, P.ogre, P.rapunzel, wp]), M = g.M; if (M.hum[key]) return M.hum[key];
     const sk = P.skin || '#f0c8a2', hair = P.hair || '#2a1e18', bones = !!P.bones, sh = bones || P.tux ? '#1d1d26' : (P.shirt || '#3a6ad0'), pants = bones ? '#1d1d26' : (P.pants || '#2a2e44'), shoe = P.shoe || '#26222a', hp = P.hat, skull = hp === 'skull', pump = hp === 'pumpkin', face = skull ? '#f2f0e6' : P.ghost ? '#f4f4f8' : sk;
     const body = this.geo(), head = this.geo(), eyeO = this.geo(), eyeC = this.geo(), armL = this.geo(), armR = this.geo(), legL = this.geo(), legR = this.geo(), blade = this.geo();
     // 몸통 (둥근 상자) + 허리
@@ -13726,6 +13798,15 @@ Object.assign(PetRT.arena, {
       if (bones) for (let n = 0; n < 4; n++) this.sq(body, 0.15, 0, 0.94 - n * 0.07, 0.02, 0.15, 0.012, 0.6, '#f0f0e8');
       if (P.dress) this.cone(body, 0, 0, 0.42, 0.34, 0.17, 0.36, P.dress, { nu: 22 });
       if (P.cape) this.sq(body, -0.2, 0, 0.72, 0.03, 0.25, 0.34, 0.4, '#a01a24');
+      /* v233 옷 */
+      if (P.space) { this.sq(body, -0.24, 0, 0.84, 0.09, 0.17, 0.2, 0.35, '#c8ccd6'); this.sq(body, 0.17, 0, 0.85, 0.025, 0.1, 0.06, 0.4, '#3a6ad8'); this.sq(body, 0.19, -0.05, 0.86, 0.015, 0.02, 0.02, 1, '#ff4040'); this.sq(body, 0.19, 0.05, 0.86, 0.015, 0.02, 0.02, 1, '#40ff80'); }
+      if (P.robot) { this.sq(body, 0.17, 0, 0.84, 0.025, 0.11, 0.08, 0.35, '#7a8494'); this.sq(body, 0.19, -0.05, 0.86, 0.015, 0.025, 0.025, 1, '#ffd040'); this.sq(body, 0.19, 0.05, 0.86, 0.015, 0.025, 0.025, 1, '#40ff80'); }
+      if (P.captain) { for (const e of [-1, 1]) { this.sq(body, 0, e * 0.2, 1.0, 0.08, 0.07, 0.025, 0.6, '#f2c230'); for (let n = 0; n < 2; n++) this.sq(body, 0.17, e * 0.07, 0.88 - n * 0.11, 0.015, 0.022, 0.022, 1, '#f2c230'); } this.sq(body, 0.165, 0, 0.88, 0.02, 0.04, 0.1, 0.5, '#f4f4f4'); }
+      if (P.beach) for (const [y, z, cl] of [[-0.09, 0.9, '#fff4a0'], [0.08, 0.82, '#ff4a8a'], [-0.04, 0.72, '#ffffff'], [0.1, 0.96, '#fff4a0']]) this.sq(body, 0.165, y, z, 0.015, 0.03, 0.03, 1, cl);
+      if (P.ogre) for (const e of [-1, 1]) this.sq(body, 0.06, e * 0.12, 0.8, 0.13, 0.07, 0.23, 0.55, P.shirt2 || '#6a4a2a');
+      if (P.mummy) for (let n = 0; n < 3; n++) this.sq(body, 0, 0, 0.66 + n * 0.12, 0.175, 0.215, 0.012, 0.6, '#b8ac90');
+      if (P.fox) for (let n = 0; n < 9; n++) { const a = (n - 4) * 0.2, dy = Math.sin(a), dz = Math.cos(a), L = Math.hypot(0.45, 1), dx = -0.45 / L, bx = -0.18, bz = 0.58; for (const [k, r, c] of [[0.2, 0.07, '#f4a040'], [0.38, 0.085, '#f4a040'], [0.56, 0.09, '#f4a040'], [0.74, 0.08, '#f4a040'], [0.9, 0.065, '#fff4e0']]) this.sq(body, bx + dx * k, dy * k / L, bz + dz * k / L, r, r, r, 1, c, { nu: 10, nv: 8 }); } /* 꼬리 아홉: 허리 뒤에서 부채꼴로 위로 */
+      if (P.rapunzel) { this.sq(body, -0.22, 0, 0.8, 0.06, 0.1, 0.5, 0.8, hair, { nu: 12, nv: 12 }); for (const z of [0.95, 0.7, 0.45]) this.sq(body, -0.27, 0, z, 0.02, 0.03, 0.03, 1, '#ff8ab0'); }
       if (!P.tux && !bones) this.sq(body, 0.1, 0, 1.0, 0.07, 0.17, 0.02, 0.6, P.shirt2 || sh); // 옷깃
     }
     // 머리 (크게)
@@ -13733,24 +13814,32 @@ Object.assign(PetRT.arena, {
     if (pump) { this.sq(head, 0, 0, hz, 0.33, 0.35, 0.29, 0.9, '#f08a2c', { nu: 24, nv: 14 }); this.sq(head, 0, 0, hz + 0.3, 0.035, 0.035, 0.07, 1, '#3a8a2a');
       for (const e of [-1, 1]) this.cone(eyeO, 0.3, e * 0.12, hz + 0.02, 0.06, 0, 0.09, '#2a1408', { rot: a3Ry(-Math.PI / 2 + 0.25), nu: 3 }); this.sq(eyeO, 0.31, 0, hz - 0.12, 0.02, 0.15, 0.035, 0.5, '#2a1408'); }
     else {
-      this.sq(head, 0, 0, hz, 0.29, 0.3, 0.28, 0.9, face, { nu: 26, nv: 16 });
+      this.sq(head, 0, 0, hz, 0.29, 0.3, 0.28, P.robot ? 0.3 : 0.9, P.robot ? '#b8c2d0' : face, { nu: 26, nv: 16 });
+      if (P.robot) { this.sq(head, 0, 0, hz + 0.33, 0.015, 0.015, 0.07, 1, '#7a8494'); this.sq(head, 0, 0, hz + 0.41, 0.04, 0.04, 0.04, 1, '#ff4a4a'); }
+      if (P.mummy) for (const z of [0.12, -0.06, -0.2]) this.sq(head, 0, 0, hz + z, 0.297, 0.307, 0.018, 0.6, '#b8ac90');
+      if (P.ogre) for (const e of [-1, 1]) this.cone(head, 0, e * 0.3, hz + 0.03, 0.05, 0.025, 0.12, face, { rot: a3Rx(e * -Math.PI / 2) });
+      if (P.fox) for (const e of [-1, 1]) this.cone(head, -0.02, e * 0.17, hz + 0.24, 0.09, 0, 0.17, '#f4a040', { nu: 4, rot: a3Rx(e * 0.3) });
       if (!P.ghost) for (const e of [-1, 1]) this.sq(head, -0.01, e * 0.29, hz - 0.03, 0.05, 0.035, 0.065, 1, face);
-      if (!skull && !P.ghost) { // 머리카락: 위·뒤를 덮는 껍질 + 앞머리 삐침
+      if (!skull && !P.ghost && !P.robot) { // 머리카락: 위·뒤를 덮는 껍질 + 앞머리 삐침
         this.sq(head, -0.005, 0, hz + 0.01, 0.31, 0.32, 0.3, 0.9, hair, { nu: 26, nv: 16, keep: p => p[2] > 0.06 - Math.max(0, -p[0]) * 0.9 });
         for (let n = 0; n < 5; n++) { const y = -0.16 + n * 0.08; this.sq(head, 0.23, y, hz + 0.13 - Math.abs(y) * 0.2, 0.06, 0.055, 0.08, 1, hair, { nu: 10, nv: 8, rot: a3Ry(0.5) }); } }
       if (hp === 'clown') this.sq(head, 0.3, 0, hz - 0.04, 0.06, 0.06, 0.06, 1, '#ff2a2a');
       // 눈 (뜬 눈 / 감은 눈), 볼, 입
       for (const e of [-1, 1]) {
+        if (P.robot) { if (e > 0) { this.sq(eyeO, 0.285, 0, hz, 0.02, 0.2, 0.05, 0.4, '#3ad8ff'); this.sq(eyeC, 0.285, 0, hz, 0.02, 0.2, 0.05, 0.4, '#3ad8ff'); } continue; }
+        if (P.beach) { this.sq(eyeO, 0.27, e * 0.1, hz, 0.025, 0.075, 0.05, 0.5, '#15151c'); this.sq(eyeC, 0.27, e * 0.1, hz, 0.025, 0.075, 0.05, 0.5, '#15151c'); if (e > 0) { this.sq(eyeO, 0.275, 0, hz + 0.01, 0.02, 0.03, 0.012, 1, '#15151c'); this.sq(eyeC, 0.275, 0, hz + 0.01, 0.02, 0.03, 0.012, 1, '#15151c'); } continue; }
         if (skull || P.ghost) { this.sq(eyeO, 0.255, e * 0.1, hz + 0.01, 0.03, 0.065, 0.075, 1, '#1a1a1e'); this.sq(eyeC, 0.255, e * 0.1, hz + 0.01, 0.03, 0.065, 0.075, 1, '#1a1a1e'); continue; }
         this.sq(eyeO, 0.262, e * 0.1, hz - 0.01, 0.03, 0.042, 0.065, 1, '#1a1418', { nu: 12, nv: 8 }); this.sq(eyeO, 0.292, e * 0.1 + 0.012, hz + 0.02, 0.012, 0.016, 0.018, 1, '#ffffff', { nu: 8, nv: 6 });
         this.sq(eyeC, 0.27, e * 0.1, hz - 0.03, 0.02, 0.045, 0.01, 1, '#1a1418', { nu: 10, nv: 6 });
         if (!skull) { this.sq(head, 0.236, e * 0.185, hz - 0.08, 0.03, 0.05, 0.028, 1, '#ff9aa6', { nu: 10, nv: 6 }); }
       }
       if (skull) { this.sq(head, 0.28, 0, hz - 0.1, 0.02, 0.03, 0.025, 1, '#1a1a1e'); for (let n = -2; n <= 2; n++) this.sq(head, 0.26, n * 0.035, hz - 0.17, 0.015, 0.012, 0.025, 1, '#1a1a1e'); }
-      else if (!P.ghost) this.sq(head, 0.272, 0, hz - 0.13, 0.015, 0.05, 0.016, 0.8, '#8a3a30', { nu: 10, nv: 6 });
+      else if (!P.ghost && !P.robot) this.sq(head, 0.272, 0, hz - 0.13, 0.015, 0.05, 0.016, 0.8, '#8a3a30', { nu: 10, nv: 6 });
       // 모자
       const top = hz + 0.27;
-      if (hp === 'crown') { this.cone(head, 0, 0, top - 0.04, 0.19, 0.19, 0.1, '#f0c040', { cap: false, nu: 20 }); for (let n = 0; n < 5; n++) { const a = n / 5 * Math.PI * 2; this.cone(head, Math.cos(a) * 0.17, Math.sin(a) * 0.17, top + 0.06, 0.05, 0, 0.1, '#ffd84a', { nu: 6 }); this.sq(head, Math.cos(a) * 0.19, Math.sin(a) * 0.19, top + 0.01, 0.025, 0.025, 0.025, 1, n % 2 ? '#e0304a' : '#3a8ae0', { nu: 8, nv: 6 }); } }
+      if (hp === 'space') { this.sq(head, 0, 0, hz + 0.02, 0.4, 0.41, 0.4, 0.9, '#e4ecf6', { nu: 26, nv: 16, keep: p => p[0] < 0.1 }); this.cone(head, 0, 0, hz - 0.36, 0.3, 0.3, 0.06, '#c8ccd6', { nu: 22 }); }
+      else if (hp === 'captain') { this.sq(head, -0.01, 0, top - 0.02, 0.31, 0.31, 0.09, 0.5, '#f4f4f4', { nu: 22 }); this.sq(head, 0.2, 0, top - 0.09, 0.14, 0.2, 0.018, 0.8, '#15151c'); this.sq(head, 0, 0, top - 0.09, 0.3, 0.3, 0.025, 0.6, '#15151c', { nu: 22 }); this.sq(head, 0.3, 0, top - 0.01, 0.02, 0.06, 0.035, 1, '#f2c230'); }
+      else if (hp === 'crown') { this.cone(head, 0, 0, top - 0.04, 0.19, 0.19, 0.1, '#f0c040', { cap: false, nu: 20 }); for (let n = 0; n < 5; n++) { const a = n / 5 * Math.PI * 2; this.cone(head, Math.cos(a) * 0.17, Math.sin(a) * 0.17, top + 0.06, 0.05, 0, 0.1, '#ffd84a', { nu: 6 }); this.sq(head, Math.cos(a) * 0.19, Math.sin(a) * 0.19, top + 0.01, 0.025, 0.025, 0.025, 1, n % 2 ? '#e0304a' : '#3a8ae0', { nu: 8, nv: 6 }); } }
       else if (hp === 'straw') { this.sq(head, 0, 0, top - 0.05, 0.48, 0.48, 0.025, 1, '#e8c060', { nu: 24 }); this.cone(head, 0, 0, top - 0.06, 0.22, 0.2, 0.16, '#f0cc70', { nu: 20 }); this.cone(head, 0, 0, top - 0.02, 0.222, 0.215, 0.05, '#c03030', { nu: 20, cap: false }); }
       else if (hp === 'party') { this.cone(head, 0, 0, top - 0.06, 0.16, 0, 0.42, '#ff5aa0', { nu: 16 }); this.sq(head, 0, 0, top + 0.37, 0.05, 0.05, 0.05, 1, '#ffe066'); for (let n = 0; n < 3; n++) this.sq(head, 0.12 - n * 0.035, 0, top + 0.03 + n * 0.11, 0.022, 0.022, 0.022, 1, '#ffffff', { nu: 8, nv: 6 }); }
       else if (hp === 'witch') { this.sq(head, 0, 0, top - 0.05, 0.46, 0.46, 0.022, 1, '#2a1a3a', { nu: 24 }); this.cone(head, 0, 0, top - 0.06, 0.2, 0.01, 0.52, '#3a2450', { nu: 18, rot: a3Ry(-0.3) }); this.cone(head, 0, 0, top - 0.04, 0.205, 0.19, 0.05, '#e0a020', { nu: 18, cap: false }); }

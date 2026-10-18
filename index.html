@@ -5442,6 +5442,8 @@ const Live = {
   untilDay() { return this.mmss(this.dayMs() - (this.now() % this.dayMs())); },
   pnl() { return State.cash - State.capital; },
   // 순위 점수 = 경매로 번 돈만 (사용자 2026-10-15 '랭킹은 경매로만 차익 본 사람, 임대수익으로 돈 번 거 누적'): 정산 끝난 물건 손익(§11, 월세 포함) + 보증금 몰수 + 아직 들고 있는 집에서 받은 월세. 카지노·게임·용돈은 안 들어간다
+  // v220 번 돈 장부 (사용자 '1억이 기준이 아니라 낙찰·매매로 난 수익이랑 월세가 번 돈'): 편집숍·게임장·카지노·내 집 매매처럼 번 돈에서 쓰고 받은 돈만 더한다
+  addXtra(d) { if (this.on && d) this.xtra = Math.round((this.xtra || 0) + d); },
   earn() { let v = 0; for (const m of Object.values(this.mine || {})) { if (m.done) v += m.profit || 0; else if (m.phase === 'own' && m.asset) v += m.asset.rentTotal || 0; } return v; },
   earnOf(v) { return v && typeof v.earn === 'number' ? v.earn : undefined; },
   // 순위는 지금 가진 돈(현금)으로 (사용자 요청 2026-10-14 '수익 말고 지금 가진 자본을 랭킹에'). 예전 기록·예전 버전은 손익만 있어 시작 자본을 더해 맞춘다
@@ -5449,7 +5451,7 @@ const Live = {
 
   /* ---- 저장 (채널별, 이 기기) ---- */
   storeKey() { return 'live' + this.ch; },
-  save() { try { this.saveInv(); } catch (e) {} Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, tomb: this.tomb, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0, aliveAt: Date.now() }); },
+  save() { try { this.saveInv(); } catch (e) {} Store.set(this.storeKey(), { name: Net.me, capital: State.capital, cash: State.cash, mine: this.mine, results: this.results.slice(0, 20), rentLog: this.rentLog.slice(0, 40), seen: this.seen, tomb: this.tomb, dayIdx: this.dayIdx, used: this.used, hits: State.hits || 0, hospital: State.hospital || 0, pvp: State.pvp || 0, xtra: this.xtra || 0, aliveAt: Date.now() }); },
   saved(ch) { return Store.get('live' + ch, null); },
   reset(ch) { Store.set('live' + ch, null); Store.set('liveInv' + ch, null); Store.set('vipLock' + ch, 0); Mine.reset(ch); },
   /* 조사 기록(뗀 서류·현장 메모·수첩·내 판단): 나갔다 와도 남게 채널별로 따로 저장 (사용자 2026-10-15 '나갔다 와도 조사했던거 저장') */
@@ -5471,8 +5473,8 @@ const Live = {
     this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.rentLog = []; this.closed = {}; this.queue = []; this.ready = false; this.readyT = 2.5;
     let sv = this.saved(this.ch); if (sv && sv.capital !== capital) sv = null; // 예전 규칙으로 저장된 기록은 새로
     this.offGap = sv ? Date.now() - Math.max(sv.aliveAt || 0, Store.get('liveAlive' + this.ch, 0) || 0) : 0; if (sv && !sv.aliveAt && !Store.get('liveAlive' + this.ch, 0)) this.offGap = 0; this.wallT = Date.now(); // 꺼 둔 시간 (예전 저장분은 모름 → 0)
-    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.mine = sv.mine || {}; this.results = sv.results || []; this.rentLog = sv.rentLog || []; this.seen = sv.seen || {}; this.tomb = sv.tomb || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
-    else { State.capital = capital; State.cash = capital; }
+    if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.xtra = sv.xtra || 0; this.mine = sv.mine || {}; this.results = sv.results || []; this.rentLog = sv.rentLog || []; this.seen = sv.seen || {}; this.tomb = sv.tomb || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
+    else { State.capital = capital; State.cash = capital; this.xtra = 0; }
     if (sv && !Store.get('topup163_' + this.ch, false)) { Store.set('topup163_' + this.ch, true); if (State.cash < 1e8) { this.topup = Math.round(1e8 - State.cash); Money.why('자금 다시 채워 줌 (1억까지)'); State.cash = 1e8; } } // 한 번만: 돈이 1억 밑이면 1억으로 (사용자 2026-10-16 '자금 1억 밑인 사람 1억으로 다시')
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('adj9k_1', false)) { Store.set('adj9k_1', true); Money.why('운영자 조정 (자금 9천만 원으로)'); State.cash = 9e7; setTimeout(() => HUD.page('운영자가 자금을 9천만 원으로 맞췄어요. 이제부터 합의금·병원비가 모자라면 석탄 땅굴로 끌려가요.', '알림'), 4500); } // 사용자 2026-10-16 '에센티아 이 사람 9천만 원 만들어 봐': 채널 1의 에센티아만, 한 번만
     { const fm = this.mine[LIVE_SMALL_FIX], fe = fm && fm.evictState; if (sv && this.ch === 1 && fe && fe.paidAssume > 0 && !Store.get('fixSmall199', false)) { Store.set('fixSmall199', true); const amt = fe.paidAssume; if (!fm.done) fe.paidAssume = 0; /* 정산이 끝났으면 그때 인수액이 빠졌으니 돈만 돌려준다 */ Money.why('인수 보증금 돌려받음 (신림동 · 소액임차인 최우선변제)'); State.cash += amt; setTimeout(() => this.save(), 0); setTimeout(() => HUD.page(`신림동 라온아파트 세입자는 소액임차인이라 보증금을 배당에서 먼저 받아요. 낸 인수 보증금 ${fmtWon(amt)}을 돌려드렸어요.`, '알림'), 4500); } } // v199 사용자 2026-10-17 '돈 빠져나간 2500만원은 다시 돌려줘'
@@ -9770,9 +9772,9 @@ const Shop = {
   /* 번 돈으로만 사기 + 되팔기 (사용자 2026-10-16 '펫 사고 막 사면 경매할 자금이 없어지지 않나' → '되팔기도 가능하고 번 돈으로만 사기')
    * 쓸 수 있는 돈 = 지금 현금 − 시작 자금(State.capital). 경매 밑천은 상점에서 못 쓴다.
    * 되팔기: 산 값의 FEEL.shopResell(절반). 산 곳(혼자 하기 / 채널 N)에서만 되판다 (채널끼리 돈 옮기기 막기). */
-  spendable() { // v218 (사용자 '집에 묶인 수익도 번 돈으로'): 채널에서 산 집에 들어간 내 돈(낙찰가 − 대출)도 밑천 계산에 넣는다. 그래도 손에 든 현금보다 많이 쓰지는 못한다
-    let tied = 0; if (typeof Live !== 'undefined' && Live.on && Live.owned) for (const m of Live.owned()) { const Lo = m.loanState || {}; tied += Math.max(0, (m.bid || 0) - (Lo.bank || 0) - (Lo.savings || 0) - (m.extraLoan || 0)); }
-    return Math.max(0, Math.round(Math.min(State.cash, State.cash + tied - (State.capital || 0))));
+  spendable() { // v220 (사용자 '1억이 기준이 아니라, 낙찰·매매로 난 수익이랑 월세가 번 돈'): 채널에서는 경매 수익(Live.earn) + 번 돈 장부(Live.xtra: 편집숍·게임장·내 집 매매). 손에 든 현금보다 많이 쓰지는 못한다
+    if (typeof Live !== 'undefined' && Live.on) return Math.max(0, Math.round(Math.min(State.cash, Live.earn() + (Live.xtra || 0))));
+    return Math.max(0, Math.round(State.cash - (State.capital || 0)));
   },
   here() { return typeof Live !== 'undefined' && Live.on ? 'ch' + Live.ch : 'solo'; },
   hereKo(k) { return k === 'solo' ? '혼자 하기' : `채널 ${String(k).slice(2)}`; },
@@ -9787,7 +9789,7 @@ const Shop = {
     if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (it.hat) { if (p.hat === it.id) Profile.set('hat', null); } else if (it.pd) PetDeco.strip(it); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null);
     const w = Store.get('wardrobe', null) || {}, src2 = Object.assign({}, w.src || {}); delete src2[it.id];
     Store.set('wardrobe', { owned: this.owned().filter(x => x !== it.id), src: src2 });
-    if (typeof Money !== 'undefined') Money.why(`편집숍 되팔기 (${it.name})`); State.cash += got; HUD.setCash(State.cash); if (Live.on) Live.save();
+    if (typeof Money !== 'undefined') Money.why(`편집숍 되팔기 (${it.name})`); State.cash += got; if (typeof Live !== 'undefined') Live.addXtra(got); HUD.setCash(State.cash); if (Live.on) Live.save();
     Pets.mineT = -1; Profile.apply && Profile.apply(); Sound.play('coins'); Toast.show(`${it.name} 되팔았어요 (+${fmtWon(got)})`); this.render();
   },
   has(id) { return this.owned().includes(id); },
@@ -9812,7 +9814,7 @@ const Shop = {
       const btn = on ? `<button class="btn" data-off="${isP ? it.pet : isD ? it.id : 1}">${isC || isH ? '벗기' : isD ? '떼기' : isP ? (home ? '집에 두기' : '가게에 맡기기') : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isH ? '쓰기' : isD ? (p.pet ? '달아 주기' : '펫이 없어요') : isP ? (p.pet && p.pet2 ? '바꿔 데려가기' : '데리고 다니기') : isF ? '켜기' : '타기'}</button>` : lock ? `<button class="btn shLockBtn" disabled>🔒 이익 경매 ${need}번</button>` : this.look ? '<button class="btn" disabled>숍에서 사요</button>' : `<button class="btn ${sp >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${sp >= it.price ? '' : 'disabled'}>사기</button>`;
       return `<div class="shItem${on ? ' on' : own ? ' own' : lock ? ' lock' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isH ? '쓰는 중' : isD ? '달고 있어요' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? (isP ? (home ? '집에 있어요' : '가게에 맡겨 둠') : '보유') : fmtWon(it.price)}</span>${btn}${sellBtn}</div>`;
     };
-    $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">💰 번 돈 <b>${fmtWon(sp)}</b> <small>(밑천 ${fmtWon(State.capital || 0)}은 못 써요 · 되팔면 반값)</small> · 🏅 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
+    $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">💰 번 돈 <b>${fmtWon(sp)}</b> <small>(${typeof Live !== 'undefined' && Live.on ? '경매 수익 + 월세에서 쓴 만큼 빠져요' : `밑천 ${fmtWon(State.capital || 0)}은 못 써요`} · 되팔면 반값)</small> · 🏅 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
       <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">✨ 이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">🎩 모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">🎀 펫 꾸미기${nt('petdeco')}</button></div>
       ${isD ? `<div class="shNote" style="margin:0 0 6px;text-align:center">${p.pet ? `데리고 다니는 ${esc((SHOP_ITEMS.pet.find(x => x.pet === PetDeco.target()) || {}).name || '펫')}에게 달아요 · 👗 옷장에서 바꿀 수 있어요` : '펫을 데리고 다녀야 달 수 있어요'}</div>` : isH || isC ? '<div class="shNote" style="margin:0 0 6px;text-align:center">산 옷·모자는 화면의 👗 옷장에서 언제든 갈아입어요</div>' : ''}
       ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
@@ -9913,7 +9915,7 @@ const Shop = {
     if (this.has(it.id)) return this.wear(it);
     const need = this.need(it), rec = AuctionRec.wins(); if (need > rec) { Sound.play('deny'); Toast.show(`${it.name}은 경매로 이익을 ${need}번 본 사람만 살 수 있어요. 지금 ${rec}번이에요.`); return; }
     const sp = this.spendable(); if (sp < it.price) { Sound.play('deny'); Toast.show(`경매 밑천은 못 써요. 번 돈이 ${fmtWon(it.price - sp)} 더 있어야 해요 (지금 번 돈 ${fmtWon(sp)}).`, 3200); return; }
-    if (typeof Money !== 'undefined') Money.why(`편집숍 (${it.name})`); State.cash -= it.price; HUD.setCash(State.cash); if (Live.on) Live.save();
+    if (typeof Money !== 'undefined') Money.why(`편집숍 (${it.name})`); State.cash -= it.price; if (typeof Live !== 'undefined') Live.addXtra(-it.price); HUD.setCash(State.cash); if (Live.on) Live.save();
     const w0 = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: this.owned().concat(it.id), src: Object.assign({}, w0.src || {}, { [it.id]: this.here() }) });
     Sound.play('coins'); Toast.show(`${it.name} 샀어요 (${fmtWon(it.price)})`);
     this.wear(it);
@@ -10061,7 +10063,7 @@ const MyHome = {
     const sp = this.spendable();
     const ok = await Dialog.say([say('agent', `${x.name} (${x.T.name}), ${fmtWon(x.price)}. 계약하면 번 돈이 ${fmtWon(sp - x.price)} 남아요. 도장 찍을까요?`)], [{ label: '✍️ 계약하기', value: 'y' }, { label: '조금 더 생각해 볼게요', value: null }]);
     if (ok !== 'y') return; if (this.get()) return; if (this.spendable() < x.price) { Sound.play('deny'); Toast.show('번 돈이 모자라요.'); return; }
-    if (typeof Money !== 'undefined') Money.why(`내 집 매매 (${x.T.name})`); State.cash -= x.price; HUD.setCash(State.cash); Sound.play('coins');
+    if (typeof Money !== 'undefined') Money.why(`내 집 매매 (${x.T.name})`); State.cash -= x.price; Live.addXtra(-x.price); HUD.setCash(State.cash); Sound.play('coins');
     { const z = Game.zone; for (let i = z.places.length - 1; i >= 0; i--) if (z.places[i].id === 'forsale') z.places.splice(i, 1); }
     Store.set(this.key(), { type: x.T.id, z: Game.zone.id, b: x.b, name: x.name, price: x.price, at: Date.now() }); if (Live.on) Live.save(); this.sync(true); Game.zone.chunks.clear();
     State.targetPlace = 'myhome'; if (typeof Net !== 'undefined' && Net.news) Net.news(`${Net.me || '누군가'}님이 ${x.T.name}을(를) 샀다! 🏡`);
@@ -10076,7 +10078,7 @@ const MyHome = {
     if (pick !== 'sell') return;
     const sure = await Dialog.say([say('agent', `정말 파실 거예요? ${fmtWon(this.sellPrice(h))} 받고 '내 집'이 없어져요.`)], [{ label: '🏷️ 팔기', value: 'y' }, { label: '안 팔래요', value: null }]);
     if (sure !== 'y' || !this.get()) return; const got = this.sellPrice(h);
-    if (typeof Money !== 'undefined') Money.why(`내 집 매도 (${T.name})`); State.cash += got; HUD.setCash(State.cash); Sound.play('coins'); Store.set(this.key(), null); if (Live.on) Live.save();
+    if (typeof Money !== 'undefined') Money.why(`내 집 매도 (${T.name})`); State.cash += got; Live.addXtra(got); HUD.setCash(State.cash); Sound.play('coins'); Store.set(this.key(), null); if (Live.on) Live.save();
     if (State.targetPlace === 'myhome') State.targetPlace = null; this.sync(true); Game.zone.chunks.clear();
     await Dialog.say([say('agent', `팔렸어요! ${fmtWon(got)} 들어갔어요. 다음에 또 좋은 집 보러 와요.`)]);
   },
@@ -13877,7 +13879,7 @@ const VipLock = {
 function mgCash(d, label) {
   if (!d) return;
   if (Live.on && typeof Money !== 'undefined') Money.why(label);
-  State.cash += d; HUD.setCash(State.cash); if (Live.on) Live.save();
+  State.cash += d; Live.addXtra(d); HUD.setCash(State.cash); if (Live.on) Live.save();
 }
 /* 친구끼리 하루 한도 (사용자 2026-10-15 '컴퓨터 계정 폰 계정 두 개로 돈 계속 줄 수 있으니까' → '하루 한도만')
  * 같은 상대(이름)와 오늘 주고받은 돈의 합(내 쪽 +/−)이 ±FEEL.pvpDailyCap을 넘지 않게 한다. 날짜는 기기 시계 기준 하루.

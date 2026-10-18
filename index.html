@@ -1025,7 +1025,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v225</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v226</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5496,6 +5496,9 @@ const Live = {
         Money.why('입찰보증금 다시 법원에 (자양동 늘봄아파트 6천만 원 낙찰로 정정)'); State.cash -= fm.deposit; this.results = this.results.filter(r => r.caseNo !== '2025타경20877');
         setTimeout(() => { const c = this.caseFor(fk); State.target = c.id; State.targetPlace = null; this.save(); HUD.page(`${c.name} 6천만 원에 낙찰받은 걸로 고쳤어요. 돌려받았던 보증금 ${fmtWon(fm.deposit)}은 다시 법원에 들어갔어요. ${FEEL.livePayMin}분 안에 ${courtOf(c).name}에 잔금 ${fmtWon(fm.bid - fm.deposit)} 내세요.`, '법원'); }, 4800); } }
     if (sv && this.ch === 1 && Store.get('fix20877', false) && !Store.get('fix216', false)) { Store.set('fix216', true); State.cash += 102000; setTimeout(() => { this.save(); HUD.page('우회전하다 빠진 수리비 4만 2,000원 + 신호위반 6만 원, 합쳐서 10만 2,000원 돌려드렸어요. 이제 빨간불 우회전은 괜찮고, 모서리를 스치는 건 수리비가 안 나가요.', '알림'); }, 5200); } // 사용자 2026-10-18 '아무것도 없는데 그냥 우회전했는데 돈 나갔다' (v216에서 고침), 한 번만
+    if (sv && !Store.get('fix226i_' + this.ch, false)) { Store.set('fix226i_' + this.ch, true); let back = 0, paid = 0; // v226 한 번만: 위 버그로 한꺼번에 빠진 이자를 돌려주고, 그 때문에 받은 추가 대출부터 갚는다 (경락잔금대출 없이 추가 대출만 있는 집)
+      for (const m of Object.values(this.mine)) { const a = m.asset, L = m.loanState || {}; if (!a || m.done || m.phase !== 'own' || (L.bank || 0) + (L.savings || 0) > 0 || !(a.intPaid > 0)) continue; const one = this.monthlyInterest(m), r = Math.max(0, a.intPaid - one); if (!r) continue; a.intPaid -= r; a.intHeld = a.held || 0; const rep = Math.min(m.extraLoan || 0, r); m.extraLoan = (m.extraLoan || 0) - rep; back += r; paid += rep; }
+      if (back) { Money.why(`잘못 빠진 대출 이자 ${fmtWon(back)} 돌려받음${paid ? ` (추가 대출 ${fmtWon(paid)} 먼저 갚음)` : ''}`); State.cash += back - paid; setTimeout(() => { this.save(); HUD.page(`이자가 한꺼번에 빠지던 버그가 있었어요. 잘못 빠진 이자 ${fmtWon(back)}을 돌려드렸고${paid ? `, 그 때문에 받은 집 담보 추가 대출 ${fmtWon(paid)}은 그 돈으로 먼저 갚았어요` : ''}.`, '알림'); }, 6800); } }
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('fix218m', false)) { Store.set('fix218m', true); Money.why('석탄 땅굴에서 되찾은 돈 (예전에 캔 땅굴 한도 몫)'); State.cash += 1e7; setTimeout(() => { this.save(); HUD.page('땅굴에서 한도 1천만 원을 채워 캔 돈을 현금으로 돌려드렸어요. 이제부터는 땅굴에서 한도를 채우면 그만큼 현금으로도 돌아와요.', '알림'); }, 6200); } // 사용자 2026-10-18 '빚 천만원 갚고 오면 내 돈 추가돼야 하는 거 아니야, 원래 내 돈이었는데 합의금·수리비로 나간 거잖아', 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
@@ -5860,6 +5863,7 @@ const Live = {
       if (a.held === undefined) { a.held = 0; a.rentHeld = 0; a.intHeld = 0; a.intPaid = 0; changed = true; } // 예전 저장분: 밀린 달은 안 준다
       a.held += Math.min(Math.max(0, dt), 1) * 1000; // 켜 둔 동안만 흐르는 보유 시간 (잠들었다 깨도 한 번에 1초만)
       const int = this.monthlyInterest(m);
+      if (!int) a.intHeld = a.held; /* v226: 대출 없는 동안은 이자 시계도 같이 간다 (전엔 멈춰 있다가 집 담보 추가 대출을 받는 순간 지난 달 이자가 한꺼번에 수십 번 빠졌다, 사용자 '갑자기 이자가 왤케 나가') */
       if (int && a.held >= a.intHeld + this.monthMs()) { a.intHeld += this.monthMs(); a.intPaid += int; State.cash -= int; HUD.setCash(State.cash); changed = true; this.rentLog.unshift({ at: this.stamp(), name: m.name.split(' ').slice(0, 2).join(' '), amt: -int, cash: State.cash, kind: 'int' }); if (this.rentLog.length > 40) this.rentLog.length = 40; if (Game.player && !this.quiet) { Toast.show(`대출 이자 ${fmtWon(int)} 빠져나감 (${m.name.split(' ').slice(0, 2).join(' ')})`); Sound.play('click'); } }
       if (a.rentOn) { // 임대 계약: 이사 나가는 날 / 만료 통지 없으면 묵시적 갱신
         if (a.leaseEnd === undefined) { a.leaseEnd = (a.held || 0) + this.leaseMs(); changed = true; } // 예전 저장분

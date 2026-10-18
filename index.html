@@ -118,7 +118,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #edgeSign { position:absolute; left:50%; top:14px; transform:translate(-50%,-160%); background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:5px 16px; color:#fff; text-align:center; box-shadow:0 3px 0 #000; opacity:0; transition:transform .25s ease-out, opacity .25s; }
 #edgeSign.in { transform:translate(-50%,0); opacity:1; }
 #nav { position:absolute; left:50%; bottom:18px; transform:translate(-50%,140%); display:flex; gap:10px; align-items:center; background:#0d1626; border:2px solid #2f4d7f; border-radius:12px; padding:6px 12px 6px 6px; color:#fff; box-shadow:0 6px 18px rgba(0,0,0,.5); opacity:0; transition:transform .25s ease-out, opacity .25s; max-width:min(94vw, 560px); pointer-events:auto; }
-#nav.in { transform:translate(-50%,0); opacity:1; }
+#nav.in { transform:translate(-50%,0); opacity:1; } #nav { display:none !important; } /* v225 (사용자 '내비 그냥 없애자, 지도에서만 나타나게'): 아래 안내판은 안 보인다. 길은 오른쪽 위 지도와 구역 지도에만 */
 #navMap { width:132px; height:96px; flex:none; border-radius:8px; background:#101a2c; border:1px solid #223a60; }
 #navBody { display:flex; gap:10px; align-items:center; min-width:0; }
 #nav .nx { background:none; border:1px solid rgba(255,255,255,.35); color:#ddd; border-radius:6px; width:26px; height:26px; font-size:13px; cursor:pointer; margin-left:4px; flex:none; }
@@ -1025,7 +1025,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v224</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v225</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3586,7 +3586,7 @@ const ZoneMap = {
   },
   pickBtn(b) {
     if (b.dataset.zp === 'auto') { State.navDest = null; Nav.mutedKey = ''; Nav.key = ''; Nav.free = false; Toast.show(`목적지: ${this.auto ? this.auto.label : '추천'}`); Sound.play('tick'); }
-    if (b.dataset.zp === 'free') { Nav.free = true; State.navDest = null; Sound.play('tick'); Toast.show('목적지 없이 운전해요. 아래 내비를 누르면 다시 고를 수 있어요.', 2600); }
+    if (b.dataset.zp === 'free') { Nav.free = true; State.navDest = null; Sound.play('tick'); Toast.show('목적지 없이 운전해요. 오른쪽 위 지도를 누르면 다시 고를 수 있어요.', 2600); }
     this.toggle(false);
   },
   fit() {
@@ -3675,6 +3675,9 @@ const ZoneMap = {
       const label = pl.kind === 'site' ? pl.name : INTERIOR_KIND_LABEL[pl.kind] || pl.name;
       x.font = 'bold 11px "IBM Plex Sans KR", sans-serif'; const w = x.measureText(label).width + 8;
       x.fillStyle = 'rgba(10,12,14,.75)'; x.fillRect(X - w / 2, Y + 10, w, 15); x.fillStyle = pl.kind === 'site' ? '#ffb0a8' : '#f3e9c8'; x.fillText(label, X, Y + 18);
+    }
+    if (Game.driving && Nav.path && Nav.path.length > 1) { // v225: 가는 길은 지도에만 (파란 선)
+      x.save(); x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 6; x.lineJoin = x.lineCap = 'round'; const line = () => { x.beginPath(); Nav.path.forEach(([tx, ty], i) => { const X = (tx + 0.5) * P, Y = (ty + 0.5) * P; if (i) x.lineTo(X, Y); else x.moveTo(X, Y); }); x.stroke(); }; line(); x.strokeStyle = '#3fa9ff'; x.lineWidth = 3.5; line(); x.restore();
     }
     if (this.pick) { // 고르기: 물건·추천 장소 위에 ▼ 화살표 (누르라는 표시)
       const bob = Math.abs(Math.sin(t * 4)) * 6, arrow = (X, Y, col, big) => { const s2 = big ? 1.7 : 1.25; x.fillStyle = 'rgba(0,0,0,.45)'; x.beginPath(); x.moveTo(X - 7 * s2 + 1, Y - 26 * s2 - bob + 1); x.lineTo(X + 7 * s2 + 1, Y - 26 * s2 - bob + 1); x.lineTo(X + 1, Y - 14 - bob + 1); x.fill(); x.fillStyle = col; x.beginPath(); x.moveTo(X - 7 * s2, Y - 26 * s2 - bob); x.lineTo(X + 7 * s2, Y - 26 * s2 - bob); x.lineTo(X, Y - 14 - bob); x.closePath(); x.fill(); x.strokeStyle = '#1a1a1a'; x.lineWidth = 1; x.stroke(); };
@@ -3842,7 +3845,7 @@ const Nav = {
   },
   update(dt) {
     if (!Game.driving || Game.scene !== 'zone' || NavPick.on || CarSwap.stolen()) { if (this.on || this.path.length) this.off(); return; } // 뺏어 탄 차엔 내비가 없다 (사용자 2026-10-16) // 목적지 고르는 동안은 안내를 미룬다
-    if (this.free) { this.path = []; this.key = ''; this.show('🚗', '목적지 없이 운전 중', '내비를 누르면 목적지 고르기'); return; }
+    if (this.free) { this.path = []; this.key = ''; this.show('🚗', '목적지 없이 운전 중', '지도를 누르면 목적지 고르기'); return; }
     const z = Game.zone, c = Game.car; const g = this.goalOf();
     if (!g) { this.off(); return; }
     if (g.kind === 'gu') { g.edge = this.edgeFor(z.gu, g.gu); if (!g.edge) { this.off(); return; } }
@@ -3874,7 +3877,7 @@ const Nav = {
     const main = t.d === 0 ? `지금 ${word}` : tm <= 30 ? `잠시 후 ${word}` : `${fmtDist(tm)} 앞에서 ${word}`;
     this.show(NAV_ARROW[t.kind], main, sub, t.d > 0 ? fmtDist(tm) : '');
     const sk = Math.round(t.at[0] / 10) + ',' + Math.round(t.at[1] / 10); // 같은 회전은 한 번만 말한다
-    if (t.d > 0 && tm <= 100 && !this.said[sk]) { this.said[sk] = 1; Sound.play('tick'); } // 화면 가운데 알림은 안 띄운다: 아래 안내판으로 충분 (사용자 2026-10-17 '괜히 시야 가린다')
+    if (t.d > 0 && tm <= 100 && !this.said[sk]) { this.said[sk] = 1; } // 화면 가운데 알림은 안 띄운다: 아래 안내판으로 충분 (사용자 2026-10-17 '괜히 시야 가린다')
   },
   drawRoute(ctx) {
     if (!Game.driving || this.path.length < 2) return;
@@ -7278,7 +7281,7 @@ function draw() {
   if (Game.keyIcon > 0) drawKeyIcon(Game.t);
   drawTimeTint(Game.t);
   $('radar').style.visibility = Game.scene === 'zone' ? 'visible' : 'hidden'; $('roadSign').style.visibility = Game.scene === 'zone' ? 'visible' : 'hidden';
-  if (Game.scene === 'zone') { Radar.draw(); Nav.drawMap(); }
+  if (Game.scene === 'zone') { Radar.draw(); }
   if (ZoneMap.open) { if (Game.scene !== 'zone') ZoneMap.toggle(false); else ZoneMap.draw(); }
   drawIris();
   drawMinimap(Game.t); SeoulMap.draw(1 / 60);
@@ -16764,7 +16767,7 @@ const Instance = {
   document.querySelectorAll('.btn').forEach(b => b.addEventListener('pointerdown', () => { Sound.init(); Sound.play('click'); }));
   $('btnNote').onclick = () => Notebook.toggle();
   $('minimap').onclick = () => SeoulMap.toggle(true);
-  $('radar').onclick = () => { Sound.init(); if (Game.scene !== 'zone') { SeoulMap.toggle(true); return; } ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; }; // 폰에선 이 레이더가 유일한 지도 버튼: 동네 밖이면 서울 지도
+  $('radar').onclick = () => { Sound.init(); if (Game.scene !== 'zone') { SeoulMap.toggle(true); return; } if (Game.driving && !CarSwap.stolen()) { ZoneMap.pickOpen(); return; } /* v225: 운전 중엔 지도를 누르면 목적지 다시 고르기 (아래 내비는 없앴다) */ ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; }; // 폰에선 이 레이더가 유일한 지도 버튼: 동네 밖이면 서울 지도
   $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
   // 지도 탭: 동네 지도 ↔ 서울 전체 (한 지도처럼; 사용자 2026-10-14)
   document.querySelectorAll('.mapTabs .btn[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); Sound.init(); if (b.dataset.go === 'seoul') { ZoneMap.toggle(false); SeoulMap.toggle(true); } else { if (Game.scene !== 'zone') { Toast.show('건물 밖에서만 동네 지도를 볼 수 있어요.'); return; } SeoulMap.toggle(false); ZoneMap.toggle(true); } });

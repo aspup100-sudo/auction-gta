@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v236</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v237</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3010,7 +3010,7 @@ const Bills = {
 // 기차 탈것이 지나간 자리에 깔리는 철로. v170 (사용자 2026-10-16 '드리프트 타이어 자국처럼 남게') · v171 ('다른 구로 넘어가면 없어지는 게 아니라 시간 지나면 없어지게'):
 // 구마다 남아 있다가 LIFE초 지나면 FADE초 동안 흐려지며 사라진다 (오래된 것부터 MAX개까지)
 const Rails = {
-  LIFE: 1, FADE: 0.3, GAP: 7, MAX: 1600, pts: [], last: {}, /* v235 사용자 '철도 1초 뒤에 없어지게 거북이처럼': 1초 뒤 맨 끝부터 하나씩 */
+  LIFE: 10, FADE: 2, GAP: 7, MAX: 1600, pts: [], last: {}, /* v237 사용자 '기차는 공룡 발자국같이 사라지는 거 비슷하게': 티라노 발자국(Prints)처럼 10초 뒤 2초 동안 흐려짐 */
   lay(key, x, y, a, spd) {
     if (spd < 4) return; const now = performance.now() / 1000, L = this.last[key];
     if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
@@ -10128,7 +10128,7 @@ const Shop = {
       else if (!mv && idle > 4.6) { const L = Pets.BUDDY_SAY, i = ((idle - 4.6) / 2.8 | 0); if (i % 3 === 2) { npc = { n: 'walker2', X: NX }; bubbles.push(['제 친구 못생겼죠?', petX, -24]); if ((idle - 4.6) % 2.8 > 1.3) bubbles.push(['ㅋㅋㅋ 네', NX, -18]); pet.face = 1; } else bubbles.push([L[i % L.length], petX, -24]); } }
     if (kind === 'kid' && !mv) { npc = { n: 'walker2', X: NX }; if (ph5 > 0 && ph5 < 2.5) { pet.face = (ph5 / 0.6 | 0) % 2 ? 1 : -1; pet.idle = 0; bubbles.push(['예쁜 누나 어딨지~?', petX, -20]); }
       else if (ph5 >= 2.5) { const p = ph5, e = p < 4 ? (p - 2.5) / 1.5 : p < 8.5 ? 1 : p < 10 ? 1 - (p - 8.5) / 1.5 : 0, a = e * e * (3 - 2 * e), there = p >= 4 && p < 8.5; pet.x = petX + (NX - 8 - petX) * a; pet.mv = !there && e > 0; pet.face = p < 8.5 ? 1 : -1; pet.idle = 0; if (there) { Pets.heart(x, pet.x + 2, -22 - ((p - 4) * 0.7 % 1) * 8, 1 - (p - 4) * 0.7 % 1, 0.6); if (p < 6.5) bubbles.push(['예쁜 누나~ 나랑 놀아요~', pet.x, -20]); if (p > 5.5) bubbles.push(['어머, 귀여워라~', NX, -18]); } } }
-    let TG = null; if (kind === 'turtle') { if (mv) { const sg = []; for (let X = petX - 4; X > petX - 26; X -= 4) sg.push([X, -1, X - 4, -1, Math.max(0, Math.min(1, (X - petX + 26) / 12))]); Beach.strip(x, sg, now / 1000); } else { TG = Pets.tSeq(idle, 1); if (TG.h > 0) pet.pose = { hide: TG.h, shake: TG.shake }; } } // 거북이: 모래·물길 / 갈매기
+    let TG = null; if (kind === 'turtle') { if (!mv) { /* v237 모래·물길 없앰 */ TG = Pets.tSeq(idle, 1); if (TG.h > 0) pet.pose = { hide: TG.h, shake: TG.shake }; } } // 거북이: 모래·물길 / 갈매기
     if (kind === 'trex' && !mv) meRow = 2; else if (pet.x < PX) meRow = 1;
     person('me', PX, mv ? 2 : meRow, fr);
     if (npc) person(npc.n, npc.X, 1, 0);
@@ -10531,7 +10531,7 @@ const Pets = {
   // 티라노 머리 위를 도는 익룡 두 마리 (펫 그림체: 1픽셀). 멀리서 날아와 점점 작은 원으로
   // 거북이 (사용자 2026-10-16): 걸어가면 모래와 물길이 기찻길처럼 깔리고, 가만히 있으면 갈매기가 날아와 등껍질을 쪼아서 머리·팔다리를 쏙 집어넣는다
   turtle(c, s, key, idle, t) {
-    if (s.moving) { Beach.lay(key, s.x, s.y); if (s.gw && !s.gOff) s.gOff = Object.assign({ t }, s.gw); s.gw = null; } // 걷기 시작하면 앉아 있던 갈매기는 날아가 버린다
+    if (s.moving) { /* v237 사용자 '거북이는 그냥 물줄기 그거 없애자': 모래·물길(Beach) 안 깐다 */ if (s.gw && !s.gOff) s.gOff = Object.assign({ t }, s.gw); s.gw = null; } // 걷기 시작하면 앉아 있던 갈매기는 날아가 버린다
     const O = s.gOff; if (O) { const p = (t - O.t) / 1.2; if (p > 1 || p < 0) s.gOff = null; else { const gx = O.x + O.f * p * 70, up = O.up + p * p * 60 + p * 10; this.extra.push({ top: 1, y: s.y + 60, d: () => this.gull(c, gx, O.y, O.f, up, t, 0) }); } }
     const T = this.tSeq(s.moving ? 0 : idle, s.face); if (!T.g) { s.gw = null; return T; }
     const g = T.g, gx = s.x + g.dx, gy = s.y + 0.3; s.gw = { x: gx, y: gy, up: g.up, f: g.f };

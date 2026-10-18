@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v240</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v241</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -11661,20 +11661,31 @@ const Dora = {
   run(c, s, key, k, t, n, idle, ox, oy) {
     const S = this.S[key] || (this.S[key] = { cd: t + 3 + Math.random() * 3 }), z = Game.scene === 'zone' && Game.zone, X = Pets.extra;
     if (S.say) this.recite(c, S, s, t, X);
-    if (S.g && (!z || (s.moving && !S.g.fly))) { if (S.g.id === 'door') { s.x = S.g.ax; } S.g = null; S.cd = t + 3; } // 주인이 움직이면 그만
+    if (S.g && (!z || (s.moving && !S.g.fly && !S.g.walk))) { if (S.g.id === 'door') { s.x = S.g.ax; } S.g = null; S.cd = t + 3; } // 주인이 움직이면 그만
     if (S.g && S.g.fly && s.moving) { S.g = null; S.cd = t + 3; }
     // 생쥐 공포: 같이 다니는 펫이 생쥐면 가끔 기겁
     if (!S.g && z && key.startsWith('me') && (Pets.mineK === 'mouse' || Pets.mineK2 === 'mouse') && !s.moving && idle > 2 && t > (S.mcd || 0) && Math.random() < 0.004) { S.panic = t + 3; S.mcd = t + 25; S.cd = Math.max(S.cd, t + 5); }
     if (S.panic > t) { const a = (S.panic - t) * 9, x = s.x + Math.cos(a) * 12, y = s.y + Math.sin(a) * 5, f = -Math.sin(a) > 0 ? 1 : -1;
       X.push({ top: 1, y: y + 60, d: () => { Net.label(c, '쥐다아아아!!', x, y - 24); c.fillStyle = '#9fd8ff'; c.fillRect(Math.round(x - 6 * f), Math.round(y - 16 + ((t * 4) % 1) * 3), 1, 2); } });
       return { y, d: () => this.pet(c, S, k, x, y, f, true, t, n, 0) }; }
+    if (!S.g && z && s.moving && t > (S.wcd || 0)) { const w = this.near(s, 12, 70), now = this.now(); S.wcd = t + 0.8; // v241 사용자 '도라에몽 그냥 걸어 다니면서 npc랑 상호작용해': 걷다가 옆을 지나는 행인한테 바로
+      if (w && !(w.doraT > now)) { const w2 = this.near(w, 10, 220, w), opts = ['greet', 'share', 'big', 'air'].concat(w2 ? ['cupid'] : []).filter(g => g !== S.last), id = opts[Math.floor(Math.random() * opts.length)];
+        w.doraT = now + 40000; S.last = id; S.wcd = t + 5 + Math.random() * 5; S.g = { id, t0: t, f: s.face || 1, ax: s.x, ay: s.y, walk: 1, w, w2: id === 'cupid' ? w2 : null }; if (id !== 'greet' && id !== 'share') Sound.play('chime'); } }
     if (!S.g && z && !s.moving && idle > 2 && t > S.cd) { const id = this.pick(S, s, z, ox, oy); S.last = id; S.g = { id, t0: t, f: s.face || 1, ax: s.x, ay: s.y, fly: id === 'copter' }; if (id === 'door') S.g.dest = S.dest; Sound.play('chime'); }
     if (!S.g) return S.inv > t ? { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, s.face, s.moving, t, n, idle) } : null;
     const G = S.g, e = t - G.t0, u = e - 0.9, f = G.f;
+    const mv = G.walk ? !!s.moving : false;
+    if (G.id === 'greet' || G.id === 'share') { const w = G.w, ff = w.x > s.x ? 1 : -1; if (!this.ok(w) && !G.hit) { S.g = null; return null; } // 걸으면서 인사 · 도라야키 나눠 주기 (도구 없이)
+      if (G.id === 'greet') { if (e < 1.4) X.push({ top: 1, y: s.y + 60, d: () => Net.bubble(c, '안녕~! 나는 도라애몽!', s.x, s.y - 26) }); else if (e < 3.2) X.push({ top: 1, y: w.y + 60, d: () => Net.bubble(c, ['어?! 도라애몽이다!!', '헐 진짜 도라애몽?!', '사진 한 장만요!!'][Math.floor(G.t0 * 7) % 3], w.x, w.y - 30) });
+        if (e > 1.4 && !G.hit) { G.hit = 1; w.dir = w.x > s.x ? 1 : 2; } }
+      else { const q = Math.min(1, e / 0.7), ix = s.x + (w.x - s.x) * q, iy = s.y - 10 + (w.y - 14 - s.y + 10) * q - Math.sin(q * Math.PI) * 8;
+        if (e < 0.7) X.push({ top: 1, y: s.y + 60, d: () => this.item(c, 'yaki', ix, iy, t) }); else if (e < 2.6) X.push({ top: 1, y: w.y + 60, d: () => { Net.bubble(c, '도라야키?! 고마워~♥', w.x, w.y - 30); this.heart(c, w.x + 4, w.y - 24 - ((t * 10) % 6)); } });
+        if (e >= 0.7 && !G.hit) { G.hit = 1; Sound.play('pop'); } }
+      if (e > 3.2) { S.g = null; S.cd = Math.max(S.cd, t + 3); } return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, mv ? s.face : ff, mv, t, n, 0) }; }
     // 0~0.9초: 주머니에서 꺼내 머리 위로 번쩍
     if (u < 0) { const hy = s.y - 17 - Math.min(1, e / 0.35) * 7;
       X.push({ top: 1, y: s.y + 60, d: () => { this.item(c, G.id, s.x + f * 1, hy, t); if (e > 0.25) Net.label(c, `${DORA_G[G.id]}!`, s.x, s.y - 34); this.sparkle(c, s.x, hy - 3, t); } });
-      return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, f, false, t, n, 0) }; }
+      return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, mv ? s.face : f, mv, t, n, 0) }; }
     const done = (cd = 7 + Math.random() * 6) => { S.g = null; S.cd = t + cd; s.still = t; };
     const base = { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, f, false, t, n, 0) };
     if (G.id === 'door') { // 문 열고 쏙 → 다른 곳 문에서 짠
@@ -11693,16 +11704,16 @@ const Dora = {
       const w = G.w, hx = s.x + (w.x > s.x ? 5 : -5), hy = s.y - 8, ff = w.x > s.x ? 1 : -1;
       if (G.id === 'big') { if (u < 0.8) X.push({ top: 1, y: s.y + 60, d: () => { this.item(c, 'big', hx, hy - 2, t); c.save(); c.globalAlpha = 0.35 + Math.sin(t * 30) * 0.08; c.fillStyle = '#fff07a'; c.beginPath(); c.moveTo(hx, hy - 2); c.lineTo(w.x - 9, w.y - 22); c.lineTo(w.x + 9, w.y - 2); c.closePath(); c.fill(); c.restore(); } });
         if (u >= 0.8 && !G.hit) { G.hit = 1; w.big = { until: this.now() + 15000 }; w.bubble = { text: '어?! 내가 왜 이렇게 커졌지?!', t: 2.6 }; this.puff(w.x, w.y - 14, '#fff6c0'); Sound.play('pop'); }
-        if (u > 1.6) done(); return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, ff, false, t, n, 0) }; }
+        if (u > 1.6) done(); return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, mv ? s.face : ff, mv, t, n, 0) }; }
       if (G.id === 'cupid') { const q = Math.min(1, u / 0.6), ax = hx + (w.x - hx) * q, ay = hy + (w.y - 12 - hy) * q - Math.sin(q * Math.PI) * 10;
         if (u < 0.6) X.push({ top: 1, y: s.y + 60, d: () => this.arrow(c, ax, ay, ff) });
         if (u >= 0.6 && !G.hit) { G.hit = 1; w.love = { tgt: G.w2, until: this.now() + 15000, sayT: 0 }; w.bubble = { text: '첫눈에 반했어요~♥', t: 2.4 }; this.puff(w.x, w.y - 14, '#ff8ab0'); Sound.play('chime'); }
-        if (u > 1.4) done(); return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, ff, false, t, n, 0) }; }
+        if (u > 1.4) done(); return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, mv ? s.face : ff, mv, t, n, 0) }; }
       { const q = Math.min(1, u / 0.35), rx = hx + (w.x - hx) * q, ry = hy + (w.y - 10 - hy) * q; // 공기포
         if (u < 0.35) X.push({ top: 1, y: s.y + 60, d: () => { this.item(c, 'air', hx, hy, t); c.strokeStyle = 'rgba(220,240,255,.85)'; c.lineWidth = 1; c.beginPath(); c.ellipse(rx, ry, 2 + q * 3, 3 + q * 4, 0, 0, 7); c.stroke(); } });
         if (u >= 0.35 && !G.hit) { G.hit = 1; const z2 = Game.zone, dx = w.x - s.x, dy = w.y - s.y, d = Math.hypot(dx, dy) || 1; for (let m = 14; m > 0; m -= 2) { const nx = w.x + dx / d * m, ny = w.y + dy / d * m; if (this.walk(z2, nx, ny)) { w.x = nx; w.y = ny; break; } } w.stun = 0.9; w.bubble = { text: '으악! 웬 바람이?!', t: 1.8 }; this.puff(w.x, w.y - 8, '#e8f4ff'); Sound.play('pop'); shake(1.5, 0.12); }
         if (u > 0.4 && u < 1.2) X.push({ top: 1, y: s.y + 60, d: () => Net.label(c, '펑!', w.x, w.y - 30) });
-        if (u > 1.3) done(); return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, ff, false, t, n, 0) }; }
+        if (u > 1.3) done(); return { y: s.y, d: () => this.pet(c, S, k, s.x, s.y, mv ? s.face : ff, mv, t, n, 0) }; }
     }
     if (G.id === 'cloak') { S.inv = t + 6.5; if (u < 0.5) X.push({ top: 1, y: s.y + 60, d: () => { c.fillStyle = 'rgba(150,170,200,.75)'; c.fillRect(Math.round(s.x - 6), Math.round(s.y - 18 + u * 18), 12, Math.max(1, Math.round(16 - u * 16))); } }); else { X.push({ top: 1, y: s.y + 60, d: () => Net.label(c, '안 보이지롱~', s.x, s.y - 26) }); done(); } return base; }
     if (G.id === 'bread') { const q = Math.min(1, u / 1.2);

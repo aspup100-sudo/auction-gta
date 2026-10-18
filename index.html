@@ -237,6 +237,8 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .nbCase { background:#fffaf0; border:1px solid #d9caa5; border-radius:8px; padding:8px 10px; margin-bottom:8px; }
 .nbCase small { color:#7a6a4a; margin-left:6px; } .nbCase ul { margin:6px 0 0; padding-left:18px; } .nbCase li { margin:3px 0; font-size:14px; }
 .nbCase a { color:var(--navy); text-decoration:underline; cursor:pointer; } .nbCase li.clue { font-size:13px; }
+.nbCase a.rvLink { font-weight:700; color:var(--seal); } details.nbCase summary { cursor:pointer; font-size:14px; color:#5a4a2a; }
+.doc.review .rvBig { background:#fff4e0; border:1px solid #e0c48a; border-radius:6px; padding:8px 10px; font-size:13.5px; line-height:1.7; } .doc.review .warn { color:var(--seal); font-weight:500; } .doc.review ul { padding-left:18px; margin:6px 0; } .doc.review li { margin:4px 0; } .doc.review details summary { cursor:pointer; color:var(--navy); margin:8px 0; }
 .panel .jq { margin:12px 0; display:flex; flex-direction:column; gap:6px; } .panel .row { display:flex; gap:8px; align-items:center; }
 .panel select, .panel input[type=number] { font:inherit; color:#1a1408; padding:6px 8px; border:1px solid #c9b98f; border-radius:6px; background:#fffaf0; }
 .panel .chk { display:flex; gap:6px; align-items:center; font-size:14px; } .panel .dim { color:#7a6a4a; opacity:1; }
@@ -1025,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v226</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v227</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5430,6 +5432,7 @@ const Live = {
     c.live = cyc; this.closed[c.id] = c;
     return c;
   },
+  pastCase(id) { const p = (this.past || []).find(x => x.id === id); if (p) return this.caseFor(p.key); for (const key in this.mine) { const [, k, n] = key.split(':').map(Number); if (`2025타경${10000 + ((k * 10007 + n * 3) % 29999)}` === id) return this.caseFor(key); } return null; },
   caseFor(key) { const [, k, n] = key.split(':').map(Number); const cur = State.week.cases.find(c => c.live && c.live.key === key); return cur || Object.values(this.closed).find(c => c.live && c.live.key === key) || this.makeCase(k, n); },
   dayIdxOf(c) { return Math.min(6, Math.floor((this.now() - c.live.t0) / this.dayMs())); }, // 0..6, 6 = 매각기일(D-day)
   dayLabel(c) { return dLabel(Math.min(7, this.dayIdxOf(c) + 1)); }, // D-6 … D-1, D-day
@@ -5468,14 +5471,14 @@ const Live = {
   saved(ch) { return Store.get('live' + ch, null); },
   reset(ch) { Store.set('live' + ch, null); Store.set('liveInv' + ch, null); Store.set('vipLock' + ch, 0); Mine.reset(ch); },
   /* 조사 기록(뗀 서류·현장 메모·수첩·내 판단): 나갔다 와도 남게 채널별로 따로 저장 (사용자 2026-10-15 '나갔다 와도 조사했던거 저장') */
-  invKeep() { const ids = new Set(State.week.cases.map(c => c.id)); for (const key in this.mine) { const [, k, n] = key.split(':').map(Number); ids.add(`2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`); } return ids; },
+  invKeep() { const ids = new Set(State.week.cases.map(c => c.id)); for (const p of this.past || []) ids.add(p.id); /* v227: 끝난 물건도 돌아보기용으로 조사 기록을 남긴다 */ for (const key in this.mine) { const [, k, n] = key.split(':').map(Number); ids.add(`2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`); } return ids; },
   saveInv(force) {
     if (!this.on || !State.week) return; const ids = this.invKeep(); const pick = o => { const r = {}; for (const id in o || {}) if (ids.has(id)) r[id] = o[id]; return r; };
-    const inv = { docs: State.docs.filter(d => ids.has(d.caseId)), seen: pick(State.seen), clues: pick(State.clues), caseMemo: pick(State.caseMemo), judgment: pick(State.judgment), memo: State.memo || '', target: ids.has(State.target) ? State.target : null };
+    const inv = { docs: State.docs.filter(d => ids.has(d.caseId)), seen: pick(State.seen), clues: pick(State.clues), caseMemo: pick(State.caseMemo), judgment: pick(State.judgment), memo: State.memo || '', past: this.past || [], target: ids.has(State.target) ? State.target : null };
     const js = JSON.stringify(inv); if (!force && js === this.invJs) return; this.invJs = js; Store.set('liveInv' + this.ch, inv);
   },
   loadInv() {
-    const inv = Store.get('liveInv' + this.ch, null); this.invJs = ''; if (!inv) return;
+    const inv = Store.get('liveInv' + this.ch, null); this.invJs = ''; this.past = []; if (!inv) return; this.past = inv.past || [];
     const ids = this.invKeep(); const keep = o => { const r = {}; for (const id in o || {}) if (ids.has(id)) r[id] = o[id]; return r; };
     State.docs = (inv.docs || []).filter(d => ids.has(d.caseId)).map((d, i) => Object.assign(d, { id: i + 1 })); State.seen = keep(inv.seen); State.clues = keep(inv.clues); State.caseMemo = keep(inv.caseMemo); State.judgment = keep(inv.judgment); State.memo = inv.memo || '';
     if (inv.target && ids.has(inv.target)) State.target = inv.target;
@@ -5483,7 +5486,7 @@ const Live = {
 
   /* ---- 시작 ---- */
   start() {
-    this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.rentLog = []; this.closed = {}; this.queue = []; this.ready = false; this.readyT = 2.5;
+    this.on = true; this.ch = Net.ch; const capital = this.capOf(this.ch); this.book = {}; this.mine = {}; this.results = []; this.rentLog = []; this.closed = {}; this.queue = []; this.past = []; this.ready = false; this.readyT = 2.5;
     let sv = this.saved(this.ch); if (sv && sv.capital !== capital) sv = null; // 예전 규칙으로 저장된 기록은 새로
     this.offGap = sv ? Date.now() - Math.max(sv.aliveAt || 0, Store.get('liveAlive' + this.ch, 0) || 0) : 0; if (sv && !sv.aliveAt && !Store.get('liveAlive' + this.ch, 0)) this.offGap = 0; this.wallT = Date.now(); // 꺼 둔 시간 (예전 저장분은 모름 → 0)
     if (sv) { State.capital = sv.capital; State.cash = sv.cash; this.xtra = sv.xtra || 0; this.mine = sv.mine || {}; this.results = sv.results || []; this.rentLog = sv.rentLog || []; this.seen = sv.seen || {}; this.tomb = sv.tomb || {}; State.hits = sv.hits || 0; State.hospital = sv.hospital || 0; State.pvp = sv.pvp || 0; this.dayIdx = sv.dayIdx; this.used = sv.used || 0; }
@@ -5543,6 +5546,7 @@ const Live = {
   roll(k) {
     const old = State.week.cases[k]; old.closed = true; this.closed[old.id] = old;
     const key = old.live.key;
+    this.past = [{ key, id: old.id, name: old.name }, ...(this.past || []).filter(p => p.key !== key)].slice(0, 8); try { this.saveInv(true); } catch (e) {} // v227 수첩 돌아보기: 최근에 끝난 물건 8개
     if (this.mine[key] && !this.mine[key].done && !this.mine[key].opened) this.queue.push(key);
     else if (Game.player) Toast.show(`${old.name} 개찰 끝 · 새 물건 등장`, 2600);
     const cyc = this.cycle(k); const c = this.makeCase(k, cyc.n); State.week.cases[k] = c;
@@ -9446,6 +9450,66 @@ const Records = {
   },
 };
 
+/* ---------- 수첩 돌아보기 (v227, 사용자 '끝난 매물 수첩에서 돌아보기 하면 얼마 인수했어야 했고 권리분석 어떻게 했어야 했고') ----------
+ * 개찰이 끝난 물건에만 연다. 진행 중인 물건에는 절대 보여 주지 않는다 (힌트 금지). */
+function caseOver(c) { if (!c) return false; if (Live.on) return !!c.closed || !!(c.live && Live.now() >= c.live.tEnd); return !!State.resultShown; }
+function reviewBid(c) {
+  const top = Math.max(0, ...((c.competition && c.competition.bids) || []).map(b => b.bid));
+  if (Live.on) {
+    const m = c.live && Live.mine[c.live.key], r = (Live.results || []).find(x => x.caseNo === c.caseNo);
+    if (m && m.won) return [m.bid, '내 낙찰가'];
+    if (r && r.wbid) return [r.wbid, r.winner === '본인' ? '내 낙찰가' : '낙찰가'];
+  } else { const br = State.bidResult; if (br && br.caseId === c.id && br.winner) return [br.winner.bid, br.winner.me ? '내 낙찰가' : '낙찰가']; }
+  return top >= c.minPrice ? [top, '낙찰가'] : [c.minPrice, '최저가 (유찰)'];
+}
+function reviewHtml(c) {
+  const [bid, bidWhat] = reviewBid(c); const a = Engine.analyze(c.data, bid); const fair = fairBid(c);
+  const base = a.base ? `${ymd(a.base.date)} ${a.base.label} ${a.base.holder || ''}`.trim() : '';
+  let h = `<div class="doc review"><div class="docHead">돌아보기 · ${c.caseNo}</div><h2>${c.name}</h2>`;
+  h += `<p>난이도 <b>${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)}</b> · ${c.risks.length ? c.risks.map(r => RISK_NAME(r) + (r === 'lien' ? (c.lien.real ? ' (진짜)' : ' (허위)') : '')).join(' · ') : '깨끗한 물건'}</p>`;
+  h += `<p class="rvBig">낙찰자가 떠안을 돈(인수액): <b>${fmtWon(a.assumeTotal)}</b><br>적정 입찰가: <b>${fair < c.minPrice ? `입찰 비추천 (적정가 ${fmtWon(fair)} &lt; 최저가 ${fmtWon(c.minPrice)})` : `${fmtWon(fair)} 안팎`}</b></p>`;
+  // 1. 말소기준
+  h += `<h3>1. 말소기준권리 찾기</h3><p>${base ? `<b>${base}</b>` : '<b>없음</b> (말소기준이 될 권리가 없어서 모든 권리가 그대로 남는다)'}</p><p class="small">근저당·가압류·압류·담보가등기·경매개시결정 등기(배당요구한 선순위 전세권 포함) 중 가장 빠른 것이 말소기준이다. 이보다 앞선 권리는 낙찰자가 떠안고, 뒤의 권리는 매각으로 모두 지워진다.${c.risks.includes('daewi') ? ' 이 물건은 1순위 근저당이 대위변제로 말소돼 말소기준이 뒤로 밀렸다.' : ''}</p>`;
+  // 2. 등기
+  const regRows = a.regs.map(r => `<tr class="${r.status === 'cancelled' ? 'struck' : ''}"><td>${ymd(r.date)}</td><td>${r.label}${r.daewi ? ' <small>(대위변제 말소)</small>' : ''}</td><td>${r.holder || ''}${r.shareText ? ` <small>${r.shareText}</small>` : ''}</td><td class="num">${r.amount ? fmtWon(r.amount) : ''}</td><td class="st ${r.status}">${STATUS_LABEL[r.status]}</td></tr>`).join('');
+  const keep = a.regs.filter(r => r.status === 'assume' || r.status === 'fatal');
+  h += `<h3>2. 등기부 권리: 인수냐 소멸이냐</h3><table class="rt"><tr><th>접수일</th><th>등기목적</th><th>권리자</th><th>금액</th><th>처리</th></tr>${regRows}</table>`;
+  h += `<p>${keep.length ? `남는 권리: ${keep.map(r => `${ymd(r.date)} ${r.label}${r.amount ? ` ${fmtWon(r.amount)}` : ''}`).join(', ')}` : '등기부에서 낙찰자가 떠안는 권리는 없다.'}</p>`;
+  for (const f of a.fatal) h += `<p class="warn">⚠ ${f.note}</p>`;
+  // 3. 임차인
+  h += `<h3>3. 임차인: 대항력과 배당</h3>`;
+  if (!a.tenants.length) h += '<p>임차인이 없다.</p>';
+  else {
+    h += `<table class="rt"><tr><th>임차인</th><th>전입</th><th>확정일자</th><th>배당요구</th><th>보증금</th><th>대항력</th><th>배당액</th><th>인수</th></tr>${a.tenants.map(t => `<tr><td>${t.name}${t.hidden ? ' <small>(현황조사 미발견)</small>' : ''}</td><td>${ymd(t.move)}</td><td>${t.fixed ? ymd(t.fixed) : '없음'}</td><td>${t.claimed === 'yes' ? '함' : '안 함'}</td><td class="num">${fmtWon(t.deposit)}</td><td class="st ${t.daehang ? 'assume' : 'extinguish'}">${t.daehang ? '있음' : '없음'}</td><td class="num">${fmtWon(t.paid)}</td><td class="num">${fmtWon(t.assumed)}</td></tr>`).join('')}</table><ul>`;
+    for (const t of a.tenants) {
+      let s;
+      if (t.noDaehang) s = '임대차 자체가 인정되지 않아 대항력이 없다. 낙찰자가 물어 줄 보증금도 없다.';
+      else if (!a.baseDate) s = '말소기준권리가 없어서 대항력이 있다.';
+      else if (t.daehang) s = `전입 ${ymd(t.move)}이 말소기준 ${ymd(a.baseDate)}보다 빨라 대항력이 있다.`;
+      else s = `전입 ${ymd(t.move)}이 말소기준 ${ymd(a.baseDate)}${t.move === a.baseDate ? '과 같은 날이다. 전입의 대항력은 다음 날 0시부터라 늦은 것으로 쳐서' : '보다 늦어서'} 대항력이 없다.`;
+      if (!t.noDaehang) {
+        const pay = t.paid > 0 ? `배당으로 ${fmtWon(t.paid)}을 받는다${t.small ? ` (소액 최우선 ${fmtWon(t.small)} 포함)` : ''}.` : `배당을 못 받는다${t.why ? ` (${t.why})` : ''}.`;
+        s += ' ' + pay + (t.daehang ? (t.assumed > 0 ? ` 못 받은 <b>${fmtWon(t.assumed)}</b>은 낙찰자가 물어 줘야 한다.` : ' 보증금을 다 받으니 낙찰자가 물어 줄 돈은 없다.') : (t.paid < t.deposit ? ' 못 받은 돈이 있어도 낙찰자 책임은 아니다.' : ''));
+      }
+      h += `<li><b>${t.name}</b>: ${s}${t.hidden ? ' 현황조사서엔 없고 전입세대열람에만 나오는 사람이다.' : ''}</li>`;
+    }
+    h += '</ul>';
+  }
+  for (const r of c.risks) if (TRAP_WHY[r]) h += `<p class="small">📘 ${TRAP_WHY[r]}</p>`;
+  // 4. 인수액
+  h += `<h3>4. 인수액 합계</h3><p><b>${fmtWon(a.assumeTotal)}</b> = 임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)}${a.assumeOther ? ` + 가등기·가처분 정리 ${fmtWon(a.assumeOther)}` : ''}</p><p class="small">${bidWhat} ${fmtWon(bid)} 기준이다. 배당액은 낙찰가에 따라 조금씩 달라진다.</p>`;
+  // 5. 적정 입찰가
+  const dv = Generator.disposalValue(c), fine = c.illegal ? c.illegal.fine : 0;
+  const dvWhy = c.share ? `시세 ${fmtWon(c.market)} × 지분 ${c.share.num}/${c.share.den} × 0.7. 지분만 사면 혼자 쓰지도 팔지도 못해 30% 깎는다.` : c.super ? `시세 ${fmtWon(c.market)} × 0.6. 땅 위 남의 건물에 법정지상권이 생길 수 있어 땅을 마음대로 못 쓴다.` : c.tomb ? `시세 ${fmtWon(c.market)} × 0.7. 분묘 자리는 못 쓴다.` : c.lien && c.lien.real ? `시세 ${fmtWon(c.market)} − 유치권 ${fmtWon(c.lien.amount)}. 진짜 유치권이라 공사대금을 물어 줘야 집을 넘겨받는다.` : `시세 ${fmtWon(c.market)} 그대로.${c.lien ? ' 유치권 신고는 허위라서 빼지 않는다.' : ''}`;
+  h += `<h3>5. 적정 입찰가</h3><p class="small">처분가치: ${dvWhy}${fine ? ` 이행강제금 ${fmtWon(fine)}은 ${c.illegal.what} 때문이다.` : ''}</p><p>(처분가치 ${fmtWon(dv)} − 인수액 ${fmtWon(a.assumeTotal)}${fine ? ` − 이행강제금 ${fmtWon(fine)}` : ''}) × 0.85 = <b>${fmtWon(fair)}</b></p><p class="small">0.85는 부대비용·수리·금융비용 약 8%와 목표 수익 7%를 뺀 것이다. 최저가는 ${fmtWon(c.minPrice)}.</p>`;
+  h += `<details><summary>배당표 보기</summary><table class="rt"><tr><th>순위</th><th>채권자</th><th>기준일</th><th>채권액</th><th>배당액</th></tr>${a.distribution.map((d, i) => `<tr><td>${i + 1}</td><td>${d.label}${d.note ? ` <small>(${d.note})</small>` : ''}</td><td>${ymd(d.date)}</td><td class="num">${fmtWon(d.claim)}</td><td class="num">${fmtWon(d.paid)}</td></tr>`).join('')}<tr><td colspan="4">잉여금 (소유자 반환)</td><td class="num">${fmtWon(a.surplus)}</td></tr></table></details>`;
+  // 내 판단 · 놓친 곳
+  const j = State.judgment[c.id];
+  if (j && (j.base || j.none || (j.tenants || []).length || j.assume != null || j.bid)) h += `<h3>내 판단과 비교</h3><table class="rt"><tr><th>항목</th><th>내 판단</th><th>정답</th><th></th></tr>${judgeCompare(c, a).map(x => `<tr><td>${x.label}</td><td>${escapeHtml(x.mine)}</td><td>${escapeHtml(x.engine)}</td><td class="st ${x.ok ? 'extinguish' : 'assume'}">${x.ok ? 'O' : 'X'}</td></tr>`).join('')}</table>`;
+  if (State.seen[c.id]) { const ms = missedInfo(c); h += `<h3>놓친 곳</h3>${ms.length ? `<ul>${ms.map(m => `<li><b>${m.place}</b>: ${escapeHtml(m.text)}</li>`).join('')}</ul>` : '<p>꼭 가야 할 곳은 다 다녀왔다.</p>'}`; }
+  return h + '</div>';
+}
+
 /* ===================== 튜토리얼: '혼자 하기'를 처음 하는 사람(경매도, 게임도 처음)을 위한 선배 안내 =====================
  * 사용자 요청 2026-10-15 ('혼자하기는 경매 모르는 사람, 게임 할 줄 모르는 사람을 위해 튜토리얼처럼').
  * 규칙: 조작법과 일반적인 경매 지식만 설명한다. 연습 물건의 정답(위험·적정가)은 결과 화면 전엔 절대 말하지 않는다.
@@ -9565,6 +9629,7 @@ const Notebook = {
     else if (this.tab === 2) body.innerHTML = this.judgeHtml();
     else body.innerHTML = this.missedHtml();
     body.querySelectorAll('[data-doc]').forEach(a => a.onclick = () => { const d = State.docs.find(x => x.id === +a.dataset.doc); this.toggle(false); DocViewer.show(d.html, { title: d.title, toNotebook: false }); });
+    body.querySelectorAll('[data-review]').forEach(a => a.onclick = () => { const c = nbCase(a.dataset.review); if (!c || !caseOver(c)) return; this.toggle(false); DocViewer.show(reviewHtml(c), { title: `돌아보기 · ${c.name}`, toNotebook: false }); });
     body.querySelectorAll('[data-info]').forEach(a => a.onclick = () => { const c = caseById(a.dataset.info); if (!c) return; this.toggle(false); DocViewer.show(docInfo(c), { title: `물건 기본정보 · ${c.name}`, toNotebook: false }); });
     body.querySelectorAll('[data-both]').forEach(a => a.onclick = () => { const id = a.dataset.both; const s = State.docs.find(x => x.caseId === id && x.kind === 'spec'), v = State.docs.find(x => x.caseId === id && x.kind === 'survey'); this.toggle(false); DocViewer.show(docPair(s.html, v.html), { title: `매각물건명세서 + 현황조사서 · ${caseById(id).name}`, toNotebook: false, wide: true }); });
     if (this.tab === 2) this.bindJudge();
@@ -9581,17 +9646,20 @@ const Notebook = {
     return h;
   },
   docsHtml() {
-    const ids = [...new Set([...State.docs.map(d => d.caseId), ...Object.keys(State.clues)])];
+    const past = Live.on ? (Live.past || []).map(p => p.id) : [];
+    const ids = [...new Set([...State.docs.map(d => d.caseId), ...Object.keys(State.clues), ...past.filter(id => State.seen[id] || (State.judgment || {})[id])])];
     // 새 물건이 위로 (사용자 2026-10-15): 입찰 대상 → 이번 목록에 있는 물건(최근에 서류 받은 순) → 지난 회차
     const cur = new Set(((State.week && State.week.cases) || []).map(c => c.id)), last = id => State.docs.map(d => d.caseId).lastIndexOf(id);
-    const rank = id => (id === State.target ? 2 : 0) + (cur.has(id) ? 1 : 0);
+    const rank = id => (id === State.target ? 4 : 0) + (cur.has(id) ? 2 : 0) + (State.docs.some(d => d.caseId === id) ? 1 : 0);
     ids.sort((x, y) => rank(y) - rank(x) || last(y) - last(x));
-    if (!ids.length && !(State.fines || []).length) return '<p class="dim">아직 받은 서류가 없어요. 사무실 PC부터 보세요.</p>';
+    const rest = past.filter(id => !ids.includes(id)); // 조사 안 하고 끝난 물건: 맨 아래 접어 둔다
+    if (!ids.length && !rest.length && !(State.fines || []).length) return '<p class="dim">아직 받은 서류가 없어요. 사무실 PC부터 보세요.</p>';
     let h = '';
     for (const id of ids) {
       // 채널: 회차가 지나 목록에서 빠진 물건의 서류도 있다 (예전엔 여기서 멈춰서 탭을 눌러도 화면이 안 바뀌었다 — 사용자 2026-10-15 '수첩 눌러도 아무것도 없고')
-      const d0 = State.docs.find(x => x.caseId === id), c = caseById(id) || { name: `${(d0 && d0.title.split(' · ')[1]) || '지난 물건'} (지난 회차)`, caseNo: '' };
+      const d0 = State.docs.find(x => x.caseId === id), c = nbCase(id) || { name: `${(d0 && d0.title.split(' · ')[1]) || '지난 물건'} (지난 회차)`, caseNo: '' };
       h += `<div class="nbCase"><b>${id === State.target ? '★ ' : ''}${c.name}</b><small>${c.caseNo}</small><ul>`;
+      if (c.data && caseOver(c)) h += `<li><a data-review="${id}" class="rvLink">🔍 돌아보기 · 인수액과 권리분석 정답</a> <small>개찰 끝</small></li>`;
       if (c.minPrice) h += `<li><a data-info="${id}">물건 기본정보</a> <small>최저가 ${fmtWon(c.minPrice)} · 보증금 ${fmtWon(Math.ceil(c.minPrice * 0.1))} · 유찰 ${c.failCount}회</small></li>`;
       for (const d of State.docs.filter(x => x.caseId === id)) h += `<li><a data-doc="${d.id}">${d.title.split(' · ')[0]}</a> <small>${whenLabel(d)}</small></li>`;
       for (const cl of State.clues[id] || []) h += `<li class="clue">현장: ${escapeHtml(cl.text)} <small>${dLabel(cl.day)}</small></li>`;
@@ -9599,6 +9667,7 @@ const Notebook = {
       if ((State.caseMemo || {})[id]) h += `<li class="clue">메모: ${escapeHtml(State.caseMemo[id]).slice(0, 60)}${State.caseMemo[id].length > 60 ? '…' : ''}</li>`;
       h += '</ul></div>';
     }
+    if (rest.length) h += `<details class="nbCase"><summary>조사 안 하고 끝난 물건 ${rest.length}건</summary><ul>${rest.map(id => { const p = Live.past.find(x => x.id === id); return `<li><a data-review="${id}">🔍 ${escapeHtml(p.name)}</a> <small>${id}</small></li>`; }).join('')}</ul></details>`;
     if ((State.fines || []).length) h += `<div class="nbCase"><b>과태료 고지서</b><ul>${State.fines.map(f => `<li>${f.why} ${fmtWon(f.amt)} <small>${dLabel(f.day)}</small></li>`).join('')}</ul></div>`;
     return h;
   },
@@ -9641,6 +9710,7 @@ const Notebook = {
   },
 };
 function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]); }
+function nbCase(id) { return caseById(id) || (Live.on ? Live.pastCase(id) : null); } // 수첩: 지난 회차 물건도 시드로 다시 만든다 (v227)
 
 /* ===================== 상점: 내 돈으로 옷·차 스킨 사기 (사용자 요청 2026-10-14) =====================
  * 광진구 '건대 편집숍'(kind 'shop')에서 점원·옷걸이·차 전시대를 쓰면 열린다. 산 것은 이 기기에 저장(Store 'wardrobe'),

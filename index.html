@@ -5481,6 +5481,7 @@ const Live = {
         Money.why('입찰보증금 다시 법원에 (자양동 늘봄아파트 6천만 원 낙찰로 정정)'); State.cash -= fm.deposit; this.results = this.results.filter(r => r.caseNo !== '2025타경20877');
         setTimeout(() => { const c = this.caseFor(fk); State.target = c.id; State.targetPlace = null; this.save(); HUD.page(`${c.name} 6천만 원에 낙찰받은 걸로 고쳤어요. 돌려받았던 보증금 ${fmtWon(fm.deposit)}은 다시 법원에 들어갔어요. ${FEEL.livePayMin}분 안에 ${courtOf(c).name}에 잔금 ${fmtWon(fm.bid - fm.deposit)} 내세요.`, '법원'); }, 4800); } }
     if (sv && this.ch === 1 && Store.get('fix20877', false) && !Store.get('fix216', false)) { Store.set('fix216', true); State.cash += 102000; setTimeout(() => { this.save(); HUD.page('우회전하다 빠진 수리비 4만 2,000원 + 신호위반 6만 원, 합쳐서 10만 2,000원 돌려드렸어요. 이제 빨간불 우회전은 괜찮고, 모서리를 스치는 건 수리비가 안 나가요.', '알림'); }, 5200); } // 사용자 2026-10-18 '아무것도 없는데 그냥 우회전했는데 돈 나갔다' (v216에서 고침), 한 번만
+    if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('fix218m', false)) { Store.set('fix218m', true); Money.why('석탄 땅굴에서 되찾은 돈 (예전에 캔 땅굴 한도 몫)'); State.cash += 1e7; setTimeout(() => { this.save(); HUD.page('땅굴에서 한도 1천만 원을 채워 캔 돈을 현금으로 돌려드렸어요. 이제부터는 땅굴에서 한도를 채우면 그만큼 현금으로도 돌아와요.', '알림'); }, 6200); } // 사용자 2026-10-18 '빚 천만원 갚고 오면 내 돈 추가돼야 하는 거 아니야, 원래 내 돈이었는데 합의금·수리비로 나간 거잖아', 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
     this.dayIdx = Math.floor(this.now() / this.dayMs()); if (!sv || sv.dayIdx !== this.dayIdx) this.used = 0;
@@ -7586,7 +7587,7 @@ const Mine = {
     if (this.debt && this.debt.fill == null) this.debt.fill = Math.max(0, FEEL.mineAllow - this.lim);
     if (this.debt && this.debt.got >= this.need()) { // 빚은 다 갚고 '더 캐기' 하다 앱을 껐다: 캔 만큼 들고 나온 걸로
       const D = this.debt, N = this.need(), left = Math.max(0, D.more ? Math.min(D.got, N + FEEL.mineMore) - N : D.got - N); /* 넘친 건 금 몫뿐 (곡괭이질은 남은 돈까지만) */ this.debt = null; this.saveDebt(); this.lim = Math.min(FEEL.mineAllow, this.lim + (D.fill || 0)); this.saveLim();
-      if (left > 0) { Money.why(`석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left; HUD.setCash(State.cash); setTimeout(() => { try { Live.save(); } catch (e) {} }, 0); }
+      if (left + (D.fill || 0) > 0) { Money.why(D.fill ? `석탄 땅굴 (밖에서 낸 ${fmtWon(D.fill)} 되찾음${left ? ' + 남은 돈' : ''})` : `석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left + (D.fill || 0); HUD.setCash(State.cash); setTimeout(() => { try { Live.save(); } catch (e) {} }, 0); }
     }
     this.want = performance.now() + 3000; this.gridDirty = true;
     if (!this.iv) this.iv = setInterval(() => { try { this.watch(); } catch (e) {} }, 300);
@@ -7601,7 +7602,7 @@ const Mine = {
     if (!Live.on || !(amt > 0) || this.ch == null) return; const before = this.lim; this.lim = Math.min(FEEL.mineAllow, this.lim + Math.round(amt)); this.saveLim();
     // 따로 표시하지 않는다 (사용자: 돈은 하나로). 다음에 돈이 나갈 때 남은 한도를 알려 준다
   },
-  // v171 (사용자 '땅굴에서 한도까지 다시 채워야 나오게, 밖에서 천만 원 손해 봤으니까'): 캘 돈 = 못 낸 빚 + 다시 채울 땅굴 한도 (fill). 한도 몫은 자금으로 안 들어오고 한도만 돌아온다 (새 돈이 아님)
+  // v171 (사용자 '땅굴에서 한도까지 다시 채워야 나오게, 밖에서 천만 원 손해 봤으니까'): 캘 돈 = 못 낸 빚 + 다시 채울 땅굴 한도 (fill). 한도 몫은 v218부터 현금으로도 돌아온다 (밖에서 낸 내 돈을 되찾는 것)
   need(D = this.debt) { return D ? D.owe + (D.fill || 0) : 0; },
   owed() { const D = this.debt; return D ? Math.max(0, this.need(D) - D.got) : 0; },
 
@@ -7746,7 +7747,7 @@ const Mine = {
     if (Net.on) Net.news(`석탄 땅굴에 끌려감 (빚 ${fmtWon(this.owed())})`);
     this.ph = 'intro'; this.phT = performance.now(); this.fade = 1;
     const D = this.debt, why = D.why.length ? D.why[D.why.length - 1] : '합의금';
-    await this.card(`<p class="mcK">${this.lim > 0 ? '낼 돈이 없다' : '땅굴 한도를 다 썼다'}</p><h3>석탄 땅굴로 끌려간다</h3><p>${this.lim > 0 ? `${esc(why)}을(를) 낼 돈이 모자랐다.` : `${esc(why)}까지 내다가 한도 ${fmtWon(FEEL.mineAllow)}을 넘었다.`}<br>못 낸 돈 <b>${fmtWon(D.owe)}</b>${D.fill ? ` + 다시 채울 땅굴 한도 <b>${fmtWon(D.fill)}</b>` : ''}.<br>합쳐서 <b>${fmtWon(this.owed())}</b>을 다 캐기 전엔 못 올라온다.</p><p class="mcS">곡괭이질 한 번마다 돈이 쌓인다. 아주 가끔 금이 나온다는 소문이 있다.</p>`, '내려가기', 5200);
+    await this.card(`<p class="mcK">${this.lim > 0 ? '낼 돈이 없다' : '땅굴 한도를 다 썼다'}</p><h3>석탄 땅굴로 끌려간다</h3><p>${this.lim > 0 ? `${esc(why)}을(를) 낼 돈이 모자랐다.` : `${esc(why)}까지 내다가 한도 ${fmtWon(FEEL.mineAllow)}을 넘었다.`}<br>못 낸 돈 <b>${fmtWon(D.owe)}</b>${D.fill ? ` + 다시 채울 땅굴 한도 <b>${fmtWon(D.fill)}</b>` : ''}.<br>합쳐서 <b>${fmtWon(this.owed())}</b>을 다 캐기 전엔 못 올라온다.${D.fill ? '<br>땅굴 한도 몫은 다 캐고 나갈 때 현금으로 돌려받는다.' : ''}</p><p class="mcS">곡괭이질 한 번마다 돈이 쌓인다. 아주 가끔 금이 나온다는 소문이 있다.</p>`, '내려가기', 5200);
     this.ph = 'down'; this.phT = performance.now(); Sound.play('cage'); Sound.play('rumble'); this.rumbleIv = setInterval(() => Sound.play('rumble'), 900);
     await this.wait(2900);
     clearInterval(this.rumbleIv); Sound.play('cage'); Sound.play('slam');
@@ -7980,21 +7981,22 @@ const Mine = {
     if (left >= FEEL.mineMore) { this.ph = 'play'; return this.finish(gold); }
     this.ph = 'ask'; Sound.play('ding');
     const el = this.el.querySelector('.mnCard');
-    el.innerHTML = `<div class="mcIn"><p class="mcK">${gold ? '금덩이를 캤다' : '마지막 한 삽'}</p><h3>빚 다 갚았다!</h3><p>지금 올라가면 <b>${left > 0 ? fmtWon(left) : '0원'}</b>을 들고 나간다.<br>더 캐면 <b>최대 ${fmtWon(FEEL.mineMore)}</b>까지 더 벌 수 있다.</p><p class="mcS">더 캐다가도 위의 '올라가기'로 언제든 나갈 수 있다. 금도 그대로 나온다.</p><div class="mcBtns"><button class="btn" id="mnMore">⛏ 더 캐기</button><button class="btn gold" id="mnGo">올라가기</button></div></div>`;
+    el.innerHTML = `<div class="mcIn"><p class="mcK">${gold ? '금덩이를 캤다' : '마지막 한 삽'}</p><h3>빚 다 갚았다!</h3><p>지금 올라가면 <b>${left + (D.fill || 0) > 0 ? fmtWon(left + (D.fill || 0)) : '0원'}</b>을 들고 나간다.<br>더 캐면 <b>최대 ${fmtWon(FEEL.mineMore)}</b>까지 더 벌 수 있다.</p><p class="mcS">더 캐다가도 위의 '올라가기'로 언제든 나갈 수 있다. 금도 그대로 나온다.</p><div class="mcBtns"><button class="btn" id="mnMore">⛏ 더 캐기</button><button class="btn gold" id="mnGo">올라가기</button></div></div>`;
     el.classList.add('on');
     $('mnGo').onclick = () => { el.classList.remove('on'); Sound.play('click'); this.ph = 'play'; this.finish(gold); };
     $('mnMore').onclick = () => { el.classList.remove('on'); Sound.play('click'); D.more = true; this.saveDebt(); this.ph = 'play'; this.lastAct = performance.now(); this.hud(); this.say(`좋아, 더 캐. 대신 ${fmtWon(FEEL.mineMore)}까지만이다.`, 3000); };
   },
   async finish(gold) {
     if (this.ph !== 'play') return; this.ph = 'done'; this.hold = false; this.unlock(); this.lift = null; this.lz = null; const D = this.debt, N = this.need(D), left = Math.max(0, D.more ? Math.min(D.got, N + FEEL.mineMore) - N : D.got - N); /* 넘친 건 금 몫뿐 (곡괭이질은 남은 돈까지만) */
-    if (left > 0) { Money.why(`석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left; HUD.setCash(State.cash); }
-    this.lim = Math.min(FEEL.mineAllow, this.lim + (D.fill || 0)); this.saveLim(); // 땅굴 한도도 다시 찼다
+    const back = D.fill || 0; /* v218 (사용자 '원래 내 돈이었는데 합의금·수리비로 나간 거잖아'): 한도를 채우며 캔 돈은 현금으로도 돌아온다 */
+    if (left + back > 0) { Money.why(back ? `석탄 땅굴 (밖에서 낸 ${fmtWon(back)} 되찾음${left ? ' + 남은 돈' : ''})` : `석탄 땅굴 (빚 ${fmtWon(D.owe)} 갚고 남은 돈)`); State.cash += left + back; HUD.setCash(State.cash); }
+    this.lim = Math.min(FEEL.mineAllow, this.lim + back); this.saveLim(); // 땅굴 한도도 다시 찼다
     this.debt = null; this.saveDebt(); Live.save(); if (Net.on) Net.news(`석탄 땅굴에서 빚 ${fmtWon(D.owe)} 다 갚고 나옴${gold ? ' (금 캠!)' : ''}`);
     Sound.play('ding'); this.hud();
-    await this.card(`<p class="mcK">${gold ? '금덩이를 캤다' : '마지막 한 삽'}</p><h3>빚 다 갚았다!</h3><table class="mcT"><tr><td>캔 돈</td><td>${fmtWon(D.got)}</td></tr><tr><td>갚은 빚</td><td>−${fmtWon(D.owe)}</td></tr>${D.fill ? `<tr><td>다시 채운 땅굴 한도</td><td>−${fmtWon(D.fill)}</td></tr>` : ''}<tr class="sum"><td>들고 나가는 돈</td><td>${left ? '+' + fmtWon(left) : '0원'}</td></tr></table><p class="mcS">곡괭이질 ${this.swings}번 · 뚫은 칸 ${this.dug}. 내가 판 굴은 다음 사람이 이어서 판다.</p>`, '올라가기', 9000);
+    await this.card(`<p class="mcK">${gold ? '금덩이를 캤다' : '마지막 한 삽'}</p><h3>빚 다 갚았다!</h3><table class="mcT"><tr><td>캔 돈</td><td>${fmtWon(D.got)}</td></tr><tr><td>갚은 빚</td><td>−${fmtWon(D.owe)}</td></tr>${D.fill ? `<tr><td>되찾은 돈 (한도도 다시 참)</td><td>+${fmtWon(D.fill)}</td></tr>` : ''}<tr class="sum"><td>들고 나가는 돈</td><td>${left + (D.fill || 0) ? '+' + fmtWon(left + (D.fill || 0)) : '0원'}</td></tr></table><p class="mcS">곡괭이질 ${this.swings}번 · 뚫은 칸 ${this.dug}. 내가 판 굴은 다음 사람이 이어서 판다.</p>`, '올라가기', 9000);
     this.ph = 'up'; this.phT = performance.now(); Sound.play('cage'); Sound.playBgm(null); this.rumbleIv = setInterval(() => Sound.play('rumble'), 900);
     await this.wait(2600); clearInterval(this.rumbleIv);
-    this.close(left);
+    this.close(left + back);
   },
   close(left) {
     if (Net.on) Net.send({ t: 'mpos', out: 1 }); this.unlock(); this.lift = null; this.lz = null;
@@ -8002,7 +8004,7 @@ const Mine = {
     this.open_ = false; this.hold = false; this.ph = null; $('mineWin').classList.remove('in'); this.el.innerHTML = '';
     for (const k in Pressed) Pressed[k] = false; for (const k in Keys) Keys[k] = false;
     Game.busy = false; Game.formOpen = false; Sound.playBgm(Game.room ? Game.room.def.bgm : 'town'); Sound.play('chime');
-    Toast.show(`석탄 땅굴에서 나왔다${left ? ` · 남은 돈 +${fmtWon(left)}` : ''}`, 3200);
+    Toast.show(`석탄 땅굴에서 나왔다${left ? ` · 들고 나온 돈 +${fmtWon(left)}` : ''}`, 3200);
     if (at) {
       MineExit.add(Game.zone.id, Game.player.x, Game.player.y); Game.busy = true; setTimeout(() => { Game.busy = false; }, MineExit.DUR + 150); // 땅굴 출구를 뚫고 기어 나온다 (v171)
       const sign = $('dropSign'); sign.innerHTML = `<b>${at.where}</b><small>${at.gu} 외진 곳 · 땅굴 비상구</small>`; sign.classList.remove('in'); void sign.offsetWidth; sign.classList.add('in'); setTimeout(() => sign.classList.remove('in'), 3200);
@@ -9768,7 +9770,10 @@ const Shop = {
   /* 번 돈으로만 사기 + 되팔기 (사용자 2026-10-16 '펫 사고 막 사면 경매할 자금이 없어지지 않나' → '되팔기도 가능하고 번 돈으로만 사기')
    * 쓸 수 있는 돈 = 지금 현금 − 시작 자금(State.capital). 경매 밑천은 상점에서 못 쓴다.
    * 되팔기: 산 값의 FEEL.shopResell(절반). 산 곳(혼자 하기 / 채널 N)에서만 되판다 (채널끼리 돈 옮기기 막기). */
-  spendable() { return Math.max(0, Math.round(State.cash - (State.capital || 0))); },
+  spendable() { // v218 (사용자 '집에 묶인 수익도 번 돈으로'): 채널에서 산 집에 들어간 내 돈(낙찰가 − 대출)도 밑천 계산에 넣는다. 그래도 손에 든 현금보다 많이 쓰지는 못한다
+    let tied = 0; if (typeof Live !== 'undefined' && Live.on && Live.owned) for (const m of Live.owned()) { const Lo = m.loanState || {}; tied += Math.max(0, (m.bid || 0) - (Lo.bank || 0) - (Lo.savings || 0) - (m.extraLoan || 0)); }
+    return Math.max(0, Math.round(Math.min(State.cash, State.cash + tied - (State.capital || 0))));
+  },
   here() { return typeof Live !== 'undefined' && Live.on ? 'ch' + Live.ch : 'solo'; },
   hereKo(k) { return k === 'solo' ? '혼자 하기' : `채널 ${String(k).slice(2)}`; },
   srcOf(id) { const w = Store.get('wardrobe', null); return (w && w.src && w.src[id]) || null; },

@@ -237,7 +237,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .nbCase { background:#fffaf0; border:1px solid #d9caa5; border-radius:8px; padding:8px 10px; margin-bottom:8px; }
 .nbCase small { color:#7a6a4a; margin-left:6px; } .nbCase ul { margin:6px 0 0; padding-left:18px; } .nbCase li { margin:3px 0; font-size:14px; }
 .nbCase a { color:var(--navy); text-decoration:underline; cursor:pointer; } .nbCase li.clue { font-size:13px; }
-.nbCase a.rvLink { font-weight:700; color:var(--seal); } details.nbCase summary { cursor:pointer; font-size:14px; color:#5a4a2a; }
+#shop .shEarn small.hole { color:#c0392b; } .csCash .hole, .arcade .hole { color:#ff9a8f; } .hole { color:#d9534f; font-weight:500; white-space:nowrap; } .nbCase a.rvLink { font-weight:700; color:var(--seal); } details.nbCase summary { cursor:pointer; font-size:14px; color:#5a4a2a; }
 .doc.review .rvBig { background:#fff4e0; border:1px solid #e0c48a; border-radius:6px; padding:8px 10px; font-size:13.5px; line-height:1.7; } .doc.review .warn { color:var(--seal); font-weight:500; } .doc.review .red { color:var(--seal); } .rvCalc { position:sticky; top:-1px; z-index:2; background:#eef2f8; border:1px solid #9aa3b2; border-radius:6px; padding:8px 10px; margin:8px 0; font-size:13.5px; } .rvCalc input { width:150px; font:inherit; padding:3px 6px; border:1px solid #9aa3b2; border-radius:4px; } .rvCalc b { color:var(--navy); margin-left:6px; } .rvQuick { margin-top:6px; display:flex; gap:6px; flex-wrap:wrap; } .rvQuick .btn { padding:3px 10px; font-size:12.5px; } .doc.review ul { padding-left:18px; margin:6px 0; } .doc.review li { margin:4px 0; } .doc.review details summary { cursor:pointer; color:var(--navy); margin:8px 0; }
 .panel .jq { margin:12px 0; display:flex; flex-direction:column; gap:6px; } .panel .row { display:flex; gap:8px; align-items:center; }
 .panel select, .panel input[type=number] { font:inherit; color:#1a1408; padding:6px 8px; border:1px solid #c9b98f; border-radius:6px; background:#fffaf0; }
@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v229</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v230</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5268,7 +5268,7 @@ const Tip = {
   give(p) {
     const id = Net.idOf(p); if (!id) return;
     if (Date.now() - (this.sent[id] || 0) < 5000) return Toast.show(`${p.name}님한테 방금 줬어요. 조금 있다 다시 줄 수 있어요.`);
-    if (mgFree() < this.AMT) return Toast.show('경매로 번 돈이 없어서 용돈을 못 줘요 (밑천은 못 써요).'); // v177
+    if (mgFree() < this.AMT) return Toast.show(earnHole() ? `경매 손해 ${fmtWon(earnHole())} 메우는 중이라 용돈을 못 줘요.` : '경매로 번 돈이 없어서 용돈을 못 줘요.'); // v177
     const li = Math.floor(Math.random() * this.THANKS.length); this.sent[id] = Date.now(); p.bowT = performance.now() + 2400; /* 준 사람 화면에서도 바로 절하게 */ p.bubble = { text: this.line(li), t: FEEL.chatBubbleTime }; mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id, li }); Sound.play('coins');
     Net.myBubble = { text: '옛다 용돈!', t: FEEL.chatBubbleTime }; Net.pushLog(Net.me, `${p.name}님한테 용돈 1,000원을 줬어요 💸`, true, true, true);
   },
@@ -6634,7 +6634,7 @@ async function talkWalker(w) {
   const town = [`${dong}은 역이 가까워서 출퇴근은 편해요. 대신 밤에 큰길은 좀 시끄럽고요.`, `오래된 집이 많아서 골목이 좁아요. 주차가 늘 전쟁이에요.`, `학교랑 마트가 가까워서 애 키우는 집이 많아요.`, `요즘 카페가 많이 생겼어요. 동네가 좀 바뀌는 중이죠.`];
   const auction = [`글쎄요, 법원 앞에 사람 많더라고요. 서류 잘 보고 들어가야 한대요.`, `저도 잘은 몰라요. 싸다고 덥석 받으면 큰일 난다는 얘기만 들었어요.`, `등기부랑 전입 같은 건 직접 떼 보셔야죠. 남 말만 믿으면 안 돼요.`, `주민센터랑 중개사한테 물어보세요. 저는 그냥 지나가는 사람이라.`];
   if (pick === 'tip') { // 지나가는 사람한테도 용돈 (사용자 2026-10-15 'npc도 가능하게'). 받은 사람은 큰절
-    if (mgFree() < 1000) await Dialog.say([{ name, sprite: w.sprite, text: '마음만 받을게요. 경매로 번 돈이 아직 없으시잖아요.' }]); // v177: 용돈도 번 돈에서만 (사용자 2026-10-17 '수익이 0원인데 어떻게 줘?')
+    if (mgFree() < 1000) await Dialog.say([{ name, sprite: w.sprite, text: earnHole() ? '마음만 받을게요. 경매 손해부터 메우셔야죠.' : '마음만 받을게요. 경매로 번 돈이 아직 없으시잖아요.' }]); // v177: 용돈도 번 돈에서만 (사용자 2026-10-17 '수익이 0원인데 어떻게 줘?')
     else { mgCash(-1000, `용돈 (${name})`); Sound.play('coins'); w.bowT = performance.now() + 2400; w.ai.t = 3; Game.busy = false; w.bubble = { text: ['아이고 감사합니다!', '이걸 왜 저한테… 감사합니다!', '복 받으실 거예요!'][(i + State.day) % 3], t: 2.6 }; return; }
   } else if (pick === 'town') await Dialog.say([{ name, sprite: w.sprite, text: town[(i * 3 + State.day) % town.length] }]);
   else if (pick === 'auction') await Dialog.say([{ name, sprite: w.sprite, text: auction[(i * 5 + State.day) % auction.length] }]);
@@ -9920,7 +9920,7 @@ const Shop = {
       const btn = on ? `<button class="btn" data-off="${isP ? it.pet : isD ? it.id : 1}">${isC || isH ? '벗기' : isD ? '떼기' : isP ? (home ? '집에 두기' : '가게에 맡기기') : isF ? '끄기' : '기본 차로'}</button>` : own ? `<button class="btn gold" data-wear="${it.id}">${isC ? '입기' : isH ? '쓰기' : isD ? (p.pet ? '달아 주기' : '펫이 없어요') : isP ? (p.pet && p.pet2 ? '바꿔 데려가기' : '데리고 다니기') : isF ? '켜기' : '타기'}</button>` : lock ? `<button class="btn shLockBtn" disabled>🔒 이익 경매 ${need}번</button>` : this.look ? '<button class="btn" disabled>숍에서 사요</button>' : `<button class="btn ${sp >= it.price ? 'gold' : ''}" data-buy="${it.id}" ${sp >= it.price ? '' : 'disabled'}>사기</button>`;
       return `<div class="shItem${on ? ' on' : own ? ' own' : lock ? ' lock' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isC ? '입는 중' : isH ? '쓰는 중' : isD ? '달고 있어요' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? (isP ? (home ? '집에 있어요' : '가게에 맡겨 둠') : '보유') : fmtWon(it.price)}</span>${btn}${sellBtn}</div>`;
     };
-    $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">💰 번 돈 <b>${fmtWon(sp)}</b> <small>(${typeof Live !== 'undefined' && Live.on ? `경매 수익 ${fmtWon(Live.earn())}${Live.xtra ? ` · 쓴 돈 ${Live.xtra < 0 ? '−' : '+'}${fmtWon(Math.abs(Live.xtra))}` : ''}` : `밑천 ${fmtWon(State.capital || 0)}은 못 써요`})</small> · 🏅 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
+    $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">💰 번 돈 <b>${fmtWon(sp)}</b> ${typeof Live !== 'undefined' && Live.on ? earnNote() : ` <small>(밑천 ${fmtWon(State.capital || 0)}은 못 써요)</small>`} · 🏅 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
       <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">👕 옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">🚗 차 스킨${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">🐾 펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">✨ 이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">🎩 모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">🎀 펫 꾸미기${nt('petdeco')}</button></div>
       ${isD ? `<div class="shNote" style="margin:0 0 6px;text-align:center">${p.pet ? `데리고 다니는 ${esc((SHOP_ITEMS.pet.find(x => x.pet === PetDeco.target()) || {}).name || '펫')}에게 달아요 · 👗 옷장에서 바꿀 수 있어요` : '펫을 데리고 다녀야 달 수 있어요'}</div>` : isH || isC ? '<div class="shNote" style="margin:0 0 6px;text-align:center">산 옷·모자는 화면의 👗 옷장에서 언제든 갈아입어요</div>' : ''}
       ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}<div class="shGrid">${list.map(card).join('')}</div>
@@ -10020,7 +10020,7 @@ const Shop = {
     if (this.look) { Toast.show('사는 건 건대 편집숍에 직접 가야 해요'); return; }
     if (this.has(it.id)) return this.wear(it);
     const need = this.need(it), rec = AuctionRec.wins(); if (need > rec) { Sound.play('deny'); Toast.show(`${it.name}은 경매로 이익을 ${need}번 본 사람만 살 수 있어요. 지금 ${rec}번이에요.`); return; }
-    const sp = this.spendable(); if (sp < it.price) { Sound.play('deny'); Toast.show(`경매 밑천은 못 써요. 번 돈이 ${fmtWon(it.price - sp)} 더 있어야 해요 (지금 번 돈 ${fmtWon(sp)}).`, 3200); return; }
+    const sp = this.spendable(); if (sp < it.price) { Sound.play('deny'); Toast.show(earnHole() ? `경매 손해 ${fmtWon(earnHole())}을 월세로 메우는 중이라 아직 못 사요.` : `번 돈이 ${fmtWon(it.price - sp)} 모자라요.`, 3200); return; }
     if (typeof Money !== 'undefined') Money.why(`편집숍 (${it.name})`); State.cash -= it.price; if (typeof Live !== 'undefined') Live.addXtra(-it.price); HUD.setCash(State.cash); if (Live.on) Live.save();
     const w0 = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: this.owned().concat(it.id), src: Object.assign({}, w0.src || {}, { [it.id]: this.here() }) });
     Sound.play('coins'); Toast.show(`${it.name} 샀어요 (${fmtWon(it.price)})`);
@@ -10137,7 +10137,7 @@ const MyHome = {
   async buy() {
     for (;;) {
       const L = this.listings(), sp = this.spendable(); if (!L.length) { await Dialog.say([say('agent', '지금 이 동네엔 나온 집이 없네요. 다른 구 부동산에도 가 봐요.')]); return; }
-      const pick = await Dialog.say([say('agent', `이 동네 매물이에요. 눌러서 구경해 봐요. 사는 건 경매로 번 돈으로만 돼요. 지금 번 돈 ${fmtWon(sp)}.`)],
+      const pick = await Dialog.say([say('agent', `이 동네 매물이에요. 눌러서 구경해 봐요. 사는 건 경매로 번 돈으로만 돼요. 지금 번 돈 ${fmtWon(sp)}${earnHole() ? `, 경매 손해 ${fmtWon(earnHole())} 메우는 중이에요` : ''}.`)],
         [...L.map((x, i) => ({ label: `${x.T.name} · ${x.name} <small>${fmtWon(x.price)}${x.price > sp ? ' · 구경만' : ''}</small>`, value: 'h' + i })), { label: '다음에 올게요', value: null }]);
       if (!pick) return; const x = L[+pick.slice(1)]; if (!x) return;
       const r = await this.detail(x, false); if (r !== 'back') return;
@@ -13983,6 +13983,9 @@ Menu.toggle0 = Menu.toggle; Menu.toggle = function (v) { const r = this.toggle0.
  * 홀짝: 게임장 옆 건대 카지노 테이블. 주사위 두 개 합이 홀인지 짝인지 맞히면 건 돈만큼 받고, 틀리면 잃는다 (1:1).
  */
 // 카지노·게임장·이혁진 판돈은 번 돈(현금 − 경매 밑천)으로만 건다 (사용자 2026-10-16 '카지노랑 이혁진 게임도 내가 번 돈만')
+/* v230 (사용자 '그 설명을 각 파트에서 이해할 수 있게, 구구절절 말고'): 채널에서 경매 손해가 아직 남아 번 돈이 0원이면 얼마 메우는 중인지 한 줄 */
+function earnHole() { return typeof Live !== 'undefined' && Live.on ? Math.max(0, Math.round(-(Live.earn() + (Live.xtra || 0)))) : 0; }
+function earnNote() { const h = earnHole(); return h ? ` <small class="hole">경매 손해 ${fmtWon(h)} 메우는 중</small>` : ''; }
 function mgFree() { return Math.max(0, (typeof Shop !== 'undefined' && Shop.spendable ? Shop.spendable() : Math.max(0, State.cash)) - VipLock.get()); }
 /* 이혁진 룰렛으로 딴 돈은 다시 판돈으로 못 건다 (사용자 2026-10-17 '그 이혁진 게임해서 건 돈만큼은 이제 돈 못걸게'): 딴 만큼 쌓고 진 만큼 덜어 낸다. 채널마다 따로, 혼자 하기는 판마다 */
 const VipLock = {
@@ -14131,7 +14134,7 @@ const Rps = {
   },
   render(msg) {
     if (!this.open_) return; if (this.view === 'party' || this.view === 'pmatch') return Party.renderRps(msg);
-    const el = $('rpsWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view); const head = `<div class="rcHead">가위바위보 <small>3판 2선승 · 번 돈 ${fmtWon(mgFree())}</small></div>`;
+    const el = $('rpsWin'); arcKeep(el, this.view === 'wait' ? 'lobby' : this.view); const head = `<div class="rcHead">가위바위보 <small>3판 2선승 · 번 돈 ${fmtWon(mgFree())}</small>${earnNote()}</div>`;
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = this.friends(); const opts = this.size === 1 ? [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }] : fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` }));
       const wait = this.view === 'wait', multi = this.size > 2;
@@ -14401,7 +14404,7 @@ const Casino = {
     const recruit = this.recruit && !P ? `<div class="ptPick"><b>몇 명이서 할까요?</b><small>${this.tab === 'rl' ? '룰렛' : '홀짝'} 테이블에 자리를 만들고 친구에게 초대장을 보내요. 방장이 ${this.tab === 'rl' ? '돌리면' : '던지면'} 모두 같은 결과가 나오고, 각자 자기 칩만 정산해요.</small><div>${PARTY_GAMES[this.tab].sizes.map(n => `<button class="btn" data-ptsz="${n}">${n}명</button>`).join('')}</div><button class="btn" data-do="ptcancel">취소</button></div>` : '';
     const dealer = machine ? '' : `<div class="dealer"><canvas class="pt" data-pt="dealer" width="32" height="32"></canvas><span class="dName">${castName('casino')}</span><p class="bubble ${msg ? 'lose' : B.cls}">${say}</p></div>`;
     el.innerHTML = `<div class="scene cs t-${this.tab}"><div class="csAmb"><i></i><i></i><i></i></div>
-      <div class="csBar"><button class="btn sBack" id="hjX" ${lock ? 'disabled' : ''}>← 자리에서 일어나기</button><span class="csLogo">♠ ♥ GRAND ${esc(Game.room && Game.room.place.kind === 'casino' ? Game.room.place.name.replace(/ 카지노$/, '') : '건대')} CASINO ♦ ♣</span><span class="csCash">번 돈 <b>${fmtWon(mgFree())}</b>${VipLock.get() ? `<small> (룰렛에서 딴 ${fmtWon(VipLock.get())} 빼고)</small>` : ''}</span></div>
+      <div class="csBar"><button class="btn sBack" id="hjX" ${lock ? 'disabled' : ''}>← 자리에서 일어나기</button><span class="csLogo">♠ ♥ GRAND ${esc(Game.room && Game.room.place.kind === 'casino' ? Game.room.place.name.replace(/ 카지노$/, '') : '건대')} CASINO ♦ ♣</span><span class="csCash">번 돈 <b>${fmtWon(mgFree())}</b>${earnNote()}${VipLock.get() ? `<small> (룰렛에서 딴 ${fmtWon(VipLock.get())} 빼고)</small>` : ''}</span></div>
       <div class="csMain"><div class="csStage">${dealer}${B.html}${recruit}</div>
       <div class="csHud"><div class="csTabs">${CASINO_TABS.map(([k, l]) => `<button class="btn${this.tab === k ? ' sel' : ''}" data-tab="${k}" ${(lock || P) && this.tab !== k ? 'disabled' : ''}>${l}</button>`).join('')}</div>${party}
       <p class="mgMsg big ${msg ? 'lose' : B.cls}">${say}</p>
@@ -14974,7 +14977,7 @@ const Fight = {
     if (this.view === 'lobby' || this.view === 'wait') {
       const fr = Rps.friends(), wait = this.view === 'wait', wpI = FIGHT_WP.find(w => w.id === this.weapon) || FIGHT_WP[0];
       const fsel = this.vs !== 'house' ? fr.find(f => f.id === this.vs) : null, fRoom = fsel ? PvpCap.room(fsel.name) : Infinity; if (!wait && this.stake > fRoom) this.stake = Math.max(...RPS_STAKES.filter(s => s <= fRoom)); const opts = [{ id: 'house', name: `${castName('arcade')} <small>게임장 사장</small>` }].concat(fr.map(f => ({ id: f.id, name: `${esc(f.name)} <small>${f.here ? '같이 있는 친구' : '밖에 있음 · 초대장'}</small>` })));
-      el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 번 돈 ${fmtWon(mgFree())}</small></div>
+      el.innerHTML = arcadeShell('🥊 건대 파이터', `<div class="rcpt arcade"><div class="rcHead">건대 파이터 <small>3판 2선승 · 번 돈 ${fmtWon(mgFree())}</small>${earnNote()}</div>
         <p class="mgNote">내 캐릭터로 직접 싸워요. <b>A·D</b> 이동 · <b>W</b> 점프 · <b>S</b> 막기 · <b>J</b> ${wpI.keys[0]} · <b>K</b> ${wpI.keys[1]}. 터치는 화면 버튼.</p>
         <div class="mgSec">무기 <small>${esc(wpI.note)}</small></div><div class="mgRow">${FIGHT_WP.map(w => `<button class="btn${this.weapon === w.id ? ' sel' : ''}" data-wp="${w.id}" ${wait || w.soon ? 'disabled' : ''}>${w.icon} ${w.name}${w.soon ? ' <small>준비 중</small>' : ''}</button>`).join('')}</div>
         <div class="mgSec">상대</div><div class="mgRow">${opts.map(o => `<button class="btn${this.vs === o.id ? ' sel' : ''}" data-vs="${o.id}" ${wait ? 'disabled' : ''}>${o.name}</button>`).join('')}</div>

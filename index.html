@@ -1027,7 +1027,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v241</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v242</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5613,9 +5613,6 @@ const Live = {
       if (!Shop.has('p_turtle')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_turtle'), src: Object.assign({}, w.src || {}, { p_turtle: 'gift' }) }); }
       const pf = Profile.get(), slot = pf.pet === 'turtle' || pf.pet2 === 'turtle' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'turtle'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
       setTimeout(() => HUD.page(slot ? '🐢 거북이 선물이에요! 지금 옆에서 따라와요.' : '🐢 거북이 선물이에요! 펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.', '선물'), 7600); }
-    if (Net.me === '부리코' && typeof SHOP_ITEMS !== 'undefined') { /* v234 사용자 2026-10-18 '나는 개발자니까 옷이랑 펫 같은 거 다 줘 부리코': 편집숍 물건 전부 (새로 나온 것도 들어올 때마다, 선물이라 되팔기는 막음) */
-      const add = [...new Set(Object.values(SHOP_ITEMS).flat().map(i => i && i.id).filter(id => id && !Shop.has(id)))];
-      if (add.length) { const w = Store.get('wardrobe', null) || {}, src = Object.assign({}, w.src || {}); for (const id of add) src[id] = 'gift'; Store.set('wardrobe', { owned: Shop.owned().concat(add), src }); setTimeout(() => HUD.page(`🎁 개발자 선물: 편집숍 물건 ${add.length}개(옷·모자·펫·꾸미기·탈것·이펙트)가 다 들어왔어요. 👗 옷장에서 골라 입어요.`, '선물'), 7600); } }
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('fix218m', false)) { Store.set('fix218m', true); Money.why('석탄 땅굴에서 되찾은 돈 (예전에 캔 땅굴 한도 몫)'); State.cash += 1e7; setTimeout(() => { this.save(); HUD.page('땅굴에서 한도 1천만 원을 채워 캔 돈을 현금으로 돌려드렸어요. 이제부터는 땅굴에서 한도를 채우면 그만큼 현금으로도 돌아와요.', '알림'); }, 6200); } // 사용자 2026-10-18 '빚 천만원 갚고 오면 내 돈 추가돼야 하는 거 아니야, 원래 내 돈이었는데 합의금·수리비로 나간 거잖아', 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
@@ -10035,11 +10032,20 @@ const Shop = {
     if (src && src !== this.here()) { Sound.play('deny'); Toast.show(`${it.name}은 ${this.hereKo(src)}에서 샀어요. 산 곳에서만 되팔 수 있어요.`, 3000); return; }
     if (this.sellArm !== it.id || Date.now() - this.sellArmT > 5000) { this.sellArm = it.id; this.sellArmT = Date.now(); Sound.play('click'); this.render(); return; } // 한 번 더 눌러야 판다
     this.sellArm = null; const p = Profile.get(), got = this.resell(it);
-    if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (it.hat) { if (p.hat === it.id) Profile.set('hat', null); } else if (it.pd) PetDeco.strip(it); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null);
+    this.unequip(it, p);
     const w = Store.get('wardrobe', null) || {}, src2 = Object.assign({}, w.src || {}); delete src2[it.id];
     Store.set('wardrobe', { owned: this.owned().filter(x => x !== it.id), src: src2 });
     if (typeof Money !== 'undefined') Money.why(`편집숍 되팔기 (${it.name})`); State.cash += got; if (typeof Live !== 'undefined') Live.addXtra(got); HUD.setCash(State.cash); if (Live.on) Live.save();
     Pets.mineT = -1; Profile.apply && Profile.apply(); Sound.play('coins'); Toast.show(`${it.name} 되팔았어요 (+${fmtWon(got)})`); this.render();
+  },
+  unequip(it, p) { if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (it.hat) { if (p.hat === it.id) Profile.set('hat', null); } else if (it.pd) PetDeco.strip(it); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null); },
+  ungift() { // v241 사용자 2026-10-18 '이제 부리코 다 뺏고 선물 주기 전 상태로 돌려': v234 부리코 개발자 선물(src 'gift')을 이 기기에서 한 번 회수. 에센티아 거북이(gift233t)는 남김
+    if (Store.get('ungift241', false)) return 0; Store.set('ungift241', true);
+    const w = Store.get('wardrobe', null); if (!w || !w.src) return 0; const keep = Store.get('gift233t', false) ? ['p_turtle'] : [];
+    const ids = Object.keys(w.src).filter(id => w.src[id] === 'gift' && !keep.includes(id)); if (!ids.length) return 0;
+    for (const id of ids) { const it = SHOP_BY_ID[id]; if (it) this.unequip(it, Profile.get()); }
+    const src = Object.assign({}, w.src); for (const id of ids) delete src[id];
+    Store.set('wardrobe', { owned: (w.owned || []).filter(x => !ids.includes(x)), src }); if (typeof Pets !== 'undefined') Pets.mineT = -1; return ids.length;
   },
   has(id) { return this.owned().includes(id); },
   // 차 색: 내 차(기본 은색) / 친구 차(기본 금색). 스킨이 있으면 그 색 (줄무늬 포함)
@@ -17346,7 +17352,7 @@ const Instance = {
     const cv = box.querySelector('canvas'); const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = false; cx.drawImage(Sprites.portrait('player'), 0, 0);
   });
   document.addEventListener('click', e => { const b = e.target.closest('.profileBox button'); if (!b) return; if (b.dataset.reset) Profile.reset(); else if (b.dataset.off) Profile.set(b.dataset.off, null); else Profile.set(b.dataset.k, b.dataset.c); Sound.play('tick'); drawProfile(); });
-  Profile.redraw = drawProfile; Profile.apply(); drawProfile();
+  Shop.ungift(); Profile.redraw = drawProfile; Profile.apply(); drawProfile();
   $('btnProfile').onclick = () => { const el = $('profileTitle'); el.hidden = !el.hidden; Sound.play('paper'); };
   // 채널 기록 지우기: 한 번 더 묻는다 (confirm 대신 버튼 교체; 상태 글이 다시 그려져도 되게 위임)
   let resetPrev = '';

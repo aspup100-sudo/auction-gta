@@ -1046,7 +1046,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v256</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v257</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -4174,6 +4174,7 @@ const WEEKDAY_ONLY = ['registry', 'center', 'bank', 'savings'];
 
 function buildInterior(place) {
   const cs = place.caseId ? caseById(place.caseId) : null; // 채널: 회차가 지나 목록에서 빠진 내 낙찰 물건도 찾는다 (사용자 2026-10-14 '명도할 때 아무것도 안 돼')
+  const HI = HomeIn.info(place, cs); if (HI) return HomeIn.build(place, cs, HI); // v257 내 집 실내 (homein.js)
   const def = INTERIOR_DEFS[cs && cs.type === '토지' ? 'site_land' : place.kind];
   const map = def.map, H = map.length, W = map[0].length;
   const solid = new Uint8Array(W * H);
@@ -4220,6 +4221,7 @@ function buildInterior(place) {
 }
 
 function drawInterior(ctx, room, t) {
+  if (room.home) return HomeIn.draw(ctx, room, t);
   const { def, W, H, cs } = room;
   const FLOOR = { concrete: ['#d9d7d3', '#d4d2ce'], wood: ['#7a5536', '#6e4b2f'], marble: ['#d9d6cf', '#cfcbc2'], stone: ['#8d8a84', '#827f79'], grass: ['#7a9a5a', '#729254'], carpet: ['#2b2446', '#272040'], casino: ['#4a1620', '#40121b'] }[def.floor];
   const WALL = { warm: '#3b2c27', admin: '#2c3a4d', bright: '#e6ebf0', dim: '#3a3a3e', fence: '#6a5a44', neon: '#15122a', gallery: '#e6e4e0' }[def.tone];
@@ -4336,6 +4338,302 @@ function drawInterior(ctx, room, t) {
     if (gal) { const rides = SHOP_ITEMS.car.filter(it => it.ride), it = rides[(x * 3 + Math.floor(t / 4)) % rides.length]; drawCarSprite(ctx, X + 8, Y + 8, 0, { ride: it.ride, rider: null }, 22, 10, 'car', 0); } else { const skins = ['#e03a3a', '#15151c', '#ffd84a', '#5fb4f0', '#6a3fb5']; drawCarSprite(ctx, X + 8, Y + 8, 0, { col: skins[(x + Math.floor(t / 4)) % skins.length], stripe: '#f6f6f6' }, 22, 10, 'car', 0); }
   }
 }
+
+/* ===================== 내 집 실내 (v257) =====================
+ * 사용자 2026-10-19 '이렇게 내 집이 됐으면 집 안에 들어갈 수 있게 하자. 아파트, 빌라 이런 거 평수 특징 살려서 내부 만들어 줘'
+ * 채널에서 낙찰받아 명도까지 끝낸 집(세 안 놓은 집)과 부동산에서 산 내 집은 현장 방 대신 진짜 집 안으로 들어간다.
+ * 종류·전용면적으로 평면도를 고른다: 아파트 59·84·110형, 빌라 방2·방3, 오피스텔 원룸·투룸, 단독 마당 집, 상가 점포.
+ * '우리 집으로 살기'를 했거나 산 집이면 가구가 있고, 아니면 빈집. 상태(낡음·파손)·수리 중·수리 끝이 그림에 보인다.
+ * 월패드: 집 관리 메뉴 (낙찰 집은 Live.home, 산 집은 MyHome.door) · 소파·침대: 쉬기.
+ * 범례: # 벽  = 창  y 월패드  G 유리 전면  x 울타리 | . 마루  , 욕실 타일  : 현관  _ 베란다  ' 잔디  ~ 디딤돌 | D 나가는 문  d 방문
+ *       가구(살 때만): b 침대 s 소파 v TV R 러그 t 식탁 z 책상 c 옷장 P 화분 a 에어컨 m 세탁기 f 냉장고 e 진열대 n 계산대
+ *       붙박이: k 싱크대 g 가스레인지 o 변기 l 세면대 u 욕조 h 신발장 r 계단 T 나무 */
+const HOME_PLANS = {
+  apt_s: { label: '아파트 59㎡형 · 방2 화1', map: [
+    '#=====#=======#',
+    '#c.bb.#P.vv..a#',
+    '#..bb.#.......#',
+    '#.....#..RRR..#',
+    '####dy#..sss..#',
+    '#.............#',
+    '##d##d##...tt.#',
+    '#b.z#,o#::....#',
+    '#b..#ul#:hfkgk#',
+    '########D######'] },
+  apt_m: { label: '아파트 84㎡형 · 방3 화2', map: [
+    '#======#==========#',
+    '#cc..bb#P...vv...a#',
+    '##d..bb#..........#',
+    '#o,#...#...RRRR...#',
+    '#ul#...#...ssss...#',
+    '#####dy#..........#',
+    '#.................#',
+    '##d##d##...tt..#d##',
+    '#b.z#,o#::.....#.b#',
+    '#b..#ul#:hfkkgk#zb#',
+    '########D##########'] },
+  apt_l: { label: '아파트 110㎡형 · 방4 화2', map: [
+    '#=======#============#',
+    '#cc.bb.P#m__________P#',
+    '#...bb..#=d========d=#',
+    '#.......#c.b#P.vv...a#',
+    '##d#....#..b#........#',
+    '#o,#....#z..#..RRRR..#',
+    '#ul#.c..#...#..ssss..#',
+    '######d#y#d##........#',
+    '#....................#',
+    '##d###d##d##....tt...#',
+    '#b.z#z.b#,o#::.......#',
+    '#b..#..b#ul#:hfkkkgkk#',
+    '############D#########'] },
+  villa_s: { label: '빌라 · 방2 화1', map: [
+    '#====#======#',
+    '#bb.c#..fkgk#',
+    '#bb..#......#',
+    '#....d.tt...#',
+    '#####y...sss#',
+    '#...........#',
+    '##d##d##....#',
+    '#b.c#,o#::P.#',
+    '#b..#ul#:h..#',
+    '########D####'] },
+  villa_l: { label: '빌라 · 방3 화1', map: [
+    '#=====#===#=====#',
+    '#c.bb.#b.c#P.v.a#',
+    '#..bb.#b..#.....#',
+    '#.....#..z#.sss.#',
+    '####d#y#d##.....#',
+    '#...............#',
+    '##d##d##....tt..#',
+    '#b.c#,o#::......#',
+    '#b..#ul#:hfkkgk.#',
+    '########D########'] },
+  off_s: { label: '오피스텔 원룸', map: [
+    '#=======y#',
+    '#bb....P.#',
+    '#bb......#',
+    '#....z...#',
+    '##d#.....#',
+    '#o,#::.fk#',
+    '#ul#:h.kg#',
+    '####D#####'] },
+  off_l: { label: '오피스텔 투룸', map: [
+    '#====#======#',
+    '#bb.c#P.vv.a#',
+    '#bb..#......#',
+    '#....#.RRR..#',
+    '#z...#.sss..#',
+    '####dy......#',
+    '#...........#',
+    '#d##....tt..#',
+    '#,o#::......#',
+    '#ul#:hfkkgk.#',
+    '####D########'] },
+  house_s: { label: '단독주택 · 방2 · 마당', map: [
+    '#=====#======#===#',
+    '#c.bb.#P.vv.a#b.c#',
+    '#..bb.#......#b..#',
+    '#.....d.RRRR.d..z#',
+    '######y.ssss.#####',
+    '#................#',
+    '##d##..tt....#d###',
+    '#l,u#fkkgkk::#__m#',
+    '#####=====#d######',
+    "x'T''''''''~''''Tx",
+    "x''P''''''~~''P''x",
+    "x''''''''''~'''''x",
+    'xxxxxxxxxxxDxxxxxx'] },
+  house_l: { label: '단독주택 · 2층 · 넓은 마당', map: [
+    '#=====#========#===#',
+    '#c.bb.#P..vv..a#b.c#',
+    '#..bb.#........#b..#',
+    '#.....d..RRRR..d..z#',
+    '######y..ssss..#####',
+    '#................rr#',
+    '##d##...tt....#d####',
+    '#l,u#fkkkgkk::#___m#',
+    '#####=====##d#######',
+    "x'T'''''''''~''''T'x",
+    "x''PP'''''''~''''P'x",
+    "x'''''''''''~''''T'x",
+    "x'''''''''''~''''''x",
+    'xxxxxxxxxxxxDxxxxxxx'] },
+  shop_s: { label: '상가 점포', map: [
+    '##########y#',
+    '#eeee.eeee.#',
+    '#..........#',
+    '#.ee..ee...#',
+    '#.ee..ee.nn#',
+    '#..........#',
+    'GGGGGDGGGGGG'] },
+  shop_l: { label: '상가 점포 · 넓은 곳', map: [
+    '##############y#',
+    '#lo#eeee.eeeee.#',
+    '#u,#...........#',
+    '##d#...........#',
+    '#..............#',
+    '#.ee..ee..ee...#',
+    '#.ee..ee..ee.nn#',
+    '#..............#',
+    'GGGGGGGDGGGGGGGG'] },
+};
+const HOME_SOLID = '#=yGxkgolurhT', HOME_FURN = 'bsvRtzcPamfen', HOME_FLOORS = ".,:_'~";
+const HomeIn = {
+  // 어느 평면도: 낙찰 물건은 종류·전용면적, 산 집은 HOME_TYPES id
+  plan(type, area, my) {
+    if (my) return { oneroom: 'off_s', villa: 'villa_s', apt: 'apt_m', house: 'house_s', pent: 'apt_l' }[my] || 'apt_m';
+    if (type === '아파트') return area < 70 ? 'apt_s' : area < 95 ? 'apt_m' : 'apt_l';
+    if (type === '다세대') return area < 55 ? 'villa_s' : 'villa_l';
+    if (type === '오피스텔') return area < 35 ? 'off_s' : 'off_l';
+    if (type === '단독') return area < 130 ? 'house_s' : 'house_l';
+    if (type === '근린상가') return area < 70 ? 'shop_s' : 'shop_l';
+    return null;
+  },
+  // 이 문으로 들어가면 집 안인가: 채널에서 명도 끝난 내 집(세 안 준 집) · 산 내 집
+  info(place, cs) {
+    if (typeof Live === 'undefined' || !Live.on) return null;
+    if (place.kind === 'home' && place.id === 'myhome') { const h = MyHome.get(), T = h && MyHome.type(h); if (!T) return null; const key = this.plan(null, 0, T.id), rooms = HOME_PLANS[key].label.split(' · ').slice(1).join(' · '); return { key, mine: h, furn: true, cond: 'good', repair: 'done', name: h.name, label: '내 집', planLabel: T.name + (rooms ? ' · ' + rooms : '') + (T.id === 'pent' ? ' · 테라스' : ''), pent: T.id === 'pent' }; }
+    if (place.kind !== 'site' || !cs) return null;
+    const m = Live.ownedFor(cs), a = m && m.asset; if (!a || a.rentOn) return null; // 세입자가 살면 초인종 (현장 방 그대로)
+    const key = this.plan(cs.type, cs.area); if (!key) return null;
+    return { key, m, c: cs, furn: !!a.live, cond: a.cond || Live.condOf(cs), reveal: !a.cond, repair: a.repair, name: cs.name, label: a.live ? '우리 집' : '내 집 · 빈집' };
+  },
+  build(place, cs, H) {
+    const P = HOME_PLANS[H.key], map = P.map, Hh = map.length, W = map[0].length, solid = new Uint8Array(W * Hh), objs = []; let exit = null;
+    const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= Hh ? '#' : map[y][x]);
+    for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
+      const ch = map[y][x];
+      if (HOME_SOLID.includes(ch) || (H.furn && HOME_FURN.includes(ch) && ch !== 'R')) solid[y * W + x] = 1;
+      if (ch === 'D') exit = { tx: x, ty: y };
+      if (ch === 'y') objs.push({ type: 'wallpad', tx: x, ty: y, label: '월패드' });
+    }
+    if (H.furn) { // 쉬기: 소파 맨 왼쪽 칸 · 침대 아래 칸 (바로 아래가 바닥일 때만, 서서 누른다)
+      for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
+        const ch = map[y][x], below = at(x, y + 1); if (!HOME_FLOORS.includes(below) && below !== 'R' && below !== 'd') continue;
+        if (ch === 's' && at(x - 1, y) !== 's') objs.push({ type: 'rest', tx: x, ty: y, label: '소파에서 쉬기' });
+        if (ch === 'b' && at(x - 1, y) !== 'b' && at(x, y + 1) !== 'b' && !objs.some(o => o.type === 'rest' && o.bed)) objs.push({ type: 'rest', bed: true, tx: x, ty: y, label: '침대에 눕기' });
+      }
+    }
+    const def = { title: P.label, floor: 'wood', bgm: 'office', tone: 'warm', map, npc: {} };
+    return { place, cs, def, W, H: Hh, solid, objs, npcs: [], guests: [], exit, home: { ...H, plan: P, seed: [...(H.name || '')].reduce((s, ch) => (s * 31 + ch.charCodeAt(0)) >>> 0, 7) },
+      isSolid: (tx, ty) => tx < 0 || ty < 0 || tx >= W || ty >= Hh || solid[ty * W + tx] === 1 };
+  },
+  // 들어온 뒤: 처음 들어온 낙찰 집은 상태부터 드러난다 (Live.home이 상태를 정하고 메뉴를 띄운다)
+  async entered() {
+    const r = Game.room, H = r && r.home; if (!H) return;
+    if (H.reveal && H.m) { H.reveal = false; Game.busy = true; try { await Live.home(H.m, H.c); } finally { Game.busy = false; } this.refresh(); return; }
+    if (!Store.get('homeInTip', false)) { Store.set('homeInTip', true); Toast.show('현관 옆 월패드에서 집 관리, 소파·침대에서 쉬어 가요.', 3500); }
+  },
+  async use(o) {
+    const H = Game.room.home;
+    if (o.type === 'rest') { State.hits = 0; State.punched = 0; Sound.play('chime'); Toast.show(o.bed ? '침대에 누워 한숨 잤다. 다친 데가 다 나았다.' : '소파에 앉아 푹 쉬었다. 다친 데가 다 나았다.'); return; }
+    Sound.play('blip', 0.6);
+    if (H.mine) await MyHome.door(); else await Live.home(H.m, H.c);
+    this.refresh();
+  },
+  // 살기·그만 살기·수리로 집이 바뀌면 방을 다시 짓는다 (서 있던 칸이 막히면 가까운 빈칸으로)
+  refresh() {
+    const r = Game.room; if (!r || !r.home || Game.scene !== 'room') return;
+    const H = this.info(r.place, r.cs); if (!H) return; if (H.key === r.home.key && H.furn === r.home.furn && H.cond === r.home.cond && H.repair === r.home.repair) return;
+    const n = this.build(r.place, r.cs, H); n.home.reveal = false; Game.room = n; const p = Game.player;
+    if (n.isSolid(Math.floor(p.x / TILE), Math.floor(p.y / TILE))) { let best = null, bd = 1e9; for (let y = 0; y < n.H; y++) for (let x = 0; x < n.W; x++) { if (n.isSolid(x, y) || n.def.map[y][x] === 'D') continue; const d = Math.hypot(x * TILE + 8 - p.x, y * TILE + 12 - p.y); if (d < bd) { bd = d; best = [x, y]; } } if (best) { p.x = best[0] * TILE + 8; p.y = best[1] * TILE + 12; } }
+  },
+  /* ---- 그리기 ---- */
+  h(x, y, s) { let v = (x * 374761393 + y * 668265263 + s * 2246822519) >>> 0; v = Math.imul(v ^ (v >>> 13), 1274126177) >>> 0; return ((v ^ (v >>> 16)) >>> 0) / 4294967296; },
+  draw(ctx, r, t) {
+    const H = r.home, map = r.def.map, W = r.W, Hh = r.H, furn = H.furn, shop = H.key.startsWith('shop'), off = H.key.startsWith('off');
+    const bad = H.repair !== 'done' ? H.cond : 'good', doing = H.repair === 'doing';
+    const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= Hh ? '#' : map[y][x]);
+    const isWall = ch => '#=yGx'.includes(ch);
+    const WOOD = shop ? ['#cfcac2', '#c8c3bb'] : off ? ['#bfb2a0', '#b6a996'] : H.pent ? ['#d8c4a0', '#d0bb96'] : ['#c99d66', '#c1945d'];
+    const PAPER = bad === 'wrecked' ? '#bfb49a' : bad === 'worn' ? '#d9cca6' : shop ? '#ecebe6' : '#efe7d6', TOP = '#4a3f38';
+    // 가구 밑 바닥: 둘레에 가장 많은 바닥
+    const under = (x, y) => { const cnt = {}; for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, 1]]) { const c = at(x + dx, y + dy); if (HOME_FLOORS.includes(c)) cnt[c] = (cnt[c] || 0) + 1; } let b = '.', n = 0; for (const k in cnt) if (cnt[k] > n || (cnt[k] === n && k === '.')) { n = cnt[k]; b = k; } return b; };
+    const floor = (fc, X, Y, x, y) => {
+      if (fc === '.') { ctx.fillStyle = WOOD[(x + y) % 2]; ctx.fillRect(X, Y, TILE, TILE); if (shop) { ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.fillRect(X, Y + 15, TILE, 1); ctx.fillRect(X + 15, Y, 1, TILE); } else { ctx.fillStyle = 'rgba(0,0,0,.10)'; ctx.fillRect(X, Y + 5, TILE, 1); ctx.fillRect(X, Y + 11, TILE, 1); ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(X + ((x * 7 + y * 3) % 12), Y + 1, 4, 1); ctx.fillStyle = 'rgba(0,0,0,.07)'; ctx.fillRect(X + ((x * 5 + y) % 3) * 5 + 3, Y, 1, 5); ctx.fillRect(X + ((x * 3 + y) % 3) * 5 + 1, Y + 6, 1, 5); } }
+      else if (fc === ',') { ctx.fillStyle = '#e4ecef'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#c4d0d6'; ctx.fillRect(X, Y + 7, TILE, 1); ctx.fillRect(X + 7, Y, 1, TILE); ctx.fillRect(X, Y + 15, TILE, 1); ctx.fillRect(X + 15, Y, 1, TILE); }
+      else if (fc === ':') { ctx.fillStyle = '#7a746c'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#6a645c'; ctx.fillRect(X, Y + 7, TILE, 1); ctx.fillRect(X + 7, Y, 1, TILE); if (at(x, y - 1) === '.' || at(x, y - 1) === 'd') { ctx.fillStyle = '#5a4a3a'; ctx.fillRect(X, Y, TILE, 2); } }
+      else if (fc === '_') { ctx.fillStyle = H.pent ? '#a07a52' : '#a8a49c'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = H.pent ? '#8a6644' : '#9a968e'; if (H.pent) { ctx.fillRect(X, Y + 3, TILE, 1); ctx.fillRect(X, Y + 7, TILE, 1); ctx.fillRect(X, Y + 11, TILE, 1); ctx.fillRect(X, Y + 15, TILE, 1); } else { ctx.fillRect(X, Y + 7, TILE, 1); ctx.fillRect(X + 7, Y, 1, TILE); } }
+      else if (fc === "'" || fc === '~') { ctx.fillStyle = (x + y) % 2 ? '#74a052' : '#6e9a4c'; ctx.fillRect(X, Y, TILE, TILE); const v = this.h(x, y, 3); ctx.fillStyle = '#86b462'; ctx.fillRect(X + Math.floor(v * 12), Y + 3 + Math.floor(v * 7) % 9, 1, 2); ctx.fillRect(X + Math.floor(v * 7 + 6) % 14, Y + 10, 1, 2); if (v > 0.8 && fc !== '~') { ctx.fillStyle = ['#f4d24a', '#f08aa8', '#ffffff'][Math.floor(v * 30) % 3]; ctx.fillRect(X + 9, Y + 5, 2, 2); }
+        if (fc === '~') { ctx.fillStyle = '#9a958c'; ctx.fillRect(X + 3, Y + 2, 10, 5); ctx.fillRect(X + 4, Y + 9, 9, 5); ctx.fillStyle = '#b4aea4'; ctx.fillRect(X + 3, Y + 2, 10, 1); ctx.fillRect(X + 4, Y + 9, 9, 1); } }
+    };
+    const late = [];
+    for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
+      const ch = map[y][x], X = x * TILE, Y = y * TILE;
+      if (HOME_FLOORS.includes(ch)) { floor(ch, X, Y, x, y); continue; }
+      if (ch === 'd') { const vert = isWall(at(x - 1, y)) && isWall(at(x + 1, y)); const fc = vert ? (HOME_FLOORS.includes(at(x, y + 1)) ? at(x, y + 1) : '.') : (HOME_FLOORS.includes(at(x + 1, y)) ? at(x + 1, y) : '.'); floor(fc === ':' ? '.' : fc, X, Y, x, y);
+        ctx.fillStyle = '#8a6a48'; if (vert) { ctx.fillRect(X, Y, 2, TILE); ctx.fillRect(X + 14, Y, 2, TILE); ctx.fillStyle = '#a8865c'; ctx.fillRect(X + 2, Y + 1, 1, 12); } else { ctx.fillRect(X, Y, TILE, 2); ctx.fillRect(X, Y + 14, TILE, 2); ctx.fillStyle = '#a8865c'; ctx.fillRect(X + 1, Y + 2, 12, 1); } continue; }
+      if (ch === 'D') { const yard = at(x - 1, y) === 'x', glass = at(x - 1, y) === 'G';
+        floor(yard ? '~' : glass ? '.' : ':', X, Y, x, y);
+        if (yard) { ctx.fillStyle = '#5a4030'; ctx.fillRect(X, Y + 4, 2, 12); ctx.fillRect(X + 14, Y + 4, 2, 12); ctx.fillStyle = '#7a5a40'; ctx.fillRect(X + 2, Y + 8, 12, 2); ctx.fillStyle = 'rgba(255,240,200,.25)'; ctx.fillRect(X + 2, Y + 10, 12, 6); }
+        else if (glass) { ctx.fillStyle = 'rgba(150,200,230,.35)'; ctx.fillRect(X + 1, Y + 2, 14, 14); ctx.fillStyle = '#5a6068'; ctx.fillRect(X, Y, TILE, 2); ctx.fillRect(X, Y, 1, TILE); ctx.fillRect(X + 15, Y, 1, TILE); ctx.fillRect(X + 7, Y + 2, 2, 14); }
+        else { ctx.fillStyle = '#3a2a22'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#5a4436'; ctx.fillRect(X + 1, Y + 1, 14, 15); ctx.fillStyle = '#4a382c'; ctx.fillRect(X + 3, Y + 3, 10, 5); ctx.fillRect(X + 3, Y + 10, 10, 5); ctx.fillStyle = '#d4b46a'; ctx.fillRect(X + 12, Y + 8, 2, 2); ctx.fillStyle = '#9ad'; ctx.fillRect(X + 11, Y + 4, 2, 2); }
+        continue; }
+      if (ch === 'x') { floor("'", X, Y, x, y); ctx.fillStyle = '#8a6440'; const hz = at(x - 1, y) === 'x' || at(x + 1, y) === 'x'; if (hz && y > 0 && at(x, y - 1) !== 'x') { ctx.fillRect(X, Y + 6, TILE, 2); ctx.fillRect(X, Y + 11, TILE, 2); ctx.fillStyle = '#a07a50'; ctx.fillRect(X + 2, Y + 3, 3, 13); ctx.fillRect(X + 10, Y + 3, 3, 13); } else { ctx.fillRect(X + 6, Y, 2, TILE); ctx.fillRect(X + 10, Y, 2, TILE); ctx.fillStyle = '#a07a50'; ctx.fillRect(X + 5, Y + 2, 8, 3); ctx.fillRect(X + 5, Y + 10, 8, 3); } continue; }
+      if (ch === 'G') { floor('.', X, Y, x, y); ctx.fillStyle = 'rgba(160,210,235,.55)'; ctx.fillRect(X, Y + 2, TILE, 14); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(X + 3 + (x % 3), Y + 4, 2, 9); ctx.fillStyle = '#5a6068'; ctx.fillRect(X, Y, TILE, 2); ctx.fillRect(X + 15, Y + 2, 1, 14);
+        if (!furn && x === 2) { ctx.fillStyle = '#fffaf0'; ctx.fillRect(X + 2, Y + 4, 12, 9); ctx.fillStyle = '#c0302a'; ctx.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('임대', X + 8, Y + 10); } continue; } // 빈 점포: 유리에 '임대' 종이
+      if (isWall(ch)) { // 벽: 아래가 바닥이면 앞면(벽지)이 보인다
+        const face = !isWall(at(x, y + 1)) && y < Hh - 1;
+        ctx.fillStyle = TOP; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#5c5048'; ctx.fillRect(X, Y, TILE, 1);
+        if (face) { ctx.fillStyle = PAPER; ctx.fillRect(X, Y + 5, TILE, 11); ctx.fillStyle = 'rgba(0,0,0,.06)'; if (!shop) for (let i = 1; i < 16; i += 4) ctx.fillRect(X + i, Y + 5, 1, 11); ctx.fillStyle = shop ? '#9a968e' : '#8a6a48'; ctx.fillRect(X, Y + 14, TILE, 2);
+          if (bad === 'worn' && this.h(x, y, 5) < 0.4) { ctx.fillStyle = 'rgba(140,110,50,.28)'; ctx.fillRect(X + 3, Y + 6, 7, 6); ctx.fillRect(X + 5, Y + 12, 3, 2); }
+          if (bad === 'wrecked' && this.h(x, y, 6) < 0.45) { ctx.fillStyle = '#3a3028'; ctx.fillRect(X + 4, Y + 7, 6, 5); ctx.fillStyle = '#6a5a48'; ctx.fillRect(X + 3, Y + 6, 8, 1); ctx.fillRect(X + 10, Y + 8, 1, 4); ctx.fillStyle = 'rgba(70,90,110,.35)'; ctx.fillRect(X + 1, Y + 5, 2, 10); } }
+        if (ch === '=') { // 창문
+          const gy = face ? Y + 5 : Y + 4, gh = face ? 8 : 6; ctx.fillStyle = '#f2f2ee'; ctx.fillRect(X, gy - 1, TILE, gh + 2); const sky = H.pent ? '#8ec8f0' : '#a8d4ec'; ctx.fillStyle = sky; ctx.fillRect(X + 1, gy, 14, gh); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(X + 2 + (x % 2) * 6, gy + 1, 2, gh - 2); ctx.fillStyle = '#f2f2ee'; if (at(x - 1, y) === '=') ctx.fillRect(X, gy, 1, gh); ctx.fillRect(X + 7, gy, 1, gh);
+          if (H.pent && face) { ctx.fillStyle = '#6a8aa8'; ctx.fillRect(X + 1, gy + gh - 3, 14, 3); ctx.fillStyle = '#4a6a88'; ctx.fillRect(X + (x * 5 % 11), gy + gh - 5, 2, 2); } // 펜트하우스: 창밖 한강·빌딩
+          if (bad === 'wrecked' && this.h(x, y, 8) < 0.35) { ctx.fillStyle = '#2a2a2a'; ctx.fillRect(X + 9, gy + 1, 1, gh - 2); ctx.fillRect(X + 10, gy + 2, 3, 1); ctx.fillRect(X + 8, gy + 4, 2, 1); } }
+        if (ch === 'y') { const py = face ? Y + 6 : Y + 3; ctx.fillStyle = '#d8dade'; ctx.fillRect(X + 4, py, 8, 7); ctx.fillStyle = (Math.floor(t * 1.5) % 2 ? '#3a8ae0' : '#4a9af0'); ctx.fillRect(X + 5, py + 1, 6, 4); ctx.fillStyle = '#7a7e86'; ctx.fillRect(X + 5, py + 6, 6, 1); }
+        continue;
+      }
+      // 가구·붙박이: 밑바닥을 깔고, 큰 것은 나중에 (위 칸을 덮으니까)
+      floor(under(x, y), X, Y, x, y);
+      if (HOME_FURN.includes(ch) && !furn) continue;
+      late.push([ch, x, y]);
+    }
+    // 바닥 얼룩·파손 (수리 전)
+    if (bad !== 'good' || doing) for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) { const ch = map[y][x]; if (ch !== '.' && !(ch === 'R' && !furn)) continue; const v = this.h(x, y, 11), X = x * TILE, Y = y * TILE;
+      if (doing) { if (v < 0.12) { ctx.fillStyle = '#4a7ac0'; ctx.fillRect(X + 1, Y + 2, 14, 12); ctx.fillStyle = '#5a8ad0'; ctx.fillRect(X + 1, Y + 2, 14, 2); } else if (v < 0.18) { ctx.fillStyle = '#e8e8e4'; ctx.fillRect(X + 4, Y + 6, 6, 7); ctx.fillStyle = '#4a9a5a'; ctx.fillRect(X + 4, Y + 6, 6, 2); ctx.fillStyle = '#8a8a8a'; ctx.fillRect(X + 5, Y + 4, 4, 1); } else if (v < 0.22) { ctx.fillStyle = '#c8a040'; ctx.fillRect(X + 3, Y + 1, 2, 14); ctx.fillRect(X + 11, Y + 1, 2, 14); for (let i = 0; i < 4; i++) ctx.fillRect(X + 5, Y + 3 + i * 4, 6, 1); } continue; }
+      if (bad === 'worn' && v < 0.25) { ctx.fillStyle = 'rgba(90,60,30,.22)'; ctx.fillRect(X + 3, Y + 5, 8, 5); ctx.fillRect(X + 5, Y + 4, 4, 7); }
+      if (bad === 'wrecked') { if (v < 0.22) { ctx.fillStyle = 'rgba(60,70,80,.35)'; ctx.fillRect(X + 1, Y + 3, 13, 9); ctx.fillRect(X + 4, Y + 1, 7, 13); } else if (v < 0.34) { ctx.fillStyle = '#6a5a4a'; ctx.fillRect(X + 3, Y + 9, 4, 3); ctx.fillStyle = '#8a7a64'; ctx.fillRect(X + 9, Y + 5, 3, 2); ctx.fillStyle = '#e8e0d0'; ctx.fillRect(X + 6, Y + 3, 3, 2); } else if (v < 0.4) { ctx.fillStyle = '#4a3a2a'; ctx.fillRect(X + 2, Y + 7, 11, 1); ctx.fillRect(X + 6, Y + 4, 1, 7); } } }
+    late.sort((a, b) => a[2] - b[2] || a[1] - b[1]);
+    for (const [ch, x, y] of late) this.piece(ctx, ch, x, y, at, H, t, bad);
+    if (H.repair === 'done' && !H.mine) { const k = Math.floor(t * 2) % 7; const sx = (k * 5 + 3) % W, sy = (k * 3 + 1) % Hh; if (HOME_FLOORS.includes(at(sx, sy))) { const X = sx * TILE + 8, Y = sy * TILE + 6; ctx.fillStyle = 'rgba(255,250,200,.9)'; ctx.fillRect(X, Y - 2, 1, 5); ctx.fillRect(X - 2, Y, 5, 1); } } // 수리 끝: 새 집 반짝
+  },
+  // 가구 한 칸 (같은 글자가 이어지면 하나로 그린다)
+  piece(ctx, ch, x, y, at, H, t, bad) {
+    const X = x * TILE, Y = y * TILE, L = at(x - 1, y) === ch, R = at(x + 1, y) === ch, U = at(x, y - 1) === ch, Dn = at(x, y + 1) === ch, s = H.seed;
+    const r = (c, a, b, w, h) => { ctx.fillStyle = c; ctx.fillRect(X + a, Y + b, w, h); };
+    switch (ch) {
+      case 'b': { let x0 = x; while (at(x0 - 1, y) === 'b') x0--; const blanket = ['#6a8ac8', '#d88aa0', '#7ab08a', '#e0b860'][(s + x0 + y) % 4]; /* 한 침대는 한 색 */
+        r('#7a5236', 0, 0, 16, 16); if (!U) r('#5a3a26', 0, -3, 16, 4); r('#f4f2ee', L ? 0 : 1, U ? 0 : 1, 16 - (L ? 0 : 1) - (R ? 0 : 1), 16 - (U ? 0 : 1) - (Dn ? 0 : 1));
+        if (!U) { r('#ffffff', 3, 2, 10, 4); r('#e2e0da', 3, 5, 10, 1); r(blanket, L ? 0 : 1, 8, 16 - (L ? 0 : 1) - (R ? 0 : 1), 8); r('rgba(255,255,255,.25)', L ? 0 : 1, 8, 16 - (L ? 0 : 1) - (R ? 0 : 1), 1); }
+        else r(blanket, L ? 0 : 1, 0, 16 - (L ? 0 : 1) - (R ? 0 : 1), Dn ? 16 : 14); break; }
+      case 's': { const c = H.pent ? ['#e8e2d6', '#d2cabc'] : ['#6a7a90', '#56667c'];
+        r(c[1], 0, 9, 16, 7); r(c[0], 0, 3, 16, 7); r('rgba(0,0,0,.12)', 7, 3, 1, 7); if (!L) r(c[1], 0, 2, 3, 13); if (!R) r(c[1], 13, 2, 3, 13); r('rgba(255,255,255,.18)', 0, 3, 16, 1); break; }
+      case 'v': r('#7a5a3e', 0, 8, 16, 7); r('#5a4030', 0, 14, 16, 1); r('#16181e', L ? 0 : 2, -6, 16 - (L ? 0 : 2) - (R ? 0 : 2), 12); r(Math.floor(t * 0.7) % 3 === 0 ? '#2a4a7a' : '#22385a', L ? 0 : 3, -5, 16 - (L ? 0 : 3) - (R ? 0 : 3), 10); if (!L) r('rgba(255,255,255,.2)', 4, -4, 2, 6); break;
+      case 'R': { const c = ['#b85a4a', '#5a7aa8', '#c8a060'][s % 3]; r(c, 0, 0, 16, 16); r('rgba(255,255,255,.25)', 0, U ? 0 : 1, 16, 1); if (!U) r('#f0e6d0', 0, 0, 16, 1); if (!Dn) r('#f0e6d0', 0, 15, 16, 1); if (!L) r('#f0e6d0', 0, 0, 1, 16); if (!R) r('#f0e6d0', 15, 0, 1, 16); if ((x + y) % 2) r('rgba(0,0,0,.08)', 4, 4, 8, 8); break; }
+      case 't': r('#c8b090', 3, -2, 10, 3); r('#c8b090', 3, 14, 10, 3); r('#8a6440', 0, 2, 16, 11); r('#a07a50', 0, 2, 16, 2); r('#f4f2ee', 4, 5, 6, 4); r('#e8c070', 6, 6, 2, 2); break;
+      case 'z': r('#8a6440', 0, 3, 16, 8); r('#6a4a30', 1, 11, 2, 4); r('#6a4a30', 13, 11, 2, 4); r('#1e2028', 4, -3, 8, 7); r('#4a8ad0', 5, -2, 6, 4); r('#3a3a40', 7, 4, 2, 1); r('#2a2a30', 5, 13, 6, 3); break;
+      case 'c': r('#6a4a30', 0, -8, 16, 23); r('#8a6440', 1, -7, 14, 21); r('#6a4a30', 7, -7, 1, 21); r('#d4b46a', 5, 2, 1, 3); r('#d4b46a', 9, 2, 1, 3); r('rgba(0,0,0,.2)', 0, 14, 16, 2); break;
+      case 'P': ctx.fillStyle = '#8a5a3a'; ctx.fillRect(X + 4, Y + 9, 8, 6); ctx.drawImage(Sprites.tree(1), X - 2, Y - 8, 20, 20); break;
+      case 'a': r('#e8eaec', 3, -8, 10, 23); r('#c8ccd0', 4, -6, 8, 1); r('#c8ccd0', 4, -4, 8, 1); r('#5ab0e0', 5, 3, 3, 1); r('rgba(0,0,0,.15)', 3, 14, 10, 1); break;
+      case 'm': r('#f0f0f0', 1, 1, 14, 14); r('#c8ccd0', 1, 1, 14, 3); r('#3a4a5a', 4, 6, 8, 7); r('#6a8aa8', 5, 7, 6, 5); r('rgba(255,255,255,.5)', 6, 8, 2, 2); break;
+      case 'f': r('#c8ccd2', 1, -8, 14, 23); r('#dfe2e6', 2, -7, 12, 21); r('#aab0b8', 2, -1, 12, 1); r('#8a9098', 12, -5, 1, 3); r('#8a9098', 12, 2, 1, 4); break;
+      case 'e': { r('#9a9ca0', 0, -6, 16, 21); r('#c8cacc', 1, -5, 14, 19); for (let i = 0; i < 3; i++) { r('#9a9ca0', 1, -1 + i * 5, 14, 1); for (let j = 0; j < 4; j++) r(['#e05a4a', '#4a8ad0', '#f0c040', '#5ab06a'][(i + j + x) % 4], 2 + j * 3, -4 + i * 5, 2, 3); } break; }
+      case 'n': r('#5a5e66', 0, 2, 16, 13); r('#e8e8e4', 0, 2, 16, 3); if (!L) { r('#2a2a30', 3, -3, 8, 6); r('#8ad0ff', 4, -2, 6, 3); } break;
+      case 'k': { const sink = !L || ((x + s) % 3 === 1 && at(x - 1, y) !== 'g'); r('#f2f0ea', 0, 0, 16, 16); r('#d8d2c4', 0, 0, 16, 4); r('#b8b0a0', 0, 4, 16, 1); r('#c8c0b0', 7, 6, 1, 9); r('#8a8478', 5, 9, 1, 2); r('#8a8478', 10, 9, 1, 2);
+        if (sink && !at(x - 1, y).match(/[kg]/)) { r('#a8b0b8', 3, 0, 10, 4); r('#7a8a98', 4, 1, 8, 2); r('#c8ccd0', 7, -2, 2, 2); } break; }
+      case 'g': r('#f2f0ea', 0, 0, 16, 16); r('#2a2a2e', 1, 0, 14, 5); r('#5a5a60', 3, 1, 4, 3); r('#5a5a60', 9, 1, 4, 3); r('#e05a3a', 4, 2, 2, 1); r('#b8b0a0', 0, 5, 16, 1); r('#3a3a40', 3, 8, 10, 6); r('#5a5a62', 4, 9, 8, 1); break;
+      case 'o': r('#f4f6f8', 4, 0, 8, 6); r('#e2e6ea', 3, 6, 10, 9); r('#ffffff', 4, 7, 8, 7); r('#c8d0d6', 6, 9, 4, 3); break;
+      case 'l': r('#d8dee2', 2, 1, 12, 9); r('#ffffff', 3, 2, 10, 6); r('#b8c4cc', 5, 3, 6, 3); r('#a8b0b8', 7, 0, 2, 2); r('#c8d0d6', 6, 10, 4, 5); break;
+      case 'u': r('#f4f6f8', 0, 0, 16, 16); r('#c8d8e2', L ? 0 : 2, 2, 16 - (L ? 0 : 2) - (R ? 0 : 2), 12); r('rgba(255,255,255,.5)', 3, 4, 3, 1); if (!R) r('#a8b0b8', 12, 0, 2, 3); break;
+      case 'h': r('#6a4a30', 0, -6, 16, 21); r('#8a6440', 1, -5, 14, 19); r('#6a4a30', 1, 3, 14, 1); r('#d4b46a', 12, -1, 1, 2); r('#d4b46a', 12, 6, 1, 2); r('#2a2a2a', 3, 12, 4, 2); r('#7a2a2a', 9, 12, 4, 2); break;
+      case 'r': for (let i = 0; i < 4; i++) { r(i % 2 ? '#8a6440' : '#a07a50', 0, i * 4, 16, 4); r('rgba(0,0,0,.15)', 0, i * 4 + 3, 16, 1); } if (!L) r('#5a3a26', 0, -2, 2, 18); break;
+      case 'T': ctx.drawImage(Sprites.tree(0), X - 4, Y - 10, 24, 24); break;
+    }
+    if (bad === 'wrecked' && 'kglu'.includes(ch) && this.h(x, y, 9) < 0.5) { r('rgba(60,50,40,.35)', 2, 5, 9, 6); r('#3a2a20', 9, 7, 3, 1); } // 파손: 싱크대·욕실이 깨지고 지저분하다
+  },
+};
 
 /* ===================== HTML 오버레이 UI: 대화창 · 토스트 · 배너 · HUD ===================== */
 const $ = id => document.getElementById(id);
@@ -6042,12 +6340,12 @@ const Live = {
     if (a.repair === 'none') opts.push({ label: `수리하기 <small>${fmtWon(cost)} · 실제 ${FEEL.liveRepairSec}초</small>`, value: 'fix', disabled: State.cash < cost });
     if (!a.live && a.repair !== 'doing') opts.push({ label: '🏠 우리 집으로 살기 <small>임대 안 놓고 내가 살아요 · 쉬어 가고 펫도 둬요</small>', value: 'live' });
     if (a.live) opts.push({ label: '우리 집 그만 살기 <small>짐 빼고 비워 두기 · 임대·매도는 부동산</small>', value: 'unlive' });
-    opts.push({ label: '나가기', value: 'n' });
+    opts.push({ label: '닫기', value: 'n' }); // v257: 이제 집 안 월패드에서 연다
     const pick = await Dialog.say([{ text: `${a.live ? `우리 집이다! ${fmtWon(m.bid)}에 낙찰받은 집. ` : ''}내 집 · 상태 ${K.label}${a.repair === 'done' ? ' (수리 끝)' : a.repair === 'doing' ? ` (수리 중 ${this.mmss(Math.max(0, a.repairUntil - this.now()))})` : ''}${a.rentOn ? ` · 월세 ${fmtWon(a.rent)}` : ''}. ${a.repair === 'done' ? '수리해 두면 매도가 +4%, 월세 +10%.' : '수리하면 매도가 +4%, 월세 +10%가 붙고 상태 할인이 사라진다.'}` }], opts);
     if (pick === 'rest') { State.hits = 0; State.punched = 0; Sound.play('chime'); Toast.show('우리 집 소파에서 푹 쉬었다. 다친 데가 다 나았다.'); return; }
     if (pick === 'live') { for (const o of this.owned()) if (o.asset) o.asset.live = false; a.live = true; this.save(); Sound.play('chime'); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 우리 집으로 이사`); await Dialog.say([{ text: `짐을 풀었다. 여기가 이제 우리 집이다. 들어오면 쉬어 갈 수 있고, 펫도 여기 둔다.` }, { text: `대출 이자는 그대로 매달 빠진다. 나중에 팔고 싶으면 부동산(${castName('agent')})에 매도를 내놓으면 된다. 임대를 놓으면 이사 나간다.` }]); return; }
     if (pick === 'unlive') { a.live = false; this.save(); Sound.play('door'); Toast.show('짐을 뺐다. 빈집으로 둔다.'); return; }
-    if (pick === 'fix') { State.cash -= cost; HUD.setCash(State.cash); Sound.play('coins'); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 수리 공사 시작`); a.repair = 'doing'; a.repairUntil = this.now() + FEEL.liveRepairSec * 1000; a.repairCost = cost; this.save(); await Dialog.say([{ text: `인테리어 업체를 불렀다. ${FEEL.liveRepairSec}초 뒤 공사가 끝난다.` }]); }
+    if (pick === 'fix') { Money.why('수리비'); State.cash -= cost; HUD.setCash(State.cash); Sound.play('coins'); Net.news(`${m.name.split(' ').slice(0, 2).join(' ')} 수리 공사 시작`); a.repair = 'doing'; a.repairUntil = this.now() + FEEL.liveRepairSec * 1000; a.repairCost = cost; this.save(); await Dialog.say([{ text: `인테리어 업체를 불렀다. ${FEEL.liveRepairSec}초 뒤 공사가 끝난다.` }]); }
   },
   // 부동산: 임대·매도
   async agent() {
@@ -6893,8 +7191,10 @@ async function driveAcross(toGu) {
 }
 
 /* ---- 내 집: 자고 일어나면 다음 날 아침, 또는 매각기일 아침까지 건너뛰기 ---- */
-async function homeDoor() {
-  if (Game.busy) return; Game.busy = true;
+async function homeDoor(pl) {
+  if (Game.busy) return;
+  if (Live.on && MyHome.get() && pl) return enterPlace(pl); // v257: 산 내 집은 안으로 들어간다 (homein.js)
+  Game.busy = true;
   try {
     if (Live.on && MyHome.get()) { await MyHome.door(); return; }
     if (Live.on) { await Dialog.say([{ name: '내 집', text: `집이다. 채널에서는 시간이 실제로 흘러서 잠으로 건너뛸 수 없다. 다음 날까지 ${Live.untilDay()}, 다음 개찰까지 ${Live.mmss(Live.nextOpen().ms)}.` }]); return; }
@@ -6977,8 +7277,9 @@ async function enterPlace(pl) {
   Sound.playBgm(Game.room.def.bgm);
   State.visited[pl.id] = true;
   await iris(false); Game.trans = null;
-  Banner.place(pl.name, INTERIOR_KIND_LABEL[pl.kind]);
+  Banner.place(Game.room.home ? Game.room.home.name : pl.name, Game.room.home ? `${Game.room.home.label} · ${Game.room.home.planLabel || Game.room.home.plan.label}` : INTERIOR_KIND_LABEL[pl.kind]);
   Game.busy = false;
+  if (Game.room.home) HomeIn.entered();
 }
 async function exitPlace() {
   if (Game.busy) return; Game.busy = true; Sound.play('door');
@@ -7134,7 +7435,7 @@ function update(dt) {
       if (!frozen) checkEdgeWalk(dt, z, p, ix, iy);
       const nearCar = !CarSwap.lent && Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
-      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(); else if (tg.kind === 'forsale') MyHome.visit(tg); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'buddy') Pets.tipBuddy(tg); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
+      if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(tg); else if (tg.kind === 'forsale') MyHome.visit(tg); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'buddy') Pets.tipBuddy(tg); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
       const ride = !frozen && Net.on ? Ride.near() : null; // 친구가 운전 중인 차 옆이면 F로 같이 타기 (운전자 포함 최대 5명, 사용자 2026-10-15)
       if ((fKey || (interact && tg && tg.kind === 'car')) && nearCar && !frozen) enterCar();
       const sw = !frozen && !ride && !nearCar ? CarSwap.near() : null; // 세워 둔 친구 차 · 길가 차 (v138)
@@ -7181,6 +7482,7 @@ function update(dt) {
   }
   else {
     const r = Game.room; Cam.zoom = Math.min(4, Math.max(2, Math.min(VW / (r.W * TILE + 32), VH / (r.H * TILE + 120)))); Cam.x = r.W * TILE / 2; Cam.y = r.H * TILE / 2 + 6;
+    { const hw = VW / 2 / Cam.zoom, hh = VH / 2 / Cam.zoom; if (r.W * TILE + 16 > hw * 2) Cam.x = Math.max(hw - 8, Math.min(r.W * TILE + 8 - hw, p.x)); if (r.H * TILE + 40 > hh * 2) Cam.y = Math.max(hh - 8, Math.min(r.H * TILE + 24 - hh, p.y)); } /* v257: 방이 화면보다 크면 (넓은 집) 플레이어를 따라간다 */
     if (Game.courtZoom && !REDUCED_MOTION) { // 개찰: 판사석 쪽으로 천천히 줌인
       const k = Math.min(1, (performance.now() - Game.courtZoom.t0) / Game.courtZoom.dur), e = 1 - Math.pow(1 - k, 3);
       Cam.zoom *= 1 + 0.3 * e; Cam.y += (2.5 * TILE - Cam.y) * 0.45 * e;
@@ -8902,6 +9204,7 @@ async function objectUse(o, kind) {
   if (o.type === 'arcade') { Sound.play('blip', 0.8); if (o.game === 'fight') Fight.open(); else if (o.game === 'tetris') Tetris.open(); else if (o.game === 'quiz') Quiz.open(); else if (o.game === 'exam') Exam.open(); else Rps.open(); return; } // 가위바위보 (v81) · 격투 게임 (v82)
   if (o.type === 'holjjak') { Casino.open('hol'); return; }
   if (o.type === 'casino') { Casino.open(o.game); return; } // 슬롯머신·블랙잭·룰렛·포커 (v82)
+  if (o.type === 'wallpad' || o.type === 'rest') return HomeIn.use(o); // v257 내 집 안: 월패드·소파·침대
   // 현장: 처음 살펴볼 때 시간 1칸
   const c = Game.room.cs; if (!c) return;
   if (Live.on) { const own = Live.ownedFor(c); if (own) return Live.home(own, c); } // 채널: 내 집 (상태 확인·수리)

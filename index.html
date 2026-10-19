@@ -99,6 +99,8 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #hudTime { position:absolute; top:188px; right:16px; font:600 15px var(--ui); color:#fff; text-shadow:0 1px 0 #000, 0 0 4px #000; }
 #hudTime.flip { animation:flip .5s ease-out; }
 #tgtChip { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom, 0px) + 6px); transform:translateX(-50%); z-index:10000; pointer-events:none; background:rgba(12,14,20,.82); color:#ffd76a; font:700 13px var(--ui); padding:5px 12px; border-radius:14px; border:1px solid rgba(255,215,106,.45); white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+#tgtChip, .scene, .scene *:not(input):not(textarea) { -webkit-user-select:none !important; user-select:none !important; -webkit-touch-callout:none !important; } /* v260 사용자 '이거 고쳐': 건대 파이터 버튼을 꾹 누르면 아이폰 복사·찾아보기 메뉴가 떴다 */
+#tgtChip.top { bottom:auto; top:calc(env(safe-area-inset-top, 0px) + 6px); } /* 버튼 패드가 있는 게임(파이터·테트리스·펫 배틀)에서는 위로 비킨다 */
 #tgtChip.hurry { color:#fff; background:rgba(170,30,30,.9); border-color:#ff8a8a; }
 @keyframes flip { 0%{transform:rotateX(0)} 50%{transform:rotateX(90deg)} 100%{transform:rotateX(0)} }
 body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 켠다 */
@@ -1046,7 +1048,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v259</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v260</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -18403,7 +18405,11 @@ const Instance = {
     const cv = box.querySelector('canvas'); const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = false; cx.drawImage(Sprites.portrait('player'), 0, 0);
   });
   document.addEventListener('click', e => { const b = e.target.closest('.profileBox button'); if (!b) return; if (b.dataset.reset) Profile.reset(); else if (b.dataset.off) Profile.set(b.dataset.off, null); else Profile.set(b.dataset.k, b.dataset.c); Sound.play('tick'); drawProfile(); });
-  setInterval(() => { const el = $('tgtChip'); if (!el) return; const T = Live.on && !Dialog.open && (Game.formOpen || Game.scene !== 'zone') ? Live.tgtInfo() : null; /* v247 카지노·게임장 같은 창 위에서도 노리는 물건 남은 시간 */ el.hidden = !T; if (T) { const s = '⏰ ' + T.text; if (el.textContent !== s) el.textContent = s; el.classList.toggle('hurry', T.ms < 60000); } }, 500);
+  { const pad = '.fgPad, .tetPad, .pbDirs, .pbBtns', typing = t => t && t.closest && t.closest('input, textarea, [contenteditable]'); /* v260: 게임 버튼을 꾹 눌러도 글자 선택·복사 메뉴가 안 뜨게 (iOS는 pointerdown만 막아서는 안 된다) */
+    document.addEventListener('touchstart', e => { const t = e.target; if (t && t.closest && t.closest(pad) && t.closest('button') && e.cancelable) e.preventDefault(); }, { passive: false });
+    document.addEventListener('selectstart', e => { const t = e.target && e.target.nodeType === 3 ? e.target.parentElement : e.target; if (!typing(t)) e.preventDefault(); });
+    document.addEventListener('contextmenu', e => { if (!typing(e.target)) e.preventDefault(); }); }
+  setInterval(() => { const el = $('tgtChip'); if (!el) return; const T = Live.on && !Dialog.open && (Game.formOpen || Game.scene !== 'zone') ? Live.tgtInfo() : null; /* v247 카지노·게임장 같은 창 위에서도 노리는 물건 남은 시간 */ el.hidden = !T; if (T) { el.classList.toggle('top', [...document.querySelectorAll('.fgPad, .tetPad, .pbDirs, .pbBtns')].some(e => e.offsetParent)); const s = '⏰ ' + T.text; if (el.textContent !== s) el.textContent = s; el.classList.toggle('hurry', T.ms < 60000); } }, 500);
   Shop.ungift(); Profile.redraw = drawProfile; Profile.apply(); drawProfile();
   $('btnProfile').onclick = () => { const el = $('profileTitle'); el.hidden = !el.hidden; Sound.play('paper'); };
   // 채널 기록 지우기: 한 번 더 묻는다 (confirm 대신 버튼 교체; 상태 글이 다시 그려져도 되게 위임)

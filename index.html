@@ -1046,7 +1046,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v257</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v258</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5453,10 +5453,10 @@ const Net = {
   },
   // 친구 차 속력: 위치 변화로 어림 (탈것 특징 '달릴 때/멈췄을 때'에 쓴다)
   carSpd(p) { const now = performance.now(); if (p._st == null) { p._sx = p.cx; p._sy = p.cy; p._st = now; p._sv = 0; } const dt = (now - p._st) / 1000; if (dt > 0.25) { p._sv = Math.hypot(p.cx - p._sx, p.cy - p._sy) / dt; p._sx = p.cx; p._sy = p.cy; p._st = now; } return p._sv; },
-  drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#d9a441'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
+  drawParkedCar(c, p) { drawCarSprite(c, p.cx, p.cy, p.ca, Shop.carOf(p.car, '#c8ccd2'), 24, 12, 'car', 1); c.fillStyle = 'rgba(255,255,255,.85)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.fillText(`${p.name} 차`, p.cx, p.cy - 10); },
   drawFriend(c, p, sp, t) {
     if (p.rd) return; // 다른 사람 차 뒷자리에 탄 사람은 따로 안 그린다 (운전자 이름표에 +N)
-    if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#d9a441', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); if (fc.ride === 'shark') Wake.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs, pax: fc.ride ? Ride.pax(this.idOf(p)) : null }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
+    if (p.dr && p.s === 'zone') { const fs = this.carSpd(p); if (p.sk && p.sk.col) drawCarSprite(c, p.cx, p.cy, p.ca, p.sk.col, +p.sk.len || 22, +p.sk.wid || 12, ['car', 'taxi', 'bus'].includes(p.sk.k) ? p.sk.k : 'car', 1); else { const fc = Shop.carOf(p.sk ? p.sk.c : p.car, '#c8ccd2', p.pal); if (fc.ride === 'train') Rails.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); if (fc.ride === 'shark') Wake.lay('f:' + p.name, p.cx, p.cy, p.ca, fs); drawCarSprite(c, p.cx, p.cy, p.ca, Object.assign(fc, { spd: fs, pax: fc.ride ? Ride.pax(this.idOf(p)) : null }), 24, 12, 'car', 1); } const n = Ride.count(this.idOf(p)); this.label(c, n ? `${p.name} +${n}` : p.name, p.cx, p.cy - 12); Titles.draw(c, p.name, p.tt, p.cx, p.cy - 21); if (p.bubble) this.bubble(c, p.bubble.text, p.cx, p.cy - 20); return; }
     let spr = sp; if (p.pal) { spr = 'f:' + p.name; Sprites.setPal(spr, Profile.pal(p.pal)); } // 친구가 꾸민 색·산 옷 그대로
     drawWalker(c, { sprite: spr, x: p.x, y: p.y, dir: p.d || 0, frame: p.m ? (p.f || 0) : 0, moving: !!p.m, bowT: p.bw || p.bowT > performance.now() ? Infinity : 0, kneelT: p.kn ? Infinity : 0, punchT: p.punchT, punchHit: p.punchHit }, t);
     this.label(c, Friends.has(p.name) ? '🤝 ' + p.name : p.name, p.x, p.y - 22); Titles.draw(c, p.name, p.tt, p.x, p.y - 31);
@@ -5942,6 +5942,10 @@ const Live = {
       if (!Shop.has('p_turtle')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_turtle'), src: Object.assign({}, w.src || {}, { p_turtle: 'gift' }) }); }
       const pf = Profile.get(), slot = pf.pet === 'turtle' || pf.pet2 === 'turtle' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'turtle'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
       setTimeout(() => HUD.page(slot ? '🐢 거북이 선물이에요! 지금 옆에서 따라와요.' : '🐢 거북이 선물이에요! 펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.', '선물'), 7600); }
+    if (Net.me === 'dd' && !Store.get('gift258k', false)) { Store.set('gift258k', true); /* v258 사용자 2026-10-19 'dd한테 짱구 펫 줘': 짱구머리 꼬마 선물 (되팔기 막음) */
+      if (!Shop.has('p_kid')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_kid'), src: Object.assign({}, w.src || {}, { p_kid: 'gift' }) }); }
+      const pf = Profile.get(), slot = pf.pet === 'kid' || pf.pet2 === 'kid' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'kid'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
+      setTimeout(() => HUD.page(slot ? '🎁 짱구머리 꼬마 선물이에요! 지금 옆에서 따라와요.' : '🎁 짱구머리 꼬마 선물이에요! 펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.', '선물'), 7600); }
     if (sv && this.ch === 1 && Net.me === '에센티아' && !Store.get('fix218m', false)) { Store.set('fix218m', true); Money.why('석탄 땅굴에서 되찾은 돈 (예전에 캔 땅굴 한도 몫)'); State.cash += 1e7; setTimeout(() => { this.save(); HUD.page('땅굴에서 한도 1천만 원을 채워 캔 돈을 현금으로 돌려드렸어요. 이제부터는 땅굴에서 한도를 채우면 그만큼 현금으로도 돌아와요.', '알림'); }, 6200); } // 사용자 2026-10-18 '빚 천만원 갚고 오면 내 돈 추가돼야 하는 거 아니야, 원래 내 돈이었는데 합의금·수리비로 나간 거잖아', 한 번만
     HUD.setCash(State.cash, false); Mine.load(this.ch); // 석탄 땅굴: 이 채널 굴 + 못 갚은 빚 (v168)
     if (this.ch === 1 && Net.me === '에센티아' && !Store.get('adjLim0_1', false)) { Store.set('adjLim0_1', true); Mine.lim = 0; Mine.saveLim(); } // v170 테스트용 (사용자 2026-10-16 '에센티아 한 번만 더 박으면 땅굴 가게'): 땅굴 한도 0으로 한 번
@@ -7935,7 +7939,7 @@ const CarSwap = {
     if (this.alt) {
       const a = this.alt, fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a), dir = fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1;
       if (a.kind === 'npc') drawCarSprite(ctx, c.x, c.y, c.a, a.col, a.len, a.wid, a.vk, dir);
-      else drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(Shop.carOf(a.skin, '#d9a441', Profile.get()), { spd: Math.abs(c.speed) }), 24, 12, 'car', dir);
+      else drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(Shop.carOf(a.skin, '#c8ccd2', Profile.get()), { spd: Math.abs(c.speed) }), 24, 12, 'car', dir);
       return true;
     }
     if (this.lent) { const b = Net.players[this.lent.id]; return !!(b && !b.gone && b.dr && b.bo === Net.myId); } // 친구가 몰고 있으면 친구 차로 그려진다
@@ -10409,7 +10413,7 @@ const Shop = {
   unequip(it, p) { if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (it.hat) { if (p.hat === it.id) Profile.set('hat', null); } else if (it.pd) PetDeco.strip(it); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null); },
   ungift() { // v241 사용자 2026-10-18 '이제 부리코 다 뺏고 선물 주기 전 상태로 돌려': v234 부리코 개발자 선물(src 'gift')을 이 기기에서 한 번 회수. 에센티아 거북이(gift233t)는 남김
     if (Store.get('ungift241', false)) return 0; Store.set('ungift241', true);
-    const w = Store.get('wardrobe', null); if (!w || !w.src) return 0; const keep = Store.get('gift233t', false) ? ['p_turtle'] : [];
+    const w = Store.get('wardrobe', null); if (!w || !w.src) return 0; const keep = (Store.get('gift233t', false) ? ['p_turtle'] : []).concat(Store.get('gift258k', false) ? ['p_kid'] : []);
     const ids = Object.keys(w.src).filter(id => w.src[id] === 'gift' && !keep.includes(id)); if (!ids.length) return 0;
     for (const id of ids) { const it = SHOP_BY_ID[id]; if (it) this.unequip(it, Profile.get()); }
     const src = Object.assign({}, w.src); for (const id of ids) delete src[id];

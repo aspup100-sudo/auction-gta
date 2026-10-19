@@ -1045,7 +1045,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v250</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v251</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5593,7 +5593,7 @@ const Live = {
   // v220 번 돈 장부 (사용자 '1억이 기준이 아니라 낙찰·매매로 난 수익이랑 월세가 번 돈'): 편집숍·게임장·카지노·내 집 매매처럼 번 돈에서 쓰고 받은 돈만 더한다
   addXtra(d) { if (this.on && d) this.xtra = Math.round((this.xtra || 0) + d); },
   earnRank() { return Math.round(Math.min(State.cash, this.earn() + (this.xtra || 0))); }, // v248 사용자 '여기 보이는 수익도 카지노 할 때 쓰는 돈 그 로직이랑 똑같이': 순위 = 번 돈 (Shop.spendable과 같은 계산, 손해면 음수로 둔다)
-  earn() { let v = 0; for (const m of Object.values(this.mine || {})) { if (m.done) v += m.profit || 0; else if (m.phase === 'own' && m.asset) v += m.asset.rentTotal || 0; } return v; },
+  earn() { let v = 0; for (const m of Object.values(this.mine || {})) { if (m.done) v += m.profit || 0; else if (m.phase === 'own' && m.asset) v += (m.asset.rentTotal || 0) - (m.asset.intPaid || 0); } return v; }, // 갖고 있는 집: 받은 월세 − 낸 대출 이자 (사용자 2026-10-19 '대출도 번 돈에서 나가는 거지'; 팔 때 정산 수익에도 이자가 빠지니까 같은 셈)
   earnOf(v) { return v && typeof v.earn === 'number' ? v.earn : undefined; },
   // 순위는 지금 가진 돈(현금)으로 (사용자 요청 2026-10-14 '수익 말고 지금 가진 자본을 랭킹에'). 예전 기록·예전 버전은 손익만 있어 시작 자본을 더해 맞춘다
   cashOf(v) { if (!v) return undefined; if (typeof v.cash === 'number') return v.cash; if (typeof v.pnl === 'number') return v.pnl + State.capital; return undefined; },

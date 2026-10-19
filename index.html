@@ -1045,7 +1045,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v252</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v253</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -1469,17 +1469,20 @@ const Generator = (() => {
 
   /**
    * 물건 1건 생성.
-   * opts: { R, gu, capital(원|null), useCapital, saleDate, year, noSmall }
+   * opts: { R, gu, capital(원|null), useCapital, saleDate, year, noSmall, oldBids, oldLand }
    */
   function makeCase(opts) {
     const { R, saleDate } = opts;
     const gu = DISTRICT[opts.gu];
-    const risks = opts.risks || drawRisks(R);
+    let risks = opts.risks || drawRisks(R);
     // 종류
     const boost = TYPE_BOOST[gu.id] || [];
     let type = R.weighted(TYPES.map(([t, w]) => [t, boost.includes(t) ? w * 2 : w]));
     if (risks.includes('super')) type = '토지';
     if (risks.includes('illegal') && (type === '아파트' || type === '토지')) type = '다세대';
+    /* v253 (사용자 2026-10-19 '근데 토지도 전입신고해?'): 맨땅(토지)에는 주택 임차인의 전입신고가 없다. 임차인 위험이 뽑힌 토지는 단독주택으로 바꾸고,
+     * 법정지상권(super) 토지면 임차인 위험만 뺀다 (지상 건물 세입자는 땅 낙찰자와 상관없음). 난수는 더 안 써서 다른 값은 그대로다 (opts.oldLand면 예전대로). */
+    if (!opts.oldLand && type === '토지' && risks.some(r => TENANT_RISKS.includes(r))) { if (risks.includes('super')) risks = risks.filter(r => !TENANT_RISKS.includes(r)); else type = '단독'; }
 
     // 감정가 (원)
     let appraisal;
@@ -5527,6 +5530,7 @@ const LIVE_TIERS = [0.8, 2, 4, 1, 6, 1.5, 3, 0.6, 2.5];
 const LIVE_TRAPS_FROM = Date.UTC(2026, 9, 15, 6, 50); // v84 배포 직후 (UTC)
 const LIVE_SMALL_FIX = '1:7:1493540'; // 채널 1 신림동 라온아파트 109동 302호
 const LIVE_BIDS_FROM = Date.UTC(2026, 9, 18, 3, 40); // v214 경쟁자 입찰 현실화·유찰 횟수: 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
+const LIVE_LAND_FROM = Date.UTC(2026, 9, 19, 6, 45); // v253 토지에는 전입한 임차인이 없다: 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
 const LIVE_SMALL_FROM = Date.UTC(2026, 9, 17, 15, 25); // v199 소액임차인 최우선변제: 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
 /* 채널 달력 (v94, 사용자 2026-10-15 '지금 몇일인지 모르지않아?'): 게임 하루(= 1주/7)가 지나면 달력도 하루 넘어간다.
  * 오늘 = 2025-01-01 + ((LIVE_DATES_FROM 날부터 센 일수 + 60) mod 728) → 배포 시각이 2025-03-02, 2년(2025~2026)을 돌고 처음으로 (약 35시간마다). 이 시각 뒤에 시작한 회차의 매각기일은 그 회차 D-day의 날짜 (전엔 모두 2025-11-11 고정 → 그 회차들은 그대로) */
@@ -5549,7 +5553,7 @@ const Live = {
     const seed = ((this.ch * 1000003 + k * 7919 + n * 104729) ^ 0x3c3c) & 0x7fffffff; const R = makeRng(seed);
     const gu = DRIVE_GUS[(n * LIVE_BASE + k) % DRIVE_GUS.length]; // 시작 순서대로 구를 돌려 동시에 도는 물건은 서로 다른 구
     const saleDate = cyc.t0 >= LIVE_DATES_FROM ? this.calDate(Math.floor(cyc.t0 / this.dayMs() + 0.01) + 6) : '2025-11-11';
-    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025', noSmall: cyc.t0 < LIVE_SMALL_FROM, oldBids: cyc.t0 < LIVE_BIDS_FROM }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
+    const c = Generator.makeCase({ R, gu, capital: this.capOf(this.ch) * LIVE_TIERS[k % LIVE_TIERS.length], useCapital: true, saleDate, year: '2025', noSmall: cyc.t0 < LIVE_SMALL_FROM, oldBids: cyc.t0 < LIVE_BIDS_FROM, oldLand: cyc.t0 < LIVE_LAND_FROM }); // 자리마다 싼 것·중간·비싼 것 (돈이 불어난 사람도 살 물건이 있게)
     c.caseNo = c.id = `2025타경${10000 + ((k * 10007 + n * 3) % 29999)}`; // 자리·회차마다 다른 번호 (같은 번호가 겹치지 않게)
     if (cyc.t0 >= LIVE_TRAPS_FROM) Generator.applyTraps(c); // 정리본 2묶음 함정은 이 시각 뒤에 시작한 회차부터 (이미 산 집·넣은 입찰은 그대로)
     if (this.key(k, n) === LIVE_SMALL_FIX) c.data.small = true; // 신림동 라온아파트 (2025타경30820): 최우선변제 넣기 전에 낙찰된 집이라 계산만 바로잡는다 (경쟁 입찰은 그대로) — 사용자 2026-10-17
@@ -9645,7 +9649,7 @@ function reviewBody(c, bid, bidWhat) {
   h += `<h3>3. 임차인: 대항력과 배당</h3>`;
   if (!a.tenants.length) h += '<p>임차인이 없다.</p>';
   else {
-    h += `<table class="rt"><tr><th>임차인</th><th>전입</th><th>확정일자</th><th>배당요구</th><th>보증금</th><th>대항력</th><th>배당액</th><th>인수</th></tr>${a.tenants.map(t => `<tr><td>${t.name}${t.hidden ? ' <small>(현황조사 미발견)</small>' : ''}</td><td>${ymd(t.move)}</td><td>${t.fixed ? ymd(t.fixed) : '없음'}</td><td>${t.claimed === 'yes' ? '함' : '안 함'}</td><td class="num">${fmtWon(t.deposit)}</td><td class="st ${t.daehang ? 'assume' : 'extinguish'}">${t.daehang ? '있음' : '없음'}</td><td class="num">${fmtWon(t.paid)}</td><td class="num">${fmtWon(t.assumed)}</td></tr>`).join('')}</table><ul>`;
+    h += `<table class="rt"><tr><th>임차인</th><th>전입</th><th>확정일자</th><th>배당요구</th><th>보증금</th><th>대항력</th><th>배당액</th><th>인수</th></tr>${a.tenants.map(t => `<tr><td>${t.name}${t.hidden ? ' <small>(현황조사 미발견)</small>' : ''}</td><td>${ymd(t.move)}</td><td>${t.fixed ? ymd(t.fixed) : '없음'}</td><td>${t.claimed !== 'yes' ? '안 함' : t.why === '배당요구종기 도과' ? `<span class="warn">늦게 함</span><br><small>${t.claimDate ? ymd(t.claimDate) : ''}</small>` : '함'}</td><td class="num">${fmtWon(t.deposit)}</td><td class="st ${t.daehang ? 'assume' : 'extinguish'}">${t.daehang ? '있음' : '없음'}</td><td class="num">${fmtWon(t.paid)}</td><td class="num">${fmtWon(t.assumed)}</td></tr>`).join('')}</table><ul>`;
     for (const t of a.tenants) {
       let s;
       if (t.noDaehang) s = '임대차 자체가 인정되지 않아 대항력이 없다. 낙찰자가 물어 줄 보증금도 없다.';
@@ -9653,7 +9657,7 @@ function reviewBody(c, bid, bidWhat) {
       else if (t.daehang) s = `전입 ${ymd(t.move)}이 말소기준 ${ymd(a.baseDate)}보다 빨라 대항력이 있다.`;
       else s = `전입 ${ymd(t.move)}이 말소기준 ${ymd(a.baseDate)}${t.move === a.baseDate ? '과 같은 날이다. 전입의 대항력은 다음 날 0시부터라 늦은 것으로 쳐서' : '보다 늦어서'} 대항력이 없다.`;
       if (!t.noDaehang) {
-        const pay = t.paid > 0 ? `배당으로 ${fmtWon(t.paid)}을 받는다${t.small ? ` (소액 최우선 ${fmtWon(t.small)} 포함)` : ''}.` : `배당을 못 받는다${t.why ? ` (${t.why})` : ''}.`;
+        const late = t.why === '배당요구종기 도과' && c.data.deadline, pay = t.paid > 0 ? `배당으로 ${fmtWon(t.paid)}을 받는다${t.small ? ` (소액 최우선 ${fmtWon(t.small)} 포함)` : ''}.` : late ? `배당요구를 했지만 종기 ${ymd(c.data.deadline)}보다 늦은 ${ymd(t.claimDate)}에 해서 배당에서 빠진다 (늦은 배당요구는 안 한 것과 같다).` : `배당을 못 받는다${t.why ? ` (${t.why})` : ''}.`; /* v253 사용자 '낙찰대금에서 김건명한테 가는 거 아니야?': 표에 '함'만 보여서 헷갈렸다 */
         s += ' ' + pay + (t.daehang ? (t.assumed > 0 ? ` 못 받은 <b>${fmtWon(t.assumed)}</b>은 낙찰자가 물어 줘야 한다.` : ' 보증금을 다 받으니 낙찰자가 물어 줄 돈은 없다.') : (t.paid < t.deposit ? ' 못 받은 돈이 있어도 낙찰자 책임은 아니다.' : ''));
       }
       h += `<li><b>${t.name}</b>: ${s}${t.hidden ? ' 현황조사서엔 없고 전입세대열람에만 나오는 사람이다.' : ''}</li>`;

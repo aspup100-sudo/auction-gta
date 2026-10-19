@@ -1045,7 +1045,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v253</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v254</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -6275,9 +6275,10 @@ const Debt = {
   room(m) { return Math.max(0, Math.floor((this.value(m) * this.LTV - this.loans(m)) / 1e5) * 1e5); },
   // 대출 중간에 갚기 (사용자 2026-10-17 '중간에 은행가면 갚는것도 해줘'): 은행·저축은행 창구. 추가 담보 → 저축은행 → 경락잔금 순으로 줄인다. 이자는 다음 달부터 줄어든 만큼
   async repayMenu(kind) {
-    const homes = Live.owned().filter(m => this.loans(m) > 0); if (!homes.length) return 'inv';
-    const tot = homes.reduce((s, m) => s + this.loans(m), 0), mi = homes.reduce((s, m) => s + Live.monthlyInterest(m), 0);
-    const pick = await Dialog.say([say(kind, `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요? 남은 대출이 ${fmtWon(tot)} 있으세요.`)], [{ label: `대출 갚기 <small>이자 ${fmtWon(mi)}/달</small>`, value: 'pay' }, { label: '다른 업무 (조사하기)', value: 'inv' }, { label: '그만두기', value: 'no' }]);
+    const homes = Live.owned().filter(m => this.loans(m) > 0), canB = kind === 'bank' && this.canBorrow(); if (!homes.length && !canB) return 'inv';
+    const tot = homes.reduce((s, m) => s + this.loans(m), 0), mi = homes.reduce((s, m) => s + Live.monthlyInterest(m), 0), roomT = Live.owned().reduce((s, m) => s + this.room(m), 0);
+    const pick = await Dialog.say([say(kind, `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?${homes.length ? ` 남은 대출이 ${fmtWon(tot)} 있으세요.` : ''}`)], [...(homes.length ? [{ label: `대출 갚기 <small>이자 ${fmtWon(mi)}/달</small>`, value: 'pay' }] : []), ...(canB ? [{ label: `집 담보 대출 받기 <small>한도 ${fmtWon(roomT)}</small>`, value: 'borrow' }] : []), { label: '다른 업무 (조사하기)', value: 'inv' }, { label: '그만두기', value: 'no' }]);
+    if (pick === 'borrow') return this.borrowMenu(kind);
     if (pick !== 'pay') return pick;
     let m = homes[0];
     if (homes.length > 1) { const k = await Dialog.say([say(kind, '어느 집 대출을 갚으시겠어요?')], [...homes.map(h => ({ label: `${h.name.split(' ').slice(0, 2).join(' ')} <small>${fmtWon(this.loans(h))}</small>`, value: Live.key(h.k, h.n) })), { label: '그만두기', value: 'no' }]); m = homes.find(h => Live.key(h.k, h.n) === k); if (!m) return 'no'; }
@@ -6295,6 +6296,24 @@ const Debt = {
     Money.why(`대출 갚음 (${m.name.split(' ').slice(0, 2).join(' ')})`); State.cash -= amt; HUD.setCash(State.cash); Sound.play('coins'); Live.save();
     const now = this.loans(m);
     await Dialog.say([say(kind, now > 0 ? `${fmtWon(amt)} 갚으셨어요. 남은 대출은 ${fmtWon(now)}, 이자는 다음 달부터 ${fmtWon(Live.monthlyInterest(m))}씩 나가요.` : `${fmtWon(amt)} 갚아서 대출 다 끝났어요. 이제 이 집 이자는 안 나가요.`)]);
+    return 'no';
+  },
+  // 집 담보 대출 (사용자 2026-10-19 '다른 집 담보 대출 받아서 할 수 있지? 돈 부족하면'): 은행 창구에서 가진 집을 담보로 미리 빌려 입찰·잔금에 쓴다.
+  // 한도 = 집값의 70% − 이미 받은 대출 (room). 빌린 돈은 m.extraLoan에 쌓여 매달 이자가 같이 빠지고, 집을 팔 때 같이 갚는다. 번 돈(Shop.spendable)은 안 늘어난다.
+  canBorrow() { return Live.owned().some(m => this.room(m) >= 1e6); },
+  async borrowMenu(kind) {
+    const homes = Live.owned().filter(m => this.room(m) >= 1e6), nm = h => h.name.split(' ').slice(0, 2).join(' ');
+    if (!homes.length) { await Dialog.say([say(kind, '담보로 더 빌릴 수 있는 한도가 남은 집이 없으세요.')]); return 'no'; }
+    let m = homes[0];
+    if (homes.length > 1) { const k = await Dialog.say([say(kind, '어느 집을 담보로 하시겠어요?')], [...homes.map(h => ({ label: `${nm(h)} <small>한도 ${fmtWon(this.room(h))}</small>`, value: Live.key(h.k, h.n) })), { label: '그만두기', value: 'no' }]); m = homes.find(h => Live.key(h.k, h.n) === k); if (!m) return 'no'; }
+    const room = this.room(m), half = Math.floor(room / 2 / 1e6) * 1e6, opts = [{ label: `한도만큼 다 <small>${fmtWon(room)}</small>`, value: room }];
+    if (half >= 1e6 && half < room) opts.push({ label: `절반 <small>${fmtWon(half)}</small>`, value: half });
+    for (const v of [1e7, 3e7, 5e7, 1e8]) if (v < room && v !== half && opts.length < 5) opts.push({ label: fmtWon(v), value: v });
+    opts.push({ label: '그만두기', value: 0 });
+    const amt = Math.min(+(await Dialog.say([say(kind, `${nm(m)} 담보로 ${fmtWon(room)}까지 빌려 드릴 수 있어요. 집값 ${fmtWon(this.value(m))}의 ${Math.round(this.LTV * 100)}%에서 이미 받은 대출 ${fmtWon(this.loans(m))}을 뺀 만큼이에요. 연 5%라 이자는 매달 빠지고, 집을 팔 때 같이 갚으셔야 해요.`)], opts)) || 0, room);
+    if (amt <= 0) return 'no';
+    m.extraLoan = (m.extraLoan || 0) + amt; Money.why(`집 담보 대출 (${nm(m)})`); State.cash += amt; HUD.setCash(State.cash); Sound.play('ding'); Live.save();
+    await Dialog.say([say(kind, `${fmtWon(amt)} 입금해 드렸어요. 다음 달부터 이 집 이자가 ${fmtWon(Math.round(amt * LOAN_RATE / 12))}씩 더 나가요.`)]);
     return 'no';
   },
   tick(dt) {
@@ -8836,10 +8855,10 @@ async function staffTalk(kind) {
   if (kind === 'bank' && !(State.ticket && State.ticket.called)) {
     await Dialog.say([say('bank', State.ticket ? `번호표 ${State.ticket.no}번이시죠? 차례가 되면 불러 드릴게요.` : '번호표 먼저 뽑아 주시겠어요? 입구 왼쪽 기계에 있어요.')]); return;
   }
-  if (kind === 'bank' && Live.on && Live.pending()) { State.ticket = null; return Live.bank(false); } // 채널: 낙찰 건 경락잔금대출
+  if (kind === 'bank' && Live.on && Live.pending()) { if (Debt.canBorrow()) { const p = await Dialog.say([say('bank', `${State.ticket.no}번 고객님, 어떤 업무 보시겠어요?`)], [{ label: '낙찰 건 경락잔금대출', value: 'k' }, { label: '가진 집 담보 대출 받기', value: 'b' }, { label: '그만두기', value: 'no' }]); if (p === 'b') { State.ticket = null; return Debt.borrowMenu('bank'); } if (p !== 'k') return; } State.ticket = null; return Live.bank(false); } // 채널: 낙찰 건 경락잔금대출 (v254: 가진 집이 있으면 담보 대출도)
   if (kind === 'bank' && State.phase === 'won') { State.ticket = null; return loanReview(false); }
   if (kind === 'bank' && State.phase === 'savings') { await Dialog.say([say('bank', '저희 한도는 더는 어렵습니다. 알려 드린 저축은행으로 가 보세요.')]); return; }
-  if (kind === 'bank' && Live.on && Live.owned().some(m => Debt.loans(m) > 0)) { const r = await Debt.repayMenu('bank'); if (r !== 'inv') { State.ticket = null; return; } } // 채널: 낙찰받은 집 대출 중간에 갚기 (v202)
+  if (kind === 'bank' && Live.on && (Live.owned().some(m => Debt.loans(m) > 0) || Debt.canBorrow())) { const r = await Debt.repayMenu('bank'); if (r !== 'inv') { State.ticket = null; return; } } // 채널: 낙찰받은 집 대출 중간에 갚기 (v202)
   if (kind === 'agent' && Live.on) { const r = await MyHome.agentMenu(); if (r !== 'inv') return; } // 채널: 내 집 사기·팔기 (v155) / 낙찰받은 집 임대·매도
   const greet = { registry: '네, 등기사항증명서 발급이세요? 관할 상관없이 어느 등기소에서나 떼 드려요.', center: '전입세대열람 신청하시려고요?', agent: '어서 와요. 경매 물건 보러 왔구나?', bank: `${State.ticket ? State.ticket.no + '번 ' : ''}고객님, 어떤 업무 보시겠어요?` }[kind];
   const pick = await Dialog.say([say(kind, greet)], [{ label: `조사하기${slotLabel() ? ` <small>(${slotLabel()})</small>` : ''}`, value: 'inv', disabled: noSlot() }, { label: '그만두기', value: 'no' }]);

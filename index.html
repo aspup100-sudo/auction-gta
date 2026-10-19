@@ -1045,7 +1045,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v251</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v252</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -10149,7 +10149,7 @@ const Shop = {
     const PX = big ? -Hw + 9 : -15, NX = Hw - 7, petX = big ? (kind === 'trex' ? 4 : 2) : 5; // 나 · 행인 · 펫 자리 (펫 단위 좌표)
     const sh = n => { Sprites.setPal(n === 'me' ? 'shop:me' : n, n === 'me' ? Profile.pal(Profile.get()) : undefined); return Sprites.sheet(n === 'me' ? 'shop:me' : n); };
     const person = (n, X, row, fr, rot) => { x.save(); x.translate(X, 0); if (rot) x.rotate(rot); x.fillStyle = 'rgba(0,0,0,.22)'; if (!rot) { x.beginPath(); x.ellipse(0, 0, 5, 1.8, 0, 0, 7); x.fill(); } x.imageSmoothingEnabled = false; x.drawImage(sh(n), fr * 16, row * 16, 16, 16, -8, -16, 16, 16); x.restore(); };
-    const say = (text, X, Y) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.translate((80 + X * k) * S, Math.max(26, 96 + Y * k) * S); x.scale(S * 1.15, S * 1.15); if (typeof Net !== 'undefined') Net.bubble(x, text, 0, 0); x.restore(); };
+    const say = (text, X, Y) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.font = '7px "IBM Plex Sans KR", sans-serif'; const hw = (Math.min(90, x.measureText(text).width) + 10) * 0.58; x.translate(Math.max(2 + hw, Math.min(158 - hw, 80 + X * k)) * S, Math.max(26, 96 + Y * k) * S); /* v252 말풍선이 칸 밖으로 잘리지 않게 */ x.scale(S * 1.15, S * 1.15); if (typeof Net !== 'undefined') Net.bubble(x, text, 0, 0); x.restore(); };
     const tag = (text, X, Y) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.translate((80 + X * k) * S, Math.max(14, 96 + Y * k) * S); x.scale(S * 1.2, S * 1.2); if (typeof Net !== 'undefined') Net.label(x, text, 0, 0); x.restore(); };
     const cam = (X, flash) => { Pets.camera(x, { x: X, y: 0, dir: 1, photo: { flash } }, now); };
     const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, ph5 = idle - 5;
@@ -10157,6 +10157,22 @@ const Shop = {
     let pet = { x: petX, y: 0, face: 1, mv, idle, pose: undefined, rot: 0, hide: false }, meRow = 2, npc = null, bubbles = [];
     const flash = now - ((now / 1300 | 0) * 1300); const fl = now - flash;
     if (kind === 'monkey') { pet.hide = true; if (mv) { person('me', PX, 2, fr); Pets.draw(x, 'monkey', PX, -15, 1, false, t, '', 0, 'ride'); } else { person('me', PX, 0, 0); Pets.draw(x, 'monkey', petX, 0, 1, false, t, '', idle); } x.restore(); return; }
+    if (typeof PetPV !== 'undefined' && PetPV[kind]) { // v252 미리보기 대본 (petpv.js)
+      const B = [], L = [], sp = idle - 4.4, el = (now - (this.bigT0 || now)) / 1000, auto = this.bigMode === 'auto';
+      PetPV[kind]({ x, k, PX, NX, petX, t, mv, idle, moveT, fr, now, sp, auto, u: auto ? sp : Math.max(0, sp) % 11, n: auto ? Math.floor(el / 14) : Math.floor(Math.max(0, sp) / 11), person, say: (s, X, Y) => B.push([s, X, Y]), tag: (s, X, Y) => L.push([s, X, Y]), S: this.pvS || (this.pvS = {}) });
+      x.restore(); for (const a of L) tag(...a); for (const a of B) say(...a); return; }
+    if (kind === 'parrot') { // 앵무새 (사용자 2026-10-19 '여기서도 막 이리저리 날라다니는 거'): 걸으면 머리 위를 이리저리, 멈추고 2.5초 뒤 지붕에 앉아 말 따라 하기
+      const bx0 = PX + 6 + Math.sin(t * 1.3) * 15, h0 = 13 + Math.sin(t * 1.9) * 5, f0 = Math.cos(t * 1.3) >= 0 ? 1 : -1, sp = idle - 4.4, RX = 15, RY = -9;
+      x.fillStyle = '#b06a4a'; x.fillRect(8, -8, 20, 8); x.fillStyle = '#8a4a32'; for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) x.fillRect(8 + c * 4 + (r % 2) * 2, -8 + r * 2, 0.5, 2); for (let r = 1; r < 4; r++) x.fillRect(8, -8 + r * 2, 20, 0.5); x.fillStyle = '#9a9488'; x.fillRect(7, -9, 21, 1); // 앉을 담장 (미리보기 칸이 낮아 지붕 대신)
+      let bx = bx0, by = -h0, face = f0, pose = 'fly', bub = null, mine = null;
+      if (!mv && sp > 2.5) { const e = Math.min(1, (sp - 2.5) / 1.2), a = e * e * (3 - 2 * e); bx = bx0 + (RX - bx0) * a; by = -h0 + (RY - 4 * Math.sin(a * Math.PI) + h0) * a; face = RX >= bx0 ? 1 : -1;
+        if (e >= 1) { face = -1; pose = 'sit'; const q = sp - 3.7, i = Math.floor(q / 5), w = q % 5;
+          if (i % 2 === 0) { const L = ['안녕~', '부자 되자!', '낙찰!'][(i / 2) % 3], ec = L.replace(/[!?~.…♥]+$/g, '').slice(0, 8); if (w > 0.3 && w < 2) mine = L; if (w > 1.2 && w < 3.6) { pose = 'talk'; bub = `${ec}! ${ec}!${ec.length <= 4 ? ' 깍!' : ''}`; } }
+          else if (w > 0.6 && w < 2.4) { pose = 'talk'; bub = PARROT_SAY[((i - 1) / 2) % PARROT_SAY.length]; } } }
+      person('me', PX, mv ? 2 : 0, fr);
+      if (pose === 'fly') { x.fillStyle = 'rgba(0,0,0,.18)'; x.beginPath(); x.ellipse(bx, 0, 3.5 - Math.min(1.5, -by / 14), 1.3, 0, 0, 7); x.fill(); }
+      Parrot.draw(x, bx, by, face, pose, t); x.restore();
+      if (mine) say(mine, PX, -20); if (bub) say(bub, Math.min(bx, 10), by - 12); return; }
     if (kind === 'dog' && !mv && ph5 > 0 && ph5 < 1.6) { const a = ph5 / 1.6 * Math.PI * 2; pet.x = PX - Math.cos(a) * 14; pet.y = 2 - Math.sin(a) * 7; pet.face = Math.sin(a) > 0 ? 1 : -1; pet.mv = true; } // 주인 주위를 한 바퀴
     if (kind === 'trex') { // 발자국 + 익룡 + 사진 찍는 행인 + 크앙
       for (let i = 0; i < 6; i++) { const X = petX - 8 - i * 9 + (mv ? (t * 30) % 9 : 0), side = i % 2 ? 1 : -1, al = mv ? 1 - i / 7 : Math.max(0, 1 - i / 7 - Math.max(0, idle - 4.4) / 9); if (al > 0) Prints.foot(x, X, 2 + side * 2.5, 0, al); }
@@ -12071,6 +12087,95 @@ Object.assign(PET_DRAW, {
     r(3, -10 + hy, 1.5, 1.5, BK); r(4, -9 + hy, 0.8, 1.2, BK); if (talk && Math.floor(t * 8) % 2) { r(3, -8 + hy, 1, 0.7, '#6a6a72'); r(3.2, -8.6 + hy, 0.6, 0.5, '#d05050'); } else r(3, -8.6 + hy, 1, 0.8, '#6a6a72'); // 부리 (말할 땐 뻐끔)
   },
 });
+
+/* ===================== 편집숍 큰 미리보기 대본 (v252, 사용자 2026-10-19 '악어, 올라푸, 스폰지밥, 핑핑이 다 안 된 거 해' + '도라에몽도') =====================
+ * Shop.petScene이 H(그리기 도구 · 시간)를 넘겨 부른다. 단위는 펫 좌표 (땅 y = 0, 내 캐릭터 H.PX, 행인 자리 H.NX).
+ * H.sp = 멈춘 뒤 지난 초, H.u = 멈춘 동안 11초 칸 안의 시간, H.n = 몇 번째 칸인지 (칸마다 다른 장난을 보여 준다).
+ * 말풍선(H.say)·이름표(H.tag)는 모아 두었다가 장면 위에 그린다. 게임 속 펫 그림(Pets.draw · PET_DRAW 포즈)과 도구 그림(Dora.item …)을 그대로 쓴다. */
+const PetPV = {
+  croc(H) { // 악어: 서 있으면 악어새가 날아와 입 청소 (게임 속 Pets.crocBird 그대로, 행인 효과 없이)
+    const { x, t, mv, petX } = H, S = H.S.croc || (H.S.croc = {}); Object.assign(S, { x: petX, y: 0, face: 1, moving: mv });
+    const ex = Pets.extra, cr = Pets.crumbs; Pets.extra = []; Pets.crumbs = () => {}; let CB = null, X = [];
+    try { CB = Pets.crocBird(x, S, mv ? 0 : H.u + 2.5, t); X = Pets.extra; } finally { Pets.extra = ex; Pets.crumbs = cr; }
+    H.person('me', H.PX, mv ? 2 : 0, H.fr);
+    Pets.draw(x, 'croc', petX, 0, 1, mv, t, '', mv ? 0 : H.idle, CB ? { open: CB.open } : undefined);
+    const NL = Net.label; Net.label = (c, s, X2, Y2) => H.tag(s, X2, Y2); try { X.sort((a, b) => a.y - b.y).forEach(e => e.d()); } finally { Net.label = NL; }
+  },
+  snowman(H) { // 눈사람 올라푸: 서 있으면 서서히 녹고, 걸으면 다시 뭉친다
+    const { x, t, mv, petX } = H, sp = H.sp; let m = 0, lab = null;
+    if (mv) { if (H.auto) { m = Math.max(0, 1 - H.moveT * 0.8); if (H.moveT > 1.25 && H.moveT < 3) lab = '다시 뭉쳤다!'; } }
+    else { m = Math.min(1, Math.max(0, (sp - 0.5) / 7)); if (sp > 2.25 && sp < 4.25) lab = '녹는다…'; else if (sp > 7.5 && sp < 9.5) lab = '다 녹았어…'; }
+    H.person('me', H.PX, mv ? 2 : 0, H.fr);
+    Pets.draw(x, 'snowman', petX, 0, 1, mv, t, '', mv ? 0 : H.idle, m > 0 ? { melt: m } : undefined);
+    if (lab) H.tag(lab, petX, -8 - 17 * (1 - m));
+  },
+  gary(H) { // 띵띵이: 지나간 자리에 끈적한 자국 (10초 남았다가 2초 동안 흐려짐), 미아웅~, 서 있으면 눈 메트로놈, 자국 밟은 행인
+    const { x, t, mv, petX } = H, sp = Math.max(0, H.sp), V = 40 / H.k, x0 = petX - 6, off = mv ? (t * V) % 3 : 0, age = X => (x0 - X) / V + (mv ? 0 : sp), al = X => Math.max(0, Math.min(1, (10 - age(X)) / 2));
+    for (let X = Math.floor(x0); X > -30; X--) { const a = al(X); if (a <= 0) continue; x.fillStyle = `rgba(190,160,230,${0.3 * a})`; x.fillRect(X, -1, 1, 2); x.fillStyle = `rgba(215,195,245,${0.42 * a})`; x.fillRect(X, -0.5, 1, 1); x.fillStyle = `rgba(255,255,255,${0.5 * a})`; x.fillRect(X, -0.5, 1, 0.5); }
+    for (let i = 0; i < 12; i++) { const X = x0 - i * 3 + off, a = al(X), h = (i * 7919) % 5; if (a <= 0 || X > x0) continue; x.fillStyle = `rgba(185,150,230,${0.45 * a})`; x.fillRect(X - 1, h % 2 ? 0 : -1.5, 2 + (h % 3) * 0.5, 1.5); x.fillStyle = `rgba(255,255,255,${0.6 * a})`; x.fillRect(X - 0.5, h % 2 ? 0 : -1.5, 0.5, 0.5); }
+    const u = H.u, meow = mv ? H.moveT > 1 && H.moveT < 2.6 : (u > 3 && u < 4.6) || (u > 9 && u < 10.6);
+    H.person('me', H.PX, mv ? 2 : 0, H.fr);
+    if (!mv && u > 4.6 && u < 9) { const q = Math.min(1, (u - 4.6) / 1.8), wx = -36 + q * 30, stun = q >= 1 && u < 8.2; x.save(); x.translate(0, 1.5); H.person('walker1', wx + (stun ? Math.sin(t * 40) * 0.5 : 0), 2, q < 1 ? 1 + Math.floor(t * 8) % 4 : 0); x.restore(); if (stun) H.say(['으앗! 끈적끈적해!', '뭐야 이거 미끄러워!', '신발에 뭐 묻었다…'][H.n % 3], wx, -18); } // 내 앞으로 걸어와 자국을 밟는다
+    Pets.draw(x, 'gary', petX, 0, 1, mv, t, '', mv ? 0 : H.idle, meow ? { a: 'meow' } : undefined);
+    if (meow) H.tag('미아웅~', petX, -18);
+  },
+  sponge(H) { // 스폰지빵: 시도 때도 없이 웃기, 서 있으면 뛰어다니기 → 행인한테 폐급짓 (칸마다 꾸벅·동전·월요일·게살버거) → 비눗방울
+    const { x, t, mv, petX, NX } = H, L = Sponge.LAUGH, u = H.u, bounce = -(Math.floor(t * 8) % 2) * 0.5;
+    let px = petX, rot = 0, pose, face = 1, dy = 0, walk = mv, npc = null, nrot = 0, laugh = false, coin = null, burger = null, heart = null, bub = false;
+    if (mv) laugh = H.moveT > 0.5 && H.moveT < 2.1;
+    else if (u >= 1.2 && u < 3.4) { const e = u - 1.2, A = Math.min(1, e / 0.6, (3.4 - u) / 0.5); px = petX + Math.sin(e * 1.9) * 9 * A; face = Math.cos(e * 1.9) >= 0 ? 1 : -1; walk = true; laugh = e > 0.6 && e < 2; } // 뛰어다니기
+    else if (u >= 3.4 && u < 9.2) { const id = ['bow', 'coin', 'monday', 'burger'][H.n % 4], tx = id === 'burger' ? petX : id === 'coin' ? 4 : 7, g = u - 4, back = u > 8.6, NX = 18;
+      npc = { X: NX }; const d = back ? 1 - Math.min(1, (u - 8.6) / 0.6) : Math.min(1, (u - 3.4) / 0.6); px = petX + (tx - petX) * d; walk = back || d < 1; face = back ? -1 : 1;
+      if (!back && g >= 0) { walk = false;
+        if (id === 'bow') { if (g < 0.9) { H.say('안녕하세요~!', px, -24); rot = Math.min(1, g / 0.3) * 0.65; }
+          else { npc.X = NX + Math.min(4, (g - 0.9) * 40); nrot = g < 1.5 ? 0.25 : 0; if (g < 3.1) H.say('아악!! 내 턱!!', npc.X, -18); if (g < 1.7) H.tag('퍽!', npc.X, -22); rot = g < 1.05 ? Math.max(0, 1 - (g - 0.9) / 0.15) * 0.65 : 0; if (g > 1.05) { pose = { a: 'laugh' }; laugh = true; dy = bounce; } } }
+        else if (id === 'coin') { if (g < 2.4) coin = px + 6; if (g < 0.8) H.say('어? 동전이다!', px, -24); rot = g < 0.8 ? 0 : g < 1.05 ? (g - 0.8) / 0.25 * 0.55 : g < 1.25 ? 0.55 + (g - 1.05) / 0.2 * 1.02 : g < 2.4 ? 1.57 : g < 2.7 ? (1 - (g - 2.4) / 0.3) * 1.57 : 0;
+          if (g > 1.05 && g < 1.9) H.tag('쿠당탕!', px + 6, -14); if (g > 1.5 && g < 3) H.say('…괜찮아요?', npc.X, -18); if (g > 2.7) { H.tag(g < 3.6 ? '괜찮아요~! ' + L : L, px, -28); pose = { a: 'laugh' }; dy = bounce; } }
+        else if (id === 'monday') { if (g < 1.8) { H.say('월요일 너무 좋아!!', px, -24); pose = { a: 'wave' }; } else if (g < 3.4) H.say(['…월요일이 좋다고?', '이 사람 뭐야…', '월요일이… 좋아…?'][Math.floor(H.n / 4) % 3], npc.X, -18); if (g > 2.6) { laugh = true; pose = { a: 'laugh' }; dy = bounce; } }
+        else { const q = Math.min(1, Math.max(0, g - 0.6) / 0.7); if (g < 0.6) H.say('게살버거 나왔습니다~!', px, -24); if (g < 1.3) { burger = [px + 6 + (npc.X - px - 6) * q, -9 + (-14 + 9) * q - Math.sin(q * Math.PI) * 9]; pose = { a: 'give' }; }
+          else if (g < 3.4) { H.say(g < 2.3 ? '게살버거다!!' : '냠냠… 진짜 맛있다!', npc.X, -18); heart = [npc.X + 5, -14 - ((t * 10) % 6)]; } if (g > 2.4) { laugh = true; pose = { a: 'laugh' }; } } } }
+    else if (u >= 9.2) { const e = u - 9.2; pose = { a: 'blow' }; bub = e; if (e < 1.4) H.tag('후~', px, -22); } // 비눗방울
+    if (laugh) { if (!pose) pose = { a: 'laugh' }; H.tag(L, px, npc ? -28 : -22); } // 행인 말풍선이랑 안 겹치게 위로
+    H.person('me', H.PX, mv ? 2 : 0, H.fr);
+    if (npc) H.person('walker2', npc.X, 1, 0, nrot);
+    if (coin != null) { x.fillStyle = '#e0b030'; x.fillRect(Math.round(coin) - 1, -1, 2, 1); if (Math.floor(t * 4) % 2) { x.fillStyle = '#fff8c0'; x.fillRect(Math.round(coin), -2, 1, 1); } }
+    if (rot) { x.save(); x.translate(px, 0); x.rotate(rot); Pets.draw(x, 'sponge', 0, 0, face, false, t, '', 0, pose); x.restore(); }
+    else Pets.draw(x, 'sponge', px, dy, face, walk, t, '', walk ? 0 : H.idle, pose);
+    if (burger) Sponge.burger(x, burger[0], burger[1]);
+    if (heart) Dora.heart(x, heart[0], heart[1]);
+    if (bub !== false) for (let i = 0; i < 9; i++) { const e = bub - 0.4 - i * 0.18; if (e < 0) continue; const r = 1 + (i % 3), bx = px + 9 + e * (3 + (i % 3) * 2) + Math.sin(e * 2.4 + i) * 1.5, by = -13 - e * (5 + (i % 4)); if (by < -31) continue;
+      x.save(); x.strokeStyle = `hsla(${(e * 120 + i * 60) % 360},80%,85%,.9)`; x.lineWidth = 0.5; x.beginPath(); x.arc(bx, by, r, 0, 7); x.stroke(); x.fillStyle = 'rgba(200,235,255,.18)'; x.fill(); x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(bx - r * 0.55, by - r * 0.6, 0.5, 0.5); x.restore(); }
+  },
+  dora(H) { // 도라애몽: 걸으면 행인한테 인사·도라야키, 서 있으면 칸마다 주머니 도구 하나 (어디로든 문 · 빅라이트 · 큐피드 화살 · 투명 망토 · 암기빵 · 대나무 헬리콥터 · 공기포 · 도라야키)
+    const { x, t, mv, petX, NX, PX } = H, n = H.n, S0 = {}; let dx = petX, dyy = 0, face = 1, al = 1, walk = mv, npc = null, nbig = false, nrot = 0, post = [], hide = false;
+    if (mv) { npc = { X: NX }; const e = H.moveT;
+      if (n % 2 === 0) { if (e < 1.4) H.say('안녕~! 나는 도라애몽!', dx, -22); else H.say(['어?! 도라애몽이다!!', '헐 진짜 도라애몽?!', '사진 한 장만요!!'][Math.floor(n / 2) % 3], NX, -18); }
+      else { const q = Math.min(1, e / 0.7); if (e < 0.7) post.push(() => Dora.item(x, 'yaki', dx + (NX - dx) * q, -10 + (-14 + 10) * q - Math.sin(q * Math.PI) * 8, t)); else { H.say('도라야키?! 고마워~♥', NX, -18); post.push(() => Dora.heart(x, NX + 4, -14 - ((t * 10) % 6))); } } }
+    else { const G = ['door', 'big', 'cupid', 'cloak', 'bread', 'copter', 'air', 'yaki'][n % 8], e = H.u - 1.2, uu = e - 0.9;
+      if (G === 'big' || G === 'cupid' || G === 'air') npc = { X: NX };
+      if (e >= 0 && uu < 0) { const hy = -17 - Math.min(1, e / 0.35) * 7; post.push(() => { Dora.item(x, G, dx + 1, hy, t); Dora.sparkle(x, dx, hy - 3, t); }); if (e > 0.25) H.tag(`${DORA_G[G]}!`, dx, -30); } // 주머니에서 번쩍
+      else if (uu >= 0) { const hx = dx + 5, hy = -8;
+        if (G === 'big') { if (uu < 0.8) post.push(() => { Dora.item(x, 'big', hx, hy - 2, t); x.save(); x.globalAlpha = 0.35 + Math.sin(t * 30) * 0.08; x.fillStyle = '#fff07a'; x.beginPath(); x.moveTo(hx, hy - 2); x.lineTo(NX - 9, -22); x.lineTo(NX + 9, -2); x.closePath(); x.fill(); x.restore(); }); else { nbig = true; if (uu < 3.4) H.say('어?! 내가 왜 이렇게 커졌지?!', NX, -30); } }
+        else if (G === 'cupid') { const q = Math.min(1, uu / 0.6); if (uu < 0.6) post.push(() => Dora.arrow(x, hx + (NX - hx) * q, hy + (-12 - hy) * q - Math.sin(q * Math.PI) * 10, 1)); else { if (uu < 3) H.say('첫눈에 반했어요~♥', NX, -18); post.push(() => { for (let i = 0; i < 2; i++) { const p = (t * 0.8 + i * 0.5) % 1; x.save(); x.globalAlpha = 1 - p; Dora.heart(x, NX - 3 + i * 6, -20 - p * 8); x.restore(); } }); } }
+        else if (G === 'air') { const q = Math.min(1, uu / 0.35); if (uu < 0.35) post.push(() => { Dora.item(x, 'air', hx, hy, t); x.strokeStyle = 'rgba(220,240,255,.85)'; x.lineWidth = 1; x.beginPath(); x.ellipse(hx + (NX - hx) * q, hy + (-10 - hy) * q, 2 + q * 3, 3 + q * 4, 0, 0, 7); x.stroke(); });
+          else { npc.X = NX + Math.min(3, (uu - 0.35) * 30); nrot = uu < 1.2 ? 0.2 : 0; if (uu < 2.4) H.say('으악! 웬 바람이?!', npc.X, -18); if (uu > 0.4 && uu < 1.2) H.tag('펑!', npc.X, -24); } }
+        else if (G === 'cloak') { if (uu < 0.5) post.push(() => { x.fillStyle = 'rgba(150,170,200,.75)'; x.fillRect(Math.round(dx - 6), Math.round(-18 + uu * 18), 12, Math.max(1, Math.round(16 - uu * 16))); }); else if (uu < 5.5) { al = 0.12 + Math.max(0, Math.sin(t * 7)) * 0.08 + (uu > 5.1 ? (uu - 5.1) * 2 : 0); if (uu < 4) H.tag('안 보이지롱~', dx, -22); } }
+        else if (G === 'bread') { if (uu < 1.2) { post.push(() => Dora.item(x, 'bread', dx + 6, -12, t, 1 - uu / 1.2 * 0.8)); H.tag('냠냠', dx, -22); } else { const Ls = ['원주율! 3.14159 26535…', '보증금은 최저가의 10%!', '권리분석은 말소기준권리부터!', '…휴, 다 외웠다!'], i = Math.floor((uu - 1.2) / 2); if (i < Ls.length) H.say(Ls[i], dx, -22); } }
+        else if (G === 'copter') { const Lc = 3.2; if (uu < Lc) { const h = uu < 0.6 ? uu / 0.6 * 11 : uu > Lc - 0.6 ? Math.max(0, (Lc - uu) / 0.6) * 11 : 11, a = Math.max(0, uu - 0.6) / (Lc - 1.2) * Math.PI * 2, R = Math.min(1, Math.max(0, uu - 0.6) * 2) * 13, cx = petX + (PX - petX) * Math.min(1, R / 13) * 0.6;
+            dx = cx + Math.cos(a) * R; dyy = Math.sin(a) * R * 0.15; face = -Math.sin(a) >= 0 ? 1 : -1; hide = true; const X0 = dx, Y0 = dyy, ff = face;
+            post.push(() => { x.fillStyle = 'rgba(0,0,0,.2)'; x.beginPath(); x.ellipse(X0, Y0, 5 - h / 8, 1.6, 0, 0, 7); x.fill(); Pets.draw(x, 'dora', X0, Y0 - h, ff, false, t, '', 0); const px = Math.round(X0), py = Math.round(Y0 - h - 19), w2 = (Math.floor(t * 20) % 2) ? 5 : 2; x.fillStyle = '#e8c020'; x.fillRect(px - w2, py, w2 * 2, 1); x.fillStyle = '#b08a10'; x.fillRect(px, py + 1, 1, 2); }); } }
+        else if (G === 'yaki') { if (uu < 2.4) { post.push(() => { Dora.item(x, 'yaki', dx + 6, -11, t, 1 - uu / 3); Dora.heart(x, dx - 3 + Math.sin(t * 3) * 3, -20 - (t * 12) % 8); }); H.tag('도라야키 최고~♥', dx, -26); } }
+        else if (G === 'door') { const f = -1, A = petX - 10, B = NX, out = B - 9; face = f; // 문 열고 쏙 → 다른 쪽 문에서 짠
+          const openA = uu < 0.3 ? uu / 0.3 : uu < 1.1 ? 1 : Math.max(0, 1 - (uu - 1.1) / 0.3), openB = uu < 1.4 ? 0 : uu < 2.2 ? Math.min(1, (uu - 1.4) / 0.3) : Math.max(0, 1 - (uu - 2.2) / 0.3);
+          if (uu < 1.4) { const g = Math.min(1, uu / 0.2); x.save(); Dora.door(x, A, 1, openA, f, g); x.restore(); }
+          if (uu > 1.1 && uu < 2.6) { const g = Math.min(1, (uu - 1.1) / 0.2); x.save(); Dora.door(x, B, 1, openB, f, g); x.restore(); }
+          if (uu < 0.3) {} else if (uu < 1) { const q = (uu - 0.3) / 0.7; dx = petX + (A - petX) * q; walk = true; al = 1 - Math.max(0, q - 0.55) / 0.45; } else if (uu < 1.6) hide = true; else if (uu < 2.2) { const q = (uu - 1.6) / 0.6; dx = B + (out - B) * q; walk = true; al = Math.min(1, q / 0.45); if (uu > 1.9) H.tag('짠!', dx, -22); } else dx = out; } } }
+    H.person('me', PX, mv ? 2 : 0, H.fr);
+    if (npc) { if (nbig) { x.save(); x.translate(npc.X, 0); x.scale(2, 2); H.person('walker2', 0, 1, 0); x.restore(); } else H.person('walker2', npc.X, 1, 0, nrot); }
+    if (!hide) Dora.pet(x, S0, 'dora', dx, dyy, face, walk, t, '', walk ? 0 : H.idle, al);
+    for (const f of post) f();
+  },
+};
 
 /* ===================== 펫 배틀 (v147, 사용자 2026-10-16 '펫끼리 싸울 수 있게 할까? 포켓몬처럼', 카드에서 '턴제 배틀') =====================
  * 데리고 다니는 첫 번째 펫(Profile.pet)이 나간다. 펫마다 타입 하나 · 기술 4개 · 능력치(체력/공격/방어/스피드)가 있고, 이기면 경험치로 레벨이 오른다 (Store 'petLv').

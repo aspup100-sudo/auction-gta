@@ -1046,7 +1046,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v255</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v256</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -9231,6 +9231,13 @@ function talkScore(text) {
   if (t.length > 40) s += 8; if (t.length < 12) s -= 10;
   return Math.max(0, Math.min(100, s));
 }
+// v256: 대화 칸에 '이사비 200만 원 드릴게요'처럼 금액을 적으면 그 돈을 준 걸로 친다 (전엔 말만 하고 돈은 안 나갔다, 사용자 2026-10-19 '이사비 줬으면 돈 나가야 하는 거 아니야?')
+// 붙어 있는 숫자+단위는 하나로 ('1억 2천만 원'), 떨어진 금액이 여럿이면 마지막 것. 없으면 0
+function wonIn(text) {
+  const U = { 억: 1e8, 천만: 1e7, 백만: 1e6, 만: 1e4, 천: 1e3 }, t = (text || '').replace(/(\d),(?=\d{3})/g, '$1'); let cur = 0, end = -1, last = 0;
+  for (const m of t.matchAll(/(\d+(?:\.\d+)?)\s*(억|천만|백만|만|천)?\s*(원)?/g)) { const u = m[2] ? U[m[2]] : m[3] ? 1 : 0; if (!u) continue; if (end < 0 || t.slice(end, m.index).trim()) cur = 0; cur += +m[1] * u; end = m.index + m[0].length; last = cur; }
+  return Math.round(last);
+}
 function occupantProfile(c) {
   const a = Engine.analyze(c.data, State.bidResult.bid);
   const o = c.occupant; const t = a.tenants[0];
@@ -9263,17 +9270,19 @@ async function evictAtSite(c) {
   panel.classList.add('in'); Game.formOpen = true;
   while (E.rounds < 2) {
     render();
-    const act = await new Promise(res => { $('epGive').onclick = () => { const v = Math.round(+$('epOffer').value || 0); if (v > State.cash) { Sound.play('deny'); Toast.show(`가진 돈이 ${fmtWon(Math.max(0, State.cash))}뿐이에요.`); return; } res({ type: 'offer', v }); }; $('epSay').onclick = () => res({ type: 'talk', v: $('epTalk').value }); });
+    const act = await new Promise(res => { $('epGive').onclick = () => { const v = Math.round(+$('epOffer').value || 0); if (v > State.cash) { Sound.play('deny'); Toast.show(`가진 돈이 ${fmtWon(Math.max(0, State.cash))}뿐이에요.`); return; } res({ type: 'offer', v }); }; $('epSay').onclick = () => { const t = $('epTalk').value, w = wonIn(t); if (w > State.cash) { Sound.play('deny'); Toast.show(`가진 돈이 ${fmtWon(Math.max(0, State.cash))}뿐이에요.`); return; } res({ type: 'talk', v: t, won: w }); }; });
     Sound.play('click'); E.rounds++; if (document.activeElement) document.activeElement.blur();
-    const score = act.type === 'offer' ? OFFER_SCORE(act.v / P.base) : talkScore(act.v);
+    const score = act.type === 'offer' ? OFFER_SCORE(act.v / P.base) : act.won ? Math.max(talkScore(act.v), OFFER_SCORE(act.won / P.base)) : talkScore(act.v);
     gauge = Math.max(3, Math.min(97, 100 - score)); $('epGauge').style.width = gauge + '%';
     await sleep(600);
     if (score >= need) {
+      if (act.type === 'talk' && act.won) { act.type = 'offer'; act.v = act.won; } /* 말로 약속한 이사비도 실제로 나간다 */
       if (act.type === 'offer') { E.moveFee = act.v; Money.why('이사비'); State.cash -= act.v; HUD.setCash(State.cash); Sound.play('coins'); }
       panel.classList.remove('in'); Game.formOpen = false;
       await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: act.type === 'offer' ? '…그 정도면 날짜 맞춰 나갈게요.' : '그렇게까지 말씀하시니… 알겠어요, 나갈게요.', emote: 'sweat', nod: true }]);
       return evictDone(c, true);
     }
+    if (act.type === 'talk' && act.won) { act.type = 'offer'; act.v = act.won; } /* 거절당하면 돈은 안 나간다 */
     const line = act.type === 'offer' ? (act.v / P.base >= 0.3 ? '이렇게 많이 주는 게 더 수상한데요?' : '그걸로 어떻게 이사를 가요?') : '말로만 그러지 마세요.';
     panel.classList.remove('in'); Game.formOpen = false; await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: line, emote: 'anger' }]); if (E.rounds < 2) { panel.classList.add('in'); Game.formOpen = true; }
   }

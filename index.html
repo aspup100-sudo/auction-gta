@@ -1048,7 +1048,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v262</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v263</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -15306,6 +15306,144 @@ Object.assign(PetRT.arena, {
   },
 });
 
+/* ===================== 펫 진화 모습 (v263, 사용자 2026-10-20 '볏 말고 뭔가 다른 게 없을까' · '형태가 바뀌어도 돼') =====================
+ * 머리 볏·흰 날개 대신 펫마다 몸 모양이 바뀐다: 1단계(Lv15)는 한 군데, 최종(Lv30)은 크게 여러 군데 (꼬리·갈기·등·날개·뿔…).
+ * 조각은 펫 그림 좌표(오른쪽 보기, 발밑 0, 위가 -)에 그린다. 층: b = 몸 뒤, f = 몸 앞. ~ = 불꽃처럼 일렁, A/B = 번갈아 (프로펠러).
+ * ['G', x, y, 층, 줄…] 칸 그림 · ['L', 색, 층, x1, y1, x2, y2, …] 선 · ['R', 색, 층, x, y, w, h] 네모. 색 글자는 COL (c·l·d는 타입 색). */
+const PetForm = {
+  COL: { Y: '#ffe44a', O: '#ffa430', o: '#f05a1a', y: '#fff6c0', r: '#e03030', w: '#ffffff', W: '#d8e6f4', k: '#1e1e26', K: '#4a4a56', g: '#f0c030', G: '#b07e10', s: '#d0d6e0', S: '#7a8494',
+    b: '#3a78d8', B: '#9ad4ff', e: '#2f8a34', E: '#6cd05a', n: '#6a3e22', N: '#a8743e', v: '#f6ead0', p: '#f59ac0', P: '#e0508a', m: '#a060f0', M: '#e4ccff', a: '#c4c0bc', j: '#c4823c', J: '#8a5420', q: '#8e939e', x: '#2e6224', z: '#9ad07a', u: '#f4e04a', i: '#86c8e8', A: '#f2dca8' },
+  NAME: {
+    mouse: ['찌릿쥐', '번개쥐왕'], dog: ['늑대개', '천둥늑대'], cat: ['쌍꼬리냥', '구미호냥'], rabbit: ['잎새토끼', '꽃밭토끼'], monkey: ['불꼬리 원숭이', '챔피언 원숭이'], penguin: ['목도리 펭귄', '황제 펭귄'],
+    panda: ['대나무 판다', '쿵푸 판다'], tiger: ['불꽃 호랑이', '화염 갈기 호랑이'], giraffe: ['잎사귀 기린', '숲의 왕 기린'], elephant: ['털코끼리', '매머드'], turtle: ['가시 거북', '대포 거북'], croc: ['가시 악어', '돛 악어'],
+    lizard: ['불꼬리 도마뱀', '날개 용'], beetle: ['황금 장수풍뎅이', '헤라클레스'], mantis: ['날개 사마귀', '쌍낫 사마귀'], dolphin: ['뿔 돌고래', '바다의 왕 돌고래'], parrot: ['꼬리깃 앵무', '불사조 앵무'], gary: ['가시 달팽이', '수정 달팽이'],
+    snowman: ['얼음손 눈사람', '얼음 거인'], dora: ['헬리콥터 도라애몽', '망토 도라애몽'], sponge: ['가라테 스폰지빵', '근육 스폰지빵'], trex: ['골판 티라노', '뿔 티라노'],
+  },
+  WHAT: { // 진화 장면 한 줄 설명
+    mouse: ['꼬리가 번개 모양으로!', '번개 꼬리가 길어지고 귀가 뾰족, 등에 털이 섰어요!'], dog: ['목에 복슬복슬 갈기, 꼬리가 풍성해졌어요!', '머리까지 덮는 큰 갈기와 등 줄무늬!'],
+    cat: ['꼬리가 두 갈래로!', '꼬리 셋 끝에 도깨비불!'], rabbit: ['잎사귀 목도리와 잎 꼬리!', '등에 커다란 꽃이 폈어요!'], monkey: ['꼬리 끝에 불이 붙었어요!', '머리가 불타고 챔피언 벨트!'],
+    penguin: ['파란 목도리를 둘렀어요!', '망토와 강철 날개 지느러미!'], panda: ['등에 대나무를 멨어요!', '긴 대나무 봉과 빨간 띠, 잎 망토!'], tiger: ['꼬리와 등에 불꽃!', '머리 뒤로 활활 타는 불꽃 갈기!'],
+    giraffe: ['목을 따라 잎사귀 갈기!', '뿔이 나뭇가지로, 갈기엔 꽃!'], elephant: ['등에 털이 덮이고 상아가 길어졌어요!', '온몸 털에 휘어진 큰 상아!'], turtle: ['등껍질에 가시!', '등에 물대포가 생겼어요!'],
+    croc: ['등 가시가 솟았어요!', '등에 커다란 돛 지느러미!'], lizard: ['꼬리 끝에 불꽃!', '등에 용 날개, 꼬리 불이 커졌어요!'], beetle: ['등껍질에 금빛 무늬!', '날개를 활짝 펴고 금빛 뿔!'],
+    mantis: ['날개가 펼쳐졌어요!', '큰 날개에 은빛 쌍낫!'], dolphin: ['이마에 뿔이 났어요!', '긴 뿔과 커다란 꼬리 지느러미!'], parrot: ['꼬리깃이 길어졌어요!', '불타는 꼬리와 불꽃 날개!'],
+    gary: ['껍데기에 가시!', '껍데기에 얼음 수정이 자랐어요!'], snowman: ['손이 얼음 결정으로!', '어깨에 얼음 기둥이 솟았어요!'], dora: ['머리에 대나무 헬리콥터!', '헬리콥터에 빨간 망토까지!'],
+    sponge: ['빨간 가라테 장갑!', '팔이 울퉁불퉁 근육으로!'], trex: ['등에 골판이 솟았어요!', '머리에 뿔 셋, 꼬리에 가시 곤봉!'],
+  },
+  F: {
+    mouse: [
+      [['G', -12, -11, 'b', 'YYY....', '.YYY...', '.YYYY..', '...YY..', '....YY.', '...YYYY', '....YY.', '.....nn'], ['G', 3, -9, 'f', '.k', 'aa'], ['R', 'r', 'f', 5, -3, 1, 1]],
+      [['G', -15, -15, 'b', '..YYYY...', '.YYYYY...', 'YYYYYY...', '...YYYY..', '....YYY..', '...YYYYY.', '......YY.', '.......k.', '.......k.', '........k', '........k', '........k'],
+        ['G', -4, -7, 'b', 'Y.Y.Y', 'YYYYY'], ['G', 2, -11, 'f', '..k', '.kk', '.aa', 'aaa'], ['R', 'Y', 'f', 5, -3, 1, 1], ['R', 'y', 'f', 6, -2, 1, 1]],
+    ],
+    dog: [
+      [['G', 2, -9, 'f', '.vv.', 'vvvv', 'vvv.', '.v..'], ['G', 4, -14, 'f', 'J.', 'jJ'], ['G', -9, -11, 'b', '.vj.', 'jjjj', 'jjjJ', '.jjJ', '..jJ']],
+      [['G', -11, -13, 'b', '..vv.', '.vvvv', 'vvvvv', 'vvvvj', '.vvjj', '..jjj', '...jj'], ['G', 1, -13, 'f', '..v.v...', '.vvvvv..', 'vvvvvv..', '.vvvvvv.', 'vvvvvv..', '.vvvvv..', 'vvvvv...', '.v.v....'],
+        ['G', -4, -6, 'f', 'k..k..k', 'k..k..k'], ['G', 4, -15, 'f', 'J.', 'jJ']],
+    ],
+    cat: [
+      [['L', 'q', 'b', -6, -5, -8, -8, -10, -10, -11, -12], ['R', 'K', 'f', 3, -13, 1, 2], ['R', 'K', 'f', 7, -13, 1, 2]],
+      [['L', 'q', 'b', -6, -5, -8, -8, -10, -11, -11, -13], ['L', 'q', 'b', -6, -4, -10, -6, -13, -8], ['G', -13, -17, 'b~', '.M.', 'MmM', 'mmm'], ['G', -15, -12, 'b~', '.M.', 'MmM', 'mmm'],
+        ['G', -9, -15, 'b~', '.M.', 'MmM', '.m.'], ['R', 'K', 'f', 3, -14, 1, 3], ['R', 'K', 'f', 7, -14, 1, 3], ['G', 2, -7, 'f', 'ww.', 'www', '.w.']],
+    ],
+    rabbit: [
+      [['G', 1, -6, 'f', 'EEEE', '.eE.'], ['G', -10, -8, 'b', '..EE', '.EEE', 'EEe.', '.e..']],
+      [['G', -5, -11, 'f', '..p..', '.ppp.', 'ppYpp', '.ppp.', 'EeEeE'], ['G', 1, -6, 'f', 'EEEE', '.eEE', '..E.'], ['G', -11, -9, 'b', '..EE', '.EEE', 'EEEe', 'EEe.', '.e..']],
+    ],
+    monkey: [
+      [['G', -8, -14, 'b~', '..Y..', '.YO..', 'YOOY.', 'oOOo.', '.ooo.'], ['R', 'r', 'f', 3, -4, 2, 1]],
+      [['G', -4, -20, 'f~', '...Y....', '..YO.Y..', '.YOOYOY.', 'YOoOOOoY', 'oooooooo'], ['G', -8, -15, 'b~', '..Y..', '.YOY.', 'YOOOY', 'oOOOo', 'ooooo', '.ooo.'],
+        ['G', -3, -6, 'f', 'gggggg', 'ggrrgg'], ['R', 'r', 'f', 3, -4, 2, 1]],
+    ],
+    penguin: [
+      [['G', -4, -8, 'f', 'bbbbbbbb'], ['G', -7, -8, 'b', 'bbB', '.bb', '..b']],
+      [['G', -8, -12, 'b', '...bb', '..bbb', '.bbbb', 'bbbbb', 'bBbbb', '.bbbb', '..bbb'], ['G', -4, -8, 'f', 'bbbbbbbb'], ['G', -7, -7, 'f', '...ss', '..sS.', '.sS..', 'sS...'], ['G', 0, -6, 'f', 'g.g', '.g.']],
+    ],
+    panda: [
+      [['L', 'e', 'b', -9, -13, 0, -6], ['L', 'E', 'b', -8, -13, 1, -6], ['G', -11, -15, 'b', 'E.E', '.EE']],
+      [['L', 'n', 'b', -11, -17, 6, -1], ['L', 'N', 'b', -10, -17, 7, -1], ['G', -7, -11, 'b', '..EEE.', '.EEeEE', 'EEeEEE'], ['L', 'r', 'f', 2, -8, -1, -1], ['L', 'r', 'f', 1, -8, -2, -1]],
+    ],
+    tiger: [
+      [['G', -20, -19, 'b~', '..Y..', '.YO..', 'YOOY.', 'oOOo.', '.ooo.'], ['G', -5, -14, 'f~', '.Y.', 'YoY'], ['G', 1, -14, 'f~', '.Y.', 'YoY']],
+      [['G', 1, -25, 'b~', '....Y....', '..Y.Yo.Y.', '.YoYooYoY', 'Yooooroo.', 'ooorrrroo', 'oorrrrroo', 'oorrrrr..', 'oorrrr...', 'orrrr....', 'orrr.....', '.orr.....', '..or.....', '...o.....'],
+        ['G', -21, -21, 'b~', '...Y..', '..YO..', '.YOOY.', 'YOOOOY', 'oOOOOo', '.oooo.'], ['G', -7, -14, 'f~', '.Y.', 'YoY'], ['G', -2, -14, 'f~', '.Y.', 'YoY']],
+    ],
+    giraffe: [
+      [['G', 1, -24, 'f', 'EE', 'Ee', '.E', 'EE', 'Ee', '.E', 'EE', 'Ee', '.E', 'EE', 'e.']],
+      [['G', 0, -24, 'f', 'EEE', 'Epe', '.EE', 'EEE', 'Eep', '.EE', 'EEE', 'pEe', '.EE', 'EEE', 'e..'], ['L', 'n', 'f', 4, -30, 2, -33, 1, -35], ['L', 'n', 'f', 3, -32, 1, -32], ['L', 'n', 'f', 6, -30, 8, -33, 9, -35], ['L', 'n', 'f', 8, -32, 10, -32],
+        ['G', 0, -37, 'f', 'E.', 'EE'], ['G', 9, -37, 'f', '.E', 'EE'], ['R', 'p', 'f', 0, -32, 1, 1], ['R', 'p', 'f', 10, -33, 1, 1], ['G', -9, -11, 'b', 'EE', 'Ee', '.e']],
+    ],
+    elephant: [
+      [['G', -9, -16, 'f', '.nnnnnnnnnnnnn.', 'nnNnnnNnnnNnnnn', 'n.n.nn.n.nn.n.n'], ['G', 10, -10, 'f', '...v', '..vv', '.vv.']],
+      [['G', -10, -17, 'f', '..nnnnnnnnnnnnnnnnnn...', '.nnnNnnnnNnnnnNnnnnNnn.', 'nnnnnnnnnnnnnnnnnnnnnnn', 'n.nn.n.nn.nn.n.nn.n..n.', 'n..n....n...n.....n....'], ['G', 9, -12, 'f', '....vv', '.....v', 'v....v', 'vv..vv', '.vvvv.']],
+    ],
+    turtle: [
+      [['G', -5, -10, 'f', '..s...s...', '.sS..sS..s', '.........S']],
+      [['G', -2, -12, 'f', '.ssssssk', 'sSSSSSSk', '.SSSSSSk'], ['G', -4, -11, 'b', '.ssssssk', 'sSSSSSSk'], ['G', -6, -10, 'f', 's.......s.', 'sS.....sS.']],
+    ],
+    croc: [
+      [['G', -9, -8, 'f', '..x...x...x...x..', '.xx..xx..xx..xx..']],
+      [['G', -8, -12, 'b', '....bbb.....', '..bbBbbbb...', '.bBbbBbbbbb.', 'bbbbbbbbbbbb', 'bbbbbbbbbbbb', '.bbbbbbbbbb.'], ['G', -18, -6, 'b', 'b..', 'bb.', '.bb'], ['G', -9, -7, 'f', '.xx..xx..xx..xx..']],
+    ],
+    lizard: [
+      [['G', -17, -7, 'b~', '.Y.', 'YOY', 'OoO', 'ooo', '.o.']],
+      [['G', -6, -14, 'b', 'dd......', 'dcd.....', 'dccdd...', '.dcccdd.', '.dccccdd', '..dcccd.', '...dccd.', '....dcd.', '.....dd.'], ['G', -19, -9, 'b~', '..Y..', '.YOY.', 'YOOOY', 'OoOoO', '.ooo.', '..o..', '...o.']],
+    ],
+    beetle: [
+      [['L', 'g', 'f', -5, -5, 1, -5], ['R', 'g', 'f', 9, -12, 2, 1], ['L', 'g', 'f', 6, -4, 7, -5]],
+      [['G', -11, -16, 'b', 'AA.......', 'AAA......', '.AAN.....', '.AANA....', '..AANA...', '...AANA..', '....AANA.', '.....ANA.', '......NA.', '.......N.'], ['G', -6, -17, 'b', 'AA......', 'AAA.....', '.ANA....', '.AANA...', '..AANA..', '...ANA..', '....ANA.', '.....NA.', '......N.', '......N.'],
+        ['L', 'g', 'f', 8, -8, 9, -10, 9, -11, 10, -12], ['R', 'g', 'f', 10, -13, 2, 1], ['L', 'K', 'f', 6, -3, 9, -4, 10, -6], ['L', 'g', 'f', -5, -5, 1, -5]],
+    ],
+    mantis: [
+      [['G', -10, -9, 'b', '.....EE', '...EEEE', '.EEEEEe', 'EEEEee.']],
+      [['G', -12, -11, 'b', '.......EE', '.....EEEE', '...EEEEEe', '.EEEEEee.', 'EEEEee...'], ['G', -9, -9, 'b', '....zz', '..zzzz', 'zzzzz.'], ['G', 6, -13, 'f', '....w', '...sw', '..ss.', '.ss..'], ['G', 5, -10, 'f', '....w', '...sw', '..ss.']],
+    ],
+    dolphin: [
+      [['G', 1, -16, 'f', '...v', '..v.', '.vv.', 'vv..']],
+      [['G', 1, -19, 'f', '.....v', '....v.', '...vv.', '..vv..', '.vv...', 'vv....'], ['G', -7, -13, 'b', 'bb.bb', '.bbb.', '..b..'], ['G', 4, -7, 'f', 'BB..', '.BBB']],
+    ],
+    parrot: [
+      [['L', 'r', 'b', -4, -3, -13, -2], ['L', 'Y', 'b', -4, -4, -12, -5], ['L', 'b', 'b', -4, -2, -11, 0]],
+      [['G', -17, -7, 'b~', 'Y............', 'OY...........', 'oOYY.........', '.ooOOYY......', '..oooOOOYY...', '....ooooOOY..', '......oooo...'], ['G', -4, -8, 'f~', '..YY', '.YOY', 'YOOo', 'OOo.', 'oo..'], ['G', 0, -14, 'f~', '.Y.', 'YOY', '.o.']],
+    ],
+    gary: [
+      [['G', -6, -13, 'f', '..s...s.', '.sS..sS.']],
+      [['G', -7, -15, 'f', '...B...W..', '..BW..BW..', '.BWB.BWB.B', '.BbB.BbB.W']],
+    ],
+    snowman: [
+      [['G', -8, -11, 'f', 'B.B', '.W.', 'B.B'], ['G', 5, -11, 'f', 'B.B', '.W.', 'B.B']],
+      [['G', -8, -11, 'f', 'B.B', '.W.', 'B.B'], ['G', 5, -11, 'f', 'B.B', '.W.', 'B.B'], ['G', -7, -19, 'b', '.B......B.', 'BW......WB', 'BWB....BWB', 'BWb....bWB', '.Bb....bB.'], ['G', -3, -2, 'f', 'B.B.B.B']],
+    ],
+    dora: [
+      [['L', 'n', 'f', 0, -21, 0, -19], ['G', -3, -22, 'fA', 'YYYYYYY'], ['G', -2, -22, 'fB', '.YYY.']],
+      [['L', 'n', 'f', 0, -21, 0, -19], ['G', -3, -22, 'fA', 'YYYYYYY'], ['G', -2, -22, 'fB', '.YYY.'], ['G', -8, -9, 'b', '.rr', 'rrr', 'rrr', 'rrr', 'rrr', 'rrr', 'rrr', '.rr']],
+    ],
+    sponge: [
+      [['R', 'r', 'f', 5, -8, 2, 2], ['R', 'r', 'b', -7, -8, 2, 2]],
+      [['G', 5, -14, 'f', '.uuu.', 'uuuuu', 'uuuuu', '.uuu.', '..uu.', '..rr.', '..rr.'], ['G', -9, -14, 'b', '.uuu.', 'uuuuu', 'uuuuu', '.uuu.', '.uu..', '.rr..', '.rr..']],
+    ],
+    trex: [
+      [['G', -15, -22, 'b', '........z..z.', '.z.....zz.zz.', 'zz..z.zzzzzz.', 'zzzzzzzzzzzz.']],
+      [['G', -17, -24, 'b', '.........z...z.', '..z....zzz.zzz.', '.zz..z.zzzzzzz.', 'zzzz.zzzzzzzzz.', 'zzzzzzzzzzzzzz.'], ['G', 4, -34, 'f', 'v...v..', 'v...v.v', '.v..vv.', '.v..v..'],
+        ['G', -22, -15, 'b', '.S.S.', 'SSSSS', '.S.S.']],
+    ],
+  },
+  has(kind) { return !!this.F[kind]; },
+  name(kind, st) { const N = this.NAME[kind]; return N ? N[st >= 2 ? 1 : 0] : ''; },
+  what(kind, st) { const N = this.WHAT[kind]; return N ? N[st >= 2 ? 1 : 0] : ''; },
+  // g: 펫 그림 좌표로 맞춰 둔 캔버스 (뒤집기 포함). L: 'b' 또는 'f'
+  draw(g, kind, st, L, t, fl, col) {
+    const S = this.F[kind]; if (!S || !st) return; const P = S[st >= 2 ? 1 : 0], C = this.COL, cc = { c: col, l: shade(col, 0.5), d: shade(col, -0.35) }, fr = fl ? 0 : Math.floor(t * 7) % 2, ab = fl ? 0 : Math.floor(t * 10) % 2;
+    const px = (x, y, ch, sw) => { if (sw) ch = ch === 'Y' ? 'O' : ch === 'O' ? 'Y' : ch === 'M' ? 'm' : ch === 'm' ? 'M' : ch; const v = cc[ch] || C[ch]; if (!v) return; g.fillStyle = v; g.fillRect(x, y, 1, 1); };
+    for (const p of P) {
+      const ly = p[0] === 'G' ? p[3] : p[2]; if (ly[0] !== L) continue; if (ly.includes('A') && ab) continue; if (ly.includes('B') && !ab) continue; const sw = ly.includes('~') && fr;
+      if (p[0] === 'G') { for (let j = 4; j < p.length; j++) { const row = p[j]; for (let i = 0; i < row.length; i++) if (row[i] !== '.') px(p[1] + i, p[2] + j - 4, row[i], sw); } }
+      else if (p[0] === 'R') { const v = cc[p[1]] || C[p[1]]; g.fillStyle = v; g.fillRect(p[3], p[4], p[5], p[6]); }
+      else if (p[0] === 'L') { for (let k = 3; k + 3 < p.length; k += 2) { let x0 = p[k], y0 = p[k + 1]; const x1 = p[k + 2], y1 = p[k + 3], dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let er = dx + dy;
+        for (let n = 0; n < 99; n++) { px(x0, y0, p[1], sw); if (x0 === x1 && y0 === y1) break; const e2 = 2 * er; if (e2 >= dy) { er += dy; x0 += sx; } if (e2 <= dx) { er += dx; y0 += sy; } } } }
+    }
+  },
+};
+
 /* ===================== 펫 진화 (v194, 사용자 2026-10-17 '이 펫 경험치로 뭘 할 수 있을까' → 카드에서 '진화') =====================
  * 펫 배틀 경험치로 오른 레벨(Store 'petLv')이 Lv15면 1단계 진화, Lv30이면 최종 진화(날개 + 빛 + 몸이 2배). v262부터 타입마다 머리 모양이 다르고 몸에 타입 색·테두리가 생긴다 (formed · part).
  * 큰 펫(티라노·기린·코끼리)과 사람 펫은 크기는 그대로. 픽셀 그림은 정수 배율로만 키운다.
@@ -15341,9 +15479,9 @@ const PetEvo = {
     c.save(); c.translate(snapPx(c, x), snapPx(c, y)); if (sc !== 1) c.scale(sc, sc);
     if (st >= 2 && !e.fl) this.aura(c, kind, t, col, people);
     const hide = moving && this.SHIFT.includes(kind);
-    if (st >= 2 && A && !people && !hide && !this.NOWING.includes(kind) && pose !== 'ride') { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.wings(c, kind, A, t, moving, col, e.fl); c.restore(); }
-    const own = people && sc === 1; /* v262 진화하면 몸 색·테두리가 타입 색으로 바뀐다 (사람 펫은 그대로) */ if (people || !this.formed(c, kind, face, moving, t, idle, pose, st, col, e.fl)) Pets.draw1(c, kind, 0, 0, face, moving, t, own ? tag : '', idle, pose);
-    const AC = hide ? PET_ANCH_MV[kind] : A; /* 미끄러지는 펭귄은 그 자세의 머리에 */ if (AC && !people) { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.part(c, AC, st, kind, col); c.restore(); }
+    if (st >= 2 && A && !people && !hide && !this.NOWING.includes(kind) && pose !== 'ride' && !PetForm.has(kind)) { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.wings(c, kind, A, t, moving, col, e.fl); c.restore(); }
+    const own = people && sc === 1; /* v262 진화하면 몸 색·테두리가 타입 색으로 바뀐다 (사람 펫은 그대로) */ if (people || !this.formed(c, kind, face, moving, t, idle, pose, st, col, e.fl, hide)) Pets.draw1(c, kind, 0, 0, face, moving, t, own ? tag : '', idle, pose);
+    const AC = hide ? PET_ANCH_MV[kind] : A; /* 미끄러지는 펭귄은 그 자세의 머리에 */ if (AC && !people && !PetForm.has(kind)) { /* v263 모습이 바뀌는 펫은 볏 없음 */ c.save(); c.scale(face < 0 ? -1 : 1, 1); this.part(c, AC, st, kind, col); c.restore(); }
     if (!e.fl) this.motes(c, kind, st, t, col, A);
     c.restore();
     if (lab && !own) Net.petLabel(c, tag, x, y - PetDeco.labelY(kind) * sc);
@@ -15354,17 +15492,18 @@ const PetEvo = {
    * 펫 그림 한 픽셀을 r 화면 픽셀로 따로 그려서 칠한 뒤 원래 자리에 붙인다 (r은 화면 배율을 나누어떨어지게 → 픽셀이 고르게). */
   offs: null,
   canv(i, W, H) { const L = this.offs || (this.offs = []); let cv = L[i]; if (!cv) cv = L[i] = document.createElement('canvas'); if (cv.width < W || cv.height < H) { cv.width = Math.max(cv.width, W); cv.height = Math.max(cv.height, H); } return cv; },
-  formed(c, kind, face, moving, t, idle, pose, st, col, fl) {
+  formed(c, kind, face, moving, t, idle, pose, st, col, fl, hf) {
     if (!c.getTransform || typeof document === 'undefined') return false; const m = c.getTransform(), s = Math.round(Math.hypot(m.a, m.b)) || 1, r = [4, 3, 2, 1].find(k => k <= s && s % k === 0) || 1;
     const big = this.BIG.includes(kind), BW = big ? 76 : 56, BH = big ? 64 : 48, W = BW * r, H = BH * r, ox = (BW / 2) * r, oy = (BH - 10) * r;
     const A = this.canv(0, W, H), B = this.canv(1, W, H), C = this.canv(2, W, H), a = A.getContext('2d'), b = B.getContext('2d'), k2 = C.getContext('2d');
     for (const g of [a, b, k2]) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, W, H); g.imageSmoothingEnabled = false; }
-    a.setTransform(r, 0, 0, r, ox, oy); Pets.draw1(a, kind, 0, 0, face, moving, t, '', idle, pose); a.setTransform(1, 0, 0, 1, 0, 0);
+    a.setTransform(r, 0, 0, r, ox, oy); const fm = !hf && PetForm.has(kind), lay = L => { a.save(); a.scale(face < 0 ? -1 : 1, 1); PetForm.draw(a, kind, st, L, t, fl, col); a.restore(); }; /* v263 펫마다 바뀐 몸 (뒤 조각 → 몸 → 앞 조각) */
+    if (fm) lay('b'); Pets.draw1(a, kind, 0, 0, face, moving, t, '', idle, pose); if (fm) lay('f'); a.setTransform(1, 0, 0, 1, 0, 0);
     b.drawImage(A, 0, 0, W, H, 0, 0, W, H); // 몸 모양 (가면)
-    a.globalCompositeOperation = 'color'; a.globalAlpha = st >= 2 ? 0.36 : 0.24; a.fillStyle = col; a.fillRect(0, 0, W, H); a.globalAlpha = 1; a.globalCompositeOperation = 'destination-in'; a.drawImage(B, 0, 0, W, H, 0, 0, W, H); a.globalCompositeOperation = 'source-over';
+    a.globalCompositeOperation = 'color'; a.globalAlpha = PetForm.has(kind) ? (st >= 2 ? 0.2 : 0.12) : st >= 2 ? 0.36 : 0.24; a.fillStyle = col; a.fillRect(0, 0, W, H); a.globalAlpha = 1; a.globalCompositeOperation = 'destination-in'; a.drawImage(B, 0, 0, W, H, 0, 0, W, H); a.globalCompositeOperation = 'source-over';
     const pw = st >= 2 && !fl && idle > 2 ? Math.max(0, 1 - ((idle - 2) % 3.5) / 0.6) : 0; // 기 모으기 (0~1)
     for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) k2.drawImage(B, 0, 0, W, H, dx, dy, W, H);
-    k2.globalCompositeOperation = 'source-in'; k2.fillStyle = pw > 0 ? (pw > 0.5 ? '#ffffff' : shade(col, 0.7)) : st >= 2 ? shade(col, 0.45) : shade(col, -0.55); k2.fillRect(0, 0, W, H); k2.globalCompositeOperation = 'source-over';
+    k2.globalCompositeOperation = 'source-in'; k2.fillStyle = pw > 0 ? (pw > 0.5 ? '#ffffff' : shade(col, 0.7)) : st >= 2 && !PetForm.has(kind) ? shade(col, 0.45) : shade(col, -0.55); k2.fillRect(0, 0, W, H); k2.globalCompositeOperation = 'source-over';
     k2.drawImage(A, 0, 0, W, H, 0, 0, W, H);
     if (pw > 0) { c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = pw * 0.7; c.strokeStyle = shade(col, 0.5); c.lineWidth = 1; const R = 4 + (1 - pw) * 12; c.beginPath(); c.ellipse(0, 0, R, R * 0.32, 0, 0, 7); c.stroke(); c.restore(); }
     c.save(); c.imageSmoothingEnabled = false; c.drawImage(C, 0, 0, W, H, -ox / r, -oy / r, W / r, H / r); c.restore();
@@ -15462,7 +15601,8 @@ const PetEvo = {
     else if (T < this.END - 0.4) { const u = (T - 1.2) / (this.END - 1.6), per = 0.55 * (1 - u) + 0.05, ph = Math.floor((T - 1.2) / per) % 2; one(ph ? q.to : q.from, true); }
     else { one(q.to, T < this.END); if (!this.done && T >= this.END) { this.done = true; $('evoWin').classList.add('done'); $('evoTx').textContent = `🎉 ${q.name}이(가) ${this.NAME[q.to]}했다!`;
       const D = typeof PB_DEX !== 'undefined' && PB_DEX[q.kind], T = D && PB_TYPES[D.t], pn = D && this.PNAME[D.t], ppl = !!(PET_HD[q.kind] || PET_PEOPLE[q.kind]); /* v262 바뀐 모습대로 */
-      $('evoSub').textContent = q.to === 1 ? (pn && !ppl ? `Lv.${PET_EVO_AT[0]} 진화: 머리에 ${pn[0]}, 몸은 ${T[0]} 타입 빛깔로! 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!` : `Lv.${PET_EVO_AT[0]} 진화: 몸이 빛나기 시작했어요. 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!`) : (pn && !ppl ? `Lv.${PET_EVO_AT[1]} 최종 진화: ${pn[1]}, 날개, 빛나는 테두리${scN > 1 ? ', 몸은 두 배' : ''}! 가만히 있으면 기를 모아요.` : `Lv.${PET_EVO_AT[1]} 최종 진화: 온몸에서 빛이 나요!`); Sound.play('chime'); } }
+      const fn = PetForm.name(q.kind, q.to); if (fn) $('evoTx').textContent = `🎉 ${q.name}이(가) ${PetBattle.ro(fn)} ${this.NAME[q.to]}했다!`; /* v263 */
+      $('evoSub').textContent = fn ? (q.to === 1 ? `Lv.${PET_EVO_AT[0]} 진화: ${PetForm.what(q.kind, 1)} 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!` : `Lv.${PET_EVO_AT[1]} 최종 진화: ${PetForm.what(q.kind, 2)}${scN > 1 ? ' 몸도 두 배!' : ''}`) : q.to === 1 ? (pn && !ppl ? `Lv.${PET_EVO_AT[0]} 진화: 머리에 ${pn[0]}, 몸은 ${T[0]} 타입 빛깔로! 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!` : `Lv.${PET_EVO_AT[0]} 진화: 몸이 빛나기 시작했어요. 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!`) : (pn && !ppl ? `Lv.${PET_EVO_AT[1]} 최종 진화: ${pn[1]}, 날개, 빛나는 테두리${scN > 1 ? ', 몸은 두 배' : ''}! 가만히 있으면 기를 모아요.` : `Lv.${PET_EVO_AT[1]} 최종 진화: 온몸에서 빛이 나요!`); Sound.play('chime'); } }
     // 번쩍 (새 모습이 드러나는 순간)
     const fl = T - (this.END - 0.4); if (fl > 0 && fl < 1.2) { c.globalAlpha = fl < 0.4 ? fl / 0.4 : Math.max(0, 1 - (fl - 0.4) / 0.8); c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
     if (this.done) { c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 14; i++) { const q2 = paHash(i * 13 + 5, 3), a = (i / 14) * Math.PI * 2 + now * 0.4, rr = (0.25 + ((q2 >> 3) % 10) / 30) * Math.min(W, H), tw = 0.5 + 0.5 * Math.sin(now * 4 + i), s = Math.max(2, Math.round(dpr * 2));

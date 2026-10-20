@@ -1048,7 +1048,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v261</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v262</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -15307,7 +15307,7 @@ Object.assign(PetRT.arena, {
 });
 
 /* ===================== 펫 진화 (v194, 사용자 2026-10-17 '이 펫 경험치로 뭘 할 수 있을까' → 카드에서 '진화') =====================
- * 펫 배틀 경험치로 오른 레벨(Store 'petLv')이 Lv15면 1단계 진화(머리에 볏), Lv30이면 최종 진화(날개 + 빛 + 몸이 2배).
+ * 펫 배틀 경험치로 오른 레벨(Store 'petLv')이 Lv15면 1단계 진화, Lv30이면 최종 진화(날개 + 빛 + 몸이 2배). v262부터 타입마다 머리 모양이 다르고 몸에 타입 색·테두리가 생긴다 (formed · part).
  * 큰 펫(티라노·기린·코끼리)과 사람 펫은 크기는 그대로. 픽셀 그림은 정수 배율로만 키운다.
  * 친구 화면: pos.pe = 첫 펫 단계 + 둘째 펫 단계 × 3. 콜로세움 3D는 볏·날개만 (움직이는 빛은 메시 기억을 깨니까 뺀다).
  * 진화하는 순간: 배틀 창을 닫으면 하얀 실루엣이 옛 모습 ↔ 새 모습으로 깜빡이다 번쩍 (#evoWin). */
@@ -15342,13 +15342,56 @@ const PetEvo = {
     if (st >= 2 && !e.fl) this.aura(c, kind, t, col, people);
     const hide = moving && this.SHIFT.includes(kind);
     if (st >= 2 && A && !people && !hide && !this.NOWING.includes(kind) && pose !== 'ride') { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.wings(c, kind, A, t, moving, col, e.fl); c.restore(); }
-    Pets.draw1(c, kind, 0, 0, face, moving, t, sc !== 1 ? '' : tag, idle, pose);
-    const AC = hide ? PET_ANCH_MV[kind] : A; /* 미끄러지는 펭귄은 그 자세의 머리에 볏 */ if (AC && !people) { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.crest(c, AC, st, col); c.restore(); }
+    const own = people && sc === 1; /* v262 진화하면 몸 색·테두리가 타입 색으로 바뀐다 (사람 펫은 그대로) */ if (people || !this.formed(c, kind, face, moving, t, idle, pose, st, col, e.fl)) Pets.draw1(c, kind, 0, 0, face, moving, t, own ? tag : '', idle, pose);
+    const AC = hide ? PET_ANCH_MV[kind] : A; /* 미끄러지는 펭귄은 그 자세의 머리에 */ if (AC && !people) { c.save(); c.scale(face < 0 ? -1 : 1, 1); this.part(c, AC, st, kind, col); c.restore(); }
     if (!e.fl) this.motes(c, kind, st, t, col, A);
     c.restore();
-    if (lab && sc !== 1) Net.petLabel(c, tag, x, y - PetDeco.labelY(kind) * sc);
+    if (lab && !own) Net.petLabel(c, tag, x, y - PetDeco.labelY(kind) * sc);
   },
   light(hex, k) { return shade(hex, k); },
+  /* v262 (사용자 2026-10-20 '진화하면 포켓몬처럼 형태가 바뀌거나 몸짓이 커지거나 더 멋있게'): 진화한 몸 = 타입 색을 입히고 테두리를 두른다.
+   * 1단계: 타입 색 살짝 + 진한 테두리. 최종: 타입 색 진하게 + 빛나는 테두리, 가만히 있으면 몇 초마다 기를 모아 번쩍 (테두리가 하얗게, 발밑에 고리).
+   * 펫 그림 한 픽셀을 r 화면 픽셀로 따로 그려서 칠한 뒤 원래 자리에 붙인다 (r은 화면 배율을 나누어떨어지게 → 픽셀이 고르게). */
+  offs: null,
+  canv(i, W, H) { const L = this.offs || (this.offs = []); let cv = L[i]; if (!cv) cv = L[i] = document.createElement('canvas'); if (cv.width < W || cv.height < H) { cv.width = Math.max(cv.width, W); cv.height = Math.max(cv.height, H); } return cv; },
+  formed(c, kind, face, moving, t, idle, pose, st, col, fl) {
+    if (!c.getTransform || typeof document === 'undefined') return false; const m = c.getTransform(), s = Math.round(Math.hypot(m.a, m.b)) || 1, r = [4, 3, 2, 1].find(k => k <= s && s % k === 0) || 1;
+    const big = this.BIG.includes(kind), BW = big ? 76 : 56, BH = big ? 64 : 48, W = BW * r, H = BH * r, ox = (BW / 2) * r, oy = (BH - 10) * r;
+    const A = this.canv(0, W, H), B = this.canv(1, W, H), C = this.canv(2, W, H), a = A.getContext('2d'), b = B.getContext('2d'), k2 = C.getContext('2d');
+    for (const g of [a, b, k2]) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, W, H); g.imageSmoothingEnabled = false; }
+    a.setTransform(r, 0, 0, r, ox, oy); Pets.draw1(a, kind, 0, 0, face, moving, t, '', idle, pose); a.setTransform(1, 0, 0, 1, 0, 0);
+    b.drawImage(A, 0, 0, W, H, 0, 0, W, H); // 몸 모양 (가면)
+    a.globalCompositeOperation = 'color'; a.globalAlpha = st >= 2 ? 0.36 : 0.24; a.fillStyle = col; a.fillRect(0, 0, W, H); a.globalAlpha = 1; a.globalCompositeOperation = 'destination-in'; a.drawImage(B, 0, 0, W, H, 0, 0, W, H); a.globalCompositeOperation = 'source-over';
+    const pw = st >= 2 && !fl && idle > 2 ? Math.max(0, 1 - ((idle - 2) % 3.5) / 0.6) : 0; // 기 모으기 (0~1)
+    for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) k2.drawImage(B, 0, 0, W, H, dx, dy, W, H);
+    k2.globalCompositeOperation = 'source-in'; k2.fillStyle = pw > 0 ? (pw > 0.5 ? '#ffffff' : shade(col, 0.7)) : st >= 2 ? shade(col, 0.45) : shade(col, -0.55); k2.fillRect(0, 0, W, H); k2.globalCompositeOperation = 'source-over';
+    k2.drawImage(A, 0, 0, W, H, 0, 0, W, H);
+    if (pw > 0) { c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = pw * 0.7; c.strokeStyle = shade(col, 0.5); c.lineWidth = 1; const R = 4 + (1 - pw) * 12; c.beginPath(); c.ellipse(0, 0, R, R * 0.32, 0, 0, 7); c.stroke(); c.restore(); }
+    c.save(); c.imageSmoothingEnabled = false; c.drawImage(C, 0, 0, W, H, -ox / r, -oy / r, W / r, H / r); c.restore();
+    return true;
+  },
+  // 머리 장식: 타입마다 다른 모양 (1단계 작게, 최종 크게). 글자 = c 타입 색 · l 밝게 · d 어둡게 · y 노란 빛 · g 금 · r 빨강 · h 하트 · p 꽃잎 · w 하양
+  PARTS: {
+    N: [['g.g.g', 'ggggg'], ['y.r.y', 'g.g.g', 'ggggg', 'grgrg']], // 왕관
+    F: [['..y', '.l.', 'lcl'], ['..y..', 'y.l.y', 'l.c.l', 'lcccl']], // 불꽃
+    W: [['l..', 'cl.', 'ccc'], ['w...', 'l...', 'cl..', 'ccl.', 'cccc']], // 지느러미 (뒤로)
+    G: [['l.l', 'lcl', '.c.'], ['.p.', 'pyp', '.p.', 'l.l', 'lcl', '.c.']], // 새싹 → 꽃
+    E: [['y.y', 'c.c'], ['y...y', 'c...c', '.c.c.', 'c...c']], // 번개 뿔
+    R: [['.l.', 'lcd'], ['l...l', 'cl.lc', 'dc.cd']], // 바위 뿔
+    B: [['y...y', '.c.c.'], ['y.....y', '.c...c.', '..c.c..', '...c...']], // 더듬이
+    K: [['rrrrr'], ['..y..', 'rrrrr', 'r....']], // 머리띠 (머리에 두른다)
+    H: [['h.h', 'hhh', '.h.', '.c.'], ['hh.hh', 'hhhhh', '.hhh.', '..h..', '.....']], // 하트 (최종은 머리 위에 떠 있다)
+  },
+  PNAME: { N: ['작은 왕관', '보석 왕관'], F: ['불꽃 볏', '세 갈래 불꽃'], W: ['지느러미', '큰 물 지느러미'], G: ['새싹', '꽃'], E: ['번개 뿔', '큰 번개 뿔'], R: ['바위 뿔', '큰 바위 뿔'], B: ['더듬이', '긴 더듬이'], K: ['머리띠', '별 머리띠'], H: ['하트', '떠 있는 하트'] },
+  part(c, A, st, kind, col) {
+    const D = typeof PB_DEX !== 'undefined' && PB_DEX[kind], ty = D && this.PARTS[D.t] ? D.t : null; if (!ty) return this.crest(c, A, st, col);
+    const G = this.PARTS[ty][st >= 2 ? 1 : 0], w = Math.max(...G.map(r => r.length)), [hx, hy] = A.h, x0 = Math.round(hx) - Math.floor(w / 2) - (ty === 'W' ? 1 : 0), y0 = Math.round(hy) - G.length + (ty === 'K' ? (st >= 2 ? 2 : 1) : 0);
+    const P = { c: col, l: shade(col, 0.5), d: shade(col, -0.35), y: '#fff2a8', g: '#f0c030', r: '#e03030', h: '#ff5a9a', p: '#f59ac0', w: '#ffffff' }, px = [];
+    G.forEach((row, j) => [...row].forEach((ch, i) => { if (P[ch]) px.push([x0 + i, y0 + j, P[ch]]); }));
+    const on = new Set(px.map(p => p[0] + ',' + p[1])); c.fillStyle = shade(ty === 'N' ? '#f0c030' : ty === 'H' ? '#ff5a9a' : ty === 'K' ? '#e03030' : col, -0.55);
+    for (const [x, y] of px) for (const [dx, dy] of [[1, 0], [-1, 0], [0, -1], [0, 1]]) if (!on.has((x + dx) + ',' + (y + dy)) && !(dy === 1 && ty !== 'H')) c.fillRect(x + dx, y + dy, 1, 1);
+    for (const [x, y, cl] of px) { c.fillStyle = cl; c.fillRect(x, y, 1, 1); }
+  },
   // 볏: 1단계는 불꽃 모양 한 갈래, 최종은 세 갈래 + 금빛 끝 (테두리를 둘러서 작아도 보이게)
   crest(c, A, st, col) {
     const [hx, hy] = A.h, dk = shade(col, -0.45), lt = shade(col, 0.5), px = []; // [x, y, 색]
@@ -15418,7 +15461,8 @@ const PetEvo = {
     if (T < 1.2) one(q.from, false);
     else if (T < this.END - 0.4) { const u = (T - 1.2) / (this.END - 1.6), per = 0.55 * (1 - u) + 0.05, ph = Math.floor((T - 1.2) / per) % 2; one(ph ? q.to : q.from, true); }
     else { one(q.to, T < this.END); if (!this.done && T >= this.END) { this.done = true; $('evoWin').classList.add('done'); $('evoTx').textContent = `🎉 ${q.name}이(가) ${this.NAME[q.to]}했다!`;
-      $('evoSub').textContent = q.to === 1 ? `Lv.${PET_EVO_AT[0]} 진화: 머리에 볏이 돋았어요. 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!` : (scN > 1 ? `Lv.${PET_EVO_AT[1]} 최종 진화: 날개가 돋고 몸이 두 배로 커졌어요!` : `Lv.${PET_EVO_AT[1]} 최종 진화: 날개가 돋고 온몸에서 빛이 나요!`); Sound.play('chime'); } }
+      const D = typeof PB_DEX !== 'undefined' && PB_DEX[q.kind], T = D && PB_TYPES[D.t], pn = D && this.PNAME[D.t], ppl = !!(PET_HD[q.kind] || PET_PEOPLE[q.kind]); /* v262 바뀐 모습대로 */
+      $('evoSub').textContent = q.to === 1 ? (pn && !ppl ? `Lv.${PET_EVO_AT[0]} 진화: 머리에 ${pn[0]}, 몸은 ${T[0]} 타입 빛깔로! 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!` : `Lv.${PET_EVO_AT[0]} 진화: 몸이 빛나기 시작했어요. 다음은 Lv.${PET_EVO_AT[1]} 최종 진화!`) : (pn && !ppl ? `Lv.${PET_EVO_AT[1]} 최종 진화: ${pn[1]}, 날개, 빛나는 테두리${scN > 1 ? ', 몸은 두 배' : ''}! 가만히 있으면 기를 모아요.` : `Lv.${PET_EVO_AT[1]} 최종 진화: 온몸에서 빛이 나요!`); Sound.play('chime'); } }
     // 번쩍 (새 모습이 드러나는 순간)
     const fl = T - (this.END - 0.4); if (fl > 0 && fl < 1.2) { c.globalAlpha = fl < 0.4 ? fl / 0.4 : Math.max(0, 1 - (fl - 0.4) / 0.8); c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
     if (this.done) { c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 14; i++) { const q2 = paHash(i * 13 + 5, 3), a = (i / 14) * Math.PI * 2 + now * 0.4, rr = (0.25 + ((q2 >> 3) % 10) / 30) * Math.min(W, H), tw = 0.5 + 0.5 * Math.sin(now * 4 + i), s = Math.max(2, Math.round(dpr * 2));

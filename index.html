@@ -1048,7 +1048,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v263</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v264</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -15322,7 +15322,7 @@ const PetForm = {
   WHAT: { // 진화 장면 한 줄 설명
     mouse: ['꼬리가 번개 모양으로!', '번개 꼬리가 길어지고 귀가 뾰족, 등에 털이 섰어요!'], dog: ['목에 복슬복슬 갈기, 꼬리가 풍성해졌어요!', '머리까지 덮는 큰 갈기와 등 줄무늬!'],
     cat: ['꼬리가 두 갈래로!', '꼬리 셋 끝에 도깨비불!'], rabbit: ['잎사귀 목도리와 잎 꼬리!', '등에 커다란 꽃이 폈어요!'], monkey: ['꼬리 끝에 불이 붙었어요!', '머리가 불타고 챔피언 벨트!'],
-    penguin: ['파란 목도리를 둘렀어요!', '망토와 강철 날개 지느러미!'], panda: ['등에 대나무를 멨어요!', '긴 대나무 봉과 빨간 띠, 잎 망토!'], tiger: ['꼬리와 등에 불꽃!', '머리 뒤로 활활 타는 불꽃 갈기!'],
+    penguin: ['파란 목도리를 둘렀어요!', '망토에 삼지창, 강철 날개 지느러미!'], panda: ['등에 대나무를 멨어요!', '긴 대나무 봉과 빨간 띠, 잎 망토!'], tiger: ['꼬리와 등에 불꽃!', '머리 뒤로 활활 타는 불꽃 갈기!'],
     giraffe: ['목을 따라 잎사귀 갈기!', '뿔이 나뭇가지로, 갈기엔 꽃!'], elephant: ['등에 털이 덮이고 상아가 길어졌어요!', '온몸 털에 휘어진 큰 상아!'], turtle: ['등껍질에 가시!', '등에 물대포가 생겼어요!'],
     croc: ['등 가시가 솟았어요!', '등에 커다란 돛 지느러미!'], lizard: ['꼬리 끝에 불꽃!', '등에 용 날개, 꼬리 불이 커졌어요!'], beetle: ['등껍질에 금빛 무늬!', '날개를 활짝 펴고 금빛 뿔!'],
     mantis: ['날개가 펼쳐졌어요!', '큰 날개에 은빛 쌍낫!'], dolphin: ['이마에 뿔이 났어요!', '긴 뿔과 커다란 꼬리 지느러미!'], parrot: ['꼬리깃이 길어졌어요!', '불타는 꼬리와 불꽃 날개!'],
@@ -15355,8 +15355,9 @@ const PetForm = {
         ['G', -3, -6, 'f', 'gggggg', 'ggrrgg'], ['R', 'r', 'f', 3, -4, 2, 1]],
     ],
     penguin: [
-      [['G', -4, -8, 'f', 'bbbbbbbb'], ['G', -7, -8, 'b', 'bbB', '.bb', '..b']],
-      [['G', -8, -12, 'b', '...bb', '..bbb', '.bbbb', 'bbbbb', 'bBbbb', '.bbbb', '..bbb'], ['G', -4, -8, 'f', 'bbbbbbbb'], ['G', -7, -7, 'f', '...ss', '..sS.', '.sS..', 'sS...'], ['G', 0, -6, 'f', 'g.g', '.g.']],
+      [['G', -4, -8, 'f', 'bbbbbbbb'], ['G', -7, -8, 'b', 'bbB', '.bb', '..b'], ['G', -6, -6, 'f', '..ss', '.sS.', 'sS..']],
+      [['G', -8, -12, 'b', '...bb', '..bbb', '.bbbb', 'bbbbb', 'bBbbb', '.bbbb', '..bbb', '...bb', '....b'], ['G', -4, -8, 'f', 'bbbbbbbb'], ['G', -7, -7, 'f', '...ss', '..sS.', '.sS..', 'sS...'], ['G', 0, -6, 'f', 'g.g', '.g.'],
+        ['G', 4, -18, 'f', 'g.g.g', 'g.g.g', 'ggggg'], ['L', 'G', 'f', 6, -15, 6, -1]],
     ],
     panda: [
       [['L', 'e', 'b', -9, -13, 0, -6], ['L', 'E', 'b', -8, -13, 1, -6], ['G', -11, -15, 'b', 'E.E', '.EE']],
@@ -15427,12 +15428,20 @@ const PetForm = {
         ['G', -22, -15, 'b', '.S.S.', 'SSSSS', '.S.S.']],
     ],
   },
+  // 움직일 때 몸 모양이 확 바뀌는 펫: 그 자세용 조각 (펭귄 배 미끄럼: 몸 x -7~7, y -5~0, 머리 5~8)
+  MV: {
+    penguin: [
+      [['G', 3, -6, 'f', 'bb', 'bb', 'bb', 'bb'], ['G', -2, -8, 'bA', '..bbbb', 'bbB...'], ['G', -2, -8, 'bB', '...bbb', '.bbB..', 'bb....'], ['G', -2, -3, 'f', 'sssS', '.SS.']],
+      [['G', -9, -8, 'bA', '..bbbbbbbbb.', '.bBbbbbbbbbb', 'bb..bbbbbb..'], ['G', -9, -8, 'bB', '...bbbbbbbb.', 'bbBbbbbbbbbb', '..bb.bbbbb..'], ['G', 3, -6, 'f', 'bb', 'bb', 'bb', 'bb'],
+        ['G', -3, -3, 'f', 'ssssS', '.sSS.'], ['L', 'G', 'b', -7, -7, 6, -7], ['G', 7, -9, 'b', 'ggg', 'g..', 'gggg', 'g..', 'ggg']],
+    ],
+  },
   has(kind) { return !!this.F[kind]; },
   name(kind, st) { const N = this.NAME[kind]; return N ? N[st >= 2 ? 1 : 0] : ''; },
   what(kind, st) { const N = this.WHAT[kind]; return N ? N[st >= 2 ? 1 : 0] : ''; },
   // g: 펫 그림 좌표로 맞춰 둔 캔버스 (뒤집기 포함). L: 'b' 또는 'f'
-  draw(g, kind, st, L, t, fl, col) {
-    const S = this.F[kind]; if (!S || !st) return; const P = S[st >= 2 ? 1 : 0], C = this.COL, cc = { c: col, l: shade(col, 0.5), d: shade(col, -0.35) }, fr = fl ? 0 : Math.floor(t * 7) % 2, ab = fl ? 0 : Math.floor(t * 10) % 2;
+  draw(g, kind, st, L, t, fl, col, mv) {
+    const S = (mv ? this.MV : this.F)[kind]; if (!S || !st) return; const P = S[st >= 2 ? 1 : 0], C = this.COL, cc = { c: col, l: shade(col, 0.5), d: shade(col, -0.35) }, fr = fl ? 0 : Math.floor(t * 7) % 2, ab = fl ? 0 : Math.floor(t * 10) % 2;
     const px = (x, y, ch, sw) => { if (sw) ch = ch === 'Y' ? 'O' : ch === 'O' ? 'Y' : ch === 'M' ? 'm' : ch === 'm' ? 'M' : ch; const v = cc[ch] || C[ch]; if (!v) return; g.fillStyle = v; g.fillRect(x, y, 1, 1); };
     for (const p of P) {
       const ly = p[0] === 'G' ? p[3] : p[2]; if (ly[0] !== L) continue; if (ly.includes('A') && ab) continue; if (ly.includes('B') && !ab) continue; const sw = ly.includes('~') && fr;
@@ -15497,7 +15506,7 @@ const PetEvo = {
     const big = this.BIG.includes(kind), BW = big ? 76 : 56, BH = big ? 64 : 48, W = BW * r, H = BH * r, ox = (BW / 2) * r, oy = (BH - 10) * r;
     const A = this.canv(0, W, H), B = this.canv(1, W, H), C = this.canv(2, W, H), a = A.getContext('2d'), b = B.getContext('2d'), k2 = C.getContext('2d');
     for (const g of [a, b, k2]) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, W, H); g.imageSmoothingEnabled = false; }
-    a.setTransform(r, 0, 0, r, ox, oy); const fm = !hf && PetForm.has(kind), lay = L => { a.save(); a.scale(face < 0 ? -1 : 1, 1); PetForm.draw(a, kind, st, L, t, fl, col); a.restore(); }; /* v263 펫마다 바뀐 몸 (뒤 조각 → 몸 → 앞 조각) */
+    a.setTransform(r, 0, 0, r, ox, oy); const fm = PetForm.has(kind) && (!hf || !!PetForm.MV[kind]), lay = L => { a.save(); a.scale(face < 0 ? -1 : 1, 1); PetForm.draw(a, kind, st, L, t, fl, col, hf); a.restore(); }; /* v263 펫마다 바뀐 몸 (뒤 조각 → 몸 → 앞 조각) */
     if (fm) lay('b'); Pets.draw1(a, kind, 0, 0, face, moving, t, '', idle, pose); if (fm) lay('f'); a.setTransform(1, 0, 0, 1, 0, 0);
     b.drawImage(A, 0, 0, W, H, 0, 0, W, H); // 몸 모양 (가면)
     a.globalCompositeOperation = 'color'; a.globalAlpha = PetForm.has(kind) ? (st >= 2 ? 0.2 : 0.12) : st >= 2 ? 0.36 : 0.24; a.fillStyle = col; a.fillRect(0, 0, W, H); a.globalAlpha = 1; a.globalCompositeOperation = 'destination-in'; a.drawImage(B, 0, 0, W, H, 0, 0, W, H); a.globalCompositeOperation = 'source-over';

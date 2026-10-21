@@ -1019,6 +1019,16 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .short #title #btnStart { padding:6px 18px; font-size:15px; } .short #title #tutRow small { display:none; }
 .short #title { justify-content:safe center; } #title .mp #mpStatus:empty, #title .mp #chStatus:empty { display:none; } #title .modeRow .tStudy i { font-size:24px; line-height:1.25; }
 @media (max-width:700px) { #title .tDock { position:static; order:-1; align-self:flex-end; } #title .modeRow .btn { min-width:132px; } }
+/* v274 (사용자 2026-10-21 '가로로 시작하면 이렇다니까' + 아이폰 가로 시작 화면 아래 검은 띠): iOS 앱은 가로로 켜면 innerHeight가 화면보다 작게 멈출 때가 있어
+   inset:0 창들이 그 높이에서 끊긴다. HUD·조작판처럼 진짜 높이(--vh, realVH)를 쓰게 하고, 남는 틈은 시작 화면 아래쪽 색으로 칠한다. */
+html, body { background:#0b1020; }
+#game, #title, #zoneMap, #dayCard, #seoulMap, #vignette, #dim, #result, #studyWin, #shBig, #chatHist, #duelDim, #duelWin, #mineWin { bottom:auto; height:var(--vh, 100%); }
+/* v274 아이폰 가로 카메라 섬 (사용자 2026-10-21 '아이폰15프로인데 카메라에 가려'): 배경은 화면 끝까지, 글자·버튼만 안전 영역 안으로 */
+:root { --sl:env(safe-area-inset-left, 0px); --sr:env(safe-area-inset-right, 0px); --sb:env(safe-area-inset-bottom, 0px); }
+#title { padding-left:max(16px, var(--sl)); padding-right:max(16px, var(--sr)); } #title .tDock { right:max(12px, var(--sr)); } .short #title .tDock { right:max(8px, var(--sr)); }
+@media (max-width:700px), (max-height:500px) { #studyWin .stHead { padding-left:max(14px, var(--sl)); padding-right:max(14px, var(--sr)); } #studyWin .stList { padding-left:max(8px, var(--sl)); padding-right:max(8px, var(--sr)); padding-bottom:max(8px, var(--sb)); } #studyWin .stBody { padding-left:max(18px, var(--sl)); padding-right:max(18px, var(--sr)); padding-bottom:max(24px, var(--sb)); } }
+.panel { padding-right:max(18px, var(--sr)); } #notebook .nbHead { margin-right:calc(-1 * max(18px, var(--sr))); padding-right:max(18px, var(--sr)); }
+#result { padding-left:max(16px, var(--sl)); padding-right:max(16px, var(--sr)); }
 </style>
 </head>
 <body>
@@ -1110,7 +1120,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v273</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v274</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>

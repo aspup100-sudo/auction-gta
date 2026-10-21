@@ -1096,6 +1096,8 @@ html, body { background:#0b0e08; }
 .short #title.modeSolo .tLeft, .short #title.modeRoom .tLeft, .short #title.modeCh .tLeft { padding-top:40px; }
 .short #title .tRight { padding-top:48px; } /* 오른쪽 위 아이콘 줄(.tDock) 밑에서 시작 */
 @media (max-width:700px) { #title { grid-template-columns:minmax(0, 1fr); align-content:start; } #title .tDock { grid-column:1; } #title .tRight { max-width:none; } }
+#title i.ic { display:inline-flex; align-items:center; justify-content:center; font-style:normal; } #title i.ic svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; } /* v279 이모티콘 → 단색 선 아이콘 (사용자: 이모티콘 개밤티) */
+#title .modeRow .btn i.ic { width:22px; color:var(--hud); } #title .modeRow .mode.sel i.ic { color:var(--hudTx); } #title .tDock .tIco i.ic svg { width:19px; height:19px; } #title .tDock .tIco i.ic { color:var(--hud); height:21px; } #title #btnPrac i.ic svg { width:16px; height:16px; } #title #btnPrac i.ic { margin-right:5px; vertical-align:-3px; } .short #title .modeRow .btn i.ic svg { width:17px; height:17px; } .short #title .tDock .tIco i.ic svg { width:16px; height:16px; } .short #title .tDock .tIco i.ic { height:18px; }
 body.gated #title { display:grid; }
 @media (max-width:700px) { #title #modeHint { display:none; } } /* 한 줄로 쌓이면 "왼쪽에서" 안내가 안 맞음 */
 /* 메뉴 판 (설정·수첩 등 .panel) */
@@ -1116,12 +1118,12 @@ body.gated #title { display:grid; }
 <div id="title">
   <div class="tstars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="troad"><div class="tcar"></div><div class="tcar t2"></div></div>
-  <button class="btn tBack" id="tBack">← 처음으로</button><div class="tDock" id="tDock"><button class="tIco" id="btnIdea"><i>💬</i><span>의견</span></button><button class="tIco" id="btnGuide"><i>📲</i><span>설치법</span></button><button class="tIco" id="btnMove"><i>🔁</i><span>기록 옮기기</span></button><button class="tIco donRow" id="btnDonate" hidden><i>☕</i><span>응원</span></button></div>
+  <button class="btn tBack" id="tBack">← 처음으로</button><div class="tDock" id="tDock"><button class="tIco" id="btnIdea"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/></svg></i><span>의견</span></button><button class="tIco" id="btnGuide"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="1.5"/><path d="M12 7v6.5M9.3 10.8 12 13.5l2.7-2.7M10.5 18.5h3"/></svg></i><span>설치법</span></button><button class="tIco" id="btnMove"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/></svg></i><span>기록 옮기기</span></button><button class="tIco donRow" id="btnDonate" hidden><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 10.5h1.5a2.2 2.2 0 0 1 0 4.4H16M8.5 3.5v2.5M12.5 3.5v2.5"/></svg></i><span>응원</span></button></div>
   <div class="tLeft">
   <h1>경매 GTA</h1>
   <div class="tag">걸어서 모으는 정보, 손으로 하는 권리분석</div>
   <div class="tOps">// 작전 선택</div>
-  <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo"><i>🙋</i>혼자 하기<small>자본 골라서 시작</small></button><button class="btn mode" data-mode="modeRoom"><i>👥</i>친구와 같이<small>방 코드로 모이기</small></button><button class="btn mode" data-mode="modeCh"><i>📡</i>실시간 채널<small>코드 없이 아무나</small></button><button class="btn tStudy" id="btnStudy"><i>📚</i>사례 공부<small>문제 풀며 배우기</small></button></div>
+  <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></i>혼자 하기<small>자본 골라서 시작</small></button><button class="btn mode" data-mode="modeRoom"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.6 3-5.5 7-5.5s7 1.9 7 5.5"/><circle cx="17" cy="8.5" r="2.6"/><path d="M17.5 14.3c2.7.2 4.5 1.8 4.5 4.7"/></svg></i>친구와 같이<small>방 코드로 모이기</small></button><button class="btn mode" data-mode="modeCh"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M8 8a5.7 5.7 0 0 0 0 8M16 8a5.7 5.7 0 0 1 0 8M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg></i>실시간 채널<small>코드 없이 아무나</small></button><button class="btn tStudy" id="btnStudy"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10.3 5 7.8 4.5 4 4.5v14c3.8 0 6.3.5 8 2 1.7-1.5 4.2-2 8-2v-14c-3.8 0-6.3.5-8 2zM12 6.5v14"/></svg></i>사례 공부<small>문제 풀며 배우기</small></button></div>
   </div>
   <div class="tRight">
   <div id="modeHint">← 왼쪽에서 할 일을 골라 주세요</div>
@@ -1148,7 +1150,7 @@ body.gated #title { display:grid; }
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row" id="capRow"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <div class="row pracRow soloOpts"><label id="tutRow"><input type="checkbox" id="tutOn" checked> <b>🎓 처음이에요</b><small>단예 선배가 한 바퀴 안내</small></label><button class="btn" id="btnPrac">🎯 단계별 연습 <small>1~5단계</small></button></div>
+  <div class="row pracRow soloOpts"><label id="tutRow"><input type="checkbox" id="tutOn" checked> <b>처음이에요</b><small>단예 선배가 한 바퀴 안내</small></label><button class="btn" id="btnPrac"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".9"/></svg></i>단계별 연습 <small>1~5단계</small></button></div>
   </div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <div class="disc">교육용 게임이에요 · 법률·투자 조언이 아니에요 · 나오는 단지·사건·인물은 모두 지어낸 거예요</div><div id="vDiag"></div>
@@ -1204,7 +1206,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v278</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v279</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>

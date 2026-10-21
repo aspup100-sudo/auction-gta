@@ -6,7 +6,7 @@
  *   GET  /don/grant?k=<열쇠>&c=GTA-XXXXXX → 코드 없이 온 후원을 손으로 연결
  * 남이 Ko-fi 공개 메시지에서 코드를 베껴도 비밀값이 없어서 못 쓴다. */
 import { KEY_HASH, sha } from './fb.js';
-export const KOFI_HASH = ''; // Ko-fi Verification Token의 SHA-256. 비어 있으면 웹훅을 받지 않는다
+export const KOFI_HASH = 'aeb6b359098d9479c8747ce5f322b3687c00f49854443ca75bd65a5de5e6a217'; // Ko-fi Verification Token의 SHA-256. 비어 있으면 웹훅을 받지 않는다
 const ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export async function codeOf(secret) { const h = await sha('gta-don:' + secret); let c = ''; for (let i = 0; i < 6; i++) c += ABC[parseInt(h.slice(i * 2, i * 2 + 2), 16) % ABC.length]; return 'GTA-' + c; }
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);

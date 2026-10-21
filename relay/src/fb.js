@@ -2,7 +2,7 @@
  *   POST /fb/send {kind:'idea'|'report', text, by, ch, ver, who, ctx}  → 저장 (하루 묶음, 하루 300개까지, 60일 보관)
  *   GET  /fb/list?k=<열쇠>                                            → 모아 보기 (HTML). 열쇠는 개발자만 안다 (여기엔 SHA-256 값만)
  * storage: get/put/delete 가 있는 저장소 (Durable Object storage 또는 테스트용 메모리). */
-export const KEY_HASH = 'c12970f04ed6702d4cbc8112fd45d1295438518e07c8186e3808e80c0bfe4493';
+export const KEY_HASH = 'f694b12319cb35e151b545f4f54d383f384747b7e0b369730824f145f195bd65';
 const DAY_MAX = 300, KEEP_DAYS = 60;
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

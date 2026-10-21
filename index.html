@@ -1308,7 +1308,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v287</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v288</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -11003,6 +11003,7 @@ const Tutorial = {
       D('채널에선 낙찰받은 집을 진짜로 들고 있으면서 임대도 놓고, 때가 되면 팔기도 해. 순위판에 내 이름도 올라가고.')]);
     const E = State.evict || {};
     State.saleOverride = { price: Math.round(Generator.disposalValue(c) * K.mod * (rep ? 1.04 : 1) / 1e5) * 1e5, months: 12 + (E.forced ? E.forced.months : 0), repair: rep ? Live.repairCostOf(c, cd) : 0, rent, rentTotal: rent * 12, rentMonths: 12, condLabel: `${K.label}${rep ? ' · 수리함' : ''} · 1년 임대 뒤 판다고 치면`, quick: false };
+    await this.parrotScene();
     State.phase = 'settle'; finishGame();
   },
   answers(c) { // 단예가 정리해 주는 '내 판단' 정답 (튜토리얼 연습 물건만)
@@ -11102,14 +11103,28 @@ const Tutorial = {
     if (s.id === 'judge') await this.judgeTalk(this.c);
   },
   bind() { $('tutor').addEventListener('click', () => { if (this.on && this.step >= 0 && this.free()) { Sound.play('click'); this.explain(this.step); } }); },
+  // v281 튜토리얼 선물 (한 번만, 되팔기 막음). 돌려주는 값: 'pet'/'pet2' 자리에 앉힘 · 'have' 이미 데리고 있음 · 'full' 자리 없음 · null 이미 받음
+  giveParrot() {
+    if (Store.get('giftTut281', false) || typeof Shop === 'undefined') return null; Store.set('giftTut281', true);
+    if (!Shop.has('p_parrot')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_parrot'), src: Object.assign({}, w.src || {}, { p_parrot: 'gift' }) }); }
+    const pf = Profile.get(), slot = pf.pet === 'parrot' || pf.pet2 === 'parrot' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : 'full'; if (slot === 'pet' || slot === 'pet2') Profile.set(slot, 'parrot'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
+    return slot;
+  },
+  // v288 사용자 2026-10-21 '앵무새 주는 것도 튜토 끝나자마자 주어지는 거 만들자': 마지막 말 뒤 그 자리에서 날아와 따라온다
+  async parrotScene() {
+    const D = t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t }); const g = this.giveParrot(); if (!g) return; this.gift = g;
+    await Dialog.say([D('아 맞다, 약속한 선물! 끝까지 해 줬으니까 앵무새 줄게.')]);
+    Sound.play('chime'); Toast.show(g === 'full' ? '앵무새 펫을 받았어요! 펫 자리가 차서 편집숍 펫 칸에 있어요.' : '앵무새 펫을 받았어요!', 3200);
+    if (g !== 'full') { await sleep(1800); const P = t => ({ name: '앵무새', text: t }); // v288 사용자 '앵무새가 튜토 수고했다고, 친구가 됐다 어쩌고'
+      await Dialog.say([{ text: '어디선가 앵무새가 날아와 머리 위를 빙빙 돈다.' }, P('수고했어! 수고했어! 튜토리얼 끝! 끝!'), P('이제 우리 친구야! 친구! 어디든 따라갈게! 따라갈게!'), D('말을 걸면 따라 할 거야. 혼자 할 때도, 실시간 채널에서도 계속 따라다녀.')]); }
+    else await Dialog.say([D('펫 두 자리가 다 차 있네. 편집숍 펫 칸에서 바꿔 데려가면 돼.')]);
+  },
   result(el) { // 결과 화면 맨 위에 마무리 한마디 + 다음부턴 안내 없이
     const page = el.querySelector('.rpage'); if (!page) return;
     page.insertAdjacentHTML('afterbegin', `<div class="rSec tutEnd"><b>🎓 튜토리얼 끝</b><p>결과 보는 법: ★은 이 물건의 난이도(지금 처음 공개), 등급은 수익·판단·조사를 합친 점수, "놓친 정보"는 꼭 갔어야 했던 곳이야. 이제 혼자 하기 "자유 플레이"에서 다른 물건에 도전해 봐. 물건마다 숨은 게 달라. "실시간 채널"에 들어가면 다른 사람들이랑 같은 물건을 두고 같이 경쟁하고, 낙찰받은 집으로 임대·매도까지 해.</p></div>`);
     $('tutor').classList.remove('in'); Store.set('tutorialDone', true); Store.set('tutSave', null); this.on = false;
-    if (!Store.get('giftTut281', false) && typeof Shop !== 'undefined') { Store.set('giftTut281', true); /* v281 사용자 2026-10-21 '튜토리얼 클리어하면 앵무새 펫 하나 주는걸로 하자' (한 번만, 되팔기 막음) */
-      if (!Shop.has('p_parrot')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_parrot'), src: Object.assign({}, w.src || {}, { p_parrot: 'gift' }) }); }
-      const pf = Profile.get(), slot = pf.pet === 'parrot' || pf.pet2 === 'parrot' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'parrot'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
-      const box = page.querySelector('.tutEnd'); if (box) box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 앵무새 펫</b> ${slot ? '다음 게임부터 혼자 하기에서도 실시간 채널에서도 옆에서 날아다니며 따라와요.' : '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.'}</p>`); Sound.play('chime'); }
+    if (this.gift) { const g = this.gift; this.gift = null; const box = page.querySelector('.tutEnd'); if (box) box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 앵무새 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '벌써 옆에서 날아다니고 있어요. 혼자 하기에서도 실시간 채널에서도 따라와요.'}</p>`); }
+    else { const g = this.giveParrot(); const box = page.querySelector('.tutEnd'); if (g && box) { box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 앵무새 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '다음 게임부터 혼자 하기에서도 실시간 채널에서도 옆에서 날아다니며 따라와요.'}</p>`); Sound.play('chime'); } }
   },
 };
 

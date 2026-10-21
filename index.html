@@ -116,7 +116,9 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #zoneMap .zh { color:#f3e9c8; font-weight:700; font-size:16px; text-shadow:0 2px 0 #000; }
 #zoneMap .zh small { color:#b9b39f; font-weight:400; margin-left:8px; }
 #zonePick { display:none; gap:8px; justify-content:center; margin:4px 0 6px; flex-wrap:wrap; } #zoneMap.pick #zonePick { display:flex; } #zonePick .btn { font-size:13px; padding:6px 12px; } #zoneMap.pick .zh { font-size:18px; color:#ffd84a; } #zoneMap.pick .zh small { display:inline; } .short #zonePick { margin:2px 0 3px; } .short #zonePick .btn { font-size:12px; padding:4px 10px; } /* v217 차 타면 지도에서 목적지 고르기 */
-#zoneCanvas { transform-origin:50% 50%; border:3px solid #cdae70; border-radius:8px; box-shadow:0 8px 0 rgba(0,0,0,.5); image-rendering:pixelated; background:#2b312e; }
+#zoneFrame { position:relative; overflow:hidden; flex:none; border:3px solid #cdae70; border-radius:8px; box-shadow:0 8px 0 rgba(0,0,0,.5); background:#2b312e; } /* v285 사용자 '지도 크기 키웠을 때 이거 이상하다': 확대해도 틀 밖(제목·버튼 위)으로 안 나간다 */
+#zmHint { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(10,12,8,.88); color:#ffd84a; border:2px solid #ffd84a; padding:10px 16px; font:700 15px/1.45 var(--ui); text-align:center; pointer-events:none; opacity:0; transition:opacity .4s; white-space:nowrap; } #zmHint.in { opacity:1; } #zmHint small { display:block; color:#e9ecdf; font-weight:500; font-size:12.5px; }
+#zoneCanvas { display:block; transform-origin:50% 50%; image-rendering:pixelated; background:#2b312e; }
 #roadSign { position:absolute; right:16px; bottom:18px; background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:6px 14px; color:#fff; box-shadow:0 3px 0 #000; transform:translateY(120%); opacity:0; transition:transform .25s ease-out, opacity .25s; }
 #roadSign.in { transform:none; opacity:1; }
 #edgeSign { position:absolute; left:50%; top:14px; transform:translate(-50%,-160%); background:#1f6b3a; border:2px solid #fff; border-radius:6px; padding:5px 16px; color:#fff; text-align:center; box-shadow:0 3px 0 #000; opacity:0; transition:transform .25s ease-out, opacity .25s; }
@@ -228,7 +230,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #mapCanvas.zoomIn { transform:translate(-50%, -50%) scale(1.6) !important; opacity:.0; transition:transform .5s ease-in, opacity .5s ease-in; }
 .mapTitle { position:absolute; top:14px; left:0; right:0; text-align:center; font:700 18px var(--serif); color:var(--paper); text-shadow:0 2px 0 #000; }
 .mapTitle small { display:block; font:400 12px var(--ui); opacity:.75; }
-#mapX { position:absolute; top:10px; right:calc(12px + env(safe-area-inset-right, 0px)); z-index:3; background:rgba(12,16,26,.9); color:#fff; border:2px solid var(--gold); border-radius:10px; padding:8px 14px; font:700 14px var(--ui); cursor:pointer; box-shadow:0 3px 0 #000; } #mapX:hover { background:#1b2232; }
+#mapX, #zmX { position:absolute; top:10px; right:calc(12px + env(safe-area-inset-right, 0px)); z-index:3; background:rgba(12,16,26,.9); color:#fff; border:2px solid var(--gold); border-radius:10px; padding:8px 14px; font:700 14px var(--ui); cursor:pointer; box-shadow:0 3px 0 #000; } #mapX:hover { background:#1b2232; }
 #mapConfirm { position:absolute; left:50%; bottom:18px; transform:translate(-50%, 140%); background:#14161c; border:2px solid var(--gold); border-radius:10px; padding:10px 14px; display:flex; gap:10px; align-items:center; transition:transform .2s ease-out; max-width:calc(100% - 32px); flex-wrap:wrap; justify-content:center; }
 #mapConfirm.in { transform:translate(-50%, 0); }
 #mapHover { position:fixed; z-index:29; background: radial-gradient(120% 90% at 0% 0%, #2f3626 0%, #151a10 55%, #0e110b 100%); color: #e9ecdf; border-radius:8px; padding:8px 12px; font-size:13px; line-height:1.55; pointer-events:none; opacity:0; transform:translateY(4px); transition:opacity .12s, transform .12s; box-shadow:0 6px 16px rgba(0,0,0,.4); }
@@ -541,7 +543,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
   .short #pedals { right:calc(16px + env(safe-area-inset-right, 0px)); } .short #tChat { right:calc(104px + env(safe-area-inset-right, 0px)); } .short.driving #tChat { right:calc(16px + env(safe-area-inset-right, 0px)); }
   /* 폰 가로: 서울 지도를 화면에 꽉 차게 */
   .short #mapCanvas { width:calc(100% - 16px); height:calc(100% - 44px); top:calc(50% + 18px); }
-  .short #mapX { top:6px; padding:6px 12px; font-size:13px; } .short .mapTitle { top:8px; font-size:15px; padding-right:100px; padding-left:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .short .mapTitle small { display:none; } /* 폰: 제목 한 줄만 (사용자 2026-10-14 '위에 글 정리해') */
+  .short #mapX, .short #zmX { top:6px; padding:6px 12px; font-size:13px; } .short .mapTitle { top:8px; font-size:15px; padding-right:100px; padding-left:100px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .short .mapTitle small { display:none; } /* 폰: 제목 한 줄만 (사용자 2026-10-14 '위에 글 정리해') */
   .short #mapConfirm { bottom:8px; padding:6px 10px; gap:6px; }
   .short #openBoard { top:6px; max-height:calc(100% - 12px); padding:8px 10px; } .short .obHead { font-size:11.5px; margin-bottom:3px; } .short .obRow { padding:2px 6px; font-size:13px; } .short #obResult { margin-top:5px; line-height:1.4; font-size:12.5px; } .short #obResult .win { font-size:16px; } .short #obResult .lose { font-size:14px; } .short #obResult .btn { margin-top:4px; } /* 폰 가로: 개찰판이 화면을 넘지 않게 줄이고, 넘치면 스크롤 (사용자 2026-10-14 '나가는 것도 잘려 못 나가') */
   .short #menu { width:min(640px, calc(100% - 24px)); padding:12px 16px; } .short #menu h2 { font-size:18px; margin-bottom:8px; } .short .keys { font-size:12px; }
@@ -1084,6 +1086,16 @@ html, body { background:#0b0e08; }
 #title .caps .btn.sel, #title .mp .ch.sel { background:var(--hud); border-color:var(--hud); color:var(--hudTx); } #title .mp .ch.sel small { color:#3a2e00; }
 #title input { border-radius:0; background:rgba(0,0,0,.35); border:1px solid #565b3c; color:#e9ecdf; }
 #title #btnStart, #title .btn.gold { border-radius:0; background:var(--hud); border:0; color:var(--hudTx); font-family:var(--disp); font-weight:400; letter-spacing:3px; font-size:17px; box-shadow:0 0 16px rgba(242,201,76,.3); clip-path:polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+/* v285 혼자 하기 세 갈래: 튜토리얼 / 자유 플레이 / 단계별 연습 */
+#title #soloPick { display:none; flex-direction:column; gap:8px; width:100%; max-width:640px; } #title.modeSolo #soloPick { display:flex; }
+#title.gated #soloPick { display:none !important; } #title #tutRow[hidden] { display:none !important; }
+#title.modeSolo:not(.smFree) #capLabel, #title.modeSolo:not(.smFree) #caps, #title.modeSolo:not(.smFree) #capRow { display:none; }
+#title .smTabs { display:flex; gap:8px; } #title .smTab { flex:1; display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:8px 12px; background:rgba(20,24,16,.75); border:1px solid #565b3c; color:#e9ecdf; font:inherit; cursor:pointer; text-align:left; }
+#title .smTab b { font-size:16px; font-weight:800; } #title .smTab small { font-size:11.5px; color:#b3bb98; } #title .smTab.sel { background:#f2c94c; border-color:#f2c94c; color:#1a1400; } #title .smTab.sel small { color:#4a3d10; }
+#title .smPane { display:none; flex-direction:column; gap:8px; } #title.smTut #smTut, #title.smFree #smFree, #title.smPrac #smPrac { display:flex; }
+#title .smPane p { margin:0; color:#c9cfb5; font-size:13px; line-height:1.55; } #title .smPane .row { justify-content:flex-start; gap:8px; margin:0; }
+#title #btnTutNew, #title #btnPrac { min-width:150px; }
+.short #title .smTab { padding:5px 10px; } .short #title .smTab b { font-size:14px; } .short #title .smPane p { font-size:12px; line-height:1.45; }
 #title #btnTutGo { font-size:15px; letter-spacing:1px; padding:7px 14px; } #title #btnTutGo[hidden] { display:none; } #title #btnTutGo small { font-family:var(--ui); letter-spacing:0; font-size:11.5px; color:var(--hudTx); opacity:.75; margin-left:4px; font-weight:700; }
 #bidForm .bfMust { margin-top:6px; padding:5px 8px; border:2px dashed #c0392b; color:#a5281b; font-weight:800; font-size:14px; background:rgba(192,57,43,.06); }
 #title #btnStart:disabled { background:#3a4029; color:#a3ab92; box-shadow:none; }
@@ -1105,6 +1117,9 @@ html, body { background:#0b0e08; }
 /* v281 튜토리얼 안내: 눌러야 할 버튼 노란 테두리 + 한 줄 설명 */
 .tutHl { outline:3px solid #ffd84a !important; outline-offset:2px; animation:tutHl 1s ease-in-out infinite; position:relative; z-index:2; }
 @keyframes tutHl { 50% { outline-color:rgba(255,216,74,.25); box-shadow:0 0 18px rgba(255,216,74,.55); } }
+.tutAnc::after { content:attr(data-tut); position:absolute; left:50%; bottom:calc(100% + 9px); transform:translateX(-50%); width:max-content; max-width:min(260px, 92%); z-index:6; background:#ffd84a; color:#1a1400; font:700 13px/1.4 var(--ui); padding:7px 11px; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.45); pointer-events:none; white-space:normal; text-align:left; letter-spacing:0; text-transform:none; }
+.tutAnc::before { content:''; position:absolute; left:50%; bottom:calc(100% + 3px); margin-left:-6px; border:6px solid transparent; border-bottom:0; border-top-color:#ffd84a; z-index:6; pointer-events:none; }
+.tutAnc.tutBelow::after { bottom:auto; top:calc(100% + 9px); } .tutAnc.tutBelow::before { bottom:auto; top:calc(100% + 3px); border:6px solid transparent; border-top:0; border-bottom-color:#ffd84a; }
 #tutTip { position:fixed; z-index:90; display:none; background:#ffd84a; color:#1a1400; font:700 13px/1.4 var(--ui); padding:7px 11px; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.5); pointer-events:none; }
 #tutTip.in { display:block; } #tutTip.top::after { display:none; } #tutTip::after { content:''; position:absolute; left:50%; bottom:-6px; margin-left:-6px; border:6px solid transparent; border-bottom:0; border-top-color:#ffd84a; } #tutTip.below::after { bottom:auto; top:-6px; border:6px solid transparent; border-top:0; border-bottom-color:#ffd84a; }
 /* v283 물건 목록·조사할 물건 고르기·물건 카드 = 밝은 법원경매정보 사이트 느낌 (사용자 '이 부류도 밝은 느낌으로') */
@@ -1191,6 +1206,13 @@ body.gated #title { display:grid; }
     <div class="mpHint">실제 시간으로 계속 돌아가는 세계예요. 매각기일 당일 법원에서 입찰하면 자동 개찰되고, 돈과 순위는 채널별로 이어져요.</div>
   </div>
   </div>
+  <div id="soloPick"><!-- v285 사용자 '처음이에요 누르고 시작 누르면 되는 건데 잘 모를 거 같애, 단계별도 따로 움직이는 건데 같이 되는 거 같잖아': 혼자 하기를 세 갈래로 -->
+    <div class="smTabs"><button class="smTab" data-sm="tut"><b>튜토리얼</b><small>처음이라면 여기</small></button><button class="smTab" data-sm="free"><b>자유 플레이</b><small>자본 골라서</small></button><button class="smTab" data-sm="prac"><b>단계별 연습</b><small>1~5단계</small></button></div>
+    <div class="smPane" id="smTut"><p>단예 선배가 옆에서 한 바퀴 같이 돌아요. 연습 물건 하나로 서류 보기, 등기소·주민센터·현장 조사, 법원 입찰까지 해요. 끝내면 앵무새 펫을 선물로 받아요.</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
+    <div class="smPane" id="smFree"><p>이번 주 물건 중 하나를 골라 혼자 조사하고 입찰해요. 안내 없이 해요.</p></div>
+    <div class="smPane" id="smPrac"><p>함정을 하나씩 늘려 가며 1단계부터 5단계까지 해요. 단계마다 정해진 물건과 자본으로 시작해요.</p><div class="row"><button class="btn gold" id="btnPrac">단계 고르기</button></div></div>
+    <label id="tutRow" hidden><input type="checkbox" id="tutOn"></label>
+  </div>
   <div id="capLabel">시작 자본</div>
   <div class="caps" id="caps">
     <button class="btn" data-v="50000000">5천만 원</button>
@@ -1199,7 +1221,6 @@ body.gated #title { display:grid; }
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row" id="capRow"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <div class="row pracRow soloOpts"><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button><label id="tutRow"><input type="checkbox" id="tutOn" checked> <b>처음이에요</b><small>단예 선배가 한 바퀴 안내</small></label><button class="btn" id="btnPrac"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".9"/></svg></i>단계별 연습 <small>1~5단계</small></button></div>
   </div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <div class="disc">교육용 게임이에요 · 법률·투자 조언이 아니에요 · 나오는 단지·사건·인물은 모두 지어낸 거예요</div><div id="vDiag"></div>
@@ -1255,7 +1276,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v284</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v285</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -1313,7 +1334,8 @@ body.gated #title { display:grid; }
   <div class="mapTabs"><button class="btn on" type="button">동네 지도</button><button class="btn" type="button" data-go="seoul">서울 전체</button></div>
   <div class="zh"><span id="zoneMapName"></span><small>장소를 누르면 목적지 · 두 손가락/휠로 확대 · 바깥을 누르면 닫기</small></div>
   <div id="zonePick"></div>
-  <canvas id="zoneCanvas"></canvas>
+  <div id="zoneFrame"><canvas id="zoneCanvas"></canvas><div id="zmHint"></div></div>
+  <button id="zmX" type="button" title="닫기">✕ 닫기</button>
 </div>
 <div id="bidForm" class="ovl"></div>
 <div id="mpWait" class="ovl"></div>
@@ -2370,7 +2392,8 @@ Object.assign(FEEL, {
   npcYieldWait: 4,        // NPC끼리 교차로에서 서로 양보하다 막히면 이 시간(초) 뒤 천천히 지나감
   npcLaneChangeWait: 3,   // 앞이 막힌 채 이 시간(초)이 지나면 옆 차선으로 빠져나간다
   npcJamReset: 12,        // 그래도 이 시간(초) 넘게 막혀 있으면 화면 밖 차는 다른 자리로 보낸다 (교통 정리)
-  bumpSpeed: 25,          // 이 속도 이상이면 '툭' 접촉음, 70 이상이면 쾅(수리비)
+  bumpSpeed: 25,          // 이 속도 이상이면 '툭' 접촉음, crashSpeed 이상이면 쾅(수리비)
+  crashSpeed: 115,        // 벽에 수직으로 박는 속도(px/s, 230 = 80km/h). v285 70(≈24km/h)→115(≈40km/h): 사용자 '건물 너무 살살 박아도 부딪혔다 한다'
   channelWaitSec: 20,     // 공개 채널 개찰 대기 최대 시간(초)
   kingNoticeMin: 5, kingNoticeSec: 9, kingNoticeLen: 40, // 1등 전체 공지: 다시 쓰기까지 분 · 화면에 떠 있는 초 · 글자 수 (사용자 2026-10-15)
   chatBubbleTime: 6,      // 말풍선이 머리 위에 떠 있는 시간(초)
@@ -3424,7 +3447,7 @@ function unstickCar(c, z) {
 function hit(c, axis) {
   const sp = c.speed, vn = Math.abs(axis === 'x' ? c.vx : c.vy); // 벽에 수직으로 박는 속도 (사용자 2026-10-18 '아무것도 없는데 우회전했는데 돈 나갔다': 돌다가 모서리를 스쳐도 수리비였다)
   if (axis === 'x') c.vx = -c.vx * FEEL.carBounce; else c.vy = -c.vy * FEEL.carBounce;
-  if (vn > 70 && c.hitCd <= 0) crashFx(c, sp);
+  if (vn > FEEL.crashSpeed && c.hitCd <= 0) crashFx(c, sp);
   else if (sp > FEEL.bumpSpeed && c.hitCd <= 0) { c.hitCd = 0.5; shake(2, 0.15); Sound.play('carDoor'); c.rock = 1; }
 }
 function crashFx(c, sp) {
@@ -3846,7 +3869,7 @@ const SeoulMap = {
     State.cash -= fuel; HUD.setCash(State.cash);
     $('mapCanvas').classList.add('zoomIn'); await sleep(500);
     this.anim = null; this.toggle(false); $('mapCanvas').classList.remove('zoomIn');
-    if (slot && !State.evening) await advanceSlot();
+    if (slot && !State.evening && !Tutorial.timeLock()) await advanceSlot();
     await arriveZone(sel.zoneId, from);
     Toast.show(`주유비 ${fmtWon(fuel)}`);
   },
@@ -3957,7 +3980,9 @@ const ZoneMap = {
     if (v && Game.scene !== 'zone') return;
     this.open = v; $('zoneMap').classList.toggle('in', v); Sound.play(v ? 'paper' : 'click');
     if (!v) this.pick = false;
-    $('zoneMap').classList.toggle('pick', !!(v && this.pick)); $('zonePick').innerHTML = v && this.pick ? `${this.auto ? `<button class="btn gold" data-zp="auto">★ ${esc(this.auto.label)}</button>` : ''}<button class="btn" data-zp="free">🚗 그냥 운전하기</button>` : '';
+    $('zoneMap').classList.toggle('pick', !!(v && this.pick)); $('zonePick').innerHTML = v && this.pick ? `<button class="btn" data-zp="free">🚗 그냥 운전하기</button>` : '';
+    if (v && Store.get('zmZoomTold', 0) < 2) { Store.set('zmZoomTold', Store.get('zmZoomTold', 0) + 1); const h = $('zmHint'), T = document.body.classList.contains('touchOn'); h.innerHTML = T ? '두 손가락으로 벌리면 지도가 커져요<small>한 손가락으로 끌면 옮겨져요</small>' : '마우스 휠로 지도를 키울 수 있어요<small>끌면 옮겨져요</small>'; h.classList.add('in'); clearTimeout(this._hT); this._hT = setTimeout(() => h.classList.remove('in'), 3800); } // v285 사용자 '지도 확대할 수 있는 것도 지도 켰을 때 처음 알려 줘' (처음 두 번)
+    if (!v) $('zmHint').classList.remove('in');
     if (v) { $('zoneMapName').textContent = this.pick ? '🚗 어디로 갈까?' : Game.zone.name + ' 구역 지도'; this.fit(); this.draw(); }
   },
   /* v217 (사용자 2026-10-18 '차 타자마자 뜨는 내비 없애고, 차 타면 지도 뜨고 어디로 갈까? 하면서 화살표, 터치하면 거기로 · 오른쪽 위 지도 보고 가게'):
@@ -3976,10 +4001,11 @@ const ZoneMap = {
     const z = Game.zone, c = $('zoneCanvas'); const w = z.W * this.PX, h = z.H * this.PX;
     c.width = w; c.height = h;
     const s = Math.min((VW - 24) / w, (VH - (document.body.classList.contains('short') ? 54 : 76) - (this.pick ? 34 : 0)) / h, 1.8); // 설명 줄을 빼고 화면에 더 꽉 차게 (사용자 2026-10-14)
-    c.style.width = Math.round(w * s) + 'px'; c.style.height = Math.round(h * s) + 'px';
+    c.style.width = Math.round(w * s) + 'px'; c.style.height = Math.round(h * s) + 'px'; const f = $('zoneFrame'); if (f) { f.style.width = c.style.width; f.style.height = c.style.height; }
     this.zoom = 1; this.px = this.py = 0; this.applyT();
   },
-  applyT() { $('zoneCanvas').style.transform = `translate(${this.px}px, ${this.py}px) scale(${this.zoom})`; },
+  applyT() { const c = $('zoneCanvas'), mx = (this.zoom - 1) * c.offsetWidth / 2, my = (this.zoom - 1) * c.offsetHeight / 2; this.px = Math.max(-mx, Math.min(mx, this.px)); this.py = Math.max(-my, Math.min(my, this.py)); // 끌어도 지도 끝이 틀 안쪽으로 들어오지 않게
+    c.style.transform = `translate(${this.px}px, ${this.py}px) scale(${this.zoom})`; },
   // 확대·축소: 손가락 두 개(핀치) 또는 마우스 휠, 끌어서 이동. 살짝 누른 건 장소 선택(click)으로 간다
   zoomAt(sx, sy, factor) {
     const r = $('zoneCanvas').getBoundingClientRect(); const cx = r.left + r.width / 2 - this.px, cy = r.top + r.height / 2 - this.py; // 변환 전 중심
@@ -4066,7 +4092,7 @@ const ZoneMap = {
       const bob = Math.abs(Math.sin(t * 4)) * 6, arrow = (X, Y, col, big) => { const s2 = big ? 1.7 : 1.25; x.fillStyle = 'rgba(0,0,0,.45)'; x.beginPath(); x.moveTo(X - 7 * s2 + 1, Y - 26 * s2 - bob + 1); x.lineTo(X + 7 * s2 + 1, Y - 26 * s2 - bob + 1); x.lineTo(X + 1, Y - 14 - bob + 1); x.fill(); x.fillStyle = col; x.beginPath(); x.moveTo(X - 7 * s2, Y - 26 * s2 - bob); x.lineTo(X + 7 * s2, Y - 26 * s2 - bob); x.lineTo(X, Y - 14 - bob); x.closePath(); x.fill(); x.strokeStyle = '#1a1a1a'; x.lineWidth = 1; x.stroke(); };
       const aid = this.auto && this.auto.kind === 'place' ? this.auto.id : null;
       for (const pl of z.places) { if (pl.id === aid) continue; arrow(pl.door.tx * P, pl.door.ty * P, pl.kind === 'site' ? '#ff6a5a' : 'rgba(243,233,200,.85)', false); }
-      const ap = aid && z.places.find(q => q.id === aid); if (ap) arrow(ap.door.tx * P, ap.door.ty * P, '#ffd84a', true);
+      const ap = aid && z.places.find(q => q.id === aid); if (ap) { const X = ap.door.tx * P, Y = ap.door.ty * P; arrow(X, Y, '#ffd84a', true); x.save(); x.font = 'bold 16px "IBM Plex Sans KR", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; const tl = '여기를 눌러요', tw = x.measureText(tl).width + 14, ty = Y - 66 - bob; x.fillStyle = '#ffd84a'; x.fillRect(X - tw / 2, ty - 12, tw, 24); x.strokeStyle = '#3a2a00'; x.lineWidth = 1.5; x.strokeRect(X - tw / 2, ty - 12, tw, 24); x.fillStyle = '#1a1400'; x.fillText(tl, X, ty + 0.5); x.restore(); } // v285 버튼 대신 지도 위에서 누를 곳
     }
     // 내 차(걸을 때)
     if (!Game.driving) { // 내 차: 노란 테두리 + 숨쉬는 원 + '내 차' 이름표 (사용자: 차 위치를 지도에 표시)
@@ -7058,8 +7084,8 @@ const RankWin = {
   },
 };
 // 조사 가능 여부·라벨 (혼자 하기/친구 방에서는 시간 칸, 채널에서는 하루 조사 횟수)
-function noSlot() { return Live.on ? !!FEEL.liveSlots && Live.used >= FEEL.liveSlots : State.evening; }
-function slotLabel() { return Live.on ? (FEEL.liveSlots ? `오늘 남은 조사 ${Math.max(0, FEEL.liveSlots - Live.used)}회` : '' /* 제한 없으면 아무 말도 안 붙인다 (사용자 2026-10-15) */) : `시간 1칸: ${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}`; }
+function noSlot() { if (Tutorial.timeLock()) return false; return Live.on ? !!FEEL.liveSlots && Live.used >= FEEL.liveSlots : State.evening; }
+function slotLabel() { if (Tutorial.timeLock()) return ''; /* v285 튜토리얼: 시간은 할 일을 끝낼 때 흐른다 */ return Live.on ? (FEEL.liveSlots ? `오늘 남은 조사 ${Math.max(0, FEEL.liveSlots - Live.used)}회` : '' /* 제한 없으면 아무 말도 안 붙인다 (사용자 2026-10-15) */) : `시간 1칸: ${halfLabel()} → ${State.half ? '다음 날 오전' : '오후'}`; }
 
 /* ===================== 내 돈 기록 + 빚 처리 (사용자 2026-10-15) =====================
  * 채널에서 현금이 바뀔 때마다 이유와 함께 채팅 피드에 '내 돈' 줄을 남긴다 (나만 보임, 피드를 누르면 지난 기록).
@@ -7628,7 +7654,7 @@ function roomInteractTarget() {
   const p = Game.player, r = Game.room; let best = null, bd = 24;
   if (r.home && HomeIn.edit) { const d = HomeIn.target(); if (d) return d; } // v259 집 꾸미는 중: 바라보는 칸에 놓기·치우기
   const consider = (o, x, y, lim = 24) => { const d = Math.hypot(x - p.x, y - p.y); if (d < bd && d < lim) { bd = d; best = o; } };
-  for (const n of r.npcs) if (n.talk) consider({ kind: 'npc', npc: n }, n.x, n.y + (n.role === 'clerk' ? 28 : 0));
+  for (const n of r.npcs) if (n.talk && !(n.role === 'danye' && Tutorial.on && !State.finished)) consider({ kind: 'npc', npc: n }, n.x, n.y + (n.role === 'clerk' ? 28 : 0)); // v285 튜토리얼: 사무실 단예한테 말 걸기(질문 메뉴) 없음, 안내는 단예가 먼저 해 준다
   for (const g of r.guests) if (!g.gone && !g.walkTo) consider({ kind: 'guest', guest: g }, g.x, g.y + 8, 20);
   /* 방 안에서도 다른 플레이어에게는 말을 걸 수 없다 (v80) */
   for (const o of r.objs) if (o.type !== 'chair') consider({ kind: 'obj', obj: o }, o.tx * TILE + 8, o.ty * TILE + 22);
@@ -7706,7 +7732,7 @@ async function driveAcross(toGu) {
   const fuel = fuelCost('drive'); // 직접 운전은 주유비가 적다
   await iris(true);
   State.cash -= fuel; HUD.setCash(State.cash);
-  if (slot && !State.evening) await advanceSlot();
+  if (slot && !State.evening && !Tutorial.timeLock()) await advanceSlot();
   await arriveZone(ZONE_OF_GU[toGu], from);
   await iris(false); Game.trans = null;
   Toast.show(`${DISTRICT[toGu].name} 진입 · 주유비 ${fmtWon(fuel)}`);
@@ -7840,6 +7866,7 @@ function exitCar() {
 /* ---- 시간: 조사하기 1칸 소모 ---- */
 async function spendSlot() {
   if (Live.on) return Live.spendSlot();
+  if (Tutorial.timeLock()) return true; // v285 튜토리얼: 조사 자체는 시간을 안 쓰고, 단계가 끝날 때 한 칸 (Tutorial.passTime)
   if (State.evening) { Toast.show('오늘은 더 조사할 수 없어요. 내일 다시.'); return false; }
   return advanceSlot();
 }
@@ -7928,7 +7955,7 @@ function update(dt) {
   if (Notebook.open || Menu.open) return;
   }
   }
-  State.clockMin = Math.min(170, State.clockMin + dt * FEEL.clockMinPerSec);
+  if (!Tutorial.timeLock()) State.clockMin = Math.min(170, State.clockMin + dt * FEEL.clockMinPerSec); // v285 튜토리얼: 시계는 할 일을 끝낼 때만
   const p = Game.player;
   const frozen = Game.busy || Game.trans || chat || Dialog.open;
   const [ix, iy] = frozen ? [0, 0] : readMove();
@@ -8160,15 +8187,20 @@ function targetPos() {
 }
 // v281 사용자 '노란 화살표가 지도에 작게 있어서 처음 본 사람은 모르겠어, 내가 움직이는 화면에 화살표 나오게 해': 내 캐릭터(차) 옆에 갈 곳 쪽 큰 화살표 + 남은 거리
 function drawGuideArrow(c, t) {
-  const z = Game.zone; if (!State.targetPlace || !z) return; const pl = z.places.find(p => p.id === State.targetPlace); if (!pl || !pl.door) return;
-  const me = Game.driving && Game.car ? Game.car : Game.player; if (!me) return;
-  const tx = (pl.door.tx + 0.5) * TILE, ty = (pl.door.ty + 0.5) * TILE, dx = tx - me.x, dy = ty - me.y, d = Math.hypot(dx, dy); if (d < TILE * 6) return;
+  // v285 사용자 '차 타고 지도에서 누르면 화살표로 알려주는 거 좋다, 디폴트로 · 실시간 채널에도': 운전 중엔 내비 목적지(지도에서 고른 곳)를 따라간다. 다른 구로 가는 길이면 경로 앞쪽을 가리킨다
+  const z = Game.zone; if (!z) return; const me = Game.driving && Game.car ? Game.car : Game.player; if (!me) return;
+  const g = Game.driving && typeof Nav !== 'undefined' && Nav.on && Nav.key && !Nav.free ? Nav.goal : null; let tx, ty, name, d, dRoute = 0;
+  const nd = !Game.driving && State.navDest, ndOut = nd && nd.gu && ![z.gu, ...(z.spec.guAlso || [])].includes(nd.gu); // v285 걸어 다닐 때도 지도에서 고른 다른 구 → 그쪽 구역 끝
+  if (ndOut) { const e = typeof Nav !== 'undefined' && Nav.edgeFor(z.gu, nd.gu); if (!e) return; tx = e.dx ? (e.dx < 0 ? 0 : z.W * TILE) : me.x; ty = e.dy ? (e.dy < 0 ? 0 : z.H * TILE) : me.y; name = DISTRICT[nd.gu].name + ' 쪽'; dRoute = 1; }
+  else if (g && g.kind === 'gu') { if (!Nav.path.length) return; const p = Nav.path[Math.min(Nav.path.length - 1, 14)]; tx = (p[0] + 0.5) * TILE; ty = (p[1] + 0.5) * TILE; name = DISTRICT[g.gu].name + ' 쪽'; dRoute = Nav.dist[Nav.path[0][1] * z.W + Nav.path[0][0]] * TILE; }
+  else { const pid = g && g.kind === 'place' ? g.id : State.targetPlace; if (!pid) return; const pl = z.places.find(p => p.id === pid); if (!pl || !pl.door) return; tx = (pl.door.tx + 0.5) * TILE; ty = (pl.door.ty + 0.5) * TILE; name = pl.name; }
+  const dx = tx - me.x, dy = ty - me.y; d = Math.hypot(dx, dy); if (d < TILE * 6 && !dRoute) return; if (dRoute) d = Math.max(d, dRoute);
   const a = Math.atan2(dy, dx), R = Game.driving ? 34 : 26, pulse = 1 + Math.sin(t * 5) * 0.08, ax = me.x + Math.cos(a) * R, ay = me.y - 6 + Math.sin(a) * R;
   c.save(); c.translate(ax, ay); c.rotate(a); c.scale(pulse, pulse);
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.moveTo(13, 2); c.lineTo(-6, -9); c.lineTo(-2, 2); c.lineTo(-6, 13); c.closePath(); c.fill();
   c.fillStyle = '#ffd84a'; c.strokeStyle = '#3a2a00'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(12, 0); c.lineTo(-7, -11); c.lineTo(-3, 0); c.lineTo(-7, 11); c.closePath(); c.fill(); c.stroke();
   c.restore();
-  const m = Math.round(d / TILE * 4), label = `${(pl.name || '').split(' · ')[0].slice(0, 10)} ${m >= 1000 ? (m / 1000).toFixed(1) + 'km' : m + 'm'}`;
+  const m = Math.round(d / TILE * 4), label = `${(name || '').split(' · ')[0].slice(0, 10)} ${m >= 1000 ? (m / 1000).toFixed(1) + 'km' : m + 'm'}`;
   c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   const lx = me.x + Math.cos(a) * (R + 24), ly = me.y - 6 + Math.sin(a) * (R + 18), w = c.measureText(label).width + 6;
   c.fillStyle = 'rgba(20,16,0,.8)'; c.fillRect(Math.round(lx - w / 2), Math.round(ly - 5), Math.round(w), 10); c.fillStyle = '#ffd84a'; c.fillText(label, Math.round(lx), Math.round(ly + 0.5)); c.restore();
@@ -10597,7 +10629,7 @@ const Tutorial = {
   start() {
     const cs = State.week.cases;
     this.c = cs.find(c => c.gu === 'gwangjin' && c.type === '아파트' && c.risks.length === 1 && c.risks[0] === 'normal') || cs.find(c => c.gu === 'gwangjin') || cs[0];
-    this.on = true; this.step = -1; this.told = {}; this.zoneId = null; this.toldCar = false; this.toldCourt = false; this.must = 0; this.list = this.build();
+    this.on = true; this.step = -1; this.told = {}; this.zoneId = null; this.toldCar = false; this.toldCourt = false; this.must = 0; this.timed = {}; this.list = this.build();
     $('tutor').classList.add('in');
   },
   build() {
@@ -10607,23 +10639,26 @@ const Tutorial = {
       { id: 'pc', title: '사무실 PC 보기', how: `${K.moveWith} 사무실에 들어가 PC 앞에서 ${K.act}`, place: 'office', ok: () => !!State.pcOpened, lines: [
         '왔어? 나 단예야. 경매도 게임도 처음이라며. 이번 주는 내가 옆에서 한 바퀴 같이 돌게.',
         `걷는 건 ${K.move}. 문이나 사람 앞에 서면 말풍선이 뜨는데, 그때 ${K.act}를 누르면 들어가거나 말을 걸 수 있어.`,
-        `${K.box}에 지금 할 일이 떠 있어. 상자를 누르면 설명을 다시 들을 수 있고. 먼저 사무실에 들어가서 PC부터 봐.`] },
+        `${K.box}에 지금 할 일이 떠 있어. 상자를 누르면 설명을 다시 들을 수 있고. 먼저 사무실에 들어가서 PC부터 봐.`,
+        '그리고 이번 주는 연습이라 시계가 저절로 안 가. 할 일을 하나 끝낼 때마다 시간이 한 칸씩(오전 → 오후 → 다음 날 아침) 넘어가.'] },
       { id: 'target', title: '연습 물건 고르기', how: '목록의 ★ 연습 물건 → "★ 입찰 대상 지정"', place: 'office', ok: () => State.target === c.id, lines: [
         `목록에 ★ 연습 물건이라고 붙여 놨어. ${c.name}. 그걸 누르고 "★ 입찰 대상 지정"을 눌러.`,
         '입찰 대상을 정하면 조사 체크리스트가 생기고, 노란 화살표가 다음 갈 곳을 가리켜 줘.'] },
       { id: 'docs', title: '명세서·현황조사서 읽기', how: 'PC → 연습 물건 카드 → "두 서류 같이 보기" (무료)', place: 'office', ok: () => !!(seen().spec && seen().survey), lines: [
         '같은 카드에서 "두 서류 같이 보기"를 눌러. 매각물건명세서는 법원이 정리한 요약이고, 현황조사서는 집행관이 직접 가 본 기록이야.',
-        '볼 건 세 가지. 임차인이 신고돼 있나, 보증금이 얼마인가, 배당요구를 했나. PC에서 보는 건 시간이 안 들어.'] },
+        '볼 건 세 가지. 임차인이 신고돼 있나, 보증금이 얼마인가, 배당요구를 했나.',
+        `한 번 뗀 서류는 다 수첩에 모여. ${K.note}을 누르고 "수집한 서류" 칸을 열면 언제든 다시 볼 수 있어. 등기부, 전입세대열람도 떼면 거기 쌓여.`] },
       { id: 'registry', title: '등기소에서 등기부 떼기', how: '노란 화살표 따라 등기소 → 직원에게 "조사하기"', place: 'registry', ok: () => !!seen().registry, lines: [
+        `방금 본 명세서·현황조사서는 ${K.note} → "수집한 서류"에서 다시 볼 수 있어. 헷갈리면 언제든 열어 봐.`,
         '이제 나가서 등기소로 가. 화살표 따라가면 돼. 직원한테 말 걸고 "조사하기"를 누르면 등기부를 떼 줘.',
         '등기부는 갑구(소유권·압류·가압류)랑 을구(근저당)로 나뉘어. 말소 안 된 것 중 날짜가 제일 빠른 근저당·압류·가압류가 "말소기준권리"야. 그보다 늦은 권리는 낙찰되면 지워져.',
-        '사무실 밖에서 하는 조사는 시간 한 칸(오전·오후)을 써. 매각기일까지 7일이니까 서두르진 마.'] },
+        '진짜 게임에선 걸어 다녀도 시계가 흐르고, 밖에서 조사할 때마다 시간 한 칸을 써. 지금은 할 일 하나 끝낼 때마다 한 칸씩만 넘어가.'] },
       { id: 'center', title: '주민센터에서 전입세대열람', how: '화살표 따라 주민센터 → "조사하기"', place: 'center', ok: () => !!seen().movein, lines: [
         '다음은 주민센터. 전입세대열람을 떼면 그 집에 누가 언제 전입했는지 나와. 명세서에 없는 사람이 나오기도 해.',
         '전입일이 말소기준권리 날짜보다 빠르면 대항력이 있어. 그럼 배당 못 받은 보증금은 낙찰자가 떠안아. 날짜 둘을 꼭 비교해.'] },
       { id: 'site', title: '현장 가 보기', how: '화살표 따라 그 집으로 → 벽·우편함·현수막 눌러 보고 초인종', place: 'case:' + c.id, ok: () => !!seen().site, lines: [
         `이번엔 현장. 걸어가도 되고, 차는 차 옆에서 ${K.car}. ${K.drive}.`,
-        '현장에 들어가면 보이는 것들을 다 눌러 봐. 초인종도 눌러서 사는 사람 얘기를 들어. 서류에 없는 게 거기 있을 때가 많아. 처음 둘러볼 때만 시간 한 칸이야.'] },
+        '현장에 들어가면 보이는 것들을 다 눌러 봐. 초인종도 눌러서 사는 사람 얘기를 들어. 서류에 없는 게 거기 있을 때가 많아.'] },
       { id: 'bank', title: '은행에서 대출 상담', how: '은행 → 왼쪽 번호표 기계 → 부르면 창구에서 "조사하기"', place: 'bank', ok: () => !!seen().bank, lines: [
         '은행에서 경락잔금대출을 미리 물어봐. 들어가서 왼쪽 번호표 기계부터 뽑고, 부르면 창구로 가.',
         '보통 낙찰가의 70~80%까지 빌려줘. 나머지는 내 돈이야. 지금 가진 돈으로 얼마까지 쓸 수 있는지 여기서 가늠해.'] },
@@ -10648,13 +10683,14 @@ const Tutorial = {
     return Game.scene !== 'title' && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !PropertyCard.open_ && !Game.pickerOpen && !DocViewer.open && !MemoPad.open_ && !SeoulMap.open && !ZoneMap.open && !Game.driving && !Game.trans && !(typeof Shop !== 'undefined' && Shop.open_);
   },
   tick(dt) {
-    if (this._hl || this.on) { this._gT = (this._gT || 0) - dt; if (this._gT <= 0) { this._gT = 0.12; this.guide(); } }
+    if (this._hl || this.on) { this._gT = (this._gT || 0) - dt; if (this._gT <= 0) { this._gT = 0; this.guide(); } }
     if (!this.on || State.finished) return;
     this._svT = (this._svT || 0) - dt; if (this._svT <= 0) { this._svT = 4; this.save(); }
     const L = this.list; let i = L.findIndex(s => !s.ok()); if (i < 0) return;
     const ci = L.findIndex(s => s.id === 'court'), ai = L.findIndex(s => s.id === 'after');
     if (State.bidResult && State.bidResult.won && i < ai) i = ai; else if (State.day >= 7 && i < ci) i = ci; // 매각기일이 되면 남은 조사는 건너뛰고 법원으로
-    if (i !== this.step) { this.step = i; if (!this.told[i]) this.wait = i === 0 ? 3.5 : 1.0; this.render(); this.aim(); }
+    if (i !== this.step) { if (this.step >= 0 && i > this.step) for (let k = this.step; k < i; k++) this.passTime(L[k]);
+      this.step = i; if (!this.told[i]) this.wait = i === 0 ? 3.5 : 1.0; this.render(); this.aim(); }
     if (Game.zone && Game.zone.id !== this.zoneId) { this.zoneId = Game.zone.id; this.aim(); }
     $('tutor').classList.toggle('drv', !!Game.driving);
     if (!this.told[i]) { this.wait -= dt; if (this.wait <= 0 && this.free()) { this.told[i] = true; this.explain(i); } }
@@ -10696,7 +10732,8 @@ const Tutorial = {
     if (Dialog.open) {
       const bs = [...$('dlgChoices').querySelectorAll('button')].filter(b => !b.disabled); if (!bs.length) return null;
       const inv = bs.find(b => /^조사하기/.test(b.textContent.trim()));
-      if (inv && ['registry', 'center', 'site', 'bank', 'agent'].includes(id)) return [inv, '"조사하기"를 눌러요. 하루에 조사는 두 번까지예요.'];
+      const st = bs.find(b => /^현장 조사 시작/.test(b.textContent.trim()));
+      if (inv || st) return [inv || st, inv ? '"조사하기"를 눌러요. 여기서 서류나 정보를 받아요.' : '"현장 조사 시작"을 눌러요. 그다음 보이는 것들을 눌러 봐요.']; // v285 사용자 '여기도 표시': 단계와 상관없이 늘
       if (id === 'wait') { const sl = bs.find(b => /매각기일/.test(b.textContent)); if (sl) return [sl, '매각기일 아침까지 자면 바로 입찰하는 날이에요.']; }
       return null;
     }
@@ -10713,7 +10750,7 @@ const Tutorial = {
       if (Notebook.tab !== 2) { const b = $('nbTabs').querySelector('[data-i="2"]'); return b ? [b, '"내 판단" 칸을 열어요.'] : null; }
       return $('jBid') ? [$('jBid'), '조사한 걸로 적정 입찰가를 적어요. 위 칸도 채우면 점수에 들어가요.'] : null;
     }
-    if (typeof ZoneMap !== 'undefined' && ZoneMap.open) { const a = ZoneMap.pick && $('zonePick').querySelector('[data-zp="auto"]'); return a ? [a, '★ 버튼을 누르면 다음 갈 곳까지 내비가 길을 알려 줘요. 지도에서 다른 곳을 눌러도 돼요.'] : null; }
+    if (typeof ZoneMap !== 'undefined' && ZoneMap.open) { const au = ZoneMap.pick && ZoneMap.auto; return au && au.kind === 'place' ? [null, `지도에서 노란 ▼ "${(au.label || '').split(' · ')[0]}"을 눌러요. 내비가 길을 알려 줘요.`, 'bottom'] : null; } // v285 ★ 버튼 대신 지도에서 직접
     if (Game.driving && (this.driveT || 0) < 14) { const K = this.keys(); return [null, `운전: ${K.drive}. 화면의 노란 화살표 쪽으로 가요.`]; }
     if (Menu.open) return id === 'wait' && $('btnEndDay') ? [$('btnEndDay'), '"오늘 일정 끝내기"를 누르면 하루가 넘어가요.'] : null;
     if (id === 'judge' && Game.scene !== 'title' && $('btnNote')) return [$('btnNote'), '수첩을 열어 내 판단을 적어요.'];
@@ -10721,18 +10758,23 @@ const Tutorial = {
   },
   guide() {
     const g = this.on && !State.finished ? this.guideFor() : null, el = g && g[0];
-    if (this._hl && this._hl !== el) this._hl.classList.remove('tutHl');
+    if (this._hl && this._hl !== el) { this._hl.classList.remove('tutHl', 'tutAnc', 'tutBelow'); delete this._hl.dataset.tut; }
     let tip = $('tutTip'); if (!tip) { tip = document.createElement('div'); tip.id = 'tutTip'; document.body.appendChild(tip); }
-    if (g && !el) { if (this._hl) this._hl.classList.remove('tutHl'); this._hl = null; if (tip.textContent !== g[1]) tip.textContent = g[1]; tip.style.maxWidth = Math.min(420, innerWidth - 16) + 'px'; tip.classList.add('in', 'top'); tip.classList.remove('below'); tip.style.left = Math.max(8, (innerWidth - tip.offsetWidth) / 2) + 'px'; tip.style.top = '64px'; return; }
+    if (g && !el) { if (this._hl) { this._hl.classList.remove('tutHl', 'tutAnc', 'tutBelow'); delete this._hl.dataset.tut; } this._hl = null; if (tip.textContent !== g[1]) tip.textContent = g[1]; tip.style.maxWidth = Math.min(420, innerWidth - 16) + 'px'; tip.classList.add('in', 'top'); tip.classList.remove('below'); tip.style.left = Math.max(8, (innerWidth - tip.offsetWidth) / 2) + 'px'; tip.style.top = (g[2] === 'bottom' ? innerHeight - tip.offsetHeight - 10 : 64) + 'px'; return; }
     tip.classList.remove('top');
     if (!el || !el.offsetParent) { this._hl = null; tip.classList.remove('in'); return; }
     if (this._hl !== el) { const r0 = el.getBoundingClientRect(); if (r0.bottom > innerHeight || r0.top < 0) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     if (this._hl !== el) { el.classList.add('tutHl'); this._hl = el; }
+    // v285 사용자 '이거 칸 따라오는 거 좀 부자연스럽다': 스크롤되는 창(물건 목록·서류·수첩) 안이면 설명을 그 칸에 붙여(::after) 같이 움직인다
+    const sc = this.scrollBox(el);
+    if (sc) { tip.classList.remove('in', 'below'); if (el.dataset.tut !== g[1]) el.dataset.tut = g[1]; el.classList.add('tutAnc'); el.classList.toggle('tutBelow', el.getBoundingClientRect().top - sc.getBoundingClientRect().top < 48); return; }
+    el.classList.remove('tutAnc', 'tutBelow');
     if (tip.textContent !== g[1]) tip.textContent = g[1];
     const r = el.getBoundingClientRect(), tw = Math.min(260, innerWidth - 16); tip.style.maxWidth = tw + 'px'; tip.classList.add('in');
     const th = tip.offsetHeight, above = r.top - th - 10 > 4, left = Math.max(8, Math.min(innerWidth - tip.offsetWidth - 8, r.left + r.width / 2 - tip.offsetWidth / 2));
     tip.style.left = left + 'px'; tip.style.top = (above ? r.top - th - 10 : Math.min(innerHeight - th - 4, r.bottom + 10)) + 'px'; tip.classList.toggle('below', !above);
   },
+  scrollBox(el) { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p).overflowY; if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight + 2) return p; } return null; },
   aim() { // 노란 화살표를 이번 단계의 장소로
     const s = this.list[this.step]; if (!s || !s.place || !Game.zone) return;
     if (s.place === 'court') { if (courtPlaceHere()) State.targetPlace = 'court'; return; }
@@ -10764,16 +10806,24 @@ const Tutorial = {
   SAVE_KEYS: ['capital', 'cash', 'day', 'half', 'evening', 'clockMin', 'notes', 'visited', 'target', 'seen', 'judgment', 'pcOpened', 'docs', 'clues', 'memo', 'caseMemo', 'phase'],
   save() {
     if (!this.on || State.finished || (typeof Practice !== 'undefined' && Practice.on) || !['investigate', 'dday'].includes(State.phase) || State.bidResult) return;
-    const s = { v: 1, at: Date.now(), seed: State.seed, told: this.told, toldCar: !!this.toldCar, step: this.step, title: (this.list[this.step] || {}).title || '' };
+    const s = { v: 1, at: Date.now(), seed: State.seed, told: this.told, timed: this.timed, toldCar: !!this.toldCar, step: this.step, title: (this.list[this.step] || {}).title || '' };
     for (const k of this.SAVE_KEYS) s[k] = State[k];
     try { Store.set('tutSave', s); } catch (e) {}
   },
   saved() { const s = Store.get('tutSave', null); return s && s.v === 1 && s.seed === TUT_SEED ? s : null; },
   restore(s) {
     for (const k of this.SAVE_KEYS) if (k in s) State[k] = s[k];
-    this.told = s.told || {}; this.toldCar = !!s.toldCar; HUD.setCash(State.cash, false);
+    this.told = s.told || {}; this.timed = s.timed || {}; this.toldCar = !!s.toldCar; HUD.setCash(State.cash, false);
     if (State.day >= 7 && State.phase === 'investigate') State.phase = 'dday';
     State.targetPlace = State.phase === 'dday' ? (courtPlaceHere() ? 'court' : null) : 'office';
+  },
+  // v285 사용자 2026-10-21 '튜토리얼에는 시간 개념이 하나 진행하면 흘러가는 걸로': 걸어 다녀도 시계는 멈춰 있고, 할 일이 끝날 때마다 한 칸 (PC에서 하는 pc·target은 docs와 묶어 한 번)
+  TIME_STEPS: ['docs', 'registry', 'center', 'site', 'bank', 'agent', 'judge'],
+  timeLock() { return this.on && !State.finished && State.day < 7 && !Live.on && !Net.on; },
+  async passTime(s) {
+    if (!s || !this.timeLock() || !this.TIME_STEPS.includes(s.id) || this.timed[s.id] || !s.ok()) return;
+    this.timed[s.id] = true; const d0 = State.day; await advanceSlot();
+    Toast.show(State.day !== d0 ? `할 일 하나 끝! 하루가 지나 ${dLabel()} 아침이에요.` : `할 일 하나 끝! 시간이 ${halfLabel()}${halfLabel() === '저녁' ? '으로' : '로'} 넘어갔어요.`, 2600);
   },
   render() {
     const s = this.list[this.step]; const el = $('tutor'); if (!s) { el.classList.remove('in'); return; }
@@ -19290,12 +19340,16 @@ const Instance = {
     startGame(cap, { tutorial: $('tutOn').checked });
   };
   // v266 단계별 연습: 단계 고르기 창 → 그 단계의 자본·시드로 시작 (1단계에서 '처음이에요'가 켜져 있으면 단예 선배 안내도 같이)
-  Practice.go = (n) => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(PRACTICE[n - 1].cap, { practice: n, tutorial: n === 1 && $('tutOn').checked }); };
+  // v285 혼자 하기 세 갈래: 튜토리얼(처음엔 기본) / 자유 플레이(한 번 끝낸 뒤 기본) / 단계별 연습
+  const soloMode = m => { const t = $('title'); t.classList.remove('smTut', 'smFree', 'smPrac'); t.classList.add({ tut: 'smTut', free: 'smFree', prac: 'smPrac' }[m]); document.querySelectorAll('#soloPick .smTab').forEach(b => b.classList.toggle('sel', b.dataset.sm === m)); $('tutOn').checked = false; };
+  document.querySelectorAll('#soloPick .smTab').forEach(b => b.onclick = () => { Sound.init(); Sound.play('click'); soloMode(b.dataset.sm); });
+  soloMode(Store.get('tutorialDone', false) ? 'free' : 'tut');
+  $('btnTutNew').onclick = () => { Sound.init(); Sound.play('stamp'); tryLandscape(); PushSub.auto(); startGame(2e8, { tutorial: true }); };
+  Practice.go = (n) => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(PRACTICE[n - 1].cap, { practice: n }); }; // v285 단계별 연습은 튜토리얼과 따로
   $('btnPrac').onclick = () => Practice.pick();
-  { const g = Store.get('practiceGo', 0); if (g) { Store.set('practiceGo', 0); $('title').classList.add('modeSolo'); const sb = document.querySelector('#title .modeRow .mode[data-mode="modeSolo"]'); if (sb) sb.classList.add('sel'); setTimeout(() => Practice.pick(), 300); } } // 결과 화면 '다음 단계 하러 가기'
-  { const sv = Tutorial.saved(); if (sv) { $('btnTutGo').hidden = false; $('tutGoTxt').textContent = `튜토리얼 ${sv.day >= 7 ? 'D-day' : 'D-' + (7 - sv.day)} · ${sv.title || ''}`; // v284 튜토리얼 이어서 하기
+  { const g = Store.get('practiceGo', 0); if (g) { Store.set('practiceGo', 0); $('title').classList.add('modeSolo'); const sb = document.querySelector('#title .modeRow .mode[data-mode="modeSolo"]'); if (sb) sb.classList.add('sel'); soloMode('prac'); setTimeout(() => Practice.pick(), 300); } } // 결과 화면 '다음 단계 하러 가기'
+  { const sv = Tutorial.saved(); if (sv) { $('btnTutGo').hidden = false; $('tutGoTxt').textContent = `${sv.day >= 7 ? 'D-day' : 'D-' + (7 - sv.day)} · ${sv.title || ''}`; $('btnTutNew').textContent = '처음부터'; // v284 튜토리얼 이어서 하기
     $('btnTutGo').onclick = () => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(sv.capital, { tutorial: true, resume: sv }); }; } }
-  $('tutOn').checked = !Store.get('tutorialDone', false); // 한 번 끝까지 해 본 뒤엔 기본으로 꺼짐
   Tutorial.bind();
   // 친구와 같이 하기 (방 코드)
   $('mpName').value = Store.get('mpName', '');
@@ -19376,7 +19430,8 @@ const Instance = {
   $('btnNote').onclick = () => Notebook.toggle();
   $('minimap').onclick = () => SeoulMap.toggle(true);
   $('radar').onclick = () => { Sound.init(); if (Game.scene !== 'zone') { SeoulMap.toggle(true); return; } if (Game.driving && !CarSwap.stolen()) { ZoneMap.pickOpen(); return; } /* v225: 운전 중엔 지도를 누르면 목적지 다시 고르기 (아래 내비는 없앴다) */ ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; }; // 폰에선 이 레이더가 유일한 지도 버튼: 동네 밖이면 서울 지도
-  $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap') { const r = $('zoneCanvas').getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) { ZoneMap.click(e); return; } } /* v229: PC 마우스는 pointer capture 때문에 click이 지도 그림이 아니라 #zoneMap으로 와서, 장소를 눌러도 고르지 않고 닫혔다 (사용자 '이거 아직 안 고쳐진 거 같다') */ if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
+  $('zmX').onclick = e => { e.stopPropagation(); ZoneMap.toggle(false); }; // v285 사용자 '지도 들어가서 나가고 싶을 땐 어떡해, 오른쪽 위 끝에 x'
+  $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap') { const r = $('zoneFrame').getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) { ZoneMap.click(e); return; } } /* v229: PC 마우스는 pointer capture 때문에 click이 지도 그림이 아니라 #zoneMap으로 와서, 장소를 눌러도 고르지 않고 닫혔다 (사용자 '이거 아직 안 고쳐진 거 같다') */ if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
   // 지도 탭: 동네 지도 ↔ 서울 전체 (한 지도처럼; 사용자 2026-10-14)
   document.querySelectorAll('.mapTabs .btn[data-go]').forEach(b => b.onclick = e => { e.stopPropagation(); Sound.init(); if (b.dataset.go === 'seoul') { ZoneMap.toggle(false); SeoulMap.toggle(true); } else { if (Game.scene !== 'zone') { Toast.show('건물 밖에서만 동네 지도를 볼 수 있어요.'); return; } SeoulMap.toggle(false); ZoneMap.toggle(true); } });
   $('zoneCanvas').addEventListener('click', e => { if (!ZoneMap.dragged) ZoneMap.click(e); });

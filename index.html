@@ -1038,7 +1038,7 @@ html, body { background:#0b0e08; }
 .panel { padding-right:max(18px, var(--sr)); } #notebook .nbHead { margin-right:calc(-1 * max(18px, var(--sr))); padding-right:max(18px, var(--sr)); }
 #result { padding-left:max(16px, var(--sl)); padding-right:max(16px, var(--sr)); }
 #title .tBack { display:none; position:absolute; top:10px; left:max(12px, var(--sl)); z-index:2; padding:6px 12px; font-size:14px; } #title.modeSolo .tBack, #title.modeRoom .tBack, #title.modeCh .tBack { display:inline-block; } .short #title .tBack { top:6px; padding:4px 10px; font-size:13px; } @media (max-width:700px) { #title .tBack { top:8px; } }
-#title #vDiag { display:none; font-size:10px; color:#b3bb98; opacity:.5; } .touchOn #title #vDiag:not(:empty) { display:block; } html, body { height:var(--vh, 100%); } /* v276 가로로 켤 때 아래가 비면 문서도 진짜 높이로 */
+html, body { height:var(--vh, 100%); } /* v276 가로로 켤 때 아래가 비면 문서도 진짜 높이로 */
 /* v276 사례 공부 = 만화책 (사용자 2026-10-21 견본 M 고름): 노란 망점, 굵은 까만 선과 그림자, 빨강 포인트 */
 #studyWin { --ink:#111; --disp:'Black Han Sans', var(--ui); }
 #studyWin .stBox { background:radial-gradient(#f5d94a 1.2px, transparent 1.4px) 0 0/9px 9px, #fff6c2; color:#111; border:4px solid var(--ink); border-radius:4px; box-shadow:8px 8px 0 var(--ink); }
@@ -1108,7 +1108,7 @@ html, body { background:#0b0e08; }
 #title .tBack { top:max(10px, env(safe-area-inset-top, 0px)); font-family:var(--disp); font-weight:400; letter-spacing:1px; z-index:3; }
 #title.modeSolo .tLeft, #title.modeRoom .tLeft, #title.modeCh .tLeft { padding-top:30px; }
 #title .foot, #title .disc { grid-column:1 / -1; position:relative; z-index:1; text-align:left; color:#8f977e; }
-#title .foot { position:absolute; left:max(16px, var(--sl)); bottom:10px; } #title #vDiag { grid-column:1 / -1; position:relative; z-index:1; }
+#title .foot { position:absolute; left:max(16px, var(--sl)); bottom:10px; }
 #title .disc { margin-top:12px; }
 #title.chOn .modeRow, #title.roomOn .modeRow { display:flex; } /* 방·채널에 들어가도 왼쪽 목록은 보여 둔다 (← 처음으로로 나감) */
 #title.chOn .modeRow .btn:not(.sel), #title.roomOn .modeRow .btn:not(.sel) { opacity:.45; }
@@ -1203,7 +1203,7 @@ body.gated #title { display:grid; }
 #notebook label.row { border-bottom:0; color:#3b4760; margin-bottom:10px; } #notebook small[id$="Txt"] { color:#1f3a66; font-weight:700; }
 /* v287 튜토리얼 앵무새 선물 안내 (사용자 '처음 온 사람을 유인할 수 있게') */
 #title .modeRow .mode .giftTag { margin-top:4px; padding:2px 8px; border-radius:999px; background:#ff7a6a; color:#fff; font-size:11px; font-weight:800; white-space:nowrap; }
-#title .modeRow .mode .giftTag[hidden] { display:none; }
+#title .modeRow .mode .giftTag[hidden] { display:none; } #title .modeRow .mode, #title .modeRow .mode small { white-space:nowrap; } /* v290 '혼자 하 / 기'로 접히지 않게 */ #title .modeRow .mode:has(.giftTag:not([hidden])) small { display:none; } /* 선물 딱지 있을 땐 작은 설명은 빼서 칸 안에 */
 #title .tutGiftLine { margin:0; padding:8px 12px; border-radius:10px; background:rgba(255,122,106,.14); border:1px solid rgba(255,122,106,.55); font-size:13px; line-height:1.5; } #title .tutGiftLine b { color:#ffb3a8; } #title .tutGiftLine[hidden] { display:none; }
 </style>
 </head>
@@ -1239,7 +1239,7 @@ body.gated #title { display:grid; }
   </div>
   <div id="soloPick"><!-- v285 사용자 '처음이에요 누르고 시작 누르면 되는 건데 잘 모를 거 같애, 단계별도 따로 움직이는 건데 같이 되는 거 같잖아': 혼자 하기를 세 갈래로 -->
     <div class="smTabs"><button class="smTab" data-sm="tut"><b>튜토리얼</b><small>처음이라면 여기</small></button><button class="smTab" data-sm="free"><b>자유 플레이</b><small>자본 골라서</small></button><button class="smTab" data-sm="prac"><b>단계별 연습</b><small>1~5단계</small></button></div>
-    <div class="smPane" id="smTut"><p>단예 선배가 옆에서 한 바퀴 같이 돌아요. 연습 물건 하나로 서류 보기, 등기소·주민센터·현장 조사, 법원 입찰, 대출·잔금·명도, 임대 놓기까지 해요.</p><p class="tutGiftLine" id="tutGiftLine"><b>끝까지 하면 앵무새 펫을 선물로 줘요.</b> 혼자 하기에서도 실시간 채널에서도 옆에서 날아다니며 따라오고, 내가 한 말을 따라 해요. 튜토리얼에서만 받을 수 있어요.</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
+    <div class="smPane" id="smTut"><p class="tutGiftLine" id="tutGiftLine"><b>끝까지 하면 앵무새 펫을 선물로 줘요.</b> 혼자 하기에서도 실시간 채널에서도 옆에서 날아다니며 따라오고, 내가 한 말을 따라 해요. 튜토리얼에서만 받을 수 있어요.</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
     <div class="smPane" id="smFree"><p>이번 주 물건 중 하나를 골라 혼자 조사하고 입찰해요. 안내 없이 해요.</p></div>
     <div class="smPane" id="smPrac"><p>함정을 하나씩 늘려 가며 1단계부터 5단계까지 해요. 단계마다 정해진 물건과 자본으로 시작해요.</p><div class="row"><button class="btn gold" id="btnPrac">단계 고르기</button></div></div>
     <label id="tutRow" hidden><input type="checkbox" id="tutOn"></label>
@@ -1254,7 +1254,7 @@ body.gated #title { display:grid; }
   <div class="row" id="capRow"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
   </div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
-  <div class="disc">교육용 게임이에요 · 법률·투자 조언이 아니에요 · 나오는 단지·사건·인물은 모두 지어낸 거예요</div><div id="vDiag"></div>
+  <div class="disc">교육용 게임이에요 · 법률·투자 조언이 아니에요 · 나오는 단지·사건·인물은 모두 지어낸 거예요</div>
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
 </div>
 
@@ -1308,7 +1308,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v289</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v290</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -7338,7 +7338,6 @@ function resize() {
   const de = document.documentElement; de.style.setProperty('--vh', VH + 'px'); de.style.setProperty('--vgap', Math.max(0, VH - innerHeight) + 'px'); // HUD·조작판·대화창이 캔버스와 같은 높이를 쓰게
   document.body.classList.toggle('short', touch && VH <= 520);
   cv.width = VW * DPR; cv.height = VH * DPR; cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
-  const vd = document.getElementById('vDiag'); if (vd) vd.textContent = VDIAG;
 }
 function localPt(e) { return ROT ? { x: e.clientY, y: innerWidth - e.clientX } : { x: e.clientX, y: e.clientY }; }
 function localRect(el) { const r = el.getBoundingClientRect(); return ROT ? { left: r.top, top: innerWidth - r.right, width: r.height, height: r.width } : { left: r.left, top: r.top, width: r.width, height: r.height }; }

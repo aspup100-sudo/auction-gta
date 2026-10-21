@@ -164,7 +164,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .toast.in { opacity:1; transform:none; } .toast small { display:block; font-size:12px; color:#e8c872; margin-top:2px; text-align:center; } .toast { text-align:center; }
 
 /* 대화창 */
-#dialog { position:fixed; left:50%; bottom:calc(16px - var(--vgap, 0px)); width:min(760px, calc(100% - 32px)); transform:translate(-50%, 130%); background:rgba(20,22,28,.96); border:2px solid var(--gold); border-radius:12px; padding:14px 16px; z-index:30; display:flex; gap:14px; transition:transform .22s ease-out; box-shadow:0 6px 0 rgba(0,0,0,.4); pointer-events:auto; }
+#dialog { position:fixed; left:50%; bottom:calc(16px - var(--vgap, 0px)); width:min(760px, calc(100% - 32px)); transform:translate(-50%, 130%); background:rgba(20,22,28,.96); border:2px solid var(--gold); border-radius:12px; padding:14px 16px; z-index:35; display:flex; gap:14px; transition:transform .22s ease-out; box-shadow:0 6px 0 rgba(0,0,0,.4); pointer-events:auto; } /* v281 대화창은 물건 목록·서류 창 위로 (사용자 "위로 떠야 보이지") */
 #dialog.in { transform:translate(-50%, 0); }
 #dialog { max-height:calc(100dvh - 24px); overflow-y:auto; overscroll-behavior:contain; } body:has(#dialog.in) #tgtChip { display:none; } /* v255 폰에서 대화창 위가 잘리거나 칩이 가리지 않게 */
 .portraitWrap { position:relative; flex:none; }
@@ -175,6 +175,8 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 .dlgBody { flex:1; min-width:0; position:relative; }
 #dlgName { color:var(--gold); font-weight:700; margin-bottom:4px; }
 #dlgText { font:400 17px/1.65 var(--serif); min-height:56px; white-space:pre-wrap; }
+#dialog .dlgBack { position:absolute; right:10px; top:8px; height:28px; padding:0 10px; border-radius:14px; border:1.5px solid var(--gold); background:#1b1e14; color:var(--gold); font:700 12px/1 var(--ui); cursor:pointer; z-index:2; } #dialog .dlgBack[hidden] { display:none; }
+#dlgRv { display:none; font-size:11px; color:var(--gold); margin-bottom:2px; } #dialog.review #dlgRv { display:block; } #dialog.review #dlgChoices { visibility:hidden; } #dialog.review #dlgText { opacity:.85; }
 #dlgMore { position:absolute; right:0; bottom:-4px; width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid var(--gold); opacity:0; }
 #dlgMore.on { animation:blink .8s steps(2) infinite; }
 @keyframes blink { 0%{opacity:1} 100%{opacity:0} }
@@ -365,7 +367,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 #tutor.in { transform:translate(-50%, 0); } #tutor small { color:var(--gold); font-size:11px; display:block; } #tutor b { display:block; font-size:14px; } #tutor span { opacity:.9; }
 body:has(#dialog.in) #tutor, .resultOn #tutor, .touchOn.chatOpen #tutor { visibility:hidden; }
 .clItem em.tutTag { color:#1a1408; background:var(--gold); border-radius:4px; padding:0 5px; font-style:normal; font-size:11px; margin-right:5px; }
-.tutEnd { background: rgba(255,216,74,.12); border:2px solid var(--gold); } .tutEnd b { display:block; margin-bottom:4px; } .tutEnd p { margin:0; }
+.tutEnd { background: rgba(255,216,74,.12); border:2px solid var(--gold); } .tutEnd b { display:block; margin-bottom:4px; } .tutEnd p { margin:0; } .tutEnd .tutGift { margin-top:6px; color:var(--gold); } .tutEnd .tutGift b { display:inline; }
 #quest.in { transform:none; } #quest b { color:var(--gold); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } #quest { pointer-events:auto; cursor:pointer; } #quest .qFold { font-style:normal; margin-left:6px; opacity:.8; font-size:11px; } #quest.fold .qMore { display:none; }
 .qItems { display:flex; flex-wrap:wrap; gap:3px 10px; margin-top:3px; } .qItems span { opacity:.6; } .qItems span.done { opacity:1; color:#9fe29a; } .qItems span.just { animation:bump .4s ease-out; }
 #balanceDue { top:var(--stackBd, 150px) !important; }
@@ -1098,6 +1100,11 @@ html, body { background:#0b0e08; }
 @media (max-width:700px) { #title { grid-template-columns:minmax(0, 1fr); align-content:start; } #title .tDock { grid-column:1; } #title .tRight { max-width:none; } }
 #title i.ic { display:inline-flex; align-items:center; justify-content:center; font-style:normal; } #title i.ic svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; } /* v279 이모티콘 → 단색 선 아이콘 (사용자: 이모티콘 개밤티) */
 #title .modeRow .btn i.ic { width:22px; color:var(--hud); } #title .modeRow .mode.sel i.ic { color:var(--hudTx); } #title .tDock .tIco i.ic svg { width:19px; height:19px; } #title .tDock .tIco i.ic { color:var(--hud); height:21px; } #title #btnPrac i.ic svg { width:16px; height:16px; } #title #btnPrac i.ic { margin-right:5px; vertical-align:-3px; } .short #title .modeRow .btn i.ic svg { width:17px; height:17px; } .short #title .tDock .tIco i.ic svg { width:16px; height:16px; } .short #title .tDock .tIco i.ic { height:18px; }
+/* v281 튜토리얼 안내: 눌러야 할 버튼 노란 테두리 + 한 줄 설명 */
+.tutHl { outline:3px solid #ffd84a !important; outline-offset:2px; animation:tutHl 1s ease-in-out infinite; position:relative; z-index:2; }
+@keyframes tutHl { 50% { outline-color:rgba(255,216,74,.25); box-shadow:0 0 18px rgba(255,216,74,.55); } }
+#tutTip { position:fixed; z-index:90; display:none; background:#ffd84a; color:#1a1400; font:700 13px/1.4 var(--ui); padding:7px 11px; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.5); pointer-events:none; }
+#tutTip.in { display:block; } #tutTip.top::after { display:none; } #tutTip::after { content:''; position:absolute; left:50%; bottom:-6px; margin-left:-6px; border:6px solid transparent; border-bottom:0; border-top-color:#ffd84a; } #tutTip.below::after { bottom:auto; top:-6px; border:6px solid transparent; border-top:0; border-bottom-color:#ffd84a; }
 body.gated #title { display:grid; }
 @media (max-width:700px) { #title #modeHint { display:none; } } /* 한 줄로 쌓이면 "왼쪽에서" 안내가 안 맞음 */
 /* 메뉴 판 (설정·수첩 등 .panel) */
@@ -1198,7 +1205,7 @@ body.gated #title { display:grid; }
 <div id="caseList"></div>
 <div id="dialog">
   <div class="portraitWrap"><canvas id="dlgPortrait" width="96" height="96"></canvas><canvas id="dlgEmote" width="32" height="32"></canvas></div>
-  <div class="dlgBody"><div id="dlgName"></div><div id="dlgText"></div><div id="dlgChoices"></div><div id="dlgMore"></div></div>
+  <button class="dlgBack" id="dlgBack" hidden title="지난 말 다시 보기">◀ 이전 말</button><div class="dlgBody"><div id="dlgRv"></div><div id="dlgName"></div><div id="dlgText"></div><div id="dlgChoices"></div><div id="dlgMore"></div></div>
 </div>
 <div id="notebook" class="panel">
   <div class="nbHead"><h2>수첩</h2><button class="btn" onclick="Notebook.toggle(false)">닫기 (Tab)</button></div>
@@ -1206,7 +1213,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v281</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v282</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3381,7 +3388,7 @@ function crashFx(c, sp) {
     c.hitCd = 0.8; shake(Math.min(8, sp / 30), 0.3); Sound.play('crash');
     if (!REDUCED_MOTION) for (let i = 0; i < 8; i++) Particles.push({ x: c.x + Math.cos(c.a) * 10, y: c.y + Math.sin(c.a) * 10, vx: (Math.random() - 0.5) * 160, vy: -30 - Math.random() * 80, g: 220, life: 0.45, max: 0.45, col: i % 2 ? 'rgba(255,200,80,' : 'rgba(255,120,40,', r: 1 + Math.random() });
     const fee = Math.round((FEEL.repairMin + Math.random() * (FEEL.repairMax - FEEL.repairMin)) / 1000) * 1000;
-    Mine.charge(fee, '수리비'); Toast.show(`쾅! 수리비 ${fmtWon(fee)}`); // v170: 수리비·과태료도 자금 90% 밑이면 땅굴 빚
+    if (Tutorial.on && !State.finished) Toast.show('쾅! 천천히 조심해서 몰아요.'); else { Mine.charge(fee, '수리비'); Toast.show(`쾅! 수리비 ${fmtWon(fee)}`); } // v170: 수리비·과태료도 자금 90% 밑이면 땅굴 빚
   }
 }
 let engineHum = 0;
@@ -3423,6 +3430,7 @@ function checkTrafficFines(c, z) {
   if (c.speed > FEEL.carMaxSpeed * 0.62 && c.fineCd <= 0 && !nearestCrossing(z, c.x, c.y, 4) && Game.decor.some(w => Math.hypot(w.x - c.x, w.y - c.y) < 34)) { c.fineCd = 6; issueFine('보행자 근처 과속', FEEL.fineSpeed); }
 }
 function issueFine(why, amt) {
+  if (Tutorial.on && !State.finished) return; // v281 튜토리얼엔 과태료 없음
   Mine.charge(amt, `과태료 (${why})`);
   State.fines = (State.fines || []); State.fines.push({ why, amt, day: State.day });
   setTimeout(() => { HUD.page(`과태료 고지서: ${why} ${fmtWon(amt)}`, '알림'); HUD.notebookBump(1); }, 900);
@@ -3477,6 +3485,7 @@ function hitPlayer(car, q) {
   shake(7, 0.35); Sound.play('crash'); Game.hitstop = 0.06;
   if (!REDUCED_MOTION) for (let i = 0; i < 6; i++) Particles.push({ x: p.x, y: p.y - 8, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 70, g: 220, life: 0.5, max: 0.5, col: 'rgba(255,230,120,', r: 1.5 });
   car.v = Math.min(car.v, 20); car.angryCd = 3; setTimeout(() => Sound.play('horn'), 300);
+  if (Tutorial.on && !State.finished) { Toast.show('차에 부딪혔어요! 길 건널 땐 좌우를 봐요.', 2200); return; } // v281 튜토리얼: 합의금·입원 없음
   State.hits = (State.hits || 0) + 1;
   if (State.hits >= FEEL.hospitalHits) { hospitalize(); return; } // 너무 많이 치이면 합의금 없이 입원
   const fee = Math.round((FEEL.settleMin + Math.random() * (FEEL.settleMax - FEEL.settleMin)) / 10000) * 10000;
@@ -5105,6 +5114,7 @@ const Banner = {
 const VOICE = { danye: 1.0, banker: 1.45, clerk: 0.7, agent: 0.9, player: 1.15, occ: 0.85 };
 const Dialog = {
   open: false, _skip: null, _next: null,
+  log: [], rv: -1, // v281 사용자 '단예가 전에 말했던 내용 놓쳤을 수 있으니까 바로 이전 대화 볼 수 있게, 화살표 클릭해서': ◀ 로 지난 말 다시 보기
   async say(lines, choices = null) {
     const box = $('dialog'); this.open = true; box.classList.add('in');
     for (let li = 0; li < lines.length; li++) {
@@ -5115,6 +5125,7 @@ const Dialog = {
       const em = $('dlgEmote'); const ex = em.getContext('2d'); ex.imageSmoothingEnabled = false; ex.clearRect(0, 0, 32, 32);
       if (L.emote) { ex.drawImage(Sprites.emote(L.emote), 0, 0, 32, 32); em.classList.remove('pop'); void em.offsetWidth; em.classList.add('pop'); em.style.display = ''; } else em.style.display = 'none';
       $('dlgName').textContent = L.name || ''; $('dlgName').style.display = L.name ? '' : 'none';
+      this.log.push({ name: L.name || '', sprite: L.sprite || null, text: L.text }); if (this.log.length > 40) this.log.shift(); this.rv = -1; $('dialog').classList.remove('review'); $('dlgBack').hidden = this.log.length < 2;
       const out = $('dlgText'); out.textContent = ''; $('dlgMore').classList.remove('on'); $('dlgChoices').innerHTML = '';
       const pitch = VOICE[L.voice] || 1;
       let skipped = false; this._skip = () => { skipped = true; };
@@ -5147,8 +5158,23 @@ const Dialog = {
     }
     this.close(); return null;
   },
-  close() { $('dialog').classList.remove('in'); this.open = false; },
+  close() { $('dialog').classList.remove('in', 'review'); this.open = false; this.rv = -1; },
+  show(L, tag) { // 다시 보기: 타이핑 없이 그 줄을 그대로
+    const pc = $('dlgPortrait'), px = pc.getContext('2d'); px.clearRect(0, 0, 96, 96); if (L.sprite) { px.imageSmoothingEnabled = false; px.drawImage(Sprites.portrait(L.sprite), 0, 0, 96, 96); pc.style.display = ''; } else pc.style.display = 'none';
+    $('dlgEmote').style.display = 'none'; $('dlgName').textContent = L.name; $('dlgName').style.display = L.name ? '' : 'none'; $('dlgText').textContent = L.text; $('dlgRv').textContent = tag || '';
+  },
+  back() {
+    if (this._skip) { this._skip(); return setTimeout(() => this.back(), 90); } // 치던 글자는 먼저 다 보이게
+    const n = this.log.length; if (n < 2) return; if (this.rv < 0) this.rv = n - 1; if (this.rv <= 0) return Sound.play('deny');
+    this.rv--; Sound.play('flip'); $('dialog').classList.add('review'); this.show(this.log[this.rv], `◀ 지난 말 ${n - 1 - this.rv}/${n - 1} · 누르면 다음`);
+  },
+  fwd() {
+    const n = this.log.length; this.rv++; Sound.play('tick');
+    if (this.rv >= n - 1) { this.rv = -1; $('dialog').classList.remove('review'); this.show(this.log[n - 1], ''); if (!this._next && $('dlgChoices').children.length) $('dlgMore').classList.remove('on'); else $('dlgMore').classList.add('on'); return; }
+    this.show(this.log[this.rv], `◀ 지난 말 ${n - 1 - this.rv}/${n - 1} · 누르면 다음`);
+  },
   press() { // E / 클릭
+    if (this.rv >= 0) { this.fwd(); return; }
     if (this._skip) { this._skip(); return; }
     if (this._next) { Sound.play('tick'); this._next(); }
   },
@@ -7966,7 +7992,7 @@ function updateDecor(dt) {
         shake(7, 0.35); Sound.play('crash'); Game.hitstop = 0.06;
         if (!REDUCED_MOTION) for (let i = 0; i < 6; i++) Particles.push({ x: w.x, y: w.y - 8, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 70, g: 220, life: 0.5, max: 0.5, col: 'rgba(255,230,120,', r: 1.5 });
         const fee = Math.round((FEEL.pedMin + Math.random() * (FEEL.pedMax - FEEL.pedMin)) / 10000) * 10000;
-        Mine.charge(fee, '보행자 합의금'); Toast.show(`보행자를 쳤다! 합의금 ${fmtWon(fee)}`); // 자금이 9천만 밑으로 내려갈 만큼은 석탄 땅굴 빚 (v168)
+        if (Tutorial.on && !State.finished) Toast.show('사람이 다칠 뻔했어요! 천천히 몰아요.', 2200); else { Mine.charge(fee, '보행자 합의금'); Toast.show(`보행자를 쳤다! 합의금 ${fmtWon(fee)}`); } // 자금이 9천만 밑으로 내려갈 만큼은 석탄 땅굴 빚 (v168)
         w.moving = false; continue;
       }
     }
@@ -8068,6 +8094,7 @@ function drawZone(t) {
   for (const tr of z.trees) { if (tr.x < x0 || tr.x > x1 || tr.y < y0 || tr.y > y1) continue; const f = Math.round(Math.sin(t * 1.3 + tr.phase) + 1); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(tr.x + 4, tr.y + 5, 10, 7, 0, 0, 7); ctx.fill(); ctx.drawImage(Sprites.tree(f), tr.x - 12, tr.y - 12); }
   if (Game.flyD) Game.flyD(); // v235 천사 날개는 지붕 위로
   tops.forEach(a => a.d()); // v234 말풍선·이름표는 지붕·가로수 위에
+  drawGuideArrow(ctx, t);
   // 장소 이름표 (가까울 때)
   const p = Game.player; ctx.textAlign = 'center';
   for (const pl of z.places) {
@@ -8087,8 +8114,38 @@ function targetPos() {
   const pl = z.places.find(p => p.id === State.targetPlace); if (!pl) return null;
   const b = z.buildings[pl.building]; return { x: (b.x + b.w / 2) * TILE, y: b.y * TILE, door: pl.door };
 }
+// v281 사용자 '노란 화살표가 지도에 작게 있어서 처음 본 사람은 모르겠어, 내가 움직이는 화면에 화살표 나오게 해': 내 캐릭터(차) 옆에 갈 곳 쪽 큰 화살표 + 남은 거리
+function drawGuideArrow(c, t) {
+  const z = Game.zone; if (!State.targetPlace || !z) return; const pl = z.places.find(p => p.id === State.targetPlace); if (!pl || !pl.door) return;
+  const me = Game.driving && Game.car ? Game.car : Game.player; if (!me) return;
+  const tx = (pl.door.tx + 0.5) * TILE, ty = (pl.door.ty + 0.5) * TILE, dx = tx - me.x, dy = ty - me.y, d = Math.hypot(dx, dy); if (d < TILE * 6) return;
+  const a = Math.atan2(dy, dx), R = Game.driving ? 34 : 26, pulse = 1 + Math.sin(t * 5) * 0.08, ax = me.x + Math.cos(a) * R, ay = me.y - 6 + Math.sin(a) * R;
+  c.save(); c.translate(ax, ay); c.rotate(a); c.scale(pulse, pulse);
+  c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.moveTo(13, 2); c.lineTo(-6, -9); c.lineTo(-2, 2); c.lineTo(-6, 13); c.closePath(); c.fill();
+  c.fillStyle = '#ffd84a'; c.strokeStyle = '#3a2a00'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(12, 0); c.lineTo(-7, -11); c.lineTo(-3, 0); c.lineTo(-7, 11); c.closePath(); c.fill(); c.stroke();
+  c.restore();
+  const m = Math.round(d / TILE * 4), label = `${(pl.name || '').split(' · ')[0].slice(0, 10)} ${m >= 1000 ? (m / 1000).toFixed(1) + 'km' : m + 'm'}`;
+  c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  const lx = me.x + Math.cos(a) * (R + 24), ly = me.y - 6 + Math.sin(a) * (R + 18), w = c.measureText(label).width + 6;
+  c.fillStyle = 'rgba(20,16,0,.8)'; c.fillRect(Math.round(lx - w / 2), Math.round(ly - 5), Math.round(w), 10); c.fillStyle = '#ffd84a'; c.fillText(label, Math.round(lx), Math.round(ly + 0.5)); c.restore();
+}
+// v281 튜토리얼: 방 안에서도 눌러야 할 것(PC·직원·번호표·초인종) 위에 노란 화살표
+function drawRoomGoal(c, t) {
+  const g = typeof Tutorial !== 'undefined' && Tutorial.roomGoal && Tutorial.roomGoal(Game.room); if (!g) return;
+  const bob = Math.sin(t * 4) * 3; c.save(); c.translate(Math.round(g.x), Math.round(g.y - 14 + bob));
+  c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.moveTo(-6 + 1, -7 + 1); c.lineTo(6 + 1, -7 + 1); c.lineTo(1, 2); c.fill();
+  c.fillStyle = '#ffd84a'; c.strokeStyle = '#3a2a00'; c.lineWidth = 1; c.beginPath(); c.moveTo(-6, -7); c.lineTo(6, -7); c.lineTo(0, 1); c.closePath(); c.fill(); c.stroke();
+  c.fillRect(-2.5, -14, 5, 7); c.strokeRect(-2.5, -14, 5, 7); c.restore();
+}
 function drawTargetArrow(c, t) {
   const tp = targetPos(); if (!tp) return;
+  if (tp.door) { /* v282 사용자 '입구 안 보인다': 갈 곳 문 칸에 깜빡이는 노란 테두리 + '입구' */
+    const dx = tp.door.tx * TILE, dy = tp.door.ty * TILE, k = 0.55 + Math.sin(t * 6) * 0.45;
+    c.save(); c.strokeStyle = `rgba(255,216,74,${k})`; c.lineWidth = 2; c.strokeRect(dx + 0.5, dy + 0.5, TILE - 1, TILE - 1);
+    c.fillStyle = `rgba(255,216,74,${0.18 + k * 0.2})`; c.fillRect(dx + 2, dy + 2, TILE - 4, TILE - 4);
+    c.font = 'bold 6px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; const w = c.measureText('입구').width + 5;
+    c.fillStyle = 'rgba(20,16,0,.85)'; c.fillRect(Math.round(dx + TILE / 2 - w / 2), dy + TILE + 2, Math.round(w), 8); c.fillStyle = '#ffd84a'; c.fillText('입구', Math.round(dx + TILE / 2), dy + TILE + 6.5); c.restore();
+  }
   const bob = Math.sin(t * 4) * 4;
   c.save(); c.translate(tp.x, tp.y - 22 + bob);
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.moveTo(-9 + 2, -10 + 2); c.lineTo(9 + 2, -10 + 2); c.lineTo(2, 4); c.fill();
@@ -8120,6 +8177,7 @@ function drawRoom(t) {
   for (const g of r.guests) if (!g.gone) actors.push({ y: g.y, d: () => drawWalker(ctx, g.walkTo ? g : { ...g, frame: 0, moving: false }, t, { breath: !g.walkTo }) });
   actors.sort((a, b) => a.y - b.y).forEach(a => a.d());
   drawGameTags(r);
+  drawRoomGoal(ctx, t);
   for (const q of Particles) { ctx.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
   if (r.place.kind === 'bank') {
     const disp = String(r.display || 140).padStart(4, '0'); const X = r.W * TILE / 2 - 22, Y = 1;
@@ -8568,6 +8626,7 @@ const Mine = {
    * after: 이어서 병원·정신과 병동에 가는 경우 (퇴원하고 나서 끌려간다) */
   charge(fee, label, o = {}) {
     fee = Math.max(0, Math.round(fee || 0)); if (!fee) return 0;
+    if (typeof Tutorial !== 'undefined' && Tutorial.on && !State.finished) return 0; // v281 사용자 '튜토리얼일 땐 합의금 이런 개념 다 빼자'
     if (!Live.on) { if (label) Money.why(label); State.cash -= fee; HUD.setCash(State.cash); return fee; }
     const can = Math.max(0, Math.min(fee, this.lim, Math.round(State.cash))); this.lim -= can; this.saveLim(); /* 한도가 남아도 자금이 모자라면 모자란 만큼은 땅굴 빚 */
     if (can > 0) { Money.why(`${label || '합의금'} · 땅굴 한도 ${fmtWon(this.lim)} 남음`); State.cash -= can; HUD.setCash(State.cash); }
@@ -10539,6 +10598,7 @@ const Tutorial = {
     return Game.scene !== 'title' && !Game.busy && !Dialog.open && !Game.formOpen && !Notebook.open && !Menu.open && !PropertyCard.open_ && !Game.pickerOpen && !DocViewer.open && !MemoPad.open_ && !SeoulMap.open && !ZoneMap.open && !Game.driving && !Game.trans && !(typeof Shop !== 'undefined' && Shop.open_);
   },
   tick(dt) {
+    if (this._hl || this.on) { this._gT = (this._gT || 0) - dt; if (this._gT <= 0) { this._gT = 0.12; this.guide(); } }
     if (!this.on || State.finished) return;
     const L = this.list; let i = L.findIndex(s => !s.ok()); if (i < 0) return;
     const ci = L.findIndex(s => s.id === 'court'), ai = L.findIndex(s => s.id === 'after');
@@ -10547,6 +10607,75 @@ const Tutorial = {
     if (Game.zone && Game.zone.id !== this.zoneId) { this.zoneId = Game.zone.id; this.aim(); }
     $('tutor').classList.toggle('drv', !!Game.driving);
     if (!this.told[i]) { this.wait -= dt; if (this.wait <= 0 && this.free()) { this.told[i] = true; this.explain(i); } }
+    else this.carTips(dt, i);
+  },
+  // v281 사용자 '사무실 갔다가 여기저기 갈 때 차를 이용할 수 있다는 것도, 차 탔을 때 내비 쓰는 것도, 차 어떻게 움직이는지도 알려줘'
+  carTips(dt, i) {
+    const s = this.list[i]; if (!s || Game.scene !== 'zone') return;
+    if (Game.driving) { this.driveT = (this.driveT || 0) + dt; return; }
+    if (this.toldCar || !s.place || s.place === 'office' || !this.free()) return;
+    const pl = Game.zone.places.find(p => p.id === State.targetPlace), me = Game.player; if (!pl || !pl.door || !Game.car) return;
+    if (Math.hypot((pl.door.tx + 0.5) * TILE - me.x, (pl.door.ty + 0.5) * TILE - me.y) < TILE * 18) return;
+    this.toldCar = true; State.carHint = 8; const K = this.keys();
+    Game.busy = true; Dialog.say([{ name: castName('danye'), sprite: 'danye', voice: 'danye', text: `${pl.name.split(' · ')[0]}까지는 좀 멀어. 길가에 '내 차'라고 떠 있는 차 보이지? 차 옆에 서서 ${K.car}을 누르면 타.` },
+      { name: castName('danye'), sprite: 'danye', voice: 'danye', text: '차에 타면 동네 지도가 떠. 가고 싶은 곳을 누르면 오른쪽 위 둥근 지도에 길이 그려지고, 화면에도 노란 화살표가 그쪽을 가리켜.' },
+      { name: castName('danye'), sprite: 'danye', voice: 'danye', text: `운전은 ${K.drive}. 건물 문 앞에 세우고 내려서 들어가면 돼.` }]).finally(() => { Game.busy = false; });
+  },
+  // v281 사용자 '어디로 가야 하는지 모르니까 PC에도 화살표' · '이렇게 뜰 때 설명하고, 어디 클릭해야 하는지 테두리로': 방 안 화살표 + 창 버튼 노란 테두리·한 줄 설명
+  roomGoal(r) {
+    if (!this.on || State.finished || !r || Dialog.open || DocViewer.open || PropertyCard.open_ || $('caseList').classList.contains('in')) return null;
+    const s = this.list[this.step]; if (!s || !s.place) return null; const pid = r.place.id, pk = r.place.kind;
+    if (!(pid === s.place || pk === s.place || (s.place === 'office' && pk === 'office'))) return null;
+    const p = Game.player, near = L => L.sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+    const obj = type => { const L = r.objs.filter(o => o.type === type).map(o => ({ x: (o.tx + 0.5) * TILE, y: (o.ty + 0.4) * TILE })); return L.length ? near(L) : null; };
+    const clerk = () => { const n = r.npcs.find(n => n.talk && n.role === 'clerk') || r.npcs.find(n => n.talk); return n ? { x: n.x, y: n.y - 14 } : null; };
+    if (['pc', 'target', 'docs'].includes(s.id)) return obj('pc');
+    if (s.id === 'bank') return State.ticket ? null : obj('ticket'); // 번호를 부르면 창구 화살표는 은행이 따로 그린다
+    if (s.id === 'site') return obj('bell') || obj('mailbox');
+    if (s.id === 'wait') return obj('rest');
+    return clerk();
+  },
+  guideFor() {
+    const s = this.list[this.step], c = this.c; if (!s || !c) return null; const id = s.id;
+    if (Dialog.open) {
+      const bs = [...$('dlgChoices').querySelectorAll('button')].filter(b => !b.disabled); if (!bs.length) return null;
+      const inv = bs.find(b => /^조사하기/.test(b.textContent.trim()));
+      if (inv && ['registry', 'center', 'site', 'bank', 'agent'].includes(id)) return [inv, '"조사하기"를 눌러요. 하루에 조사는 두 번까지예요.'];
+      if (id === 'wait') { const sl = bs.find(b => /매각기일/.test(b.textContent)); if (sl) return [sl, '매각기일 아침까지 자면 바로 입찰하는 날이에요.']; }
+      return null;
+    }
+    if (DocViewer.open) { const x = [...$('docView').querySelectorAll('button')].find(b => /닫기/.test(b.textContent)); return x && ['docs', 'registry', 'center', 'agent', 'bank'].includes(id) ? [x, '다 읽었으면 닫아요. 본 서류는 수첩에 모여요.'] : null; }
+    if ($('caseList').classList.contains('in')) { const row = $('caseList').querySelector(`.clItem[data-id="${c.id}"]`); return row ? [row, Game.pickerOpen ? '★ 연습 물건을 눌러서 이 물건을 조사해요.' : '맨 위 ★ 연습 물건을 눌러서 자세히 봐요.'] : null; }
+    if (PropertyCard.open_) {
+      if (!PropertyCard.cur || PropertyCard.cur.id !== c.id) return $('pcClose') ? [$('pcClose'), '이건 연습 물건이 아니에요. 닫고 ★ 연습 물건을 골라요.'] : null;
+      if (id === 'target' && $('pcBid')) return [$('pcBid'), '"입찰 대상 지정"을 눌러요. 이번 주에 이 물건을 조사하고 입찰해요.'];
+      if (id === 'docs' && $('pcBoth')) return [$('pcBoth'), '두 서류를 나란히 열어요. 누가 살고 있는지, 보증금이 얼마인지 나와요.'];
+      return $('pcClose') ? [$('pcClose'), `다 봤으면 닫고 다음: ${s.title}`] : null;
+    }
+    if (Notebook.open) {
+      if (id !== 'judge') return null;
+      if (Notebook.tab !== 2) { const b = $('nbTabs').querySelector('[data-i="2"]'); return b ? [b, '"내 판단" 칸을 열어요.'] : null; }
+      return $('jBid') ? [$('jBid'), '조사한 걸로 적정 입찰가를 적어요. 위 칸도 채우면 점수에 들어가요.'] : null;
+    }
+    if (typeof ZoneMap !== 'undefined' && ZoneMap.open) { const a = ZoneMap.pick && $('zonePick').querySelector('[data-zp="auto"]'); return a ? [a, '★ 버튼을 누르면 다음 갈 곳까지 내비가 길을 알려 줘요. 지도에서 다른 곳을 눌러도 돼요.'] : null; }
+    if (Game.driving && (this.driveT || 0) < 14) { const K = this.keys(); return [null, `운전: ${K.drive}. 화면의 노란 화살표 쪽으로 가요.`]; }
+    if (Menu.open) return id === 'wait' && $('btnEndDay') ? [$('btnEndDay'), '"오늘 일정 끝내기"를 누르면 하루가 넘어가요.'] : null;
+    if (id === 'judge' && Game.scene !== 'title' && $('btnNote')) return [$('btnNote'), '수첩을 열어 내 판단을 적어요.'];
+    return null;
+  },
+  guide() {
+    const g = this.on && !State.finished ? this.guideFor() : null, el = g && g[0];
+    if (this._hl && this._hl !== el) this._hl.classList.remove('tutHl');
+    let tip = $('tutTip'); if (!tip) { tip = document.createElement('div'); tip.id = 'tutTip'; document.body.appendChild(tip); }
+    if (g && !el) { if (this._hl) this._hl.classList.remove('tutHl'); this._hl = null; if (tip.textContent !== g[1]) tip.textContent = g[1]; tip.style.maxWidth = Math.min(420, innerWidth - 16) + 'px'; tip.classList.add('in', 'top'); tip.classList.remove('below'); tip.style.left = Math.max(8, (innerWidth - tip.offsetWidth) / 2) + 'px'; tip.style.top = '64px'; return; }
+    tip.classList.remove('top');
+    if (!el || !el.offsetParent) { this._hl = null; tip.classList.remove('in'); return; }
+    if (this._hl !== el) { const r0 = el.getBoundingClientRect(); if (r0.bottom > innerHeight || r0.top < 0) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    if (this._hl !== el) { el.classList.add('tutHl'); this._hl = el; }
+    if (tip.textContent !== g[1]) tip.textContent = g[1];
+    const r = el.getBoundingClientRect(), tw = Math.min(260, innerWidth - 16); tip.style.maxWidth = tw + 'px'; tip.classList.add('in');
+    const th = tip.offsetHeight, above = r.top - th - 10 > 4, left = Math.max(8, Math.min(innerWidth - tip.offsetWidth - 8, r.left + r.width / 2 - tip.offsetWidth / 2));
+    tip.style.left = left + 'px'; tip.style.top = (above ? r.top - th - 10 : Math.min(innerHeight - th - 4, r.bottom + 10)) + 'px'; tip.classList.toggle('below', !above);
   },
   aim() { // 노란 화살표를 이번 단계의 장소로
     const s = this.list[this.step]; if (!s || !s.place || !Game.zone) return;
@@ -10567,6 +10696,10 @@ const Tutorial = {
     const page = el.querySelector('.rpage'); if (!page) return;
     page.insertAdjacentHTML('afterbegin', `<div class="rSec tutEnd"><b>🎓 튜토리얼 끝</b><p>결과 보는 법: ★은 이 물건의 난이도(지금 처음 공개), 등급은 수익·판단·조사를 합친 점수, "놓친 정보"는 꼭 갔어야 했던 곳이야. 다음부터는 제목 화면에서 "처음이에요"를 끄고 이번 주 다른 물건에 도전해 봐. 물건마다 숨은 게 달라.</p></div>`);
     $('tutor').classList.remove('in'); Store.set('tutorialDone', true);
+    if (!Store.get('giftTut281', false) && typeof Shop !== 'undefined') { Store.set('giftTut281', true); /* v281 사용자 2026-10-21 '튜토리얼 클리어하면 앵무새 펫 하나 주는걸로 하자' (한 번만, 되팔기 막음) */
+      if (!Shop.has('p_parrot')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_parrot'), src: Object.assign({}, w.src || {}, { p_parrot: 'gift' }) }); }
+      const pf = Profile.get(), slot = pf.pet === 'parrot' || pf.pet2 === 'parrot' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'parrot'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
+      const box = page.querySelector('.tutEnd'); if (box) box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 앵무새 펫</b> ${slot ? '다음 게임부터 옆에서 날아다니며 따라와요.' : '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.'}</p>`); Sound.play('chime'); }
   },
 };
 
@@ -10775,7 +10908,8 @@ const SHOP_ITEMS = {
     { id: 'p_snowman', name: '눈사람 올라푸', new: '2026-10-18', nb: 233, price: 1.2e8, pet: 'snowman' },
     { id: 'p_sponge', name: '스폰지빵', new: '2026-10-18', nb: 243, price: 1.5e8, pet: 'sponge' }, // v243 (사용자 '스폰지밥, 핑핑이 만들자'): 이름은 패러디
     { id: 'p_gary', name: '달팽이 띵띵이', new: '2026-10-18', nb: 243, price: 8000e4, pet: 'gary' },
-    { id: 'p_parrot', name: '앵무새', new: '2026-10-18', nb: 245, price: 6000e4, pet: 'parrot' }, // v245 (사용자 '앵무새도 만들자'): 날아다니며 따라오고 말 따라 하고, 가만히 있으면 지붕에 앉는다
+    { id: 'p_parrot', name: '앵무새', new: '2026-10-18', nb: 245, price: 6000e4, pet: 'parrot', giftOnly: true }, // v281 사용자 '앵무새는 숍에서 살 수 있는 거 없애자': 튜토리얼 끝낸 선물로만 (giftTut281)
+    // v245 (사용자 '앵무새도 만들자'): 날아다니며 따라오고 말 따라 하고, 가만히 있으면 지붕에 앉는다
     { id: 'p_dora', name: '도라애몽 (주머니 도구)', new: '2026-10-18', nb: 234, price: 3e8, pet: 'dora' }, // v234 (사용자 '도라에몽도 펫에 넣자'): 이름은 패러디, 도구는 dora.js
   ],
   car: [
@@ -10865,7 +10999,7 @@ const Shop = {
   open_: false, tab: 'clothes',
   // 새로 들어온 물건: 열흘 동안 NEW 딱지 (사용자 2026-10-16)
   // NEW 딱지 · 사장님 호객은 '제일 최근에 들어온 묶음'만 (v197, 사용자 '지난번에 추가된 건 빼고 최근 추가된 것만'): 10일 안에 들어온 것 중 nb(들어온 판 번호)가 가장 큰 묶음
-  fresh(it) { return !!(it && it.new) && Date.now() - Date.parse(it.new) < 10 * 864e5; },
+  fresh(it) { return !!(it && it.new) && !it.giftOnly && Date.now() - Date.parse(it.new) < 10 * 864e5; },
   topT: 0, topV: 0,
   top() { const now = Date.now(); if (now - this.topT > 60000) { this.topT = now; let m = -1; for (const it of Object.values(SHOP_BY_ID)) if (this.fresh(it)) m = Math.max(m, it.nb || 0); this.topV = m; } return this.topV; },
   isNew(it) { return this.fresh(it) && (it.nb || 0) === this.top(); },
@@ -10902,7 +11036,7 @@ const Shop = {
   unequip(it, p) { if (it.home) return HomeDeco.strip(it.id); if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (it.hat) { if (p.hat === it.id) Profile.set('hat', null); } else if (it.pd) PetDeco.strip(it); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null); },
   ungift() { // v241 사용자 2026-10-18 '이제 부리코 다 뺏고 선물 주기 전 상태로 돌려': v234 부리코 개발자 선물(src 'gift')을 이 기기에서 한 번 회수. 에센티아 거북이(gift233t)는 남김
     if (Store.get('ungift241', false)) return 0; Store.set('ungift241', true);
-    const w = Store.get('wardrobe', null); if (!w || !w.src) return 0; const keep = (Store.get('gift233t', false) ? ['p_turtle'] : []).concat(Store.get('gift258k', false) ? ['p_kid'] : []);
+    const w = Store.get('wardrobe', null); if (!w || !w.src) return 0; const keep = (Store.get('gift233t', false) ? ['p_turtle'] : []).concat(Store.get('gift258k', false) ? ['p_kid'] : []).concat(Store.get('giftTut281', false) ? ['p_parrot'] : []);
     const ids = Object.keys(w.src).filter(id => w.src[id] === 'gift' && !keep.includes(id)); if (!ids.length) return 0;
     for (const id of ids) { const it = SHOP_BY_ID[id]; if (it) this.unequip(it, Profile.get()); }
     const src = Object.assign({}, w.src); for (const id of ids) delete src[id];
@@ -10918,7 +11052,7 @@ const Shop = {
   },
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
   render() {
-    const p = Profile.get(); const list = SHOP_ITEMS[this.tab]; const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
+    const p = Profile.get(); const list = SHOP_ITEMS[this.tab].filter(it => !it.giftOnly || this.has(it.id)); const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
     const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : isH ? p.hat : isD ? null : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
     const nt = k => SHOP_ITEMS[k].some(it => this.isNew(it)) ? '<i class="shNew">NEW</i>' : '';
     const sp = this.spendable(), rec = AuctionRec.wins(), nextNeed = list.map(it => this.need(it)).filter(n => n > rec).sort((a, b) => a - b)[0];
@@ -11047,6 +11181,7 @@ const Shop = {
   // 경매 실적 조건 (사용자 2026-10-16 '돈이 있어도 실적이 쌓여야 살 수 있게'): 비쌀수록 이익 본 경매 횟수가 더 필요. 산 물건은 그대로 쓴다.
   need(it) { if (it.need !== undefined) return it.need; const p = it.price; return p >= 5e8 ? 10 : p >= 3e8 ? 7 : p >= 2e8 ? 5 : p >= 1e8 ? 3 : p >= 5e7 ? 1 : 0; },
   buy(it) {
+    if (it && it.giftOnly) { Sound.play('deny'); Toast.show(`${it.name}은 튜토리얼을 끝내면 선물로 받아요.`, 2600); return; }
     if (this.look) { Toast.show('사는 건 건대 편집숍에 직접 가야 해요'); return; }
     if (this.has(it.id)) return this.wear(it);
     const need = this.need(it), rec = AuctionRec.wins(); if (need > rec) { Sound.play('deny'); Toast.show(`${it.name}은 경매로 이익을 ${need}번 본 사람만 살 수 있어요. 지금 ${rec}번이에요.`); return; }
@@ -12316,7 +12451,7 @@ const Closet = {
       <div class="pcBtns"><button class="btn" id="clShop">🛍️ 편집숍 구경하기</button><button class="btn gold" id="clClose">닫기</button></div></div>`;
     el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
     el.querySelectorAll('[data-sel]').forEach(b => (b.onclick = () => { PetDeco.sel = +b.dataset.sel; Sound.play('click'); this.render(); }));
-    const pick = (id, apply) => { if (id && !Shop.has(id)) { const it = SHOP_BY_ID[id]; Sound.play('deny'); Toast.show(`${it.name}은 건대 편집숍에서 사요 (${fmtWon(it.price)})`); return; } apply(id ? SHOP_BY_ID[id] : null); Pets.mineT = -1; Sound.play('pop'); this.render(); };
+    const pick = (id, apply) => { if (id && !Shop.has(id)) { const it = SHOP_BY_ID[id]; Sound.play('deny'); Toast.show(it.giftOnly ? `${it.name}은 튜토리얼을 끝내면 선물로 받아요.` : `${it.name}은 건대 편집숍에서 사요 (${fmtWon(it.price)})`); return; } apply(id ? SHOP_BY_ID[id] : null); Pets.mineT = -1; Sound.play('pop'); this.render(); };
     el.querySelectorAll('[data-out]').forEach(b => (b.onclick = () => pick(b.dataset.out, it => Profile.set('outfit', it ? it.id : null))));
     el.querySelectorAll('[data-hat]').forEach(b => (b.onclick = () => pick(b.dataset.hat, it => Profile.set('hat', it ? it.id : null))));
     el.querySelectorAll('[data-fx]').forEach(b => (b.onclick = () => pick(b.dataset.fx, it => Profile.set('fx', it ? it.id : null))));
@@ -19204,7 +19339,7 @@ const Instance = {
   $('rankWin').addEventListener('click', e => { if (e.target.id === 'rankWin') RankWin.close(); });
   $('balanceDue').addEventListener('click', () => { if (!Layout.editing && !Menu.open && Game.scene !== 'title') AssetBox.open(); }); // 내 집·잔금 줄 → 내 집·임대 현황 창 (사용자 2026-10-14: 설정 말고 따로 현황)
   $('assetBox').addEventListener('click', e => { if (e.target.id === 'assetBox') AssetBox.close(); });
-  $('dialog').addEventListener('click', e => { if (!e.target.closest('.choice')) Dialog.press(); });
+  $('dialog').addEventListener('click', e => { if (e.target.closest('#dlgBack')) { e.stopPropagation(); Dialog.back(); return; } if (!e.target.closest('.choice')) Dialog.press(); });
   // 터치
   if (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) document.body.classList.add('touchOn');
   resize(); // touchOn이 정해진 뒤 가로 눕힘 여부를 다시 계산

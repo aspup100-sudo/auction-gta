@@ -1084,6 +1084,8 @@ html, body { background:#0b0e08; }
 #title .caps .btn.sel, #title .mp .ch.sel { background:var(--hud); border-color:var(--hud); color:var(--hudTx); } #title .mp .ch.sel small { color:#3a2e00; }
 #title input { border-radius:0; background:rgba(0,0,0,.35); border:1px solid #565b3c; color:#e9ecdf; }
 #title #btnStart, #title .btn.gold { border-radius:0; background:var(--hud); border:0; color:var(--hudTx); font-family:var(--disp); font-weight:400; letter-spacing:3px; font-size:17px; box-shadow:0 0 16px rgba(242,201,76,.3); clip-path:polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+#title #btnTutGo { font-size:15px; letter-spacing:1px; padding:7px 14px; } #title #btnTutGo[hidden] { display:none; } #title #btnTutGo small { font-family:var(--ui); letter-spacing:0; font-size:11.5px; color:var(--hudTx); opacity:.75; margin-left:4px; font-weight:700; }
+#bidForm .bfMust { margin-top:6px; padding:5px 8px; border:2px dashed #c0392b; color:#a5281b; font-weight:800; font-size:14px; background:rgba(192,57,43,.06); }
 #title #btnStart:disabled { background:#3a4029; color:#a3ab92; box-shadow:none; }
 #title #tutRow { border-radius:0; border-color:var(--hudLine); background:rgba(20,24,16,.7); } #title #btnPrac { border-color:var(--hud); color:var(--hud); }
 #title .tDock .tIco { border-radius:0; background:rgba(20,24,16,.8); border:1px solid var(--hudLine); }
@@ -1197,7 +1199,7 @@ body.gated #title { display:grid; }
     <button class="btn" data-v="500000000">5억 원</button>
   </div>
   <div class="row" id="capRow"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
-  <div class="row pracRow soloOpts"><label id="tutRow"><input type="checkbox" id="tutOn" checked> <b>처음이에요</b><small>단예 선배가 한 바퀴 안내</small></label><button class="btn" id="btnPrac"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".9"/></svg></i>단계별 연습 <small>1~5단계</small></button></div>
+  <div class="row pracRow soloOpts"><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button><label id="tutRow"><input type="checkbox" id="tutOn" checked> <b>처음이에요</b><small>단예 선배가 한 바퀴 안내</small></label><button class="btn" id="btnPrac"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".9"/></svg></i>단계별 연습 <small>1~5단계</small></button></div>
   </div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
   <div class="disc">교육용 게임이에요 · 법률·투자 조언이 아니에요 · 나오는 단지·사건·인물은 모두 지어낸 거예요</div><div id="vDiag"></div>
@@ -1253,7 +1255,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v283</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v284</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3058,6 +3060,8 @@ function buildZone(spec, cases = []) {
     }
   }
   for (const p of parks) for (let k = 0; k < Math.min(40, Math.max(4, Math.round(p.w * p.h / 60))); k++) { const x = p.x + 1 + R.next() * (p.w - 2), y = p.y + 1 + R.next() * (p.h - 2); if (at(Math.floor(x), Math.floor(y)) === T.PARK) trees.push({ x: x * TILE, y: y * TILE, phase: R.next() * 6.28 }); }
+  // v284 사용자 2026-10-21 '입구 안 보인다는 건 풀 때문에': 장소 문 앞 4칸 안의 가로수·공원 나무는 뺀다 (R 순서는 그대로라 다른 배치는 안 바뀐다)
+  for (let k = trees.length - 1; k >= 0; k--) if (places.some(p => p.door && Math.hypot(trees[k].x - (p.door.tx + 0.5) * TILE, trees[k].y - (p.door.ty + 0.5) * TILE) < TILE * 4)) trees.splice(k, 1);
   // 교차로(큰길끼리) → 횡단보도
   const raw = [];
   for (let i = 0; i < spec.roads.length; i++) for (let j = i + 1; j < spec.roads.length; j++) {
@@ -7356,7 +7360,7 @@ function startGame(capital, opts = {}) {
   Game.traffic = spawnTraffic(Game.zone);
   State.targetPlace = 'office';
   Practice.on = false; if (PR && !Net.on) Practice.start(opts.practice);
-  Tutorial.on = false; if (opts.tutorial && !Net.on) Tutorial.start(); // 혼자 하기 '처음이에요': 단예 선배가 한 바퀴 안내 (2026-10-15)
+  Tutorial.on = false; if (opts.tutorial && !Net.on) { Tutorial.start(); if (opts.resume) Tutorial.restore(opts.resume); } // 혼자 하기 '처음이에요': 단예 선배가 한 바퀴 안내 (2026-10-15)
   $('title').classList.add('out'); setTimeout(() => $('title').style.display = 'none', 400);
   $('hud').classList.add('on');
   Game.scene = 'zone'; Sound.playBgm('town');
@@ -7364,7 +7368,7 @@ function startGame(capital, opts = {}) {
   (async () => {
     await Banner.day(dLabel(), halfLabel(), false);
     Banner.area(...Game.zone.spec.dongLabel);
-    if (!Live.on) setTimeout(() => HUD.page('이번 주 물건 떴다. 사무실 PC부터 봐.'), 1200);
+    if (!Live.on) setTimeout(() => HUD.page(opts.resume ? `이어서 하자. 지금 할 일: ${(Tutorial.list[Tutorial.step] || {}).title || opts.resume.title || '안내 상자 보기'}` : '이번 주 물건 떴다. 사무실 PC부터 봐.'), 1200);
   })();
 }
 
@@ -9814,7 +9818,7 @@ Object.assign(State, { phase: 'investigate', bidResult: null, loan: null, evict:
 const targetCase = () => State.target && caseById(State.target);
 
 /* ---------- 입찰표 ---------- */
-function bidForm(c, practice) {
+function bidForm(c, practice, must = 0) { // must: 튜토리얼에서 단예가 불러 준 금액, 이 값이어야만 낸다 (v284)
   return new Promise(res => {
     // 보증금은 입찰자가 직접 고른다: 보통 최저가의 10%, 재매각 사건은 20% (명세서 특별매각조건을 읽어야 안다, 정리본 2026-10-15)
     const d10 = CourtRules.deposit(c, 0.1), d20 = CourtRules.deposit(c, 0.2);
@@ -9822,13 +9826,13 @@ function bidForm(c, practice) {
     el.innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}${practice ? ' · <b class="prac">입찰 연습</b>' : ''}</div><h2>기 일 입 찰 표</h2>
       <table class="kv"><tr><th>사건번호</th><td>${c.caseNo}</td><th>물건번호</th><td>1</td></tr>
       <tr><th>입찰자 성명</th><td colspan="3">본인</td></tr>
-      <tr><th>입찰가격</th><td colspan="3"><input id="bfBid" type="number" min="0" step="100000" placeholder="원 단위로 적으세요"><div id="bfBidTxt" class="small"></div></td></tr>
+      <tr><th>입찰가격</th><td colspan="3"><input id="bfBid" type="number" min="0" step="100000" placeholder="${must ? must.toLocaleString() : '원 단위로 적으세요'}"><div id="bfBidTxt" class="small"></div>${must ? `<div class="bfMust">단예 선배: <b>${fmtWon(must)}</b> (${must.toLocaleString()}원)으로 적어요</div>` : ''}</td></tr>
       <tr><th>보증금액</th><td colspan="3"><label class="bfDep"><input type="radio" name="bfDep" value="0.1" checked> ${fmtWon(d10)} <span class="small">(최저매각가격 ${fmtWon(c.minPrice)}의 10%)</span></label><br><label class="bfDep"><input type="radio" name="bfDep" value="0.2"> ${fmtWon(d20)} <span class="small">(20%, 특별매각조건이 있을 때)</span></label></td></tr></table>
       <div class="cap">※ 입찰가격은 최저매각가격 이상이어야 합니다. 한 번 제출한 입찰표는 바꿀 수 없고, 금액을 잘못 적어도(착오) 구제되지 않습니다. 보증금이 정해진 금액보다 적으면 입찰은 무효입니다.</div>
       <div id="bfConfirm"></div>
       <div class="pcBtns" id="bfBtns"><button class="btn gold" id="bfOk">${practice ? '연습 제출' : '입찰표 제출 · 보증금 납부'}</button><button class="btn" id="bfNo">취소</button></div></div>`;
     el.scrollTop = 0; el.classList.add('in'); Sound.play('paper'); Game.formOpen = true;
-    const j = State.judgment[c.id]; if (j && j.bid) { $('bfBid').value = j.bid; $('bfBidTxt').textContent = fmtWon(j.bid); }
+    const j = State.judgment[c.id]; if (j && j.bid && !must) { $('bfBid').value = j.bid; $('bfBidTxt').textContent = fmtWon(j.bid); }
     $('bfBid').oninput = e => ($('bfBidTxt').textContent = e.target.value ? `${fmtWon(+e.target.value)} · 금 ${CourtRules.hangul(+e.target.value)}원정` : '');
     if ($('bfBid').value) $('bfBid').oninput({ target: $('bfBid') });
     setTimeout(() => $('bfBid').focus(), 250);
@@ -9837,6 +9841,8 @@ function bidForm(c, practice) {
     const submit = () => {
       const bid = Math.round(+$('bfBid').value);
       const rate = +(el.querySelector('input[name=bfDep]:checked') || { value: 0.1 }).value; const dep = CourtRules.deposit(c, rate);
+      if (must && bid !== must) { Sound.play('deny'); Toast.show(`단예 선배가 말한 ${fmtWon(must)} (${must.toLocaleString()})으로 적어야 넘어가요.`, 3200); return; }
+      if (must && rate < CourtRules.depRate(c) - 1e-9) { Sound.play('deny'); Toast.show(`보증금은 ${fmtWon(CourtRules.deposit(c, CourtRules.depRate(c)))}으로 골라요.`, 2800); return; }
       if (!bid || bid < c.minPrice) { Sound.play('deny'); Toast.show(`최저매각가격 ${fmtWon(c.minPrice)} 미만은 무효예요. 다시 적어 주세요.`, 2800); return; }
       if (!practice && State.cash < dep) { Sound.play('deny'); Toast.show(`보증금 ${fmtWon(dep)}이(가) 없어서 입찰할 수 없어요.`, 2800); return; }
       if (!practice && Live.on && State.cash < bid * 0.2) { Sound.play('deny'); Toast.show(`대출 80%를 받아도 현금이 모자라요. 낙찰가의 20%(${fmtWon(Math.ceil(bid * 0.2))}) 이상 있어야 해요.`, 3200); return; } // 채널: 보증금 날리는 입찰은 처음부터 막는다
@@ -9877,7 +9883,8 @@ async function courtClerk() {
   }
   if (c.court !== zoneCourt) { await Dialog.say([say('court', `${c.caseNo}요? 이 사건은 여기서 진행 안 합니다. ${courtOf(c).name}으로 가 보세요.`, { emote: 'surprise' })]); return; }
   if (c.cancelled) { await Dialog.say([say('court', `${c.caseNo}은(는) 매각기일 전에 ${CourtRules.cancelText(c)}되어 오늘 진행하지 않습니다.`, { emote: 'silence' })]); State.target = null; return; }
-  const r = await bidForm(c, false); if (!r) return;
+  const must = Tutorial.on && Tutorial.c && c.id === Tutorial.c.id ? await Tutorial.courtTalk(c) : 0; // v284 튜토리얼: 단예와 권리분석 → 그 금액으로만
+  const r = await bidForm(c, false, must); if (!r) return;
   await hitStamp(); State.cash -= r.deposit; HUD.setCash(State.cash); Toast.show(`입찰보증금 ${fmtWon(r.deposit)} 납부`);
   if (Net.on) { Net.sendBid(c, r.bid); await Net.waitBids(c); } // 친구 입찰표가 모일 때까지(또는 '친구 없이 개찰')
   await runOpening(c, r);
@@ -10574,7 +10581,9 @@ function reviewBody(c, bid, bidWhat) {
 
 /* ===================== 튜토리얼: '혼자 하기'를 처음 하는 사람(경매도, 게임도 처음)을 위한 선배 안내 =====================
  * 사용자 요청 2026-10-15 ('혼자하기는 경매 모르는 사람, 게임 할 줄 모르는 사람을 위해 튜토리얼처럼').
- * 규칙: 조작법과 일반적인 경매 지식만 설명한다. 연습 물건의 정답(위험·적정가)은 결과 화면 전엔 절대 말하지 않는다.
+ * 규칙: 조작법과 일반적인 경매 지식만 설명한다. 연습 물건의 정답(위험·적정가)은 결과 화면 전엔 말하지 않는다.
+ * 예외 v284 (사용자 2026-10-21 '법원 가서 같이 권리분석 해 주면서 적정가 이 정도로 해야 한다, 얼마로 기입하라고 말해. 너가 말한 기입가 아니면 안 넘어가게'):
+ *   매각기일 법정에서 입찰표를 쓰기 직전에 단예가 권리분석을 같이 하고 적정가를 불러 준다. 입찰표는 그 금액이어야만 제출된다 (courtTalk · must).
  * 단계는 상태(State.seen 등)로 판단하므로 순서를 건너뛰어도 안내 상자는 늘 '아직 안 한 첫 일'을 가리킨다.
  */
 const TUT_SEED = 205; // 광진구 구의동 해솔아파트 112동 1603호: 후순위 임차인 1명(전액 배당) → 등기부·전입세대·현장을 한 바퀴 돌아보기 좋은 물건
@@ -10588,7 +10597,7 @@ const Tutorial = {
   start() {
     const cs = State.week.cases;
     this.c = cs.find(c => c.gu === 'gwangjin' && c.type === '아파트' && c.risks.length === 1 && c.risks[0] === 'normal') || cs.find(c => c.gu === 'gwangjin') || cs[0];
-    this.on = true; this.step = -1; this.told = {}; this.zoneId = null; this.list = this.build();
+    this.on = true; this.step = -1; this.told = {}; this.zoneId = null; this.toldCar = false; this.toldCourt = false; this.must = 0; this.list = this.build();
     $('tutor').classList.add('in');
   },
   build() {
@@ -10623,13 +10632,13 @@ const Tutorial = {
         '중개사가 소문도 하나 흘릴 거야. 소문은 소문이니까, 믿을지는 네가 확인해.'] },
       { id: 'judge', title: '수첩에 내 판단 적기', how: `${K.note} → "내 판단" → 적정 입찰가까지 적기`, place: null, ok: () => { const j = State.judgment[c.id]; return !!(j && j.bid); }, lines: [
         `${K.note}을 열어 "내 판단" 탭을 채워. 말소기준권리, 대항력 있는 임차인, 떠안을 돈, 그리고 적정 입찰가.`,
-        '적정가는 이렇게 잡아. 팔 수 있는 값에서 떠안을 돈을 빼고, 세금·수리·이자 같은 비용이랑 내 수익만큼 더 빼. 정답은 결과 화면에서 같이 맞춰 보자.'] },
+        '적정가는 이렇게 잡아. 팔 수 있는 값에서 떠안을 돈을 빼고, 세금·수리·이자 같은 비용이랑 내 수익만큼 더 빼. 매각기일에 법원에서 입찰표 쓰기 전에 나랑 같이 한 번 더 맞춰 보자.'] },
       { id: 'wait', title: '매각기일까지 보내기', how: `내 집(화살표)에서 "매각기일 아침까지 자기" 또는 ${K.end}`, place: 'home', ok: () => State.day >= 7, lines: [
         `조사 끝났으면 매각기일까지 시간을 보내자. 내 집에 가서 "매각기일 아침까지 자기"를 누르거나, ${K.end}로 하루씩 넘겨.`,
         '남는 시간에 다른 물건을 구경해도 돼. 대신 이번 주는 연습 물건 하나만 끝까지 가 보자.'] },
       { id: 'court', title: '법원 가서 입찰하기', how: `${K.map}에서 ${court} → "출발" → 집행관에게 입찰표`, place: 'court', ok: () => !!State.bidResult || State.phase === 'nobid', lines: [
         `오늘이 매각기일이야. 광진구 물건은 ${court} 관할인데, 법원은 다른 구에 있어. ${K.map}을 열어 법원을 누르고 "출발"하면 차로 가. 차 근처에 있어야 해.`,
-        '법정에서 집행관에게 말 걸면 입찰표를 써. 최저가 이상으로 적고, 보증금은 최저가의 10%야. 한 번 내면 못 바꿔. 수첩에 적어 둔 적정가가 미리 채워져 있어.'] },
+        '법정에서 집행관에게 말 걸면 입찰표를 써. 그 전에 나랑 권리분석을 한 번 같이 하고, 내가 말해 주는 금액으로 적어. 한 번 내면 못 바꿔.'] },
       { id: 'after', title: '낙찰 뒤 절차', how: '은행 대출 → 법원 잔금 → 현장 명도 → 정산', place: null, ok: () => !!State.finished || !!(State.bidResult && !State.bidResult.won), lines: [
         '낙찰이야! 이제 잔금. 은행에서 경락잔금대출을 받고, 법원에 잔금을 내고, 현장에서 사는 사람과 명도(집 비우기)를 정리하면 정산서가 나와.',
         '잔금 기한 30일 안에 못 내면 보증금을 날려. 화살표랑 호출 메시지 따라가면 돼.'] },
@@ -10641,6 +10650,7 @@ const Tutorial = {
   tick(dt) {
     if (this._hl || this.on) { this._gT = (this._gT || 0) - dt; if (this._gT <= 0) { this._gT = 0.12; this.guide(); } }
     if (!this.on || State.finished) return;
+    this._svT = (this._svT || 0) - dt; if (this._svT <= 0) { this._svT = 4; this.save(); }
     const L = this.list; let i = L.findIndex(s => !s.ok()); if (i < 0) return;
     const ci = L.findIndex(s => s.id === 'court'), ai = L.findIndex(s => s.id === 'after');
     if (State.bidResult && State.bidResult.won && i < ai) i = ai; else if (State.day >= 7 && i < ci) i = ci; // 매각기일이 되면 남은 조사는 건너뛰고 법원으로
@@ -10678,6 +10688,11 @@ const Tutorial = {
   },
   guideFor() {
     const s = this.list[this.step], c = this.c; if (!s || !c) return null; const id = s.id;
+    if (this.must && $('bidForm').classList.contains('in')) { // v284 입찰표: 단예가 말한 금액 칸 → 제출 → 한 번 더 확인
+      if ($('bfYes')) return [$('bfYes'), '금액을 한 번 더 확인하고 제출해요.'];
+      if (Math.round(+$('bfBid').value) !== this.must) return [$('bfBid'), `여기에 ${fmtWon(this.must)} (${this.must.toLocaleString()})을 적어요.`];
+      return $('bfOk') ? [$('bfOk'), '보증금 10%를 고른 채로 제출해요.'] : null;
+    }
     if (Dialog.open) {
       const bs = [...$('dlgChoices').querySelectorAll('button')].filter(b => !b.disabled); if (!bs.length) return null;
       const inv = bs.find(b => /^조사하기/.test(b.textContent.trim()));
@@ -10723,6 +10738,43 @@ const Tutorial = {
     if (s.place === 'court') { if (courtPlaceHere()) State.targetPlace = 'court'; return; }
     if (Game.zone.places.some(p => p.id === s.place)) State.targetPlace = s.place;
   },
+  // v284 매각기일 법정: 단예와 권리분석 같이 하고 적정가를 불러 준다. 돌려준 금액만 입찰표에 낼 수 있다 (auction.js bidForm must)
+  async courtTalk(c) {
+    const fair = Math.max(c.minPrice, fairBid(c)), a = Engine.analyze(c.data, fair), dep = CourtRules.deposit(c, CourtRules.depRate(c)), j = State.judgment[c.id] || {};
+    const D = t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t }); this.must = fair;
+    if (this.toldCourt) { await Dialog.say([D(`입찰가격은 ${fmtWon(fair)}. 숫자로 ${fair.toLocaleString()}. 보증금은 ${fmtWon(dep)}으로 골라.`)]); return fair; }
+    this.toldCourt = true; const L = [D('입찰표 쓰기 전에 나랑 권리분석 한 번 같이 하자. 이번 주에 뗀 서류로 하나씩 맞춰 볼게.')];
+    const b = a.base;
+    L.push(D(b ? `① 말소기준권리. 등기부에서 말소 안 된 근저당·압류·가압류 중 날짜가 제일 빠른 건 ${ymd(b.date)} ${b.label}${b.holder ? `(${b.holder})` : ''}이야. 이게 기준이고, 이보다 늦은 권리는 낙찰되면 다 지워져.` : '① 말소기준권리. 이 물건은 기준이 될 근저당·압류·가압류가 없어. 그러면 등기부 권리가 다 남으니 조심해야 해.'));
+    if (!a.tenants.length) L.push(D('② 임차인. 전입세대열람에 사는 사람이 없었지. 대항력 따질 사람이 없어.'));
+    for (const t of a.tenants) {
+      const when = !a.baseDate ? '말소기준이 없어서 대항력이 있어.' : t.daehang ? `전입 ${ymd(t.move)}이 말소기준 ${ymd(a.baseDate)}보다 빨라. 대항력이 있어.` : `전입 ${ymd(t.move)}이 말소기준 ${ymd(a.baseDate)}보다 늦어. 대항력이 없어.`;
+      const pay = t.paid >= t.deposit ? `배당요구를 해서 보증금 ${fmtWon(t.deposit)}을 배당으로 다 받아.` : t.paid > 0 ? `보증금 ${fmtWon(t.deposit)} 중 ${fmtWon(t.paid)}을 배당으로 받아${t.small ? ` (소액임차인 최우선변제 ${fmtWon(t.small)} 포함)` : ''}.` : '배당을 못 받아.';
+      L.push(D(`② 임차인 ${t.name}. ${when} ${pay} ${t.daehang ? (t.assumed > 0 ? `못 받은 ${fmtWon(t.assumed)}은 우리가 물어 줘야 해.` : '다 받으니까 우리가 물어 줄 돈은 없어.') : '못 받은 돈이 있어도 우리 책임은 아니야.'}`));
+    }
+    const dv = Generator.disposalValue(c);
+    L.push(D(`③ 떠안을 돈(인수액)은 ${fmtWon(a.assumeTotal)}. ${a.assumeTotal ? '이건 낙찰가 말고 따로 나가는 돈이야.' : '깨끗한 물건이야.'}`));
+    L.push(D(`④ 적정가. 중개사무소 시세가 대략 ${fmtWon(c.market)}이었지. ${dv !== c.market ? `팔 수 있는 값은 ${fmtWon(dv)}로 봐. ` : ''}여기서 떠안을 돈을 빼고, 세금·수리·이자 같은 비용이랑 우리 수익 몫으로 15%를 더 빼면 ${fmtWon(fairBid(c))}${fairBid(c) < c.minPrice ? `인데, 최저가 ${fmtWon(c.minPrice)}보다 낮아서 연습은 최저가로 써 보자.` : '이야.'}`));
+    if (j.bid) L.push(D(`네가 수첩에 적은 건 ${fmtWon(j.bid)}였지. ${Math.abs(j.bid - fair) <= fair * 0.1 ? '거의 맞췄어!' : '차이가 어디서 났는지 결과 화면에서 같이 보자.'}`));
+    L.push(D(`그러니까 입찰가격 칸에 ${fmtWon(fair)}, 숫자로 ${fair.toLocaleString()}을 적어. 보증금은 최저가의 10%인 ${fmtWon(dep)}. 이번엔 이 금액 말고는 못 내.`));
+    L.push(D('다른 사람이 더 높게 쓰면 떨어질 수도 있어. 그것도 경매야. 결과는 개찰 때 같이 보자.'));
+    await Dialog.say(L); return fair;
+  },
+  // v284 사용자 2026-10-21 '어 튜토리얼 진행 이어서하기 해': 입찰 전(조사·매각기일)까지의 진행을 저장해 두고 제목 화면 '이어서 하기'로 다시
+  SAVE_KEYS: ['capital', 'cash', 'day', 'half', 'evening', 'clockMin', 'notes', 'visited', 'target', 'seen', 'judgment', 'pcOpened', 'docs', 'clues', 'memo', 'caseMemo', 'phase'],
+  save() {
+    if (!this.on || State.finished || (typeof Practice !== 'undefined' && Practice.on) || !['investigate', 'dday'].includes(State.phase) || State.bidResult) return;
+    const s = { v: 1, at: Date.now(), seed: State.seed, told: this.told, toldCar: !!this.toldCar, step: this.step, title: (this.list[this.step] || {}).title || '' };
+    for (const k of this.SAVE_KEYS) s[k] = State[k];
+    try { Store.set('tutSave', s); } catch (e) {}
+  },
+  saved() { const s = Store.get('tutSave', null); return s && s.v === 1 && s.seed === TUT_SEED ? s : null; },
+  restore(s) {
+    for (const k of this.SAVE_KEYS) if (k in s) State[k] = s[k];
+    this.told = s.told || {}; this.toldCar = !!s.toldCar; HUD.setCash(State.cash, false);
+    if (State.day >= 7 && State.phase === 'investigate') State.phase = 'dday';
+    State.targetPlace = State.phase === 'dday' ? (courtPlaceHere() ? 'court' : null) : 'office';
+  },
   render() {
     const s = this.list[this.step]; const el = $('tutor'); if (!s) { el.classList.remove('in'); return; }
     el.innerHTML = `<small>선배 안내 ${this.step + 1}/${this.list.length}</small><b>${s.title}</b><span>${s.how}</span>`; el.classList.add('in');
@@ -10736,7 +10788,7 @@ const Tutorial = {
   result(el) { // 결과 화면 맨 위에 마무리 한마디 + 다음부턴 안내 없이
     const page = el.querySelector('.rpage'); if (!page) return;
     page.insertAdjacentHTML('afterbegin', `<div class="rSec tutEnd"><b>🎓 튜토리얼 끝</b><p>결과 보는 법: ★은 이 물건의 난이도(지금 처음 공개), 등급은 수익·판단·조사를 합친 점수, "놓친 정보"는 꼭 갔어야 했던 곳이야. 다음부터는 제목 화면에서 "처음이에요"를 끄고 이번 주 다른 물건에 도전해 봐. 물건마다 숨은 게 달라.</p></div>`);
-    $('tutor').classList.remove('in'); Store.set('tutorialDone', true);
+    $('tutor').classList.remove('in'); Store.set('tutorialDone', true); Store.set('tutSave', null); this.on = false;
     if (!Store.get('giftTut281', false) && typeof Shop !== 'undefined') { Store.set('giftTut281', true); /* v281 사용자 2026-10-21 '튜토리얼 클리어하면 앵무새 펫 하나 주는걸로 하자' (한 번만, 되팔기 막음) */
       if (!Shop.has('p_parrot')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_parrot'), src: Object.assign({}, w.src || {}, { p_parrot: 'gift' }) }); }
       const pf = Profile.get(), slot = pf.pet === 'parrot' || pf.pet2 === 'parrot' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'parrot'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
@@ -19241,6 +19293,8 @@ const Instance = {
   Practice.go = (n) => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(PRACTICE[n - 1].cap, { practice: n, tutorial: n === 1 && $('tutOn').checked }); };
   $('btnPrac').onclick = () => Practice.pick();
   { const g = Store.get('practiceGo', 0); if (g) { Store.set('practiceGo', 0); $('title').classList.add('modeSolo'); const sb = document.querySelector('#title .modeRow .mode[data-mode="modeSolo"]'); if (sb) sb.classList.add('sel'); setTimeout(() => Practice.pick(), 300); } } // 결과 화면 '다음 단계 하러 가기'
+  { const sv = Tutorial.saved(); if (sv) { $('btnTutGo').hidden = false; $('tutGoTxt').textContent = `튜토리얼 ${sv.day >= 7 ? 'D-day' : 'D-' + (7 - sv.day)} · ${sv.title || ''}`; // v284 튜토리얼 이어서 하기
+    $('btnTutGo').onclick = () => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(sv.capital, { tutorial: true, resume: sv }); }; } }
   $('tutOn').checked = !Store.get('tutorialDone', false); // 한 번 끝까지 해 본 뒤엔 기본으로 꺼짐
   Tutorial.bind();
   // 친구와 같이 하기 (방 코드)

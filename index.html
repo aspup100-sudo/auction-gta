@@ -255,6 +255,8 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 /* 서류 뷰어: 행정 레이어 */
 #docView { position:fixed; left:50%; top:50%; width:min(820px, calc(100% - 24px)); max-height:calc(100% - 40px); display:flex; flex-direction:column; background:#fff; color:#111; border-radius:6px; z-index:33; box-shadow:0 14px 40px rgba(0,0,0,.6); transform:translate(-50%, 120vh) rotate(6deg); transition:transform .3s ease-out; pointer-events:auto; -webkit-user-select:text; user-select:text; }
 #docView.in { transform:translate(-50%, -50%) rotate(0); }
+body.tutReview #dialog { z-index:40; } #docBody tr.tutMark td, #notebook li.tutMark, #notebook .jq.tutMark { background:#fff3b0 !important; box-shadow:inset 0 0 0 2px #e0a800; } #docBody tr.tutMark td { color:#111 !important; }
+body.tutReview #docView.in { top:6px; transform:translate(-50%, 0); max-height:calc(100% - 250px); } .short body.tutReview #docView.in, body.tutReview.short #docView.in { max-height:calc(100% - 215px); } /* v285 단예와 서류 다시 보기: 대화창 위로 서류 */
 #docView.wide { width:min(1280px, calc(100% - 24px)); }
 .docPair { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; } .docPair > div { min-width:0; }
 @media (max-width:900px) { .docPair { grid-template-columns:1fr; } }
@@ -359,6 +361,8 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 
 /* 게임 느낌 보강: 시간 칸·할 일·끄덕임·타이틀 */
 #hudSlots { position:absolute; top:206px; right:16px; display:flex; gap:4px; align-items:center; }
+#btnSkip { position:absolute; top:228px; right:16px; pointer-events:auto; padding:5px 12px; font:700 13px var(--ui); background:rgba(14,17,10,.85); color:#ffd84a; border:1px solid #ffd84a; border-radius:0; box-shadow:none; } #btnSkip[hidden] { display:none; } /* v285 사용자 '그냥 시간 스킵할 수 있는 거 만들어, 자기 말고' */
+.short #btnSkip { top:178px; right:calc(12px + env(safe-area-inset-right, 0px)); padding:4px 10px; font-size:12px; }
 #hudSlots .pip { width:14px; height:8px; border-radius:4px; background:rgba(255,255,255,.25); border:1px solid rgba(0,0,0,.6); }
 #hudSlots .pip.used { background:#4a4f5a; } #hudSlots .pip.now { background:#ffd84a; box-shadow:0 0 6px #ffd84a; animation:pipPulse 1.2s ease-in-out infinite; }
 @keyframes pipPulse { 50%{box-shadow:0 0 2px #ffd84a} }
@@ -1174,6 +1178,29 @@ body.gated #title { display:grid; }
 .rcpt:not(.arcade) { border-radius:0 !important; border-top:3px solid var(--hud) !important; }
 .rcpt:not(.arcade) .rcHead { font-family:var(--disp); font-weight:400; letter-spacing:2px; }
 .rcpt:not(.arcade) .btn { border-radius:0; } .rcpt:not(.arcade) .btn.gold { background:var(--hud); color:var(--hudTx); border-color:var(--hud); }
+
+/* v285 수첩 = 밝은 수첩 (사용자 '와 수첩 개 밤티'): 흰 바탕·남색 머리, 서류는 줄마다 누르는 칸, 판단은 칸마다 설명 */
+#notebook { background:#f3f5fa !important; color:#1c2333; border:0 !important; border-left:1px solid #c3cddf !important; border-top:0 !important; }
+#notebook .nbHead { background:#1f3a66 !important; padding-top:12px; padding-bottom:12px; border-bottom:0; }
+#notebook .nbHead h2 { color:#fff; font-family:var(--ui); font-weight:900; letter-spacing:1px; text-shadow:none; font-size:20px; } #notebook .nbHead h2::before { content:''; }
+#notebook .nbHead .btn { background:transparent !important; border:1px solid rgba(255,255,255,.55) !important; color:#fff !important; border-radius:4px; font-size:13px; padding:5px 10px; }
+#notebook .tabs { position:sticky; top:30px; z-index:3; background:#f3f5fa; margin:0 -18px 12px; padding:10px 18px 8px; gap:6px; border-bottom:1px solid #dbe1ec; }
+#notebook .tabs .btn { flex:1; background:#fff !important; border:1px solid #c7d0e0 !important; color:#3b4760 !important; border-radius:999px; font-weight:700; padding:6px 8px; box-shadow:none; }
+#notebook .tabs .btn.on { background:#1f3a66 !important; border-color:#1f3a66 !important; color:#fff !important; } #notebook .tabs .btn:disabled { opacity:.45; }
+#notebook .nbCase { background:#fff; border:1px solid #d7deea; border-radius:8px; padding:10px 12px 4px; margin-bottom:10px; box-shadow:0 1px 2px rgba(20,33,61,.06); }
+#notebook .nbCase > b { color:#14213d; font-size:15px; } #notebook .nbCase > small { color:#7a859c; }
+#notebook .nbCase ul { list-style:none; padding:0; margin:8px -12px 0; }
+#notebook .nbCase li { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; padding:9px 12px; margin:0; border-top:1px solid #eceff5; font-size:14px; color:#1c2333; }
+#notebook .nbCase li a { flex:1 1 auto; color:#1f3a66; text-decoration:none; font-weight:700; } #notebook .nbCase li a::after { content:'  ›'; color:#9aa6bd; font-weight:400; }
+#notebook .nbCase li small { margin-left:0; color:#7a859c; font-size:12px; } #notebook .nbCase li.clue { color:#3b4760; font-size:13px; background:#fafbfd; }
+#notebook .nbCase a.rvLink { color:#b3261e; }
+#notebook .nbH { color:#14213d; } #notebook .dim { color:#6a768f !important; }
+#notebook textarea { background:#fff; color:#1c2333; border:1px solid #c7d0e0; border-radius:6px; }
+#notebook .jq { background:#fff; border:1px solid #d7deea; border-radius:8px; padding:10px 12px; margin:0 0 10px; }
+#notebook .jq > b { color:#14213d; font-size:15px; } #notebook .jHint { color:#6a768f; font-size:12px; line-height:1.4; margin-top:-2px; }
+#notebook select, #notebook input[type=number] { background:#fff !important; color:#1c2333 !important; border:1px solid #b6c1d6 !important; border-radius:6px; padding:8px 10px; }
+#notebook .chk { border-bottom:0; color:#1c2333; padding:3px 0; } #notebook input[type=checkbox] { accent-color:#1f3a66; width:18px; height:18px; }
+#notebook label.row { border-bottom:0; color:#3b4760; margin-bottom:10px; } #notebook small[id$="Txt"] { color:#1f3a66; font-weight:700; }
 </style>
 </head>
 <body>
@@ -1241,6 +1268,7 @@ body.gated #title { display:grid; }
   <div id="hudCash">₩ 0</div>
   <div id="hudTime"></div>
   <div id="hudSlots"></div>
+  <button class="btn" id="btnSkip" hidden>시간 넘기기 ▸</button>
   <div id="quest"></div>
   <div id="balanceDue"></div>
   <div id="rankBox" hidden></div>
@@ -1276,7 +1304,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v285</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v286</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5261,6 +5289,7 @@ const HUD = {
       $('hudCash').classList.toggle('down', d < 0);
     } else $('hudCash').classList.remove('down');
     $('hudCash').textContent = '₩ ' + fmtNum(this._shown);
+    const sk = Live.on || Net.on || State.day >= 7 || !!State.finished || Game.scene === 'title'; if ($('btnSkip').hidden !== sk) $('btnSkip').hidden = sk;
   },
   pagerLines: [],
   page(text, from = castName('danye').replace(/ 선배$/, '')) {
@@ -7739,6 +7768,26 @@ async function driveAcross(toGu) {
   Game.busy = false; Game.edgeGoing = false;
 }
 
+/* ---- v285 시간 넘기기 (혼자 하기): 집에 가서 자지 않아도 한 칸 · 다음 날 · 매각기일 아침으로 (사용자 '그냥 시간 스킵할 수 있는 거 만들어, 자기 말고') ---- */
+async function skipTime() {
+  if (Live.on || Net.on || Game.busy || Dialog.open || State.finished || Game.driving) { if (Game.driving) Toast.show('차에서 내린 뒤에 넘길 수 있어요.'); return; }
+  const left = 7 - State.day;
+  if (left <= 0) { Toast.show(State.phase === 'dday' ? '오늘이 매각기일이에요. 법원에 가서 입찰해요.' : '낙찰 뒤 절차(대출·잔금·명도)를 마저 해요.', 2600); return; }
+  Game.busy = true;
+  try {
+    const nextL = State.evening || (State.half === 1 && State.day < 6) ? `${dLabel(State.day + 1)} 오전` : State.half === 0 ? '오후' : '저녁';
+    const opts = [{ label: `한 칸 넘기기 → ${nextL}`, value: 'slot' }];
+    if (left > 1) opts.push({ label: `다음 날 아침으로 → ${dLabel(State.day + 1)} 오전`, value: 'day' });
+    opts.push({ label: `매각기일(D-day) 아침으로${left > 1 ? ` · ${left}일` : ''}`, value: 'dday' }, { label: '그만두기', value: 0 });
+    const pick = await Dialog.say([{ name: '시간 넘기기', text: `지금은 ${dLabel()} ${halfLabel()}. 얼마나 넘길까요?` }], opts);
+    if (!pick) return;
+    Sound.play('flip'); await iris(true);
+    if (pick === 'slot') await advanceSlot();
+    else if (pick === 'day') await endDay();
+    else { State.day += left - 1; State.evening = false; await endDay(); }
+    await iris(false); Game.trans = null;
+  } finally { Game.busy = false; }
+}
 /* ---- 내 집: 자고 일어나면 다음 날 아침, 또는 매각기일 아침까지 건너뛰기 ---- */
 async function homeDoor(pl) {
   if (Game.busy) return;
@@ -8165,7 +8214,7 @@ function drawZone(t) {
   for (const tr of z.trees) { if (tr.x < x0 || tr.x > x1 || tr.y < y0 || tr.y > y1) continue; const f = Math.round(Math.sin(t * 1.3 + tr.phase) + 1); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(tr.x + 4, tr.y + 5, 10, 7, 0, 0, 7); ctx.fill(); ctx.drawImage(Sprites.tree(f), tr.x - 12, tr.y - 12); }
   if (Game.flyD) Game.flyD(); // v235 천사 날개는 지붕 위로
   tops.forEach(a => a.d()); // v234 말풍선·이름표는 지붕·가로수 위에
-  drawGuideArrow(ctx, t);
+  drawGuideArrow(ctx, t); drawCarGoal(ctx, t);
   // 장소 이름표 (가까울 때)
   const p = Game.player; ctx.textAlign = 'center';
   for (const pl of z.places) {
@@ -8193,6 +8242,7 @@ function drawGuideArrow(c, t) {
   const nd = !Game.driving && State.navDest, ndOut = nd && nd.gu && ![z.gu, ...(z.spec.guAlso || [])].includes(nd.gu); // v285 걸어 다닐 때도 지도에서 고른 다른 구 → 그쪽 구역 끝
   if (ndOut) { const e = typeof Nav !== 'undefined' && Nav.edgeFor(z.gu, nd.gu); if (!e) return; tx = e.dx ? (e.dx < 0 ? 0 : z.W * TILE) : me.x; ty = e.dy ? (e.dy < 0 ? 0 : z.H * TILE) : me.y; name = DISTRICT[nd.gu].name + ' 쪽'; dRoute = 1; }
   else if (g && g.kind === 'gu') { if (!Nav.path.length) return; const p = Nav.path[Math.min(Nav.path.length - 1, 14)]; tx = (p[0] + 0.5) * TILE; ty = (p[1] + 0.5) * TILE; name = DISTRICT[g.gu].name + ' 쪽'; dRoute = Nav.dist[Nav.path[0][1] * z.W + Nav.path[0][0]] * TILE; }
+  else if (Tutorial.needCar()) { tx = Game.car.x; ty = Game.car.y; name = '내 차'; if (Math.hypot(tx - me.x, ty - me.y) < TILE * 3) return; dRoute = 1; } // v285 튜토리얼: 먼저 차로
   else { const pid = g && g.kind === 'place' ? g.id : State.targetPlace; if (!pid) return; const pl = z.places.find(p => p.id === pid); if (!pl || !pl.door) return; tx = (pl.door.tx + 0.5) * TILE; ty = (pl.door.ty + 0.5) * TILE; name = pl.name; }
   const dx = tx - me.x, dy = ty - me.y; d = Math.hypot(dx, dy); if (d < TILE * 6 && !dRoute) return; if (dRoute) d = Math.max(d, dRoute);
   const a = Math.atan2(dy, dx), R = Game.driving ? 34 : 26, pulse = 1 + Math.sin(t * 5) * 0.08, ax = me.x + Math.cos(a) * R, ay = me.y - 6 + Math.sin(a) * R;
@@ -8204,6 +8254,14 @@ function drawGuideArrow(c, t) {
   c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   const lx = me.x + Math.cos(a) * (R + 24), ly = me.y - 6 + Math.sin(a) * (R + 18), w = c.measureText(label).width + 6;
   c.fillStyle = 'rgba(20,16,0,.8)'; c.fillRect(Math.round(lx - w / 2), Math.round(ly - 5), Math.round(w), 10); c.fillStyle = '#ffd84a'; c.fillText(label, Math.round(lx), Math.round(ly + 0.5)); c.restore();
+}
+// v285 튜토리얼: 차를 타야 할 때 내 차 위에 '여기 타요'
+function drawCarGoal(c, t) {
+  if (!Tutorial.needCar()) return; const car = Game.car, bob = Math.sin(t * 4) * 3;
+  c.save(); c.translate(Math.round(car.x), Math.round(car.y - 26 + bob));
+  c.fillStyle = '#ffd84a'; c.strokeStyle = '#3a2a00'; c.lineWidth = 1; c.beginPath(); c.moveTo(-7, -8); c.lineTo(7, -8); c.lineTo(0, 2); c.closePath(); c.fill(); c.stroke(); c.fillRect(-3, -16, 6, 8); c.strokeRect(-3, -16, 6, 8);
+  c.font = 'bold 8px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; const w = c.measureText('여기 타요').width + 8;
+  c.fillStyle = '#ffd84a'; c.fillRect(Math.round(-w / 2), -29, Math.round(w), 11); c.fillStyle = '#1a1400'; c.fillText('여기 타요', 0, -23.5); c.restore();
 }
 // v281 튜토리얼: 방 안에서도 눌러야 할 것(PC·직원·번호표·초인종) 위에 노란 화살표
 function drawRoomGoal(c, t) {
@@ -10629,7 +10687,7 @@ const Tutorial = {
   start() {
     const cs = State.week.cases;
     this.c = cs.find(c => c.gu === 'gwangjin' && c.type === '아파트' && c.risks.length === 1 && c.risks[0] === 'normal') || cs.find(c => c.gu === 'gwangjin') || cs[0];
-    this.on = true; this.step = -1; this.told = {}; this.zoneId = null; this.toldCar = false; this.toldCourt = false; this.must = 0; this.timed = {}; this.list = this.build();
+    this.on = true; this.step = -1; this.told = {}; this.zoneId = null; this.toldCar = false; this.toldCourt = false; this.toldJudge = false; this.must = 0; this.timed = {}; this.list = this.build();
     $('tutor').classList.add('in');
   },
   build() {
@@ -10665,14 +10723,13 @@ const Tutorial = {
       { id: 'agent', title: '중개사무소에서 시세 묻기', how: '중개사무소 → "조사하기" → 실거래 시세', place: 'agent', ok: () => !!seen().agent, lines: [
         '중개사무소에 가면 이 동네 실거래 시세를 알려 줘. 나중에 팔 값을 알아야 얼마에 살지 정하지.',
         '중개사가 소문도 하나 흘릴 거야. 소문은 소문이니까, 믿을지는 네가 확인해.'] },
-      { id: 'judge', title: '수첩에 내 판단 적기', how: `${K.note} → "내 판단" → 적정 입찰가까지 적기`, place: null, ok: () => { const j = State.judgment[c.id]; return !!(j && j.bid); }, lines: [
-        `${K.note}을 열어 "내 판단" 탭을 채워. 말소기준권리, 대항력 있는 임차인, 떠안을 돈, 그리고 적정 입찰가.`,
-        '적정가는 이렇게 잡아. 팔 수 있는 값에서 떠안을 돈을 빼고, 세금·수리·이자 같은 비용이랑 내 수익만큼 더 빼. 매각기일에 법원에서 입찰표 쓰기 전에 나랑 같이 한 번 더 맞춰 보자.'] },
-      { id: 'wait', title: '매각기일까지 보내기', how: `내 집(화살표)에서 "매각기일 아침까지 자기" 또는 ${K.end}`, place: 'home', ok: () => State.day >= 7, lines: [
-        `조사 끝났으면 매각기일까지 시간을 보내자. 내 집에 가서 "매각기일 아침까지 자기"를 누르거나, ${K.end}로 하루씩 넘겨.`,
+      { id: 'judge', title: '수첩 "내 판단" 칸 보기', how: '단예가 수첩 "내 판단" 칸을 보여 줘요 (안 적어도 넘어가요)', place: null, ok: () => !!this.toldJudge, lines: [
+        '조사는 다 했지? 수첩에 내 판단을 적어 두는 칸이 있어. 같이 열어 볼게.'] },
+      { id: 'wait', title: '매각기일까지 보내기', how: '오른쪽 "시간 넘기기" → "매각기일(D-day) 아침으로"', place: null, ok: () => State.day >= 7, lines: [
+        '조사 끝났으면 매각기일까지 시간을 넘기자. 오른쪽 날짜 밑 "시간 넘기기"를 누르고 "매각기일 아침으로"를 골라.',
         '남는 시간에 다른 물건을 구경해도 돼. 대신 이번 주는 연습 물건 하나만 끝까지 가 보자.'] },
-      { id: 'court', title: '법원 가서 입찰하기', how: `${K.map}에서 ${court} → "출발" → 집행관에게 입찰표`, place: 'court', ok: () => !!State.bidResult || State.phase === 'nobid', lines: [
-        `오늘이 매각기일이야. 광진구 물건은 ${court} 관할인데, 법원은 다른 구에 있어. ${K.map}을 열어 법원을 누르고 "출발"하면 차로 가. 차 근처에 있어야 해.`,
+      { id: 'court', title: '법원 가서 입찰하기', how: `"내 차" 타기 → 지도 "서울 전체" → ${court} → "출발" → 집행관에게 입찰표`, place: 'court', ok: () => !!State.bidResult || State.phase === 'nobid', lines: [
+        `오늘이 매각기일이야. 광진구 물건은 ${court} 관할인데, 법원은 다른 구에 있어. 먼저 "내 차"에 타. 지도가 뜨면 위쪽 "서울 전체"를 누르고, 법원을 고른 뒤 "출발"하면 법원 앞까지 바로 가.`,
         '법정에서 집행관에게 말 걸면 입찰표를 써. 그 전에 나랑 권리분석을 한 번 같이 하고, 내가 말해 주는 금액으로 적어. 한 번 내면 못 바꿔.'] },
       { id: 'after', title: '낙찰 뒤 절차', how: '은행 대출 → 법원 잔금 → 현장 명도 → 정산', place: null, ok: () => !!State.finished || !!(State.bidResult && !State.bidResult.won), lines: [
         '낙찰이야! 이제 잔금. 은행에서 경락잔금대출을 받고, 법원에 잔금을 내고, 현장에서 사는 사람과 명도(집 비우기)를 정리하면 정산서가 나와.',
@@ -10689,7 +10746,7 @@ const Tutorial = {
     const L = this.list; let i = L.findIndex(s => !s.ok()); if (i < 0) return;
     const ci = L.findIndex(s => s.id === 'court'), ai = L.findIndex(s => s.id === 'after');
     if (State.bidResult && State.bidResult.won && i < ai) i = ai; else if (State.day >= 7 && i < ci) i = ci; // 매각기일이 되면 남은 조사는 건너뛰고 법원으로
-    if (i !== this.step) { if (this.step >= 0 && i > this.step) for (let k = this.step; k < i; k++) this.passTime(L[k]);
+    if (i !== this.step) { if (this.step >= 0 && i > this.step) this.passTime(L.slice(this.step, i));
       this.step = i; if (!this.told[i]) this.wait = i === 0 ? 3.5 : 1.0; this.render(); this.aim(); }
     if (Game.zone && Game.zone.id !== this.zoneId) { this.zoneId = Game.zone.id; this.aim(); }
     $('tutor').classList.toggle('drv', !!Game.driving);
@@ -10734,7 +10791,7 @@ const Tutorial = {
       const inv = bs.find(b => /^조사하기/.test(b.textContent.trim()));
       const st = bs.find(b => /^현장 조사 시작/.test(b.textContent.trim()));
       if (inv || st) return [inv || st, inv ? '"조사하기"를 눌러요. 여기서 서류나 정보를 받아요.' : '"현장 조사 시작"을 눌러요. 그다음 보이는 것들을 눌러 봐요.']; // v285 사용자 '여기도 표시': 단계와 상관없이 늘
-      if (id === 'wait') { const sl = bs.find(b => /매각기일/.test(b.textContent)); if (sl) return [sl, '매각기일 아침까지 자면 바로 입찰하는 날이에요.']; }
+      if (id === 'wait') { const sl = bs.find(b => /매각기일/.test(b.textContent)); if (sl) return [sl, '매각기일 아침으로 넘기면 바로 입찰하는 날이에요.']; }
       return null;
     }
     if (DocViewer.open) { const x = [...$('docView').querySelectorAll('button')].find(b => /닫기/.test(b.textContent)); return x && ['docs', 'registry', 'center', 'agent', 'bank'].includes(id) ? [x, '다 읽었으면 닫아요. 본 서류는 수첩에 모여요.'] : null; }
@@ -10748,11 +10805,24 @@ const Tutorial = {
     if (Notebook.open) {
       if (id !== 'judge') return null;
       if (Notebook.tab !== 2) { const b = $('nbTabs').querySelector('[data-i="2"]'); return b ? [b, '"내 판단" 칸을 열어요.'] : null; }
-      return $('jBid') ? [$('jBid'), '조사한 걸로 적정 입찰가를 적어요. 위 칸도 채우면 점수에 들어가요.'] : null;
+      // v285 사용자 '여기서 뭘 하라는 거야': 비어 있는 첫 칸을 짚고, 그 답을 어디서 보는지 말해 준다
+      // v285 사용자 '여기서 뭘 하라는 거야' · '권리분석 수첩에서 같이 다시 들어가 보면서 분석해 줘야지' · '적정 낙찰가 너가 판단해서 기입하게 해': 단예가 정리한 답을 칸마다 짚는다
+      if (Notebook.jCase !== c.id) return $('jCase') ? [$('jCase'), '★ 연습 물건을 골라요.'] : null;
+      const A = this.answers(c), nb = $('nbBody'), jb = $('jBase'), none = $('jNone'), got = [...nb.querySelectorAll('input[data-t]:checked')].map(x => x.dataset.t);
+      if (jb && jb.value !== A.base) return [jb, `1번: "${A.baseText}"을 골라요. 이게 말소기준권리예요.`];
+      if ($('jq2') && !(A.tenants.length ? A.tenants.every(n => got.includes(n)) && got.length === A.tenants.length && !none.checked : none.checked && !got.length)) return [$('jq2'), A.tenants.length ? `2번: ${A.tenants.join(', ')}만 체크해요.` : '2번: 대항력 있는 사람이 없으니 "없음"만 체크해요.'];
+      if ($('jAssume') && Math.round(+$('jAssume').value) !== A.assume || $('jAssume').value === '') return [$('jAssume'), `3번: ${A.assume.toLocaleString()} 을 적어요. ${A.assume ? '우리가 떠안을 보증금이에요.' : '떠안을 돈이 없어요.'}`];
+      return $('jBid') ? [$('jBid'), `4번: ${A.bid.toLocaleString()} (${fmtWon(A.bid)})을 적어요. 단예가 정한 적정 입찰가예요.`] : null;
     }
+    // v285 사용자 '이거 차 타게 표시해야지' · '지도 전체 지도 눌러서 바로 갈 수 있는 것도 알려 줘야지': 법원이 다른 구면 서울 전체 → 법원 → 출발
+    const far = id === 'court' && !courtPlaceHere();
+    if (typeof SeoulMap !== 'undefined' && SeoulMap.open && far) { const go = $('mapConfirm').classList.contains('in') && $('mapGo'); return go ? [go, '"출발"을 누르면 차가 법원 앞까지 데려다줘요.'] : [null, `서울 지도에서 "${COURTS[c.court].name}"을 눌러요.`, 'bottom']; }
+    if (typeof ZoneMap !== 'undefined' && ZoneMap.open && far) { const tb = $('zoneMap').querySelector('.mapTabs [data-go="seoul"]'); if (tb) return [tb, '법원은 다른 구에 있어요. "서울 전체"를 누르면 법원으로 바로 갈 수 있어요.']; }
     if (typeof ZoneMap !== 'undefined' && ZoneMap.open) { const au = ZoneMap.pick && ZoneMap.auto; return au && au.kind === 'place' ? [null, `지도에서 노란 ▼ "${(au.label || '').split(' · ')[0]}"을 눌러요. 내비가 길을 알려 줘요.`, 'bottom'] : null; } // v285 ★ 버튼 대신 지도에서 직접
+    if (this.needCar()) { const K = this.keys(); return [null, `"내 차"에 타요. 노란 화살표를 따라 차 옆에 서서 ${K.car}을 눌러요.`]; }
     if (Game.driving && (this.driveT || 0) < 14) { const K = this.keys(); return [null, `운전: ${K.drive}. 화면의 노란 화살표 쪽으로 가요.`]; }
     if (Menu.open) return id === 'wait' && $('btnEndDay') ? [$('btnEndDay'), '"오늘 일정 끝내기"를 누르면 하루가 넘어가요.'] : null;
+    if (id === 'wait' && Game.scene !== 'title' && !Game.driving && $('btnSkip') && !$('btnSkip').hidden) return [$('btnSkip'), '여기를 눌러 매각기일까지 시간을 넘겨요.'];
     if (id === 'judge' && Game.scene !== 'title' && $('btnNote')) return [$('btnNote'), '수첩을 열어 내 판단을 적어요.'];
     return null;
   },
@@ -10774,6 +10844,12 @@ const Tutorial = {
     const th = tip.offsetHeight, above = r.top - th - 10 > 4, left = Math.max(8, Math.min(innerWidth - tip.offsetWidth - 8, r.left + r.width / 2 - tip.offsetWidth / 2));
     tip.style.left = left + 'px'; tip.style.top = (above ? r.top - th - 10 : Math.min(innerHeight - th - 4, r.bottom + 10)) + 'px'; tip.classList.toggle('below', !above);
   },
+  needCar() { // 걸어가기엔 멀거나(18칸 넘게) 법원이 다른 구일 때: 차 위에 '여기 타요'
+    const s = this.list[this.step]; if (!this.on || State.finished || !s || !s.place || Game.driving || Game.scene !== 'zone' || !Game.car || Game.busy) return false;
+    if (s.id === 'court') return State.phase === 'dday' && !courtPlaceHere();
+    const pl = Game.zone.places.find(p => p.id === State.targetPlace); if (!pl || !pl.door) return false;
+    return Math.hypot((pl.door.tx + 0.5) * TILE - Game.player.x, (pl.door.ty + 0.5) * TILE - Game.player.y) > TILE * 18;
+  },
   scrollBox(el) { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p).overflowY; if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight + 2) return p; } return null; },
   aim() { // 노란 화살표를 이번 단계의 장소로
     const s = this.list[this.step]; if (!s || !s.place || !Game.zone) return;
@@ -10785,6 +10861,8 @@ const Tutorial = {
     const fair = Math.max(c.minPrice, fairBid(c)), a = Engine.analyze(c.data, fair), dep = CourtRules.deposit(c, CourtRules.depRate(c)), j = State.judgment[c.id] || {};
     const D = t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t }); this.must = fair;
     if (this.toldCourt) { await Dialog.say([D(`입찰가격은 ${fmtWon(fair)}. 숫자로 ${fair.toLocaleString()}. 보증금은 ${fmtWon(dep)}으로 골라.`)]); return fair; }
+    if (this.judgeOk()) { this.toldCourt = true; await Dialog.say([D(`수첩에 같이 정리한 거 기억나지? 말소기준은 ${this.answers(c).baseText}, 떠안을 돈은 ${fmtWon(this.answers(c).assume)}, 적정가는 ${fmtWon(fair)}.`), D(`입찰가격 칸에 ${fmtWon(fair)}, 숫자로 ${fair.toLocaleString()}을 적어. 보증금은 최저가의 10%인 ${fmtWon(dep)}. 이번엔 이 금액 말고는 못 내.`), D('다른 사람이 더 높게 쓰면 떨어질 수도 있어. 그것도 경매야. 결과는 개찰 때 같이 보자.')]); return fair; }
+    if (State.docs.some(d => d.caseId === c.id && d.kind === 'registry')) { this.toldCourt = true; await this.walk(c, [`그러니까 입찰가격 칸에 ${fmtWon(fair)}, 숫자로 ${fair.toLocaleString()}을 적어. 보증금은 최저가의 10%인 ${fmtWon(dep)}. 이번엔 이 금액 말고는 못 내.`, '다른 사람이 더 높게 쓰면 떨어질 수도 있어. 그것도 경매야. 결과는 개찰 때 같이 보자.']); return fair; } // 서류를 직접 열어 짚으면서
     this.toldCourt = true; const L = [D('입찰표 쓰기 전에 나랑 권리분석 한 번 같이 하자. 이번 주에 뗀 서류로 하나씩 맞춰 볼게.')];
     const b = a.base;
     L.push(D(b ? `① 말소기준권리. 등기부에서 말소 안 된 근저당·압류·가압류 중 날짜가 제일 빠른 건 ${ymd(b.date)} ${b.label}${b.holder ? `(${b.holder})` : ''}이야. 이게 기준이고, 이보다 늦은 권리는 낙찰되면 다 지워져.` : '① 말소기준권리. 이 물건은 기준이 될 근저당·압류·가압류가 없어. 그러면 등기부 권리가 다 남으니 조심해야 해.'));
@@ -10797,33 +10875,95 @@ const Tutorial = {
     const dv = Generator.disposalValue(c);
     L.push(D(`③ 떠안을 돈(인수액)은 ${fmtWon(a.assumeTotal)}. ${a.assumeTotal ? '이건 낙찰가 말고 따로 나가는 돈이야.' : '깨끗한 물건이야.'}`));
     L.push(D(`④ 적정가. 중개사무소 시세가 대략 ${fmtWon(c.market)}이었지. ${dv !== c.market ? `팔 수 있는 값은 ${fmtWon(dv)}로 봐. ` : ''}여기서 떠안을 돈을 빼고, 세금·수리·이자 같은 비용이랑 우리 수익 몫으로 15%를 더 빼면 ${fmtWon(fairBid(c))}${fairBid(c) < c.minPrice ? `인데, 최저가 ${fmtWon(c.minPrice)}보다 낮아서 연습은 최저가로 써 보자.` : '이야.'}`));
-    if (j.bid) L.push(D(`네가 수첩에 적은 건 ${fmtWon(j.bid)}였지. ${Math.abs(j.bid - fair) <= fair * 0.1 ? '거의 맞췄어!' : '차이가 어디서 났는지 결과 화면에서 같이 보자.'}`));
     L.push(D(`그러니까 입찰가격 칸에 ${fmtWon(fair)}, 숫자로 ${fair.toLocaleString()}을 적어. 보증금은 최저가의 10%인 ${fmtWon(dep)}. 이번엔 이 금액 말고는 못 내.`));
     L.push(D('다른 사람이 더 높게 쓰면 떨어질 수도 있어. 그것도 경매야. 결과는 개찰 때 같이 보자.'));
     await Dialog.say(L); return fair;
+  },
+  answers(c) { // 단예가 정리해 주는 '내 판단' 정답 (튜토리얼 연습 물건만)
+    const fair = Math.max(c.minPrice, fairBid(c)), a = Engine.analyze(c.data, c.minPrice), b = a.base;
+    return { base: b ? b.date + '|' + b.type : '', baseText: b ? `${ymd(b.date)} ${b.label}${b.holder ? ' ' + b.holder : ''}` : '없음', tenants: a.tenants.filter(t => t.daehang && !t.noDaehang).map(t => t.name), assume: a.assumeTotal, bid: fair, a };
+  },
+  judgeOk() {
+    const c = this.c; if (!c) return false; const j = State.judgment[c.id]; if (!j) return false; const A = this.answers(c), tn = j.tenants || [];
+    const hasReg = State.docs.some(d => d.caseId === c.id && d.kind === 'registry');
+    return (!hasReg || j.base === A.base) && (A.tenants.length ? A.tenants.every(n => tn.includes(n)) && tn.length === A.tenants.length : !!j.none && !tn.length) && (j.assume || 0) === A.assume && j.bid === A.bid;
+  },
+  // v285 '내 판단' 단계·법정: 수첩을 열어 뗀 서류를 하나씩 다시 열고, 말하는 줄을 노랗게 칠하면서 같이 권리분석
+  // (사용자 '권리분석 수첩에서 같이 다시 들어가 보면서 분석해 줘야지' · '이때 직접 너가 수첩 열어서 같이 보면서 뭘 말하는지 표시하면서 설명해')
+  async walk(c, end) {
+    const A = this.answers(c), a = A.a, D = t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t });
+    const doc = k => [...State.docs].reverse().find(x => x.caseId === c.id && x.kind === k);
+    const mark = fn => { const rows = [...$('docBody').querySelectorAll('tr')]; rows.forEach(r => r.classList.remove('tutMark')); const hit = rows.filter(fn); hit.forEach(r => r.classList.add('tutMark')); if (hit[0]) hit[0].scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+    const say = async (t, fn) => { if (fn && DocViewer.open) mark(fn); await Dialog.say([D(t)]); };
+    const open = async k => { // 수첩 '수집한 서류'에서 그 서류 줄을 짚고 → 연다
+      const d = doc(k); if (!d) return false;
+      Notebook.tab = 0; if (!Notebook.open) Notebook.toggle(true); else Notebook.render();
+      const a2 = $('nbBody').querySelector(`a[data-doc="${d.id}"]`); if (a2) { a2.closest('li').classList.add('tutMark'); a2.scrollIntoView({ block: 'center' }); }
+      await sleep(900); Notebook.toggle(false); await sleep(200);
+      DocViewer.show(d.html, { title: d.title, toNotebook: false }); await sleep(350); return true;
+    };
+    const shut = async () => { if (DocViewer.open) DocViewer.close(); await sleep(300); };
+    const col = (r, n) => ((r.children[n] || {}).textContent || '').trim();
+    Game.busy = true; document.body.classList.add('tutReview');
+    try {
+      if (Notebook.open) Notebook.toggle(false);
+      await say('지금까지 뗀 서류는 다 수첩에 모여 있어. 같이 하나씩 다시 열어 보자.');
+      if (await open('registry')) {
+        await say('① 먼저 등기부. 갑구는 소유권, 을구는 근저당 같은 다른 권리야. 줄 그어진 건 이미 지워진 거라 빼고 봐.');
+        await say(`말소 안 된 근저당·압류·가압류 중 날짜가 제일 빠른 건 노란 줄, ${A.baseText}이야. 이게 말소기준권리야.`, r => a.base && col(r, 2).startsWith(ymd(a.base.date)));
+        await say('이보다 늦은 권리는 낙찰되면 다 지워져. 그러니까 우리가 신경 쓸 건 이 날짜보다 빠른 것들뿐이야.');
+        await shut();
+      }
+      if (await open('movein')) {
+        for (const t of a.tenants) await say(`② 전입세대열람. 노란 줄이 임차인 ${maskName(t.name)}이야. 전입일이 ${ymd(t.move)}이라 말소기준 ${ymd(a.baseDate)}보다 ${t.daehang ? '빨라. 대항력이 있어.' : '늦어. 대항력이 없어.'}`, r => col(r, 2) === ymd(t.move));
+        if (!a.tenants.length) await say('② 전입세대열람. 전입한 임차인이 없어. 대항력 따질 사람이 없지.');
+        await say(A.tenants.length ? `대항력 있는 사람이 배당으로 못 받는 보증금은 우리가 물어 줘야 해. 계산하면 떠안을 돈은 ${fmtWon(A.assume)}.` : '대항력 있는 사람이 없으니까 보증금을 다 못 받아도 우리 책임이 아니야. 떠안을 돈은 0원.');
+        await shut();
+      }
+      if (await open('agent')) {
+        await say(`③ 중개사무소에서 받은 실거래 시세야. 노란 줄들을 보면 이 집은 대략 ${fmtWon(c.market)}에 팔려.`, () => true);
+        await say(`여기서 떠안을 돈 ${fmtWon(A.assume)}을 빼고, 세금·수리·이자랑 우리 수익 몫으로 15%를 더 빼면 ${fmtWon(fairBid(c))}${fairBid(c) < c.minPrice ? `인데 최저가보다 낮아서 최저가 ${fmtWon(c.minPrice)}로 하자` : ''}. 내가 보기엔 이게 적정 입찰가야.`);
+        await shut();
+      }
+      for (const t of end) await say(t);
+    } finally { if (DocViewer.open) DocViewer.close(); Game.busy = false; document.body.classList.remove('tutReview'); }
+  },
+  // v285 사용자 '내 판단 단계에서는 그냥 적을 수 있다고만 짚고, 내가 직접 기입은 안 해도 그냥 넘어가게 해'
+  async judgeTalk(c) {
+    if (this._jt || !c) return; this._jt = true; const D = t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t });
+    Game.busy = true; document.body.classList.add('tutReview');
+    try {
+      Notebook.tab = 2; Notebook.jCase = c.id; if (!Notebook.open) Notebook.toggle(true); else Notebook.render(); await sleep(300);
+      const tab = $('nbTabs').querySelector('[data-i="2"]'); if (tab) tab.classList.add('tutHl');
+      await Dialog.say([D('여기가 수첩 "내 판단" 칸이야. 말소기준권리, 대항력 있는 임차인, 떠안을 돈, 적정 입찰가를 적어 둘 수 있어.')]);
+      const q = $('jq4'); if (q) { q.classList.add('tutMark'); q.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      await Dialog.say([D('적어 두면 결과 화면에서 내 판단이 맞았는지 채점해 줘. 다음부터 혼자 할 땐 꼭 적어 봐.'), D('이번엔 안 적어도 돼. 매각기일에 법원에서 입찰표 쓰기 전에, 서류를 같이 다시 열어 보면서 정리해 줄게.')]);
+      if (tab) tab.classList.remove('tutHl'); if (q) q.classList.remove('tutMark');
+    } finally { this.toldJudge = true; this._jt = false; Game.busy = false; document.body.classList.remove('tutReview'); }
+    Notebook.toggle(false);
   },
   // v284 사용자 2026-10-21 '어 튜토리얼 진행 이어서하기 해': 입찰 전(조사·매각기일)까지의 진행을 저장해 두고 제목 화면 '이어서 하기'로 다시
   SAVE_KEYS: ['capital', 'cash', 'day', 'half', 'evening', 'clockMin', 'notes', 'visited', 'target', 'seen', 'judgment', 'pcOpened', 'docs', 'clues', 'memo', 'caseMemo', 'phase'],
   save() {
     if (!this.on || State.finished || (typeof Practice !== 'undefined' && Practice.on) || !['investigate', 'dday'].includes(State.phase) || State.bidResult) return;
-    const s = { v: 1, at: Date.now(), seed: State.seed, told: this.told, timed: this.timed, toldCar: !!this.toldCar, step: this.step, title: (this.list[this.step] || {}).title || '' };
+    const s = { v: 1, at: Date.now(), seed: State.seed, told: this.told, timed: this.timed, toldJudge: !!this.toldJudge, toldCar: !!this.toldCar, step: this.step, title: (this.list[this.step] || {}).title || '' };
     for (const k of this.SAVE_KEYS) s[k] = State[k];
     try { Store.set('tutSave', s); } catch (e) {}
   },
   saved() { const s = Store.get('tutSave', null); return s && s.v === 1 && s.seed === TUT_SEED ? s : null; },
   restore(s) {
     for (const k of this.SAVE_KEYS) if (k in s) State[k] = s[k];
-    this.told = s.told || {}; this.timed = s.timed || {}; this.toldCar = !!s.toldCar; HUD.setCash(State.cash, false);
+    this.told = s.told || {}; this.timed = s.timed || {}; this.toldJudge = !!s.toldJudge; this.toldCar = !!s.toldCar; HUD.setCash(State.cash, false);
     if (State.day >= 7 && State.phase === 'investigate') State.phase = 'dday';
     State.targetPlace = State.phase === 'dday' ? (courtPlaceHere() ? 'court' : null) : 'office';
   },
   // v285 사용자 2026-10-21 '튜토리얼에는 시간 개념이 하나 진행하면 흘러가는 걸로': 걸어 다녀도 시계는 멈춰 있고, 할 일이 끝날 때마다 한 칸 (PC에서 하는 pc·target은 docs와 묶어 한 번)
   TIME_STEPS: ['docs', 'registry', 'center', 'site', 'bank', 'agent', 'judge'],
   timeLock() { return this.on && !State.finished && State.day < 7 && !Live.on && !Net.on; },
-  async passTime(s) {
-    if (!s || !this.timeLock() || !this.TIME_STEPS.includes(s.id) || this.timed[s.id] || !s.ok()) return;
-    this.timed[s.id] = true; const d0 = State.day; await advanceSlot();
-    Toast.show(State.day !== d0 ? `할 일 하나 끝! 하루가 지나 ${dLabel()} 아침이에요.` : `할 일 하나 끝! 시간이 ${halfLabel()}${halfLabel() === '저녁' ? '으로' : '로'} 넘어갔어요.`, 2600);
+  async passTime(ss) { // 한 번에 여러 단계가 끝나도 차례로 넘기고 안내는 한 번만
+    const go = ss.filter(s => s && this.TIME_STEPS.includes(s.id) && !this.timed[s.id] && s.ok()); if (!go.length || !this.timeLock()) return;
+    const d0 = State.day; for (const s of go) { this.timed[s.id] = true; await advanceSlot(); }
+    Toast.show(State.day !== d0 ? `할 일 끝! 하루가 지나 ${dLabel()} 아침이에요.` : `할 일 하나 끝! 시간이 ${halfLabel()}${halfLabel() === '저녁' ? '으로' : '로'} 넘어갔어요.`, 2600);
   },
   render() {
     const s = this.list[this.step]; const el = $('tutor'); if (!s) { el.classList.remove('in'); return; }
@@ -10833,6 +10973,7 @@ const Tutorial = {
     const s = this.list[i]; if (!s || !s.lines.length || Game.busy || Dialog.open) return;
     Game.busy = true;
     try { await Dialog.say(s.lines.map(t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t }))); } finally { Game.busy = false; }
+    if (s.id === 'judge') await this.judgeTalk(this.c);
   },
   bind() { $('tutor').addEventListener('click', () => { if (this.on && this.step >= 0 && this.free()) { Sound.play('click'); this.explain(this.step); } }); },
   result(el) { // 결과 화면 맨 위에 마무리 한마디 + 다음부턴 안내 없이
@@ -10927,10 +11068,10 @@ const Notebook = {
     for (const t of c.data.tenants) { if ((seen.spec || seen.survey) && !t.hidden) names.add(t.name); if (seen.movein) names.add(t.name); }
     const tenantHtml = names.size ? [...names].map(n => `<label class="chk"><input type="checkbox" data-t="${n}" ${(j.tenants || []).includes(n) ? 'checked' : ''}> ${seen.movein && !(seen.spec || seen.survey) ? maskName(n) : n}</label>`).join('') : '<span class="dim">아직 확인한 임차인이 없어요.</span>';
     return `<label class="row">물건 <select id="jCase">${cands.map(x => `<option value="${x.id}" ${x.id === id ? 'selected' : ''}>${x.id === State.target ? '★ ' : ''}${x.name}</option>`).join('')}</select></label>
-      <div class="jq"><b>1. 말소기준권리</b>${regOpts}</div>
-      <div class="jq"><b>2. 대항력 있는 임차인</b>${tenantHtml}<label class="chk"><input type="checkbox" id="jNone" ${j.none ? 'checked' : ''}> 없음</label></div>
-      <div class="jq"><b>3. 낙찰자 인수 예상액(원)</b><input id="jAssume" type="number" min="0" step="1000000" value="${j.assume ?? ''}"><small id="jAssumeTxt">${j.assume ? fmtWon(j.assume) : ''}</small></div>
-      <div class="jq"><b>4. 적정 입찰가(원)</b><input id="jBid" type="number" min="0" step="1000000" value="${j.bid ?? ''}"><small id="jBidTxt">${j.bid ? fmtWon(j.bid) : ''}</small><div class="dim">최저가 ${fmtWon(c.minPrice)}</div></div>`;
+      <div class="jq" id="jq1"><b>1. 말소기준권리</b><small class="jHint">등기부에서 말소 안 된 근저당·압류·가압류 중 날짜가 제일 빠른 것</small>${regOpts}</div>
+      <div class="jq" id="jq2"><b>2. 대항력 있는 임차인</b><small class="jHint">전입일이 1번 날짜보다 빠른 사람. 아무도 없으면 '없음'</small>${tenantHtml}<label class="chk"><input type="checkbox" id="jNone" ${j.none ? 'checked' : ''}> 없음</label></div>
+      <div class="jq" id="jq3"><b>3. 낙찰자 인수 예상액(원)</b><small class="jHint">대항력 있는 사람이 배당에서 못 받는 보증금. 그런 사람이 없으면 0</small><input id="jAssume" type="number" min="0" step="1000000" value="${j.assume ?? ''}"><small id="jAssumeTxt">${j.assume ? fmtWon(j.assume) : ''}</small></div>
+      <div class="jq" id="jq4"><b>4. 적정 입찰가(원)</b><small class="jHint">팔 수 있는 값 − 3번 금액에서 비용·수익 몫(약 15%)을 더 뺀 값</small><input id="jBid" type="number" min="0" step="1000000" value="${j.bid ?? ''}"><small id="jBidTxt">${j.bid ? fmtWon(j.bid) : ''}</small><div class="dim">최저가 ${fmtWon(c.minPrice)}</div></div>`;
   },
   bindJudge() {
     if (!$('jCase')) return;
@@ -19430,6 +19571,7 @@ const Instance = {
   $('btnNote').onclick = () => Notebook.toggle();
   $('minimap').onclick = () => SeoulMap.toggle(true);
   $('radar').onclick = () => { Sound.init(); if (Game.scene !== 'zone') { SeoulMap.toggle(true); return; } if (Game.driving && !CarSwap.stolen()) { ZoneMap.pickOpen(); return; } /* v225: 운전 중엔 지도를 누르면 목적지 다시 고르기 (아래 내비는 없앴다) */ ZoneMap.toggle(true); $('zoneMapName').textContent = Game.zone ? Game.zone.name + ' 구역 지도' : ''; }; // 폰에선 이 레이더가 유일한 지도 버튼: 동네 밖이면 서울 지도
+  $('btnSkip').onclick = () => { Sound.init(); Sound.play('click'); skipTime(); };
   $('zmX').onclick = e => { e.stopPropagation(); ZoneMap.toggle(false); }; // v285 사용자 '지도 들어가서 나가고 싶을 땐 어떡해, 오른쪽 위 끝에 x'
   $('zoneMap').addEventListener('click', e => { if (ZoneMap.dragged) return; if (e.target.id === 'zoneMap') { const r = $('zoneFrame').getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) { ZoneMap.click(e); return; } } /* v229: PC 마우스는 pointer capture 때문에 click이 지도 그림이 아니라 #zoneMap으로 와서, 장소를 눌러도 고르지 않고 닫혔다 (사용자 '이거 아직 안 고쳐진 거 같다') */ if (e.target.id === 'zoneMap' || e.target.closest('.zh') || e.target.closest('.zl')) ZoneMap.toggle(false); });
   // 지도 탭: 동네 지도 ↔ 서울 전체 (한 지도처럼; 사용자 2026-10-14)

@@ -8,13 +8,14 @@ export const SEEN_KEEP_MS = 30 * 86400e3;    // 순위표: 30일 동안 안 들�
 export const SEEN_MAX = 300;
 // 이미 기록을 지운 이름 (v178 전에 지워서 순위표에 남은 것): 서버가 처음 읽을 때 한 번 뺀다
 const PURGE = [];
+export const CROWD = 20, CROWD_GAP_MS = 3600e3; // v267 (사용자 2026-10-21 '사람 20명 넘어서 버벅거리면 알려줘'): 한 방에 20명이 넘으면 운영자 폰에 알림, 방마다 한 시간에 한 번
 export const TICK_MS = 10000;                // 심장박동·순위표 공유 간격
 export const MINE_MAX = 12000, MINE_LIM = 250; // 석탄 땅굴 (v168): 채널마다 굴 하나. 판 칸('x,y')과 마지막 막장 [x,y,방향]을 들고 있다가 새로 온 광부에게 준다
 
 export class RoomLogic {
   // opts: { kind: 'ch'|'room', key, storage: { get(k), put(k, v) }, sockets: () => [{ ws, id, name, send(str), close() }], now?: () => ms }  (ws = 같은 연결인지 비교용 원본 소켓)
   constructor(opts) {
-    this.kind = opts.kind; this.key = opts.key; this.storage = opts.storage; this.sockets = opts.sockets; this.now = opts.now || (() => Date.now());
+    this.kind = opts.kind; this.key = opts.key; this.storage = opts.storage; this.sockets = opts.sockets; this.now = opts.now || (() => Date.now()); this.onCrowd = opts.onCrowd || null; // onCrowd(n, where): 사람이 많을 때 부른다
     this.book = null; this.seen = null; this.tomb = null; this.hostId = null; this.dirty = false; this.loaded = null; this.mcells = null; this.mlast = null; this.mdirty = false;
   }
   async load() {
@@ -34,6 +35,8 @@ export class RoomLogic {
   async join(s) {
     await this.load();
     for (const o of this.sockets()) if (o.ws !== s.ws && o.id === s.id) { try { o.close(); } catch (e) {} }
+    const n = this.players().length;
+    if (n > CROWD && this.onCrowd) { const t = this.now(), last = this.crowdAt !== undefined ? this.crowdAt : ((await this.storage.get('crowdAt')) || 0); if (t - last >= CROWD_GAP_MS) { this.crowdAt = t; await this.storage.put('crowdAt', t); try { await this.onCrowd(n, this.kind === 'ch' ? '채널 ' + this.key : '친구 방 ' + this.key); } catch (e) {} } }
   }
   players(except) { const l = []; const seen = new Set(); for (const s of this.sockets()) { if ((except && s.ws === except.ws) || seen.has(s.id)) continue; seen.add(s.id); l.push({ id: s.id, name: s.name }); } return l; }
   broadcast(m, except) { const str = JSON.stringify(m); for (const s of this.sockets()) { if (except && s.ws === except.ws) continue; try { s.send(str); } catch (e) {} } }

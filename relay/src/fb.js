@@ -2,11 +2,11 @@
  *   POST /fb/send {kind:'idea'|'report', text, by, ch, ver, who, ctx}  → 저장 (하루 묶음, 하루 300개까지, 60일 보관)
  *   GET  /fb/list?k=<열쇠>                                            → 모아 보기 (HTML). 열쇠는 개발자만 안다 (여기엔 SHA-256 값만)
  * storage: get/put/delete 가 있는 저장소 (Durable Object storage 또는 테스트용 메모리). */
-const KEY_HASH = 'c12970f04ed6702d4cbc8112fd45d1295438518e07c8186e3808e80c0bfe4493';
+export const KEY_HASH = 'c12970f04ed6702d4cbc8112fd45d1295438518e07c8186e3808e80c0bfe4493';
 const DAY_MAX = 300, KEEP_DAYS = 60;
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-async function sha(s) { const b = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+export async function sha(s) { const b = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
 const kst = (t) => new Date(t + 9 * 3600e3).toISOString().replace('T', ' ').slice(0, 16);
 
 export async function handleFb(req, storage, CORS) {

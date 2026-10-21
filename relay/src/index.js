@@ -3,7 +3,7 @@
  *       wss://<worker>/room/<방 코드>?id=...&name=...                (친구 방)
  *       GET /health → ok
  *       /push/key · /push/sub · /push/poke → 콕 찌르기 폰 알림 (src/push.js)
- *       /fb/send · /fb/list?k=… → 의견함·채팅 신고 (src/fb.js)
+ *       /fb/send · /fb/list?k=… → 의견함·채팅 신고 (src/fb.js). 신고면 운영자 폰에 알림 (/push/alert, 안에서만)
  *       /sv/put · /sv/get?c=… → 기록 옮기기 코드 (src/sv.js)
  * 채널·방마다 Durable Object 하나가 떠서 그 방의 사람들을 잇는다. WebSocket 절전(hibernation) API라 아무도 말을 안 하면 비용이 거의 없다.
  */
@@ -15,11 +15,18 @@ import { handleSv } from './sv.js';
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': '*' };
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
     if (url.pathname === '/' || url.pathname === '/health') return new Response('auction-gta relay ok', { headers: { 'content-type': 'text/plain; charset=utf-8', ...CORS } });
+    if (url.pathname.replace(/\/+$/, '') === '/push/alert') return new Response('not found', { status: 404, headers: CORS }); // 운영자 알림은 아래 신고 처리에서만
     if (url.pathname.startsWith('/push/')) return env.ROOMS.get(env.ROOMS.idFromName('push:hub')).fetch(req);
+    if (url.pathname === '/fb/send' && req.method === 'POST') { // v267: 신고가 저장되면 운영자 폰에 알림
+      const body = await req.text(), r = await env.ROOMS.get(env.ROOMS.idFromName('fb:hub')).fetch(new Request(req.url, { method: 'POST', body }));
+      let b = null; try { b = JSON.parse(body); } catch (e) {}
+      if (r.ok && b && b.kind === 'report') ctx.waitUntil(env.ROOMS.get(env.ROOMS.idFromName('push:hub')).fetch(new Request(url.origin + '/push/alert', { method: 'POST', body: JSON.stringify({ who: b.who, text: b.text, by: b.by, ch: b.ch }) })).catch(() => {}));
+      return r;
+    }
     if (url.pathname.startsWith('/fb/')) return env.ROOMS.get(env.ROOMS.idFromName('fb:hub')).fetch(req); // 의견함도 Durable Object 하나에
     if (url.pathname.startsWith('/sv/')) return env.ROOMS.get(env.ROOMS.idFromName('sv:hub')).fetch(req); // 기록 옮기기 코드 // 콕 알림: 구독 목록은 Durable Object 하나에 모은다
     const m = url.pathname.match(/^\/(ch|room)\/([A-Za-z0-9_-]{1,16})\/?$/);
@@ -44,7 +51,8 @@ export class ChannelRoom {
     if (this.logic) return this.logic;
     if (!this.meta && kind) { this.meta = { kind, key }; this.ctx.storage.put('meta', this.meta); }
     const meta = this.meta || { kind: 'ch', key: '0' };
-    this.logic = new RoomLogic({ kind: meta.kind, key: meta.key, storage: this.ctx.storage, sockets: () => this.sockets() });
+    this.logic = new RoomLogic({ kind: meta.kind, key: meta.key, storage: this.ctx.storage, sockets: () => this.sockets(),
+      onCrowd: (n, where) => this.env.ROOMS.get(this.env.ROOMS.idFromName('push:hub')).fetch(new Request('https://relay/push/alert', { method: 'POST', body: JSON.stringify({ kind: 'crowd', n, where }) })) }); // 사람 많으면 운영자 폰에
     return this.logic;
   }
   async fetch(req) {

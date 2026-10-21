@@ -1313,7 +1313,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v291</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v292</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -13962,7 +13962,7 @@ const PetBattle = {
     this.end(B.me === 'a' ? 'b' : 'a', '항복했다…');
   },
   esc() { const B = this.B; if (!B) return; if (B.over) return this.close();
-    if (B.rtMode === 'arena' && !B.apick && !B.voting) { PetRT.arena.unlock(); Toast.show('마우스를 풀었어요. 화면을 누르면 다시 둘러봐요 · 그만두려면 🏳 항복 버튼'); return; } // v197: 콜로세움에서 Esc는 마우스 풀기만 (사용자 'esc 누르니까 멈추는데')
+    if (PetRT.is3d(B.rtMode) && !B.apick && !B.voting) { PetRT.arena.unlock(); Toast.show('마우스를 풀었어요. 화면을 누르면 다시 둘러봐요 · 그만두려면 🏳 항복 버튼'); return; } // v197: 콜로세움에서 Esc는 마우스 풀기만 (사용자 'esc 누르니까 멈추는데')
     this.quit(); },
   close() { if (!this.open_) return; PetRT.arena.unlock(); const K = this.kneel; this.kneel = null; if (K) setTimeout(() => this.beg(K), 250); this.open_ = false; this.B = null; this.sayNext = null; clearTimeout(this.sayT); clearInterval(this.tmr); Game.formOpen = false; $('pbWin').classList.remove('in'); cancelAnimationFrame(this.raf); Sound.play('flip'); },
   // 상대가 사라지거나 너무 오래 안 고르면 / 내가 30초 안 고르면 아무거나
@@ -13981,7 +13981,7 @@ const PetBattle = {
   build() {
     const el = $('pbWin'); el.classList.add('in');
     const R = this.B && this.B.rtMode;
-    el.innerHTML = R ? `<div class="pbBox rt${R === 'arena' ? ' arena' : ''}"><div class="pbScene"><canvas id="pbCv"></canvas>${PetRT.pad(R)}</div><div class="pbBot"><div class="pbMsg" id="pbMsg"></div><div class="pbMoves" id="pbMoves"></div></div></div>`
+    el.innerHTML = R ? `<div class="pbBox rt${PetRT.is3d(R) ? ' arena' : ''}"><div class="pbScene"><canvas id="pbCv"></canvas>${PetRT.pad(R)}</div><div class="pbBot"><div class="pbMsg" id="pbMsg"></div><div class="pbMoves" id="pbMoves"></div></div></div>`
       : `<div class="pbBox"><div class="pbScene"><canvas id="pbCv"></canvas><div class="pbHud foe" id="pbHudFoe"></div><div class="pbHud me" id="pbHudMe"></div></div>
       <div class="pbBot"><div class="pbMsg" id="pbMsg"></div><div class="pbMoves" id="pbMoves"></div></div></div>`;
     if (R) PetRT.bindPad();
@@ -14060,6 +14060,7 @@ const pbCl = v => Math.max(-1, Math.min(1, +v || 0));
 
 const PetRT = {
   on: true, tp: { x: 0, y: 0, an: 0, jn: 0, dq: '' },
+  is3d(m) { return !!(m && this[m] && this[m].full); }, // v292: 콜로세움 엔진으로 그리는 3D 게임 (콜로세움 · 펫 축구)
   pick(B) { if (B.mode === 'npc') { B.seed = (Math.random() * 2 ** 31) >>> 0; return PB_MODES[Math.floor(Math.random() * PB_MODES.length)]; } return PB_MODES[(B.seed >>> 0) % PB_MODES.length]; },
   st(P) {
     const b = (PB_DEX[P.kind] || PB_DEX.dog).b, f = 1 + (P.lv - 5) * 0.012;
@@ -14484,7 +14485,7 @@ const PetRT = {
   },
   /* ================= 🏐 피구 ================= */
   dodge: {
-    T: 120, // v291 사용자 '피구 1분 지나면 공이 튕기는 걸로': 1분까지는 그대로, 1분부터 공이 벽에 튕겨서 아무나 맞는다 (2분이면 끝)
+    T: 90, // v292 사용자 '피구 게임은 1분30초로' (v291 2분) · v291 사용자 '피구 1분 지나면 공이 튕기는 걸로': 1분까지는 그대로, 1분부터 공이 벽에 튕겨서 아무나 맞는다 (1분 30초면 끝)
     sm: ['ax', 'ay', 'bx', 'by'], upWhy: '시간 끝! 덜 맞은 쪽이 이겼어요.',
     init() { return { ax: 70, ay: 100, bx: 250, by: 100, al: 3, bl: 3, ac: 0.8, bc: 0.8, ai: 0, bi: 0, af: 1, bf: -1, balls: [] }; },
     step(G, dt, P) {
@@ -15075,7 +15076,7 @@ const PetArena = {
 
 /* ---- 경기 ---- */
 PetRT.arena = {
-  T: 120, sm: [], upWhy: '시간 끝! 체력이 더 많이 남은 팀이 이겼어요.',
+  T: 120, sm: [], upWhy: '시간 끝! 체력이 더 많이 남은 팀이 이겼어요.', pil: PA_PIL, fpKey: 'arenaFP2', /* v292: 펫 축구(petsoccer.js)가 이 엔진을 물려받는다 (기둥 없음, 시점 설정 따로) */
   myName() { return (typeof Net !== 'undefined' && Net.me) || Store.get('mpName', '') || '나'; },
   init(B) {
     const ac = B.ac || {}, A = { a: PetArena.clean(ac.a), b: PetArena.clean(ac.b) }, foe = B.me === 'a' ? 'b' : 'a';
@@ -15178,7 +15179,7 @@ PetRT.arena = {
     for (let a = 0; a < 4; a++) for (let b = a + 1; b < 4; b++) { const p = G.u[a], q = G.u[b]; if (p.hp <= 0 || q.hp <= 0 || p.lp > 0 || q.lp > 0) continue; const dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy), m = p.r + q.r;
       if (d < m && d > 1e-4) { const k = (m - d) / 2 / d; p.x -= dx * k; p.y -= dy * k; q.x += dx * k; q.y += dy * k; } }
   },
-  los(x0, y0, x1, y1) { for (const [cx, cy] of PA_PIL) { const dx = x1 - x0, dy = y1 - y0, L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((cx - x0) * dx + (cy - y0) * dy) / L)); if (Math.hypot(x0 + dx * t - cx, y0 + dy * t - cy) < PA_PR + 0.1) return false; } return true; },
+  los(x0, y0, x1, y1) { for (const [cx, cy] of this.pil) { const dx = x1 - x0, dy = y1 - y0, L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((cx - x0) * dx + (cy - y0) * dy) / L)); if (Math.hypot(x0 + dx * t - cx, y0 + dy * t - cy) < PA_PR + 0.1) return false; } return true; },
   // AI (호스트에서 조종 안 하는 캐릭터 전부)
   think(G, u, i, dt) {
     const B = PetBattle.B, A = this.aiS[i] || (this.aiS[i] = { t: 0, tg: -1, ph: Math.random() * 6, er: 0, et: 0 }), none = { mx: 0, my: 0, an: u.an };
@@ -15205,7 +15206,7 @@ PetRT.arena = {
     const T = PetRT.tp, L = B.loc, K = Keys, k = (...n) => n.some(x => K[x]) ? 1 : 0, now = performance.now(), dt = L.rt ? Math.min(0.05, (now - L.rt) / 1000) : 0; L.rt = now;
     const f = k('w', 'ㅈ', 'ArrowUp') - k('s', 'ㄴ', 'ArrowDown'), sx = k('d', 'ㅇ') - k('a', 'ㅁ');
     B.ya += (k('ArrowRight') - k('ArrowLeft')) * 2.6 * dt + this.look.dx; this.look.dx = 0; B.ya = paAng(B.ya, 0);
-    const vk = k('v', 'ㅍ'); if (vk && !L.pv) { this.fp = !this.fp; Store.set('arenaFP2', this.fp); Sound.play('click'); } L.pv = vk; // v192: V = 1인칭/3인칭
+    const vk = k('v', 'ㅍ'); if (vk && !L.pv) { this.fp = !this.fp; Store.set(this.fpKey, this.fp); Sound.play('click'); } L.pv = vk; // v192: V = 1인칭/3인칭
     B.pi = Math.max(-1.3, Math.min(1.3, (B.pi || 0) + (k('PageUp') - k('PageDown')) * 1.6 * dt - (this.look.dy || 0))); this.look.dy = 0; // v191: 위아래 보기 (보기만, 싸움엔 영향 없음)
     let x = sx + T.x, y = -f + T.y; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
     const ha = !!(k('j', 'ㅓ') || this.mb[0] || this.hold.a), hs = !!(k('k', 'ㅏ', 'Shift') || this.mb[2] || this.hold.s), hh = !!(k(' ') || this.hold.h); /* v231: Space = 점프, 공격은 클릭/J */
@@ -15234,7 +15235,7 @@ PetRT.arena = {
   bind() {
     const cv = $('pbCv'); if (!cv) return; const me = this;
     for (const [id, key] of [['pbAct', 'a'], ['pbJmp', 's'], ['pbHop', 'h']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); me.hold[key] = true; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => { me.hold[key] = false; b.classList.remove('dn'); }; }
-    const vb = $('pbView'); if (vb) vb.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); me.fp = !me.fp; Store.set('arenaFP2', me.fp); Sound.play('click'); }; // v192: 폰에서 1인칭/3인칭
+    const vb = $('pbView'); if (vb) vb.onpointerdown = e => { e.preventDefault(); e.stopPropagation(); me.fp = !me.fp; Store.set(me.fpKey, me.fp); Sound.play('click'); }; // v192: 폰에서 1인칭/3인칭
     let tid = null, tx = 0, ty = 0;
     cv.onpointerdown = e => {
       if (e.pointerType === 'touch') { tid = e.pointerId; tx = e.clientX; ty = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
@@ -15254,7 +15255,7 @@ PetRT.arena = {
   // 3인칭 카메라: 내 캐릭터 머리 위 뒤쪽. 벽·기둥에 닿으면 당겨 온다, 흔들림 없이 부드럽게
   tpCam(cam, U, R, dt) {
     const head = (U.z || 0) + (U.k === 'hum' ? 1.35 * PA_HS : Math.max(0.55, U.h * 0.85)), want = U.k === 'hum' ? 4.3 : 2.3 + U.h * 1.8, F = cam.F;
-    let d = want; const ok = dd => { const x = U.x - F[0] * dd, y = U.y - F[1] * dd, z = head - F[2] * dd; if (Math.hypot(x, y) > PA_R - 0.45 || z < 0.25 || z > 6.6) return false; for (const [qx, qy] of PA_PIL) if (Math.hypot(x - qx, y - qy) < PA_PR + 0.3) return false; return true; };
+    let d = want; const ok = dd => { const x = U.x - F[0] * dd, y = U.y - F[1] * dd, z = head - F[2] * dd; if (Math.hypot(x, y) > PA_R - 0.45 || z < 0.25 || z > 6.6) return false; for (const [qx, qy] of this.pil) if (Math.hypot(x - qx, y - qy) < PA_PR + 0.3) return false; return true; };
     while (d > 0.6 && !ok(d)) d -= 0.15; R.tcd = R.tcd == null || d < R.tcd ? d : R.tcd + (d - R.tcd) * Math.min(1, dt * 4);
     R.tz = R.tz == null ? head : R.tz + (head - R.tz) * Math.min(1, dt * 9); /* v231: 점프해도 카메라는 부드럽게 따라온다 */
     cam.px = U.x - F[0] * R.tcd; cam.py = U.y - F[1] * R.tcd; cam.z = R.tz - F[2] * R.tcd;
@@ -15668,7 +15669,7 @@ in vec2 aP; void main() { gl_Position = vec4(aP, 0.0, 1.0); }`;
 const PA_FS = `#version 300 es
 precision highp float;
 uniform vec3 uC, uF, uR, uU; uniform vec2 uTan, uRes; uniform float uT, uSun;
-uniform vec2 uPil[4]; uniform vec4 uSh[6]; uniform int uNS;
+uniform vec2 uPil[4]; uniform vec4 uSh[6]; uniform int uNS; uniform float uSoc;
 out vec4 o;
 const float R = 9.0, WH = 7.0, PR = 0.5, PH = 3.4;
 float h21(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
@@ -15728,7 +15729,13 @@ vec3 sand(vec2 p, float fp) {
   float nz = vn(p * 0.7) * 16.0 + vn(p * 3.1) * 9.0 + vn(p * 11.0) * 6.0 * fa + (h21(floor(p * 48.0)) - 0.5) * 14.0 * fb + sin(rr * 13.0) * 2.2 * fa - 15.0;
   vec3 c = vec3(218.0 + nz, 188.0 + nz * 0.9, 132.0 + nz * 0.7) / 255.0;
   float ln = max(max(cov(abs(rr - 8.4) - 0.045, fp), cov(abs(rr - 3.0) - 0.035, fp)), cov(abs(rr - 1.2) - 0.035, fp));
-  c -= C(46., 44., 32.) * ln; if (rr < 1.2) c += C(10., 6., 0.); if (rr > 8.4) c -= C(12., 12., 8.);
+  if (uSoc > 0.5) { // v292 펫 축구: 하얀 선 (가운데 줄·가운데 원·골 앞 네모·골라인), 골 앞은 팀 색
+    float ax = abs(p.x), bx = sdBox(vec2(ax - 6.9, p.y), vec2(1.1, 2.9), 0.0);
+    float sl = min(min(abs(p.x), abs(length(p) - 1.6)), min(abs(bx), abs(rr - 8.85)));
+    if (ax > 7.95 && abs(p.y) < 1.85) sl = min(sl, abs(ax - 8.0));
+    c = mix(c, p.x < 0.0 ? vec3(0.62, 0.74, 0.95) : vec3(0.95, 0.66, 0.6), 0.28 * smoothstep(0.05, -0.05, bx));
+    c = mix(c, vec3(0.97, 0.96, 0.9), cov(sl - 0.05, fp) * 0.85); ln = 0.0; }
+  c -= C(46., 44., 32.) * ln; if (rr < 1.2 && uSoc < 0.5) c += C(10., 6., 0.); if (rr > 8.4) c -= C(12., 12., 8.);
   float m = rr > 8.3 ? 1.0 - smoothstep(8.3, R, rr) * 0.32 : 1.0;
   vec2 sd = vec2(cos(uSun), sin(uSun)); float b3 = dot(p, sd), tW = -b3 + sqrt(max(0.0, b3 * b3 - (rr * rr - R * R)));
   m *= 1.0 - 0.3 * smoothstep(4.8, 4.0, tW);
@@ -15791,7 +15798,7 @@ Object.assign(PetRT.arena, {
       const bW = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bW); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
       const bS = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bS); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
       const tx = [0, 1, 2, 3].map(() => { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; });
-      const uw = {}, us = {}; for (const n of ['uC', 'uF', 'uR', 'uU', 'uTan', 'uRes', 'uT', 'uSun', 'uPil', 'uSh', 'uNS']) uw[n] = U(W, n); for (const n of ['uC', 'uF', 'uR', 'uU', 'uP', 'uTan', 'uS', 'uTx', 'uA']) us[n] = U(S, n);
+      const uw = {}, us = {}; for (const n of ['uC', 'uF', 'uR', 'uU', 'uTan', 'uRes', 'uT', 'uSun', 'uPil', 'uSh', 'uNS', 'uSoc']) uw[n] = U(W, n); for (const n of ['uC', 'uF', 'uR', 'uU', 'uP', 'uTan', 'uS', 'uTx', 'uA']) us[n] = U(S, n);
       this.G3 = { cv, gl, W, S, bW, bS, tx, uw, us, aW: gl.getAttribLocation(W, 'aP'), aS: gl.getAttribLocation(S, 'aQ') };
     } catch (e) { console.warn('arena gl', e); this.G3 = null; }
     return this.G3;
@@ -15809,7 +15816,7 @@ Object.assign(PetRT.arena, {
   zcols(R, cam) {
     const iw = cam.iw; if (!R.zb || R.zb.length !== iw) R.zb = new Float32Array(iw); const px = cam.px, py = cam.py, dX = Math.cos(cam.yaw), dY = Math.sin(cam.yaw), th = cam.tanH;
     for (let x = 0; x < iw; x++) { const cx = 2 * x / iw - 1, rx = dX - dY * th * cx, ry = dY + dX * th * cx, a = rx * rx + ry * ry, b = 2 * (rx * px + ry * py), cc = px * px + py * py - PA_R * PA_R; let tb = (-b + Math.sqrt(Math.max(0, b * b - 4 * a * cc))) / (2 * a);
-      for (let n = 0; n < 4; n++) { const [qx, qy] = PA_PIL[n], ox = px - qx, oy = py - qy, b2 = 2 * (rx * ox + ry * oy), c2 = ox * ox + oy * oy - PA_PR * PA_PR, D = b2 * b2 - 4 * a * c2; if (D <= 0) continue; const tt = (-b2 - Math.sqrt(D)) / (2 * a); if (tt > 0.05 && tt < tb) tb = tt; }
+      for (let n = 0; n < this.pil.length; n++) { const [qx, qy] = this.pil[n], ox = px - qx, oy = py - qy, b2 = 2 * (rx * ox + ry * oy), c2 = ox * ox + oy * oy - PA_PR * PA_PR, D = b2 * b2 - 4 * a * c2; if (D <= 0) continue; const tt = (-b2 - Math.sqrt(D)) / (2 * a); if (tt > 0.05 && tt < tb) tb = tt; }
       R.zb[x] = tb; }
   },
   // 바닥·벽·관중·기둥·하늘 + 캐릭터 (깊이 버퍼)
@@ -15822,8 +15829,8 @@ Object.assign(PetRT.arena, {
     const top = $('pbCv'); if (top && cv.parentNode !== top.parentNode) { cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; top.parentNode.insertBefore(cv, top); }
     gl.viewport(0, 0, w, h); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.depthMask(true); gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT); gl.disable(gl.BLEND);
     const set = (u, c) => { gl.uniform3fv(u.uC, [cam.px, cam.py, cam.z]); gl.uniform3fv(u.uF, cam.F); gl.uniform3fv(u.uR, cam.R); gl.uniform3fv(u.uU, cam.U); gl.uniform2f(u.uTan, cam.tanH, cam.tanV); };
-    gl.useProgram(g.W); const uw = g.uw; set(uw); gl.uniform2f(uw.uRes, w, h); gl.uniform1f(uw.uT, t % 1000); gl.uniform1f(uw.uSun, -2.2); gl.uniform2fv(uw.uPil, PA_PIL.flat());
-    const shd = G.u.filter(u => !(u.hp <= 0 && u.dead > 1.4 && !u.ash)).slice(0, 6), arr = new Float32Array(24); shd.forEach((u, n) => { arr.set([u.x, u.y, u.r * (u.hp > 0 ? 1.15 : 1.4) / (1 + (u.z || 0) * 0.4), u.hp <= 0 && u.ash ? 2 : 1], n * 4); });
+    gl.useProgram(g.W); const uw = g.uw; set(uw); gl.uniform2f(uw.uRes, w, h); gl.uniform1f(uw.uT, t % 1000); gl.uniform1f(uw.uSun, -2.2); gl.uniform2fv(uw.uPil, [0, 1, 2, 3].flatMap(n => this.pil[n] || [60 + n * 3, 60])); gl.uniform1f(uw.uSoc, this.soc ? 1 : 0); /* v292 펫 축구: 기둥 치우고 축구장 선 */
+    const shd = this.shd ? this.shd(G) : G.u.filter(u => !(u.hp <= 0 && u.dead > 1.4 && !u.ash)).slice(0, 6), arr = new Float32Array(24); shd.forEach((u, n) => { arr.set([u.x, u.y, u.r * (u.hp > 0 ? 1.15 : 1.4) / (1 + (u.z || 0) * 0.4), u.hp <= 0 && u.ash ? 2 : 1], n * 4); });
     gl.uniform4fv(uw.uSh, arr); gl.uniform1i(uw.uNS, shd.length);
     gl.bindBuffer(gl.ARRAY_BUFFER, g.bW); gl.enableVertexAttribArray(g.aW); gl.vertexAttribPointer(g.aW, 2, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); gl.disableVertexAttribArray(g.aW);
     // 캐릭터: v192 진짜 3D 모델 (사람) · 부풀린 도트 입체 (펫)
@@ -16094,7 +16101,7 @@ Object.assign(PetRT.arena, {
     for (const o of [legL, legR]) { if (P.ghost) continue; this.sq(o, 0, 0, -0.22, 0.082, 0.082, 0.22, 0.85, pants, { nu: 12, nv: 10 }); this.sq(o, 0.05, 0, -0.5, 0.13, 0.085, 0.065, 0.6, shoe, { nu: 14, nv: 8 }); }
     // 무기: 칼 (손에서 앞으로) · 불 장갑
     if (wp === 'fire') this.sq(armR, 0, 0, -0.42, 0.085, 0.085, 0.085, 1, '#d8402a');
-    else { this.sq(blade, 0.02, 0, -0.45, 0.035, 0.12, 0.03, 0.5, '#d8b040'); this.sq(blade, -0.07, 0, -0.45, 0.09, 0.025, 0.025, 0.8, '#5a3820'); this.sq(blade, 0.42, 0, -0.45, 0.38, 0.045, 0.012, 0.35, '#dfe6ee', { nu: 12, nv: 8 }); this.sq(blade, 0.42, 0, -0.448, 0.36, 0.006, 0.014, 0.4, '#9aa6b4', { nu: 8, nv: 6 }); }
+    else if (wp !== 'kick') { this.sq(blade, 0.02, 0, -0.45, 0.035, 0.12, 0.03, 0.5, '#d8b040'); this.sq(blade, -0.07, 0, -0.45, 0.09, 0.025, 0.025, 0.8, '#5a3820'); this.sq(blade, 0.42, 0, -0.45, 0.38, 0.045, 0.012, 0.35, '#dfe6ee', { nu: 12, nv: 8 }); this.sq(blade, 0.42, 0, -0.448, 0.36, 0.006, 0.014, 0.4, '#9aa6b4', { nu: 8, nv: 6 }); }
     const m = { body: this.upload(g, body), head: this.upload(g, head), eyeO: this.upload(g, eyeO), eyeC: this.upload(g, eyeC), armL: this.upload(g, armL), armR: this.upload(g, armR), legL: legL.p.length ? this.upload(g, legL) : null, legR: legR.p.length ? this.upload(g, legR) : null, blade: blade.p.length ? this.upload(g, blade) : null };
     M.hum[key] = m; return m;
   },
@@ -16157,10 +16164,10 @@ Object.assign(PetRT.arena, {
       if (v.k === 'hum') {
         const P = Sprites.PAL[this.spr(B, v.tm)] || Sprites.PAL.player, m = this.human3(g, P, v.wp), sw = Math.sin(ph) * amp, bob = Math.abs(Math.cos(ph)) * 0.035 * amp + (1 - amp) * Math.sin(t * 2.2) * 0.006;
         const base = a3Ch(a3T(v.x, v.y, (v.z || 0) - sink * 1.6), a3Rz(v.an), a3Rx(fall * Math.PI / 2 * (v.tm === 'a' ? 1 : -1)), a3Sc(PA_HS, PA_HS, PA_HS), squash, lean, a3T(0, 0, bob));
-        const atk = v.at > 0 && v.ak, pa = atk ? Math.min(1, 1 - v.at / 0.3) : 0, wu = v.wu > 0, fire = v.wp === 'fire';
+        const kick = v.wp === 'kick', atk = v.at > 0 && v.ak && !kick, pa = atk ? Math.min(1, 1 - v.at / 0.3) : 0, wu = v.wu > 0, fire = v.wp === 'fire', kq = kick && v.at > 0 ? Math.sin(Math.min(1, 1 - v.at / 0.3) * Math.PI) : 0; /* v292 펫 축구: 공격 = 발차기 */
         let aR = fire ? -0.35 : -0.5; if (wu) aR = fire ? -1.2 : -2.75; else if (atk) aR = fire ? -1.55 + Math.sin(pa * Math.PI) * 0.2 : -2.75 + Math.min(1, pa * 1.7) * 2.45; else aR += air ? -0.45 : sw * 0.15;
         const aL = air ? -0.75 : -sw * 0.55 - (1 - amp) * (0.08 - Math.sin(t * 2) * 0.04);
-        const lgL = air ? -0.55 : sw * 0.6, lgR = air ? 0.3 : -sw * 0.6;
+        const lgL = air ? -0.55 : sw * 0.6, lgR = kq ? -kq * (v.ak === 's' ? 1.6 : 1.25) : air ? 0.3 : -sw * 0.6;
         part(m.body, base, al, tA, tc, ol); part(m.head, a3Mul(base, a3Rz(atk ? -0.15 : 0)), al, tA, tc, ol);
         part((t * 1000 + v.x * 333) % 3600 < 120 ? m.eyeC : m.eyeO, base, al, tA, tc, 0);
         part(m.armL, a3Ch(base, a3T(0, -0.27, 0.98), a3Rx(-0.12), a3Ry(aL)), al, tA, tc, ol);
@@ -16178,6 +16185,248 @@ Object.assign(PetRT.arena, {
     gl.bindVertexArray(null); gl.frontFace(gl.CCW); gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND); gl.depthMask(true);
   },
 });
+
+/* ===================== ⚽ 펫 축구 (v292, 사용자 2026-10-21 '콜로세움 게임처럼 이런 게임류를 더 추가하고싶은데' → 펫 축구·무너지는 바닥·깃발 모으기·언덕 점령 '다 좋은데') =====================
+ * 콜로세움 엔진(petarena.js · arenagl.js · arena3d.js)을 그대로 물려받는다: 같은 모래 경기장, 기둥만 치우고 바닥에 축구장 선.
+ * 나 + 내 펫 vs 상대 + 상대 펫. 나는 내가 조종하고 펫은 알아서 뛴다. 몸으로 밀어서 드리블, 클릭/J 차기 (보는 쪽으로),
+ * 우클릭/K 강슛 (띄워서 세게, 5초마다), Space 점프 (뜬 공은 머리로). 먼저 3골이면 이기고, 시간이 끝나 비기면 연장 골든골.
+ * 공 좌표: x·y = 가운데, z = 공 바닥 높이. 골대는 x = ±SC_GX (a팀은 +x 쪽 골대에 넣는다). 호스트가 공까지 다 계산한다. */
+PB_MODES.push('soccer');
+PB_MODE_KO.soccer = '⚽ 펫 축구';
+PB_MODE_HELP.soccer = ['WASD 이동 · 마우스로 보는 쪽이 차는 쪽 · 클릭/J 차기 · 우클릭/K 강슛 (띄워서 세게) · Space 점프 (뜬 공은 머리로) · V 시점. 먼저 3골 넣으면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 방향을 정해요. 차기·강슛·점프 버튼! 먼저 3골 넣으면 이겨요.'];
+PB_ACT_KO.soccer = '차기';
+PB_APT.soccer = ['빠르기·힘', b => b[3] * 0.6 + b[1] * 0.4];
+PB_ART.soccer = ['#7ad070', '#1e4a2a'];
+
+const SC_GX = 8, SC_GW = 1.8, SC_GH = 1.5, SC_GD = 0.7, SC_BR = 0.3, SC_WIN = 3;
+const scRot = (ax, ay, az, a) => { const c = Math.cos(a), s = Math.sin(a), t = 1 - c, m = a3I(); // 축 (ax,ay,az) 둘레로 a만큼 (a3Ry와 같은 방향)
+  m[0] = t * ax * ax + c; m[1] = t * ax * ay + s * az; m[2] = t * ax * az - s * ay; m[4] = t * ax * ay - s * az; m[5] = t * ay * ay + c; m[6] = t * ay * az + s * ax; m[8] = t * ax * az + s * ay; m[9] = t * ay * az - s * ax; m[10] = t * az * az + c; return m; };
+
+PetRT.soccer = Object.assign(Object.create(PetRT.arena), {
+  T: 120, sm: [], pil: [], soc: 1, fpKey: 'socFP', why0: '시간 끝! 골을 더 많이 넣은 팀이 이겼어요.',
+  gl() { return PetRT.arena.gl(); }, // 그래픽 카드 준비는 콜로세움과 같이 쓴다
+  init(B) {
+    const foe = B.me === 'a' ? 'b' : 'a', hn = { a: B.me === 'a' ? this.myName() : String(B.foeName || '상대'), b: B.me === 'b' ? this.myName() : String(B.foeName || '상대') };
+    const u = []; for (const tm of ['a', 'b']) for (const pet of [0, 1]) { const o = PetRT.arena.mk.call(this, B, tm, pet, 'sword', hn[tm]); if (!pet) o.wp = 'kick'; o.scm = 5; o.kw = 0; o.kq = 0; u.push(o); }
+    this.aiS = []; this.R = null; this.gbl = null; B.ya = B.me === 'a' ? 0 : Math.PI; B.pi = 0.1; this.look = { dx: 0, dy: 0 }; this.fp = !!Store.get('socFP', false); /* 축구는 처음엔 3인칭 (공이 발밑에 보여야 해서) */ this.mb = {}; this.hold = {};
+    const G = { u, ctl: { a: 0, b: 0 }, hum: { [B.me]: true, [foe]: B.mode === 'net' }, pr: [], ev: [], eid: 0, kf: [], pid: 0, bl: { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 }, sc: { a: 0, b: 0 }, gp: 0, lt: -1, tc: { a: 0, b: 0 }, ot: 0, fin: '' };
+    this.kickoff(G); return G;
+  },
+  kickoff(G) {
+    const P = { a: [[-2.2, 0], [-5.4, 1.6]], b: [[2.2, 0], [5.4, -1.6]] };
+    G.u.forEach(u => { const p = P[u.tm][u.k === 'hum' ? 0 : 1]; Object.assign(u, { x: p[0], y: p[1], an: u.tm === 'a' ? 0 : Math.PI, vx: 0, vy: 0, kx: 0, ky: 0, z: 0, vz: 0, st: 0, at: 0, kw: 0, kq: 0, qa: 0, qs: 0 }); });
+    Object.assign(G.bl, { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 }); G.lt = -1;
+  },
+  timeUp(G) { if (G.sc.a !== G.sc.b) { this.why0 = '시간 끝! 골을 더 많이 넣은 팀이 이겼어요.'; return G.sc.a > G.sc.b ? 'a' : 'b'; }
+    this.why0 = '연장전도 비겨서 공을 더 많이 찬 팀이 이겼어요.'; return G.tc.a === G.tc.b ? null : G.tc.a > G.tc.b ? 'a' : 'b'; },
+  /* ---- 한 틱 (호스트) ---- */
+  step(G, dt, P) {
+    for (let i = 0; i < 4; i++) { const u = G.u[i], human = G.hum[u.tm] && this.cu(G, u.tm) === i; this.unit(G, u, i, human ? this.cmdOf(P[u.tm]) : this.think(G, u, i, dt), dt); }
+    this.push(G); this.ball(G, dt);
+    if (G.gp > 0) { G.gp -= dt; if (G.left <= 0) G.left = 0.001; /* 골 세리머니 동안은 시간 끝내지 않는다 */ if (G.gp <= 0) { G.gp = 0; if (G.fin) return G.fin; this.kickoff(G); this.ev(G, { k: 'kf' }); } }
+    else if (G.left <= 0 && !G.ot && G.sc.a === G.sc.b) { G.ot = 1; G.left = 60; this.ev(G, { k: 'ot' }); } // 비기면 연장 1분, 먼저 넣는 팀이 이긴다
+    return null;
+  },
+  unit(G, u, i, cmd, dt) {
+    for (const k of ['cd', 'sc', 'at', 'st', 'fl', 'ld', 'kw', 'qa', 'qs']) u[k] = Math.max(0, (u[k] || 0) - dt);
+    if (u.kq && u.kw <= 0) { if (u.kq === 2) u.sc = Math.min(u.sc, 0.8); u.kq = 0; } // 강슛이 헛발이면 금방 다시
+    if (cmd.atk) u.qa = 0.2; if (cmd.sp) u.qs = 0.2;
+    const e = Math.exp(-7 * dt); u.x += u.kx * dt; u.y += u.ky * dt; u.kx *= e; u.ky *= e;
+    const air = u.z > 0 || u.vz > 0;
+    if (u.st <= 0) { if (cmd.an != null) u.an = cmd.an; let mx = cmd.mx || 0, my = cmd.my || 0; const m = Math.hypot(mx, my); if (m > 1) { mx /= m; my /= m; }
+      const sp = u.sp * (u.at > 0 ? 0.75 : 1), k = Math.min(1, dt * (air ? 4 : m > 0.05 ? 13 : 20));
+      u.vx += (mx * sp - u.vx) * k; u.vy += (my * sp - u.vy) * k; u.x += u.vx * dt; u.y += u.vy * dt; u.mv = Math.min(1, Math.hypot(u.vx, u.vy) / sp);
+      if (cmd.jp && !air) { u.vz = 5.6; this.ev(G, { k: 'jp', o: i }); } }
+    else { u.mv = 0; const e2 = Math.exp(-10 * dt); u.vx *= e2; u.vy *= e2; }
+    if (u.z > 0 || u.vz > 0) { u.vz -= 15 * dt; u.z += u.vz * dt; if (u.z <= 0) { u.z = 0; u.ld = 0.22; u.vz = 0; this.ev(G, { k: 'ln', o: i, x: u.x, y: u.y }); } }
+    u.ph = ((u.ph || 0) + Math.hypot(u.vx, u.vy) * dt * 2.5 * (u.z > 0 ? 0.3 : 1)) % (Math.PI * 200);
+    if (u.st <= 0 && !u.kq) {
+      if (u.qs > 0 && u.sc <= 0) { u.qs = 0; u.sc = u.scm; u.at = 0.3; u.ak = 's'; u.kw = 0.3; u.kq = 2; this.ev(G, { k: 'sw', o: i, w: 's' }); }
+      else if (u.qa > 0 && u.cd <= 0) { u.qa = 0; u.cd = 0.4; u.at = 0.3; u.ak = 'a'; u.kw = 0.22; u.kq = 1; this.ev(G, { k: 'sw', o: i, w: 'a' }); }
+    }
+    if (u.kq && u.kw > 0) this.kick(G, u, i);
+  },
+  // 차는 순간 (누른 뒤 잠깐 동안 공이 발 닿는 곳에 오면 찬다): 보는 쪽으로
+  kick(G, u, i) {
+    const b = G.bl, dx = b.x - u.x, dy = b.y - u.y, d = Math.hypot(dx, dy), reach = u.r + SC_BR + 0.5 + u.h * 0.08;
+    if (d > reach || b.z > u.z + Math.max(0.9, u.h) + 0.2) return;
+    if (d > u.r + SC_BR + 0.2 && Math.abs(paAng(Math.atan2(dy, dx), u.an)) > 1.4) return;
+    const pw = u.kq === 2, kp = 0.85 + Math.max(0, Math.min(0.5, u.dm - 0.75)) * 0.6 + (u.k === 'hum' ? 0.05 : 0), sp = (pw ? 14 : 8.5) * kp;
+    b.vx = Math.cos(u.an) * sp + u.vx * 0.3; b.vy = Math.sin(u.an) * sp + u.vy * 0.3; b.vz = pw ? 4.6 : 1.3 + (u.z > 0.1 ? 2 : 0); b.z = Math.max(b.z, 0.01);
+    u.kq = 0; u.kw = 0; G.lt = i; G.tc[u.tm]++; this.ev(G, { k: 'kk', o: i, p: pw ? 1 : 0, x: b.x, y: b.y, z: b.z });
+  },
+  // 벽·서로 밀어내기 + 몸에 닿은 공 밀기 (드리블) · 헤딩
+  push(G) {
+    for (const u of G.u) { const rr = Math.hypot(u.x, u.y), lim = PA_R - u.r - 0.1; if (rr > lim) { u.x *= lim / rr; u.y *= lim / rr; }
+      const xl = SC_GX + 0.1 - u.r; if (Math.abs(u.x) > xl) u.x = Math.sign(u.x) * xl; } // 골대 안으로는 못 들어간다
+    for (let a = 0; a < 4; a++) for (let c = a + 1; c < 4; c++) { const p = G.u[a], q = G.u[c], dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy), m = p.r + q.r;
+      if (d < m && d > 1e-4) { const k = (m - d) / 2 / d; p.x -= dx * k; p.y -= dy * k; q.x += dx * k; q.y += dy * k; } }
+    const b = G.bl, bc = b.z + SC_BR; let hit = 0;
+    G.u.forEach((u, i) => { const dx = b.x - u.x, dy = b.y - u.y, d = Math.hypot(dx, dy), m = u.r + SC_BR, top = u.z + Math.max(0.5, u.h); if (d >= m || d < 1e-4 || b.z > top || bc + SC_BR < u.z) return;
+      if (u.z > 0.15 && bc > u.z + u.h * 0.45) { b.vx = Math.cos(u.an) * 6.5; b.vy = Math.sin(u.an) * 6.5; b.vz = Math.max(b.vz, 3.2); b.z = Math.max(b.z, top - SC_BR); G.lt = i; G.tc[u.tm]++; this.ev(G, { k: 'kk', o: i, p: 0, h: 1, x: b.x, y: b.y, z: b.z }); return; } // 헤딩
+      if (b.z > top - SC_BR * 1.2 && b.vz < 0) { b.z = top - SC_BR * 0.8; b.vz = -b.vz * 0.45 + 0.8; return; } // 머리 위에서 통
+      const nx = dx / d, ny = dy / d; b.x = u.x + nx * m; b.y = u.y + ny * m; const rel = (u.vx - b.vx) * nx + (u.vy - b.vy) * ny; hit |= 1 << i;
+      if (rel > 0) { b.vx += nx * rel * 1.25; b.vy += ny * rel * 1.25; if (rel > 0.6) G.lt = i; } });
+    if ((hit & 3) && (hit & 12) && b.z < 0.05) { const a = Math.random() * Math.PI * 2; b.vz = 3.6; b.vx += Math.cos(a) * 2.5; b.vy += Math.sin(a) * 2.5; b.z = 0.02; this.ev(G, { k: 'bn', x: b.x, y: b.y }); } // 양 팀이 공을 끼고 밀면 공이 튀어 오른다 (안 끼게)
+  },
+  ball(G, dt) { const b = G.bl, n = Math.max(1, Math.min(4, Math.ceil(Math.hypot(b.vx, b.vy, b.vz) * dt / 0.15))); for (let s = 0; s < n; s++) this.bstep(G, b, dt / n); },
+  bstep(G, b, h) {
+    b.x += b.vx * h; b.y += b.vy * h;
+    if (b.z > 0 || b.vz > 0) { b.vz -= 13 * h; b.z += b.vz * h; if (b.z <= 0) { b.z = 0; if (b.vz < -1.6) { if (b.vz < -3) this.ev(G, { k: 'bn', x: b.x, y: b.y }); b.vz = -b.vz * 0.55; } else b.vz = 0; } }
+    const f = Math.exp(-(b.z > 0.02 ? 0.12 : 0.9) * h); b.vx *= f; b.vy *= f;
+    const ax = Math.abs(b.x), sx = b.x < 0 ? -1 : 1, ay = Math.abs(b.y), cz = b.z + SC_BR, rb = (nx, ny, vn) => { if (vn < 0) { b.vx -= 1.75 * vn * nx; b.vy -= 1.75 * vn * ny; if (vn < -2) this.ev(G, { k: 'po', x: b.x, y: b.y }); } };
+    if (ax > SC_GX - SC_BR - 0.1 && ax < SC_GX + SC_BR + 0.1) { // 골대 기둥 · 가로대
+      for (const py of [-SC_GW, SC_GW]) { const dx = b.x - sx * SC_GX, dy = b.y - py, d = Math.hypot(dx, dy), m = SC_BR + 0.07; if (d < m && d > 1e-4 && cz < SC_GH + 0.07) { b.x = sx * SC_GX + dx / d * m; b.y = py + dy / d * m; rb(dx / d, dy / d, b.vx * dx / d + b.vy * dy / d); } }
+      if (ay < SC_GW) { const dx = ax - SC_GX, dz = cz - SC_GH, d = Math.hypot(dx, dz), m = SC_BR + 0.07; if (d < m && d > 1e-4) { const nx = dx / d, nz = dz / d, vx = b.vx * sx, vn = vx * nx + b.vz * nz; b.x = sx * (SC_GX + nx * m); b.z = SC_GH + nz * m - SC_BR; if (vn < 0) { b.vx = sx * (vx - 1.75 * vn * nx); b.vz -= 1.75 * vn * nz; if (vn < -2) this.ev(G, { k: 'po', x: b.x, y: b.y }); } } }
+    }
+    if (ax > SC_GX && ay < SC_GW && cz < SC_GH) { // 골대 안: 그물이 잡는다
+      if (!G.gp && ax > SC_GX + SC_BR) this.goal(G, b.x > 0 ? 'a' : 'b');
+      const bx = SC_GX + SC_GD - SC_BR, by = SC_GW - SC_BR; if (ax > bx) { b.x = sx * bx; b.vx *= -0.15; } if (ay > by) { b.y = Math.sign(b.y) * by; b.vy *= -0.15; }
+      if (cz > SC_GH - SC_BR) { b.z = SC_GH - SC_BR * 2; b.vz = Math.min(0, b.vz) * 0.2; } if (G.gp) { const k = Math.exp(-3 * h); b.vx *= k; b.vy *= k; } return; }
+    if (ax > SC_GX && ay < SC_GW && cz >= SC_GH && cz < SC_GH + SC_BR && b.vz < 0) { b.z = SC_GH; b.vz *= -0.3; } // 골대 지붕 그물
+    if (ay > SC_GW + 0.07 && ax > SC_GX - SC_BR) { b.x = sx * (SC_GX - SC_BR); if (b.vx * sx > 0) b.vx = -b.vx * 0.6; } // 골대 옆은 벽 (구석에 공이 끼지 않게)
+    const rr = Math.hypot(b.x, b.y), lim = PA_R - SC_BR - 0.05; if (rr > lim) { const nx = b.x / rr, ny = b.y / rr, vn = b.vx * nx + b.vy * ny; b.x = nx * lim; b.y = ny * lim; if (vn > 0) { b.vx -= 1.7 * vn * nx; b.vy -= 1.7 * vn * ny; if (vn > 2.5) this.ev(G, { k: 'wl', x: b.x, y: b.y }); } }
+  },
+  goal(G, tm) {
+    G.sc[tm]++; G.gp = 2.4; const s = G.u[G.lt]; this.ev(G, { k: 'gl', tm, o: G.lt, own: s && s.tm !== tm ? 1 : 0 });
+    if (G.sc[tm] >= SC_WIN || G.ot) { G.fin = tm; G.why = G.ot ? '연장전 골든골!' : `먼저 ${SC_WIN}골을 넣었어요!`; }
+  },
+  // AI: 공에 더 가까운 쪽이 공을 몰고 (공 뒤로 돌아가서 골대 쪽으로), 다른 쪽은 우리 골대와 공 사이를 지킨다
+  think(G, u, i, dt) {
+    const B = PetBattle.B, A = this.aiS[i] || (this.aiS[i] = { rt: 0, role: 0, er: 0, et: 0 }), b = G.bl, none = { mx: 0, my: 0, an: u.an };
+    if (G.ph !== 'play') return none;
+    const sk = B && B.mode === 'npc' && u.tm !== B.me ? B.ai.sk : 0.75, dir = u.tm === 'a' ? 1 : -1, ex = dir * SC_GX, ox = -dir * SC_GX;
+    const go = (tx, ty, face, k) => { let mx = tx - u.x, my = ty - u.y; const m = Math.hypot(mx, my); if (m < 0.15) mx = my = 0; else { const s = Math.min(1, m / 0.8) * k; mx = mx / m * s; my = my / m * s; }
+      const df = paAng(face, u.an); return { mx, my, an: u.an + Math.max(-7 * dt, Math.min(7 * dt, df)) }; };
+    if (G.gp > 0) return go(ox * 0.3, u.y * 0.6, Math.atan2(-u.y, ex - u.x), 0.45);
+    A.rt -= dt; if (A.rt <= 0) { A.rt = 0.4; const mate = G.u.find((v, j) => j !== i && v.tm === u.tm), dm = Math.hypot(b.x - u.x, b.y - u.y), dmate = mate ? Math.hypot(b.x - mate.x, b.y - mate.y) : 99; A.role = dm <= dmate + (A.role === 0 ? 0.6 : -0.6) ? 0 : 1; }
+    A.et -= dt; if (A.et <= 0) { A.et = 0.6; A.er = (Math.random() - 0.5) * 2 * (1 - sk) * 0.35; }
+    const px = b.x + b.vx * 0.25, py = b.y + b.vy * 0.25, d = Math.hypot(b.x - u.x, b.y - u.y), near = d < u.r + SC_BR + 0.45, sp0 = 0.72 + sk * 0.3;
+    let atk = false, sp = false, jp = false, o;
+    if (A.role === 0) {
+      const gy = Math.max(-SC_GW + 0.5, Math.min(SC_GW - 0.5, py * 0.3)), gdx = ex - px, gdy = gy - py, gl = Math.hypot(gdx, gdy) || 1, nx = gdx / gl, ny = gdy / gl, ga = Math.atan2(ny, nx) + A.er;
+      const behind = (u.x - px) * nx + (u.y - py) * ny, side = (u.x - px) * -ny + (u.y - py) * nx, back = u.r + SC_BR + 0.35;
+      let tx, ty; if (behind < -0.15 && Math.abs(side) < 0.6) { tx = px + nx * 0.6; ty = py + ny * 0.6; } // 공 뒤에 섰으면 골대 쪽으로 밀고 간다
+      else { tx = px - nx * back; ty = py - ny * back; if (behind > -0.2) { const sg = side >= 0 ? 1 : -1; tx += -ny * sg * 1.1; ty += nx * sg * 1.1; } } // 공 앞이면 옆으로 돌아서
+      o = go(tx, ty, d < 2 ? ga : Math.atan2(ty - u.y, tx - u.x), sp0);
+      const aligned = Math.abs(paAng(Math.atan2(b.y - u.y, b.x - u.x), ga)) < 0.6 && Math.abs(paAng(u.an, ga)) < 0.5, dg = Math.hypot(ex - b.x, b.y);
+      const foeNear = G.u.some(v => v.tm !== u.tm && Math.hypot(v.x - b.x, v.y - b.y) < 1.3), fwd = Math.abs(paAng(u.an, ga)) < 1.3;
+      if (near && fwd && foeNear && Math.random() < dt * (4 + sk * 6)) atk = true; // 상대가 붙으면 일단 앞으로 찬다
+      if (near && aligned) { if (u.sc <= 0 && dg < 7.5 && dg > 2.5 && Math.random() < dt * (1 + sk * 3)) sp = true; else if (Math.random() < dt * (dg < 9 ? 3 + sk * 5 : 1 + sk * 2)) atk = true; }
+      if (near && Math.abs(b.x - ox) < 3 && Math.abs(paAng(u.an, dir > 0 ? 0 : Math.PI)) < 1.3) atk = atk || Math.random() < dt * 6; // 우리 골대 앞이면 일단 걷어낸다
+      if (b.z > 0.5 && d < 1.4 && Math.random() < dt * 4 * sk) jp = true;
+    } else {
+      let tx = ox + (px - ox) * 0.42 + dir * 0.6, ty = py * 0.55 + (u.k === 'hum' ? 0.8 : -0.8);
+      if ((px - ox) * dir < 3.5) { tx = ox + dir * 1.2; ty = Math.max(-SC_GW, Math.min(SC_GW, py * 0.6)); } // 공이 우리 골대 가까우면 골키퍼
+      o = go(tx, ty, Math.atan2(py - u.y, px - u.x), sp0);
+      if (near && Math.random() < dt * 5) atk = true;
+    }
+    return Object.assign(o, { atk, sp, jp });
+  },
+  // 받은 쪽: 공은 받은 속도로 이어서 굴리고, 새 상태가 오면 살짝 당겨 맞춘다
+  guest(B, dt) {
+    const fr = B.fresh, S = B.G; PetRT.arena.guest.call(this, B, dt); const D = B.D; if (!S.bl || !D) return;
+    let p = this.gbl; if (!p) p = this.gbl = Object.assign({}, S.bl);
+    if (fr) { const e = Math.hypot(S.bl.x - p.x, S.bl.y - p.y, S.bl.z - p.z); if (e > 1.5) Object.assign(p, S.bl); else { p.x += (S.bl.x - p.x) * 0.5; p.y += (S.bl.y - p.y) * 0.5; p.z += (S.bl.z - p.z) * 0.5; p.vx = S.bl.vx; p.vy = S.bl.vy; p.vz = S.bl.vz; } }
+    p.x += p.vx * dt; p.y += p.vy * dt; if (p.z > 0 || p.vz > 0) { p.vz -= 13 * dt; p.z += p.vz * dt; if (p.z < 0) { p.z = 0; p.vz = 0; } }
+    D.bl = p;
+  },
+  pad() { return `<div class="pbPad m-arena"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns"><button class="pbB3" id="pbHop">점프</button><button class="pbB2" id="pbJmp">강슛</button><button class="pbB1" id="pbAct">차기</button></div><button class="pbView" id="pbView">시점</button></div>`; },
+  hands() {}, // 1인칭이어도 손은 안 그린다 (발로 차는 게임)
+  shd(G) { const b = G.bl; return G.u.concat(b ? [{ x: b.x, y: b.y, r: SC_BR * 0.95, z: b.z, hp: 1 }] : []); }, // 바닥 그림자: 넷 + 공
+  /* ---- 그리기: 캐릭터 다음에 골대 둘 + 공 ---- */
+  socMesh(g) {
+    const M = g.M; if (M.soc) return M.soc;
+    const goal = net => { const o = this.geo(), X = SC_GX, W = SC_GW, H = SC_GH, D = SC_GD, pr = 0.07, wh = '#f4f4ee', nr = 0.016, Ry = a3Ry(Math.PI / 2), Rx = a3Rx(-Math.PI / 2);
+      for (const y of [-W, W]) { this.cone(o, X, y, 0, pr, pr, H + pr, wh, { nu: 12 }); this.cone(o, X + D, y, 0, 0.035, 0.035, H, net, { nu: 6 }); this.cone(o, X, y, H, 0.035, 0.035, D, net, { nu: 6, rot: Ry }); this.cone(o, X, y, 0.02, 0.03, 0.03, D, net, { nu: 6, rot: Ry }); }
+      this.cone(o, X, -W - pr, H, pr, pr, 2 * W + 2 * pr, wh, { nu: 12, rot: Rx }); this.cone(o, X + D, -W, H, 0.035, 0.035, 2 * W, net, { nu: 6, rot: Rx }); this.cone(o, X + D, -W, 0.02, 0.03, 0.03, 2 * W, net, { nu: 6, rot: Rx });
+      for (let y = -W + 0.3; y < W - 0.05; y += 0.3) { this.cone(o, X + D, y, 0, nr, nr, H, net, { nu: 4, cap: false }); this.cone(o, X, y, H, nr, nr, D, net, { nu: 4, cap: false, rot: Ry }); }
+      for (let z = 0.3; z < H - 0.05; z += 0.3) { this.cone(o, X + D, -W, z, nr, nr, 2 * W, net, { nu: 4, cap: false, rot: Rx }); for (const y of [-W, W]) this.cone(o, X, y, z, nr, nr, D, net, { nu: 4, cap: false, rot: Ry }); }
+      for (const y of [-W, W]) this.cone(o, X + D * 0.5, y, 0, nr, nr, H, net, { nu: 4, cap: false });
+      this.cone(o, X + D * 0.5, -W, H, nr, nr, 2 * W, net, { nu: 4, cap: false, rot: Rx });
+      return this.upload(g, o); };
+    const bo = this.geo(); this.sq(bo, 0, 0, 0, SC_BR, SC_BR, SC_BR, 1, '#f6f6f2', { nu: 32, nv: 20 });
+    const p = (1 + Math.sqrt(5)) / 2, ico = [[0, 1, p], [0, -1, p], [0, 1, -p], [0, -1, -p], [1, p, 0], [-1, p, 0], [1, -p, 0], [-1, -p, 0], [p, 0, 1], [-p, 0, 1], [p, 0, -1], [-p, 0, -1]].map(v => { const l = Math.hypot(...v); return v.map(q => q / l); });
+    for (let k = 0; k < bo.p.length / 3; k++) { const x = bo.p[k * 3], y = bo.p[k * 3 + 1], z = bo.p[k * 3 + 2], l = Math.hypot(x, y, z) || 1; let best = -1; for (const v of ico) best = Math.max(best, (x * v[0] + y * v[1] + z * v[2]) / l); if (best > 0.93) bo.c[k * 3] = bo.c[k * 3 + 1] = bo.c[k * 3 + 2] = 0.13; } // 검은 오각형 12개
+    M.soc = { gb: goal('#ffb4a8'), ga: goal('#a8c8ff'), ball: this.upload(g, bo) }; return M.soc;
+  },
+  draw3(g, R, G, B, ci, cam, t, fp) {
+    PetRT.arena.draw3.call(this, g, R, G, B, ci, cam, t, fp);
+    const gl = g.gl, M = this.m3(g), u = M.u, S = this.socMesh(g), b = G.bl; if (!b) return;
+    gl.useProgram(M.p); gl.uniform3f(u.uC, cam.px, cam.py, cam.z); gl.uniform3fv(u.uF, cam.F); gl.uniform3fv(u.uR, cam.R); gl.uniform3fv(u.uU, cam.U); gl.uniform2f(u.uTan, cam.tanH, cam.tanV); gl.uniform3f(u.uCam, cam.px, cam.py, cam.z);
+    gl.enable(gl.CULL_FACE); gl.frontFace(gl.CW); gl.disable(gl.BLEND);
+    const part = (m, Mx, ol) => { gl.bindVertexArray(m.vao); gl.uniformMatrix4fv(u.uM, false, Mx); gl.uniform1f(u.uAl, 1); gl.uniform1f(u.uUseT, 0); gl.uniform1f(u.uEm, 0);
+      if (ol > 0) { gl.cullFace(gl.FRONT); gl.uniform1f(u.uOL, ol); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
+      gl.cullFace(gl.BACK); gl.uniform1f(u.uOL, 0); gl.uniform1f(u.uTintA, 0); gl.uniform3fv(u.uTint, [1, 1, 1]); gl.drawArrays(gl.TRIANGLES, 0, m.n); };
+    part(S.gb, a3I(), 0); part(S.ga, a3Rz(Math.PI), 0); // +x = b팀 골대 (빨강 그물), -x = a팀 골대 (파랑 그물)
+    // 공: 굴러간 만큼 돈다 (보기만)
+    const now = performance.now(); if (!R.bq || !(R.bq[0] === R.bq[0])) { R.bq = a3I(); R.bp = [b.x, b.y]; }
+    const mx = b.x - R.bp[0], my = b.y - R.bp[1], md = Math.hypot(mx, my); if (md > 1e-4 && md < 2) R.bq = a3Mul(scRot(-my / md, mx / md, 0, md / SC_BR), R.bq); R.bp = [b.x, b.y]; R.bt = now;
+    const dist = Math.hypot(b.x - cam.px, b.y - cam.py, b.z - cam.z); part(S.ball, a3Mul(a3T(b.x, b.y, b.z + SC_BR), R.bq), Math.max(0.008, Math.min(0.03, dist * 0.004)));
+    gl.bindVertexArray(null); gl.frontFace(gl.CCW); gl.disable(gl.CULL_FACE); gl.depthMask(true);
+  },
+  events(R, G, B, ci) {
+    const my = this.cu(G, B.me), U = G.u[ci];
+    for (const e of G.ev || []) { if (e.id <= R.seen) continue; R.seen = e.id; const o = G.u[e.o], near = e.x != null ? Math.hypot(e.x - U.x, e.y - U.y) < 8 : o ? Math.hypot(o.x - U.x, o.y - U.y) < 8 : false;
+      if (e.k === 'kk') { this.spark(R, e.x, e.y, e.z + SC_BR, e.p ? 14 : 6, e.p ? '#ffd84a' : '#fff', e.p ? 1.2 : 0.6); if (e.o === my) { R.hm = 0.2; Sound.play(e.p ? 'slam' : 'pop'); } else if (near) Sound.play(e.p ? 'slam' : 'flip'); if (e.p) R.rings.push({ x: e.x, y: e.y, t: 0, l: 0.35, r: 1.2, col: '#ffe08a' }); }
+      else if (e.k === 'gl') { const s = G.u[e.o], mine = e.tm === B.me; R.goal = { t: 2.4, mine, s: s ? (e.own ? `${s.nm} 자책골!` : `${s.nm}${s.k === 'hum' ? '' : ' (펫)'} 골!`) : '골!' }; Sound.play(mine ? 'chime' : 'deny'); Sound.play('ding');
+        const gx = e.tm === 'a' ? SC_GX : -SC_GX; for (let n = 0; n < 40; n++) this.spark(R, gx, (Math.random() - 0.5) * SC_GW * 2, Math.random() * SC_GH, 1, ['#ff5a6a', '#ffd84a', '#5ad0ff', '#7cf08a', '#fff'][n % 5], 1.6); R.sh = Math.max(R.sh, 0.5); }
+      else if (e.k === 'po') { Sound.play('cage'); this.spark(R, e.x, e.y, 0.8, 5, '#fff', 0.6); }
+      else if (e.k === 'bn' || e.k === 'wl') { if (near) Sound.play('flip'); }
+      else if (e.k === 'kf') { B.ya = B.me === 'a' ? 0 : Math.PI; R.msg = { t: 1.4, s: '다시 시작!' }; Sound.play('blip'); }
+      else if (e.k === 'ot') { R.msg = { t: 2.6, s: '연장전! 먼저 넣는 팀이 이겨요' }; Sound.play('ding'); }
+      else if (e.k === 'sw') { if (e.o === my || near) Sound.play('whoosh'); }
+      else if (e.k === 'jp') { if (e.o === my || near) Sound.play('pop'); }
+      else if (e.k === 'ln') { for (let n = 0; n < 8 && R.fx.length < 260; n++) { const a = Math.random() * 7, v = 0.8 + Math.random() * 1.4; R.fx.push({ x: e.x + Math.cos(a) * 0.2, y: e.y + Math.sin(a) * 0.2, z: 0.04, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vz: 0.5 + Math.random() * 0.8, g: 5, t: 0, life: 0.28 + Math.random() * 0.25, col: '#e8d4a8', sz: 0.075 }); } }
+    }
+  },
+  hud(c, W, H, R, G, B, ci, U, t, dt) {
+    const fs = Math.max(11, Math.min(20, H / 30)), touch = document.body.classList.contains('touchOn'), F = PetRT.font.bind(PetRT), cam = R.cam, me = B.me, foe = me === 'a' ? 'b' : 'a', b = G.bl, K = cam.k;
+    const pt = (x, y, z) => { if (cam.gl) { const p = this.p3(cam, x, y, z); return { ok: p.w > 0.1, x: p.sx * K, y: p.sy * K, w: p.w }; } const q = this.proj(cam, x, y); return { ok: q.dp > 0.2, x: q.sx * K, y: (q.gy - z * q.sc) * K, w: q.dp }; };
+    // 이름표 (체력 없음)
+    for (const g of R.tags || []) { const u = g.u, X = g.sx * K, Y = g.sy * K; c.font = F(fs * 0.7, 800); c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(u.nm, X, Y); c.fillStyle = u.tm === me ? '#bfe0ff' : '#ffc0b0'; c.fillText(u.nm, X, Y); }
+    // 예전 그림(그래픽 카드 없음)엔 공을 여기서 동그라미로
+    if (b && !cam.gl) { const q = this.proj(cam, b.x, b.y); if (q.dp > 0.2) { const r = Math.max(2, SC_BR * q.sc * K); c.fillStyle = '#f6f6f2'; c.strokeStyle = '#222'; c.lineWidth = 1.5; c.beginPath(); c.arc(q.sx * K, (q.gy - (b.z + SC_BR) * q.sc) * K, r, 0, 7); c.fill(); c.stroke(); } }
+    // 차는 방향 (공이 가까울 때 발밑에 화살표)
+    if (b && G.ph === 'play' && Math.hypot(b.x - U.x, b.y - U.y) < 2.6) { const a = B.ya, p0 = pt(U.x + Math.cos(a) * (U.r + 0.2), U.y + Math.sin(a) * (U.r + 0.2), 0.03), p1 = pt(U.x + Math.cos(a) * (U.r + 1.5), U.y + Math.sin(a) * (U.r + 1.5), 0.03);
+      if (p0.ok && p1.ok) { const an = Math.atan2(p1.y - p0.y, p1.x - p0.x), hs = fs * 0.55; c.strokeStyle = 'rgba(255,216,74,.85)'; c.lineWidth = Math.max(2, fs * 0.2); c.beginPath(); c.moveTo(p0.x, p0.y); c.lineTo(p1.x, p1.y); c.stroke(); c.fillStyle = 'rgba(255,216,74,.9)'; c.beginPath(); c.moveTo(p1.x + Math.cos(an) * hs, p1.y + Math.sin(an) * hs); c.lineTo(p1.x + Math.cos(an + 2.5) * hs, p1.y + Math.sin(an + 2.5) * hs); c.lineTo(p1.x + Math.cos(an - 2.5) * hs, p1.y + Math.sin(an - 2.5) * hs); c.fill(); } }
+    // 공이 화면 밖이면 가장자리에 공 표시 + 화살표
+    if (b) { const p = pt(b.x, b.y, b.z + SC_BR), m = fs * 2.2; if (!(p.ok && p.x > m && p.x < W - m && p.y > m * 1.6 && p.y < H - m)) { let dx = p.x - W / 2, dy = p.y - H / 2; if (!p.ok) { dx = -dx; dy = -dy; if (Math.abs(dy) < 1 && Math.abs(dx) < 1) dy = H; }
+        const s = Math.min((W / 2 - m) / Math.max(1e-3, Math.abs(dx)), (H / 2 - m * 1.4) / Math.max(1e-3, Math.abs(dy))), X = W / 2 + dx * s, Y = H / 2 + dy * s, an = Math.atan2(dy, dx), r = fs * 0.75;
+        c.fillStyle = 'rgba(10,14,24,.7)'; c.beginPath(); c.arc(X, Y, r * 1.5, 0, 7); c.fill(); c.fillStyle = '#ffd84a'; c.beginPath(); c.moveTo(X + Math.cos(an) * r * 2.4, Y + Math.sin(an) * r * 2.4); c.lineTo(X + Math.cos(an + 0.5) * r * 1.5, Y + Math.sin(an + 0.5) * r * 1.5); c.lineTo(X + Math.cos(an - 0.5) * r * 1.5, Y + Math.sin(an - 0.5) * r * 1.5); c.fill();
+        c.fillStyle = '#f6f6f2'; c.beginPath(); c.arc(X, Y, r, 0, 7); c.fill(); c.fillStyle = '#222'; c.beginPath(); c.arc(X, Y, r * 0.35, 0, 7); c.fill(); } }
+    // 위 가운데: 점수판 + 시간
+    const tb = fs * 0.5, bw = fs * 2.6, tw = fs * 4, h0 = fs * 1.8, x0 = W / 2 - tw / 2;
+    c.fillStyle = '#2f7fe0'; PetRT.rr(c, x0 - bw, tb, bw, h0, fs * 0.3); c.fill(); c.fillStyle = '#e0483a'; PetRT.rr(c, x0 + tw, tb, bw, h0, fs * 0.3); c.fill();
+    const hot = G.left < 10 && G.ph === 'play'; c.fillStyle = hot ? '#7a1a14' : 'rgba(10,12,20,.82)'; c.fillRect(x0, tb, tw, h0);
+    c.textAlign = 'center'; c.fillStyle = '#fff'; c.font = F(fs * 1.35, 900); c.fillText(String(G.sc[me] | 0), x0 - bw / 2, tb + h0 * 0.74); c.fillText(String(G.sc[foe] | 0), x0 + tw + bw / 2, tb + h0 * 0.74);
+    { const L = Math.ceil(G.left || 0); c.font = F(fs * 1.05, 900); c.fillStyle = hot ? '#ffd0c8' : '#fff'; c.fillText(`${Math.floor(L / 60)}:${String(L % 60).padStart(2, '0')}`, W / 2, tb + h0 * 0.7); }
+    c.font = F(fs * 0.6, 800); c.fillStyle = G.ot ? '#ffd84a' : '#e8e2c8'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.6)'; const sub = G.ot ? '연장전 · 골든골' : `펫 축구 · 먼저 ${SC_WIN}골`; c.strokeText(sub, W / 2, tb + h0 + fs * 0.85); c.fillText(sub, W / 2, tb + h0 + fs * 0.85);
+    // 양쪽 위: 팀 초상화
+    const pr = fs * 1.05; for (const [tm, left] of [[me, true], [foe, false]]) G.u.filter(u => u.tm === tm).forEach((u, n) => { const x = left ? tb + pr + n * (pr * 2 + fs * 4.6) : W - tb - pr - n * (pr * 2 + fs * 4.6), y = tb + pr; this.portrait(c, B, u, x, y, pr, t);
+      c.font = F(fs * 0.66, 800); c.textAlign = left ? 'left' : 'right'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.6)'; const tx = left ? x + pr + fs * 0.3 : x - pr - fs * 0.3, lab = (G.hum[tm] && this.cu(G, tm) === G.u.indexOf(u) ? '조종 · ' : '') + u.nm; c.strokeText(lab, tx, y + fs * 0.25); c.fillStyle = '#fff'; c.fillText(lab, tx, y + fs * 0.25); });
+    // 미니맵: 내가 넣을 골대가 위
+    const mr = fs * 2.5, mx = tb + mr + 4, my = tb + pr * 2 + fs * 0.9 + mr, ms = mr / PA_R; c.save(); c.translate(mx, my); c.fillStyle = 'rgba(10,14,24,.6)'; c.beginPath(); c.arc(0, 0, mr, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1.5; c.stroke(); c.clip(); c.rotate(-(me === 'a' ? 0 : Math.PI) - Math.PI / 2);
+    c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -mr); c.lineTo(0, mr); c.stroke(); c.beginPath(); c.arc(0, 0, 1.6 * ms, 0, 7); c.stroke();
+    for (const [gx, col] of [[SC_GX, me === 'a' ? '#ff6a5a' : '#5aa8ff'], [-SC_GX, me === 'a' ? '#5aa8ff' : '#ff6a5a']]) { c.fillStyle = col; c.fillRect(gx > 0 ? gx * ms : (gx - SC_GD) * ms, -SC_GW * ms, SC_GD * ms, SC_GW * 2 * ms); }
+    G.u.forEach((u, i) => { c.fillStyle = i === ci ? '#ffd84a' : u.tm === me ? '#4aa0ff' : '#ff4a3a'; c.beginPath(); c.arc(u.x * ms, u.y * ms, Math.max(2.5, fs * (i === ci ? 0.28 : 0.22)), 0, 7); c.fill(); });
+    if (b) { c.fillStyle = '#fff'; c.strokeStyle = '#000'; c.lineWidth = 1; c.beginPath(); c.arc(b.x * ms, b.y * ms, Math.max(2.5, fs * 0.2), 0, 7); c.fill(); c.stroke(); }
+    c.restore();
+    // 오른쪽 아래: 기술 칸 (PC) / 폰 버튼 글씨
+    const ready = U.sc <= 0;
+    if (!touch) { const box = fs * 2.5, gap = fs * 0.4; [['차기', 'J / 클릭', U.cd, 0.4], ['강슛', 'K / 우클릭', U.sc, U.scm], ['점프', 'Space', 0, 1]].forEach(([nm, key, cd, cm], n) => { const bx = W - fs - (3 - n) * (box + gap) + gap, by = H - fs - box;
+        c.fillStyle = 'rgba(10,14,24,.62)'; PetRT.rr(c, bx, by, box, box, fs * 0.35); c.fill(); if (cd > 0) { c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(bx, by + box * (1 - cd / (cm || 1)), box, box * cd / (cm || 1)); }
+        c.strokeStyle = cd > 0 ? 'rgba(255,255,255,.3)' : n === 1 ? '#ffd84a' : '#fff'; c.lineWidth = 2; PetRT.rr(c, bx, by, box, box, fs * 0.35); c.stroke();
+        c.textAlign = 'center'; c.font = F(fs * 0.85, 900); c.fillStyle = '#fff'; c.fillText(n === 1 && cd > 0.05 ? String(Math.ceil(cd)) : nm, bx + box / 2, by + box * 0.6); c.font = F(fs * 0.5, 800); c.fillStyle = 'rgba(255,255,255,.6)'; c.fillText(key, bx + box / 2, by - fs * 0.25); }); }
+    else { const b2 = $('pbJmp'); if (b2) { const txt = ready ? '강슛' : `${Math.ceil(U.sc)}`; if (b2.textContent !== txt) b2.textContent = txt; b2.classList.toggle('cd', !ready); } }
+    // 가운데: 골! · 알림
+    if (R.goal && (R.goal.t -= dt) > 0) { const g = R.goal, q = Math.min(1, (2.4 - g.t) * 5), sz = fs * 3.2 * (0.6 + 0.4 * q); c.globalAlpha = Math.min(1, g.t * 2); c.textAlign = 'center'; c.font = F(sz, 900); c.lineWidth = Math.max(5, sz * 0.12); c.strokeStyle = g.mine ? 'rgba(10,30,80,.85)' : 'rgba(80,10,10,.85)'; c.strokeText('골!', W / 2, H * 0.34); c.fillStyle = g.mine ? '#7cc4ff' : '#ff7a6a'; c.fillText('골!', W / 2, H * 0.34);
+      c.font = F(fs * 1.05, 900); c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(g.s, W / 2, H * 0.34 + fs * 1.7); c.fillStyle = '#fff'; c.fillText(g.s, W / 2, H * 0.34 + fs * 1.7); c.globalAlpha = 1; }
+    if (R.msg && (R.msg.t -= dt) > 0) { c.font = F(fs * 0.9, 800); c.textAlign = 'center'; const w = c.measureText(R.msg.s).width + fs * 2; c.fillStyle = 'rgba(10,14,24,.75)'; PetRT.rr(c, W / 2 - w / 2, H * 0.5, w, fs * 1.7, fs * 0.85); c.fill(); c.fillStyle = '#ffe58a'; c.fillText(R.msg.s, W / 2, H * 0.5 + fs * 1.15); }
+    if (!touch && G.ph === 'play' && document.pointerLockElement !== $('pbCv')) { c.font = F(fs * 0.72, 800); c.textAlign = 'center'; const s = '화면을 클릭하면 마우스로 방향을 정해요', w = c.measureText(s).width + fs * 1.4; c.fillStyle = 'rgba(10,14,24,.7)'; PetRT.rr(c, W / 2 - w / 2, H - fs * 5.6, w, fs * 1.5, fs * 0.75); c.fill(); c.fillStyle = '#fff'; c.fillText(s, W / 2, H - fs * 4.55); }
+  },
+});
+Object.defineProperty(PetRT.soccer, 'upWhy', { get() { return this.why0; } }); // 시간 끝 이유는 그때그때 (Object.assign은 getter를 값으로 굳혀서 따로)
 
 /* ===================== 펫 진화 모습 (v263, 사용자 2026-10-20 '볏 말고 뭔가 다른 게 없을까' · '형태가 바뀌어도 돼') =====================
  * 머리 볏·흰 날개 대신 펫마다 몸 모양이 바뀐다: 1단계(Lv15)는 한 군데, 최종(Lv30)은 크게 여러 군데 (꼬리·갈기·등·날개·뿔…).
@@ -16522,7 +16771,7 @@ const LookSens = {
   set(v) { v = Math.round(Math.max(this.MIN, Math.min(this.MAX, v)) * 10) / 10; Store.set('lookSens', v); this.menu(); return v; },
   menu() { const inp = $('setLook'); if (!inp) return; const v = this.k(); inp.value = v; $('setLookV').textContent = '×' + v.toFixed(1);
     if (!inp.dataset.on) { inp.dataset.on = 1; inp.oninput = () => this.set(+inp.value); inp.onchange = () => { this.set(+inp.value); inp.blur(); }; inp.onkeydown = e => e.stopPropagation(); } },
-  on() { return (typeof Mine !== 'undefined' && Mine.open_) || (typeof PetBattle !== 'undefined' && PetBattle.B && PetBattle.B.rtMode === 'arena'); },
+  on() { return (typeof Mine !== 'undefined' && Mine.open_) || (typeof PetBattle !== 'undefined' && PetBattle.B && PetRT.is3d(PetBattle.B.rtMode)); },
 };
 window.addEventListener('keydown', e => { if ((e.key !== '[' && e.key !== ']') || !LookSens.on() || /INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) return;
   const v = LookSens.set(LookSens.k() + (e.key === ']' ? 0.1 : -0.1)); Toast.show(`🎯 둘러보기 감도 ×${v.toFixed(1)}  ([ 느리게 · ] 빠르게)`); e.preventDefault(); }, true);

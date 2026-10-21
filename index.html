@@ -1308,7 +1308,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v288</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v289</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3062,7 +3062,7 @@ function buildZone(spec, cases = []) {
     let best = null, bs = -1;
     for (const [x, y, face] of opts) {
       const v = at(x, y); if (!walkable(v)) continue;
-      const s = (v === T.WALK ? 3 : 1) + (face === 0 ? 1 : 0) + R.next() * 0.5;
+      const s = (v === T.WALK ? 3 : 1) + (face === 0 ? 4 : face === 3 ? -3 : 0) + R.next() * 0.5; // v289 눕힌 탑다운: 뒤(북쪽) 문은 지붕에 가려서 앞(남쪽) 문을 훨씬 먼저
       if (s > bs) { bs = s; best = { tx: x, ty: y, face }; }
     }
     return best;
@@ -3071,7 +3071,7 @@ function buildZone(spec, cases = []) {
   function stableDoor(b) {
     let best = null, bs = -1;
     const opts = []; for (let x = b.x; x < b.x + b.w; x++) { opts.push([x, b.y + b.h, 0]); opts.push([x, b.y - 1, 3]); } for (let y = b.y; y < b.y + b.h; y++) { opts.push([b.x - 1, y, 2]); opts.push([b.x + b.w, y, 1]); }
-    for (const [x, y, face] of opts) { const v = at(x, y); if (!walkable(v)) continue; const s = (v === T.WALK ? 3 : 1) + (face === 0 ? 1 : 0) + ((Math.imul(x * 73856093 ^ y * 19349663, 2654435761) >>> 0) % 1000) / 2000; if (s > bs) { bs = s; best = { tx: x, ty: y, face }; } }
+    for (const [x, y, face] of opts) { const v = at(x, y); if (!walkable(v)) continue; const s = (v === T.WALK ? 3 : 1) + (face === 0 ? 4 : face === 3 ? -3 : 0) + ((Math.imul(x * 73856093 ^ y * 19349663, 2654435761) >>> 0) % 1000) / 2000; if (s > bs) { bs = s; best = { tx: x, ty: y, face }; } }
     return best;
   }
   // 장소 배정
@@ -3225,12 +3225,54 @@ function zoneChunk(zone, cx, cy) {
   if (zone.chunks.size > 80) zone.chunks.delete(zone.chunks.keys().next().value);
   zone.chunks.set(key, c); return c;
 }
-function drawBuildingRoof(ctx, b, t) {
+/* v289 눕힌 탑다운 (사용자 2026-10-21 '탑다운으로 가자', 견본에서 고른 '눕힌 탑다운'): 길·충돌은 그대로 두고 건물만 세운다.
+ * 바닥 칸(b.x..b.x+w, b.y..b.y+h)은 그대로 땅 위 자리. 앞벽은 남쪽 끝(base)에서 wallH만큼 위로 서고, 지붕은 그만큼 위로 올라가 그려진다.
+ * 그래서 건물 북쪽(뒤) wallH 안쪽은 지붕에 가려진다 → game.js가 사람·차·나무와 함께 base 기준 y 정렬로 그리고, 가려진 내 캐릭터는 반투명으로 한 번 더 그린다. */
+function bWallH(b) { return b.fixedPlace && b.fixedPlace.kind === 'court' ? 46 : Math.round(Math.min(44, 10 + b.floors * 2.4)); } // 높을수록 뒤 길을 많이 가려서 44px(약 3칸)까지만
+function drawBuildingShadow(ctx, b) { // 땅 그림자 (사람보다 먼저)
+  const X = b.x * TILE, Y = b.y * TILE, Wp = b.w * TILE, Hp = b.h * TILE, sh = b.fixedPlace && b.fixedPlace.kind === 'court' ? 26 : Math.min(28, 3 + b.floors * 1.6);
+  ctx.fillStyle = 'rgba(10,12,20,.3)';
+  ctx.beginPath(); ctx.moveTo(X + Wp, Y + Hp - bWallH(b) * 0.3); ctx.lineTo(X + Wp + sh, Y + Hp - bWallH(b) * 0.3 + sh * 0.4); ctx.lineTo(X + Wp + sh, Y + Hp + sh * 0.5); ctx.lineTo(X + sh * 0.5, Y + Hp + sh * 0.5); ctx.lineTo(X, Y + Hp); ctx.lineTo(X + Wp, Y + Hp); ctx.closePath(); ctx.fill();
+}
+const FRONT_KIND = { court: ['#0f3358', '#e7e1d2'], office: ['#8a6a2a', '#f3e2b8'], registry: ['#1b3a66', '#dbe4f2'], center: ['#1b5ea6', '#e0ecfa'], bank: ['#1f7a44', '#e2f4e6'], savings: ['#7a5a2a', '#f2e6cf'], agent: ['#b06a2a', '#fbe8d2'], shop: ['#c0407a', '#fde3ef'], arcade: ['#7a34b0', '#efe0fb'], casino: ['#a0182e', '#fde2e6'], hospital: ['#d0384e', '#ffffff'], forsale: ['#2a7a5a', '#e2f4ec'], home: ['#b0702a', '#fbe9d0'] };
+function drawBuildingFront(ctx, b, t, pl) {
+  const X = b.x * TILE, Wp = b.w * TILE, base = (b.y + b.h) * TILE, wh = bWallH(b), top = base - wh, court = b.fixedPlace && b.fixedPlace.kind === 'court';
+  const wall = court ? '#bdb5a3' : shade(b.color, -0.22); ctx.fillStyle = wall; ctx.fillRect(X, top, Wp, wh);
+  ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(X, top, Wp, 1.5); ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(X, top + 1.5, Wp, 1);
+  ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.fillRect(X, top, 1.5, wh); ctx.fillRect(X + Wp - 1.5, top, 1.5, wh);
+  let sd = (b.seed ^ 0x5bd1e995) >>> 0; const rnd = () => ((sd = (sd * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const eve = State.evening, kind = pl && pl.kind, K = kind && FRONT_KIND[kind];
+  const gf = Math.min(12, Math.round(wh * 0.42)), upH = wh - gf - 4;
+  if (court) { // 법원: 기둥 줄 + 현판
+    ctx.fillStyle = '#e9e3d4'; for (let x = X + 10; x < X + Wp - 10; x += 16) ctx.fillRect(x, top + 10, 6, wh - 12);
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; for (let x = X + 10; x < X + Wp - 10; x += 16) ctx.fillRect(x + 5, top + 10, 1, wh - 12);
+    ctx.fillStyle = '#d8d1c0'; ctx.fillRect(X + 4, top + 3, Wp - 8, 7); ctx.fillStyle = '#0f3358'; ctx.fillRect(X + Wp / 2 - 22, top + 3.5, 44, 6);
+    ctx.fillStyle = '#e7d28a'; ctx.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(pl ? pl.name.replace('서울', '').slice(0, 8) : '법원', X + Wp / 2, top + 6.8); ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#cfc7b5'; ctx.fillRect(X + 2, base - 3, Wp - 4, 3);
+  } else {
+    if (upH >= 3) { // 위층 창문
+      const rows = Math.max(1, Math.min(Math.max(1, b.floors - 1), Math.floor(upH / 5))), rh = upH / rows, cols = Math.max(1, Math.floor((Wp - 5) / 7)), cx0 = X + (Wp - (cols * 7 - 3)) / 2, wwh = Math.min(3.5, rh - 1.4);
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const lit = eve ? rnd() < 0.5 : false, v = rnd(); ctx.fillStyle = lit ? '#ffd98a' : v < 0.18 ? '#8aa2b6' : '#56697c'; ctx.fillRect(cx0 + c * 7, top + 3.5 + r * rh + (rh - wwh) / 2, 4, wwh); }
+    }
+    const gy = base - gf; ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(X, gy, Wp, 1);
+    if (K) { // 가게·관공서: 차양 + 통유리 + 간판
+      ctx.fillStyle = K[0]; ctx.fillRect(X + 1, gy, Wp - 2, 3); ctx.fillStyle = 'rgba(255,255,255,.35)'; for (let x = X + 2; x < X + Wp - 2; x += 6) ctx.fillRect(x, gy, 3, 3);
+      ctx.fillStyle = eve ? '#e8c77a' : '#2d3b49'; ctx.fillRect(X + 3, gy + 4, Wp - 6, gf - 5); ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(X + 3, gy + 4, Wp - 6, 1.5);
+      const label = { court: '법원', office: '경매 사무소', registry: '등기소', center: '주민센터', bank: '은행', savings: '저축은행', agent: '공인중개사', shop: '편집숍', arcade: '게임장', casino: '카지노', hospital: '병원', forsale: '분양', home: '우리 집' }[kind] || '';
+      if (label && upH >= 8) { ctx.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; const w = Math.min(Wp - 6, ctx.measureText(label).width + 6); ctx.fillStyle = K[0]; ctx.fillRect(X + Wp / 2 - w / 2, gy - 8, w, 7); ctx.fillStyle = K[1]; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, X + Wp / 2, gy - 4.3, w - 2); ctx.textBaseline = 'alphabetic'; }
+    } else if (kind === 'site') { ctx.fillStyle = '#b3392a'; ctx.fillRect(X + 2, gy - 7, Math.min(Wp - 4, 30), 6); ctx.fillStyle = '#fff'; ctx.font = 'bold 4.5px "IBM Plex Sans KR", sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('경매 진행 중', X + 4, gy - 3.8, Math.min(Wp - 8, 26)); ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#56697c'; for (let x = X + 4; x < X + Wp - 6; x += 8) ctx.fillRect(x, gy + 3, 5, gf - 5);
+    } else { ctx.fillStyle = eve && rnd() < 0.5 ? '#f0cf86' : '#4c5d6e'; for (let x = X + 4; x < X + Wp - 6; x += 8) ctx.fillRect(x, gy + 3, 5, Math.max(2, gf - 6)); }
+  }
+  const dr = pl && pl.door && pl.door.face === 0 ? pl.door : null; // 문이 앞(남쪽)이면 앞벽에 문
+  if (dr) { const dx = dr.tx * TILE + 4; ctx.fillStyle = '#2a211b'; ctx.fillRect(dx, base - Math.min(9, gf - 1), 8, Math.min(9, gf - 1)); ctx.fillStyle = eve ? '#ffd98a' : '#6f5a46'; ctx.fillRect(dx + 1, base - Math.min(9, gf - 1) + 1, 6, 2); ctx.fillStyle = '#d8c39a'; ctx.fillRect(dx + 6, base - 4.5, 1, 1); }
+}
+function drawBuildingRoof(ctx, b, t, pl) {
+  const wh = bWallH(b); ctx.save(); ctx.translate(0, -wh); drawBuildingTop(ctx, b, t); ctx.restore(); drawBuildingFront(ctx, b, t, pl);
+}
+function drawBuildingTop(ctx, b, t) {
   if (b.fixedPlace && b.fixedPlace.kind === 'court') return drawCourtRoof(ctx, b);
   const X = b.x * TILE, Y = b.y * TILE, Wp = b.w * TILE, Hp = b.h * TILE;
-  const sh = Math.min(28, 3 + b.floors * 1.6);
-  ctx.fillStyle = 'rgba(10,12,20,.35)';
-  ctx.beginPath(); ctx.moveTo(X + Wp, Y); ctx.lineTo(X + Wp + sh, Y + sh); ctx.lineTo(X + Wp + sh, Y + Hp + sh); ctx.lineTo(X + sh, Y + Hp + sh); ctx.lineTo(X, Y + Hp); ctx.lineTo(X + Wp, Y + Hp); ctx.closePath(); ctx.fill();
   ctx.fillStyle = b.color; ctx.fillRect(X, Y, Wp, Hp);
   ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(X, Y, Wp, 2); ctx.fillRect(X, Y, 2, Hp);
   ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(X, Y + Hp - 2, Wp, 2); ctx.fillRect(X + Wp - 2, Y, 2, Hp);
@@ -3250,8 +3292,7 @@ function drawBuildingRoof(ctx, b, t) {
 
 const COURT_GU = { central: 'seocho', east: 'songpa', south: 'yangcheon', north: 'dobong', west: 'mapo' };
 function drawCourtRoof(ctx, b) {
-  const X = b.x * TILE, Y = b.y * TILE, Wp = b.w * TILE, Hp = b.h * TILE, sh = 26;
-  ctx.fillStyle = 'rgba(10,12,20,.4)'; ctx.fillRect(X + sh, Y + sh, Wp, Hp);
+  const X = b.x * TILE, Y = b.y * TILE, Wp = b.w * TILE, Hp = b.h * TILE;
   ctx.fillStyle = '#cfc8b8'; ctx.fillRect(X, Y, Wp, Hp);
   ctx.fillStyle = '#b8b0a0'; ctx.fillRect(X + 20, Y + 20, Wp - 40, Hp - 40);
   ctx.fillStyle = '#a49c8c'; ctx.fillRect(X + Wp / 2 - 40, Y + Hp / 2 - 30, 80, 60);
@@ -8185,13 +8226,21 @@ function drawZone(t) {
   MineExit.draw(ctx, x0, y0, x1, y1); // 석탄 땅굴 출구 (v171)
   // 신호등 · NPC 차량 · 내 차
   drawSignals(ctx, z, t);
-  for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) continue; drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v); }
-  PetRage.drawCars(ctx, x0, y0, x1, y1); // 친구 펫을 친 차 (v157)
-  if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); if (Game.driving && mc.ride === 'shark') Wake.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); Game.flyD = null; { const dm = () => drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0, pax: mc.ride && Game.driving && Net.on ? Ride.pax(Net.myId) : null }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (carFlying()) Game.flyD = dm; else dm(); } if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } }
+  const near = []; // v289 눕힌 탑다운: 차·건물·나무도 사람과 같이 y(바닥 기준) 정렬
+  for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 - 20 || q.x > x1 + 20 || q.y < y0 - 20 || q.y > y1 + 60) continue; near.push({ y: q.y, d: () => drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v) }); }
+  near.push({ y: -1e9, d: () => PetRage.drawCars(ctx, x0, y0, x1, y1) }); // 친구 펫을 친 차 (v157)
+  Game.myCarD = null; near.push({ y: Game.car.y, d: () => { if (!CarSwap.drawMine(ctx)) { const c = Game.car; const fwd = c.vx * Math.cos(c.a) + c.vy * Math.sin(c.a); const mc = Shop.myCar(Game.driving); if (Game.driving && mc.ride === 'train') Rails.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); if (Game.driving && mc.ride === 'shark') Wake.lay('me', c.x, c.y, c.a, Math.abs(c.speed)); Game.flyD = null; { const dm = () => drawCarSprite(ctx, c.x, c.y, c.a, Object.assign(mc, { spd: Game.driving ? Math.abs(c.speed) : 0, pax: mc.ride && Game.driving && Net.on ? Ride.pax(Net.myId) : null }), 24, 12, 'car', fwd < -2 || (Game.driving && (Keys.s || Keys.ArrowDown)) ? -1 : 1); if (carFlying()) Game.flyD = dm; else { dm(); if (Game.driving) Game.myCarD = dm; } } if (!Game.driving) { ctx.fillStyle = '#ffd84a'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('내 차', c.x, c.y - 10); } } } });
   // 문 열림
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
+  // 건물 그림자는 땅에 먼저
+  const blds = [], plOf = {}; for (const pl of z.places) plOf[pl.building] = pl;
+  for (const b of z.buildings) { const X = b.x * TILE, Y = b.y * TILE, wh = bWallH(b), base = (b.y + b.h) * TILE; if (X > x1 + 30 || Y - wh > y1 || X + b.w * TILE + 30 < x0 || base + 30 < y0) continue; blds.push(b); drawBuildingShadow(ctx, b); }
+  // 문 앞 매트 (땅)
+  for (const pl of z.places) { const dx = pl.door.tx * TILE, dy = pl.door.ty * TILE; if (dx < x0 - 20 || dx > x1 || dy < y0 - 20 || dy > y1) continue; ctx.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.6)' : 'rgba(205,174,112,.7)'; ctx.fillRect(dx + 3, dy + 3, 10, 10); }
+  for (const b of blds) near.push({ y: (b.y + b.h) * TILE, d: () => drawBuildingRoof(ctx, b, t, plOf[b.id]) });
+  for (const tr of z.trees) { if (tr.x < x0 - 16 || tr.x > x1 + 16 || tr.y < y0 - 16 || tr.y > y1 + 16) continue; near.push({ y: tr.y + 6, d: () => { const f = Math.round(Math.sin(t * 1.3 + tr.phase) + 1); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(tr.x + 4, tr.y + 5, 10, 7, 0, 0, 7); ctx.fill(); ctx.drawImage(Sprites.tree(f), tr.x - 12, tr.y - 12); } }); }
   // 사람·고양이 (y 정렬)
-  const actors = [...Game.decor.flatMap(w => [{ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else if ((w.big || w.love) && typeof Dora !== 'undefined') w._sz = Dora.drawWalker(ctx, w, t, () => drawWalker(ctx, w, t)); else drawWalker(ctx, w, t); } }, ...(w.bubble ? [{ top: 1, y: w.y, d: () => { if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - ((w.big && w._sz === 2) ? 46 : 30)); } }] : [])]), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { if (!MineExit.drawRise(ctx, () => drawWalker(ctx, Game.player, t))) { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); if (Game.player.kneelT > performance.now()) Net.bubble(ctx, Game.player.kneelSay, Game.player.x, Game.player.y - 30); } } }]),
+  const actors = [...near, ...Game.decor.flatMap(w => [{ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else if ((w.big || w.love) && typeof Dora !== 'undefined') w._sz = Dora.drawWalker(ctx, w, t, () => drawWalker(ctx, w, t)); else drawWalker(ctx, w, t); } }, ...(w.bubble ? [{ top: 1, y: w.y, d: () => { if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - ((w.big && w._sz === 2) ? 46 : 30)); } }] : [])]), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { if (!MineExit.drawRise(ctx, () => drawWalker(ctx, Game.player, t))) { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); if (Game.player.kneelT > performance.now()) Net.bubble(ctx, Game.player.kneelSay, Game.player.x, Game.player.y - 30); } } }]),
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
     ...Pets.actors(ctx, Net.visible('zone'), t),
     ...Fx.actors(ctx, Net.visible('zone'), t),
@@ -8201,31 +8250,26 @@ function drawZone(t) {
   const tops = []; actors.sort((a, b) => a.y - b.y).forEach(a => a.top ? tops.push(a) : a.d()); // v234: top = 말풍선·이름표·나는 새 → 지붕 위에
   for (const q of Particles) { ctx.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
   Bills.draw(ctx); // v234 금빛 리무진 지폐
-  // 건물 지붕 (사람 위로)
-  for (const b of z.buildings) {
-    const X = b.x * TILE, Y = b.y * TILE; if (X > x1 || Y > y1 || X + b.w * TILE + 30 < x0 || Y + b.h * TILE + 30 < y0) continue;
-    drawBuildingRoof(ctx, b, t);
-  }
-  // 장소 표시(간판), 경매 깃발
+  // 건물 뒤에 가려진 나(사람·차)는 반투명으로 한 번 더 (v289)
+  { const me = Game.driving ? Game.car : Game.player, md = Game.driving ? Game.myCarD : (Ride.with ? null : () => drawWalker(ctx, Game.player, t));
+    if (md && blds.some(b => { const X = b.x * TILE, base = (b.y + b.h) * TILE; return me.y < base && me.x > X - 6 && me.x < X + b.w * TILE + 6 && me.y + 4 > b.y * TILE - bWallH(b) && me.y - 18 < base; })) { ctx.save(); ctx.globalAlpha = 0.5; md(); ctx.restore(); } }
+  // 장소 표시(간판), 경매 깃발: 올라간 지붕 위
   for (const pl of z.places) {
-    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = (b.y + b.h / 2) * TILE;
+    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = (b.y + b.h / 2) * TILE - bWallH(b);
     if (X < x0 - 60 || X > x1 + 60 || Y < y0 - 60 || Y > y1 + 60) continue;
     if (pl.kind === 'site') drawFlag(ctx, X, Y - 6, t, pl);
     else drawPlaceIcon(ctx, X, Y, pl.kind);
-    // 문 앞 매트
-    ctx.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.6)' : 'rgba(205,174,112,.7)'; ctx.fillRect(pl.door.tx * TILE + 3, pl.door.ty * TILE + 3, 10, 10);
+    if (pl.door.face === 3) { ctx.globalAlpha = 0.6; ctx.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.8)' : 'rgba(205,174,112,.9)'; ctx.fillRect(pl.door.tx * TILE + 3, pl.door.ty * TILE + 3, 10, 10); ctx.globalAlpha = 1; } // 뒷문은 지붕에 가려서 위에 한 번 더
   }
   drawTargetArrow(ctx, t);
   if (State.carHint > 0 && !Game.driving) { State.carHint -= 1 / 60; const c = Game.car, bob = Math.sin(t * 6) * 3; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.moveTo(c.x - 6, c.y - 26 + bob); ctx.lineTo(c.x + 6, c.y - 26 + bob); ctx.lineTo(c.x, c.y - 16 + bob); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  // 가로수 (흔들림)
-  for (const tr of z.trees) { if (tr.x < x0 || tr.x > x1 || tr.y < y0 || tr.y > y1) continue; const f = Math.round(Math.sin(t * 1.3 + tr.phase) + 1); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(tr.x + 4, tr.y + 5, 10, 7, 0, 0, 7); ctx.fill(); ctx.drawImage(Sprites.tree(f), tr.x - 12, tr.y - 12); }
   if (Game.flyD) Game.flyD(); // v235 천사 날개는 지붕 위로
   tops.forEach(a => a.d()); // v234 말풍선·이름표는 지붕·가로수 위에
   drawGuideArrow(ctx, t); drawCarGoal(ctx, t);
   // 장소 이름표 (가까울 때)
   const p = Game.player; ctx.textAlign = 'center';
   for (const pl of z.places) {
-    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = b.y * TILE - 4;
+    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = b.y * TILE - 4 - bWallH(b);
     const d = Math.hypot(pl.door.tx * TILE - p.x, pl.door.ty * TILE - p.y); if (d > 120) continue;
     const a = Math.max(0, Math.min(1, (120 - d) / 40));
     ctx.font = '600 7px "IBM Plex Sans KR", sans-serif';

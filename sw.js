@@ -1,5 +1,5 @@
 // 경매 GTA 서비스 워커: 온라인이면 항상 최신 index.html을 받고, 끊기면 저장해 둔 파일로 열어요.
-const CACHE = "auction-gta-v293";
+const CACHE = "auction-gta-v294";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== "auction-gta-admin").map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -16,6 +16,10 @@ self.addEventListener("push", e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err) {}
   if (d.t === "crowd") { // v267 운영자 기기: 한 채널에 사람이 많을 때
     e.waitUntil(self.registration.showNotification("👥 " + String(d.where || "채널") + "에 " + (Number(d.n) || 0) + "명이 모였어요", { body: "20명이 넘으면 버벅거릴 수 있어요. 계속 많으면 서버 요금제나 위치 보내는 횟수를 손봐야 해요.", tag: "crowd", renotify: true, icon: "icons/icon-192.png", badge: "icons/icon-192.png", data: { url: "./" } }));
+    return;
+  }
+  if (d.t === "don") { // v294 운영자 기기: Ko-fi 후원이 들어왔을 때
+    e.waitUntil(self.registration.showNotification("후원이 들어왔어요", { body: String(d.from || "누군가") + " · " + String(d.amt || "") + " " + String(d.cur || "") + (d.code ? "\n" + d.code + " 용돈 주기 열림" : "\n코드 없음 · 후원 목록에서 열어 주세요"), tag: "don", renotify: true, icon: "icons/icon-192.png", badge: "icons/icon-192.png", data: { url: "./" } }));
     return;
   }
   if (d.t === "report") { // v267 운영자 기기: 채팅 신고 알림 (눌러서 의견함 열기)

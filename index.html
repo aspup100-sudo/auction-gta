@@ -1210,6 +1210,197 @@ body.gated #title { display:grid; }
 .panel, .rcpt:not(.arcade) { background:#13170e !important; color:#f1f3ea; }
 .clChip { border-radius:0; border-color:#565b3c; background:#1f2517; color:#f1f3ea; } .clChip.on { background:var(--hud); border-color:var(--hud); color:var(--hudTx); } .clChip.on small { color:#3a3000; }
 #assetBox .ah, #assetBox .loanSec { border-radius:0; background:#1a1f13; } #assetBox .ah.rent { background:#262612; } #assetBox .ah h3 .tag { border-radius:0; }
+/* v293 게임 안 창 = 마닐라 서류철 + 포스트잇 (사용자 2026-10-21 견본 S1 '이걸러 해줘', '접수 저거 도장 넣어서'). 시작 화면·사례 공부·HUD·결과 통지서·수첩·물건 목록은 그대로.
+   창 = .mf 붙은 17개 (template 속 id). 아래 첫 묶음은 예전 어두운 색을 같은 자리에서 종이색으로 바꾼 것(자동 변환), 그 밑이 S1 모양. */
+.mf .lvCh { color:#7a3a00; }
+.mf .lvPill { color:#33240f; }
+.mf .lvPill.on { color:#33240f; }
+.mf .lvRank { background:#fbf5e6; }
+.mf .lvRank td { border-top:1px solid #c4a066; }
+.mf .lvRank .md { color:#33240f; }
+.mf .lvRank .md.r1, .mf .lvRank .md.r2, .mf .lvRank .md.r3 { color:#33240f; }
+.mf .lvRank .nm small { color:#5d4524; }
+.mf .lvRank tr.sel td { background:#fff3b0; }
+.mf .lvRank tr.lvAs td { background:#fff3b0; }
+.mf .lvAs .al { border-top:1px dashed #c4a066; }
+.mf .lvAs .al small { color:#5d4524; }
+.mf .lvAs .al i.up { color:#1f7a3a; }
+.mf .lvAs .al i.down { color:#c8442e; }
+.mf .lvRank tr.me td { background:#fff3b0; }
+.mf .lvRank .pn.up, .mf .lvRecent b.up { color:#1f7a3a; }
+.mf .lvRank .pn.down, .mf .lvRecent b.down { color:#c8442e; }
+.mf .lvRecent b.dim { color:#5d4524; }
+.mf .lvChips small, .mf .lvRecent small { color:#5d4524; }
+.mf .lvRecent div { border-top:1px dashed #c4a066; }
+#mpWait { background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); color:#33240f; }
+#menu { background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); color:#33240f; }
+#menu .tabs .btn { background:#fbf5e6; color:#33240f; border-color:#c4a066; }
+#menu .tabs .btn.on { color:#33240f; }
+#menu textarea { background:#fbf5e6; border:1px solid #c4a066; }
+.mf .pcBtns .btn:not(.gold) { background:#fbf5e6; color:#33240f; border-color:#c4a066; }
+#shop .shEarn small.hole { color:#c8442e; }
+#menu select, #menu input[type=number] { color:#33240f; border:1px solid #c4a066; background:#fbf5e6; }
+#menu .dim { color:#5d4524; }
+#loanPanel { background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); color:#33240f; }
+#loanPanel.dark { color:#7a3a00; }
+.mf #lpSteps li { color:#c8442e; }
+#loanPanel.dark #lpSteps li { color:#c8442e; }
+.mf #lpStamp.ok { color:#1f7a3a; }
+.mf #lpStamp.no { color:#c8442e; }
+.mf .rcpt { background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); color:#33240f; }
+.mf .rcSub { color:#5d4524; border-bottom:2px dashed #c4a066; }
+.mf #rcLines li.me { color:#7a3a00; }
+.mf #rcLines li.why span { color:#7a3a00; }
+.mf .rcTotal { border-top:2px dashed #c4a066; }
+.mf #rcSum.plus { color:#1f7a3a; }
+.mf #rcSum.minus { color:#c8442e; }
+.mf .rcNote { color:#5d4524; }
+.mf .rSec h3 { border-bottom:2px dashed #c4a066; }
+.mf .rSec h3 small { color:#5d4524; }
+.mf .missed b { color:#c8442e; }
+#records .plus { color:#1f7a3a; }
+#records .minus { color:#c8442e; }
+.mf .mEnd { border-top:1px dashed #c4a066; }
+.mf #quitBox .qWarn { color:#c8442e; }
+#assetBox .ah { border:1px solid #c4a066; background:#fbf5e6; }
+#assetBox .ah.rent { background:#fff3b0; }
+#assetBox .ah h3 .tag { color:#33240f; }
+#assetBox .kv2 span:nth-child(odd) { color:#5d4524; }
+#assetBox .kv2 b.up { color:#1f7a3a; }
+#assetBox .kv2 b.down { color:#c8442e; }
+#assetBox .empty { color:#5d4524; }
+.mf .clChip { border:1px solid #c4a066; background:#fbf5e6; color:#33240f; }
+.mf .clEmpty { color:#5d4524; }
+.mf .clChip small { color:#5d4524; }
+#shop .rcHead small { color:#5d4524; }
+#shop .shTag input { border:1px solid #c4a066; }
+.mf .shItem { border:1px solid #c4a066; background:#fbf5e6; }
+.mf .shNew { color:#33240f; }
+.mf .shItem.on { background:#fff3b0; }
+.mf .shItem span { color:#5d4524; }
+.mf .shItem .shSell { background:#fbf5e6; color:#5d4524; border-color:#c4a066; }
+.mf .shItem .shSell.arm { color:#33240f; }
+.mf .shNote { color:#5d4524; }
+#shop .shRec { color:#33240f; }
+#shop .shRec b { color:#7a3a00; }
+.mf .shItem.lock .shLockBtn, .mf .shItem.lock .shLockBtn:disabled { color:#33240f; background:#fff3b0; border-color:#c4a066; }
+#shop .shEarn small { color:#5d4524; }
+#shop .shLook { color:#c8442e; }
+#shop .rcpt > .pcBtns:last-child { background:#fbf5e6; }
+#cmWin textarea, #cmWin input { border:1px solid #c4a066; background:#fbf5e6; color:#33240f; }
+#cmWin .cmCnt { color:#5d4524; }
+#cmWin .cmP { color:#5d4524; }
+#cmWin .cmPart { border:1px solid #c4a066; background:#fbf5e6; }
+#cmWin .cmCode { color:#7a3a00; }
+#cmWin .cmBad { color:#c8442e; }
+#cmWin .cmCtx { background:#fbf5e6; color:#33240f; }
+#cmWin .cmAdm { color:#5d4524; }
+#cmWin .cmMuted div { border-bottom:1px solid #c4a066; }
+#cmWin .prSt { border:1px solid #c4a066; background:#fbf5e6; }
+#cmWin .prSt:hover:not(:disabled) { background:#fff3b0; }
+#cmWin .prSt .prN { color:#7a3a00; }
+#cmWin .prSt .prT small { color:#5d4524; }
+#cmWin .prSt .prG { color:#1f7a3a; }
+#cmWin .prSt .stars { color:#7a3a00; }
+#installGuide .ig { border:1px solid #c4a066; background:#fbf5e6; }
+#installGuide .ig.here { background:#fff3b0; }
+#installGuide .ig h3 .tagHere { color:#33240f; }
+#installGuide .ig p { color:#5d4524; }
+#installGuide .igLink code { color:#7a3a00; }
+.mf .xClose { border:2px solid #33240f; background:#fbf5e6; color:#33240f; }
+#rpsAsk { background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); color:#33240f; }
+#rpsAsk span { color:#5d4524; }
+#rpsAsk .bad { color:#c8442e; }
+#partyAsk { color:#33240f; background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); }
+#partyAsk .tk { color:#7a3a00; }
+#partyAsk span { color:#7a3a00; }
+#partyAsk .bad { color:#c8442e; }
+#partyAsk .btn:not(.gold) { background:#fbf5e6; color:#33240f; border-color:#c4a066; }
+#pokeAsk { color:#33240f; background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); }
+#pokeAsk .tk { color:#7a3a00; }
+#pokeAsk span { color:#7a3a00; }
+#pokeAsk .bad { color:#c8442e; }
+#pokeAsk .btn:not(.gold) { background:#fbf5e6; color:#33240f; border-color:#c4a066; }
+#rankWin .rwPoke small { color:#5d4524; }
+#rankWin .rwPush small { color:#5d4524; }
+#rankWin .rwPush.on { color:#1f7a3a; }
+#assetBox .loanSec { border-color:#c4a066; background:#fbf5e6; }
+#assetBox .loanRow { border-top:1px dashed #c4a066; }
+#assetBox .loanRow span { color:#33240f; }
+#fightAsk { background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); color:#33240f; }
+#fightAsk span { color:#5d4524; }
+#fightAsk .bad { color:#c8442e; }
+#pbAsk { color:#33240f; background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); }
+#frAsk { color:#33240f; background:radial-gradient(120% 90% at 0% 0%, #fbf5e6 0%, #fbf5e6 55%, #fbf5e6 100%); }
+#pbAsk .tk { color:#7a3a00; }
+#pbAsk span { color:#7a3a00; }
+#pbAsk .btn:not(.gold) { background:#fbf5e6; color:#33240f; border-color:#c4a066; }
+#frAsk .tk { color:#7a3a00; }
+#frAsk span { color:#7a3a00; }
+#frAsk .btn:not(.gold) { background:#fbf5e6; color:#33240f; border-color:#c4a066; }
+#menu, #mpWait, #loanPanel, #rpsAsk, #fightAsk, #partyAsk, #pokeAsk, #pbAsk, #frAsk { border:2px solid #c4a066; }
+.mf .rcHead, #menu h2 { color:#33240f; text-shadow:none; }
+.mf .rSec h3 { color:#33240f; }
+#menu .btn:not(.gold) { background:linear-gradient(180deg, #fbf5e6, #fbf5e6); border-color:#c4a066; color:#33240f; }
+.mf .shItem.on, #installGuide .ig.here, #cmWin .prSt:hover:not(:disabled) { border-color:#e0b820; background:#fff3b0; }
+.mf #rcSum, .mf .rcTotal b { color:#33240f; }
+#menu code { background:#fbf5e6; color:#7a3a00; }
+#menu a:not(.btn) { color:#7a3a00; }
+#menu { border:1px solid #c4a066; }
+#menu h2 { color:#33240f; }
+#menu h2::before { color:#7a3a00; }
+#menu select { background:#fbf5e6; border:1px solid #c4a066; color:#33240f; }
+#menu { background:#fbf5e6 !important; color:#33240f; }
+.mf .clChip { border-color:#c4a066; background:#fbf5e6; color:#33240f; }
+#assetBox .ah, #assetBox .loanSec { background:#fbf5e6; }
+#assetBox .ah.rent { background:#fff3b0; }
+.mf { --kr:#d9b77e; --krIn:#c79f60; --pp:#fbf5e6; --ppLine:#c4a066; --ink:#33240f; --ink2:#5d4524; --pit:#ffe36a; --pitLine:#e0b820; --stamp:rgba(176,42,26,.8); }
+.mf .rcpt:not(.arcade), #menu.mf, #loanPanel.mf, #mpWait.mf, #rpsAsk.mf, #fightAsk.mf, #partyAsk.mf, #pokeAsk.mf, #pbAsk.mf, #frAsk.mf {
+  color:var(--ink) !important; border:0 !important; border-radius:0 !important; box-shadow:0 8px 0 rgba(0,0,0,.35) !important;
+  background:linear-gradient(35deg, transparent 38%, rgba(255,255,240,.6) 38% 62%, transparent 62%) right -.2em top 1.05em / 3.4em 2.6em no-repeat local,
+    linear-gradient(var(--kr), var(--kr)) 0 1.3em / 100% calc(100% - 1.3em) no-repeat local, transparent !important; }
+.mf .rcpt:not(.arcade) { position:relative; } /* 창 자체가 fixed인 것(메뉴·대출·대기·초대)은 그대로 */
+.mf .rcpt:not(.arcade), #menu.mf, #loanPanel.mf, #mpWait.mf { padding-top:calc(16px + 1.3em) !important; }
+#rpsAsk.mf, #fightAsk.mf, #partyAsk.mf, #pokeAsk.mf, #pbAsk.mf, #frAsk.mf { padding-top:calc(10px + 1.3em) !important; }
+.mf .rcpt:not(.arcade)::before, #menu.mf::before, #loanPanel.mf::before, #mpWait.mf::before, #rpsAsk.mf::before, #fightAsk.mf::before, #partyAsk.mf::before, #pokeAsk.mf::before, #pbAsk.mf::before, #frAsk.mf::before {
+  content:''; position:absolute; top:0; left:7%; width:24%; height:1.4em; background:var(--kr); border-radius:8px 8px 0 0; pointer-events:none; }
+.mf .rcpt:not(.arcade)::after, #menu.mf::after, #loanPanel.mf::after, #mpWait.mf::after {
+  content:'접수'; position:absolute; z-index:2; right:14%; top:.75em; padding:.1em .45em; border:3px solid var(--stamp); color:var(--stamp); font:400 17px/1.2 var(--disp); letter-spacing:.2em; transform:rotate(-8deg); background:rgba(251,245,230,.35); pointer-events:none; }
+.mf, .mf .rcpt:not(.arcade) { scrollbar-color:#9a7440 transparent; }
+#shop.mf, #closet.mf, #records.mf, #cmWin.mf, #assetBox.mf, #rankWin.mf, #installGuide.mf { overflow-x:hidden; }
+/* 제목·글씨 */
+.mf .rcHead, #menu.mf h2 { color:var(--ink) !important; text-shadow:none !important; } .mf .rcHead small, #menu.mf h2 small { color:var(--ink2) !important; }
+#menu.mf h2::before { content:none; } #menu.mf h2 { border-bottom:2px solid var(--ppLine); padding-bottom:6px; }
+.mf .rSec h3, .mf h3, .mf h4 { color:var(--ink); } .mf small, .mf .dim { color:var(--ink2); } .mf b { color:inherit; }
+.mf .rcSub, .mf .rSec h3, .mf .rcTotal { border-color:var(--ppLine) !important; }
+#menu.mf label { border-bottom:1px solid rgba(154,116,64,.3) !important; } #menu.mf input[type=range], #menu.mf input[type=checkbox] { accent-color:#8a5a20; }
+.mf a:not(.btn) { color:#8a3a10 !important; } .mf code { background:var(--pp) !important; color:#8a3a10 !important; border:1px solid var(--ppLine); border-radius:3px !important; }
+.mf summary { color:#8a3a10; }
+/* 버튼: 흰 종이 칸 + 갈색 테두리. gold·닫기 = 진갈색 */
+.mf .btn { border-radius:3px !important; }
+.mf .btn:not(.gold):not(.sel):not(.on):not(.xClose) { background:var(--pp) !important; color:var(--ink) !important; border:2px solid #9a7440 !important; font-weight:700; }
+.mf .btn:not(.gold):not(:disabled):hover { border-color:#5d4524 !important; }
+.mf .btn.gold { background:#33240f !important; color:#f6d98a !important; border:2px solid #33240f !important; }
+.mf .btn:disabled { opacity:.5; }
+#menuClose, .mf .pcBtns .btn[id$=Close], .mf .pcBtns .btn[data-x], .mf #abClose { background:#33240f !important; color:#f6d98a !important; border-color:#33240f !important; }
+.mf .xClose { background:#33240f !important; color:#f6d98a !important; border:2px solid #33240f !important; border-radius:3px !important; box-shadow:2px 2px 0 rgba(0,0,0,.2) !important; }
+/* 고른 칸 = 노란 포스트잇 (살짝 기울고 그림자) */
+.mf .tabs .btn.on, .mf .shTabs .btn.sel, .mf .btn.sel, .mf .btn.on, .mf .clChip.on, .mf .lvPill.on { background:var(--pit) !important; color:var(--ink) !important; border:2px solid var(--pitLine) !important; transform:rotate(-2deg); box-shadow:2px 3px 0 rgba(0,0,0,.18) !important; }
+.mf .clChip.on small { color:#5d4524 !important; }
+.mf .clChip { background:var(--pp); border:2px solid #9a7440; border-radius:3px; color:var(--ink); }
+/* 안쪽 칸 = 흰 종이 + 그림자 */
+.mf .shItem, #assetBox.mf .ah, #assetBox.mf .loanSec, .mf .prSt, .mf .ig, .mf .lvRank, .mf .cmPart { background:var(--pp) !important; border:2px solid var(--ppLine) !important; border-radius:3px !important; box-shadow:3px 3px 0 rgba(90,60,20,.18); }
+.mf .shItem.on, #assetBox.mf .ah.rent, .mf .ig.here { background:#fff6c8 !important; border-color:var(--pitLine) !important; }
+.mf .shItem canvas, .mf .clPrev, #shBig .sbIn { background:#efe3c6 !important; }
+.mf input, .mf textarea, .mf select { background:var(--pp) !important; color:var(--ink) !important; border:2px solid #9a7440 !important; border-radius:3px !important; }
+.mf table th { background:#ecd9b0 !important; color:var(--ink) !important; } .mf table td { color:var(--ink); border-color:var(--ppLine); }
+.mf .plus, .mf .up { color:#1f7a3a !important; } .mf .minus, .mf .down, .mf .bad, .mf .qWarn { color:#c8442e !important; }
+.mf .mEnd { border-top-color:#9a7440 !important; }
+#menu.mf #mpInfo { background:var(--pp); border:2px solid var(--ppLine); color:var(--ink); } #menu.mf #mpInfo code { background:#fff6c8 !important; }
+#records.mf, #cmWin.mf, #shop.mf, #closet.mf, #assetBox.mf, #rankWin.mf, #installGuide.mf { background:rgba(0,0,0,.55); } #dupGate.mf { background:rgba(0,0,0,.8); } /* 폴더 탭 옆 빈 띠도 바깥처럼 어둡게 */
+#shop.mf .rcpt > .pcBtns:last-child { background:var(--kr) !important; box-shadow:0 -6px 8px -6px rgba(60,40,10,.3); }
+#cmWin .donCodeRow { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin:8px 0; } #cmWin .donCodeRow code { font:700 18px var(--ui); letter-spacing:2px; padding:6px 12px; -webkit-user-select:all; user-select:all; } #cmWin h3.donKk { margin:10px 0 4px; font-size:15px; } /* v294 Ko-fi 후원 칸 */
+#menu.mf td.tc { color:#7a3a00 !important; } .mf .dim, #menu.mf h2 small { opacity:1 !important; } .mf .shNew { color:#fff !important; } #menu.mf .ksub { color:var(--ink2) !important; opacity:1 !important; }
 </style>
 </head>
 <body>
@@ -1313,7 +1504,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v293</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v294</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2393,6 +2584,7 @@ Object.assign(FEEL, {
   carBounce: 0.35,
   netPingSec: 4,          // 방장 심장박동 간격(초)
   relayUrl: '',           // 중계 서버 주소(https://…workers.dev). 비어 있으면 PeerJS. boot.js가 relay-url.txt에서 읽어 채운다 (사용자 요청 2026-10-14 '중계서버 두자')
+  kofiUrl: '', // v294 Ko-fi 후원 페이지 (https://ko-fi.com/...). 있으면 응원 창에 Ko-fi 칸과 기기 코드가 보이고, 후원한 기기만 용돈 주기가 열린다 (Donor)
   donateUrl: 'https://qr.kakaopay.com/FXClURsbU', // v270 개발자 응원 (사용자 2026-10-21 '후원 플랫폼 링크 하나 넣자'; v291 '모르는 사람은 이*진으로 보이지?' → 가린 이름이면 괜찮다고 해서 그대로) // v270 개발자 응원 (후원 플랫폼 링크, 사용자 2026-10-21 '후원 플랫폼 링크 하나 넣자'). 비어 있으면 버튼이 안 보인다
   relayUrlFile: 'https://aspup100-sudo.github.io/auction-gta/relay-url.txt', // 같은 폴더에 relay-url.txt가 없을 때(아티팩트 등) 여기서 읽는다
   wsDeadSec: 35,          // 중계 서버 소식(10초마다 심장박동)이 이만큼 없으면 다시 잇기
@@ -5716,7 +5908,7 @@ const Net = {
   },
   /* ---- 중계 서버(ws) ---- */
   async pickWs() { try { await this.relayReady; } catch (e) {} if (this.transport === 'local') return false; this.transport = FEEL.relayUrl ? 'ws' : 'peer'; return this.transport === 'ws'; },
-  wsUrl(path) { return FEEL.relayUrl.replace(/^http/, 'ws') + path + `?id=${encodeURIComponent(this.myId)}&name=${encodeURIComponent(this.me)}`; },
+  wsUrl(path) { return FEEL.relayUrl.replace(/^http/, 'ws') + path + `?id=${encodeURIComponent(this.myId)}&name=${encodeURIComponent(this.me)}` + (typeof Donor !== 'undefined' && Donor.on() ? '&ds=' + Donor.secret() : ''); }, // v294 ds = 후원 확인용 기기 비밀값
   closeWs() { const w = this.ws; this.ws = null; if (w) { try { w.onclose = null; w.onmessage = null; w.close(); } catch (e) {} } },
   connectWs(path) {
     return new Promise(res => {
@@ -6102,8 +6294,8 @@ const GREET_REPLIES = ['안녕하세요!', '네, 반가워요', '좋아요, 같�
 async function greetFriend(p) {
   if (Game.busy || Dialog.open) return; Game.busy = true;
   try {
-    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다. 용돈을 주면 큰절을 한다.` }], [{ label: '💸 용돈 1,000원 주기', value: '__tip' }, ...(PetBattle.myPet() && PetBattle.hasPet(p) ? [{ label: '⚔️ 펫 배틀 신청', value: '__pb' }] : []), Friends.has(p.name) ? { label: '🤝 친구 끊기', value: '__unfr' } : { label: '🤝 친구 신청 (서로 위치 보기)', value: '__fr' }, { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
-    if (pick === '__tip') Tip.give(p); else if (pick === '__pb') setTimeout(() => PetBattle.ask(p), 60); /* 펫 고르기 창이 뜰 수 있어 인사 창이 닫힌 뒤 */ else if (pick === '__fr') Friends.ask(p); else if (pick === '__unfr') Friends.unfriend(p); else if (pick) Net.greet(p, pick);
+    const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다.${Donor.ok ? ' 용돈을 주면 큰절을 한다.' : ''}` }], [...(Donor.ok ? [{ label: '용돈 1,000원 주기', value: '__tip' }] : []), ...(PetBattle.myPet() && PetBattle.hasPet(p) ? [{ label: '펫 배틀 신청', value: '__pb' }] : []), Friends.has(p.name) ? { label: '친구 끊기', value: '__unfr' } : { label: '친구 신청 (서로 위치 보기)', value: '__fr' }, { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
+    if (pick === '__tip' && Donor.ok) Tip.give(p); // v294 후원한 기기만 (서버도 막는다) else if (pick === '__pb') setTimeout(() => PetBattle.ask(p), 60); /* 펫 고르기 창이 뜰 수 있어 인사 창이 닫힌 뒤 */ else if (pick === '__fr') Friends.ask(p); else if (pick === '__unfr') Friends.unfriend(p); else if (pick) Net.greet(p, pick);
   } finally { Game.busy = false; }
 }
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -6309,14 +6501,14 @@ const Tip = {
     if (Date.now() - (this.sent[id] || 0) < 5000) return Toast.show(`${p.name}님한테 방금 줬어요. 조금 있다 다시 줄 수 있어요.`);
     if (mgFree() < this.AMT) return Toast.show(earnHole() ? `경매 손해 ${fmtWon(earnHole())} 메우는 중이라 용돈을 못 줘요.` : '경매로 번 돈이 없어서 용돈을 못 줘요.'); // v177
     const li = Math.floor(Math.random() * this.THANKS.length); this.sent[id] = Date.now(); p.bowT = performance.now() + 2400; /* 준 사람 화면에서도 바로 절하게 */ p.bubble = { text: this.line(li), t: FEEL.chatBubbleTime }; mgCash(-this.AMT, `용돈 (${p.name})`); Net.send({ t: 'tip', to: id, li }); Sound.play('coins');
-    Net.myBubble = { text: '옛다 용돈!', t: FEEL.chatBubbleTime }; Net.pushLog(Net.me, `${p.name}님한테 용돈 1,000원을 줬어요 💸`, true, true, true);
+    Net.myBubble = { text: '옛다 용돈!', t: FEEL.chatBubbleTime }; Net.pushLog(Net.me, `${p.name}님한테 용돈 1,000원을 줬어요`, true, true, true);
   },
   onNet(m, p) {
     const li = m.li === undefined ? Math.floor(Math.random() * this.THANKS.length) : +m.li || 0;
     if (m.to !== Net.myId) { const r = Net.players[m.to]; if (r && !r.gone) { r.bowT = performance.now() + 2400; r.bubble = { text: this.line(li), t: FEEL.chatBubbleTime }; } return; } // 옆에서 본 사람 화면에도
     if (!Game.player) return; const name = (p && p.name) || '친구';
     mgCash(this.AMT, `용돈 (${name})`); Sound.play('coins'); Toast.show(`${name}님이 용돈 1,000원을 줬어요. 감사합니다 꾸벅!`, 3000);
-    Net.pushLog(name, '님이 용돈 1,000원을 줬어요 💸', false, true, true);
+    Net.pushLog(name, '님이 용돈 1,000원을 줬어요', false, true, true);
     Game.player.bowT = performance.now() + 2400; Net.myBubble = { text: this.line(li), t: FEEL.chatBubbleTime }; // 받는 사람은 큰절 + 재밌는 한마디
   },
 };
@@ -7718,11 +7910,11 @@ async function talkWalker(w) {
   const dong = z.spec.dongLabel ? z.spec.dongLabel[0] : z.name; const gu = DISTRICT[z.gu].name;
   const hello = [`안녕하세요. ${dong} 처음 오셨어요?`, `네? 아, 길 물어보시려고요?`, `${gu}는 요즘 공사가 많아서 길이 좀 막혀요.`, `오늘 날씨 좋죠? 걷기 딱 좋아요.`, `경매 보러 오신 분이죠? 요즘 그런 분들 자주 보여요.`];
     const pick = await Dialog.say([{ name, sprite: w.sprite, text: hello[(i + State.day) % hello.length] }], [
-    { label: '동네 어때요?', value: 'town' }, { label: '요즘 경매 어때요?', value: 'auction' }, { label: '💸 용돈 1,000원 주기', value: 'tip' }, // 끝내기 선택지 없이 3개만 (사용자 2026-10-16)
+    { label: '동네 어때요?', value: 'town' }, { label: '요즘 경매 어때요?', value: 'auction' }, ...(Donor.ok ? [{ label: '용돈 1,000원 주기', value: 'tip' }] : []), // 끝내기 선택지 없이 (사용자 2026-10-16). v294 용돈은 후원한 기기만 (Donor)
   ]);
   const town = [`${dong}은 역이 가까워서 출퇴근은 편해요. 대신 밤에 큰길은 좀 시끄럽고요.`, `오래된 집이 많아서 골목이 좁아요. 주차가 늘 전쟁이에요.`, `학교랑 마트가 가까워서 애 키우는 집이 많아요.`, `요즘 카페가 많이 생겼어요. 동네가 좀 바뀌는 중이죠.`];
   const auction = [`글쎄요, 법원 앞에 사람 많더라고요. 서류 잘 보고 들어가야 한대요.`, `저도 잘은 몰라요. 싸다고 덥석 받으면 큰일 난다는 얘기만 들었어요.`, `등기부랑 전입 같은 건 직접 떼 보셔야죠. 남 말만 믿으면 안 돼요.`, `주민센터랑 중개사한테 물어보세요. 저는 그냥 지나가는 사람이라.`];
-  if (pick === 'tip') { // 지나가는 사람한테도 용돈 (사용자 2026-10-15 'npc도 가능하게'). 받은 사람은 큰절
+  if (pick === 'tip' && Donor.ok) { // 지나가는 사람한테도 용돈 (사용자 2026-10-15 'npc도 가능하게'). 받은 사람은 큰절
     if (mgFree() < 1000) await Dialog.say([{ name, sprite: w.sprite, text: earnHole() ? '마음만 받을게요. 경매 손해부터 메우셔야죠.' : '마음만 받을게요. 경매로 번 돈이 아직 없으시잖아요.' }]); // v177: 용돈도 번 돈에서만 (사용자 2026-10-17 '수익이 0원인데 어떻게 줘?')
     else { mgCash(-1000, `용돈 (${name})`); Sound.play('coins'); w.bowT = performance.now() + 2400; w.ai.t = 3; Game.busy = false; w.bubble = { text: ['아이고 감사합니다!', '이걸 왜 저한테… 감사합니다!', '복 받으실 거예요!'][(i + State.day) % 3], t: 2.6 }; return; }
   } else if (pick === 'town') await Dialog.say([{ name, sprite: w.sprite, text: town[(i * 3 + State.day) % town.length] }]);
@@ -10148,7 +10340,7 @@ async function loanReview(savings) {
   if (!savings && need === 0) { await Dialog.say([sayB(`잔금 ${fmtWon(balance)}은(는) 보유 현금으로 충분하시네요. 대출은 필요 없겠어요.`)]); State.phase = 'pay'; HUD.page(`잔금은 법원 수납 창구에서 내. ${courtOf(c).name}.`); return; }
   await Dialog.say([sayB(savings ? '1금융권에서 오셨죠? 서류 주세요.' : '경락잔금대출 심사 서류 주시겠어요?')]);
   const panel = $('loanPanel'); panel.innerHTML = `<div class="lpDocs"><div class="lpDoc">낙찰허가결정문</div><div class="lpDoc">신분증</div><div class="lpDoc">소득서류</div></div><div id="lpStatus">심사 중<span class="dots"></span></div><div class="lpBar"><div id="lpFill"></div></div><ul id="lpSteps"></ul><div id="lpStamp"></div>`;
-  panel.className = 'ovl in' + (savings ? ' dark' : '');
+  panel.className = 'ovl mf in' + (savings ? ' dark' : ''); // v294 mf = 포스트잇 창
   for (const d of panel.querySelectorAll('.lpDoc')) { await sleep(350); d.classList.add('slid'); Sound.play('paper'); }
   for (let i = 0; i < 14; i++) { await sleep(170); Sound.play('calc'); }
   if (L.steps.length > 1 && !savings) { await Dialog.say([sayB('…', { emote: 'silence' })]); }
@@ -10178,17 +10370,17 @@ async function loanReview(savings) {
     await sleep(1200);
   }
   if (ok === true) {
-    panel.className = 'ovl'; const why = L.steps.slice(1).map(s => s.label.split(' −')[0]).filter(x => x !== '최저 한도 적용');
+    panel.className = 'ovl mf'; const why = L.steps.slice(1).map(s => s.label.split(' −')[0]).filter(x => x !== '최저 한도 적용');
     await Dialog.say([sayB(`${fmtWon(amount)} 승인됐습니다.${why.length ? ` 한도가 줄어든 건 ${why.join(', ')} 때문이에요.` : ''}${savings ? ` 금리가 높아서 추가 이자 ${fmtWon(L.extra)}이(가) 붙습니다.` : ''}`)]);
     State.phase = 'pay'; State.targetPlace = courtPlaceHere() ? 'court' : null; HUD.page(`대출 나왔으면 법원 가서 잔금 내. ${courtOf(c).name}.`);
   } else if (ok === 'partial') {
-    panel.className = 'ovl';
+    panel.className = 'ovl mf';
     const why = L.steps.slice(1).map(s => s.label.split(' −')[0]).filter(x => x !== '최저 한도 적용');
     await Dialog.say([sayB(`저희는 ${fmtWon(amount)}까지만 가능해요.${why.length ? ` ${why.join(', ')} 때문에 한도가 줄었어요.` : ''}`, { emote: 'sweat' }), sayB('저희는 여기까지라… 다른 곳을 알아보셔야 할 것 같아요. 근처 저축은행을 알려 드릴게요.')]);
     addSavingsBank(); State.phase = 'savings';
   } else {
     stamp.className = 'no'; stamp.textContent = '부결'; Sound.play('stamp'); shake(4, 0.2); $('dim').classList.add('in'); await sleep(500); $('dim').classList.remove('in');
-    await sleep(900); panel.className = 'ovl';
+    await sleep(900); panel.className = 'ovl mf';
     await Dialog.say([sayB('죄송합니다. 이번 건은 어렵겠어요.', { emote: 'sweat' })]);
     await forfeit(c);
   }
@@ -19624,6 +19816,39 @@ const Practice = {
   },
 };
 
+/* v294 후원자 용돈 (사용자 2026-10-21 '용돈 주고 절시키는 거 없애고 후원해 준 사람만' → 'Kofi 이거 해볼까'):
+ * 행인·친구한테 용돈 1,000원 주고 큰절 받기는 Ko-fi로 후원한 기기만 된다.
+ * 기기마다 비밀값(donSecret)이 있고, 응원 창엔 그 비밀값에서 만든 코드(GTA-XXXXXX)만 보인다. 후원 메시지에 코드를 넣으면
+ * Ko-fi 웹훅 → 중계 서버(relay/src/don.js)가 그 코드를 후원자로 적는다. 게임은 /don/me?s=비밀값으로 물어본다.
+ * 친구한테 주는 용돈은 서버도 막는다 (채널 접속 주소의 ds). 카카오페이 응원은 그대로, 혜택 없음. */
+const Donor = {
+  ok: !!Store.get('donOk', 0), code: Store.get('donCode', ''), pollT: 0,
+  secret() { let s = Store.get('donSecret', ''); if (typeof s !== 'string' || s.length < 16) { const b = new Uint8Array(16); crypto.getRandomValues(b); s = [...b].map(x => x.toString(16).padStart(2, '0')).join(''); Store.set('donSecret', s); } return s; },
+  base() { return (FEEL.relayUrl || '').replace(/^ws/, 'http').replace(/\/+$/, ''); },
+  on() { return /^https:\/\//.test(FEEL.kofiUrl || ''); },
+  async check() {
+    if (!this.on()) return this.ok; try { await Promise.race([Net.relayReady, sleep(3000)]); } catch (e) {}
+    const u = this.base(); if (!u) return this.ok;
+    try { const j = await (await fetch(u + '/don/me?s=' + encodeURIComponent(this.secret()), { cache: 'no-store' })).json(); if (j && j.ok) { const was = this.ok; this.ok = !!j.donor; this.code = j.code || this.code; Store.set('donOk', this.ok ? 1 : 0); Store.set('donCode', this.code); if (this.ok && !was) this.thanks(); } } catch (e) {}
+    return this.ok;
+  },
+  thanks() { Sound.play('chime'); Toast.show('후원 고마워요! 이제 행인이랑 친구한테 용돈 주기를 할 수 있어요.', 4500); const b = $('donState'); if (b) b.innerHTML = this.stateHtml(); },
+  stateHtml() { return this.ok ? '<b class="up">이 기기는 후원 확인됐어요. 용돈 주기가 열려 있어요.</b>' : '후원이 들어오면 몇 초 안에 여기서 바로 열려요.'; },
+  // 응원 창 안 Ko-fi 칸. 창이 떠 있는 동안 5초마다 확인
+  section() {
+    if (!this.on()) return ''; this.check().then(() => { const c = $('donCode'); if (c && this.code) c.textContent = this.code; const b = $('donState'); if (b) b.innerHTML = this.stateHtml(); });
+    clearInterval(this.pollT); let n = 0; this.pollT = setInterval(() => { if (!$('donState') || !$('cmWin').classList.contains('in') || ++n > 120) return clearInterval(this.pollT); if (!this.ok) this.check(); }, 5000);
+    return `<div class="rSec donKofi"><h3>Ko-fi로 후원하기 <small>카드·페이팔</small></h3>
+  <p class="cmP">후원 메시지에 아래 코드를 붙여 주시면, 고마운 마음으로 이 기기에 <b>용돈 주기</b>(행인·친구한테 1,000원 주고 큰절 받기)를 열어 드려요.</p>
+  <div class="donCodeRow"><code id="donCode">${esc(this.code || '코드 만드는 중')}</code><button class="btn" id="donCopy">코드 복사</button><a class="btn gold" href="${esc(FEEL.kofiUrl)}" target="_blank" rel="noopener">Ko-fi 열기</a></div>
+  <p class="cmP" id="donState">${this.stateHtml()}</p></div>`;
+  },
+  bind() {
+    const c = $('donCopy'); if (c) c.onclick = async () => { const t = this.code || $('donCode').textContent; try { await navigator.clipboard.writeText(t); Toast.show('코드를 복사했어요. Ko-fi 메시지에 붙여 넣어 주세요.'); } catch (e) { Toast.show('복사가 안 돼요. 코드를 길게 눌러 복사해 주세요.'); } Sound.play('tick'); };
+  },
+};
+if (Donor.on()) setTimeout(() => Donor.check(), 4000); // 켤 때 한 번 (다른 기기에서 후원했다가 기록을 옮겨 온 경우 등)
+
 /* ===================== v266 공개 준비 (사용자 2026-10-21 '용, 제트기는 그냥 나두고 다른 건 다 만들어') =====================
  * - 채팅 🔕 안 보기 · 🚩 신고: 지난 기록(ChatHist)에서 다른 사람 줄마다. 안 보기는 이 기기에만 (Store 'muted'), 신고는 중계 서버 의견함으로 (relay/src/fb.js)
  * - 💬 의견 보내기: 제목 화면·메뉴. 같은 의견함에 kind 'idea'
@@ -19769,11 +19994,11 @@ $('chatHistList').addEventListener('click', e => {
 $('chHistMuted').onclick = () => Cm.muted();
 ['btnIdea', 'menuIdea'].forEach(id => $(id).onclick = () => Cm.idea());
 ['btnMove', 'menuMove'].forEach(id => $(id).onclick = () => Cm.move());
-// v270 ☕ 개발자 응원하기: FEEL.donateUrl(후원 플랫폼 링크)이 있을 때만 보인다. 돈을 내도 게임 안에서 달라지는 건 없다 (판매가 아니라 응원)
+// v270 ☕ 개발자 응원하기: FEEL.donateUrl(후원 플랫폼 링크)이 있을 때만 보인다. 돈을 내도 게임 안에서 달라지는 건 없다 (판매가 아니라 응원). v294: Ko-fi 칸(Donor.section)은 후원한 기기에 용돈 주기를 열어 준다
 Cm.donate = () => { const u = FEEL.donateUrl; if (!/^https:\/\//.test(u)) return; Cm.win(`<div class="rcHead">개발자 응원하기</div><div class="rcSub">경매 GTA는 작은 개인 프로젝트예요. 재밌게 하셨다면 커피 한 잔 값으로 응원해 주세요.</div>
-  <p class="cmP">응원은 자유예요. 내도 안 내도 게임 안에서 달라지는 건 없어요. 서버비와 새 기능 만드는 데 써요. 고마워요!</p>
-  <div class="donAmts">${Cm.DON_AMTS.map(n => `<a class="btn gold" href="${esc(Cm.donLink(u, n))}" target="_blank" rel="noopener">${n.toLocaleString('ko-KR')}원</a>`).join('')}<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">금액 직접 넣기</a></div>
-  <div class="pcBtns"><button class="btn" data-x>닫기</button></div>`); $('cmWin').querySelectorAll('.donAmts a').forEach(x => x.onclick = () => { Sound.play('chime'); setTimeout(() => Cm.close(), 300); }); };
+  <p class="cmP">응원은 자유예요. ${Donor.on() ? '카카오페이 응원은 게임 안에서 달라지는 건 없어요.' : '내도 안 내도 게임 안에서 달라지는 건 없어요.'} 서버비와 새 기능 만드는 데 써요. 고마워요!</p>
+  ${Donor.on() ? '<h3 class="donKk">카카오페이로 응원하기</h3>' : ''}<div class="donAmts">${Cm.DON_AMTS.map(n => `<a class="btn gold" href="${esc(Cm.donLink(u, n))}" target="_blank" rel="noopener">${n.toLocaleString('ko-KR')}원</a>`).join('')}<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">금액 직접 넣기</a></div>
+  ${Donor.section()}<div class="pcBtns"><button class="btn" data-x>닫기</button></div>`); Donor.bind(); $('cmWin').querySelectorAll('.donAmts a').forEach(x => x.onclick = () => { Sound.play('chime'); setTimeout(() => Cm.close(), 300); }); };
 // 금액이 미리 들어간 송금 링크 (v271, 사용자 '바로 금액 들어갈 수 있게'): 카카오페이 송금코드 뒤에 (금액 × 524288)을 16진수로 붙이는 비공식 방식. 안 맞으면 DON_AMTS를 비우면 '금액 직접 넣기'만 남는다
 Cm.DON_AMTS = [1000, 3000, 5000]; // v281 사용자 2026-10-21 '1000원 3000원 5000원 이렇게 하자'
 Cm.donLink = (u, n) => /^https:\/\/qr\.kakaopay\.com\/[A-Za-z0-9]+$/.test(u) ? u + (n * 524288).toString(16) : u;

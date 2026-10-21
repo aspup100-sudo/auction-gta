@@ -4,7 +4,7 @@
  *   POST /push/sub  {name, sub}          → 이 이름으로 알림 받을 기기 등록 (이름마다 최근 기기 5대)
  *   POST /push/poke {from, to, ch}       → to 이름의 기기들에 '○○님이 콕 찔렀어요' 알림
  *   POST /push/admin {k, sub}            → 의견함 열쇠를 아는 기기 = 운영자. 채팅 신고가 오면 이 기기들에 알림 (v267, 사용자 2026-10-21 '신고당했으면 나한테 알려줘')
- *   POST /push/alert {who, text, by, ch} → 운영자 기기들에 '🚩 신고' 알림 ({kind:'crowd', n, where}면 '👥 사람 많음'). index.js가 /fb/send 신고 뒤·방 입장 때 안에서만 부른다 (밖에서 온 /push/alert는 index.js가 막는다)
+ *   POST /push/alert {who, text, by, ch} → 운영자 기기들에 '🚩 신고' 알림 ({kind:'crowd', n, where}면 '👥 사람 많음', {kind:'don', from, amt, cur, code}면 후원 들어옴 v294). index.js가 /fb/send 신고 뒤·방 입장 때 안에서만 부른다 (밖에서 온 /push/alert는 index.js가 막는다)
  * storage: get/put/delete 가 있는 저장소 (Durable Object storage 또는 테스트용 메모리).
  * 암호화: RFC 8291 (aes128gcm), 서명: RFC 8292 (VAPID, ES256). WebCrypto만 쓴다 (Worker·Node 둘 다 됨). */
 import { KEY_HASH, sha } from './fb.js';
@@ -87,9 +87,9 @@ export async function handlePush(req, storage, cors = {}, opt = {}) {
   if (path === '/push/alert') {
     const now = Date.now(), hr = ((await storage.get('alertHour')) || []).filter(t => now - t < 3600000); if (hr.length >= ALERT_PER_HOUR) return json({ ok: false, why: 'busy' }, 200, cors);
     const list = (await storage.get('admins')) || []; if (!list.length) return json({ ok: false, why: 'none' }, 200, cors);
-    const payload = b.kind === 'crowd' ? JSON.stringify({ t: 'crowd', n: Math.max(0, Math.min(9999, Number(b.n) || 0)), where: cleanName(b.where), at: now }) : JSON.stringify({ t: 'report', who: cleanName(b.who), text: String(b.text || '').replace(/[<>]/g, '').slice(0, 80), by: cleanName(b.by), ch: String(b.ch || '').slice(0, 12), at: now });
+    const payload = b.kind === 'don' ? JSON.stringify({ t: 'don', from: cleanName(b.from), amt: String(b.amt || '').slice(0, 12), cur: String(b.cur || '').slice(0, 6), code: String(b.code || '').slice(0, 12), at: now }) : b.kind === 'crowd' ? JSON.stringify({ t: 'crowd', n: Math.max(0, Math.min(9999, Number(b.n) || 0)), where: cleanName(b.where), at: now }) : JSON.stringify({ t: 'report', who: cleanName(b.who), text: String(b.text || '').replace(/[<>]/g, '').slice(0, 80), by: cleanName(b.by), ch: String(b.ch || '').slice(0, 12), at: now });
     let sent = 0; const keep = [];
-    for (const s of list) { let st = 0; try { st = await sendPush(v, s, payload, { ...opt, topic: b.kind === 'crowd' ? 'crowd' : 'report' }); } catch (e) { st = 0; } if (st >= 200 && st < 300) sent++; if (st !== 404 && st !== 410) keep.push(s); }
+    for (const s of list) { let st = 0; try { st = await sendPush(v, s, payload, { ...opt, topic: b.kind === 'crowd' ? 'crowd' : b.kind === 'don' ? 'don' : 'report' }); } catch (e) { st = 0; } if (st >= 200 && st < 300) sent++; if (st !== 404 && st !== 410) keep.push(s); }
     if (sent) { hr.push(now); await storage.put('alertHour', hr); } if (keep.length !== list.length) await storage.put('admins', keep);
     return json({ ok: sent > 0, sent }, 200, cors);
   }

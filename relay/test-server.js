@@ -6,19 +6,26 @@ import { RoomLogic, TICK_MS } from './src/room.js';
 import { handlePush } from './src/push.js';
 import { handleFb } from './src/fb.js';
 import { handleSv } from './src/sv.js';
+import { handleDon, isDonor } from './src/don.js';
+import { sha } from './src/fb.js';
 
 const port = Number(process.argv[2]) || 8787;
 const rooms = new Map(); // 'ch:1' → { logic, socks: Set }
 const memStore = () => { const m = new Map(); return { async get(k) { return m.get(k); }, async put(k, v) { m.set(k, JSON.parse(JSON.stringify(v))); }, async delete(k) { m.delete(k); } }; };
 const CORS0 = {};
 const testFetch = async (u, o) => { console.log('push →', u, o && o.headers && o.headers.topic); return { status: 201 }; }; // 테스트: 진짜 푸시 서버 대신 찍기만
-const pushStore = memStore(), fbStore = memStore(), svStore = memStore();
+const pushStore = memStore(), fbStore = memStore(), svStore = memStore(), donStore = memStore(); const TEST_KOFI = await sha('test-kofi-token'); // 테스트 Ko-fi 토큰
 const roomFor = (kind, key) => {
   const id = kind + ':' + key; if (rooms.has(id)) return rooms.get(id);
   const r = { socks: new Set() }; r.logic = new RoomLogic({ kind, key, storage: memStore(), sockets: () => [...r.socks], onCrowd: (n, where) => handlePush(new Request('http://x/push/alert', { method: 'POST', body: JSON.stringify({ kind: 'crowd', n, where }) }), pushStore, CORS0, { fetch: testFetch }).then(x => x.text()).then(t => console.log('crowd', n, where, t)) });
   r.timer = setInterval(() => r.logic.tick().catch(() => {}), TICK_MS); rooms.set(id, r); return r;
 };
 const server = http.createServer(async (req, res) => {
+  if (req.url.startsWith('/kofi') || req.url.startsWith('/don/')) { // v294 후원 확인 (src/don.js, 테스트 토큰 'test-kofi-token')
+    let body = ''; for await (const c of req) body += c;
+    const r = await handleDon(new Request('http://x' + req.url, { method: req.method, body: req.method === 'POST' ? body : undefined }), donStore, { 'access-control-allow-origin': '*' }, e => console.log('don', JSON.stringify(e)), TEST_KOFI);
+    res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(await r.text());
+  }
   if (req.url.startsWith('/push/') || req.url.startsWith('/fb/') || req.url.startsWith('/sv/')) { // 콕 알림 (src/push.js와 같은 처리, 저장은 메모리)
     const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': '*' };
     if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
@@ -38,7 +45,8 @@ wss.on('connection', async (ws, req) => {
   const r = roomFor(kind, key);
   const s = { ws, id, name, send: d => { if (ws.readyState === 1) ws.send(d); }, close: () => ws.close(1000, 'replaced') };
   r.socks.add(s); await r.logic.join(s);
-  ws.on('message', d => { const t = d.toString(); if (t.length <= 4000) r.logic.message(s, t).catch(() => {}); });
+  const ds = (url.searchParams.get('ds') || '').slice(0, 64);
+  ws.on('message', async d => { const t = d.toString(); if (t.length > 4000) return; if (t.includes('"t":"tip"') && !(await isDonor(donStore, ds))) return; r.logic.message(s, t).catch(() => {}); }); // v294 후원자만 용돈 (index.js와 같게)
   ws.on('close', () => { r.socks.delete(s); r.logic.close(s).catch(() => {}); });
   ws.on('error', () => {});
 });

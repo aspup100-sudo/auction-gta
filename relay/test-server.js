@@ -4,22 +4,24 @@ import { WebSocketServer } from 'ws';
 import http from 'node:http';
 import { RoomLogic, TICK_MS } from './src/room.js';
 import { handlePush } from './src/push.js';
+import { handleFb } from './src/fb.js';
+import { handleSv } from './src/sv.js';
 
 const port = Number(process.argv[2]) || 8787;
 const rooms = new Map(); // 'ch:1' → { logic, socks: Set }
 const memStore = () => { const m = new Map(); return { async get(k) { return m.get(k); }, async put(k, v) { m.set(k, JSON.parse(JSON.stringify(v))); }, async delete(k) { m.delete(k); } }; };
-const pushStore = memStore();
+const pushStore = memStore(), fbStore = memStore(), svStore = memStore();
 const roomFor = (kind, key) => {
   const id = kind + ':' + key; if (rooms.has(id)) return rooms.get(id);
   const r = { socks: new Set() }; r.logic = new RoomLogic({ kind, key, storage: memStore(), sockets: () => [...r.socks] });
   r.timer = setInterval(() => r.logic.tick().catch(() => {}), TICK_MS); rooms.set(id, r); return r;
 };
 const server = http.createServer(async (req, res) => {
-  if (req.url.startsWith('/push/')) { // 콕 알림 (src/push.js와 같은 처리, 저장은 메모리)
+  if (req.url.startsWith('/push/') || req.url.startsWith('/fb/') || req.url.startsWith('/sv/')) { // 콕 알림 (src/push.js와 같은 처리, 저장은 메모리)
     const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': '*' };
     if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
     let body = ''; for await (const c of req) body += c;
-    const r = await handlePush(new Request('http://x' + req.url, { method: req.method, body: req.method === 'POST' ? body : undefined }), pushStore, CORS);
+    const rq = new Request('http://x' + req.url, { method: req.method, body: req.method === 'POST' ? body : undefined }), r = req.url.startsWith('/fb/') ? await handleFb(rq, fbStore, CORS) : req.url.startsWith('/sv/') ? await handleSv(rq, svStore, CORS) : await handlePush(rq, pushStore, CORS);
     res.writeHead(r.status, Object.fromEntries(r.headers)); return res.end(await r.text());
   }
   res.setHeader('access-control-allow-origin', '*'); res.setHeader('content-type', 'text/plain; charset=utf-8'); res.end('auction-gta relay (test) ok'); });

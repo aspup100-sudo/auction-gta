@@ -3,10 +3,14 @@
  *       wss://<worker>/room/<방 코드>?id=...&name=...                (친구 방)
  *       GET /health → ok
  *       /push/key · /push/sub · /push/poke → 콕 찌르기 폰 알림 (src/push.js)
+ *       /fb/send · /fb/list?k=… → 의견함·채팅 신고 (src/fb.js)
+ *       /sv/put · /sv/get?c=… → 기록 옮기기 코드 (src/sv.js)
  * 채널·방마다 Durable Object 하나가 떠서 그 방의 사람들을 잇는다. WebSocket 절전(hibernation) API라 아무도 말을 안 하면 비용이 거의 없다.
  */
 import { RoomLogic, TICK_MS } from './room.js';
 import { handlePush } from './push.js';
+import { handleFb } from './fb.js';
+import { handleSv } from './sv.js';
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': '*' };
 
@@ -15,7 +19,9 @@ export default {
     const url = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
     if (url.pathname === '/' || url.pathname === '/health') return new Response('auction-gta relay ok', { headers: { 'content-type': 'text/plain; charset=utf-8', ...CORS } });
-    if (url.pathname.startsWith('/push/')) return env.ROOMS.get(env.ROOMS.idFromName('push:hub')).fetch(req); // 콕 알림: 구독 목록은 Durable Object 하나에 모은다
+    if (url.pathname.startsWith('/push/')) return env.ROOMS.get(env.ROOMS.idFromName('push:hub')).fetch(req);
+    if (url.pathname.startsWith('/fb/')) return env.ROOMS.get(env.ROOMS.idFromName('fb:hub')).fetch(req); // 의견함도 Durable Object 하나에
+    if (url.pathname.startsWith('/sv/')) return env.ROOMS.get(env.ROOMS.idFromName('sv:hub')).fetch(req); // 기록 옮기기 코드 // 콕 알림: 구독 목록은 Durable Object 하나에 모은다
     const m = url.pathname.match(/^\/(ch|room)\/([A-Za-z0-9_-]{1,16})\/?$/);
     if (!m) return new Response('not found', { status: 404, headers: CORS });
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('websocket only', { status: 426, headers: CORS });
@@ -44,6 +50,8 @@ export class ChannelRoom {
   async fetch(req) {
     const url = new URL(req.url);
     if (url.pathname.startsWith('/push/')) return handlePush(req, this.ctx.storage, CORS);
+    if (url.pathname.startsWith('/fb/')) return handleFb(req, this.ctx.storage, CORS);
+    if (url.pathname.startsWith('/sv/')) return handleSv(req, this.ctx.storage, CORS);
     const m = url.pathname.match(/^\/(ch|room)\/([A-Za-z0-9_-]{1,16})\/?$/); if (!m) return new Response('not found', { status: 404 });
     const kind = m[1], key = kind === 'ch' ? String(Number(m[2]) || 0) : m[2].toUpperCase();
     const id = (url.searchParams.get('id') || '').slice(0, 24) || 'g' + Math.random().toString(36).slice(2, 8);

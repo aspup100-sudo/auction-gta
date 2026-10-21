@@ -1029,6 +1029,8 @@ html, body { background:#0b1020; }
 @media (max-width:700px), (max-height:500px) { #studyWin .stHead { padding-left:max(14px, var(--sl)); padding-right:max(14px, var(--sr)); } #studyWin .stList { padding-left:max(8px, var(--sl)); padding-right:max(8px, var(--sr)); padding-bottom:max(8px, var(--sb)); } #studyWin .stBody { padding-left:max(18px, var(--sl)); padding-right:max(18px, var(--sr)); padding-bottom:max(24px, var(--sb)); } }
 .panel { padding-right:max(18px, var(--sr)); } #notebook .nbHead { margin-right:calc(-1 * max(18px, var(--sr))); padding-right:max(18px, var(--sr)); }
 #result { padding-left:max(16px, var(--sl)); padding-right:max(16px, var(--sr)); }
+#title .tBack { display:none; position:absolute; top:10px; left:max(12px, var(--sl)); z-index:2; padding:6px 12px; font-size:14px; } #title.modeSolo .tBack, #title.modeRoom .tBack, #title.modeCh .tBack { display:inline-block; } .short #title .tBack { top:6px; padding:4px 10px; font-size:13px; } @media (max-width:700px) { #title .tBack { top:8px; } }
+#title #vDiag { display:none; font-size:10px; color:#9fb3ea; opacity:.5; } .touchOn #title #vDiag:not(:empty) { display:block; } html, body { height:var(--vh, 100%); } /* v276 가로로 켤 때 아래가 비면 문서도 진짜 높이로 */
 </style>
 </head>
 <body>
@@ -1039,7 +1041,7 @@ html, body { background:#0b1020; }
   <div class="troad"><div class="tcar"></div><div class="tcar t2"></div></div>
   <h1>경매 GTA</h1>
   <div class="tag">걸어서 모으는 정보, 손으로 하는 권리분석</div>
-  <div class="tDock" id="tDock"><button class="tIco" id="btnIdea"><i>💬</i><span>의견</span></button><button class="tIco" id="btnGuide"><i>📲</i><span>설치법</span></button><button class="tIco" id="btnMove"><i>🔁</i><span>기록 옮기기</span></button><button class="tIco donRow" id="btnDonate" hidden><i>☕</i><span>응원</span></button></div>
+  <button class="btn tBack" id="tBack">← 처음으로</button><div class="tDock" id="tDock"><button class="tIco" id="btnIdea"><i>💬</i><span>의견</span></button><button class="tIco" id="btnGuide"><i>📲</i><span>설치법</span></button><button class="tIco" id="btnMove"><i>🔁</i><span>기록 옮기기</span></button><button class="tIco donRow" id="btnDonate" hidden><i>☕</i><span>응원</span></button></div>
   <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo"><i>🙋</i>혼자 하기<small>자본 골라서 시작</small></button><button class="btn mode" data-mode="modeRoom"><i>👥</i>친구와 같이<small>방 코드로 모이기</small></button><button class="btn mode" data-mode="modeCh"><i>📡</i>실시간 채널<small>코드 없이 아무나</small></button><button class="btn tStudy" id="btnStudy"><i>📚</i>사례 공부<small>문제 풀며 배우기</small></button></div>
   <div id="modeHint">어떻게 할지 먼저 골라 주세요</div>
   <div id="installGate" hidden><b>📲 설치해서 열어야 시작할 수 있어요</b><p>웹 브라우저에서는 둘러보기만 돼요. 홈 화면(폰)이나 바탕화면(컴퓨터)에 설치한 뒤, 그 아이콘으로 열어 주세요.</p><div class="row"><button class="btn gold" id="btnInstall" hidden>홈 화면에 설치</button><button class="btn gold" id="btnGuide2">📲 앱으로 설치하는 법</button></div></div>
@@ -1067,7 +1069,7 @@ html, body { background:#0b1020; }
   <div class="row" id="capRow"><input id="capInput" type="number" min="10000000" step="10000000" placeholder="직접 입력(원)"><button class="btn gold" id="btnStart">시작하기</button></div>
   <div class="row pracRow soloOpts"><label id="tutRow"><input type="checkbox" id="tutOn" checked> <b>🎓 처음이에요</b><small>단예 선배가 한 바퀴 안내</small></label><button class="btn" id="btnPrac">🎯 단계별 연습 <small>1~5단계</small></button></div>
   <div class="foot">걷기 WASD · 달리기 Shift · 상호작용 E · 승하차 F · 핸드브레이크 Space · 서울 지도 M · 수첩 Tab &nbsp;|&nbsp; <a href="#test" id="lnkTest">엔진 점검 화면</a> · <a href="#" id="lnkRec">기록</a></div>
-  <div class="disc">교육용 게임이에요 · 법률·투자 조언이 아니에요 · 나오는 단지·사건·인물은 모두 지어낸 거예요</div>
+  <div class="disc">교육용 게임이에요 · 법률·투자 조언이 아니에요 · 나오는 단지·사건·인물은 모두 지어낸 거예요</div><div id="vDiag"></div>
   <div id="iosHint" hidden>아이폰은 Safari에서 공유 버튼 → "홈 화면에 추가"로 설치해요.</div>
 </div>
 
@@ -1120,7 +1122,7 @@ html, body { background:#0b1020; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v275</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v276</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -7057,14 +7059,15 @@ const cv = document.getElementById('game'); const ctx = cv.getContext('2d');
 let VW = 0, VH = 0, DPR = 1, IW0 = 0, IH0 = 0;
 // iOS 홈 화면 앱: 키보드가 내려간 뒤에도 레이아웃 높이(innerHeight)가 줄어든 채 남아 아래가 검게 비던 문제(사용자 2026-10-14, v57 흔들기로도 안 잡힘).
 // 그래서 '진짜 높이'를 따로 잰다: 보이는 영역(visualViewport)이 더 크면 그 값, 아이폰 앱 가로면 폰 짧은 변. 글자 입력 중(키보드 올라옴)엔 그대로 둔다.
-let IOS_APP = null;
-function iosStandalone() { if (IOS_APP === null) IOS_APP = /iphone|ipad|ipod/i.test(navigator.userAgent) && ((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || !!navigator.standalone); return IOS_APP; }
+let IOS_APP = null, VDIAG = '';
+function iosStandalone() { if (!IOS_APP) IOS_APP = (/iphone|ipad|ipod/i.test(navigator.userAgent) || (/macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)) && ((window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) || !!navigator.standalone); return IOS_APP; } // v276: 못 알아봤으면 다음에 다시 잰다 (켜자마자 한 번 잘못 재면 끝까지 틀렸다)
 function realVH() {
   const h = innerHeight;
   const ae = document.activeElement; if (ae && /^(input|textarea)$/i.test(ae.tagName)) return h;
   const vv = window.visualViewport; let best = h;
   if (vv && vv.offsetTop < 1 && Math.round(vv.height) > h + 1 && Math.round(vv.height) - h < 200) best = Math.round(vv.height);
   if (iosStandalone() && innerWidth > innerHeight) { const s = Math.min(screen.width, screen.height); if (s > best && s - h < 200) best = s; }
+  VDIAG = `${innerWidth}×${h} · 보임 ${vv ? Math.round(vv.width) + '×' + Math.round(vv.height) : '-'} · 폰 ${screen.width}×${screen.height} · 앱 ${iosStandalone() ? 'O' : 'X'} · 맞춤 ${best}`; // v276 가로로 켤 때 아래가 비는 원인 찾기 (사용자 2026-10-21)
   return best;
 }
 // 폰을 세로로 들고 있어도 가로로 논다: body를 90도 눕히고(body.rot) 가로·세로를 바꿔 쓴다. 터치 좌표는 localPt/localRect로 되돌린다.
@@ -7079,6 +7082,7 @@ function resize() {
   const de = document.documentElement; de.style.setProperty('--vh', VH + 'px'); de.style.setProperty('--vgap', Math.max(0, VH - innerHeight) + 'px'); // HUD·조작판·대화창이 캔버스와 같은 높이를 쓰게
   document.body.classList.toggle('short', touch && VH <= 520);
   cv.width = VW * DPR; cv.height = VH * DPR; cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+  const vd = document.getElementById('vDiag'); if (vd) vd.textContent = VDIAG;
 }
 function localPt(e) { return ROT ? { x: e.clientY, y: innerWidth - e.clientX } : { x: e.clientX, y: e.clientY }; }
 function localRect(el) { const r = el.getBoundingClientRect(); return ROT ? { left: r.top, top: innerWidth - r.right, width: r.height, height: r.width } : { left: r.left, top: r.top, width: r.width, height: r.height }; }
@@ -18994,7 +18998,7 @@ const Instance = {
   // 제목 화면: '친구와 같이 하기' / '실시간 채널' 버튼 → 누른 쪽만 펼친다
   document.querySelectorAll('#title .modeRow .mode').forEach(b => b.onclick = () => {
     Sound.init(); const t = $('title'); const on = t.classList.contains(b.dataset.mode);
-    if (Net.on) { Toast.show(Net.mode === 'channel' ? '고른 채널을 다시 누르면 나올 수 있어요.' : '지금 친구 방에 들어가 있어요. 새로고침하면 나와요.'); return; } // 연결된 채로 모드를 바꾸면 헷갈리니 막는다
+    if (Net.on) { Toast.show(Net.mode === 'channel' ? '고른 채널을 다시 누르면 나올 수 있어요.' : '지금 친구 방에 들어가 있어요. 왼쪽 위 ← 처음으로를 누르면 나와요.'); return; } // 연결된 채로 모드를 바꾸면 헷갈리니 막는다
     t.classList.remove('modeSolo', 'modeRoom', 'modeCh'); document.querySelectorAll('#title .modeRow .mode').forEach(x => x.classList.remove('sel'));
     if (!on) { t.classList.add(b.dataset.mode); b.classList.add('sel'); } Sound.play('paper');
   });
@@ -19028,6 +19032,15 @@ const Instance = {
     const code = $('mpCode').value.trim().toUpperCase(); if (code.length !== 6) { Toast.show('방 코드 6자리를 넣어 주세요.'); $('mpCode').focus(); return; }
     Store.set('mpName', name); $('mpCreate').disabled = true; $('mpJoin').disabled = true;
     const ok = await Net.join(code, name); if (!ok) { $('mpCreate').disabled = false; $('mpJoin').disabled = false; }
+  };
+  // 처음으로: 고른 모드를 접고, 들어가 있던 친구 방·채널에서도 나온다 (사용자 2026-10-21 '여기선 어떻게 뒤로가')
+  $('tBack').onclick = () => {
+    Sound.init(); const t = $('title');
+    if (Net.on) { const ch = Net.mode === 'channel'; if (!Net.leave()) return; Toast.show(ch ? '채널에서 나왔어요.' : '방에서 나왔어요.'); }
+    const cb = document.querySelector('#chBox .ch.sel'); if (cb) chReset(cb);
+    t.classList.remove('modeSolo', 'modeRoom', 'modeCh', 'roomOn', 'chOn'); document.querySelectorAll('#title .modeRow .mode').forEach(x => x.classList.remove('sel'));
+    $('mpStatus').textContent = ''; $('mpCreate').disabled = false; $('mpJoin').disabled = false; $('btnStart').textContent = '시작하기'; $('btnStart').disabled = false;
+    Sound.play('paper');
   };
   Instance.bind(); ChatBar.bind(); Layout.bind(); ViewFix.bind(); LeftStack.bind();
   // 폰: 꾹 누르면 뜨는 복사·찾아보기 메뉴와 글자 선택을 막는다 (입력칸은 그대로)

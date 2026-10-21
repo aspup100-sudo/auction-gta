@@ -958,6 +958,9 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .paMv { line-height:1.35; text-align:center; } .paMv b { font-size:11px; color:#ffe58a; } .paMv small { font-size:10px; opacity:.75; }
 .pbView { position:absolute; right:14px; bottom:120px; width:52px; height:52px; border-radius:50%; border:2px solid rgba(255,255,255,.9); background:rgba(20,24,34,.6); color:#fff; font:800 11px var(--ui); pointer-events:auto; touch-action:none; } .short .pbView { bottom:92px; right:8px; width:44px; height:44px; }
 .pbPad.m-arena .pbB1, .pbPad.m-arena .pbB2 { font-size:12px; line-height:1.15; padding:4px; word-break:keep-all; } .pbB2.cd { background:rgba(60,60,70,.8); } .pbBox.rt:has(.m-arena) #pbCv { cursor:crosshair; }
+.pbEdit { position:absolute; left:14px; bottom:122px; width:34px; height:34px; border-radius:50%; border:2px solid rgba(255,255,255,.75); background:rgba(20,24,34,.55); color:#fff; font:700 17px/1 var(--ui); pointer-events:auto; touch-action:none; padding:0; } .short .pbEdit { left:8px; bottom:96px; width:30px; height:30px; font-size:15px; } .pbPad.m-race .pbEdit, .pbPad.m-tug .pbEdit, .pbPad.m-balloon .pbEdit, .pbPad.m-memory .pbEdit { bottom:14px; }
+.pbEditBar { display:none; position:absolute; left:50%; top:10px; transform:translateX(-50%); z-index:6; gap:8px; align-items:center; background:rgba(10,12,18,.88); color:#fff; padding:6px 8px 6px 12px; border-radius:10px; pointer-events:auto; font:700 13px var(--ui); white-space:nowrap; } .pbEditBar button { font:700 13px var(--ui); padding:5px 12px; border-radius:8px; border:1px solid #fff6; background:#2a3142; color:#fff; } .pbEditBar #pbEditDone { background:#d8b45a; color:#1a1408; border-color:#d8b45a; }
+.pbPad.pbEditing .pbEditBar { display:flex; } .pbPad.pbEditing .pbEdit { display:none; } .pbPad.pbEditing #pbStick, .pbPad.pbEditing #pbHop, .pbPad.pbEditing #pbJmp, .pbPad.pbEditing #pbAct, .pbPad.pbEditing #pbView { outline:2px dashed #ffd84a; outline-offset:3px; cursor:move; } .pbPad .dragging { opacity:.8; }
 .short .pbStick { width:80px; height:80px; left:8px; bottom:8px; } .short .pbB1 { width:70px; height:70px; font-size:13px; } .short .pbB2 { width:56px; height:56px; } .short .pbB3 { width:50px; height:50px; } .short .pbBtns { right:8px; bottom:8px; }
 #pbAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 #frAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color:#2a1a08; background:linear-gradient(135deg, #fff6d8, #f0d890); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
@@ -1058,7 +1061,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v268</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v269</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -13771,6 +13774,7 @@ const PetRT = {
     document.querySelectorAll('.pbDirs button').forEach(b => { b.onpointerdown = e => { e.preventDefault(); T.dq += b.dataset.d; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => b.classList.remove('dn'); b.onclick = e => e.preventDefault(); });
     for (const [id, key] of [['pbAct', 'an'], ['pbJmp', 'jn']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); T[key]++; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => b.classList.remove('dn'); b.onclick = e => e.preventDefault(); }
     const M = PetBattle.B && this[PetBattle.B.rtMode]; if (M && M.bind) M.bind();
+    PadLayout.editing = false; PadLayout.apply(); // v269 옮겨 둔 조이스틱·버튼 위치
   },
 };
 
@@ -18502,6 +18506,45 @@ const Layout = {
     addEventListener('resize', () => setTimeout(() => this.apply(), 80));
   },
 };
+/* ===================== v269 펫 배틀·콜로세움 조이스틱·버튼 옮기기 (사용자 2026-10-21 '조이스틱도 위치 바꿀 수 있게 해') =====================
+ * 경기 화면 왼쪽 ✥ 버튼 → 조이스틱·점프·특수(힘껏)·공격(베기)·시점을 끌어서 옮긴다. 경기 화면(.pbPad) 비율로 'padLayout'에 가로/폰 가로마다 저장.
+ * 옮긴 버튼은 .pbBtns 줄에서 빼서 .pbPad에 바로 붙이고(absolute), 기본값이면 원래 줄로 되돌린다. 조정 중엔 그 버튼이 눌리지 않는다 (경기는 계속 돌아간다). */
+const PadLayout = {
+  IDS: ['pbStick', 'pbHop', 'pbJmp', 'pbAct', 'pbView'], editing: false, drag: null,
+  data() { const d = Store.get('padLayout', {}); return d && typeof d === 'object' ? d : {}; },
+  pad() { return document.querySelector('.pbPad'); },
+  apply() {
+    const pad = this.pad(); if (!pad) return; const d = this.data()[Layout.bucket()] || {}, pr = pad.getBoundingClientRect();
+    if (!$('pbEdit')) { pad.insertAdjacentHTML('beforeend', '<button class="pbEdit" id="pbEdit" title="조이스틱·버튼 옮기기">✥</button><div class="pbEditBar" id="pbEditBar"><span>끌어서 옮기세요</span><button id="pbEditReset">기본값</button><button id="pbEditDone">완료</button></div>');
+      $('pbEdit').onpointerdown = e => { e.preventDefault(); e.stopPropagation(); this.edit(true); }; $('pbEditDone').onclick = () => this.edit(false);
+      $('pbEditReset').onclick = () => { const all = this.data(); delete all[Layout.bucket()]; Store.set('padLayout', all); this.apply(); Toast.show('기본 위치로 되돌렸어요.'); }; }
+    pad.classList.toggle('pbEditing', this.editing);
+    for (const id of this.IDS) {
+      const el = $(id); if (!el) continue; if (!el._home) el._home = el.parentNode; const p = d[id];
+      if (p && pr.width) { if (el.parentNode !== pad) pad.appendChild(el); const w = el.offsetWidth, h = el.offsetHeight; this.place(el, Math.max(0, Math.min(pr.width - w, p.x * pr.width)), Math.max(0, Math.min(pr.height - h, p.y * pr.height))); }
+      else { if (el.parentNode !== el._home) el._home.appendChild(el); for (const k of ['position', 'left', 'top', 'right', 'bottom', 'pointerEvents']) el.style[k] = ''; }
+    }
+  },
+  place(el, x, y) { Object.assign(el.style, { position: 'absolute', left: x + 'px', top: y + 'px', right: 'auto', bottom: 'auto', pointerEvents: 'auto' }); },
+  edit(v) { this.editing = v; const pad = this.pad(); if (pad) pad.classList.toggle('pbEditing', v); Sound.play(v ? 'paper' : 'click'); if (v) Toast.show('조이스틱·버튼을 끌어서 옮기세요. 끝나면 완료.', 2600); },
+  bind() {
+    const sel = this.IDS.map(i => '.pbPad #' + i).join(',');
+    document.addEventListener('pointerdown', e => {
+      if (!this.editing || !e.target.closest) return; const el = e.target.closest(sel); if (!el) return; e.preventDefault(); e.stopPropagation();
+      const pad = this.pad(), pr = pad.getBoundingClientRect(), r = el.getBoundingClientRect(); if (el.parentNode !== pad) { pad.appendChild(el); this.place(el, r.left - pr.left, r.top - pr.top); }
+      this.drag = { el, dx: e.clientX - r.left, dy: e.clientY - r.top, ptr: e.pointerId }; el.classList.add('dragging');
+    }, true);
+    document.addEventListener('pointermove', e => {
+      const d = this.drag; if (!d || e.pointerId !== d.ptr) return; e.preventDefault(); e.stopPropagation();
+      const pr = this.pad().getBoundingClientRect(), x = Math.max(0, Math.min(pr.width - d.el.offsetWidth, e.clientX - d.dx - pr.left)), y = Math.max(0, Math.min(pr.height - d.el.offsetHeight, e.clientY - d.dy - pr.top));
+      this.place(d.el, x, y); d.fx = x / pr.width; d.fy = y / pr.height;
+    }, true);
+    const up = e => { const d = this.drag; if (!d || e.pointerId !== d.ptr) return; e.stopPropagation(); this.drag = null; d.el.classList.remove('dragging'); if (d.fx === undefined) return; const all = this.data(), b = all[Layout.bucket()] = all[Layout.bucket()] || {}; b[d.el.id] = { x: d.fx, y: d.fy }; Store.set('padLayout', all); Sound.play('click'); };
+    document.addEventListener('pointerup', up, true); document.addEventListener('pointercancel', up, true);
+    addEventListener('resize', () => setTimeout(() => this.apply(), 120));
+  },
+};
+PadLayout.bind();
 
 /* ===================== 혼자 하기 단계별 연습 (v266, 사용자 2026-10-21 '혼자하기 단계별 연습 물건') =====================
  * 1~5단계: 시드·자본·함정 여부를 고정해서 늘 같은 광진구 연습 물건이 나온다 (쉬운 것 → 함정 많은 것).

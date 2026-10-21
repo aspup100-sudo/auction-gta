@@ -1312,8 +1312,8 @@ body.gated #title { display:grid; }
   <div class="tabs" id="nbTabs"></div>
   <div id="nbBody"></div>
 </div>
-<div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v292</small></h2>
+<div id="menu" class="panel mf">
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v293</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -1374,24 +1374,24 @@ body.gated #title { display:grid; }
   <button id="zmX" type="button" title="닫기">✕ 닫기</button>
 </div>
 <div id="bidForm" class="ovl"></div>
-<div id="mpWait" class="ovl"></div>
+<div id="mpWait" class="ovl mf"></div>
 <div id="openBoard" class="ovl"></div>
 <div id="vignette"></div>
 <div id="bigSeal"></div>
-<div id="loanPanel" class="ovl"></div>
+<div id="loanPanel" class="ovl mf"></div>
 <div id="dim"></div>
 <div id="envelope" class="ovl"></div>
 <div id="evictPanel" class="ovl"></div>
 <div id="result"></div>
-<div id="records" class="ovl"></div>
-<div id="installGuide" class="ovl"></div>
-<div id="cmWin" class="ovl"></div>
-<div id="shop" class="ovl"></div>
-<div id="closet" class="ovl"></div>
-<div id="pbWin" class="ovl"></div><div id="pbAsk"></div><div id="frAsk"></div><div id="examWin" class="ovl"></div><div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk"></div><div id="partyAsk"></div><div id="pokeAsk"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk"></div><div id="duelDim"></div><div id="duelWin"></div><div id="mineWin"></div>
-<div id="assetBox" class="ovl"></div>
-<div id="rankWin" class="ovl"></div>
-<div id="dupGate" class="ovl"></div>
+<div id="records" class="ovl mf"></div>
+<div id="installGuide" class="ovl mf"></div>
+<div id="cmWin" class="ovl mf"></div>
+<div id="shop" class="ovl mf"></div>
+<div id="closet" class="ovl mf"></div>
+<div id="pbWin" class="ovl"></div><div id="pbAsk" class="mf"></div><div id="frAsk" class="mf"></div><div id="examWin" class="ovl"></div><div id="rpsWin" class="ovl"></div><div id="hjWin" class="ovl"></div><div id="rpsAsk" class="mf"></div><div id="partyAsk" class="mf"></div><div id="pokeAsk" class="mf"></div><div id="fightWin" class="ovl"></div><div id="tetWin" class="ovl"></div><div id="quizWin" class="ovl"></div><div id="fightAsk" class="mf"></div><div id="duelDim"></div><div id="duelWin"></div><div id="mineWin"></div>
+<div id="assetBox" class="ovl mf"></div>
+<div id="rankWin" class="ovl mf"></div>
+<div id="dupGate" class="ovl mf"></div>
 <div id="layoutBar"><span>버튼을 끌어서 옮기세요</span><button class="btn" id="layoutReset">기본값</button><button class="btn gold" id="layoutDone">완료</button></div>
 <div id="touch"><div id="stick"><div id="knob"></div></div><button id="tAct">조사</button><button id="tCar">승하차</button><button id="tHit" hidden>👊</button><button id="tChat" hidden>채팅</button><div id="pedals"><button id="tGas">가속</button><button id="tBrake">브레이크</button><button id="tHb">핸드</button></div></div>
 
@@ -4228,7 +4228,7 @@ const Nav = {
       if (court) { const g = COURT_GU[court]; if (g !== z.gu) return { kind: 'gu', gu: g, label: `${COURTS[court].name} (${DISTRICT[g].name})` }; }
       return null;
     }
-    if (State.targetPlace) { const pl = z.places.find(p => p.id === State.targetPlace); if (pl) return { kind: 'place', id: pl.id, label: pl.name }; }
+    if (State.targetPlace && (Tutorial.on || State.pickedPlace === State.targetPlace)) { const pl = z.places.find(p => p.id === State.targetPlace); if (pl) return { kind: 'place', id: pl.id, label: pl.name }; } // v293 사용자 '아무것도 안 눌렀는데 사무실로 화살표': 차 탈 때도 내가 고른 곳만 (v291 걸을 때와 같게)
     if (tc && tc.gu !== z.gu && State.phase === 'investigate') return { kind: 'gu', gu: tc.gu, label: `${tc.name} (${DISTRICT[tc.gu].name})` };
     return null;
   },
@@ -10200,7 +10200,7 @@ function addSavingsBank() {
   const cl = z.claim([b.x + b.w + 10, b.y + b.h + 6], x => x.w >= 3 && x.h >= 3);
   if (!cl) return;
   cl.b.place = 'savings'; z.places.push({ id: 'savings', kind: 'savings', name: '새솔저축은행', building: cl.b.id, door: cl.door });
-  z.chunks.clear(); State.targetPlace = 'savings'; HUD.page('저축은행 위치를 지도에 표시했어. 걸어가.', '알림');
+  z.chunks.clear(); State.targetPlace = State.pickedPlace = 'savings'; HUD.page('저축은행 위치를 지도에 표시했어. 걸어가.', '알림');
 }
 async function forfeit(c) {
   if (Live.on) return Live.forfeitWin(Live.pending(), '대출 부결'); // 채널: 그 낙찰 건만 보증금 몰수, 게임은 계속

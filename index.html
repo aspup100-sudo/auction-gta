@@ -1206,7 +1206,7 @@ body.gated #title { display:grid; }
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v279</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v280</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -1253,11 +1253,11 @@ body.gated #title { display:grid; }
     <div class="ksub">친구와 같이 할 때도 이 모습으로 보여요. 이 기기에 저장됩니다. 옷·차 스킨은 광진구 건대 편집숍에서 돈 주고 살 수 있어요.</div>
   </details>
   <button class="btn" id="btnLayout">버튼 위치 조정</button>
-  <button class="btn" id="menuIdea">💬 의견 보내기</button>
-  <button class="btn" id="menuDonate" hidden>☕ 개발자 응원하기</button>
+  <button class="btn" id="menuIdea">의견 보내기</button>
+  <button class="btn" id="menuDonate" hidden>개발자 응원하기</button>
   <button class="btn" id="btnEndDay">오늘 일정 끝내기</button>
   <button class="btn" onclick="Menu.toggle(false)">닫기 (Esc)</button>
-  <button class="btn" id="menuMove">🔁 기록 옮기기</button>
+  <button class="btn" id="menuMove">기록 옮기기</button>
   <div id="quitBox"><button class="btn" id="btnQuit">게임 나가기 <small>제목 화면으로</small></button></div>
 </div>
 <div id="zoneMap">
@@ -18748,7 +18748,7 @@ const Practice = {
   // 제목 화면 단계 고르기 (go: boot.js가 넘겨 주는 시작 함수)
   pick() {
     const r = this.rec(), G = { S: 5, A: 4, B: 3, C: 2, D: 1 };
-    Cm.win(`<div class="rcHead">🎯 단계별 연습</div><div class="rcSub">단계마다 정해진 연습 물건이 하나씩 있어요. 결과 화면까지 하면 다음 단계가 열려요.</div>
+    Cm.win(`<div class="rcHead">단계별 연습</div><div class="rcSub">단계마다 정해진 연습 물건이 하나씩 있어요. 결과 화면까지 하면 다음 단계가 열려요.</div>
       ${PRACTICE.map((P, i) => { const n = i + 1, ok = this.open(n), g = r[n]; return `<button class="prSt" data-n="${n}" ${ok ? '' : 'disabled'}><span class="prN">${ok ? n : '🔒'}</span><span class="prT"><b>${P.st}</b><small>${ok ? `${esc(P.what)} · 자본 ${fmtWon(P.cap)}` : `${n - 1}단계를 끝내면 열려요`}</small></span><span class="prG">${g && G[g] ? g : g ? '✓' : ''}</span></button>`; }).join('')}
       <p class="cmP">오른쪽 글자는 그 단계 연습 물건으로 받은 가장 좋은 등급이에요. 다시 해도 돼요.</p>
       <div class="pcBtns"><button class="btn" data-x>닫기</button></div>`);
@@ -18791,7 +18791,7 @@ const Cm = {
 
   /* ---- 💬 의견 보내기 ---- */
   idea() {
-    const el = this.win(`<div class="rcHead">💬 의견 보내기</div><div class="rcSub">버그 · 바라는 점 · 헷갈린 곳 뭐든 좋아요. 답장은 못 드리지만 다 읽어요.</div>
+    const el = this.win(`<div class="rcHead">의견 보내기</div><div class="rcSub">버그 · 바라는 점 · 헷갈린 곳 뭐든 좋아요. 답장은 못 드리지만 다 읽어요.</div>
       <textarea id="cmIdea" maxlength="500" rows="5" placeholder="예) 땅굴에서 광차가 안 움직여요 / 이런 물건도 나오면 좋겠어요"></textarea><div class="cmCnt"><span id="cmIdeaN">0</span>/500</div>
       <div class="pcBtns"><button class="btn gold" id="cmIdeaGo">보내기</button><button class="btn" data-x>닫기</button></div>
       <button class="cmAdm" id="cmAdm">${Store.get('fbAdmin', 0) ? '🔔 운영자 신고 알림 켜짐' : '운영자 알림 설정'}</button>`);
@@ -18864,7 +18864,7 @@ const Cm = {
     return new TextDecoder().decode(new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()));
   },
   move() {
-    this.win(`<div class="rcHead">🔁 기록 옮기기</div><div class="rcSub">폰을 바꿔도 돈 · 내 집 · 펫 · 옷 · 채널 기록을 그대로 이어서 해요.</div>
+    this.win(`<div class="rcHead">기록 옮기기</div><div class="rcSub">폰을 바꿔도 돈 · 내 집 · 펫 · 옷 · 채널 기록을 그대로 이어서 해요.</div>
       <div class="cmParts"><div class="cmPart"><h3>① 지금 이 기기 → 코드 만들기</h3><p class="cmP">기록을 서버에 3일 동안 맡기고 8자리 코드를 받아요.</p><div id="cmCodeOut"><button class="btn gold" id="cmPut">코드 만들기</button></div></div>
       <div class="cmPart"><h3>② 다른 기기에서 받은 코드 넣기</h3><div class="cmRow"><input id="cmCodeIn" maxlength="9" placeholder="8자리 코드" autocapitalize="characters" autocomplete="off"><button class="btn" id="cmGet">받기</button></div><div id="cmGetMsg"></div></div></div>
       <div class="pcBtns"><button class="btn" data-x>닫기</button></div>`, true);
@@ -18908,7 +18908,7 @@ $('chHistMuted').onclick = () => Cm.muted();
 ['btnIdea', 'menuIdea'].forEach(id => $(id).onclick = () => Cm.idea());
 ['btnMove', 'menuMove'].forEach(id => $(id).onclick = () => Cm.move());
 // v270 ☕ 개발자 응원하기: FEEL.donateUrl(후원 플랫폼 링크)이 있을 때만 보인다. 돈을 내도 게임 안에서 달라지는 건 없다 (판매가 아니라 응원)
-Cm.donate = () => { const u = FEEL.donateUrl; if (!/^https:\/\//.test(u)) return; Cm.win(`<div class="rcHead">☕ 개발자 응원하기</div><div class="rcSub">경매 GTA는 작은 개인 프로젝트예요. 재밌게 하셨다면 커피 한 잔 값으로 응원해 주세요.</div>
+Cm.donate = () => { const u = FEEL.donateUrl; if (!/^https:\/\//.test(u)) return; Cm.win(`<div class="rcHead">개발자 응원하기</div><div class="rcSub">경매 GTA는 작은 개인 프로젝트예요. 재밌게 하셨다면 커피 한 잔 값으로 응원해 주세요.</div>
   <p class="cmP">응원은 자유예요. 내도 안 내도 게임 안에서 달라지는 건 없어요. 서버비와 새 기능 만드는 데 써요. 고마워요!</p>
   <div class="donAmts">${Cm.DON_AMTS.map(n => `<a class="btn gold" href="${esc(Cm.donLink(u, n))}" target="_blank" rel="noopener">☕ ${n.toLocaleString('ko-KR')}원</a>`).join('')}<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">금액 직접 넣기</a></div>
   <div class="pcBtns"><button class="btn" data-x>닫기</button></div>`); $('cmWin').querySelectorAll('.donAmts a').forEach(x => x.onclick = () => { Sound.play('chime'); setTimeout(() => Cm.close(), 300); }); };

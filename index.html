@@ -1048,7 +1048,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v264</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v265</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -18454,10 +18454,10 @@ const ViewFix = {
     if (!document.body.classList.contains('touchOn')) return;
     const ae = document.activeElement; if (ae && /^(input|textarea)$/i.test(ae.tagName)) return; // 글자를 적는 중엔 키보드 때문에 줄어든 게 정상
     const vv = window.visualViewport;
-    const scrolled = (window.scrollY || window.pageYOffset || 0) > 0 || (vv && (vv.offsetTop > 1 || vv.offsetLeft > 1));
+    const de = document.documentElement, bd = document.body, scrolled = (window.scrollY || window.pageYOffset || 0) > 0 || de.scrollTop > 0 || bd.scrollTop > 0 || (vv && (vv.offsetTop > 1 || vv.offsetLeft > 1));
     const shrunk = !!vv && innerHeight < Math.round(vv.height) - 1; // 보이는 영역보다 레이아웃이 작다 = 키보드가 남긴 자국
     const stuck = this.ios() && innerWidth > innerHeight && innerHeight < Math.min(screen.width, screen.height) - 2; // 가로인데 화면 높이가 폰 짧은 변보다 작다
-    if (scrolled) scrollTo(0, 0);
+    if (scrolled) { scrollTo(0, 0); de.scrollTop = 0; bd.scrollTop = 0; }
     if (scrolled || ((shrunk || stuck) && Date.now() - this.lastNudge > 4000)) { this.lastNudge = Date.now(); this.nudge(); } // v72: 한 번만 흔들고 포기하지 않고 줄어든 동안 4초마다 다시 (그 사이엔 realVH가 진짜 높이로 그린다)
   },
   nudge() { // 문서 높이를 살짝 바꿨다 되돌리면 iOS가 레이아웃 뷰포트를 다시 잰다; 번갈아 viewport 메타도 건드려 본다
@@ -18468,6 +18468,8 @@ const ViewFix = {
   },
   bind() {
     setInterval(() => this.check(), 1000);
+    const kick = () => this.check(); for (const ms of [0, 200, 600, 1500]) setTimeout(kick, ms); // v265 사용자 '폰으로 처음 들어가면 화면이 위로 올라가 있어': 켜자마자·돌아오자마자·돌린 직후에 바로 바로잡는다 (1초 기다리지 않고)
+    addEventListener('pageshow', () => { setTimeout(kick, 50); setTimeout(kick, 500); }); addEventListener('orientationchange', () => { setTimeout(kick, 300); setTimeout(kick, 900); }); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(kick, 300); });
     if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(() => this.check(), 350));
     document.addEventListener('focusout', () => { setTimeout(() => this.check(), 300); setTimeout(() => this.check(), 900); }); // 키보드가 내려간 뒤 한 번 더
   },

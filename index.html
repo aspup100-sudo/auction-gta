@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v318</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v319</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2716,7 +2716,7 @@ const PROFILE_SWATCHES = {
   shirt: ['#2f4f86', '#9b3b3b', '#2f7d4f', '#d9a441', '#6a3fb5', '#e26a9a', '#f1f1f1', '#15151c'],
   pants: ['#3a3a46', '#2b3a6e', '#6b4a2b', '#1c1c22', '#8a8a95', '#5a2b2b'],
 };
-const PAL_FLAGS = ['robot', 'beach', 'mummy', 'space', 'captain', 'fox', 'ogre', 'rapunzel']; // v233 옷 그림 표시 (sprites.js wearables, arena3d human3)
+const PAL_FLAGS = ['robot', 'beach', 'mummy', 'space', 'captain', 'fox', 'ogre', 'rapunzel', 'fant', 'fantV', 'sfx']; // v233 옷 그림 표시 (sprites.js wearables, arena3d human3)
 const PROFILE_LABEL = { hair: '머리', skin: '피부', shirt: '옷', pants: '바지' };
 const Profile = {
   get() { return Store.get('profile', {}); },
@@ -2915,8 +2915,19 @@ const Sprites = (() => {
       if (side) { P(H, 10, 6, 2, 10); P(Fl, 10, 8, 1, 1); P(Fl, 11, 12, 1, 1); }
       else if (front) { P(H, 4, 5, 1, 7); P(H, 11, 5, 1, 7); P(H, 12, 12, 2, 4); P(Fl, 4, 7, 1, 1); }
       else { P(H, 6, 7, 4, 9); P(H, 5, 7, 1, 4); P(H, 10, 7, 1, 4); P(Fl, 7, 9, 1, 1); P(Fl, 8, 12, 1, 1); P(Fl, 7, 14, 1, 1); } }
+    /* v319 판타지·SF 옷 (사용자 '옷들안에서도 장르 들어가서 고를수있게 하자'): 2D는 표시만 몇 칸 */
+    if (pal.fant === 'ranger') { const D = pal.shirt2 || '#1e4a22', Br = '#6a4424'; P(D, 4, 1, 8, 2); P(D, 4, 3, 1, 5); P(D, 11, 3, 1, 5); if (side) P(D, 9, 3, 3, 5); else if (back) P(D, 4, 3, 8, 5); P(Br, 4, 11, 8, 1); if (front) P('#d8b040', 7, 11, 2, 1); }
+    if (pal.fant === 'peasant') { const Br = '#5a3a22'; P(Br, 4, 11, 8, 1); if (front) { P(pal.shirt2 || '#6a4a2a', 7, 8, 2, 3); P('#d8b040', 7, 11, 1, 1); } }
+    if (pal.sfx === 'cyber') { const N = '#3af0ff'; if (side) { P(N, 7, 8, 1, 4); P(N, 7, 13, 1, 2); } else { P(N, 5, 8, 1, 4); P(N, 10, 8, 1, 4); P(N, 5, 13, 1, 2); P(N, 10, 13, 1, 2); if (front) P('#ff3ad8', 7, 9, 2, 1); } }
+    if (pal.sfx === 'mecha') { const W = '#e8ecf2', O = '#e8502a'; P(W, 3, 7, 3, 2); P(W, 10, 7, 3, 2); P(O, 3, 7, 3, 1); P(O, 10, 7, 3, 1); if (front) { P(W, 6, 8, 4, 3); P('#3ad8ff', 7, 9, 2, 1); } else if (back) P('#5a6070', 5, 8, 6, 4); P(W, 5, 13, 2, 1); P(W, 9, 13, 2, 1); }
+    if (pal.sfx === 'pilot') { const S = '#2a2e38'; if (front) { P(S, 5, 8, 1, 4); P(S, 10, 8, 1, 4); P(S, 6, 10, 4, 1); P('#3a6ad8', 9, 8, 1, 1); } else if (back) P(S, 5, 8, 6, 1); P(S, 4, 11, 8, 1); }
+    if (pal.sfx === 'knight') { const M = '#d8dee8', D = '#8a94a4'; P(M, 3, 7, 3, 2); P(M, 10, 7, 3, 2); if (front) { P(M, 6, 8, 4, 4); P(D, 7, 9, 2, 2); } P(D, 4, 11, 8, 1); }
+    if (pal.sfx === 'wizard') { const R = pal.shirt || '#3a2a7a', Gd = '#e8c040'; P(R, 4, 11, 8, 4); P(R, 3, 13, 10, 2); P(Gd, 4, 11, 8, 1); if (front) { P(Gd, 7, 8, 2, 1); P('#fff4a0', 5, 13, 1, 1); P('#fff4a0', 10, 14, 1, 1); } }
     const h = pal.hat; if (!h) return;
     const E = '#1b1420';
+    if (h === 'helm') { const M = '#c8d0dc', D = '#7a8494'; P(M, 4, 0, 8, 6); P(D, 4, 5, 8, 1); if (front) { P(K, 5, 3, 6, 1); P(D, 7, 4, 2, 2); } else if (side) P(K, 4, 3, 3, 1); P('#c0302a', 7, 0, 2, 1); P('#c0302a', side ? 9 : 7, -1, 2, 1); return; }
+    if (h === 'wizard') { const B = '#3a2a7a', Gd = '#e8c040'; P(B, 3, 2, 10, 1); P(B, 5, 1, 6, 1); P(B, 6, 0, 4, 1); P(B, side ? 9 : 8, -1, 2, 1); P(Gd, 5, 1, 6, 1); P('#fff4a0', 7, 0, 1, 1); return; }
+    if (h === 'visor') { const V = '#3af0ff'; if (side) { P(V, 4, 4, 3, 1); P('#2a3040', 7, 3, 2, 3); } else if (front) { P(V, 5, 4, 6, 1); P('#e8ffff', 6, 4, 1, 1); P('#2a3040', 4, 3, 1, 3); P('#2a3040', 11, 3, 1, 3); } else P('#2a3040', 4, 4, 8, 1); return; }
     if (h === 'space') { const G = 'rgba(190,225,255,.38)', E2 = 'rgba(255,255,255,.75)'; P(G, 4, 1, 8, 7); P(E2, 5, 0, 6, 1); P(E2, 3, 1, 1, 7); P(E2, 12, 1, 1, 7); P('#ffffff', side ? 5 : 5, 2, 1, 2); P('#d8dce4', 4, 8, 8, 1); return; }
     if (h === 'captain') { const Wt = '#f4f4f4'; P(Wt, 4, 0, 8, 2); P(Wt, 3, 1, 10, 1); P(K, 4, 2, 8, 1); P('#f2c230', side ? 5 : 7, 1, 2, 1); if (front) P(K, 5, 3, 6, 1); else if (side) P(K, 3, 3, 3, 1); return; }
     if (h === 'crown') { const Gd = '#f2c230', Dk = '#c8941a'; P(Gd, 5, 1, 6, 1); P(Dk, 5, 2, 6, 1); if (side) { P(Gd, 5, 0, 1, 1); P(Gd, 7, 0, 1, 1); P(Gd, 10, 0, 1, 1); P('#e03a3a', 7, 1, 1, 1); } else { P(Gd, 5, 0, 1, 1); P(Gd, 7, 0, 2, 1); P(Gd, 10, 0, 1, 1); P('#e03a3a', 7, 1, 2, 1); P('#3a8ae0', 5, 2, 1, 1); P('#3a8ae0', 10, 2, 1, 1); } }
@@ -11728,6 +11739,16 @@ const SHOP_ITEMS = {
     { id: 'c_gumiho', name: '구미호 (꼬리 아홉)', new: '2026-10-18', nb: 233, price: 4000e4, pal: { shirt: '#f6f2ea', shirt2: '#d83a3a', pants: '#f6f2ea', dress: '#f6f2ea', hairC: '#1a1418', fox: true } },
     { id: 'c_rapunzel', name: '라푼젤 드레스 (긴 머리)', new: '2026-10-18', nb: 233, price: 4000e4, pal: { shirt: '#9a6ad8', shirt2: '#e8c8f0', pants: '#9a6ad8', dress: '#9a6ad8', hairC: '#f2d060', rapunzel: true } },
     { id: 'c_space', name: '우주복', new: '2026-10-18', nb: 233, price: 5000e4, pal: { shirt: '#f2f4f8', shirt2: '#d0d4dc', pants: '#f2f4f8', space: true } },
+    // v319 사용자 '옷들안에서도 장르 들어가서 고를수있게 하자': 판타지 (평민·레인저 = Quaternius 판타지 옷 모델, hero3d.js fantOn) · SF
+    { id: 'c_peasant', name: '마을 평민 옷', new: '2026-10-22', nb: 319, price: 1500e4, pal: { shirt: '#d8ccb0', shirt2: '#6a4a2a', pants: '#4a3626', shoe: '#3a2a1e', fant: 'peasant' } },
+    { id: 'c_peasant2', name: '마을 평민 옷 (갈색)', new: '2026-10-22', nb: 319, price: 1500e4, pal: { shirt: '#7a6a4a', shirt2: '#4a3a26', pants: '#3a2e22', shoe: '#2a2018', fant: 'peasant', fantV: 1 } },
+    { id: 'c_ranger', name: '숲의 레인저', new: '2026-10-22', nb: 319, price: 4000e4, pal: { shirt: '#3a8a3a', shirt2: '#1e4a22', pants: '#1e3a1e', shoe: '#3a2a1e', fant: 'ranger' } },
+    { id: 'c_ranger2', name: '사막 레인저', new: '2026-10-22', nb: 319, price: 4000e4, pal: { shirt: '#8a5a32', shirt2: '#5a3a22', pants: '#5a3a22', shoe: '#3a2a1e', fant: 'ranger', fantV: 1 } },
+    { id: 'c_knight', name: '기사 갑옷', new: '2026-10-22', nb: 319, price: 6000e4, pal: { shirt: '#b8c0cc', shirt2: '#8a94a4', pants: '#9aa2ae', shoe: '#5a6070', cape: '#b02a2a', sfx: 'knight' } },
+    { id: 'c_wizard', name: '마법사 로브', new: '2026-10-22', nb: 319, price: 5000e4, pal: { shirt: '#3a2a7a', shirt2: '#e8c040', pants: '#2a1e5a', sfx: 'wizard' } },
+    { id: 'c_cyber', name: '사이버 슈트', new: '2026-10-22', nb: 319, price: 5000e4, pal: { shirt: '#1a1e2a', shirt2: '#2a3040', pants: '#151820', shoe: '#101218', sfx: 'cyber' } },
+    { id: 'c_mecha', name: '메카 아머', new: '2026-10-22', nb: 319, price: 8000e4, pal: { shirt: '#d8dce4', shirt2: '#e8502a', pants: '#5a6070', shoe: '#3a3e48', sfx: 'mecha' } },
+    { id: 'c_pilot', name: '우주선 조종사', new: '2026-10-22', nb: 319, price: 3500e4, pal: { shirt: '#e8782a', shirt2: '#2a2e38', pants: '#e8782a', shoe: '#2a2e38', sfx: 'pilot' } },
   ],
   hat: [ // 모자·머리 (사용자 2026-10-17 '왕관, 밀짚모자, 생일축하 꼬깔, 삐에로 분장 얼굴, 할로윈 모자, 호박머리, 해골 머리, 좀비 머리, 프랑켄슈타인'). 그림은 sprites.js wearables
     { id: 'h_straw', name: '밀짚모자', new: '2026-10-17', nb: 187, price: 300e4, hat: 'straw' },
@@ -11741,6 +11762,9 @@ const SHOP_ITEMS = {
     { id: 'h_crown', name: '왕관', new: '2026-10-17', nb: 187, price: 5000e4, hat: 'crown' },
     { id: 'h_captain', name: '선장 모자', new: '2026-10-18', nb: 233, price: 800e4, hat: 'captain' },
     { id: 'h_space', name: '우주 헬멧', new: '2026-10-18', nb: 233, price: 3000e4, hat: 'space' },
+    { id: 'h_helm', name: '기사 투구', new: '2026-10-22', nb: 319, price: 2500e4, hat: 'helm' }, // v319 판타지·SF 모자
+    { id: 'h_wizard', name: '마법사 모자', new: '2026-10-22', nb: 319, price: 2000e4, hat: 'wizard' },
+    { id: 'h_visor', name: '사이버 바이저', new: '2026-10-22', nb: 319, price: 2500e4, hat: 'visor' },
   ],
   petdeco: [ // 펫 꾸미기 (사용자 2026-10-17 '안경, 목줄, 목도리, 펫 색깔 변경 황금색도'). 데리고 다니는 펫에 단다. 그림은 petdeco.js
     { id: 'd_glasses', name: '동그란 안경', new: '2026-10-17', nb: 187, price: 200e4, pd: 'eye', v: 'glasses' },
@@ -11884,6 +11908,11 @@ const SHOP_ITEMS = {
 const RIDE_TABS = [['all', '전체'], ['car', '자동차'], ['two', '두 바퀴'], ['pub', '대중교통'], ['ani', '동물'], ['sky', '하늘'], ['water', '물'], ['mil', '군용'], ['fun', '재미']];
 const RIDE_GROUP = { bike: 'two', scooter: 'two', moto: 'two', uni: 'two', bus: 'pub', train: 'pub', cart: 'fun', chair: 'fun', piggy: 'fun', cabrio: 'car', benz: 'car', ferrari: 'car', lambo: 'car', horse: 'ani', bull: 'ani', wolf: 'ani', shark: 'ani', jet: 'sky', wings: 'sky', dragon: 'sky',
   boat: 'water', lifeboat: 'water', sailboat: 'water', viking: 'water', galleon: 'water', cruise: 'water', tank: 'mil', tank2: 'mil', tank3: 'mil', tank4: 'mil' };
+// v319 옷·모자·가구 장르 (사용자 '옷들안에서도 장르 들어가서 고를수있게 하자, 가구도')
+const GENRE_TABS = [['all', '전체'], ['mod', '현대'], ['fan', '판타지'], ['sf', 'SF'], ['hal', '할로윈']];
+const GENRE = { c_witch: 'hal', c_vamp: 'hal', c_ghost: 'hal', c_skel: 'hal', c_pumpkin: 'hal', c_mummy: 'hal', c_ogre: 'fan', c_gumiho: 'fan', c_rapunzel: 'fan', c_peasant: 'fan', c_peasant2: 'fan', c_ranger: 'fan', c_ranger2: 'fan', c_knight: 'fan', c_wizard: 'fan', c_robot: 'sf', c_space: 'sf', c_cyber: 'sf', c_mecha: 'sf', c_pilot: 'sf',
+  h_witch: 'hal', h_clown: 'hal', h_pumpkin: 'hal', h_skull: 'hal', h_zombie: 'hal', h_frank: 'hal', h_crown: 'fan', h_helm: 'fan', h_wizard: 'fan', h_space: 'sf', h_visor: 'sf' };
+function genreOf(it) { return it.genre || GENRE[it.id] || 'mod'; }
 function rideGroup(it) { return it.ride ? RIDE_GROUP[it.ride] || 'fun' : 'car'; }
 const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it);
 const Shop = {
@@ -11943,7 +11972,7 @@ const Shop = {
   },
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
   render() {
-    const p = Profile.get(); const sub = this.tab === 'car' ? this.rsub || 'all' : 'all', list = SHOP_ITEMS[this.tab].filter(it => (!it.giftOnly || this.has(it.id)) && (sub === 'all' || rideGroup(it) === sub)); const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
+    const p = Profile.get(); const gt = ['clothes', 'hat', 'home'].includes(this.tab), sub = this.tab === 'car' ? this.rsub || 'all' : gt ? (this.gsub || {})[this.tab] || 'all' : 'all', list = SHOP_ITEMS[this.tab].filter(it => (!it.giftOnly || this.has(it.id)) && (sub === 'all' || (gt ? genreOf(it) === sub : rideGroup(it) === sub))); const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
     const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : isH ? p.hat : isD ? null : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
     const nt = k => SHOP_ITEMS[k].some(it => this.isNew(it)) ? '<i class="shNew">NEW</i>' : '';
     const sp = this.spendable(), rec = AuctionRec.wins(), nextNeed = list.map(it => this.need(it)).filter(n => n > rec).sort((a, b) => a - b)[0];
@@ -11956,7 +11985,7 @@ const Shop = {
       return `<div class="shItem${on ? ' on' : own ? ' own' : lock ? ' lock' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isHm ? HomeDeco.onWord(it) : isC ? '입는 중' : isH ? '쓰는 중' : isD ? '달고 있어요' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? (isP ? (home ? '집에 있어요' : '가게에 맡겨 둠') : '보유') : fmtWon(it.price)}</span>${btn}${sellBtn}</div>`;
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">번 돈 <b>${fmtWon(sp)}</b> ${typeof Live !== 'undefined' && Live.on ? earnNote() : ` <small>(밑천 ${fmtWon(State.capital || 0)}은 못 써요)</small>`} · 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
-      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">차·탈것${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">펫 꾸미기${nt('petdeco')}</button><button class="btn${isHm ? ' sel' : ''}" data-tab="home">가구${nt('home')}</button></div>${this.tab === 'car' ? `<div class="shTabs shSub">${RIDE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS.car.some(it => rideGroup(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-rsub="${g}">${n}${SHOP_ITEMS.car.some(it => (g === 'all' || rideGroup(it) === g) && this.isNew(it)) && g !== 'all' ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}
+      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">차·탈것${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">펫 꾸미기${nt('petdeco')}</button><button class="btn${isHm ? ' sel' : ''}" data-tab="home">가구${nt('home')}</button></div>${this.tab === 'car' ? `<div class="shTabs shSub">${RIDE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS.car.some(it => rideGroup(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-rsub="${g}">${n}${SHOP_ITEMS.car.some(it => (g === 'all' || rideGroup(it) === g) && this.isNew(it)) && g !== 'all' ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}${gt ? `<div class="shTabs shSub">${GENRE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS[this.tab].some(it => genreOf(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-gsub="${g}">${n}${g !== 'all' && SHOP_ITEMS[this.tab].some(it => genreOf(it) === g && this.isNew(it)) ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}
       ${isD ? `<div class="shNote" style="margin:0 0 6px;text-align:center">${p.pet ? `데리고 다니는 ${esc((SHOP_ITEMS.pet.find(x => x.pet === PetDeco.target()) || {}).name || '펫')}에게 달아요 · 옷장에서 바꿀 수 있어요` : '펫을 데리고 다녀야 달 수 있어요'}</div>` : isH || isC ? '<div class="shNote" style="margin:0 0 6px;text-align:center">산 옷·모자는 화면의 옷장에서 언제든 갈아입어요</div>' : ''}
       ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}${isHm ? '<div class="shNote" style="margin:0 0 6px;text-align:center">TV·소파·침대·식탁·러그·집 톤은 사면 바로 우리 집에 들어가요 · 화분·거울 같은 소품은 집 월패드 → 집 꾸미기에서 놓아요</div>' : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">그림을 누르면 움직이는 미리보기를 볼 수 있어요. ${isHm ? '가구는 산 내 집과 낙찰받아 사는 우리 집에 쓰여요. 친구가 놀러 오면 꾸민 그대로 보여요. 산 가구는 이 기기에서 계속 가져요.' : isF ? '이펙트는 걸어 다닐 때 내 몸 주변에 보이고, 친구 화면에도 보여요. 산 이펙트는 이 기기에서 계속 가져요.' : isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' + (home ? '' : ' 아직 내 집이 없으면 안 데리고 다니는 펫은 편집숍이 맡아 줘요. 공인중개사에서 집을 사면 집에 둘 수 있어요.') : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
@@ -11965,6 +11994,7 @@ const Shop = {
     el.querySelectorAll('canvas[data-prev]').forEach(cv => { this.preview(cv, SHOP_BY_ID[cv.dataset.prev]); cv.onclick = () => this.big(SHOP_BY_ID[cv.dataset.prev]); });
     el.querySelectorAll('[data-tab]').forEach(b => (b.onclick = () => { this.tab = b.dataset.tab; Sound.play('paper'); this.render(); }));
     el.querySelectorAll('[data-rsub]').forEach(b => (b.onclick = () => { this.rsub = b.dataset.rsub; Sound.play('click'); this.render(); }));
+    el.querySelectorAll('[data-gsub]').forEach(b => (b.onclick = () => { this.gsub = Object.assign({}, this.gsub, { [this.tab]: b.dataset.gsub }); Sound.play('click'); this.render(); }));
     el.querySelectorAll('[data-buy]').forEach(b => (b.onclick = () => this.buy(SHOP_BY_ID[b.dataset.buy])));
     el.querySelectorAll('[data-sell]').forEach(b => (b.onclick = () => this.sell(SHOP_BY_ID[b.dataset.sell])));
     el.querySelectorAll('[data-wear]').forEach(b => (b.onclick = () => this.wear(SHOP_BY_ID[b.dataset.wear])));
@@ -18149,13 +18179,27 @@ const Hero3D = {
     return { g, box, clips, s, top };
   },
   kindOf(P) { return P.longHair || P.perm || P.dress || P.veil || P.rapunzel || P.fox ? 'F' : 'M'; },
-  hairOf(P, k) { if (P.ghost || P.robot || P.hat === 'pumpkin' || P.hat === 'skull' || P.hat === 'space' && P.space) return null; if (k === 'F') return P.perm ? 'Hair_Buns' : 'Hair_Long'; return P.hardhat || P.hat === 'frank' ? 'Hair_Buzzed' : 'Hair_SimpleParted'; },
-  key(P) { return JSON.stringify([this.kindOf(P), P.skin, P.hair, P.shirt, P.shirt2, P.pants, P.shoe, P.hat, P.tie, P.tux, P.dress, P.veil, P.cape, P.bones, P.ghost, P.hardhat, P.robot, P.beach, P.mummy, P.space, P.captain, P.fox, P.ogre, P.rapunzel, P.camo, P.perm, P.longHair]); },
+  hairOf(P, k) { if (P.ghost || P.robot || P.hat === 'pumpkin' || P.hat === 'skull' || P.hat === 'helm' || P.hat === 'space' && P.space) return null; if (k === 'F') return P.perm ? 'Hair_Buns' : 'Hair_Long'; return P.hardhat || P.hat === 'frank' ? 'Hair_Buzzed' : 'Hair_SimpleParted'; },
+  key(P) { return JSON.stringify([this.kindOf(P), P.skin, P.hair, P.shirt, P.shirt2, P.pants, P.shoe, P.hat, P.tie, P.tux, P.dress, P.veil, P.cape, P.bones, P.ghost, P.hardhat, P.robot, P.beach, P.mummy, P.space, P.captain, P.fox, P.ogre, P.rapunzel, P.camo, P.perm, P.longHair, P.fant, P.fantV, P.fant && this.fst === 2, P.sfx]); },
+  /* v319 판타지 옷 (Quaternius Modular Character Outfits - Fantasy, CC0): 평민 · 레인저. 우리 몸에 맞게 다듬어 3d/fantM.glb · fantF.glb (assets3d/build_outfits.py).
+   * 덩어리: {옷}_cloth (텍스처 색을 정점 색으로, {옷}_clothB = 두 번째 색) · {옷}_skin (손·팔 살 → 피부색) · ranger_hood (머리카락 숨김). 몸에서 옷 아래 부위는 안으로 줄여 안 비치게 */
+  fst: 0, F: {},
+  loadFant() { if (this.fst || !window.T3) return; this.fst = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder); const get = f => new Promise((ok, no) => L.load(Arena3J.url(f + '?v=1'), ok, undefined, no));
+    MeshoptDecoder.ready.then(() => Promise.all(['fantM.glb', 'fantF.glb'].map(get))).then(([M, F]) => { for (const [k, g] of [['M', M], ['F', F]]) { const parts = {}; g.scene.traverse(o => { if (o.isSkinnedMesh) { o.geometry._keep = 1; parts[(o.material && o.material.name || o.name).replace(/^M_/, '')] = o; } }); /* 이름은 재질 이름 (gltfpack이 덩어리 이름을 바꿔서) */ this.F[k] = parts; } this.fst = 2; }).catch(e => { console.warn('fant', e); this.fst = -1; }); },
+  fantOn(model, bones, P, k, body) {
+    const { THREE } = T3, F = this.F[k]; if (!F || !body) return false; let hood = false;
+    for (const role of ['cloth', 'skin', 'hood']) { const src = F[P.fant + '_' + role + (P.fantV && role !== 'skin' ? 'B' : '')] || F[P.fant + '_' + role]; if (!src) continue; const g = src.geometry; /* B = 두 번째 색 */
+      const mat = role === 'skin' ? Room3D.toon(P.skin || '#f1c9a5') : this.mats().body, m = new THREE.SkinnedMesh(g, mat), sk = new THREE.Skeleton(src.skeleton.bones.map(b => bones[b.name] || bones.root), src.skeleton.boneInverses);
+      m.bind(sk, src.bindMatrix); m.frustumCulled = false; m.castShadow = !Room3D.zNow; body.parent.add(m);
+      if (role !== 'skin') { const l = new THREE.SkinnedMesh(g, this.mats().ol); l.bind(sk, src.bindMatrix); l.frustumCulled = false; body.parent.add(l); }
+      if (role === 'hood') hood = true; }
+    return hood;
+  },
   /* ---- 색: 부위 → 팔레트 (무늬 옷은 정점마다 조금씩) ---- */
   geo: {},
   paint(k, part, src, P) {
     const id = k + part + this.key(P); if (this.geo[id]) return this.geo[id];
-    const { THREE } = T3, L = c => new THREE.Color(c).convertSRGBToLinear(), g = src.clone(), C = src.attributes.color, Pp = src.attributes.position, n = C.count, out = new Float32Array(n * 3);
+    const { THREE } = T3, L = c => new THREE.Color(c).convertSRGBToLinear(), g = src.clone(), C = src.attributes.color, shr = !!(P.fant && this.fst === 2 && /^Super/i.test(part)), Pp = shr ? g.attributes.position : src.attributes.position, Nn = src.attributes.normal, n = C.count, out = new Float32Array(n * 3);
     const skin = P.hat === 'skull' ? '#f2f0e6' : P.skin || '#f1c9a5', sh = P.bones || P.tux ? '#1d1d26' : P.shirt || '#2f4f86', pants = P.bones ? '#1d1d26' : P.pants || '#3a3a46';
     const reg = [skin, P.cape ? '#f0f0f0' : skin, sh, sh, sh, pants, pants, P.shoe || '#26222a', P.shirt2 || sh, P.hair || '#2a1e18'].map(L), tmp = new THREE.Color();
     const hash = (x, y, z) => { const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return s - Math.floor(s); };
@@ -18164,7 +18208,9 @@ const Hero3D = {
       if (P.beach && r >= 2 && r <= 4) { const q = hash(Math.floor(x * 22), Math.floor(y * 22), Math.floor(z * 22)); if (q > 0.86) tmp.copy(L(['#fff4a0', '#ffffff', '#ff4a8a'][Math.floor(q * 100) % 3])); }
       if (P.mummy && r !== 9 && Math.sin(y * 70 + x * 8) > 0.55) tmp.multiplyScalar(0.8);
       if (P.bones && (r === 3 || r === 4 || r === 5 || r === 6) && Math.abs(x % 0.06) < 0.012) tmp.copy(L('#ecece4'));
+      if (shr && r >= 1 && r <= 8) { const d = r === 1 ? 0.012 : r === 8 ? 0.02 : 0.035; Pp.setXYZ(i, x - Nn.getX(i) * d, y - Nn.getY(i) * d, z - Nn.getZ(i) * d); } /* v319 판타지 옷 아래 몸은 안으로 */
       out[i * 3] = tmp.r; out[i * 3 + 1] = tmp.g; out[i * 3 + 2] = tmp.b; }
+    if (shr && g.index) { const I = g.index.array, cov = i => { const r = Math.floor(C.getX(i) * 16); return r >= 2 && r <= 7; }, keep = []; for (let t = 0; t < I.length; t += 3) if (!(cov(I[t]) && cov(I[t + 1]) && cov(I[t + 2]))) keep.push(I[t], I[t + 1], I[t + 2]); g.setIndex(keep); } /* 옷 밑 몸통·팔다리는 아예 빼기 (얼룩처럼 비침) */
     g.setAttribute('color', new THREE.BufferAttribute(out, 3)); g._keep = 1;
     const ks = Object.keys(this.geo); if (ks.length > 80) { const o = this.geo[ks[0]]; delete this.geo[ks[0]]; o.dispose(); }
     return (this.geo[id] = g);
@@ -18180,14 +18226,15 @@ const Hero3D = {
   make(P) {
     const { THREE, SkeletonUtils } = T3, k = this.kindOf(P), B = this.B[k], hair = this.hairOf(P, k), M = this.mats(), cast = !Room3D.zNow;
     const model = SkeletonUtils.clone(B.g.scene), root = new THREE.Group(), inner = new THREE.Group(); inner.rotation.y = Math.PI / 2; inner.scale.setScalar(B.s * (Room3D.zNow ? 1.18 : 1)); /* 바깥은 멀리서 보니까 조금 크게 (꼬마 모델만큼 눈에 띄게) */ inner.add(model); root.add(inner);
-    const bones = {}, hideFace = P.hat === 'pumpkin' || P.ghost || P.robot && false;
+    const bones = {}, hideFace = P.hat === 'pumpkin' || P.ghost || P.robot && false; let body = null;
     model.traverse(o => { if (o.isBone) bones[o.name] = o; if (!o.isMesh) return; const part = o.userData.part || ''; o.frustumCulled = false; o.castShadow = cast;
       if (/^Hair/.test(part) && part !== hair) { o.visible = false; return; }
       if (P.ghost || hideFace && /^(Eyes|Eyebrows|Hair)/.test(part)) { o.visible = false; return; }
       if (/^Eyes/.test(part)) { if (!M.eye) M.eye = new THREE.MeshToonMaterial({ map: o.material.map, gradientMap: Room3D.grad }); o.material = M.eye; return; }
-      o.geometry = this.paint(k, part, o.geometry, P); o.material = M.body;
+      o.geometry = this.paint(k, part, o.geometry, P); o.material = M.body; if (/^Super/i.test(part)) body = o;
       if (/^(Super|Hair)/.test(part)) { const l = new THREE.SkinnedMesh(o.geometry, M.ol); l.bind(o.skeleton, o.bindMatrix); l.frustumCulled = false; o.parent.add(l); } });
     model.updateMatrixWorld(true); this.wear(model, bones, B.box, P, k);
+    if (P.fant) { this.loadFant(); if (this.fst === 2 && body && this.fantOn(model, bones, P, k, body)) { const hg = new Set(); model.traverse(o => { if (o.isMesh && /^Hair/.test(o.userData.part || '')) hg.add(o.geometry); }); model.traverse(o => { if (o.isMesh && hg.has(o.geometry)) o.visible = false; }); } }
     const sh = new THREE.Mesh(Room3D.shGeo || (Room3D.shGeo = new THREE.CircleGeometry(0.3, 20)), Room3D.shMat || (Room3D.shMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })));
     Room3D.shGeo._keep = 1; sh.rotation.x = -Math.PI / 2; sh.position.y = 0.01; root.add(sh);
     const mix = new THREE.AnimationMixer(model), H = { root, inner, model, mix, B, hero: 1, acts: {}, cur: null, spd: 0, amp: 0, ph: 0, ghost: !!P.ghost };
@@ -18235,6 +18282,21 @@ const Hero3D = {
     if (P.space) { put(CH, Bx(ts.x * 0.7, ts.y * 0.6, 0.12), '#c8ccd6', 0, chestY - 0.02, T.min.z - 0.05); put(CH, Bx(0.12, 0.07, 0.02), '#3a6ad8', 0, chestY, chestZ + 0.01); }
     if (P.robot) { put(CH, Bx(0.14, 0.1, 0.02), '#7a8494', 0, chestY, chestZ + 0.01); put(CH, Sp(0.015, 8), '#ffd040', -0.035, chestY + 0.01, chestZ + 0.022, 0, 0, 0, { glow: 1 }); put(CH, Sp(0.015, 8), '#40ff80', 0.035, chestY + 0.01, chestZ + 0.022, 0, 0, 0, { glow: 1 }); }
     if (P.ogre) for (const e of [-1, 1]) put(CH, Bx(ts.x * 0.28, ts.y * 0.8, 0.02), P.shirt2 || '#6a4a2a', e * ts.x * 0.3, tc.y, chestZ + 0.006);
+    // v319 SF·판타지 옷 (사용자 '옷들안에서도 장르 들어가서 고를수있게'): 팔다리 뼈를 따라 붙이는 줄·판
+    if (P.sfx) { const bp = n => bones[n] ? model.worldToLocal(bones[n].getWorldPosition(V())) : null;
+      const seg = (a, b, w, h, col, off, o) => { const A = bp(a), B2 = bp(b); if (!A || !B2) return null; const d = B2.clone().sub(A), L = d.length(), m = new THREE.Mesh(Bx(w, h, L * 0.86), o && o.m || mat(col, o)); m.quaternion.setFromUnitVectors(V(0, 0, 1), d.normalize()); m.position.copy(A).add(B2).multiplyScalar(0.5).add(off || V()); m.castShadow = !R.zNow; model.add(m); m.updateMatrixWorld(true); bones[a].attach(m); return m; };
+      const at = (bone, geo, col, off, o) => { const A = bp(bone); return A ? put(bone, geo, col, A.x + off.x, A.y + off.y, A.z + off.z, 0, 0, 0, o) : null; }, LR = ['l', 'r'], ring = (bone, rr, y, h, col, o, zs = 0.78) => { const m = put(bone, Cy(rr, rr, h, 20, true), col, 0, y, tc.z, 0, 0, 0, Object.assign({ m: o && o.glow ? R.glow(col) : R.toon(col, { side: THREE.DoubleSide }) }, o)); m.scale.z = zs; return m; }, shR = hipR * 1.12;
+      const sx = P.sfx;
+      if (sx === 'cyber') { const N = '#3af0ff', G = { glow: 1 }; for (const e of LR) { seg('upperarm_' + e, 'lowerarm_' + e, 0.012, 0.012, N, V(0, 0.034, 0), G); seg('lowerarm_' + e, 'hand_' + e, 0.011, 0.011, N, V(0, 0.03, 0), G); seg('thigh_' + e, 'calf_' + e, 0.014, 0.014, N, V(0, 0, 0.065), G); seg('calf_' + e, 'foot_' + e, 0.013, 0.013, N, V(0, 0, 0.052), G); }
+        for (const e of [-1, 1]) put(CH, Bx(0.012, ts.y * 0.5, 0.01), N, e * 0.05, chestY - 0.05, chestZ + 0.006, 0, 0, e * 0.35, G); ring(PV, shR, waistY + 0.01, 0.018, '#ff3ad8', G); }
+      if (sx === 'mecha' || sx === 'knight') { const Wt = sx === 'mecha' ? '#e8ecf2' : '#d8dee8', Ac = sx === 'mecha' ? '#e8502a' : '#8a94a4';
+        const cr = ts.x * 0.4, sh = put(CH, new THREE.CylinderGeometry(cr * 1.06, cr * 0.9, ts.y * 0.5, 22, 1, true, -0.4 * Math.PI, 0.8 * Math.PI), Wt, 0, chestY - 0.02, tc.z, 0, 0, 0, { m: R.toon(Wt, { side: THREE.DoubleSide }) }); sh.scale.set(1, 1, Math.max(0.5, (chestZ - tc.z + 0.022) / (cr * 0.98))); /* 가슴판: 몸통을 감싸는 굽은 판 */
+        if (sx === 'mecha') { put(CH, Cy(0.032, 0.032, 0.014, 18), '#3ad8ff', 0, chestY, chestZ + 0.025, Math.PI / 2, 0, 0, { glow: 1 }); put(CH, Bx(ts.x * 0.62, ts.y * 0.5, 0.1), '#5a6070', 0, chestY - 0.03, T.min.z - 0.045); for (const e of [-1, 1]) put(CH, Cy(0.03, 0.022, 0.05, 12), '#ff9a3a', e * 0.06, chestY - ts.y * 0.28, T.min.z - 0.05, 0, 0, 0, { glow: 1 }); }
+        else put(CH, Bx(0.016, ts.y * 0.42, 0.016), Ac, 0, chestY - 0.02, chestZ + 0.022);
+        for (const e of LR) { const sp = at('upperarm_' + e, sx === 'mecha' ? Bx(0.12, 0.07, 0.15) : Sp(0.085, 14), Wt, V(0, 0.03, 0), { flat: sx === 'mecha' }); if (sp && sx === 'knight') sp.scale.set(1.15, 0.75, 1.1); if (sx === 'mecha') at('upperarm_' + e, Bx(0.122, 0.02, 0.152), Ac, V(0, 0.07, 0)); at('calf_' + e, Bx(0.085, 0.09, 0.05), Wt, V(0, 0.01, 0.06), { flat: 1 }); seg('lowerarm_' + e, 'hand_' + e, 0.075, 0.075, Wt, V(0, 0, 0), { flat: 1 }); }
+        ring(PV, shR * 0.98, waistY + 0.01, 0.04, sx === 'mecha' ? '#3a3e48' : '#5a3a22'); }
+      if (sx === 'pilot') { const S = '#2a2e38'; for (const e of [-1, 1]) put(CH, Bx(0.026, ts.y * 0.72, 0.012), S, e * 0.065, chestY - 0.05, chestZ + 0.006); put(CH, Bx(ts.x * 0.5, 0.026, 0.012), S, 0, chestY - ts.y * 0.18, chestZ + 0.008); put(CH, Bx(0.05, 0.035, 0.012), '#3a6ad8', -0.07, chestY + 0.05, chestZ + 0.012); put(CH, Bx(0.035, 0.03, 0.012), '#f2c230', 0.075, chestY + 0.05, chestZ + 0.012); ring(PV, shR * 0.98, waistY + 0.01, 0.035, S); ring('neck_01', r * 0.62, T.max.y + 0.01, 0.04, S, null, 1); }
+      if (sx === 'wizard') { const len = Math.max(0.4, waistY - (Sn ? Sn.min.y + 0.04 : waistY - 0.6)); put(PV, Cy(hipR * 2.0, hipR * 1.1, len, 24), P.shirt, 0, waistY - len / 2 + 0.04, tc.z, 0, 0, 0, { m: R.toon(P.shirt, { side: THREE.DoubleSide }) }); ring(PV, hipR * 1.12, waistY + 0.03, 0.035, '#e8c040', null, 1); ring('neck_01', r * 0.66, T.max.y, 0.05, P.shirt2 || '#e8c040', null, 1); for (let n = 0; n < 5; n++) { const a = n * 1.3, y = waistY - len * (0.2 + n * 0.14); put(PV, Sp(0.012, 6), '#fff4a0', Math.sin(a) * hipR * (1.15 + n * 0.17), y, tc.z + Math.cos(a) * hipR * (1.15 + n * 0.17), 0, 0, 0, { glow: 1 }); } } }
     // 드레스 · 면사포 · 망토
     if (P.dress) { const len = Math.max(0.35, waistY - (Sn ? Sn.min.y + (Sn.max.y - Sn.min.y) * 0.45 : waistY - 0.5)); put(PV, Cy(hipR * 2.0, hipR * 1.05, len, 24), P.dress, 0, waistY - len / 2 + 0.03, tc.z, 0, 0, 0, { m: R.toon(P.dress, { side: THREE.DoubleSide }) }); }
     if (P.cape) { const h = waistY - (Sn ? Sn.min.y : 0.2) + ts.y * 0.6, d = Math.max(0.1, ts.z * 0.55); put(CH, new THREE.CylinderGeometry(ts.x * 0.52, ts.x * 0.95, h, 18, 1, true, Math.PI / 2, Math.PI), P.cape, 0, T.max.y - h / 2, tc.z - 0.01, 0, 0, 0, { m: R.toon(P.cape, { side: THREE.DoubleSide }) }).scale.set(1, 1, d / (ts.x * 0.52)); put(CH, new THREE.CylinderGeometry(ts.x * 0.3, ts.x * 0.24, 0.1, 14, 1, true, Math.PI / 2, Math.PI), '#15151c', 0, T.max.y + 0.06, tc.z, 0, 0, 0, { m: R.toon('#15151c', { side: THREE.DoubleSide }) }); } // 망토: 등을 감싸는 반원 천 + 세운 깃
@@ -18261,6 +18323,9 @@ const Hero3D = {
     else if (hat === 'crown') { put(HB, Cy(hr * 0.85, hr * 0.85, r * 0.45, 20, true), '#f0c040', 0, top + r * 0.05, hc.z, 0, 0, 0, { m: R.toon('#f0c040', { side: THREE.DoubleSide }) }); for (let n = 0; n < 5; n++) { const a = n / 5 * Math.PI * 2; put(HB, Co(r * 0.16, r * 0.4, 6), '#ffd84a', Math.sin(a) * hr * 0.85, top + r * 0.45, hc.z + Math.cos(a) * hr * 0.85); put(HB, Sp(r * 0.08, 8), n % 2 ? '#e0304a' : '#3a8ae0', Math.sin(a) * hr * 0.87, top + r * 0.05, hc.z + Math.cos(a) * hr * 0.87, 0, 0, 0, { glow: 1 }); } }
     else if (hat === 'pumpkin') { const g = Sp(r * 1.45, 20); put(HB, g, '#f08a2c', 0, hc.y + hs.y * 0.05, hc.z, 0, 0, 0, { m: R.toon('#f08a2c', { flatShading: true }) }).scale.set(1.15, 0.95, 1.1); put(HB, Cy(r * 0.1, r * 0.1, r * 0.4, 8), '#3a8a2a', 0, hc.y + r * 1.45, hc.z); for (const e of [-1, 1]) put(HB, Co(r * 0.25, r * 0.3, 3), '#2a1408', e * r * 0.5, hc.y + r * 0.2, hc.z + r * 1.52, Math.PI / 2, 0, 0); put(HB, Bx(r * 1.0, r * 0.18, 0.03), '#2a1408', 0, hc.y - r * 0.45, hc.z + r * 1.5); }
     else if (hat === 'space' || P.space && hat === 'space') { put(HB, Sp(r * 1.75, 22), '#e4ecf6', 0, hc.y + hs.y * 0.05, hc.z, 0, 0, 0, { m: R.bubM || (R.bubM = new THREE.MeshToonMaterial({ color: 0xdfeefc, transparent: true, opacity: 0.35, depthWrite: false, gradientMap: R.grad })) }); put(HB, Cy(r * 1.3, r * 1.3, r * 0.3, 22), '#c8ccd6', 0, fc.min.y + r * 0.1, hc.z); }
+    else if (hat === 'helm') { put(HB, Sp(hr * 1.06, 18), '#c8d0dc', 0, hc.y + hs.y * 0.08, hc.z, 0, 0, 0, { m: R.toon('#c8d0dc', { flatShading: true }) }).scale.set(1, 1.08, 1.06); put(HB, Bx(r * 1.5, r * 0.14, 0.03), '#15151c', 0, eyeY, hc.z + hr * 1.05); put(HB, Bx(0.03, r * 0.7, 0.03), '#7a8494', 0, eyeY - r * 0.4, hc.z + hr * 1.07); put(HB, Co(r * 0.25, r * 0.9, 10), '#c0302a', 0, top + r * 0.5, hc.z - r * 0.2, -0.5); } // v319 기사 투구
+    else if (hat === 'wizard') { put(HB, Cy(hr * 2.0, hr * 2.0, 0.014, 28), '#3a2a7a', 0, top - r * 0.2, hc.z); put(HB, Co(hr * 0.88, r * 2.7, 18), '#3a2a7a', 0, top + r * 1.15, hc.z - r * 0.3, -0.32); put(HB, Cy(hr * 0.92, hr * 0.9, r * 0.24, 18, true), '#e8c040', 0, top - r * 0.07, hc.z); for (const [x, y, z] of [[0.5, 0.6, 0.6], [-0.4, 1.1, 0.4], [0.2, 1.6, 0.1]]) put(HB, Sp(r * 0.1, 8), '#fff4a0', x * r, top + y * r, hc.z + z * r, 0, 0, 0, { glow: 1 }); } // 마법사 모자
+    else if (hat === 'visor') { put(HB, Bx(r * 2.0, r * 0.32, 0.03), '#3af0ff', 0, eyeY, fz + 0.01, 0, 0, 0, { glow: 1 }); for (const e of [-1, 1]) put(HB, Cy(r * 0.28, r * 0.28, r * 0.25, 14), '#2a3040', e * (r + r * 0.05), eyeY, hc.z, 0, 0, Math.PI / 2); put(HB, Cy(0.006, 0.006, r * 0.6, 6), '#2a3040', r * 1.1, eyeY + r * 0.4, hc.z, 0, 0, -0.3); } // 사이버 바이저
     if (P.hardhat) { put(HB, Sp(hr * 1.02, 18), P.hardhat, 0, top - r * 0.55, hc.z, 0, 0, 0, { m: R.toon(P.hardhat) }).scale.set(1, 0.75, 1.05); put(HB, Cy(hr * 1.2, hr * 1.2, 0.012, 22), P.hardhat, 0, top - r * 0.62, hc.z + r * 0.15); }
   },
 };
@@ -18547,6 +18612,7 @@ const Snap3D = {
     const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);
+    if (kind === 'outfit' && it.pal.fant) { Hero3D.loadFant(); if (Hero3D.fst === 1 && !this.fw) this.fw = setInterval(() => { if (Hero3D.fst === 1) return; clearInterval(this.fw); this.fw = 0; if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); } /* v319 판타지 옷 모델이 오면 다시 */
     if (kind === 'outfit' || kind === 'hat') { const P = Profile.pal(Object.assign({}, me, kind === 'hat' ? { hat: it.id } : { outfit: it.id })); key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
     else if (kind === 'car') { if (typeof Car3D !== 'undefined') { Car3D.load(); if (Car3D.st === 1 && !this.cw) this.cw = setInterval(() => { if (Car3D.st === 1) return; clearInterval(this.cw); this.cw = 0; if (Car3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); } key = 'th:car' + (Car3D.ready() ? '3:' : ':') + it.col + ':' + (it.stripe || ''); /* v315 차 모델이 오면 다시 그리기 */ build = g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); m.rotation.y = -0.55; g.add(m); }; aim = (b, c) => this.fit(b, c, 0.42, 1.02); }
     else if (kind === 'ride3') { Ride3D.load(); if (!Ride3D.ready()) { if (Ride3D.st === 1 && !this.rw) this.rw = setInterval(() => { if (Ride3D.st === 1) return; clearInterval(this.rw); this.rw = 0; if (Ride3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); return false; } /* v317 배·탱크 칸 그림 */

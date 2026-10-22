@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v303</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v304</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -16528,6 +16528,7 @@ Object.assign(PetRT.arena, {
     let hit = C.get(hs); if (hit) { C.delete(hs); C.set(hs, hit); return { hit }; }
     const sm = this.smooth(), A = sm.getContext('2d').getImageData(0, 0, 400, 336).data, GW = 200, GH = 168, op = new Uint8Array(GW * GH);
     let x0 = GW, x1 = 0, y0 = GH, y1 = 0; for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (A[((y * 2 + 1) * 400 + x * 2 + 1) * 4 + 3] >= 128) { op[y * GW + x] = 1; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    for (let x = 0; x < GW; x++) op[x] = op[(GH - 1) * GW + x] = 0; for (let y = 0; y < GH; y++) op[y * GW] = op[y * GW + GW - 1] = 0; // v304: 그림이 스크래치 끝까지 닿으면 그 칸 두께가 끝없이 커져 긴 띠가 생겼다 (진화한 돌고래·판다)
     // 가장자리까지 거리 (칸) → 두께
     const D = new Float32Array(GW * GH); for (let i = 0; i < D.length; i++) D[i] = op[i] ? 1e9 : 0;
     for (let y = 1; y < GH - 1; y++) for (let x = 1; x < GW - 1; x++) { const i = y * GW + x; if (!op[i]) continue; D[i] = Math.min(D[i], D[i - 1] + 1, D[i - GW] + 1, D[i - GW - 1] + 1.414, D[i - GW + 1] + 1.414); }
@@ -16540,7 +16541,7 @@ Object.assign(PetRT.arena, {
       for (let y = 1; y < GH - 1; y++) for (let x = 1; x < GW - 1; x++) { const i = y * GW + x; if (!op[i]) continue; take(i, x, y, i - 1); take(i, x, y, i - GW); take(i, x, y, i - GW - 1); take(i, x, y, i - GW + 1); }
       for (let y = GH - 2; y > 0; y--) for (let x = GW - 2; x > 0; x--) { const i = y * GW + x; if (!op[i]) continue; take(i, x, y, i + 1); take(i, x, y, i + GW); take(i, x, y, i + GW + 1); take(i, x, y, i + GW - 1); }
     }
-    const hgt = i => op[i] ? Math.max(0.6, Math.sqrt(Math.max(0, HH[i])) * 0.5 * 0.9) : 0; // 스크래치 픽셀 단위 (한 칸 = 0.5픽셀)
+    const hgt = i => op[i] ? Math.min(30, Math.max(0.6, Math.sqrt(Math.max(0, HH[i])) * 0.5 * 0.9)) : 0; // 스크래치 픽셀 단위 (한 칸 = 0.5픽셀)
     const CW = GW + 1, H = new Float32Array(CW * (GH + 1)), used = new Int32Array(CW * (GH + 1)).fill(-1);
     for (let y = Math.max(0, y0 - 1); y <= Math.min(GH, y1 + 2); y++) for (let x = Math.max(0, x0 - 1); x <= Math.min(GW, x1 + 2); x++) { let s2 = 0, z = false; for (const [a, b] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) { const xx = x + a, yy = y + b; if (xx < 0 || yy < 0 || xx >= GW || yy >= GH || !op[yy * GW + xx]) { z = true; break; } s2 += hgt(yy * GW + xx); } H[y * CW + x] = z ? 0 : s2 / 4; }
     const sc = u.h / (PetRT.petH(u.k) * 2), p = [], n = [], tt = [], idx = [], hv = (x, y) => H[Math.max(0, Math.min(GH, y)) * CW + Math.max(0, Math.min(GW, x))];
@@ -17165,7 +17166,7 @@ const Room3D = {
     if (this.r) return; const { THREE } = T3, cv = this.cv = document.createElement('canvas'); cv.id = 'room3d';
     cv.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; const g = $('game'); g.parentNode.insertBefore(cv, g);
     const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' }); r.setClearColor(0x000000, 0);
-    r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.toneMapping = THREE.NoToneMapping;
+    r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; /* v304: 부드러운 그림자는 화면 전체가 무거워서 */ r.toneMapping = THREE.NoToneMapping;
     const gv = [86, 90, 98, 150, 218, 240, 252, 255], gd = new Uint8Array(gv.flatMap(v => [v, v, v, 255])), gm = this.grad = new THREE.DataTexture(gd, gv.length, 1, THREE.RGBAFormat); gm.minFilter = gm.magFilter = THREE.LinearFilter; gm.needsUpdate = true;
     this.cam = new THREE.PerspectiveCamera(32, 1, 0.1, 200); this.ct = null; this.hg = {}; this.mats = {}; this.eg = {}; this.q = 1;
     this.lineM = new THREE.LineBasicMaterial({ color: 0x2e2218, transparent: true, opacity: 0.55 });
@@ -17433,7 +17434,7 @@ const Room3D = {
     return (this.hg[key] = out); },
   person(P) { const { THREE } = T3, G = this.hgeo(P), M = this.hmat || (this.hmat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: this.grad })), OL = this.olMat();
     const root = new THREE.Group(), inner = new THREE.Group(); inner.rotation.x = -Math.PI / 2; inner.scale.setScalar(R3_HS); root.add(inner);
-    const mk = (g, par, ol = true) => { if (!g) return null; const m = new THREE.Mesh(g, M); m.castShadow = true; par.add(m); if (ol) { const o = new THREE.Mesh(g, OL); m.add(o); } return m; };
+    const cast = !this.zNow, mk = (g, par, ol = true) => { if (!g) return null; const m = new THREE.Mesh(g, M); m.castShadow = cast; /* 밖에선 발밑 동그란 그림자만 (사람이 많아서) */ par.add(m); if (ol) { const o = new THREE.Mesh(g, OL); m.add(o); } return m; };
     const piv = (x, y, z, tx) => { const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.x = tx; inner.add(p); return p; };
     const H = { root, inner, body: mk(G.body, inner), head: mk(G.head, inner), eyeO: mk(G.eyeO, inner, false), eyeC: mk(G.eyeC, inner, false) };
     H.aL = piv(0, -0.27, 0.98, -0.12); H.aR = piv(0, 0.27, 0.98, 0.12); H.lL = piv(0, 0.1, 0.55, 0); H.lR = piv(0, -0.1, 0.55, 0);
@@ -17545,7 +17546,7 @@ Object.assign(Room3D, {
     this.room = z; this.A = new Map(); this.zb = new Map(); this.zw = []; this.zc = []; this.zid = 0; this.zEve = State.evening;
     const S = this.S = new THREE.Scene(); S.background = null;
     S.add(new THREE.HemisphereLight(0xfff4e6, 0x6a7080, 1.35));
-    const sun = this.zsun = new THREE.DirectionalLight(0xfff0d8, 1.9); S.add(sun); S.add(sun.target); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
+    const sun = this.zsun = new THREE.DirectionalLight(0xfff0d8, 1.9); S.add(sun); S.add(sun.target); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
     // 그림자만 받는 땅 (색은 아래 2D 땅 그림이 보인다)
     const gp = new THREE.Mesh(new THREE.PlaneGeometry(z.W + 40, z.H + 40), new THREE.ShadowMaterial({ opacity: 0.28 })); gp.rotation.x = -Math.PI / 2; gp.position.set(z.W / 2, 0, z.H / 2); gp.receiveShadow = true; S.add(gp);
     // 가로수: 한 번에 (줄기 + 잎 두 덩어리)
@@ -17562,26 +17563,30 @@ Object.assign(Room3D, {
   },
   /* ---- 건물 하나: 상자 + 앞벽(2D 앞벽 그림) · 옆벽(창문 줄) · 지붕(2D 지붕 그림) ---- */
   zBld(b, pl) {
-    const { THREE } = T3, wh = bWallH(b), H = wh / TILE * Z3_BH, X = b.x * TILE, base = (b.y + b.h) * TILE;
-    const tex = (w, h, fn) => { const t = this.cvTex(Math.max(2, Math.round(w * 2)), Math.max(2, Math.round(h * 2)), c => { c.scale(2, 2); fn(c); }); t._own = 1; return t; };
-    const front = tex(b.w * TILE, wh, c => { c.translate(-X, -(base - wh)); drawBuildingFront(c, b, 0, pl); });
-    const sb = Object.assign({}, b, { x: 0, y: 0, w: b.h, h: 0, seed: b.seed ^ 77 }), side = tex(b.h * TILE, wh, c => { c.translate(0, wh); drawBuildingFront(c, sb, 0, null); });
-    const roof = tex(b.w * TILE, b.h * TILE, c => { c.translate(-X, -b.y * TILE); drawBuildingTop(c, b, 0); });
-    const m = t => new THREE.MeshToonMaterial({ map: t, gradientMap: this.grad, transparent: false });
-    const mats = [m(side), m(side), m(roof), m(roof), m(front), m(side)];
-    const g = new THREE.Mesh(new THREE.BoxGeometry(b.w, H, b.h), mats); g.position.set(b.x + b.w / 2, H / 2, b.y + b.h / 2); g.castShadow = true; g.receiveShadow = true;
-    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(g.geometry), this.lineM));
+    const { THREE } = T3, wh = bWallH(b), H = wh / TILE * Z3_BH, X = b.x * TILE, base = (b.y + b.h) * TILE, fw = b.w * TILE, sw = b.h * TILE, rh = b.h * TILE, P = 2, K = 2;
+    // v304 (사용자 '렉이 너무 많이 걸리는데'): 그림 세 장·재질 여섯 개 → 한 장에 모아 (위 줄 = 앞벽 | 옆벽, 아래 = 지붕) 재질 하나, 그리기 한 번
+    const CW = (fw + P + sw) * K, CH = (wh + P + rh) * K, sb = Object.assign({}, b, { x: 0, y: 0, w: b.h, h: 0, seed: b.seed ^ 77 });
+    const part = (c, x, y, w, h, fn) => { c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip(); fn(); c.restore(); };
+    const tex = this.cvTex(Math.ceil(CW), Math.ceil(CH), c => { c.scale(K, K);
+      part(c, 0, 0, fw, wh, () => { c.translate(-X, -(base - wh)); drawBuildingFront(c, b, 0, pl); });
+      part(c, fw + P, 0, sw, wh, () => { c.translate(fw + P, wh); drawBuildingFront(c, sb, 0, null); });
+      part(c, 0, wh + P, fw, rh, () => { c.translate(-X, wh + P - b.y * TILE); drawBuildingTop(c, b, 0); }); }); tex._own = 1;
+    const geo = new THREE.BoxGeometry(b.w, H, b.h), uv = geo.attributes.uv, fR = [0, 0, fw, wh], sR = [fw + P, 0, sw, wh], rR = [0, wh + P, fw, rh], RG = [sR, sR, rR, rR, fR, sR]; // 상자 면 순서: +x −x 위 아래 앞(+z) 뒤
+    for (let f = 0; f < 6; f++) { const [x0, y0, w, h] = RG[f]; for (let i = f * 4; i < f * 4 + 4; i++) { const u = uv.getX(i), v = uv.getY(i); uv.setXY(i, (x0 + u * w) * K / CW, 1 - (y0 + (1 - v) * h) * K / CH); } }
+    geo.clearGroups(); const mt = new THREE.MeshToonMaterial({ map: tex, gradientMap: this.grad }), mats = [mt];
+    const g = new THREE.Mesh(geo, mt); g.position.set(b.x + b.w / 2, H / 2, b.y + b.h / 2); g.castShadow = true; g.receiveShadow = true;
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), this.lineM));
     return { m: g, mats, H, o: 1 };
   },
   // 이번 프레임에 보일 건물만 세우고, 멀어진 건물은 치운다. 내가 건물 뒤(북쪽)에 가려지면 그 건물은 반투명
   zStream(z, cx, cz, vw, vd, dt) {
     if (this.zEve !== State.evening) { for (const [, e] of this.zb) this.zDrop(e); this.zb.clear(); this.zEve = State.evening; }
     const plOf = this.zpl && this.zplZ === z ? this.zpl : (this.zplZ = z, this.zpl = {}); if (!Object.keys(plOf).length) for (const pl of z.places) plOf[pl.building] = pl;
-    const x0 = cx - vw / 2 - 3, x1 = cx + vw / 2 + 3, z0 = cz - vd / 2 - 3, z1 = cz + vd / 2 + 7, me = Game.driving ? Game.car : Game.player, mx = me.x / TILE, mz = me.y / TILE, cot = 1 / Math.tan(Z3_EL);
+    const x0 = cx - vw / 2 - 6, x1 = cx + vw / 2 + 6, z0 = cz - vd / 2 - 6, z1 = cz + vd / 2 + 10, me = Game.driving ? Game.car : Game.player, mx = me.x / TILE, mz = me.y / TILE, cot = 1 / Math.tan(Z3_EL);
     let made = 0;
     for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e0 = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
       if (!inV) { if (e0 && (b.x > x1 + 12 || b.x + b.w < x0 - 12 || b.y > z1 + 12 || b.y + b.h < z0 - 12)) { this.zDrop(e0); this.zb.delete(id); } continue; }
-      let e = e0; if (!e) { if (made > 6) continue; /* 한 프레임에 너무 많이 만들지 않게 */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
+      let e = e0; if (!e) { if (made >= 2) continue; /* 한 프레임에 둘까지만 (미리 넉넉히 바깥부터 세워 둔다) */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
       const hide = mx > b.x - 0.4 && mx < b.x + b.w + 0.4 && mz < b.y + 0.3 && mz > b.y - e.H * cot - 0.6, tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
       const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
@@ -17591,12 +17596,13 @@ Object.assign(Room3D, {
   car3(len, wid, col, stripe, kind) {
     const { THREE } = T3, g = new THREE.Group(), L = len / TILE, W = wid / TILE, bus = kind === 'bus';
     this.box(g, 0, 0, L, W, bus ? 0.95 : 0.36, col, 0.12);
-    if (bus) { this.box(g, 0.04, 0, L - 0.2, W + 0.01, 0.3, '#22303c', 0.6, { line: false }); this.box(g, 0, 0, L, W, 0.05, col, 1.07); }
-    else { this.box(g, -L * 0.06, 0, L * 0.5, W * 0.84, 0.28, '#24303a', 0.48, { line: false }); this.box(g, -L * 0.08, 0, L * 0.42, W * 0.86, 0.05, col, 0.76); }
-    if (stripe) this.box(g, 0, 0, L * 0.96, 0.08, 0.02, stripe, bus ? 1.12 : 0.81, { line: false });
-    if (kind === 'taxi') this.box(g, -L * 0.08, 0, 0.2, 0.12, 0.1, '#fff3c0', 0.81, { glow: 1 });
-    for (const [a, c] of [[L * 0.3, 1], [L * 0.3, -1], [-L * 0.3, 1], [-L * 0.3, -1]]) { const w = this.cyl(g, a, c * (W / 2 - 0.02), 0.14, 0.14, 0.1, '#1c1c20', 0.0, 12); w.rotation.x = Math.PI / 2; w.position.y = 0.14; }
-    for (const c of [1, -1]) { this.box(g, L / 2 + 0.005, c * W * 0.32, 0.02, 0.12, 0.07, '#ffe9a0', 0.32, { glow: 1, line: false }); this.box(g, -L / 2 - 0.005, c * W * 0.32, 0.02, 0.12, 0.07, '#c02020', 0.32, { glow: 1, line: false }); }
+    if (bus) { this.box(g, 0.04, 0, L - 0.2, W + 0.01, 0.3, '#22303c', 0.6, { line: false }); this.box(g, 0, 0, L, W, 0.05, col, 1.07, { line: false, cast: false }); }
+    else { this.box(g, -L * 0.06, 0, L * 0.5, W * 0.84, 0.28, '#24303a', 0.48, { line: false }); this.box(g, -L * 0.08, 0, L * 0.42, W * 0.86, 0.05, col, 0.76, { line: false, cast: false }); }
+    if (stripe) this.box(g, 0, 0, L * 0.96, 0.08, 0.02, stripe, bus ? 1.12 : 0.81, { line: false, cast: false });
+    if (kind === 'taxi') this.box(g, -L * 0.08, 0, 0.2, 0.12, 0.1, '#fff3c0', 0.81, { glow: 1, line: false, cast: false });
+    const wg = this.wheelG || (this.wheelG = new THREE.CylinderGeometry(0.14, 0.14, 0.1, 10)), wm = this.toon('#1c1c20'); wg._keep = 1; // 바퀴 도형은 하나를 같이 쓴다 (차가 오갈 때마다 새로 만들면 쌓인다)
+    for (const [a, c] of [[L * 0.3, 1], [L * 0.3, -1], [-L * 0.3, 1], [-L * 0.3, -1]]) { const w = new THREE.Mesh(wg, wm); w.rotation.x = Math.PI / 2; w.position.set(a, 0.14, c * (W / 2 - 0.02)); g.add(w); }
+    for (const c of [1, -1]) { this.box(g, L / 2 + 0.005, c * W * 0.32, 0.02, 0.12, 0.07, '#ffe9a0', 0.32, { glow: 1, line: false, cast: false }); this.box(g, -L / 2 - 0.005, c * W * 0.32, 0.02, 0.12, 0.07, '#c02020', 0.32, { glow: 1, line: false, cast: false }); }
     return g;
   },
   /* ---- 2D 그리기 가로채기 (zq가 있는 동안, 메인 캔버스에 그리려는 것만) ---- */
@@ -17613,8 +17619,9 @@ Object.assign(Room3D, {
   // 2D 그림이 쓰는 변환 (땅 = 세로만 sin배): worldToScreen과 같다
   zFrame(z, t) {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.zdt = dt; this.show(true); this.zShowG(true); this.zHook();
-    this.fe = this.fe ? this.fe * 0.95 + dt * 1000 * 0.05 : 16; if (this.fr % 60 === 0) { if (this.fe > 24) this.q = Math.max(0.55, this.q * 0.85); else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.1); }
-    const pr = Math.min(DPR, 2) * this.q; if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
+    // 느리면 빨리 해상도를 낮추고, 가장 낮춰도 느리면 해 그림자를 끈다 (사람·차 발밑 동그란 그림자는 남는다)
+    this.fe = this.fe ? this.fe * 0.92 + dt * 1000 * 0.08 : 16; if (this.fr % 30 === 0) { if (this.fe > 22) { if (this.q > 0.5) this.q = Math.max(0.5, this.q * 0.82); else if (this.zsun.castShadow) this.zsun.castShadow = false; } else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.06); }
+    const pr = Math.min(DPR, 1.5) * this.q; if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
     if (this.sw !== VW || this.sh !== VH) { r.setSize(VW, VH, true); this.sw = VW; this.sh = VH; this.cam.aspect = VW / VH; this.cam.updateProjectionMatrix(); }
     if (this.gcv.width !== Math.round(VW * DPR) || this.gcv.height !== Math.round(VH * DPR)) { this.gcv.width = Math.round(VW * DPR); this.gcv.height = Math.round(VH * DPR); this.gcv.style.width = VW + 'px'; this.gcv.style.height = VH + 'px'; }
     // 직교 카메라: 화면 가운데 = 카메라 (2D와 같은 확대)

@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v319</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v320</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -18151,7 +18151,7 @@ const Hero3D = {
   load() {
     if (this.st || !window.T3) return; this.st = 1;
     const { GLTFLoader, MeshoptDecoder } = T3; const L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
-    const get = f => new Promise((ok, no) => L.load(Arena3J.url(f + '?v=1'), ok, undefined, no));
+    const get = f => new Promise((ok, no) => L.load(Arena3J.url(f + '?v=2'), ok, undefined, no));
     MeshoptDecoder.ready.then(() => Promise.all(['heroM.glb', 'heroF.glb', 'anim1.glb', 'anim2.glb'].map(get))).then(([M, F, A1, A2]) => {
       const ar = {}; A1.scene.traverse(o => { if (o.isBone) ar[o.name] = o; }); // 동작 파일의 원래 뼈 (다리 길이·서 있는 자세)
       const raw = [...A1.animations, ...A2.animations];
@@ -18182,14 +18182,23 @@ const Hero3D = {
   hairOf(P, k) { if (P.ghost || P.robot || P.hat === 'pumpkin' || P.hat === 'skull' || P.hat === 'helm' || P.hat === 'space' && P.space) return null; if (k === 'F') return P.perm ? 'Hair_Buns' : 'Hair_Long'; return P.hardhat || P.hat === 'frank' ? 'Hair_Buzzed' : 'Hair_SimpleParted'; },
   key(P) { return JSON.stringify([this.kindOf(P), P.skin, P.hair, P.shirt, P.shirt2, P.pants, P.shoe, P.hat, P.tie, P.tux, P.dress, P.veil, P.cape, P.bones, P.ghost, P.hardhat, P.robot, P.beach, P.mummy, P.space, P.captain, P.fox, P.ogre, P.rapunzel, P.camo, P.perm, P.longHair, P.fant, P.fantV, P.fant && this.fst === 2, P.sfx]); },
   /* v319 판타지 옷 (Quaternius Modular Character Outfits - Fantasy, CC0): 평민 · 레인저. 우리 몸에 맞게 다듬어 3d/fantM.glb · fantF.glb (assets3d/build_outfits.py).
-   * 덩어리: {옷}_cloth (텍스처 색을 정점 색으로, {옷}_clothB = 두 번째 색) · {옷}_skin (손·팔 살 → 피부색) · ranger_hood (머리카락 숨김). 몸에서 옷 아래 부위는 안으로 줄여 안 비치게 */
+   * 덩어리: {옷}_cloth (원래 텍스처, {옷}_texB = 두 번째 색 그림) · {옷}_skin (손·팔 살 → 피부색) · ranger_hood (머리카락 숨김). 몸에서 옷 아래 부위는 안으로 줄여 안 비치게 */
   fst: 0, F: {},
   loadFant() { if (this.fst || !window.T3) return; this.fst = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder); const get = f => new Promise((ok, no) => L.load(Arena3J.url(f + '?v=1'), ok, undefined, no));
-    MeshoptDecoder.ready.then(() => Promise.all(['fantM.glb', 'fantF.glb'].map(get))).then(([M, F]) => { for (const [k, g] of [['M', M], ['F', F]]) { const parts = {}; g.scene.traverse(o => { if (o.isSkinnedMesh) { o.geometry._keep = 1; parts[(o.material && o.material.name || o.name).replace(/^M_/, '')] = o; } }); /* 이름은 재질 이름 (gltfpack이 덩어리 이름을 바꿔서) */ this.F[k] = parts; } this.fst = 2; }).catch(e => { console.warn('fant', e); this.fst = -1; }); },
+    MeshoptDecoder.ready.then(() => Promise.all(['fantM.glb', 'fantF.glb'].map(get))).then(([M, F]) => { for (const [k, g] of [['M', M], ['F', F]]) { const parts = {}; g.scene.traverse(o => { if (o.isMesh) { o.geometry._keep = 1; parts[(o.material && o.material.name || o.name).replace(/^M_/, '')] = o; } }); /* 이름은 재질 이름 (gltfpack이 덩어리 이름을 바꿔서) */ this.F[k] = parts; } this.fst = 2; }).catch(e => { console.warn('fant', e); this.fst = -1; }); },
+  /* v320 고화질: 원래 텍스처(기본색 2048 · 노멀 1024)를 툰 재질에 그대로. fantV = 두 번째 색 텍스처 ({옷}_texB 재질의 그림을 같은 UV 변환으로) */
+  fmat: {},
+  fantMat(src, tb, v) {
+    const id = src.material.name + (v ? 'B' : ''); if (this.fmat[id]) return this.fmat[id];
+    const { THREE } = T3, sm = src.material; let map = sm.map;
+    if (v && tb && tb.material.map && map) { map = tb.material.map.clone(); map.offset.copy(sm.map.offset); map.repeat.copy(sm.map.repeat); map.rotation = sm.map.rotation; map.matrixAutoUpdate = sm.map.matrixAutoUpdate; map.matrix.copy(sm.map.matrix); map.needsUpdate = true; }
+    if (map) map.anisotropy = 4;
+    return (this.fmat[id] = new THREE.MeshToonMaterial({ map, normalMap: sm.normalMap || null, gradientMap: Room3D.grad }));
+  },
   fantOn(model, bones, P, k, body) {
     const { THREE } = T3, F = this.F[k]; if (!F || !body) return false; let hood = false;
-    for (const role of ['cloth', 'skin', 'hood']) { const src = F[P.fant + '_' + role + (P.fantV && role !== 'skin' ? 'B' : '')] || F[P.fant + '_' + role]; if (!src) continue; const g = src.geometry; /* B = 두 번째 색 */
-      const mat = role === 'skin' ? Room3D.toon(P.skin || '#f1c9a5') : this.mats().body, m = new THREE.SkinnedMesh(g, mat), sk = new THREE.Skeleton(src.skeleton.bones.map(b => bones[b.name] || bones.root), src.skeleton.boneInverses);
+    for (const role of ['cloth', 'skin', 'hood']) { const src = F[P.fant + '_' + role]; if (!src || !src.isSkinnedMesh) continue; const g = src.geometry;
+      const mat = role === 'skin' ? Room3D.toon(P.skin || '#f1c9a5') : this.fantMat(src, F[P.fant + '_texB'], P.fantV), m = new THREE.SkinnedMesh(g, mat), sk = new THREE.Skeleton(src.skeleton.bones.map(b => bones[b.name] || bones.root), src.skeleton.boneInverses);
       m.bind(sk, src.bindMatrix); m.frustumCulled = false; m.castShadow = !Room3D.zNow; body.parent.add(m);
       if (role !== 'skin') { const l = new THREE.SkinnedMesh(g, this.mats().ol); l.bind(sk, src.bindMatrix); l.frustumCulled = false; body.parent.add(l); }
       if (role === 'hood') hood = true; }
@@ -18210,7 +18219,7 @@ const Hero3D = {
       if (P.bones && (r === 3 || r === 4 || r === 5 || r === 6) && Math.abs(x % 0.06) < 0.012) tmp.copy(L('#ecece4'));
       if (shr && r >= 1 && r <= 8) { const d = r === 1 ? 0.012 : r === 8 ? 0.02 : 0.035; Pp.setXYZ(i, x - Nn.getX(i) * d, y - Nn.getY(i) * d, z - Nn.getZ(i) * d); } /* v319 판타지 옷 아래 몸은 안으로 */
       out[i * 3] = tmp.r; out[i * 3 + 1] = tmp.g; out[i * 3 + 2] = tmp.b; }
-    if (shr && g.index) { const I = g.index.array, cov = i => { const r = Math.floor(C.getX(i) * 16); return r >= 2 && r <= 7; }, keep = []; for (let t = 0; t < I.length; t += 3) if (!(cov(I[t]) && cov(I[t + 1]) && cov(I[t + 2]))) keep.push(I[t], I[t + 1], I[t + 2]); g.setIndex(keep); } /* 옷 밑 몸통·팔다리는 아예 빼기 (얼룩처럼 비침) */
+    if (shr && g.index) { const I = g.index.array, r0 = this.F[k] && this.F[k][P.fant + '_skin'] ? 1 : 2, cov = i => { const r = Math.floor(C.getX(i) * 16); return r >= r0 && r <= 7; }, keep = []; for (let t = 0; t < I.length; t += 3) if (!(cov(I[t]) && cov(I[t + 1]) && cov(I[t + 2]))) keep.push(I[t], I[t + 1], I[t + 2]); g.setIndex(keep); } /* 옷 밑 몸통·팔다리는 아예 빼기 (얼룩처럼 비침) */
     g.setAttribute('color', new THREE.BufferAttribute(out, 3)); g._keep = 1;
     const ks = Object.keys(this.geo); if (ks.length > 80) { const o = this.geo[ks[0]]; delete this.geo[ks[0]]; o.dispose(); }
     return (this.geo[id] = g);

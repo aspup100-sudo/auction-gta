@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v304</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v305</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -12045,7 +12045,7 @@ const ShopPromo = {
   spawn() { // spawnDecor 끝에서 부른다
     this.w = null; const z = Game.zone; if (!z || !z.places || !Shop.newItems().length) return;
     const shop = z.places.find(p => p.kind === 'shop'), office = z.places.find(p => p.id === 'office'); if (!shop || !office) return;
-    let best = null, bd = 1e9; for (let dy = -6; dy <= 6; dy++) for (let dx = -8; dx <= 8; dx++) { const tx = office.door.tx + dx, ty = office.door.ty + dy; if (z.at(tx, ty) !== T.WALK) continue; const d = Math.abs(Math.hypot(dx, dy) - 4); if (d < bd) { bd = d; best = [tx, ty]; } }
+    let best = null, bd = 1e9; for (let dy = -6; dy <= 6; dy++) for (let dx = -8; dx <= 8; dx++) { const tx = office.door.tx + dx, ty = office.door.ty + dy; const v = z.at(tx, ty); if (v !== T.WALK && v !== T.PARK && v !== T.GROUND && v !== T.ALLEY) continue; const d = Math.abs(Math.hypot(dx, dy) - 4) + (dy < 1 ? 6 : 0) + (v === T.WALK ? 0 : 0.5); /* v304 문 앞(남쪽)부터: 3D에선 건물 뒤에 서면 가려진다 */ if (d < bd) { bd = d; best = [tx, ty]; } }
     if (!best) return; const w = makeWalker('clerk', best[0] * TILE + 8, best[1] * TILE + 8); w.ai = { t: 999, ix: 0, iy: 0 }; w.promo = { home: [w.x, w.y], base: [w.x, w.y], next: performance.now() + 1500, i: 0, shop }; Game.decor.push(w); this.w = w;
   },
   // 매 프레임 (Pets.actors에서)
@@ -13155,8 +13155,10 @@ const Fx = {
   // 그릴 목록: 나(걸을 때) + 걷는 친구
   actors(c, vis, t) {
     const out = [], P = Game.player, me = Pets.mineF;
-    if (me && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push({ y: P.y + 0.3, d: () => this.draw(c, me, P.x, P.y, t, this.liftMe()) });
-    for (const { p } of vis) { const f = p.pal && p.pal.fx; if (!f || p.rd || (p.dr && p.s === 'zone')) continue; out.push({ y: p.y + 0.3, d: () => this.draw(c, f, p.x, p.y, t, this.liftOf(p)) }); }
+    // v304 3D 화면(실내·바깥)에선 3D 사람 머리 높이에 맞춰 그린다 (사용자 '이펙트 구름도 위치 바꿔야'): 2D 발밑에서 15픽셀 위 = 3D 1.32칸 높이, 위아래로 눌리지 않게
+    const dr = (f, x, y, lift) => () => { if (!(typeof Room3D !== 'undefined' && Room3D.pq)) return this.draw(c, f, x, y, t, lift); c.save(); try { Room3D.anchor(c, x, y, 1.42, 15, false); this.draw(c, f, x, y, t, lift); } finally { c.restore(); } };
+    if (me && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push({ y: P.y + 0.3, d: dr(me, P.x, P.y, this.liftMe()) });
+    for (const { p } of vis) { const f = p.pal && p.pal.fx; if (!f || p.rd || (p.dr && p.s === 'zone')) continue; out.push({ y: p.y + 0.3, d: dr(f, p.x, p.y, this.liftOf(p)) }); }
     return out;
   },
 };
@@ -17517,7 +17519,7 @@ const Room3D = {
   proj(x, y, h = 0) { const v = this.v3 || (this.v3 = new T3.THREE.Vector3()); v.set(x / TILE, h, y / TILE).project(this.cc || this.cam); return { x: (v.x + 1) / 2 * VW, y: (1 - v.y) / 2 * VH }; },
   // 2D 그림을 3D 자리에 맞춰 그리게: 게임 좌표 (x, y)가 3D의 (x, y, 높이 h) 위로 가고, 크기는 그 자리의 확대 비율. off = 2D 그림에서 그 높이까지 (픽셀)
   anchor(c, x, y, h = 0, off = 0, cap = true) { const a = this.proj(x, y, h), b = this.proj(x + TILE, y, h), k0 = Math.hypot(b.x - a.x, b.y - a.y) / TILE, k = cap && h > 0 ? Math.min(k0, Cam.zoom * 1.1) : k0, S = DPR * k; /* 이름표·말풍선은 2D 때 크기 이상으로 커지지 않게 */
-    c.setTransform(S, 0, 0, S, DPR * (a.x + off * k) - x * S, DPR * (a.y + off * k) - y * S); return k; },
+    c.setTransform(S, 0, 0, S, DPR * a.x - x * S, DPR * (a.y + off * k) - y * S); return k; }, // v304: off는 세로만 (예전엔 가로로도 밀려 이름표·이펙트가 오른쪽으로 비켜 있었다)
 };
 
 /* ===================== 3D 바깥 도시 (v303, 사용자 2026-10-22 '밖도 3D로' '네') =====================
@@ -17582,12 +17584,13 @@ Object.assign(Room3D, {
   zStream(z, cx, cz, vw, vd, dt) {
     if (this.zEve !== State.evening) { for (const [, e] of this.zb) this.zDrop(e); this.zb.clear(); this.zEve = State.evening; }
     const plOf = this.zpl && this.zplZ === z ? this.zpl : (this.zplZ = z, this.zpl = {}); if (!Object.keys(plOf).length) for (const pl of z.places) plOf[pl.building] = pl;
-    const x0 = cx - vw / 2 - 6, x1 = cx + vw / 2 + 6, z0 = cz - vd / 2 - 6, z1 = cz + vd / 2 + 10, me = Game.driving ? Game.car : Game.player, mx = me.x / TILE, mz = me.y / TILE, cot = 1 / Math.tan(Z3_EL);
+    const x0 = cx - vw / 2 - 6, x1 = cx + vw / 2 + 6, z0 = cz - vd / 2 - 6, z1 = cz + vd / 2 + 10, me = Game.driving ? Game.car : Game.player, cot = 1 / Math.tan(Z3_EL), F = [[me.x / TILE, me.y / TILE]]; // 가려지면 안 되는 사람: 나 · 편집숍 사장님 · 친구
+    const sp = typeof ShopPromo !== 'undefined' && ShopPromo.w; if (sp && Game.decor.includes(sp)) F.push([sp.x / TILE, sp.y / TILE]); if (typeof Net !== 'undefined' && Net.on) for (const { p } of Net.visible('zone')) if (p && Number.isFinite(p.x)) F.push([p.x / TILE, p.y / TILE]);
     let made = 0;
     for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e0 = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
       if (!inV) { if (e0 && (b.x > x1 + 12 || b.x + b.w < x0 - 12 || b.y > z1 + 12 || b.y + b.h < z0 - 12)) { this.zDrop(e0); this.zb.delete(id); } continue; }
       let e = e0; if (!e) { if (made >= 2) continue; /* 한 프레임에 둘까지만 (미리 넉넉히 바깥부터 세워 둔다) */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
-      const hide = mx > b.x - 0.4 && mx < b.x + b.w + 0.4 && mz < b.y + 0.3 && mz > b.y - e.H * cot - 0.6, tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
+      const hide = F.some(([fx, fz]) => fx > b.x - 0.4 && fx < b.x + b.w + 0.4 && fz < b.y + 0.3 && fz > b.y - e.H * cot - 0.6), tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
       const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
   },

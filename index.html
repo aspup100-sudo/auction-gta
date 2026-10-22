@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v330</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v331</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17877,7 +17877,7 @@ Object.assign(Room3D, {
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
     if (!this.gcv) { const g = this.gcv = document.createElement('canvas'); g.id = 'zground'; g.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; this.cv.parentNode.insertBefore(g, this.cv); this.gctx = g.getContext('2d'); }
     if (!this.ocam) this.ocam = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.5, 300);
-    this.room = z; this.A = new Map(); this.zb = new Map(); this.zw = []; this.zc = []; this.zid = 0; this.zEve = State.evening;
+    this.room = z; this.zp = 0; this.zpWait = 0; this.ztree = null; this.zti = 0; this.A = new Map(); this.zb = new Map(); this.zw = []; this.zc = []; this.zid = 0; this.zEve = State.evening;
     const S = this.S = new THREE.Scene(); S.background = null;
     S.add(new THREE.HemisphereLight(0xfff4e6, 0x6a7080, 1.35));
     const sun = this.zsun = new THREE.DirectionalLight(0xfff0d8, 1.9); S.add(sun); S.add(sun.target); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
@@ -17892,7 +17892,7 @@ Object.assign(Room3D, {
         Sc.set(1, s, 1); M.compose(V.set(x, 0.45 * s, y), Q.identity(), Sc); tm.setMatrixAt(i, M);
         Sc.set(s, s * 0.92, s); Q.setFromAxisAngle(V.set(0, 1, 0), tr.phase); M.compose(V.set(x, 1.15 * s, y), Q, Sc); lm.setMatrixAt(i, M);
         M.compose(V.set(x + 0.18, 1.55 * s, y - 0.1), Q, Sc); lm2.setMatrixAt(i, M); });
-      for (const m of [tm, lm, lm2]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; S.add(m); }
+      for (const m of [tm, lm, lm2]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; S.add(m); } this.ztree = [tm, lm, lm2];
     }
   },
   /* ---- 건물 하나: 상자 + 앞벽(2D 앞벽 그림) · 옆벽(창문 줄) · 지붕(2D 지붕 그림) ---- */
@@ -17958,6 +17958,40 @@ Object.assign(Room3D, {
       let stripe = null, cc = col; if (col && typeof col === 'object') { stripe = col.stripe || null; cc = col.col; } R.zq.c.push({ x, y, a, col: cc || '#c8ccd2', stripe, len, wid, kind, skin: !!(col && typeof col === 'object') }); };
   },
   // 2D 그림이 쓰는 변환 (땅 = 세로만 sin배): worldToScreen과 같다
+  /* ---- v331 거리 소품 (사용자 '2D인거 전부 3D로 바꿔' · '리얼리스틱 팩으로'): Poly Haven 스캔 가로등·소화전·쓰레기통·전기함·벤치·맨홀 ----
+   * 큰길 보도 가장자리를 따라 (가로수 사이), 공원엔 벤치. 종류마다 InstancedMesh 한 벌이라 그리는 횟수는 몇 번 안 된다. 사람 키에 맞춰 0.8배 (실내는 1칸 = 1.13 m). */
+  ZP: { lamp: ['r_street_lamp_01', 1.25], hyd: ['r_fire_hydrant', 1], bin: ['r_metal_trash_can', 1], box: ['r_utility_box_01', 1], bench: ['r_painted_wooden_bench', 1.1], seat: ['r_modular_street_seating', 1], hole: ['r_water_manhole_cover', 1.2] },
+  zPropSpots(z) { if (z._props) return z._props; const P = { lamp: [], hyd: [], bin: [], box: [], bench: [], seat: [], hole: [] }, at = (x, y) => z.at(Math.floor(x), Math.floor(y));
+    const nearDoor = (x, y, d) => z.places.some(p => p.door && Math.hypot(x - p.door.tx - 0.5, y - p.door.ty - 0.5) < d), nearX = (x, y) => z.crossings.some(c => Math.hypot(x - c.x, y - c.y) < Math.max(c.halfA, c.halfB) + 3);
+    let n = 0; for (const r of z.roads || []) for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1], L = Math.hypot(bx - ax, by - ay); if (L < 4) continue; const ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux;
+      const curb = (px, py, dx, dy) => { for (let d = 0.5; d < r.width / 2 + 8; d += 0.25) if (at(px + dx * d, py + dy * d) !== T.ROAD) return d; return r.width / 2; }; // 길 가운데서 바깥으로: 차도가 끝나는 곳
+      for (let s = 6.5; s < L - 2; s += 14) for (const sd of [-1, 1]) { n++; const cb = curb(ax + ux * s, ay + uy * s, nx * sd, ny * sd), o = cb + 0.55, x = ax + ux * s + nx * sd * o, y = ay + uy * s + ny * sd * o; if (at(x, y) !== T.WALK || nearDoor(x, y, 2.5) || nearX(x, y)) continue;
+        const rot = Math.atan2(nx * sd, ny * sd); P.lamp.push([x, y, rot + Math.PI]);
+        const k = n % 6, o2 = curb(ax + ux * (s + 3.5), ay + uy * (s + 3.5), nx * sd, ny * sd) + (k < 2 ? 0.45 : 2.2), x3 = ax + ux * (s + 3.5) + nx * sd * o2, y3 = ay + uy * (s + 3.5) + ny * sd * o2;
+        if (at(x3, y3) === T.WALK && !nearDoor(x3, y3, 2) && !nearX(x3, y3)) { if (k === 0) P.hyd.push([x3, y3, rot]); else if (k === 2 || k === 5) P.bin.push([x3, y3, rot + Math.PI]); else if (k === 3) P.box.push([x3, y3, rot + Math.PI]); else if (k === 4 && r.width >= 6) P.seat.push([x3, y3, rot]); } }
+      if (r.width >= 4) for (let s = 11; s < L - 3; s += 23) P.hole.push([ax + ux * s + nx * r.width * 0.22, ay + uy * s + ny * r.width * 0.22, 0]); }
+    for (const p of z.parks || []) { const m = Math.min(6, Math.max(1, Math.round((p.w + p.h) / 14))); for (let k = 0; k < m; k++) { const t = (k + 0.5) / m, top = k % 2 === 0, x = p.x + 1.5 + t * (p.w - 3), y = top ? p.y + 1.3 : p.y + p.h - 1.3; if (at(x, y) === T.PARK) P.bench.push([x, y, top ? 0 : Math.PI]); } }
+    for (const key in P) { const L = P[key], out = [], d2 = key === 'lamp' ? 9 : 4; for (const q of L) if (!out.some(o => (o[0] - q[0]) ** 2 + (o[1] - q[1]) ** 2 < d2)) out.push(q); P[key] = out; } // 겹친 길(중앙 분리대)에서 둘씩 서지 않게
+    return (z._props = P); },
+  zProps(z) { if (this.zp || !this.S || typeof Props3D === 'undefined') return; const ks = Object.values(this.ZP).map(v => v[0]); let wait = 0; for (const k of ks) if (!Props3D.has(k)) { Props3D.need(k); if (Props3D.rs[k] !== -1) wait = 1; } this.zpVer = Props3D.ver; if (wait) { this.zpWait = 1; return; }
+    this.zpWait = 0; this.zp = 1; const { THREE } = T3, P = this.zPropSpots(z), F = 0.8, M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), Sc = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    for (const [key, [k, sc]] of Object.entries(this.ZP)) { const cells = new Map(); for (const q of P[key]) { const c = Math.floor(q[0] / 32) + ',' + Math.floor(q[1] / 32); if (!cells.has(c)) cells.set(c, []); cells.get(c).push(q); } // 32칸 묶음마다 따로 → 화면 밖 묶음은 안 그린다
+      for (const L of cells.values()) for (const part of Props3D.M[k]) { const im = new THREE.InstancedMesh(part.geo, part.mat, L.length);
+        L.forEach(([x, y, r], i) => { Sc.setScalar(F * sc); M.compose(V.set(x, key === 'hole' ? 0.004 : 0, y), Q.setFromAxisAngle(up, r), Sc); M.multiply(part.M); im.setMatrixAt(i, M); });
+        im.castShadow = key !== 'hole'; im.receiveShadow = true; im.computeBoundingSphere(); this.S.add(im); } } },
+  /* ---- v331 가로수: Poly Haven 올리브 나무 스캔 2종 × 3방향을 이 카메라 각도(Z3_EL)로 미리 찍은 사진판 (3d/real/trees.png, assets3d/trees_imp.js) ----
+   * 카메라가 돌지 않는 직교 카메라라 카메라를 보는 판 한 장이 3D 나무와 똑같이 보인다. 나무 하나에 삼각형 둘 (원본 스캔은 나무 하나에 150만 개). */
+  TIMP: { w: [7.51, 8.73, 8.73, 5.66, 6.78, 6.78], u: [0.496, 0.519, 0.485, 0.491, 0.387, 0.621], v: [0.233, 0.288, 0.292, 0.381, 0.262, 0.271] },
+  zTrees(z) { if (this.zti || !z.trees.length) return; const { THREE } = T3;
+    if (!this.ztTex) { this.ztTex = new THREE.TextureLoader().load(Arena3J.url('real/trees.png?v=1'), () => { this.ztOK = 1; }, undefined, () => { this.ztTex = null; this.ztOK = -1; }); this.ztTex.colorSpace = THREE.SRGBColorSpace; this.ztTex.anisotropy = 4; this.ztTex._keep = 1; }
+    if (this.ztOK !== 1) return; this.zti = 1;
+    const mat = new THREE.MeshBasicMaterial({ map: this.ztTex, alphaTest: 0.42, side: THREE.DoubleSide, toneMapped: false }), T = this.TIMP, F = 0.8 / 1.13, M = new THREE.Matrix4(), V = new THREE.Vector3(), Q = new THREE.Quaternion(), Sc = new THREE.Vector3(), cells = new Map();
+    z.trees.forEach((t, i) => { const v = (i % 2) * 3 + Math.floor(((t.phase / 6.283) * 3 + 3) % 3), c = v + ':' + Math.floor(t.x / TILE / 32) + ',' + Math.floor(t.y / TILE / 32); if (!cells.has(c)) cells.set(c, []); cells.get(c).push([t.x / TILE, t.y / TILE, 0.85 + ((i * 37) % 10) / 30]); });
+    for (const [c, L] of cells) { const v = +c.split(':')[0], col = v % 3, row = Math.floor(v / 3), g = new THREE.PlaneGeometry(1, 1), uv = g.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, (col + uv.getX(i)) / 3, 1 - (row + 1 - uv.getY(i)) / 2);
+      g.translate(0.5 - T.u[v], 0.5 - T.v[v], 0); g.rotateX(-Z3_EL); const im = new THREE.InstancedMesh(g, mat, L.length), sz = T.w[v] * F * (v < 3 ? 0.8 : 0.95);
+      L.forEach(([x, y, k], i) => { Sc.setScalar(sz * k); M.compose(V.set(x, 0, y), Q, Sc); im.setMatrixAt(i, M); }); im.castShadow = true; im.computeBoundingSphere(); this.S.add(im); }
+    if (this.ztree) for (const m of this.ztree) m.visible = false; },
   zFrame(z, t) {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.zdt = dt; this.show(true); this.zShowG(true); this.zHook();
     // 느리면 빨리 해상도를 낮추고, 가장 낮춰도 느리면 해 그림자를 끈다 (사람·차 발밑 동그란 그림자는 남는다)
@@ -17971,6 +18005,7 @@ Object.assign(Room3D, {
     oc.position.set(cx, Math.sin(Z3_EL) * D, cz + Math.cos(Z3_EL) * D); oc.lookAt(cx, 0, cz); oc.updateMatrixWorld(); this.cc = oc;
     const sun = this.zsun, R2 = Math.max(vw, vh / this.zSq()) * 0.62 + 6; sun.position.set(cx - 9, 22, cz + 14); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
     const sc = sun.shadow.camera; if (sc.right !== R2) { sc.left = -R2; sc.right = R2; sc.top = R2; sc.bottom = -R2; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
+        if (PBR.done && !this.zti) this.zTrees(z); if (PBR.done && (!this.zp && (!this.zpWait || Props3D.ver !== this.zpVer))) this.zProps(z); // v331 거리 소품 (받으면 한 번에 세운다)
     this.zStream(z, cx, cz, vw, vh / this.zSq(), dt);
     this.zq = { w: [], c: [] }; this.pq = [];
   },

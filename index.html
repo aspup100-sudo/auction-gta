@@ -1602,7 +1602,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v336</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v337</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17984,10 +17984,10 @@ Object.assign(Room3D, {
       if (w.vip) { c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 22); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 22); c.restore(); }
       if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w, typeof Hero3D !== 'undefined' && Hero3D.ready()); c.restore(); } };
     drawCarSprite = function (c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
-      if (R.zq && c === ctx && col && typeof col === 'object' && col.ride && typeof RIDE3 !== 'undefined' && RIDE3[col.ride]) { Ride3D.load(col.ride); if (Ride3D.ready(col.ride)) { const k = col.ride; R.zq.c.push({ x, y, a, ride: k, kind: 'ride:' + k, len: RIDE3[k].L, spd: col.spd || 0 }); /* v317 배·탱크 3D + 탄 사람 */
+      if (R.zq && c === ctx && col && typeof col === 'object' && col.ride && typeof RIDE3 !== 'undefined' && RIDE3[col.ride]) { Ride3D.load(col.ride); if (Ride3D.ready(col.ride)) { const k = col.ride; const ce = { x, y, a, ride: k, kind: 'ride:' + k, len: RIDE3[k].L, spd: col.spd || 0 }; R.zq.c.push(ce); /* v317 배·탱크 3D + 탄 사람 */
         const who = [col.rider, ...(col.pax || [])].filter(Boolean), spd = Math.abs(col.spd || 0), mv = spd > 4;
         if (RIDE3[k].carry) { R.zq.c.pop(); R.zq.w.push({ sprite: 'rdc', pal: PIGGY_PAL, x, y, dir: 0, still: !mv, anim: mv ? Ride3D.gait(spd) : 'Idle_Loop', ride: { h: 0, a, stand: true, gnd: true, pose: 'carry', mv } }); if (col.tag && typeof Net !== 'undefined') { c.save(); R.anchor(c, x, y, 0.01, 0); Net.label(c, col.tag, x, y + 15); c.restore(); } } // v322 업어 주는 친구 (사람 모델) + 이름표
-        who.forEach((p, i) => { const S = Ride3D.seat(k, i, x, y, a, { mv, n: who.length }); R.zq.w.push({ sprite: 'rd' + i, pal: p, x: S.x, y: S.y, dir: 0, sit: !S.hatch && !S.stand && S.pose !== 'row', still: (S.hatch || S.stand) && !S.walk, anim: S.walk || S.pose === 'row' ? Ride3D.anim1(S, mv, spd) : null, ride: { h: S.h, a, hatch: S.hatch, stand: S.stand, gnd: S.gnd, pose: S.pose, rope: S.rope, mv } }); }); return; } }
+        who.forEach((p, i) => { const S = Ride3D.seat(k, i, x, y, a, { mv, n: who.length }); R.zq.w.push({ sprite: 'rd' + i, pal: p, x: S.x, y: S.y, dir: 0, sit: !S.hatch && !S.stand && S.pose !== 'row', still: (S.hatch || S.stand) && !S.walk, anim: S.walk || S.pose === 'row' ? Ride3D.anim1(S, mv, spd) : null, ride: { h: S.h, a, hatch: S.hatch, noLeg: S.noLeg, stand: S.stand, gnd: S.gnd, pose: S.pose, rope: S.rope, grip: S.grip, leg: S.leg, mv, ce } }); }); return; } }
       if (!R.zq || c !== ctx || (col && typeof col === 'object' && col.ride)) return dc0(c, x, y, a, col, len, wid, kind, speed);
       let stripe = null, cc = col; if (col && typeof col === 'object') { stripe = col.stripe || null; cc = col.col; } R.zq.c.push({ x, y, a, col: cc || '#c8ccd2', stripe, len, wid, kind, skin: !!(col && typeof col === 'object') }); };
   },
@@ -18087,13 +18087,16 @@ Object.assign(Room3D, {
     const zq = this.zq || { w: [], c: [] }; this.zq = null; const t = performance.now() / 1000, dt = this.zdt || 0.016;
     this.zw = this.zMatch(zq.w, this.zw, (p, q) => p.sprite === q.sprite, 26, 'zw');
     this.zw.forEach((w, i) => { const H = this.actor(w.key, w.pal || Sprites.PAL[w.sprite] || Sprites.PAL.walker1 || Sprites.PAL.player, w, t, dt, i * 1.3); if (w.low && !H.hero) H.root.position.y -= 0.25;
-      if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.stand ? w.ride.h : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.y = H.ang; if (H.hero && w.ride.pose) Hero3D.ridePose(H, w.ride.pose, t, w.ride.mv); if (H.hero && w.ride.hatch) Hero3D.hideLegs(H); this.rope(H, H.hero && w.ride.rope); /* v321 노 젓기 · 밧줄 */ if (!w.ride.gnd) { H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } } else { if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } if (H.rp) this.rope(H, null); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
+      if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.stand ? w.ride.h : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.set(0, H.ang, 0); if (H.hero && (w.ride.pose || w.ride.grip || w.ride.leg)) Hero3D.ridePose(H, w.ride.pose, t, w.ride.mv, w.ride.grip, w.ride.leg); if (H.hero && (w.ride.hatch || w.ride.noLeg)) Hero3D.hideLegs(H); this.rope(H, H.hero && w.ride.rope); /* v321 노 젓기 · 밧줄 */ if (!w.ride.gnd) { H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } } else { if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } if (H.rp) this.rope(H, null); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
     this.zc = this.zMatch(zq.c, this.zc, (p, q) => p.col === q.col && p.kind === q.kind && p.len === q.len, 48, 'zc');
     for (const c of this.zc) { if (c.ride) { let H = this.A.get(c.key); if (!H) { H = { root: Ride3D.make(c.ride), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); } H.seen = this.fr; /* v317 배는 둥실, 탱크는 서 있으면 포탑이 천천히 두리번 */
         const water = RIDE_WATER.has(c.ride), mv = c.spd > 4, ph = c.key.length * 1.7; H.root.position.set(c.x / TILE, water ? 0.03 + Math.sin(t * 2.2 + ph) * 0.035 : 0, c.y / TILE); H.root.rotation.set(water ? Math.sin(t * 1.7 + ph) * 0.05 : 0, -c.a, water ? (mv ? 0.05 : 0) + Math.sin(t * 1.3 + ph) * 0.025 : 0, 'YXZ');
         Ride3D.anim(H.root, t, mv); const tur = H.root.userData.tur; if (tur && !H.root.userData.spin) { H.tr = H.tr || 0; const want = mv ? 0 : Math.sin(t * 0.5 + ph) * 0.7; H.tr += (want - H.tr) * Math.min(1, dt * 2); tur.rotation.y = H.tr; } continue; }
       let H = this.A.get(c.key); if (H && H.old && Car3D.ready()) { this.S.remove(H.root); H = null; } if (!H) { const v = c.skin ? 0 : [...c.key].reduce((h, ch) => h * 31 + ch.charCodeAt(0) | 0, 7) >>> 0; H = { root: this.car3(c.len, c.wid, c.col, c.stripe, c.kind, v), car: 1, old: !Car3D.ready() }; this.S.add(H.root); this.A.set(c.key, H); } // v315 차 모델 (늦게 받아지면 바꿔 끼운다)
       H.seen = this.fr; H.root.position.set(c.x / TILE, 0, c.y / TILE); H.root.rotation.y = -c.a; }
+    for (const w of this.zw) { const c = w.ride && w.ride.ce, HR = c && c.key != null && this.A.get(c.key), H = HR && this.A.get(w.key); if (!H) continue; /* v337 사용자 '배같은경우도 신경써서': 둥실대는 배 · 날갯짓하는 용 위에 탄 사람도 같이 */
+      const T = Ride3D.rel(HR.root, c.x, c.y, c.a); H.root.updateMatrix(); H.root.matrix.premultiply(T).decompose(H.root.position, H.root.quaternion, H.root.scale);
+      if (w.ride.rope && H.hero) { H.root.updateMatrixWorld(true); const v = new T3.THREE.Vector3(w.ride.rope.x / TILE, w.ride.rope.h, w.ride.rope.y / TILE).applyMatrix4(T); this.rope(H, { x: v.x * TILE, y: v.z * TILE, h: v.y }); } }
     this.render(); // 펫 + 안 보인 것 치우기 + 그리기
   },
 });
@@ -18145,10 +18148,10 @@ const Car3D = {
  * 바깥 3D: 차 대신 이 모델 + 탄 사람(앉기, 탱크는 해치에 서서). 2D(바깥 2D·편집숍 큰 미리보기·전시대)는 위에서 찍은 3D 사진을 돌려 그린다 (drawRide → Ride3D.draw2).
  * L: 길이 (월드 px, 2D), s3: 3D에선 몇 배 크게 (사람이 크게 보여서), seats: 앉는 자리 [앞뒤(길이 배), 좌우(길이 배)], y: 앉는 높이 (길이 배, 자리마다 [앞뒤, 좌우, 높이]로 따로 줄 수도), hatch: 서서 상체만 내밀기 */
 const RIDE3 = {
-  lifeboat: { L: 30, s3: 1.15, y: 0.06, seats: [[-0.22, 0], [0.12, -0.12], [0.12, 0.12], [-0.05, 0.13]] },
-  boat: { L: 30, s3: 1.2, y: 0.07, seats: [[-0.2, 0], [0.1, 0], [0.26, 0]] },
-  sailboat: { L: 34, s3: 1.3, y: 0.08, pose: 'rope', seats: [[-0.3, 0], [-0.1, 0.08], [0.18, 0]] },
-  viking: { L: 44, s3: 1.5, y: 0.12, pose: 'row', seats: [[-0.3, 0], [-0.12, 0.08], [0.02, -0.08], [0.16, 0.08], [-0.2, -0.08], [0.22, -0.08], [0.1, -0.08], [0.3, 0]] },
+  lifeboat: { L: 30, s3: 1.15, y: 0.08, leg: [0.1, -0.6], seats: [[-0.22, 0], [0.12, -0.12], [0.12, 0.12], [-0.05, 0.13]] },
+  boat: { L: 30, s3: 1.2, y: 0.09, leg: [0.1, -0.6], seats: [[-0.2, 0], [0.1, 0], [0.26, 0]] },
+  sailboat: { L: 34, s3: 1.3, y: 0.1, leg: [0.1, -0.6], pose: 'rope', seats: [[-0.3, 0], [-0.1, 0.08], [0.18, 0]] },
+  viking: { L: 44, s3: 1.5, y: 0.12, leg: [0.1, -0.4], pose: 'row', seats: [[-0.3, 0], [-0.12, 0.08], [0.02, -0.08], [0.16, 0.08], [-0.2, -0.08], [0.22, -0.08], [0.1, -0.08], [0.3, 0]] },
   galleon: { L: 48, s3: 1.7, y: 0.2, pose: 'rope', stand: 1, seats: [[-0.36, 0, 0.255], [-0.12, 0.06], [0, -0.06], [0.15, 0.06], [-0.22, -0.06], [-0.05, 0.06], [0.08, -0.06], [0.24, 0]] },
   cruise: { L: 48, s3: 1.6, y: 0.3, seats: [[0.07, 0], [-0.2, 0.055], [-0.2, -0.055], [-0.25, 0.055], [-0.25, -0.055], [-0.15, 0.055], [-0.15, -0.055], [0.0, 0]] },
   tank: { L: 34, s3: 1.3, y: 0.3, hatch: 1, seats: [[-0.06, 0], [-0.3, 0.18], [-0.3, -0.18]] },
@@ -18156,27 +18159,28 @@ const RIDE3 = {
   tank3: { L: 38, s3: 1.3, y: 0.36, hatch: 1, seats: [[0.02, 0], [-0.32, 0.2], [-0.32, -0.2]] },
   tank4: { L: 38, s3: 1.3, y: 0.24, hatch: 1, seats: [[-0.04, 0.13], [-0.34, 0.15], [-0.34, -0.15]] }, // v321 긴 포가 몸을 뚫지 않게 포 옆 해치
   // v322 재미 탈것 (사용자 '이것들은 … 3D로'): 카트는 달릴 땐 뒤에서 밀고(push = 손잡이 뒤 서는 곳) 서면 바구니에 올라탄다, 같이 탄 사람은 바구니 안
-  cart: { L: 19, s3: 1.15, y: 0.68, push: -0.95, seats: [[-0.08, 0], [-0.08, 0]] },
-  chair: { L: 13, s3: 1, y: 0.62, spin: 1, seats: [[0.04, 0]] }, // 사무실 의자: 다섯 갈래 다리(_spin)가 빙글빙글
+  cart: { L: 19, s3: 1.15, y: 0.68, grip: [0, 0.3, 0.92], push: -0.95, seats: [[-0.08, 0], [-0.08, 0]] },
+  chair: { L: 13, s3: 1, y: 0.72, spin: 1, seats: [[0.04, 0]] }, // 사무실 의자: 다섯 갈래 다리(_spin)가 빙글빙글
   piggy: { L: 14, s3: 1, carry: 1, seats: [[0, 0]] }, // 친구 등에 업히기: 모델 없음, 업어 주는 친구 = 사람 모델 (PIGGY_PAL) · 나는 그 등에
   // v335 Sketchfab 실사 탈것 (CC BY 4.0, 사용자 '리얼리스틱 팩으로'): 3d/sf/<키>.glb 하나씩 (assets3d/build_sf.py: 앞 +x, 길이 1, 바닥 0). sf = 따로 받는 실사 모델, idle = 서 있을 때 동작 빠르기
-  bike: { sf: 1, L: 28, y: 0.5, seats: [[-0.12, 0]] },
-  scooter: { sf: 1, L: 30, y: 0.42, seats: [[-0.12, 0], [-0.3, 0]] },
-  moto: { sf: 1, L: 34, y: 0.4, seats: [[-0.06, 0], [-0.24, 0]] },
-  uni: { sf: 1, L: 11, y: 1.38, seats: [[0, 0]] },
-  bus: { sf: 1, L: 130, y: 0.1, seats: [[0.4, -0.07], [0.25, 0.07], [0.1, -0.07], [0.1, 0.07], [-0.1, -0.07], [-0.1, 0.07]] },
-  cabrio: { sf: 1, L: 70, y: 0.12, seats: [[-0.06, -0.1], [-0.06, 0.1], [-0.26, -0.1], [-0.26, 0.1]] },
-  horse: { sf: 1, L: 40, y: 0.56, idle: 0.15, seats: [[0, 0], [-0.16, 0]] },
-  bull: { sf: 1, L: 46, y: 0.44, seats: [[0.02, 0], [-0.16, 0]] },
-  benz: { sf: 1, L: 72, y: 0.02, seats: [[-0.06, -0.1], [-0.06, 0.1]] },
-  wolf: { sf: 1, L: 44, y: 0.5, idle: 0.15, seats: [[0.02, 0], [-0.16, 0]] },
-  shark: { sf: 1, L: 64, y: 0.4, idle: 0.4, seats: [[0.06, 0], [-0.1, 0]] },
-  ferrari: { sf: 1, L: 70, y: 0.01, seats: [[-0.04, -0.1], [-0.04, 0.1]] },
+  bike: { sf: 1, L: 28, y: 0.46, grip: [0.12, 0.11, 0.6, 0.25], seats: [[-0.12, 0]] },
+  scooter: { sf: 1, L: 30, y: 0.42, grip: [0.16, 0.13, 0.55, 0.1], seats: [[-0.12, 0], [-0.3, 0]] },
+  moto: { sf: 1, L: 34, y: 0.4, grip: [0.16, 0.14, 0.54, 0.3], seats: [[-0.06, 0], [-0.24, 0]] },
+  uni: { sf: 1, L: 11, y: 1.38, grip: [0, 0.9, 2], leg: [0.12, 0.6], seats: [[0, 0]] },
+  bus: { sf: 1, L: 130, y: 0.1, noLeg: 1, grip: [0.45, 0.025, 0.135, 0.05], seats: [[0.4, -0.07], [0.25, 0.07], [0.1, -0.07], [0.1, 0.07], [-0.1, -0.07], [-0.1, 0.07]] },
+  cabrio: { sf: 1, L: 70, y: 0.12, grip: [0.04, 0.035, 0.17, 0.05], seats: [[-0.06, -0.1], [-0.06, 0.1], [-0.26, -0.1], [-0.26, 0.1]] },
+  horse: { sf: 1, L: 40, y: 0.56, idle: 0.15, bone: 'spine009', grip: [0.18, 0.06, 0.72, 0.15], leg: [0.5, 1.1], seats: [[0, 0], [-0.16, 0]] },
+  bull: { sf: 1, L: 46, y: 0.44, grip: [0.1, 0.08, 0.52, 0.15], leg: [0.55, 1.15], seats: [[0.02, 0], [-0.16, 0]] },
+  benz: { sf: 1, L: 72, y: -0.01, noLeg: 1, grip: [0.04, 0.035, 0.14, 0.05], seats: [[-0.06, -0.1], [-0.06, 0.1]] },
+  wolf: { sf: 1, L: 44, y: 0.47, idle: 0.15, grip: [0.2, 0.06, 0.55, 0.2], leg: [0.45, 0.85], seats: [[0.02, 0], [-0.16, 0]] },
+  shark: { sf: 1, L: 64, y: 0.33, idle: 0.4, bone: 'Spine_01', grip: [0, 0.03, 0.4, 0.15], leg: [0.5, 1], seats: [[-0.08, 0], [-0.22, 0]] },
+  ferrari: { sf: 1, L: 70, y: -0.01, noLeg: 1, grip: [0.05, 0.035, 0.13, 0.05], seats: [[-0.04, -0.1], [-0.04, 0.1]] },
   train: { sf: 1, L: 160, y: 0.03, stand: 1, seats: [[-0.08, 0], [-0.34, -0.03], [-0.34, 0.03], [-0.4, -0.03], [-0.4, 0.03], [-0.28, 0], [-0.22, 0], [-0.16, 0]] },
-  lambo: { sf: 1, L: 68, y: -0.01, seats: [[-0.02, -0.1], [-0.02, 0.1]] },
-  jet: { sf: 1, L: 150, y: 0.2, seats: [[0.27, 0], [0.2, 0]] },
+  lambo: { sf: 1, L: 68, y: -0.01, noLeg: 1, grip: [0.07, 0.035, 0.13, 0.05], seats: [[-0.02, -0.1], [-0.02, 0.1]] },
+  jet: { sf: 1, L: 150, y: 0.15, noLeg: 1, grip: [0.31, 0.04, 0.18, 0.05], seats: [[0.25, 0], [0.19, 0]] }, // v337 조종석 안에 상체만 (사용자 '제트기도')
   wings: { sf: 1, L: 34, y: 0.35, stand: 1, off: [-0.12, 0.42], seats: [[0, 0]] },
-  dragon: { sf: 1, L: 80, y: 0.0, idle: 0.3, seats: [[0.1, 0], [-0.02, 0], [-0.12, 0]] },
+  dragon: { sf: 1, L: 120, y: 0.175, idle: 0.3, bone: 'spine_05', grip: [0.3, 0.04, 0.18, 0.25], leg: [0.5, 0.6], seats: [[0.21, 0], [0.13, 0], [0.06, 0]] }, // v337 날개 사이 등 (사용자 '용은또 뭐야'): 날갯짓하는 몸 뼈를 따라간다
+  // v337 grip = [손 앞뒤, 두 손 간격의 반, 높이, 숙이기] (길이 배, 사용자 '잡고 타야지'), leg = [다리 벌림, 아래로] (배는 무릎 세우기 < 0), noLeg = 차 안 다리 숨기기, bone = 탄 사람이 따라갈 몸 뼈
 };
 const PIGGY_PAL = { hair: '#3a2a1a', skin: '#f0c8a0', shirt: '#2f9a5a', shirt2: '#257a48', pants: '#2b3a6e', shoe: '#15151c' }; // 2D 업어 주는 친구 색 그대로
 const Ride3D = {
@@ -18202,7 +18206,8 @@ const Ride3D = {
   make(k, sc = RIDE3[k].s3 || 1) {
     const { THREE } = T3, B = this.M[k], g = new THREE.Group(), inner = new THREE.Group(), s = RIDE3[k].L / TILE * sc; inner.scale.setScalar(s); g.add(inner); if (!B) return g;
     if (B.sf) { const m = T3.SkeletonUtils.clone(B.sf), R = RIDE3[k]; inner.add(m); if (Math.abs(B.y0) > 0.03) m.position.y = -B.y0; if (R.off) inner.position.set(R.off[0] * s, R.off[1] * s, 0); // v335 실사 모델 (뼈 동작이 있으면 섞개)
-      if (B.anims.length) { const mix = new THREE.AnimationMixer(m); mix.clipAction(B.anims[0]).play(); g.userData.mix = mix; g.userData.idle = R.idle == null ? 0.2 : R.idle; } g.userData.inner = inner; return g; }
+      if (B.anims.length) { const mix = new THREE.AnimationMixer(m); mix.clipAction(B.anims[0]).play(); g.userData.mix = mix; g.userData.idle = R.idle == null ? 0.2 : R.idle;
+        if (R.bone) { let sb = null; m.traverse(o => { if (!sb && o.isBone && o.name.startsWith(R.bone)) sb = o; }); if (sb) { mix.update(0); g.updateMatrixWorld(true); g.userData.sb = sb; g.userData.sbI = new THREE.Matrix4().copy(g.matrixWorld).invert().multiply(sb.matrixWorld).invert(); g.userData.D = new THREE.Matrix4(); } } } /* v337 탄 자리 뼈: 용·말·상어 몸이 움직이면 탄 사람도 같이 (D = 처음 자세 → 지금) */ g.userData.inner = inner; return g; }
     const add = (par, p, off) => { const m = new THREE.Mesh(p.geo, this.mat()); p.M.decompose(m.position, m.quaternion, m.scale); if (off) m.position.sub(off); m.castShadow = true; par.add(m); };
     for (const p of B.m) add(inner, p);
     if (B.tur.length) { const tb = new THREE.Box3(); for (const p of B.tur) { if (!p.geo.boundingBox) p.geo.computeBoundingBox(); tb.union(p.geo.boundingBox.clone().applyMatrix4(p.M)); } const c = tb.getCenter(new THREE.Vector3()); c.y = 0; const pv = new THREE.Group(); pv.position.copy(c); inner.add(pv); for (const p of B.tur) add(pv, p, c); g.userData.tur = pv; }
@@ -18213,12 +18218,14 @@ const Ride3D = {
       rim.position.set(S0[0], hy, S0[1]); hole.rotation.x = -Math.PI / 2; hole.position.set(S0[0], hy + 0.002, S0[1]); lid.position.set(S0[0] - 0.07, hy + 0.04, S0[1]); lid.rotation.z = 1.1; inner.add(rim, hole, lid); } /* v321 해치: 테두리 · 검은 구멍 · 열린 뚜껑 */
     g.userData.inner = inner; return g;
   },
+  // v337 탄 사람 옮기기: 가만히 선 탈것 기준으로 앉힌 사람(월드) → 지금 둥실대는 배 · 움직이는 용 위. x, y = 월드 px, a = 방향
+  rel(g, x, y, a) { const { THREE } = T3, M0 = new THREE.Matrix4().makeRotationY(-a).setPosition(x / TILE, 0, y / TILE).invert(); g.updateMatrixWorld(true); const T = g.matrixWorld.clone(); if (g.userData.D) T.multiply(g.userData.D); return T.multiply(M0); },
   // v321 노 젓기 · 돛 돌리기 (탄 사람 동작과 같은 박자: Ride3D.ph)
   ph(t) { return t * Math.PI * 2 * 0.85; },
   gait(spd) { const s = spd / TILE; return s < 1.8 ? 'Walk_Loop' : s < 3.8 ? 'Jog_Fwd_Loop' : 'Sprint_Loop'; }, // v322 미는 사람 · 업어 주는 친구 걸음
   anim1(S, mv, spd) { return S.walk ? (mv ? this.gait(spd || 30) : 'Idle_Loop') : S.pose === 'row' ? 'Driving_Loop' : S.hatch || S.stand ? 'Idle_Loop' : 'Sitting_Idle_Loop'; }, // 탄 사람 동작 이름
   anim(g, t, mv) { const ph = this.ph(t), U = g.userData, T = T3.THREE;
-    if (U.mix) { const dt = U.lt == null ? 0 : Math.max(0, Math.min(0.1, t - U.lt)); U.lt = t; U.mix.update(dt * (mv ? 1 : U.idle)); } // v335 말·늑대·상어·용: 달리면 제 빠르기, 서 있으면 천천히
+    if (U.mix) { const dt = U.lt == null ? 0 : Math.max(0, Math.min(0.1, t - U.lt)); U.lt = t; U.mix.update(dt * (mv ? 1 : U.idle)); if (U.sb) { g.updateMatrixWorld(true); U.D.copy(g.matrixWorld).invert().multiply(U.sb.matrixWorld).multiply(U.sbI); } } // v335 말·늑대·상어·용: 달리면 제 빠르기, 서 있으면 천천히
     if (U.oars) { const A = mv ? 0.42 : 0.16, e = new T.Euler(), q = new T.Quaternion(); for (const o of U.oars) { const s = o.userData.s, c = Math.cos(ph), lift = c > 0 ? 0.16 * c : 0.05 * c; e.set(-s * lift * (mv ? 1 : 0.5), s * A * Math.sin(ph), 0, 'YXZ'); q.setFromEuler(e); o.quaternion.copy(o.userData.q0).premultiply(q); } }
     if (U.spin && U.tur) U.tur.rotation.y = t * (mv ? 6 : 0.5); // v322 의자 다리 (2D처럼 달리면 빨리)
     if (U.sails) { const q = new T.Quaternion(), ax = new T.Vector3(0, 1, 0); U.sails.forEach((o, i) => { q.setFromAxisAngle(ax, (mv ? 0.22 : 0.08) * Math.sin(ph * 0.5 + i * 0.3) + (mv ? 0.12 : 0)); o.quaternion.copy(o.userData.q0).premultiply(q); }); } },
@@ -18226,7 +18233,8 @@ const Ride3D = {
   seat(k, i, x, y, a, q) { const R = RIDE3[k], S = R.seats[Math.min(i, R.seats.length - 1)], L = R.L * (R.s3 || 1);
     if (R.push && !i && q && (q.mv || q.n > 1)) return { x: x + Math.cos(a) * R.push * L, y: y + Math.sin(a) * R.push * L, h: 0, stand: true, walk: true, gnd: true, pose: 'push' }; // v322 카트 밀기 (달릴 때 · 같이 탄 사람이 있을 때)
     if (R.carry) { const b = -0.09 * TILE; return { x: x + Math.cos(a) * b, y: y + Math.sin(a) * b, h: 0.92, pose: 'hug' }; } // v322 업힌 나: 친구 허리 바로 뒤
-    const f = S[0] * L, r = S[1] * L, o = { x: x + Math.cos(a) * f - Math.sin(a) * r, y: y + Math.sin(a) * f + Math.cos(a) * r, h: (S[2] || R.y) * L / TILE, hatch: !!R.hatch, stand: !!(R.stand && !i), pose: i ? null : R.pose || null };
+    const f = S[0] * L, r = S[1] * L, o = { x: x + Math.cos(a) * f - Math.sin(a) * r, y: y + Math.sin(a) * f + Math.cos(a) * r, h: (S[2] || R.y) * L / TILE, hatch: !!R.hatch, noLeg: !!R.noLeg, leg: R.leg || null, stand: !!(R.stand && !i), pose: i ? null : R.pose || null };
+    if (!i && R.grip) { const G = R.grip; o.grip = { f: (G[0] - S[0]) * L / TILE, s: G[1] * L / TILE, h: G[2] * L / TILE, d: G[3] || 0 }; } // v336 손잡이·고삐 (앞뒤, 두 손 간격의 반, 높이 = 길이 배) → 손이 거기 닿게
     const B = this.M[k]; if (!i && R.pose === 'rope' && B && B.rope) { const [rx, ry, rz] = B.rope; o.rope = { x: x + Math.cos(a) * rx * L - Math.sin(a) * rz * L, y: y + Math.sin(a) * rx * L + Math.cos(a) * rz * L, h: ry * L / TILE }; } return o; }, // pose: row = 노 젓기, rope = 밧줄로 돛 (v321)
   // 2D 그림 (바깥 2D · 편집숍 큰 미리보기 · 전시대): 거의 바로 위에서 찍은 3D 사진. 아직이면 간단한 모양
   draw2(c, k, rider, pax, mv, t) {
@@ -18645,13 +18653,33 @@ const Hero3D = {
   },
   /* ---- v321 탈것 위 동작: 애니메이션 위에 뼈를 더 돌린다 (모델 기준 축: x = 옆, 앞 = +z) ---- */
   bone(H, n) { const c = H.bn || (H.bn = {}); if (!(n in c)) c[n] = H.model.getObjectByName(n) || null; return c[n]; },
-  turn(H, n, ax, ang) { const b = this.bone(H, n); if (!b || !b.parent) return; const { THREE } = T3, mq = H.model.getWorldQuaternion(new THREE.Quaternion()), pq = b.parent.getWorldQuaternion(new THREE.Quaternion()), wa = ax.clone().applyQuaternion(mq), q = new THREE.Quaternion().setFromAxisAngle(wa, ang); const rq = H.rq || (H.rq = {}), q0 = b.quaternion.clone(); b.quaternion.premultiply(pq.clone().invert().multiply(q).multiply(pq)); rq[n] = { b, a: q0, m: b.quaternion.clone() }; b.updateMatrixWorld(true); },
-  ridePose(H, pose, t, mv) { const { THREE } = T3, X = new THREE.Vector3(1, 0, 0), ph = Ride3D.ph(t); if (H.rq) for (const k in H.rq) { const r = H.rq[k]; if (r.b.quaternion.equals(r.m)) r.b.quaternion.copy(r.a); } /* 애니메이션 값이 그대로면 믹서가 뼈를 다시 안 써서, 지난번 돌린 게 쌓이지 않게 되돌린다 */ H.root.updateMatrixWorld(true);
+  turn(H, n, ax, ang) { const b = this.bone(H, n); if (!b || !b.parent) return; const { THREE } = T3, mq = H.model.getWorldQuaternion(new THREE.Quaternion()), pq = b.parent.getWorldQuaternion(new THREE.Quaternion()), wa = ax.clone().applyQuaternion(mq), q = new THREE.Quaternion().setFromAxisAngle(wa, ang); const rq = H.rq || (H.rq = {}), q0 = rq[n] && rq[n].b === b && b.quaternion.equals(rq[n].m) ? rq[n].a : b.quaternion.clone(); b.quaternion.premultiply(pq.clone().invert().multiply(q).multiply(pq)); rq[n] = { b, a: q0, m: b.quaternion.clone() }; b.updateMatrixWorld(true); },
+  ridePose(H, pose, t, mv, grip, leg) { const { THREE } = T3, X = new THREE.Vector3(1, 0, 0), ph = Ride3D.ph(t); if (H.rq) for (const k in H.rq) { const r = H.rq[k]; if (r.b.quaternion.equals(r.m)) r.b.quaternion.copy(r.a); } /* 애니메이션 값이 그대로면 믹서가 뼈를 다시 안 써서, 지난번 돌린 게 쌓이지 않게 되돌린다 */ H.root.updateMatrixWorld(true);
     if (pose === 'row') { const k = mv ? 1 : 0.45, s = Math.sin(ph); this.turn(H, 'spine_01', X, 0.32 * s * k); this.turn(H, 'spine_02', X, 0.12 * s * k); for (const e of ['l', 'r']) { this.turn(H, 'upperarm_' + e, X, -0.35 * s * k); this.turn(H, 'lowerarm_' + e, X, -0.4 * Math.max(0, -s) * k); } } // 앞으로 뻗었다가 (노 날이 앞) 몸을 젖히며 당기기
     else if (pose === 'rope') { const k = mv ? 1 : 0.6; ['l', 'r'].forEach((e, i) => { const s = Math.sin(ph + i * Math.PI); this.turn(H, 'upperarm_' + e, X, -(1.35 + 0.4 * s * k)); this.turn(H, 'lowerarm_' + e, X, -(0.35 + 0.35 * Math.max(0, -s) * k)); }); this.turn(H, 'spine_01', X, -0.12 - 0.06 * Math.sin(ph * 2) * k); } // 손을 번갈아 위로 뻗어 밧줄 당기기
     else if (pose === 'push') { this.turn(H, 'spine_01', X, 0.3); for (const e of ['l', 'r']) { this.turn(H, 'upperarm_' + e, X, -1.05); this.turn(H, 'lowerarm_' + e, X, -0.35); } } // v322 카트 손잡이 밀기: 몸 숙이고 두 팔 앞으로
     else if (pose === 'carry') { const Z = new THREE.Vector3(0, 0, 1); this.turn(H, 'spine_01', X, 0.38); this.turn(H, 'spine_02', X, 0.12); ['l', 'r'].forEach((e, i) => { const sd = i ? -1 : 1; this.turn(H, 'upperarm_' + e, X, 1.1); this.turn(H, 'upperarm_' + e, Z, 0.3 * sd); this.turn(H, 'lowerarm_' + e, X, -1.1); }); } // v322 업어 주기: 앞으로 숙이고 두 팔을 뒤로 돌려 업힌 다리 받치기
-    else if (pose === 'hug') { const Z = new THREE.Vector3(0, 0, 1), Y = new THREE.Vector3(0, 1, 0); this.turn(H, 'spine_01', X, 0.5); ['l', 'r'].forEach((e, i) => { const sd = i ? -1 : 1; this.turn(H, 'upperarm_' + e, X, -0.85); this.turn(H, 'lowerarm_' + e, Y, 1.1 * sd); this.turn(H, 'thigh_' + e, Z, 0.45 * sd); }); } }, // v322 업히기: 친구 목에 두 팔 두르고 다리는 허리 양옆으로
+    else if (pose === 'hug') { const Z = new THREE.Vector3(0, 0, 1), Y = new THREE.Vector3(0, 1, 0); this.turn(H, 'spine_01', X, 0.5); ['l', 'r'].forEach((e, i) => { const sd = i ? -1 : 1; this.turn(H, 'upperarm_' + e, X, -0.85); this.turn(H, 'lowerarm_' + e, Y, 1.1 * sd); this.turn(H, 'thigh_' + e, Z, 0.45 * sd); }); }
+    if (leg) { const X = new THREE.Vector3(1, 0, 0), Z = new THREE.Vector3(0, 0, 1); for (const [e, sd] of [['l', 1], ['r', -1]]) { if (leg[1]) { this.turn(H, 'thigh_' + e, X, leg[1]); this.turn(H, 'calf_' + e, X, -leg[1] * 0.8); } if (leg[0]) this.turn(H, 'thigh_' + e, Z, leg[0] * sd); } } // v337 leg = [벌림, 아래로]: 말·소·용은 다리를 몸통 양옆으로 내리고, 배는 무릎을 세워 (아래로 < 0) 발이 바닥 밑으로 안 나가게
+    if (grip) this.grip(H, grip); },
+  /* v336 사용자 '잡고 타야지 이런건': 두 손을 손잡이·고삐에 (탈것 앞뒤 f · 높이 h · 두 손 간격 s, 앉은 자리 기준 칸) → 두 마디 팔 IK, 팔꿈치는 아래 바깥쪽.
+   * d > 0 이면 상체를 그만큼 앞으로 숙인다 (오토바이·말) */
+  grip(H, G) { const { THREE } = T3, R = H.root, q = R.getWorldQuaternion(new THREE.Quaternion()), o = R.getWorldPosition(new THREE.Vector3()), ry = R.position.y;
+    if (G.d) { this.turn(H, 'spine_01', new THREE.Vector3(1, 0, 0), G.d * 0.6); this.turn(H, 'spine_02', new THREE.Vector3(1, 0, 0), G.d * 0.4); }
+    for (const [e, sd] of [['l', -1], ['r', 1]]) { const T = new THREE.Vector3(G.f, G.h - ry, G.s * sd).applyQuaternion(q).add(o), pole = new THREE.Vector3(-0.3, -1, sd * 0.9).applyQuaternion(q); this.reach(H, e, T, pole); } },
+  // 두 마디 팔 IK: 어깨(upperarm)·팔꿈치(lowerarm)를 돌려 손(hand)이 T(월드)에 닿게. 팔꿈치는 pole 쪽으로
+  reach(H, e, T, pole) {
+    const { THREE } = T3, ua = this.bone(H, 'upperarm_' + e), la = this.bone(H, 'lowerarm_' + e), hd = this.bone(H, 'hand_' + e); if (!ua || !la || !hd || !ua.parent) return;
+    const V = () => new THREE.Vector3(), Pw = b => b.getWorldPosition(V()), rq = H.rq || (H.rq = {});
+    const rotW = (b, n, qd) => { const pq = b.parent.getWorldQuaternion(new THREE.Quaternion()), bq = b.getWorldQuaternion(new THREE.Quaternion()), q0 = rq[n] && rq[n].b === b && b.quaternion.equals(rq[n].m) ? rq[n].a : b.quaternion.clone(); b.quaternion.copy(pq.invert().multiply(qd).multiply(bq)); rq[n] = { b, a: q0, m: b.quaternion.clone() }; b.updateMatrixWorld(true); };
+    ua.updateMatrixWorld(true); let S = Pw(ua), E = Pw(la), W = Pw(hd); const a = S.distanceTo(E), b = E.distanceTo(W), d = Math.min(a + b - 1e-4, Math.max(Math.abs(a - b) + 1e-4, S.distanceTo(T)));
+    const cur = V().subVectors(S, E).angleTo(V().subVectors(W, E)), want = Math.acos(THREE.MathUtils.clamp((a * a + b * b - d * d) / (2 * a * b), -1, 1));
+    let ax = V().subVectors(E, S).cross(V().subVectors(W, E)); if (ax.lengthSq() < 1e-10) ax = V().subVectors(E, S).cross(pole); if (ax.lengthSq() < 1e-10) return; ax.normalize();
+    rotW(la, 'lowerarm_' + e, new THREE.Quaternion().setFromAxisAngle(ax, cur - want));
+    W = Pw(hd); rotW(ua, 'upperarm_' + e, new THREE.Quaternion().setFromUnitVectors(V().subVectors(W, S).normalize(), V().subVectors(T, S).normalize()));
+    if (pole) { E = Pw(la); const n = V().subVectors(T, S).normalize(), pe = V().subVectors(E, S).projectOnPlane(n), pp = pole.clone().projectOnPlane(n);
+      if (pe.lengthSq() > 1e-10 && pp.lengthSq() > 1e-10) { let g = pe.angleTo(pp); if (V().crossVectors(pe, pp).dot(n) < 0) g = -g; rotW(ua, 'upperarm_' + e, new THREE.Quaternion().setFromAxisAngle(n, g)); } }
+  }, // v322 업히기: 친구 목에 두 팔 두르고 다리는 허리 양옆으로
   hideLegs(H) { if (H.noLeg) return; H.noLeg = 1; for (const n of ['thigh_l', 'thigh_r']) { const b = this.bone(H, n); if (b) b.scale.setScalar(0.001); } }, // v321 해치 위로 상체만 (다리가 전차 밑으로 삐져나오지 않게)
   handsAt(H) { const { THREE } = T3, a = this.bone(H, 'hand_l'), b = this.bone(H, 'hand_r'); if (!a || !b) return null; return a.getWorldPosition(new THREE.Vector3()).add(b.getWorldPosition(new THREE.Vector3())).multiplyScalar(0.5); },
   /* ---- 우리 옷: 뼈에 붙이는 도형 (모델 공간에서 만들고 그 뼈에 붙인다) ---- */
@@ -19137,7 +19165,7 @@ const Snap3D = {
       if (u.st.rope) { const { THREE } = T3; u.rp = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 6), Room3D.toon('#6a4a26')); u.m.add(u.rp); }
       return u; },
       (b, c) => this.fit(b, c, 0.42, 1.06),
-      (u, dt, tt) => { const { THREE } = T3, mvv = !!mv; u.m.position.y = water ? Math.sin(tt * 2.2) * 0.04 : 0; u.m.rotation.z = water ? Math.sin(tt * 1.7) * 0.03 : 0; Ride3D.anim(u.m, tt, mvv); u.H.mix.update(dt); if (u.C) { Hero3D.play(u.C, mvv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.C.mix.update(dt); } u.m.updateMatrixWorld(true); if (u.st.pose) Hero3D.ridePose(u.H, u.st.pose, tt, mvv); if (u.C) Hero3D.ridePose(u.C, 'carry', tt, mvv);
+      (u, dt, tt) => { const { THREE } = T3, mvv = !!mv; u.m.position.y = water ? Math.sin(tt * 2.2) * 0.04 : 0; u.m.rotation.z = water ? Math.sin(tt * 1.7) * 0.03 : 0; Ride3D.anim(u.m, tt, mvv); if (u.m.userData.D) u.H.root.matrix.multiplyMatrices(u.m.userData.D, u.base).decompose(u.H.root.position, u.H.root.quaternion, u.H.root.scale); /* v337 용·말 몸 따라 */ u.H.mix.update(dt); if (u.C) { Hero3D.play(u.C, mvv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.C.mix.update(dt); } u.m.updateMatrixWorld(true); if (u.st.pose || u.st.grip || u.st.leg) Hero3D.ridePose(u.H, u.st.pose, tt, mvv, u.st.grip, u.st.leg); if (u.C) Hero3D.ridePose(u.C, 'carry', tt, mvv);
         if (u.rp) { const a = Hero3D.handsAt(u.H); if (a) { u.m.worldToLocal(a); const r = u.st.rope, b = new THREE.Vector3(r.x / TILE, r.h, r.y / TILE), d = b.clone().sub(a), L = d.length(); u.rp.position.copy(a).add(b).multiplyScalar(0.5); u.rp.scale.set(1, L, 1); u.rp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); } } });
     if (!img) return false;
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, Hh); x.restore(); return true;
@@ -19150,9 +19178,9 @@ const Snap3D = {
   // v322 탈것 + 탄 나 (+ 업어 주는 친구) 한 묶음: 편집숍 큰 미리보기 · 칸 그림
   rideCast(k, P, mv) {
     const m = Ride3D.make(k), hh = HERO_H * 1.18, mk = pal => { const z = Room3D.zNow; Room3D.zNow = true; let H; try { H = Hero3D.make(pal); } finally { Room3D.zNow = z; } H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); return H; };
-    if (m.userData.mix) m.userData.mix.update(0.01); /* v335 움직이는 실사 모델은 동작 자세로 크기 재기 */ const H = mk(P), st = Ride3D.seat(k, 0, 0, 0, 0, { mv: !!mv, n: 1 }); H.root.position.set(st.x / TILE, st.hatch ? st.h - hh * 0.62 : st.stand ? st.h : st.h - hh * 0.2, st.y / TILE); Hero3D.play(H, Ride3D.anim1(st, !!mv), 0); H.mix.update(0.9); if (st.hatch) Hero3D.hideLegs(H); m.add(H.root);
+    if (m.userData.mix) m.userData.mix.update(0.01); /* v335 움직이는 실사 모델은 동작 자세로 크기 재기 */ const H = mk(P), st = Ride3D.seat(k, 0, 0, 0, 0, { mv: !!mv, n: 1 }); H.root.position.set(st.x / TILE, st.hatch ? st.h - hh * 0.62 : st.stand ? st.h : st.h - hh * 0.2, st.y / TILE); Hero3D.play(H, Ride3D.anim1(st, !!mv), 0); H.mix.update(0.9); if (st.hatch || st.noLeg) Hero3D.hideLegs(H); m.add(H.root);
     let C = null; if (RIDE3[k].carry) { C = mk(PIGGY_PAL); Hero3D.play(C, mv ? 'Walk_Loop' : 'Idle_Loop', 0); C.mix.update(0.9); m.add(C.root); m.updateMatrixWorld(true); Hero3D.ridePose(C, 'carry', 0, !!mv); }
-    m.updateMatrixWorld(true); if (st.pose) Hero3D.ridePose(H, st.pose, 0, !!mv); return { m, H, st, C };
+    H.root.updateMatrix(); const base = H.root.matrix.clone(); m.updateMatrixWorld(true); if (st.pose || st.grip || st.leg) Hero3D.ridePose(H, st.pose, 0, !!mv, st.grip, st.leg); return { m, H, st, C, base };
   },
   /* ---- v323 편집숍 펫 큰 미리보기 3D (사용자 '여기도 다 3D로 바꿔야지'): 대본(Shop.petScene · petpv.js)은 그대로 돌리고,
    * 사람(person) · 펫(Pets.draw · Parrot.draw) · 새(Bird3D)는 그리는 대신 cap에 모았다가 3D로 세운다. 하트·도구·말풍선 같은 나머지는 투명 판(pvO)에 2D로 그려 위에 얹는다.

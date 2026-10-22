@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v329</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v330</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17053,18 +17053,24 @@ const PBR = {
       constructor(p = {}) { const q = Object.assign({}, p); delete q.gradientMap; super(Object.assign({ roughness: 0.68, metalness: 0 }, q)); this.toonPbr = true; } }
     class Ren extends O.WebGLRenderer {
       constructor(p) { super(p); const tm = O.ACESFilmicToneMapping; Object.defineProperty(this, 'toneMapping', { get: () => tm, set() { }, configurable: true }); this.toneMappingExposure = P.exp; }
-      render(s, c) { if (s && s.isScene && !s.userData.pbr) P.scene(this, s); return super.render(s, c); } }
-    N.MeshToonMaterial = Mat; N.WebGLRenderer = Ren; T.THREE = N;
+      render(s, c) { if (s && s.isScene && s.userData.pbr !== P.gen) P.scene(this, s); return super.render(s, c); } }
+    N.MeshToonMaterial = Mat; N.WebGLRenderer = Ren; T.THREE = N; this.sky();
   },
+  // v330 실사 환경광: Poly Haven wide_street_01 HDRI (3d/env/sky.bin, 512×256 half float). 오면 장면마다 환경광을 바꿔 끼운다 (그 전엔 그라데이션 하늘)
+  gen: 1, hdr: null,
+  sky() { try { fetch(Arena3J.url('env/sky.bin?v=1')).then(r => r.ok ? r.arrayBuffer() : null).then(b => { if (!b || b.byteLength !== 512 * 256 * 8) return; this.hdr = new Uint16Array(b); this.envs = new WeakMap(); this.gen++; }).catch(() => { }); } catch (e) { } },
   // 장면 처음 그릴 때: 환경광 + 빛 세기 맞추기 (환경광이 하늘빛을 대신하니 반구광은 줄인다)
-  scene(r, s) { s.userData.pbr = 1; if (!s.environment) s.environment = this.env(r); s.traverse(o => { if (o.isHemisphereLight && !o.userData.pbr) { o.userData.pbr = 1; o.intensity *= 0.45; } else if (o.isDirectionalLight && !o.userData.pbr) { o.userData.pbr = 1; o.intensity *= 1.25; } }); },
+  scene(r, s) { s.userData.pbr = this.gen; if (!s.environment || s.environment.userData.pbrEnv) s.environment = this.env(r); s.traverse(o => { if (o.isHemisphereLight && !o.userData.pbr) { o.userData.pbr = 1; o.intensity *= 0.45; } else if (o.isDirectionalLight && !o.userData.pbr) { o.userData.pbr = 1; o.intensity *= 1.25; } }); },
   // 환경광: 위는 하늘, 가운데는 따뜻한 지평선, 아래는 흙빛 + 해 쪽 밝은 점 → 거칠기 따라 은은한 반사
-  env(r) { let t = this.envs.get(r); if (t) return t; const { THREE } = T3, S = new THREE.Scene(); S.userData.pbr = 1;
+  env(r) { let t = this.envs.get(r); if (t) return t; const { THREE } = T3;
+    if (this.hdr) { const d = new THREE.DataTexture(this.hdr, 512, 256, THREE.RGBAFormat, THREE.HalfFloatType); d.mapping = THREE.EquirectangularReflectionMapping; d.colorSpace = THREE.LinearSRGBColorSpace; d.magFilter = d.minFilter = THREE.LinearFilter; d.needsUpdate = true;
+      const pm = new THREE.PMREMGenerator(r); t = pm.fromEquirectangular(d).texture; pm.dispose(); d.dispose(); t.userData.pbrEnv = 1; this.envs.set(r, t); return t; }
+    const S = new THREE.Scene(); S.userData.pbr = this.gen;
     const g = new THREE.SphereGeometry(10, 48, 24), c = [], p = g.attributes.position, col = new THREE.Color(), sky = new THREE.Color('#9cc4ec'), hz = new THREE.Color('#f2e6d4'), gr = new THREE.Color('#6a6258');
     for (let i = 0; i < p.count; i++) { const y = p.getY(i) / 10; if (y > 0) col.copy(hz).lerp(sky, Math.pow(y, 0.6)); else col.copy(hz).lerp(gr, Math.pow(-y, 0.45)); c.push(col.r, col.g, col.b); }
     g.setAttribute('color', new THREE.Float32BufferAttribute(c, 3)); S.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
     const sun = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(6, 5.4, 4.6) })); sun.position.set(-4, 7, 5); S.add(sun);
-    const pm = new THREE.PMREMGenerator(r); t = pm.fromScene(S, 0.035).texture; pm.dispose(); this.envs.set(r, t); return t; },
+    const pm = new THREE.PMREMGenerator(r); t = pm.fromScene(S, 0.035).texture; pm.dispose(); t.userData.pbrEnv = 1; this.envs.set(r, t); return t; },
 };
 
 /* ============================================================

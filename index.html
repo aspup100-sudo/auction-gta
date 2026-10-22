@@ -1065,6 +1065,38 @@ html, body { height:var(--vh, 100%); } /* v276 가로로 켤 때 아래가 비�
 #studyWin a { color:var(--hud); }
 @media (max-width:700px), (max-height:500px) { #studyWin .stBox { border:0; box-shadow:none; } #studyWin .stList { border-right:0; } #studyWin .stItem.on { transform:none; } }
 @media (max-width:700px), (max-height:500px) { #studyWin .stList { padding-left:max(10px, var(--sl)); padding-right:max(10px, var(--sr)); padding-bottom:max(10px, var(--sb)); } } /* v291 사용자 '사례 공부도 아이폰 카메라에 가린다': 위 padding:10px가 안전 여백 줄을 덮어써서 다시 */
+/* v333 사례 공부 실사 종이 (사용자 '사례 공부 안바껴있다' → '둘 다'): 호두나무 책상 위에 마닐라 서류철(목록)과 사건 서류(본문), 클립으로 꽂은 현장 사진. 질감은 3d/study/*.jpg (Study.paper가 --st-* 로 넣는다) */
+#studyWin .stBox { background:#3a2618 var(--st-desk) center/700px auto; color:#1d1b16; border:0; border-top:0; box-shadow:0 18px 50px rgba(0,0,0,.7), inset 0 0 120px rgba(0,0,0,.45); }
+#studyWin .stHead { background:linear-gradient(180deg, rgba(20,12,6,.55), rgba(20,12,6,.25)); border-bottom:1px solid rgba(0,0,0,.35); color:#f2e7cf; }
+#studyWin .stHead b { font-family:var(--serif); font-weight:700; font-size:20px; color:#f6ead0; letter-spacing:2px; text-shadow:0 1px 0 rgba(0,0,0,.6); }
+#studyWin .stHead small { color:#e2cfa6; font-weight:600; }
+#studyWin .stHead .xClose { border-color:#e9d9b4; color:#f6ead0; } #studyWin .stHead .stBack { background:#efe2c2; border-color:#efe2c2; color:#2a1d10; }
+#studyWin .stMain { padding:10px 12px 12px; gap:12px; }
+#studyWin .stList { background:#d6b880 var(--st-kraft) 0 0/512px; border:0; border-radius:3px 10px 3px 3px; box-shadow:0 6px 14px rgba(0,0,0,.45), inset 0 0 0 1px rgba(90,60,20,.25), inset 0 -30px 40px rgba(110,70,20,.12); padding:12px 10px; }
+#studyWin .stGroup { color:#5a3d12; font-family:var(--serif); font-weight:700; letter-spacing:1px; margin:14px 2px 6px; } #studyWin .stGroup::before { width:14px; height:3px; background:#7a5520; }
+#studyWin .stItem { background:#fbf8ef var(--st-paper) 0 0/400px; border:0; border-left:5px solid #b9a27a; border-radius:2px; color:#24211b; font-weight:600; box-shadow:0 1px 2px rgba(60,40,10,.35); }
+#studyWin .stItem:hover { background-color:#fff; transform:translateX(3px); }
+#studyWin .stItem.on { background:#fffdf6 var(--st-paper) 0 0/400px; border-left-color:#b3392a; color:#111; box-shadow:0 3px 8px rgba(60,40,10,.45); transform:translateX(6px); } #studyWin .stItem i { color:#0b7a3b; font-weight:800; } #studyWin .stItem.on i { color:#0b7a3b; }
+#studyWin .stPractice, #studyWin .stPractice:hover { background:#efe0b8 var(--st-paper) 0 0/400px; border:1.5px dashed #8a5a20; border-radius:2px; color:#5a2a08; font-family:var(--serif); } #studyWin .stPractice small { color:#6a5432; font-family:var(--ui); }
+#studyWin .stBody { background:#f8f4e8 var(--st-paper) 0 0/512px; color:#1d1b16; border-radius:2px; box-shadow:0 8px 22px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.08); position:relative; }
+#studyWin .stBody h3 { font-family:var(--serif); font-weight:700; color:#16140f; font-size:24px; border-bottom:2px solid #1d1b16; padding-bottom:6px; } #studyWin .stBody h4 { color:#16140f; font-family:var(--serif); } #studyWin .stBody .dim { color:#5e584a; }
+#studyWin .stTag { background:transparent; color:#b3392a; border:2px solid #b3392a; border-radius:3px; font-family:var(--serif); font-weight:700; transform:rotate(-2deg); }
+#studyWin .stStory { background:#fff8c9; border:0; border-left:0; color:#2a2610; box-shadow:0 2px 6px rgba(80,60,0,.25); background-image:repeating-linear-gradient(180deg, transparent 0 25px, rgba(80,110,170,.18) 25px 26px); line-height:26px; padding:8px 14px; transform:rotate(-.4deg); }
+#studyWin .stPhoto { margin:14px auto 16px; padding:10px 10px 6px; background:#fdfdfb; box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.06); transform:rotate(.6deg); position:relative; max-width:640px; }
+#studyWin .stPhoto::before { content:''; position:absolute; top:-12px; left:34px; width:16px; height:40px; border:3px solid #9aa0a8; border-radius:9px; border-bottom-color:transparent; box-shadow:1px 1px 1px rgba(0,0,0,.25); }
+#studyWin .stPh { background:#c9c3b2; aspect-ratio:16/9; overflow:hidden; } #studyWin .stPh canvas { display:block; width:100% !important; height:auto !important; cursor:grab; }
+#studyWin .stPhoto.wait .stPh { background:linear-gradient(100deg, #cfc8b6 30%, #e2dccb 50%, #cfc8b6 70%) 0 0/200% 100%; animation:stShine 1.4s linear infinite; } @keyframes stShine { to { background-position:-200% 0; } }
+#studyWin .stPhoto figcaption { font-family:var(--serif); font-size:13px; color:#55503f; display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:6px; flex-wrap:wrap; } #studyWin .stViews { display:flex; gap:4px; } #studyWin .stViews button { font:inherit; font-size:12.5px; font-weight:700; background:#fffdf5; color:#3a3426; border:1px solid #8a826a; border-radius:2px; padding:3px 10px; cursor:pointer; } #studyWin .stViews button.on { background:#1d3a6a; color:#fff; border-color:#1d3a6a; }
+#studyWin .stQ { background:rgba(255,255,255,.55); border:1px solid #c9bf9f; border-radius:2px; } #studyWin .stQ.ok { background:rgba(11,122,59,.08); border-color:#0b7a3b; } #studyWin .stQ.no { background:rgba(179,57,42,.08); border-color:#b3392a; }
+#studyWin .stBody .btn { background:#fffdf5; color:#1d1b16; border:1px solid #6e6650; border-radius:2px; font-weight:700; } #studyWin .stBody .btn:hover { background:#f3ecd8; }
+#studyWin .stBody .btn.gold { background:#1d3a6a; color:#fff; border-color:#1d3a6a; }
+#studyWin .stOpts .btn { background:#fffdf5; color:#1d1b16; border:1px solid #6e6650; border-radius:2px; } #studyWin .stOpts .btn:hover { background:#f3ecd8; }
+#studyWin .stOpts .btn.sel { background:#fffdf5; color:#b3392a; border-color:#b3392a; box-shadow:0 0 0 2px #b3392a inset; border-radius:40% 55% 45% 60% / 60% 45% 55% 40%; } #studyWin .stOpts .btn.right { outline:2px solid #0b7a3b; outline-offset:3px; }
+#studyWin .stScore { font-family:var(--serif); font-weight:700; color:#b3392a; display:inline-block; border:3px double #b3392a; padding:2px 14px; transform:rotate(-3deg); } #studyWin .stScore.ok { color:#0b7a3b; border-color:#0b7a3b; } #studyWin .warn { color:#b3392a; }
+#studyWin .rt { background:#fffdf6; box-shadow:0 1px 3px rgba(0,0,0,.15); } #studyWin .rt th, #studyWin .rt td { border:1px solid #57524a; color:#16140f; } #studyWin .rt th { background:#e7e1d0; color:#16140f; font-family:var(--serif); font-weight:700; } #studyWin .rt td { background:transparent; } #studyWin .rt td small { color:#5e584a; }
+#studyWin .rt .st.base { color:#1d4fd6; } #studyWin .rt .st.assume, #studyWin .rt .st.fatal { color:#c4231c; } #studyWin .rt .st.extinguish { color:#0b7a3b; } #studyWin .rt tr.struck td { color:#8a8570; text-decoration:line-through; text-decoration-color:#c4231c; }
+#studyWin .stBody a { color:#1d3a6a; }
+@media (max-width:700px), (max-height:500px) { #studyWin .stMain { padding:0; gap:0; } #studyWin .stList, #studyWin .stBody { border-radius:0; box-shadow:none; } #studyWin .stItem.on { transform:none; } #studyWin .stPhoto { transform:none; } }
 /* v278 군용 HUD 테마 (사용자 2026-10-21 견본 E '이걸로 가자'): 국방색 어두운 바탕, 노란 선택, 각진 칸, 왼쪽 작전 목록 + 오른쪽 고른 칸 */
 :root { --hud:#f2c94c; --hudTx:#1a1400; --hudLine:rgba(242,201,76,.2); --hudPan:rgba(18,22,13,.86); --disp:'Black Han Sans', var(--ui); }
 #title { background:radial-gradient(ellipse at 70% 28%, #3b4430 0%, #151a10 55%, #0b0e08 100%); display:grid; grid-template-columns:minmax(240px, 38%) minmax(0, 1fr); column-gap:clamp(16px, 4vw, 56px); align-content:center; align-items:start; justify-items:stretch; text-align:left; padding-top:max(16px, env(safe-area-inset-top, 0px)); }
@@ -1569,7 +1601,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v332</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v333</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -22076,19 +22108,23 @@ const Study = {
   mark(id, score) { const d = this.done(); d[id] = Math.max(d[id] || 0, score); Store.set('studyDone', d); },
   open() {
     if (this.open_) return; this.open_ = true; Sound.init && Sound.init(); Sound.play('paper');
-    $('studyWin').classList.add('in'); this.list(); this.show(this.cur || STUDY_LESSONS[0].id);
+    this.paper(); $('studyWin').classList.add('in'); this.list(); this.show(this.cur || STUDY_LESSONS[0].id);
   },
-  close() { if (!this.open_) return; this.open_ = false; $('studyWin').classList.remove('in'); Sound.play('flip'); },
+  close() { if (!this.open_) return; this.open_ = false; Study3D.stop(); $('studyWin').classList.remove('in'); Sound.play('flip'); },
   list() {
     const d = this.done(), groups = {};
     for (const L of STUDY_LESSONS) (groups[L.g] = groups[L.g] || []).push({ id: L.id, title: L.title, mark: d[L.id] ? (d[L.id] >= 3 ? '✓' : `${d[L.id]}/3`) : '' });
     for (const C of STUDY_CARDS) (groups[C.g] = groups[C.g] || []).push({ id: C.id, title: C.title, mark: d[C.id] ? '✓' : '', card: true });
     const n = STUDY_LESSONS.filter(L => (d[L.id] || 0) >= 3).length;
     $('stList').innerHTML = `<button class="stItem stPractice ${this.cur === 'practice' ? 'on' : ''}" data-id="practice">실전 물건 연습 <small>새 물건으로 무한 연습</small></button>`
-      + Object.entries(groups).map(([g, items]) => `<div class="stGroup">${esc(g)}</div>${items.map(x => `<button class="stItem ${this.cur === x.id ? 'on' : ''}" data-id="${x.id}">${x.card ? '📖 ' : ''}${esc(x.title)}<i>${x.mark}</i></button>`).join('')}`).join('');
+      + Object.entries(groups).map(([g, items]) => `<div class="stGroup">${esc(g)}</div>${items.map(x => `<button class="stItem ${this.cur === x.id ? 'on' : ''}" data-id="${x.id}">${esc(x.title)}<i>${x.mark}</i></button>`).join('')}`).join('');
     $('stProg').textContent = `문제 사례 ${n}/${STUDY_LESSONS.length} 완료`;
     $('stList').querySelectorAll('.stItem').forEach(b => b.onclick = () => { this.show(b.dataset.id); $('studyWin').classList.add('reading'); });
   },
+  // v333 실사 종이·서류철·책상 질감 (3d/study/*.jpg, assets3d/study_tex.py). 사진은 게임 파일 서버에서 받는다
+  paper() { if (this.pp) return; this.pp = 1; const w = $('studyWin'); for (const k of ['paper', 'kraft', 'desk']) w.style.setProperty('--st-' + k, `url("${Arena3J.url('study/' + k + '.jpg?v=1')}")`); },
+  // 현장 사진 칸 (study3d.js가 3D 장면을 넣는다)
+  photo() { return `<figure class="stPhoto" id="stPhoto"><div class="stPh"></div><figcaption><span>현장 사진 · 끌어서 돌려 보기</span><span class="stViews"><button data-v="all" class="on">전체</button><button data-v="doc">등기 서류</button><button data-v="ppl">사람</button></span></figcaption></figure>`; },
   regLabel(r) { return Engine.REG_LABEL[r.look || r.type] || r.type; },
   // 사례 표: 등기(갑·을 순서 대신 날짜순)와 임차인. 판정은 숨긴다.
   tables(data, extra = {}) {
@@ -22138,8 +22174,8 @@ const Study = {
       ${a.tenants.length ? `<table class="rt"><tr><th>임차인</th><th>대항력</th><th>배당</th><th>배당액</th><th>인수</th></tr>${tRows}</table>` : ''}
       <table class="rt"><tr><th>순위</th><th>배당받는 사람</th><th>채권액</th><th>배당액</th></tr>${dRows}<tr><td colspan="3">남는 돈 (소유자에게)</td><td class="num">${fmtWon(a.surplus)}</td></tr></table>
       <p><b>인수액 ${fmtWon(a.assumeTotal)}</b> <small>(임차보증금 ${fmtWon(a.assumeTenant)} + 전세금 ${fmtWon(a.assumeJeon)}${a.assumeOther ? ` + 가등기·가처분 정리 ${fmtWon(a.assumeOther)}` : ''})</small></p>
-      ${a.fatal.map(f => `<p class="warn">⚠ ${f.note}</p>`).join('')}
-      ${P ? `<p class="small">이 물건 시세 ${fmtWon(P.market)} · 최저가 ${fmtWon(P.minPrice)} · 엔진 적정 입찰가 ${fmtWon(fairBid(P))} 안팎 · 난이도 ${'★'.repeat(P.stars)}</p><button class="btn gold" id="stNext">🎲 다음 물건</button>` : `<button class="btn" id="stRetry">다시 풀기</button>${this.nextId() ? ` <button class="btn gold" id="stNext">다음 사례 →</button>` : ''}`}`;
+      ${a.fatal.map(f => `<p class="warn">주의: ${f.note}</p>`).join('')}
+      ${P ? `<p class="small">이 물건 시세 ${fmtWon(P.market)} · 최저가 ${fmtWon(P.minPrice)} · 엔진 적정 입찰가 ${fmtWon(fairBid(P))} 안팎 · 난이도 ${'★'.repeat(P.stars)}</p><button class="btn gold" id="stNext">다음 물건</button>` : `<button class="btn" id="stRetry">다시 풀기</button>${this.nextId() ? ` <button class="btn gold" id="stNext">다음 사례 →</button>` : ''}`}`;
     $('stAns').scrollIntoView({ behavior: 'smooth', block: 'start' });
     if ($('stRetry')) $('stRetry').onclick = () => this.show(A.id);
     if ($('stNext')) $('stNext').onclick = () => this.show(P ? 'practice' : this.nextId());
@@ -22158,18 +22194,18 @@ const Study = {
       if (c.share) notes.push(`지분 ${c.share.den}분의 ${c.share.num} 매각`); if (c.lien) notes.push(`유치권 신고 ${fmtWon(c.lien.amount)} (${esc(c.lien.holder)})`); if (c.super) notes.push(`지상에 제시외 건물(${c.super.building})`); if (c.illegal) notes.push(`현장: ${c.illegal.what}`); if (c.heir) notes.push(`소유자 사망 · 상속인 ${c.heir.heirs}명 거주`); if (c.tomb) notes.push(`현장: 분묘 ${c.tomb.n}기`);
       for (const r of c.data.reg) { if (r.type === 'secreg' && r.look && r.claimDate) notes.push(`명세서: 가등기권자 ${esc(r.holder)} 채권계산서 제출`); if (r.type === 'jeonY') notes.push(`명세서: 전세권자 ${esc(r.holder)} 배당요구`); }
       body.innerHTML = `<h3>실전 물건 연습</h3><p class="stStory">${esc(c.name)} · ${c.type} · 감정가 ${fmtWon(c.appraisal)} · 최저가 ${fmtWon(c.minPrice)}<br><small>조사를 다 마쳤다고 치고, 등기부·명세서·전입세대열람·현장에서 본 것을 표로 모았어요. 최저가에 낙찰받는다고 보고 풀어 보세요.</small></p>
-        ${this.tables(c.data, { bid: c.minPrice })}${notes.length ? `<p class="small">📝 ${notes.join(' · ')}</p>` : ''}${c.data.reg.some(r => ['claimreg', 'inj'].includes(r.type) && !r.cancelled) ? '<p class="small dim">가등기·가처분 정리 비용은 등기부에 안 나와요. 인수 여부만 맞히면 돼요.</p>' : ''}
+        ${this.photo()}${this.tables(c.data, { bid: c.minPrice })}${notes.length ? `<p class="small">현장 메모: ${notes.join(' · ')}</p>` : ''}${c.data.reg.some(r => ['claimreg', 'inj'].includes(r.type) && !r.cancelled) ? '<p class="small dim">가등기·가처분 정리 비용은 등기부에 안 나와요. 인수 여부만 맞히면 돼요.</p>' : ''}
         <div class="stQuiz">${this.quiz('practice', c.data, c.minPrice)}</div><div id="stAns"></div>`;
-      this.bindQuiz(); this.list(); body.scrollTop = 0; return;
+      this.bindQuiz(); this.list(); body.scrollTop = 0; Study3D.show($('stPhoto'), c.data, { seed: (c.minPrice / 1e4) | 0, land: c.type === '토지' }); return;
     }
     const L = STUDY_LESSONS.find(x => x.id === id);
     if (L) {
-      body.innerHTML = `<div class="stTag">${esc(L.g)}</div><h3>${esc(L.title)}</h3><p class="stStory">${esc(L.story)}</p>${this.tables(L.data, { bid: L.bid * 1e4 })}${L.note ? `<p class="small dim">${esc(L.note)}</p>` : ''}
+      body.innerHTML = `<div class="stTag">${esc(L.g)}</div><h3>${esc(L.title)}</h3><p class="stStory">${esc(L.story)}</p>${this.photo()}${this.tables(L.data, { bid: L.bid * 1e4 })}${L.note ? `<p class="small dim">${esc(L.note)}</p>` : ''}
         <div class="stQuiz">${this.quiz(L.id, L.data, L.bid * 1e4)}</div><div id="stAns"></div>`;
-      this.bindQuiz();
+      this.bindQuiz(); Study3D.show($('stPhoto'), L.data, { seed: STUDY_LESSONS.indexOf(L) * 5 + 1 });
     } else {
-      const C = STUDY_CARDS.find(x => x.id === id); if (!C) return;
-      body.innerHTML = `<div class="stTag">${esc(C.g)}</div><h3>📖 ${esc(C.title)}</h3><p class="stStory">${esc(C.body)}</p><p class="small">🔎 어디서 확인하나: <b>${esc(C.where)}</b></p>${this.nextId() ? `<button class="btn gold" id="stNext">다음 →</button>` : ''}`;
+      Study3D.stop(); const C = STUDY_CARDS.find(x => x.id === id); if (!C) return;
+      body.innerHTML = `<div class="stTag">${esc(C.g)}</div><h3>${esc(C.title)}</h3><p class="stStory">${esc(C.body)}</p><p class="small">어디서 확인하나: <b>${esc(C.where)}</b></p>${this.nextId() ? `<button class="btn gold" id="stNext">다음 →</button>` : ''}`;
       this.mark(C.id, 3); if ($('stNext')) $('stNext').onclick = () => this.show(this.nextId());
     }
     this.list(); body.scrollTop = 0;
@@ -22179,6 +22215,155 @@ const Study = {
     $('stX').onclick = () => this.close(); $('stBack').onclick = () => $('studyWin').classList.remove('reading');
     $('studyWin').addEventListener('click', e => { if (e.target.id === 'studyWin') this.close(); });
     addEventListener('keydown', e => { if (this.open_ && e.key === 'Escape') { e.stopPropagation(); this.close(); } }, true);
+  },
+};
+
+/* ===================== 사례 공부 현장 사진 (v333, 사용자 '사례 공부 안바껴있다' → '둘 다': 실사 종이 질감 + 사례마다 3D 집 장면) =====================
+ * 사례마다 서울 다세대 빌라 실사 모델(3d/real/st_villa0·1.glb, Poly Haven 벽돌·미장 스캔, assets3d/real/build_villa.py) 앞에
+ * 세입자(hero3d.js 사람, 이름·전입일·보증금 이름표)와 소유자, 옆 게시판에 등기부 서류(접수 순서, 말소된 건 빨간 줄)를 세운다.
+ * 판정(대항력·인수)은 안 보여 준다: 표와 같은 사실만. 손가락으로 끌면 돌려 볼 수 있고, 가만두면 천천히 흔들린다.
+ * 3D를 못 쓰면(그래픽 가속 꺼짐, 3D 끔, 토지 물건) 사진 칸을 숨긴다.
+ */
+const Study3D = {
+  G: {}, gs: {}, // 빌라 모델 (변형 번호 → 장면)
+  NAMES: ['한빛빌라', '새솔하이츠', '푸른빌', '다온캐슬', '한결빌라', '미소빌', '청운맨션', '해든빌'],
+  PALS: [
+    { hair: '#2b2230', skin: '#f1c9a5', shirt: '#2f4f86', shirt2: '#23406d', pants: '#3a3a46', shoe: '#1d1d22' },
+    { hair: '#5b3424', skin: '#f3cfae', shirt: '#cdae70', shirt2: '#a8894e', pants: '#2e2e38', shoe: '#3b2a22', longHair: true },
+    { hair: '#18161c', skin: '#f2cda8', shirt: '#d8d8d8', shirt2: '#b0b0b0', pants: '#2c3d63', shoe: '#eeeeee' },
+    { hair: '#3a2420', skin: '#f0c4a0', shirt: '#b0517a', shirt2: '#8b3c5e', pants: '#3d3550', shoe: '#2a2030', perm: true },
+    { hair: '#c9c9c9', skin: '#e0b48c', shirt: '#6d7b5a', shirt2: '#55613f', pants: '#4a4339', shoe: '#2a221b' },
+    { hair: '#241c18', skin: '#eec39c', shirt: '#7a2a2a', shirt2: '#5a1e1e', pants: '#26262e', shoe: '#18181c', longHair: true },
+    { hair: '#1f1b1b', skin: '#f0c8a2', shirt: '#f2f2f2', shirt2: '#cfd6e0', pants: '#1f2a44', shoe: '#111111', tie: '#1b5ea6' },
+  ],
+  OWNER: { hair: '#6a6a6a', skin: '#e6b893', shirt: '#7c5b3b', shirt2: '#5e432b', pants: '#4b4b55', shoe: '#222222' },
+  ok() { return typeof Room3D !== 'undefined' && Room3D.on() && !Room3D.soft && !Room3D.bad; },
+  // 사진 칸 하나 열기. el 안에 캔버스를 넣는다. data = 사례 표 데이터, o = { seed, land }
+  show(el, data, o = {}) {
+    this.stop(); if (!el) return;
+    if (o.land || !this.ok()) { el.hidden = true; return; }
+    const job = this.job = { el, data, o, t0: performance.now() }; el.classList.add('wait');
+    const go = () => { if (this.job !== job || !el.isConnected) return; this.build(job); };
+    if (window.T3 && this.gs[o.seed & 1] === 2) return go();
+    if (!window.T3) Arena3J.load(); let n = 0;
+    const tick = () => { if (this.job !== job || !el.isConnected) return;
+      if (window.T3) { try { Room3D.init(); if (!Room3D.soft) Hero3D.load(); } catch (e) { el.hidden = true; return; } if (Room3D.soft || Room3D.bad) { el.hidden = true; return; }
+        this.need(o.seed & 1); if (this.gs[o.seed & 1] === 2) return go(); if (this.gs[o.seed & 1] === -1) { el.hidden = true; return; } }
+      if (++n < 120) job.wt = setTimeout(tick, 400); else el.hidden = true; };
+    tick();
+  },
+  need(v) { if (this.gs[v]) return; this.gs[v] = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
+    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('real/st_villa' + v + '.glb?v=1'), ok, undefined, no))).then(g => {
+      g.scene.traverse(m => { if (!m.isMesh) return; m.castShadow = m.receiveShadow = true; const t = m.material; for (const k of ['map', 'normalMap', 'roughnessMap']) if (t[k]) t[k].anisotropy = 8;
+        if (t.transparent) { t.depthWrite = false; m.castShadow = false; m.renderOrder = 1; } });
+      this.G[v] = g.scene; this.gs[v] = 2; }).catch(e => { console.warn('study3d', e); this.gs[v] = -1; }); },
+  renderer() {
+    if (this.r) return this.r; const { THREE } = T3, r = this.r = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
+    r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.outputColorSpace = THREE.SRGBColorSpace;
+    r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); this.stop(); this.r = null; }); return r;
+  },
+  // 글씨 판 (캔버스 → 텍스처)
+  canvasTex(w, h, draw) { const { THREE } = T3, c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; },
+  font: '"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif',
+  serif: '"Gowun Batang","AppleMyungjo","Batang","Noto Serif KR",serif',
+  // 이름표 (사람 머리 위): 굵은 이름 + 작은 줄
+  tag(title, sub, tone) {
+    const { THREE } = T3, W = 512, H = sub ? 170 : 104;
+    const tex = this.canvasTex(W, H, (x) => { x.fillStyle = 'rgba(250,247,238,.96)'; x.strokeStyle = tone || '#2a2a2a'; x.lineWidth = 6; const r = 18;
+      x.beginPath(); x.roundRect(4, 4, W - 8, H - 8, r); x.fill(); x.stroke(); x.fillStyle = tone || '#1c1c1c'; x.fillRect(4, 4, 18, H - 8);
+      x.fillStyle = '#161616'; x.font = `800 48px ${this.font}`; x.textBaseline = 'middle'; x.fillText(title, 40, sub ? 52 : H / 2, W - 60);
+      if (sub) { x.fillStyle = '#4a463c'; x.font = `600 34px ${this.font}`; x.fillText(sub, 40, 118, W - 60); } });
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true })); s.scale.set(3.4, 3.4 * H / W, 1); s.renderOrder = 10; s.userData.own = 1; return s;
+  },
+  // 등기부 한 장 (A4 비슷한 종이)
+  sheet(r, i) {
+    const W = 360, H = 480, label = Study.regLabel(r), amt = r.amount && !['claimreg', 'inj', 'own', 'start'].includes(r.type) ? fmtWon(r.amount) : '';
+    return this.canvasTex(W, H, (x) => {
+      x.fillStyle = '#f7f4ea'; x.fillRect(0, 0, W, H); for (let k = 0; k < 900; k++) { x.fillStyle = `rgba(120,100,70,${Math.random() * 0.05})`; x.fillRect(Math.random() * W, Math.random() * H, 1 + Math.random() * 2, 1); }
+      x.strokeStyle = '#3a3a3a'; x.lineWidth = 2; x.strokeRect(18, 18, W - 36, H - 36); x.fillStyle = '#222'; x.textBaseline = 'middle';
+      x.font = `700 22px ${this.serif}`; x.textAlign = 'center'; x.fillText('등기사항전부증명서', W / 2, 46); x.beginPath(); x.moveTo(30, 66); x.lineTo(W - 30, 66); x.stroke();
+      x.font = `700 20px ${this.font}`; x.fillStyle = '#555'; x.fillText(`순위 ${i + 1}`, W / 2, 92);
+      x.fillStyle = '#111'; x.font = `800 40px ${this.font}`; x.fillText(ymd(r.date), W / 2, 150);
+      x.font = `900 ${label.length > 7 ? 38 : 50}px ${this.serif}`; x.fillText(label, W / 2, 232, W - 50);
+      x.font = `700 30px ${this.font}`; x.fillStyle = '#333'; x.fillText(r.holder || '', W / 2, 304, W - 50);
+      if (amt) { x.font = `800 36px ${this.font}`; x.fillStyle = '#111'; x.fillText(amt, W / 2, 364, W - 50); }
+      for (let k = 0; k < 4; k++) { x.fillStyle = 'rgba(60,60,60,.25)'; x.fillRect(46, 404 + k * 12, W - 92 - (k * 37 % 60), 4); }
+      if (r.cancelled) { x.strokeStyle = '#c4231c'; x.lineWidth = 8; x.beginPath(); x.moveTo(30, H - 40); x.lineTo(W - 30, 40); x.stroke(); x.fillStyle = '#c4231c'; x.font = `900 34px ${this.font}`; x.fillText('말소', W - 70, H - 60); }
+    });
+  },
+  // 게시판 (나무 틀 + 코르크) + 서류
+  board(regs) {
+    const { THREE } = T3, g = new THREE.Group(), n = Math.min(8, regs.length), cols = Math.min(4, Math.max(2, Math.ceil(n / 2))), rows = Math.ceil(n / cols);
+    const sw = 0.62, sh = 0.83, gap = 0.12, BW = cols * sw + (cols + 1) * gap, BH = rows * sh + (rows + 1) * gap + 0.32, z0 = 0.75;
+    const wood = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.55 }), cork = new THREE.MeshStandardMaterial({ map: this.canvasTex(256, 256, (x) => { x.fillStyle = '#a77b4f'; x.fillRect(0, 0, 256, 256); for (let k = 0; k < 4000; k++) { x.fillStyle = Math.random() < 0.5 ? 'rgba(90,60,30,.35)' : 'rgba(220,180,130,.3)'; x.fillRect(Math.random() * 256, Math.random() * 256, 2, 2); } }), roughness: 0.95 });
+    cork.map.wrapS = cork.map.wrapT = THREE.RepeatWrapping; cork.map.repeat.set(BW, BH); [wood, cork].forEach(m => m.userData.own = 1);
+    const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
+    add(new THREE.BoxGeometry(BW, BH, 0.05), cork, 0, z0 + BH / 2, 0);
+    for (const [w, h, x, y] of [[BW + 0.16, 0.08, 0, z0 + BH + 0.04], [BW + 0.16, 0.08, 0, z0 - 0.04], [0.08, BH, -BW / 2 - 0.04, z0 + BH / 2], [0.08, BH, BW / 2 + 0.04, z0 + BH / 2]]) add(new THREE.BoxGeometry(w, h, 0.09), wood, x, y, 0);
+    for (const x of [-BW / 2 + 0.1, BW / 2 - 0.1]) add(new THREE.BoxGeometry(0.07, z0 + 0.1, 0.07), wood, x, (z0 + 0.1) / 2, -0.02);
+    const head = this.canvasTex(1024, 96, (x) => { x.fillStyle = '#1d2a1f'; x.fillRect(0, 0, 1024, 96); x.fillStyle = '#f2ead2'; x.font = `800 52px ${this.font}`; x.textBaseline = 'middle'; x.textAlign = 'center'; x.fillText('등기부 · 접수 순서', 512, 50); });
+    const hm = new THREE.MeshStandardMaterial({ map: head, roughness: 0.7 }); hm.userData.own = 1; add(new THREE.PlaneGeometry(BW - 0.2, 0.22), hm, 0, z0 + BH - 0.18, 0.03);
+    const pin = new THREE.MeshStandardMaterial({ color: 0xc8261e, roughness: 0.3 }); pin.userData.own = 1;
+    regs.slice(0, n).forEach((r, i) => { const c = i % cols, rw = Math.floor(i / cols), x = -BW / 2 + gap + sw / 2 + c * (sw + gap), y = z0 + BH - 0.32 - gap - sh / 2 - rw * (sh + gap);
+      const m = new THREE.MeshStandardMaterial({ map: this.sheet(r, i), roughness: 0.9 }); m.userData.own = 1; const p = add(new THREE.PlaneGeometry(sw, sh), m, x, y, 0.035); p.rotation.z = ((i * 37) % 7 - 3) * 0.008;
+      add(new THREE.SphereGeometry(0.03, 10, 8), pin, x, y + sh / 2 - 0.05, 0.05); });
+    return { g, BW, BH: BH + z0 };
+  },
+  people(job) {
+    const S = job.S, d = job.data, R = makeRng((job.o.seed || 1) * 7 + 3).next, out = [];
+    const own = d.reg.find(r => r.type === 'own'), ten = d.tenants.slice(0, 4), z = Room3D.zNow; Room3D.zNow = false;
+    try {
+      const mk = (P, x, zz, ry, tg, act = 'Idle_Loop') => { const H = Hero3D.make(P); H.root.scale.setScalar(1.13); H.root.position.set(x, 0.15, zz); H.root.rotation.y = ry; Hero3D.play(H, act, 0); H.mix.update(R() * 2);
+        S.add(H.root); H.tag = tg; if (tg) { tg.position.set(0, 2.5 / 1.13, 0); tg.scale.multiplyScalar(1 / 1.13); H.root.add(tg); } out.push(H); return H; };
+      const n = ten.length, unit = i => `${2 + (i % 3)}0${1 + (i >> 1) % 2}호`;
+      ten.forEach((x, i) => { const P = { ...this.PALS[(i + (job.o.seed | 0)) % this.PALS.length] }, xs = n === 1 ? 0.6 : -2.2 + i * (4.4 / Math.max(1, n - 1));
+        const sub = `${unit(i)} · 전입 ${ymd(x.move)}`, nm = x.corp ? `${x.corp} (대표 ${x.name})` : `임차인 ${x.name}`;
+        if (x.hidden) { mk(P, 2.4, 1.2, 0.5, this.tag(nm, '명세서엔 없음 · ' + sub, '#8a5a12')); return; } // 공동현관 그늘에 서 있다
+        if (x.leaseReg) { const H = mk(P, xs, 4.3, Math.PI * 0.85, this.tag(nm, '이사 나감 · 임차권등기', '#6a6a6a'), 'Walk_Loop'); H.walk = 1; return; }
+        mk(P, xs, 3.4, -0.15 + R() * 0.3, this.tag(nm, x.fake ? '계약서 없음 · 소유자 친척' : sub, x.fake ? '#a3261c' : '#1f4f86')); });
+      if (own) mk(this.OWNER, -5.2, 4.1, 0.2, this.tag(`소유자 ${own.holder}`, '', '#3a3a3a'));
+      if (!n) { const s = this.tag('임차인 없음', '전입세대 없음', '#4a4a4a'); s.position.set(2.4, 1.6, 2.6); S.add(s); }
+    } finally { Room3D.zNow = z; }
+    job.H = out;
+  },
+  build(job) {
+    const { THREE } = T3, el = job.el, v = job.o.seed & 1; let r; try { r = this.renderer(); } catch (e) { el.hidden = true; return; }
+    const S = job.S = new THREE.Scene(); S.add(new THREE.HemisphereLight(0xfff4e6, 0x6a5a48, 1.1));
+    const sun = new THREE.DirectionalLight(0xfff0d8, 2.3); sun.position.set(-10, 22, 16); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+    Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 70 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03; S.add(sun);
+    S.add(this.G[v]); // 같은 모델을 그대로 쓴다 (사진 칸은 한 번에 하나)
+    const nm = this.NAMES[(job.o.seed >>> 1) % this.NAMES.length], plate = this.canvasTex(1024, 128, (x) => { x.fillStyle = '#f4f1ea'; x.fillRect(0, 0, 1024, 128); x.fillStyle = v ? '#2a2420' : '#1d3a6a'; x.font = `900 84px ${this.serif}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(nm, 512, 68); });
+    const pm = new THREE.MeshStandardMaterial({ map: plate, roughness: 0.5 }); pm.userData.own = 1; const pl = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.42), pm); pl.position.set(0, 2.78, 2.09); S.add(pl);
+    const regs = job.data.reg.filter(x => x.type !== 'start').slice().sort((a, b) => (a.date < b.date ? -1 : 1)), B = this.board(regs);
+    B.g.position.set(-7.0, 0.14, 3.3); B.g.rotation.y = 0.34; S.add(B.g);
+    const bc = B.g.position.clone().add(new THREE.Vector3(0, 0.75 + (B.BH - 0.75) / 2, 0)), BV = 0.34;
+    job.views = { all: { t: [-1.7, 3.1, 2.6], d: 18, a: -0.2, e: 0.13 }, doc: { t: [bc.x, bc.y, bc.z], d: 1.8 + B.BW * 1.6, a: BV, e: 0.03 }, ppl: { t: [-0.4, 1.7, 3.5], d: 9.5, a: -0.12, e: 0.07 } };
+    const cam = job.cam = new THREE.PerspectiveCamera(30, 1, 0.5, 200); job.tgt = new THREE.Vector3(-1.7, 3.1, 2.6); job.az = -0.2; job.el = 0.13; job.dist = 18; job.drag = null; job.man = 0;
+    const box = el.querySelector('.stPh') || el; box.innerHTML = ''; box.appendChild(r.domElement); el.classList.remove('wait'); el.hidden = false;
+    const cv = r.domElement; cv.style.touchAction = 'pan-y';
+    el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { job.goal = job.views[b.dataset.v]; job.vw = b.dataset.v; job.man = performance.now(); el.querySelectorAll('[data-v]').forEach(x => x.classList.toggle('on', x === b)); Sound.play && Sound.play('tick'); });
+    cv.onpointerdown = e => { job.goal = null; job.drag = { x: e.clientX, y: e.clientY, az: job.az, el: job.el }; job.man = performance.now(); cv.setPointerCapture(e.pointerId); };
+    cv.onpointermove = e => { const D = job.drag; if (!D) return; job.az = Math.max(-0.95, Math.min(0.8, D.az - (e.clientX - D.x) * 0.006)); job.el = Math.max(0.04, Math.min(0.62, D.el + (e.clientY - D.y) * 0.004)); job.man = performance.now(); };
+    cv.onpointerup = cv.onpointercancel = () => { job.drag = null; };
+    let last = 0; const clock = new THREE.Clock();
+    const loop = (now) => { if (this.job !== job) return; if (!el.isConnected || !Study.open_) { this.stop(); return; } job.raf = requestAnimationFrame(loop);
+      if (document.hidden || now - last < 33) return; last = now; const dt = Math.min(0.1, clock.getDelta());
+      if (!job.H && Hero3D.ready()) this.people(job);
+      const w = box.clientWidth | 0, h = Math.round(w * 0.56); if (w && (w !== job.w || h !== job.h)) { job.w = w; job.h = h; r.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+      if (job.goal) { const G = job.goal, k = 1 - Math.exp(-dt * 4); job.tgt.lerp(new THREE.Vector3(...G.t), k); job.dist += (G.d - job.dist) * k; job.az += (G.a - job.az) * k; job.el += (G.e - job.el) * k; job.man = now; }
+      const t = (now - job.t0) / 1000, idle = !job.drag && !job.goal && now - job.man > 2500 && (job.vw || 'all') === 'all', az = job.az + (idle ? Math.sin(t * 0.22) * 0.1 : 0);
+      cam.position.set(job.tgt.x + Math.sin(az) * Math.cos(job.el) * job.dist, job.tgt.y + Math.sin(job.el) * job.dist, job.tgt.z + Math.cos(az) * Math.cos(job.el) * job.dist); cam.lookAt(job.tgt);
+      const tagOn = job.vw !== 'doc'; if (job.H) for (const H of job.H) { H.tag && (H.tag.visible = tagOn); H.mix.update(dt); if (H.walk) { H.root.position.x -= dt * 0.9; H.root.position.z += dt * 0.25; if (H.root.position.x < -7) { H.root.position.x = 4.5; H.root.position.z = 3.9; } } }
+      if (!S.background && typeof PBR !== 'undefined' && PBR.hdr) { const d = S.background = new THREE.DataTexture(PBR.hdr, 512, 256, THREE.RGBAFormat, THREE.HalfFloatType); d.mapping = THREE.EquirectangularReflectionMapping; d.colorSpace = THREE.LinearSRGBColorSpace; d.magFilter = d.minFilter = THREE.LinearFilter; d.needsUpdate = true; S.backgroundIntensity = 0.85; S.backgroundRotation && S.backgroundRotation.set(0, 1.2, 0); }
+      r.render(S, cam); };
+    job.raf = requestAnimationFrame(loop);
+  },
+  stop() {
+    const j = this.job; if (!j) return; this.job = null; clearTimeout(j.wt); cancelAnimationFrame(j.raf);
+    if (j.S) { j.S.traverse(o => { if (o.userData && o.userData.own && o.material) { o.material.map && o.material.map.dispose(); o.material.dispose(); }
+        if (o.isMesh && o.material && o.material.userData && o.material.userData.own) { o.material.map && o.material.map.dispose(); o.material.dispose(); o.geometry.dispose(); } });
+      if (j.H) for (const H of j.H) { H.mix.stopAllAction(); j.S.remove(H.root); }
+      for (const v in this.G) j.S.remove(this.G[v]); if (j.S.background) j.S.background.dispose(); }
   },
 };
 

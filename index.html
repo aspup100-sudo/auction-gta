@@ -1082,7 +1082,7 @@ html, body { height:var(--vh, 100%); } /* v276 가로로 켤 때 아래가 비�
 #studyWin .stBody h3 { font-family:var(--serif); font-weight:700; color:#16140f; font-size:24px; border-bottom:2px solid #1d1b16; padding-bottom:6px; } #studyWin .stBody h4 { color:#16140f; font-family:var(--serif); } #studyWin .stBody .dim { color:#5e584a; }
 #studyWin .stTag { background:transparent; color:#b3392a; border:2px solid #b3392a; border-radius:3px; font-family:var(--serif); font-weight:700; transform:rotate(-2deg); }
 #studyWin .stStory { background:#fff8c9; border:0; border-left:0; color:#2a2610; box-shadow:0 2px 6px rgba(80,60,0,.25); background-image:repeating-linear-gradient(180deg, transparent 0 25px, rgba(80,110,170,.18) 25px 26px); line-height:26px; padding:8px 14px; transform:rotate(-.4deg); }
-#studyWin .stPhoto { margin:14px auto 16px; padding:10px 10px 6px; background:#fdfdfb; box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.06); transform:rotate(.6deg); position:relative; max-width:640px; }
+#studyWin .stPhoto { margin:14px auto 16px; padding:10px 10px 6px; background:#fdfdfb; box-shadow:0 6px 16px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.06); position:relative; max-width:640px; } /* v335 기울이면 사진·이름표가 흐려져서 바로 세움 */
 #studyWin .stPhoto::before { content:''; position:absolute; top:-12px; left:34px; width:16px; height:40px; border:3px solid #9aa0a8; border-radius:9px; border-bottom-color:transparent; box-shadow:1px 1px 1px rgba(0,0,0,.25); }
 #studyWin .stPh { background:#c9c3b2; aspect-ratio:16/9; overflow:hidden; } #studyWin .stPh canvas { display:block; width:100% !important; height:auto !important; cursor:grab; }
 #studyWin .stPhoto.wait .stPh { background:linear-gradient(100deg, #cfc8b6 30%, #e2dccb 50%, #cfc8b6 70%) 0 0/200% 100%; animation:stShine 1.4s linear infinite; } @keyframes stShine { to { background-position:-200% 0; } }
@@ -1602,7 +1602,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v335</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v336</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -22330,7 +22330,7 @@ const Study3D = {
       this.G[v] = g.scene; this.gs[v] = 2; }).catch(e => { console.warn('study3d', e); this.gs[v] = -1; }); },
   renderer() {
     if (this.r) return this.r; const { THREE } = T3, r = this.r = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
-    r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.outputColorSpace = THREE.SRGBColorSpace;
+    r.setPixelRatio(2); /* v335 보통 모니터(1배)에서도 두 배로 그려 또렷하게 */ r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.outputColorSpace = THREE.SRGBColorSpace;
     r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); this.stop(); this.r = null; }); return r;
   },
   // 글씨 판 (캔버스 → 텍스처)
@@ -22340,11 +22340,11 @@ const Study3D = {
   // 이름표 (사람 머리 위): 굵은 이름 + 작은 줄
   tag(title, sub, tone) {
     const { THREE } = T3, W = 512, H = sub ? 170 : 104;
-    const tex = this.canvasTex(W, H, (x) => { x.fillStyle = 'rgba(250,247,238,.96)'; x.strokeStyle = tone || '#2a2a2a'; x.lineWidth = 6; const r = 18;
+    const tex = this.canvasTex(W * 2, H * 2, (x) => { x.scale(2, 2); /* v335 사용자 '이름 적힌 이부분 흐리다': 두 배로 그린다 */ x.fillStyle = 'rgba(250,247,238,.96)'; x.strokeStyle = tone || '#2a2a2a'; x.lineWidth = 6; const r = 18;
       x.beginPath(); x.roundRect(4, 4, W - 8, H - 8, r); x.fill(); x.stroke(); x.fillStyle = tone || '#1c1c1c'; x.fillRect(4, 4, 18, H - 8);
       x.fillStyle = '#161616'; x.font = `800 48px ${this.font}`; x.textBaseline = 'middle'; x.fillText(title, 40, sub ? 52 : H / 2, W - 60);
       if (sub) { x.fillStyle = '#4a463c'; x.font = `600 34px ${this.font}`; x.fillText(sub, 40, 118, W - 60); } });
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true })); s.scale.set(3.4, 3.4 * H / W, 1); s.renderOrder = 10; s.userData.own = 1; return s;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true, toneMapped: false })); s.scale.set(4, 4 * H / W, 1); s.renderOrder = 10; s.userData.own = 1; return s;
   },
   // 등기부 한 장 (A4 비슷한 종이)
   sheet(r, i) {

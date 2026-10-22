@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v308</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v309</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17164,6 +17164,16 @@ const Room3D = {
     if (!window.T3) { Arena3J.load(); return false; }
     try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
   },
+  // v309 느릴 때 화질 낮추기 (사용자 '해상도가 너무 떨어지는데'): 해 그림자 먼저, 그다음 해상도 (0.75배까지만).
+  // 낮춘 뒤 2초 지나도 15% 넘게 빨라지지 않으면 (그래픽카드 탓이 아니면) 되돌리고 한동안 다시 안 낮춘다
+  adapt(slow, sun) {
+    const fe = this.fe, T = this.qTry;
+    if (T) { if (this.fr - T.fr < 60) return; if (fe > T.fe * 0.85) { if (T.sh) { if (sun) sun.castShadow = true; this.shNo = 1; } else this.q = T.q; this.qNo = this.fr; } this.qTry = null; return; }
+    if (fe > slow) { if (this.qNo && this.fr - this.qNo < 1800) return;
+      if (sun && sun.castShadow && !this.shNo) { this.qTry = { fr: this.fr, fe, sh: 1 }; sun.castShadow = false; return; }
+      if (this.q > 0.75) { this.qTry = { fr: this.fr, fe, q: this.q }; this.q = Math.max(0.75, this.q * 0.85); } }
+    else if (fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.06);
+  },
   softNote() { return !!this.soft; }, // 알림 없이 조용히 예전 그림으로 (사용자 '일반 유저가 그래픽 가속 신경 쓰지 않는다')
   show(v) { if (this.cv) { const d = v ? 'block' : 'none'; if (this.cv.style.display !== d) this.cv.style.display = d; } },
   init() {
@@ -17467,7 +17477,7 @@ const Room3D = {
   draw(rm, t) {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.show(true);
     // 크기: 화면 그대로, 느리면 해상도를 조금 낮춘다
-    this.fe = this.fe ? this.fe * 0.95 + dt * 1000 * 0.05 : 16; if (this.fr % 60 === 0) { if (this.fe > 24) this.q = Math.max(0.55, this.q * 0.85); else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.1); }
+    this.fe = this.fe ? this.fe * 0.95 + dt * 1000 * 0.05 : 16; if (this.fr % 30 === 0) this.adapt(24);
     const pr = Math.min(DPR, 2, Math.max(0.6, Math.sqrt(1.6e6 / (VW * VH)))) * this.q; /* 큰 화면(컴퓨터)은 그리는 점 수를 160만 개 안쪽으로 */ if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
     if (this.sw !== VW || this.sh !== VH) { r.setSize(VW, VH, true); this.sw = VW; this.sh = VH; this.cam.aspect = VW / VH; this.cam.updateProjectionMatrix(); }
     // 사람들
@@ -17634,7 +17644,7 @@ Object.assign(Room3D, {
   zFrame(z, t) {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.zdt = dt; this.show(true); this.zShowG(true); this.zHook();
     // 느리면 빨리 해상도를 낮추고, 가장 낮춰도 느리면 해 그림자를 끈다 (사람·차 발밑 동그란 그림자는 남는다)
-    this.fe = this.fe ? this.fe * 0.92 + dt * 1000 * 0.08 : 16; if (this.fr % 30 === 0) { if (this.fe > 22) { if (this.q > 0.5) this.q = Math.max(0.5, this.q * 0.82); else if (this.zsun.castShadow) this.zsun.castShadow = false; } else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.06); }
+    this.fe = this.fe ? this.fe * 0.92 + dt * 1000 * 0.08 : 16; if (this.fr % 30 === 0) this.adapt(22, this.zsun);
     const pr = Math.min(DPR, 1.5, Math.max(0.6, Math.sqrt(1.4e6 / (VW * VH)))) * this.q; /* 큰 화면(컴퓨터)은 3D 점 수를 140만 개 안쪽으로 (1920×1080이면 0.8배) */ if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
     if (this.sw !== VW || this.sh !== VH) { r.setSize(VW, VH, true); this.sw = VW; this.sh = VH; this.cam.aspect = VW / VH; this.cam.updateProjectionMatrix(); }
     if (this.gcv.width !== Math.round(VW * DPR) || this.gcv.height !== Math.round(VH * DPR)) { this.gcv.width = Math.round(VW * DPR); this.gcv.height = Math.round(VH * DPR); this.gcv.style.width = VW + 'px'; this.gcv.style.height = VH + 'px'; }

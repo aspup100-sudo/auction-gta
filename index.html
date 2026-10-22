@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v328</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v329</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5332,6 +5332,7 @@ const HomeIn = {
     // 가구 밑 바닥: 둘레에 가장 많은 바닥
     const under = (x, y) => { const cnt = {}; for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, 1]]) { const c = at(x + dx, y + dy); if (HOME_FLOORS.includes(c)) cnt[c] = (cnt[c] || 0) + 1; } let b = '.', n = 0; for (const k in cnt) if (cnt[k] > n || (cnt[k] === n && k === '.')) { n = cnt[k]; b = k; } return b; };
     const floor = (fc, X, Y, x, y) => {
+      if (this.realFloor && this.realFloor(ctx, fc, X, Y, x, y)) return; // v329 실사 바닥 (realfloor.js)
       if (fc === '.') { ctx.fillStyle = WOOD[(x + y) % 2]; ctx.fillRect(X, Y, TILE, TILE); if (LINES === 'tile') { ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.fillRect(X, Y + 15, TILE, 1); ctx.fillRect(X + 15, Y, 1, TILE); } else if (LINES === 'herring') { ctx.fillStyle = 'rgba(0,0,0,.12)'; if ((x + y) % 2) { ctx.fillRect(X, Y + 7, TILE, 1); ctx.fillRect(X + 8, Y, 1, 7); ctx.fillRect(X + 4, Y + 8, 1, 8); ctx.fillRect(X + 12, Y + 8, 1, 8); } else { ctx.fillRect(X + 7, Y, 1, TILE); ctx.fillRect(X, Y + 8, 7, 1); ctx.fillRect(X + 8, Y + 4, 8, 1); ctx.fillRect(X + 8, Y + 12, 8, 1); } } else { ctx.fillStyle = 'rgba(0,0,0,.10)'; ctx.fillRect(X, Y + 5, TILE, 1); ctx.fillRect(X, Y + 11, TILE, 1); ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(X + ((x * 7 + y * 3) % 12), Y + 1, 4, 1); ctx.fillStyle = 'rgba(0,0,0,.07)'; ctx.fillRect(X + ((x * 5 + y) % 3) * 5 + 3, Y, 1, 5); ctx.fillRect(X + ((x * 3 + y) % 3) * 5 + 1, Y + 6, 1, 5); } }
       else if (fc === ',') { ctx.fillStyle = '#e4ecef'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#c4d0d6'; ctx.fillRect(X, Y + 7, TILE, 1); ctx.fillRect(X + 7, Y, 1, TILE); ctx.fillRect(X, Y + 15, TILE, 1); ctx.fillRect(X + 15, Y, 1, TILE); }
       else if (fc === ':') { ctx.fillStyle = '#7a746c'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#6a645c'; ctx.fillRect(X, Y + 7, TILE, 1); ctx.fillRect(X + 7, Y, 1, TILE); if (at(x, y - 1) === '.' || at(x, y - 1) === 'd') { ctx.fillStyle = '#5a4a3a'; ctx.fillRect(X, Y, TILE, 2); } }
@@ -17367,6 +17368,46 @@ PetRT.arena.big3 = () => Arena3J.st === 2 && Arena3J.on(); // v296: 새 3D 그�
     Arena3J.hide(); const cv = glDraw0.call(this, R, G, B, ci, cam, t, dt); if (cv) cv.style.display = ''; return cv;
   }; }
 
+/* ===================== 실사 집 바닥·벽 (v329, 사용자 '2D인거 전부 3D로 바꿔' · '리얼리스틱 팩으로') =====================
+ * 내 집 3D 바닥을 ambientCG·Poly Haven 바닥 사진(색·노멀·거칠기, CC0)으로 그린다. 바닥 글자(거실·욕실·현관·베란다·마당)와 집 톤마다 재질이 다르다.
+ * 2D 집 그림(HomeIn.draw 바닥만)의 floor() 자리에 끼워 넣어서 문턱·러그·얼룩은 그대로 위에 그려진다. 벽은 칠한 석고 노멀.
+ * 사진을 받기 전이거나 PBR을 끈 경우엔 예전 그림. 파일: 3d/floor/<키>_{c,n,r}.jpg (assets3d/floor_mk.py) */
+const RealFloor = {
+  st: 0, im: {}, P: 96, // 칸당 픽셀
+  K: ['wood', 'oak', 'marble', 'concrete', 'trav', 'parquet', 'checker', 'shop', 'carpet', 'pent', 'bath', 'entry', 'deck', 'grass', 'plaster'],
+  TONE: { base: 'wood', white: 'marble', oak: 'oak', gray: 'concrete', pink: 'oak', mint: 'trav', navy: 'parquet', black: 'checker' },
+  TINT: { pink: 'rgba(255,196,206,.32)', mint: 'rgba(196,240,222,.18)', white: 'rgba(255,255,255,.28)' },
+  COVER: { wood: 2, oak: 2, marble: 3, concrete: 3, trav: 2, parquet: 1.5, checker: 2, shop: 2, carpet: 2, pent: 2, bath: 1.5, entry: 2, deck: 2, grass: 2, plaster: 1 }, // 사진 한 장이 덮는 칸 수
+  GROUT: { marble: 1, concrete: 1.5, trav: 1 }, // 큰 판석: 칸마다 줄눈
+  ready() { return this.st === 2; },
+  load() { if (this.st) return; this.st = 1; let n = 0; const need = this.K.length * 3;
+    for (const k of this.K) for (const s of ['c', 'n', 'r']) { const im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = () => { if (++n === need) { this.st = 2; if (typeof Room3D !== 'undefined' && Room3D.room && Room3D.room.home) Room3D.room = null; } }; im.onerror = () => { this.st = -1; };
+      im.src = Arena3J.url('floor/' + k + '_' + s + '.jpg?v=1'); this.im[k + s] = im; } },
+  kind(H, fc) { // 바닥 글자 → 사진
+    if (fc === ',') return 'bath'; if (fc === ':') return 'entry'; if (fc === "'") return 'grass'; if (fc === '~') return null; if (fc === '_') return H.pent ? 'deck' : 'concrete';
+    const tn = (H.deco && H.deco.tone) || 'base'; if (tn !== 'base' && this.TONE[tn]) return this.TONE[tn];
+    return H.key.startsWith('shop') ? 'shop' : H.key.startsWith('off') ? 'carpet' : H.pent ? 'pent' : 'wood'; },
+  // 바닥 재질 한 장 (색·노멀·거칠기 캔버스). 바닥 아닌 칸(벽 밑 등)은 2D 그림 그대로
+  mat(rm, W, H) {
+    const { THREE } = T3, P = Math.min(this.P, Math.floor(4096 / Math.max(W, H))), H0 = rm.home, tone = (H0.deco && H0.deco.tone) || 'base', rec = [], cache = new Map();
+    const mk = (fill) => { const c = document.createElement('canvas'); c.width = W * P; c.height = H * P; const x = c.getContext('2d'); if (fill) { x.fillStyle = fill; x.fillRect(0, 0, c.width, c.height); } x.scale(P / 16, P / 16); return [c, x]; };
+    const pat = (x, k, s) => { const key = k + s; let p = cache.get(x) && cache.get(x)[key]; if (p) return p; const im = this.im[key], sc = this.COVER[k] * 16 / im.width; p = x.createPattern(im, 'repeat'); p.setTransform(new DOMMatrix([sc, 0, 0, sc, 0, 0])); if (!cache.has(x)) cache.set(x, {}); cache.get(x)[key] = p; return p; };
+    const [cc, cx] = mk(); cx.imageSmoothingEnabled = false;
+    HomeIn.realFloor = (ctx, fc, X, Y) => { const k = this.kind(H0, fc); if (!k) return false; ctx.save(); ctx.imageSmoothingEnabled = true; ctx.fillStyle = pat(ctx, k, 'c'); ctx.fillRect(X, Y, 16, 16);
+      if (fc === '.' && this.TINT[tone]) { ctx.fillStyle = this.TINT[tone]; ctx.fillRect(X, Y, 16, 16); }
+      const g = this.GROUT[k]; if (g) { ctx.fillStyle = 'rgba(40,36,30,.16)'; const s = 16 * g; if (X % s < 0.01) ctx.fillRect(X, Y, 0.18, 16); if (Y % s < 0.01) ctx.fillRect(X, Y, 16, 0.18); }
+      ctx.restore(); rec.push([k, X, Y]); return true; };
+    try { HomeIn.draw(cx, rm, 0, true); } finally { HomeIn.realFloor = null; }
+    const [nc, nx] = mk('#8080ff'), [rc, rx] = mk('#b4b4b4'); nx.imageSmoothingEnabled = rx.imageSmoothingEnabled = true;
+    for (const [k, X, Y] of rec) { nx.fillStyle = pat(nx, k, 'n'); nx.fillRect(X, Y, 16, 16); rx.fillStyle = pat(rx, k, 'r'); rx.fillRect(X, Y, 16, 16); }
+    const tex = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t._own = 1; return t; };
+    const m = new THREE.MeshStandardMaterial({ map: tex(cc, true), normalMap: tex(nc), roughnessMap: tex(rc), roughness: 1, metalness: 0 }); m.normalScale.set(0.8, 0.8); m.userData.own = 1; return m;
+  },
+  // 벽지·칠: 석고 노멀만 (색은 집 톤 그대로), 한 칸 = 사진 한 장
+  wallN() { if (this.wn) return this.wn; const { THREE } = T3, t = new THREE.Texture(this.im.plastern); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.needsUpdate = true; return (this.wn = t); },
+};
+
 /* ===================== 3D 실내 (v300, 사용자 2026-10-22 '각 건물 안에 들어가면 3d로' → '밖도 3D로 할까요?' '네') =====================
  * 게임 규칙(충돌·문·NPC 자리·대화)은 INTERIOR_DEFS 칸 지도 그대로 두고 그림만 three.js로 그린다.
  * 좌표: 1칸 = 1, 위 = +Y, 게임 x → X, 게임 y → Z (화면 아래 = +Z). 카메라는 비스듬히 위에서 (GTA 차이나타운 워즈 느낌).
@@ -17420,14 +17461,14 @@ const Room3D = {
     const { THREE } = T3, k = `${w.toFixed(3)},${h.toFixed(3)},${d.toFixed(3)}`; let g = this.eg[k];
     if (!g) g = this.eg[k] = { g: new THREE.BoxGeometry(w, h, d) }; const m = new THREE.Mesh(g.g, o.glow ? this.glow(col) : this.toon(col)); m.position.set(x, y0 + h / 2, z);
     m.castShadow = o.cast !== false; m.receiveShadow = true; par.add(m);
-    if (o.line !== false) { if (!g.e) g.e = new THREE.EdgesGeometry(g.g); const l = new THREE.LineSegments(g.e, this.lineM); m.add(l); }
+    if (o.line !== false && !PBR.done) { if (!g.e) g.e = new THREE.EdgesGeometry(g.g); const l = new THREE.LineSegments(g.e, this.lineM); m.add(l); }
     return m;
   },
   cyl(par, x, z, r0, r1, h, col, y0 = 0, seg = 16, o = {}) { const { THREE } = T3, m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, h, seg), o.glow ? this.glow(col) : this.toon(col)); m.position.set(x, y0 + h / 2, z); m.castShadow = true; m.receiveShadow = true; par.add(m); return m; },
   ball(par, x, y, z, r, col, sy = 1) { const { THREE } = T3, m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 2), this.toon(col, { flatShading: true })); m.position.set(x, y, z); m.scale.y = sy; m.castShadow = true; par.add(m); return m; },
   cvTex(w, h, fn) { const { THREE } = T3, c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; },
   /* ---- 방 한 번 세우기 (같은 방이면 그대로) ---- */
-  dispose() { if (!this.S) return; this.S.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); for (const m of [].concat(o.material || [])) if (m.map && m.map._own) m.map.dispose(); }); this.S = null; this.A = new Map(); },
+  dispose() { if (!this.S) return; this.S.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); for (const m of [].concat(o.material || [])) { if (m.map && m.map._own) m.map.dispose(); if (m.userData.own) { for (const t of [m.normalMap, m.roughnessMap]) if (t && t._own) t.dispose(); m.dispose(); } } }); this.S = null; this.A = new Map(); },
   build(rm) {
     if (this.S && this.room === rm) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
@@ -17465,8 +17506,10 @@ const Room3D = {
     const sun = new THREE.DirectionalLight(0xfff0d8, 1.75); sun.position.set(W * 0.5 - 4, 14, H + 6); sun.target.position.set(W / 2, 0, H / 2); S.add(sun); S.add(sun.target);
     sun.castShadow = true; const sc = sun.shadow.camera, R = Math.max(W, H) * 0.75; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 1; sc.far = 60; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.03;
     // 바닥: 2D 집 그림의 바닥만 (2배)
-    HomeIn.rug3 = furn && Props3D.has(realHome('rug', lv.rug)); const fl = this.cvTex(W * 32, H * 32, c => { c.scale(2, 2); c.imageSmoothingEnabled = false; HomeIn.draw(c, rm, 0, true); }); fl._own = 1; HomeIn.rug3 = false; // v328 실사 러그가 있으면 바닥 그림엔 안 그린다
-    const fm = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshToonMaterial({ map: fl, gradientMap: this.grad })); fm.rotation.x = -Math.PI / 2; fm.position.set(W / 2, 0, H / 2); fm.receiveShadow = true; S.add(fm);
+    if (PBR.done) RealFloor.load(); const rf = PBR.done && RealFloor.ready(); // v329 실사 바닥·벽
+    HomeIn.rug3 = furn && Props3D.has(realHome('rug', lv.rug)); let fmat; if (rf) fmat = RealFloor.mat(rm, W, H); else { const fl = this.cvTex(W * 32, H * 32, c => { c.scale(2, 2); c.imageSmoothingEnabled = false; HomeIn.draw(c, rm, 0, true); }); fl._own = 1; fmat = new THREE.MeshToonMaterial({ map: fl, gradientMap: this.grad }); } HomeIn.rug3 = false; // v328 실사 러그가 있으면 바닥 그림엔 안 그린다
+    if (rf) for (const c of [PAPER, TRIM]) { const wm = this.toon(c); if (!wm.normalMap) { wm.normalMap = RealFloor.wallN(); wm.normalScale.set(0.6, 0.6); wm.needsUpdate = true; } }
+    const fm = new THREE.Mesh(new THREE.PlaneGeometry(W, H), fmat); fm.rotation.x = -Math.PI / 2; fm.position.set(W / 2, 0, H / 2); fm.receiveShadow = true; S.add(fm);
     // 벽: 바깥 벽은 높게, 안쪽 벽은 허리 높이 (위에서 방 안이 다 보이게), 맨 아래 줄은 낮게
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const ch = m[y][x];
       if (ch === 'x') { const hz = at(x - 1, y) === 'x' || at(x + 1, y) === 'x'; this.box(S, x + 0.5, y + 0.5, 0.14, 0.14, 0.7, '#7a5838'); if (hz) { for (const hh of [0.28, 0.55]) this.box(S, x + 0.5, y + 0.5, 1, 0.07, 0.07, '#a07a50', hh, { line: false }); } else for (const hh of [0.28, 0.55]) this.box(S, x + 0.5, y + 0.5, 0.07, 1, 0.07, '#a07a50', hh, { line: false }); continue; }

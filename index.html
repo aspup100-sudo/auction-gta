@@ -1602,7 +1602,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v337</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v338</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -6542,14 +6542,15 @@ const Net = {
   // 펫 이름표: 사람 이름표보다 작게 (사용자 2026-10-16 '펫 이름 더 작게')
   petLabel(c, name, x, y) { c.save(); c.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(name).width + 4; c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(x - w / 2, y - 5, w, 6.5); c.fillStyle = '#ffe9a0'; c.fillText(name, x, y); c.restore(); },
   label(c, name, x, y) { c.fillStyle = 'rgba(0,0,0,.6)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(name).width + 6; c.fillRect(x - w / 2, y - 7, w, 9); c.fillStyle = '#ffd84a'; c.fillText(name, x, y); },
-  bubble(c, text, x, y) { // v334 사용자 '챗팅 너무 찌부돼있어': 7px 글씨를 확대하면 아이폰에서 글자가 납작하게 뭉개져서, 4배 큰 글씨로 그리고 줄 간격·여백도 넉넉히
+  bubble(c, text, x, y) { // v334 큰 글씨로 그려서 줄이기 (아이폰에서 안 뭉개지게) · v338 사용자 '말풍선 어색한데 이질감들어': 띄어쓰기에서만 줄 바꾸고 줄 길이를 고르게, 굵은 검은 테두리 대신 흰 풍선 + 은은한 그림자
     const Q = 4; c.save(); c.translate(x, y); c.scale(1 / Q, 1 / Q); c.font = `${7.5 * Q}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    const lines = []; let cur = ''; for (const ch of text) { if (c.measureText(cur + ch).width > 84 * Q) { lines.push(cur); cur = ch; } else cur += ch; } if (cur) lines.push(cur);
-    const LH = 10.5 * Q, w = Math.max(...lines.map(l => c.measureText(l).width)) + 14 * Q, h = lines.length * LH + 8 * Q, X = -w / 2, Y = -h;
-    c.fillStyle = '#fffaf0'; c.strokeStyle = '#14161c'; c.lineWidth = Q; c.lineJoin = 'round';
-    c.beginPath(); c.roundRect ? c.roundRect(X, Y, w, h, 4 * Q) : c.rect(X, Y, w, h); c.fill(); c.stroke();
-    c.beginPath(); c.moveTo(-3.5 * Q, Y + h - Q / 2); c.lineTo(0, Y + h + 4.5 * Q); c.lineTo(3.5 * Q, Y + h - Q / 2); c.fill(); c.beginPath(); c.moveTo(-3.5 * Q, Y + h); c.lineTo(0, Y + h + 4.5 * Q); c.lineTo(3.5 * Q, Y + h); c.stroke();
-    c.fillStyle = '#14161c'; lines.forEach((l, i) => c.fillText(l, 0, Y + 4 * Q + LH * (i + 0.78))); c.restore();
+    const W = t => c.measureText(t).width, wrap = mw => { const out = []; let cur = ''; for (const wd of String(text).split(/\s+/).filter(Boolean)) { const nx = cur ? cur + ' ' + wd : wd; if (W(nx) <= mw) { cur = nx; continue; } if (cur) out.push(cur); cur = ''; for (const ch of wd) { if (W(cur + ch) > mw && cur) { out.push(cur); cur = ch; } else cur += ch; } } if (cur) out.push(cur); return out; };
+    let lines = wrap(88 * Q); if (lines.length > 1) { let lo = 30 * Q, hi = 88 * Q; for (let k = 0; k < 8; k++) { const m = (lo + hi) / 2; if (wrap(m).length <= lines.length) hi = m; else lo = m; } lines = wrap(hi); } // 마지막 줄만 짧게 남지 않게 폭을 줄여 본다
+    const LH = 10 * Q, w = Math.max(...lines.map(W)) + 13 * Q, h = lines.length * LH + 7 * Q, X = -w / 2, Y = -h - 3 * Q, r = Math.min(6 * Q, h / 2);
+    const shape = () => { c.beginPath(); c.moveTo(X + r, Y); c.arcTo(X + w, Y, X + w, Y + h, r); c.arcTo(X + w, Y + h, X, Y + h, r); c.lineTo(3 * Q, Y + h); c.lineTo(0, Y + h + 3.5 * Q); c.lineTo(-3 * Q, Y + h); c.arcTo(X, Y + h, X, Y, r); c.arcTo(X, Y, X + w, Y, r); c.closePath(); };
+    c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 5 * Q; c.shadowOffsetY = 1.5 * Q; c.fillStyle = 'rgba(255,255,255,.96)'; shape(); c.fill();
+    c.shadowColor = 'transparent'; c.lineWidth = 0.5 * Q; c.strokeStyle = 'rgba(20,24,32,.18)'; c.stroke();
+    c.fillStyle = '#1d2027'; lines.forEach((l, i) => c.fillText(l, 0, Y + 3.5 * Q + LH * (i + 0.76))); c.restore();
   },
   drawMine(c) { if (this.myBubble && Game.player && !Game.driving) this.bubble(c, this.myBubble.text, Game.player.x, Game.player.y - 30); else if (this.myBubble && Game.driving) this.bubble(c, this.myBubble.text, Game.car.x, Game.car.y - 20); },
   info() {

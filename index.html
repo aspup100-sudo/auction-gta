@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v327</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v328</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5119,6 +5119,8 @@ const REAL3 = {
 // 예전 집 꾸미기 소품 그림 → 실사 모델 (산 기록은 그대로, 그리는 것만 바꾼다)
 const REAL_ART = { chair: 'modern_arm_chair_01', egg: 'mid_century_lounge_chair', ctable: 'coffee_table_round_01', gmirror: 'ornate_mirror_01', glass: 'vintage_cabinet_01', books: 'wooden_bookshelf_worn', mon: 'potted_plant_02', olive: 'potted_plant_01' };
 const REAL_SOFA = ['', 'sofa_02', 'Sofa_01', 'sofa_03']; // 집 소파 등급별
+const REAL_HOME = { tv: 'h_tv', bed: 'h_bed', table: 'h_tbl', rug: 'h_rug' }; // v328 TV·침대·식탁·러그 등급별 실사 모델 (3d/real/h_tv0.glb …)
+function realHome(kind, lv) { return 'r_' + REAL_HOME[kind] + Math.max(0, Math.min(kind === 'tv' ? 3 : 2, lv | 0)); }
 function realArt(a) { return REAL_ART[a] ? 'k:r_' + REAL_ART[a] : a; }
 const HOME_PLANS = {
   apt_s: { label: '아파트 59㎡형 · 방2 화1', map: [
@@ -5369,7 +5371,7 @@ const HomeIn = {
       // 가구·붙박이: 밑바닥을 깔고, 큰 것은 나중에 (위 칸을 덮으니까)
       floor(under(x, y), X, Y, x, y);
       if (HOME_FURN.includes(ch) && !furn) continue;
-      if (fo) { if (ch === 'R') this.piece(ctx, ch, x, y, at, H, t, bad); continue; }
+      if (fo) { if (ch === 'R' && !this.rug3) this.piece(ctx, ch, x, y, at, H, t, bad); continue; }
       late.push([ch, x, y]);
     }
     // 바닥 얼룩·파손 (수리 전)
@@ -5547,11 +5549,12 @@ Object.assign(HomeIn, {
     const H = { seed: 1, deco: { lv } };
     const room = (map, X0, Y0, sc) => { const M = map.split('/'), f = (a, b) => (M[b] && M[b][a]) || ' '; x.save(); x.translate(X0, Y0); x.scale(sc, sc); for (let b = 0; b < M.length; b++) for (let a = 0; a < M[b].length; a++) if (M[b][a] !== ' ') this.piece(x, M[b][a], a, b, f, H, t, 'good'); x.restore(); };
     const art = (a, X0, Y0, sc) => { x.save(); x.translate(X0, Y0); x.scale(sc, sc); this.art(x, a, 0, 0, t); x.restore(); };
-    const ra = it.home === 'place' ? realArt(it.art) : it.home === 'sofa' && REAL_SOFA[it.lv] ? 'k:r_' + REAL_SOFA[it.lv] : ''; // v327 실사 사진
+    const ra = it.home === 'place' ? realArt(it.art) : it.home === 'sofa' && REAL_SOFA[it.lv] ? 'k:r_' + REAL_SOFA[it.lv] : REAL_HOME[it.home] ? 'k:' + realHome(it.home, it.lv) : ''; // v327 실사 사진 (v328 TV·침대·식탁·러그도)
     if (ra.startsWith('k:r_')) { const img = Props3D.thumb(ra.slice(2)); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } }
     if (it.home === 'place' && it.art.startsWith('k:')) { const S = Math.max(1, Math.round(x.getTransform().a)), img = typeof Snap3D !== 'undefined' && Snap3D.prop(it.art.slice(2), 104 * S); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } } // v325 장르 가구: 방 위에 3D 사진
     if (it.home === 'place') return art(it.art, 56, 52, 3);
-    if (it.home === 'tone') { room('vv', 48, 26, 2); room('ss', 48, 70, 2); art('mon', 8, 66, 2); art('lamp', 120, 66, 2); return; }
+    if (it.home === 'tone') { const a = Props3D.thumb('r_h_tv1'), b = Props3D.thumb('r_sofa_02'), c = Props3D.thumb('r_potted_plant_02'); if (a && b && c) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(a, 36, -8, 88, 88); x.drawImage(c, 0, 34, 70, 70); x.drawImage(b, 44, 34, 80, 80); x.restore(); return; } /* v328 톤 미리보기: 실사 TV·소파·화분을 그 톤 방에 */
+      room('vv', 48, 26, 2); room('ss', 48, 70, 2); art('mon', 8, 66, 2); art('lamp', 120, 66, 2); return; }
     if (it.home === 'tv') room('vv', 32, 50, 3);
     else if (it.home === 'sofa') room('sss', 32, 60, 2);
     else if (it.home === 'bed') room('bb/bb', 48, 34, 2);
@@ -17462,7 +17465,7 @@ const Room3D = {
     const sun = new THREE.DirectionalLight(0xfff0d8, 1.75); sun.position.set(W * 0.5 - 4, 14, H + 6); sun.target.position.set(W / 2, 0, H / 2); S.add(sun); S.add(sun.target);
     sun.castShadow = true; const sc = sun.shadow.camera, R = Math.max(W, H) * 0.75; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 1; sc.far = 60; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.03;
     // 바닥: 2D 집 그림의 바닥만 (2배)
-    const fl = this.cvTex(W * 32, H * 32, c => { c.scale(2, 2); c.imageSmoothingEnabled = false; HomeIn.draw(c, rm, 0, true); }); fl._own = 1;
+    HomeIn.rug3 = furn && Props3D.has(realHome('rug', lv.rug)); const fl = this.cvTex(W * 32, H * 32, c => { c.scale(2, 2); c.imageSmoothingEnabled = false; HomeIn.draw(c, rm, 0, true); }); fl._own = 1; HomeIn.rug3 = false; // v328 실사 러그가 있으면 바닥 그림엔 안 그린다
     const fm = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshToonMaterial({ map: fl, gradientMap: this.grad })); fm.rotation.x = -Math.PI / 2; fm.position.set(W / 2, 0, H / 2); fm.receiveShadow = true; S.add(fm);
     // 벽: 바깥 벽은 높게, 안쪽 벽은 허리 높이 (위에서 방 안이 다 보이게), 맨 아래 줄은 낮게
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const ch = m[y][x];
@@ -17483,7 +17486,7 @@ const Room3D = {
     }
     // 가구·붙박이: 이어진 같은 글자 = 한 덩어리
     const seen = new Set(), tv = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (m[y][x] === 'v') tv.push([x + 0.5, y + 0.5]);
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const ch = m[y][x]; if (seen.has(x + ',' + y) || !'bsvtzcPamfenkgoluhrT'.includes(ch)) continue; if (HOME_FURN.includes(ch) && !furn) continue;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const ch = m[y][x]; if (seen.has(x + ',' + y) || !'bsvtzcPamfenkgoluhrTR'.includes(ch)) continue; if (HOME_FURN.includes(ch) && !furn) continue;
       let w = 1; while (at(x + w, y) === ch && !seen.has((x + w) + ',' + y)) w++; let d = 1; while ([...Array(w)].every((_, i) => at(x + i, y + d) === ch)) d++;
       if ('vtzcPamfnoh'.includes(ch) && ch !== 't' && ch !== 'v' && ch !== 'n') { w = 1; d = 1; } // 한 칸짜리
       for (let j = 0; j < d; j++) for (let i = 0; i < w; i++) seen.add((x + i) + ',' + (y + j));
@@ -17524,6 +17527,16 @@ const Room3D = {
     }
     return true;
   },
+  // v328 실사 가구를 칸(w×d)에 맞춰 놓는다: b = 등 쪽 벽 (0 북 · 1 남 · 2 서 · 3 동, -1 = 가운데). 침대는 좁은 칸이면 폭만 줄이고, 러그는 칸에 꼭 맞게 늘린다
+  realFit(S, k, ch, x, y, w, d, b) {
+    const { THREE } = T3, m = Props3D.make(k); m.rotation.y = b < 0 ? (w >= d ? 0 : Math.PI / 2) : [0, Math.PI, Math.PI / 2, -Math.PI / 2][b]; m.updateMatrixWorld(true);
+    const bx = new THREE.Box3().setFromObject(m), mw = bx.max.x - bx.min.x, md = bx.max.z - bx.min.z;
+    let sx, sz; if (ch === 'R') { sx = (w - 0.12) / mw; sz = (d - 0.12) / md; } else if (ch === 'b') { sx = Math.min(1.08, (w - 0.06) / mw); sz = Math.min(1.08, (d - 0.04) / md); const u = Math.min(sx, sz) * 1.0; if (Math.max(sx, sz) / u < 1.25) sx = sz = u; } /* 거의 같으면 비율 그대로 */ else if (ch === 't') { sx = sz = Math.min(1.05, (Math.max(w, d) + 0.1) / Math.max(mw, md)); } else { sx = sz = Math.min(1.05, (w - 0.04) / mw, (d + 0.3) / md); }
+    const g = new THREE.Group(); g.add(m); g.scale.set(sx, ch === 'R' ? 1 : ch === 'b' ? Math.min(1.05, Math.max(sx, sz)) : sx, sz);
+    const cx = x + w / 2, cz = y + d / 2, ox = (bx.min.x + bx.max.x) / 2, oz = (bx.min.z + bx.max.z) / 2, hw = mw * sx / 2, hd = md * sz / 2;
+    let px = cx, pz = cz; if (b === 0) pz = y + 0.02 + hd; else if (b === 1) pz = y + d - 0.02 - hd; else if (b === 2) px = x + 0.02 + hw; else if (b === 3) px = x + w - 0.02 - hw;
+    g.position.set(px - ox * sx, ch === 'R' ? 0.004 : 0, pz - oz * sz); S.add(g); return true;
+  },
   // 집 가구 한 덩어리 (x, y 왼쪽 위 칸부터 w×d). 색·등급은 2D 그림(HomeIn.piece)과 같게
   hfurn(S, ch, x, y, w, d, o) {
     const { at, isWall, tv, lv, sd, Ho, bad } = o, cx = x + w / 2, cz = y + d / 2, X = x + 0.5, Z = y + 0.5;
@@ -17531,6 +17544,8 @@ const Room3D = {
     const back = () => { const n = [0, 0, 0, 0]; for (let i = 0; i < w; i++) { if (isWall(at(x + i, y - 1))) n[0]++; if (isWall(at(x + i, y + d))) n[1]++; } for (let j = 0; j < d; j++) { if (isWall(at(x - 1, y + j))) n[2]++; if (isWall(at(x + w, y + j))) n[3]++; } let b = 0; for (let k = 1; k < 4; k++) if (n[k] > n[b]) b = k; return b; };
     // 등 쪽 b에 붙인 판 (두께 t, 높이 hh, y0부터)
     const slab = (b, t, hh, col, y0 = 0, inset = 0, op) => b < 2 ? this.box(S, cx, b === 0 ? y + t / 2 + inset : y + d - t / 2 - inset, w - 0.08, t, hh, col, y0, op) : this.box(S, b === 2 ? x + t / 2 + inset : x + w - t / 2 - inset, cz, t, d - 0.08, hh, col, y0, op);
+    const RK = { b: ['bed', lv.bed], v: ['tv', lv.tv], t: ['table', lv.table], R: ['rug', lv.rug] }[ch]; // v328 실사 TV·침대·식탁·러그 (받는 동안은 예전 모양)
+    if (RK) { const k = realHome(RK[0], RK[1]); if (Props3D.has(k)) return this.realFit(S, k, ch, x, y, w, d, ch === 't' || ch === 'R' ? -1 : back()); Props3D.need(k); this.rWait = 1; if (ch === 'R') return; }
     switch (ch) {
       case 'b': { const k = lv.bed | 0, blanket = k === 1 ? '#f8f8f6' : k === 2 ? '#8a2a3a' : ['#6a8ac8', '#d88aa0', '#7ab08a', '#e0b860'][(sd + x + y) % 4], frame = k === 1 ? '#8a8a90' : k === 2 ? '#3a2418' : '#7a5236', head = k === 1 ? '#6a6a72' : k === 2 ? '#2a1810' : '#5a3a26';
         this.box(S, cx, cz, w - 0.06, d - 0.06, 0.3, frame); this.box(S, cx, cz + 0.02, w - 0.14, d - 0.12, 0.14, '#f4f2ee', 0.3); this.box(S, cx, y + 0.08, w - 0.06, 0.12, k ? 0.95 : 0.75, head);

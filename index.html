@@ -370,7 +370,7 @@ body.tutReview #docView.in { top:6px; transform:translate(-50%, 0); max-height:c
 .hudBtns { top:226px !important; }
 #quest { position:absolute; top:92px; left:12px; background:rgba(20,22,28,.85); border:1px solid var(--gold); border-radius:8px; padding:6px 10px; font-size:12px; color:var(--paper); transform:translateX(-120%); transition:transform .25s ease-out; max-width:min(330px, 60vw); }
 #tutor { position:absolute; top:52px; left:50%; transform:translate(-50%, -180%); width:min(400px, 70vw); background:rgba(20,22,28,.92); border:2px solid var(--gold); border-radius:10px; padding:6px 12px; color:var(--paper); font-size:12.5px; line-height:1.35; pointer-events:auto; cursor:pointer; transition:transform .3s ease-out; z-index:11; box-shadow:0 4px 12px rgba(0,0,0,.4); }
-#tutor.in { transform:translate(-50%, 0); } #tutor small { color:var(--gold); font-size:11px; display:block; } #tutor b { display:block; font-size:14px; } #tutor span { opacity:.9; }
+#tutor.in { transform:translate(-50%, 0); } #tutor:not(.in), #tutor:empty { visibility:hidden; transition:transform .3s ease-out, visibility 0s .3s; } /* v316 빈 연습 안내판이 위쪽에 검은 바로 남던 것 (사용자 '위에 바는 뭐야') */ #tutor small { color:var(--gold); font-size:11px; display:block; } #tutor b { display:block; font-size:14px; } #tutor span { opacity:.9; }
 body:has(#dialog.in) #tutor, .resultOn #tutor, .touchOn.chatOpen #tutor { visibility:hidden; }
 .clItem em.tutTag { color:#1a1408; background:var(--gold); border-radius:4px; padding:0 5px; font-style:normal; font-size:11px; margin-right:5px; }
 .tutEnd { background: rgba(255,216,74,.12); border:2px solid var(--gold); } .tutEnd b { display:block; margin-bottom:4px; } .tutEnd p { margin:0; } .tutEnd .tutGift { margin-top:6px; color:var(--gold); } .tutEnd .tutGift b { display:inline; }
@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v315</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v316</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>

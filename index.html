@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v302</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v303</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -8474,7 +8474,7 @@ function update(dt) {
     Cam.x += (tx - Cam.x) * k; Cam.y += (ty - Cam.y) * k;
     const zt = FEEL.zoom * (Game.driving && !REDUCED_MOTION ? 1 - (1 - FEEL.camZoomAtMax) * Math.min(1, Game.car.speed / FEEL.carMaxSpeed) : 1);
     Cam.zoom += (zt - Cam.zoom) * Math.min(1, dt * 3);
-    const hw = VW / 2 / Cam.zoom, hh = VH / 2 / Cam.zoom, ZW = Game.zone.W * TILE, ZH = Game.zone.H * TILE;
+    const hw = VW / 2 / Cam.zoom, hh = VH / 2 / Cam.zoom / zoneSq(), ZW = Game.zone.W * TILE, ZH = Game.zone.H * TILE;
     Cam.x = ZW > hw * 2 ? Math.max(hw, Math.min(ZW - hw, Cam.x)) : ZW / 2; Cam.y = ZH > hh * 2 ? Math.max(hh, Math.min(ZH - hh, Cam.y)) : ZH / 2;
   }
   else {
@@ -8533,8 +8533,8 @@ function updateDecor(dt) {
 function worldToScreen() {
   const sx = Cam.shake > 0 ? (Math.random() - 0.5) * Cam.shakeAmp * (Cam.shake / FEEL.shakeDecay) : 0;
   const sy = Cam.shake > 0 ? (Math.random() - 0.5) * Cam.shakeAmp * (Cam.shake / FEEL.shakeDecay) : 0;
-  const S = DPR * Cam.zoom, e = DPR * (VW / 2 + sx) - camSnapX() * S, f = DPR * (VH / 2 + sy) - camSnapY() * S;
-  ctx.setTransform(S, 0, 0, S, Game.scene === 'zone' ? Math.round(e) : e, Game.scene === 'zone' ? Math.round(f) : f);
+  const S = DPR * Cam.zoom, q = zoneSq(), e = DPR * (VW / 2 + sx) - camSnapX() * S, f = DPR * (VH / 2 + sy) - camSnapY() * S * q; // q: 3D 바깥이면 땅이 세로로 sin배 (직교 카메라)
+  ctx.setTransform(S, 0, 0, S * q, Game.scene === 'zone' ? Math.round(e) : e, Game.scene === 'zone' ? Math.round(f) : f);
 }
 // 카메라 (v167, 사용자 2026-10-16 '모바일 걸어다닐 때마다 지진 난 것처럼 화면이 너무 움직여'): v161엔 걸을 때 카메라를 월드 1픽셀(폰에선 기기 6픽셀)씩
 // 끊어 옮겨서 배경 전체가 덜컹거렸다. 이제 카메라는 소수점 그대로 부드럽게 따라가고(화면 이동은 기기 1픽셀 단위로만 반올림),
@@ -8548,34 +8548,34 @@ function roadPoint(r, s) {
   const segs = []; let tot = 0; for (let i = 0; i < r.pts.length - 1; i++) { const L = Math.hypot(r.pts[i + 1][0] - r.pts[i][0], r.pts[i + 1][1] - r.pts[i][1]); segs.push(L); tot += L; }
   let d = Math.max(0, Math.min(1, s)) * tot; for (let i = 0; i < segs.length; i++) { if (d <= segs[i] || i === segs.length - 1) { const k = d / segs[i]; const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1]; return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, ux: (bx - ax) / segs[i], uy: (by - ay) / segs[i] }; } d -= segs[i]; }
 }
-function drawZone(t) {
-  const z = Game.zone;
-  const halfW = VW / 2 / Cam.zoom, halfH = VH / 2 / Cam.zoom;
+function drawZone(t, g = ctx) { // g: 땅 그림 캔버스 (3D 바깥이면 #zground)
+  const z = Game.zone, Z3 = g !== ctx;
+  const halfW = VW / 2 / Cam.zoom, halfH = VH / 2 / Cam.zoom / zoneSq() + (Z3 ? 60 : 0);
   const x0 = Cam.x - halfW - 40, x1 = Cam.x + halfW + 40, y0 = Cam.y - halfH - 40, y1 = Cam.y + halfH + 40;
-  ctx.imageSmoothingEnabled = false;
+  g.imageSmoothingEnabled = false;
   for (let cy = Math.max(0, Math.floor(y0 / CHUNK)); cy <= Math.floor(y1 / CHUNK); cy++)
     for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++)
-      if (cx * CHUNK < z.W * TILE && cy * CHUNK < z.H * TILE) ctx.drawImage(zoneChunk(z, cx, cy), cx * CHUNK, cy * CHUNK);
+      if (cx * CHUNK < z.W * TILE && cy * CHUNK < z.H * TILE) g.drawImage(zoneChunk(z, cx, cy), cx * CHUNK, cy * CHUNK);
   // 지하철 출입구
-  for (const s of z.subway) { const X = s.x * TILE, Y = s.y * TILE; ctx.fillStyle = '#1f8a3a'; ctx.fillRect(X - 6, Y - 6, 12, 12); ctx.fillStyle = '#fff'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(String(s.ref || s.line), X, Y + 3); }
+  for (const s of z.subway) { const X = s.x * TILE, Y = s.y * TILE; g.fillStyle = '#1f8a3a'; g.fillRect(X - 6, Y - 6, 12, 12); g.fillStyle = '#fff'; g.font = 'bold 8px sans-serif'; g.textAlign = 'center'; g.fillText(String(s.ref || s.line), X, Y + 3); }
   // 도로 이름(노면, 반투명 큰 글자)
-  ctx.save(); ctx.font = 'bold 26px "IBM Plex Sans KR", sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.13)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  g.save(); g.font = 'bold 26px "IBM Plex Sans KR", sans-serif'; g.fillStyle = 'rgba(255,255,255,.13)'; g.textAlign = 'center'; g.textBaseline = 'middle';
   for (const r of z.roads) for (let i = 0; i < r.pts.length - 1; i++) {
     const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1]; const L = Math.hypot(bx - ax, by - ay);
-    for (let s = 30; s < L - 10; s += 60) { ctx.save(); ctx.translate((ax + (bx - ax) * s / L) * TILE, (ay + (by - ay) * s / L) * TILE); let a = Math.atan2(by - ay, bx - ax); if (a > Math.PI / 2) a -= Math.PI; if (a < -Math.PI / 2) a += Math.PI; ctx.rotate(a); ctx.fillText(r.name.split('').join(' '), 0, 0); ctx.restore(); }
+    for (let s = 30; s < L - 10; s += 60) { g.save(); g.translate((ax + (bx - ax) * s / L) * TILE, (ay + (by - ay) * s / L) * TILE); let a = Math.atan2(by - ay, bx - ax); if (a > Math.PI / 2) a -= Math.PI; if (a < -Math.PI / 2) a += Math.PI; g.rotate(a); g.fillText(r.name.split('').join(' '), 0, 0); g.restore(); }
   }
-  ctx.restore();
+  g.restore();
   // 스키드 자국
   { const now = performance.now() / 1000, zid = z.id; while (Skids.length && now - (Skids[0].t || 0) > 180) Skids.shift(); // v171: 구마다 남았다가 3분 지나면 사라진다 (마지막 30초 흐려짐)
-    for (const m of Skids) { if (m.z !== zid || m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; ctx.fillStyle = `rgba(20,20,22,${(0.45 * Math.min(1, (180 - (now - m.t)) / 30)).toFixed(3)})`; if (m.h) { ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.a); if (m.cl === 2) { ctx.fillRect(-1.6, -1, 2, 2); ctx.fillRect(0.8, -1.9, 0.9, 0.9); ctx.fillRect(1.2, -0.7, 0.9, 0.7); ctx.fillRect(1.2, 0.3, 0.9, 0.7); ctx.fillRect(0.8, 1, 0.9, 0.9); ctx.restore(); continue; } /* 늑구: 발바닥 + 발가락 넷 */ if (m.cl) { ctx.fillRect(-1.2, -1.6, 2.4, 1.2); ctx.fillRect(-1.2, 0.4, 2.4, 1.2); ctx.restore(); continue; } /* 황소: 갈라진 두 쪽 발굽 */ ctx.fillRect(-1.5, -1.5, 1, 3); ctx.fillRect(-0.5, -1.5, 2, 0.8); ctx.fillRect(-0.5, 0.7, 2, 0.8); ctx.restore(); } else ctx.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); } } // v234 m.h = 말발굽 (U자, 앞쪽이 열림)
-  Rails.draw(ctx, x0, y0, x1, y1); // 기차 철로
-  Wake.draw(ctx, x0, y0, x1, y1); // v235 부캉이 물줄기
-  Prints.draw(ctx, x0, y0, x1, y1); // 티라노 발자국
-  Beach.draw(ctx, x0, y0, x1, y1); // 거북이 모래·물길
-  Slime.draw(ctx, x0, y0, x1, y1); // 띵띵이 끈적 자국 (v243)
-  MineExit.draw(ctx, x0, y0, x1, y1); // 석탄 땅굴 출구 (v171)
+    for (const m of Skids) { if (m.z !== zid || m.x < x0 || m.x > x1 || m.y < y0 || m.y > y1) continue; g.fillStyle = `rgba(20,20,22,${(0.45 * Math.min(1, (180 - (now - m.t)) / 30)).toFixed(3)})`; if (m.h) { g.save(); g.translate(m.x, m.y); g.rotate(m.a); if (m.cl === 2) { g.fillRect(-1.6, -1, 2, 2); g.fillRect(0.8, -1.9, 0.9, 0.9); g.fillRect(1.2, -0.7, 0.9, 0.7); g.fillRect(1.2, 0.3, 0.9, 0.7); g.fillRect(0.8, 1, 0.9, 0.9); g.restore(); continue; } /* 늑구: 발바닥 + 발가락 넷 */ if (m.cl) { g.fillRect(-1.2, -1.6, 2.4, 1.2); g.fillRect(-1.2, 0.4, 2.4, 1.2); g.restore(); continue; } /* 황소: 갈라진 두 쪽 발굽 */ g.fillRect(-1.5, -1.5, 1, 3); g.fillRect(-0.5, -1.5, 2, 0.8); g.fillRect(-0.5, 0.7, 2, 0.8); g.restore(); } else g.fillRect(m.x - 1.5, m.y - 1.5, 3, 3); } } // v234 m.h = 말발굽 (U자, 앞쪽이 열림)
+  Rails.draw(g, x0, y0, x1, y1); // 기차 철로
+  Wake.draw(g, x0, y0, x1, y1); // v235 부캉이 물줄기
+  Prints.draw(g, x0, y0, x1, y1); // 티라노 발자국
+  Beach.draw(g, x0, y0, x1, y1); // 거북이 모래·물길
+  Slime.draw(g, x0, y0, x1, y1); // 띵띵이 끈적 자국 (v243)
+  MineExit.draw(g, x0, y0, x1, y1); // 석탄 땅굴 출구 (v171)
   // 신호등 · NPC 차량 · 내 차
-  drawSignals(ctx, z, t);
+  drawSignals(g, z, t);
   const near = []; // v289 눕힌 탑다운: 차·건물·나무도 사람과 같이 y(바닥 기준) 정렬
   for (const car of Game.traffic) { const q = trafficCarPos(car); if (q.x < x0 - 20 || q.x > x1 + 20 || q.y < y0 - 20 || q.y > y1 + 60) continue; near.push({ y: q.y, d: () => drawCarSprite(ctx, q.x, q.y, q.a, car.col, car.len, car.wid, car.kind, car.v) }); }
   near.push({ y: -1e9, d: () => PetRage.drawCars(ctx, x0, y0, x1, y1) }); // 친구 펫을 친 차 (v157)
@@ -8584,11 +8584,11 @@ function drawZone(t) {
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 건물 그림자는 땅에 먼저
   const blds = [], plOf = {}; for (const pl of z.places) plOf[pl.building] = pl;
-  for (const b of z.buildings) { const X = b.x * TILE, Y = b.y * TILE, wh = bWallH(b), base = (b.y + b.h) * TILE; if (X > x1 + 30 || Y - wh > y1 || X + b.w * TILE + 30 < x0 || base + 30 < y0) continue; blds.push(b); drawBuildingShadow(ctx, b); }
+  for (const b of z.buildings) { const X = b.x * TILE, Y = b.y * TILE, wh = bWallH(b), base = (b.y + b.h) * TILE; if (X > x1 + 30 || Y - wh > y1 || X + b.w * TILE + 30 < x0 || base + 30 < y0) continue; blds.push(b); if (!Z3) drawBuildingShadow(ctx, b); }
   // 문 앞 매트 (땅)
-  for (const pl of z.places) { const dx = pl.door.tx * TILE, dy = pl.door.ty * TILE; if (dx < x0 - 20 || dx > x1 || dy < y0 - 20 || dy > y1) continue; ctx.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.6)' : 'rgba(205,174,112,.7)'; ctx.fillRect(dx + 3, dy + 3, 10, 10); }
-  for (const b of blds) near.push({ y: (b.y + b.h) * TILE, d: () => drawBuildingRoof(ctx, b, t, plOf[b.id]) });
-  for (const tr of z.trees) { if (tr.x < x0 - 16 || tr.x > x1 + 16 || tr.y < y0 - 16 || tr.y > y1 + 16) continue; near.push({ y: tr.y + 6, d: () => { const f = Math.round(Math.sin(t * 1.3 + tr.phase) + 1); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(tr.x + 4, tr.y + 5, 10, 7, 0, 0, 7); ctx.fill(); ctx.drawImage(Sprites.tree(f), tr.x - 12, tr.y - 12); } }); }
+  for (const pl of z.places) { const dx = pl.door.tx * TILE, dy = pl.door.ty * TILE; if (dx < x0 - 20 || dx > x1 || dy < y0 - 20 || dy > y1) continue; g.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.6)' : 'rgba(205,174,112,.7)'; g.fillRect(dx + 3, dy + 3, 10, 10); }
+  if (!Z3) for (const b of blds) near.push({ y: (b.y + b.h) * TILE, d: () => drawBuildingRoof(ctx, b, t, plOf[b.id]) }); // 3D면 건물·나무는 3D
+  if (!Z3) for (const tr of z.trees) { if (tr.x < x0 - 16 || tr.x > x1 + 16 || tr.y < y0 - 16 || tr.y > y1 + 16) continue; near.push({ y: tr.y + 6, d: () => { const f = Math.round(Math.sin(t * 1.3 + tr.phase) + 1); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(tr.x + 4, tr.y + 5, 10, 7, 0, 0, 7); ctx.fill(); ctx.drawImage(Sprites.tree(f), tr.x - 12, tr.y - 12); } }); }
   // 사람·고양이 (y 정렬)
   const actors = [...near, ...Game.decor.flatMap(w => [{ y: w.y, d: () => { if (w.esc) drawEscape(ctx, w, t); else if ((w.big || w.love) && typeof Dora !== 'undefined') w._sz = Dora.drawWalker(ctx, w, t, () => drawWalker(ctx, w, t)); else drawWalker(ctx, w, t); } }, ...(w.bubble ? [{ top: 1, y: w.y, d: () => { if (w.bubble) Net.bubble(ctx, w.bubble.text, w.x, w.y - ((w.big && w._sz === 2) ? 46 : 30)); } }] : [])]), ...(Game.driving || Ride.with ? [] : [{ y: Game.player.y, d: () => { if (!MineExit.drawRise(ctx, () => drawWalker(ctx, Game.player, t))) { drawWalker(ctx, Game.player, t); Titles.drawMine(ctx, Game.player); if (Game.player.kneelT > performance.now()) Net.bubble(ctx, Game.player.kneelSay, Game.player.x, Game.player.y - 30); } } }]),
     ...Net.visible('zone').map(({ p, sp }) => ({ y: p.dr ? p.cy : p.y, d: () => Net.drawFriend(ctx, p, sp, t) })),
@@ -8597,6 +8597,7 @@ function drawZone(t) {
     ...BusStop.actors(ctx, performance.now() / 1000), // v234 버스 정류장
     ...Net.parkedCars().map(p => ({ y: p.cy, d: () => Net.drawParkedCar(ctx, p) })),
     ...Game.cats.map(c => ({ y: c.y, d: () => { ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(c.x - 4, c.y + 2, 9, 2); const img = Sprites.cat(c.sit ? 0 : Math.floor(t * 6) % 2); ctx.save(); ctx.translate(c.x, c.y); if (c.vx < 0) ctx.scale(-1, 1); ctx.drawImage(img, -5, -5); ctx.restore(); } }))];
+  if (Z3) for (const a of actors) { const d0 = a.d; a.d = () => { worldToScreen(); d0(); }; } // 3D: 사람을 그린 뒤엔 그 사람 머리 기준이라 매번 땅 기준으로 되돌린다
   const tops = []; actors.sort((a, b) => a.y - b.y).forEach(a => a.top ? tops.push(a) : a.d()); // v234: top = 말풍선·이름표·나는 새 → 지붕 위에
   for (const q of Particles) { ctx.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
   Bills.draw(ctx); // v234 금빛 리무진 지폐
@@ -8605,10 +8606,12 @@ function drawZone(t) {
     if (md && blds.some(b => { const X = b.x * TILE, base = (b.y + b.h) * TILE; return me.y < base && me.x > X - 6 && me.x < X + b.w * TILE + 6 && me.y + 4 > b.y * TILE - bWallH(b) && me.y - 18 < base; })) { ctx.save(); ctx.globalAlpha = 0.5; md(); ctx.restore(); } }
   // 장소 표시(간판), 경매 깃발: 올라간 지붕 위
   for (const pl of z.places) {
-    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = (b.y + b.h / 2) * TILE - bWallH(b);
+    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = (b.y + b.h / 2) * TILE - (Z3 ? 0 : bWallH(b));
     if (X < x0 - 60 || X > x1 + 60 || Y < y0 - 60 || Y > y1 + 60) continue;
+    if (Z3) Room3D.anchor(ctx, X, Y, bWallH(b) / TILE * Z3_BH, 0); // 3D: 지붕 위
     if (pl.kind === 'site') drawFlag(ctx, X, Y - 6, t, pl);
     else drawPlaceIcon(ctx, X, Y, pl.kind);
+    if (Z3) worldToScreen();
     if (pl.door.face === 3) { ctx.globalAlpha = 0.6; ctx.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.8)' : 'rgba(205,174,112,.9)'; ctx.fillRect(pl.door.tx * TILE + 3, pl.door.ty * TILE + 3, 10, 10); ctx.globalAlpha = 1; } // 뒷문은 지붕에 가려서 위에 한 번 더
   }
   drawTargetArrow(ctx, t);
@@ -8619,8 +8622,9 @@ function drawZone(t) {
   // 장소 이름표 (가까울 때)
   const p = Game.player; ctx.textAlign = 'center';
   for (const pl of z.places) {
-    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = b.y * TILE - 4 - bWallH(b);
+    const b = z.buildings[pl.building]; const X = (b.x + b.w / 2) * TILE, Y = b.y * TILE - 4 - (Z3 ? 0 : bWallH(b));
     const d = Math.hypot(pl.door.tx * TILE - p.x, pl.door.ty * TILE - p.y); if (d > 120) continue;
+    if (Z3) Room3D.anchor(ctx, X, b.y * TILE, bWallH(b) / TILE * Z3_BH, 0);
     const a = Math.max(0, Math.min(1, (120 - d) / 40));
     ctx.font = '600 7px "IBM Plex Sans KR", sans-serif';
     const label = pl.kind === 'site' ? `${(caseById(pl.caseId) || { name: pl.name }).name} · ${pl.caseId.replace('타경', '타경 ')}` : pl.name;
@@ -8628,7 +8632,7 @@ function drawZone(t) {
     ctx.globalAlpha = a; ctx.fillStyle = pl.kind === 'site' ? 'rgba(80,16,12,.85)' : 'rgba(15,20,30,.85)'; ctx.fillRect(X - w / 2, Y - 10, w, 11);
     ctx.fillStyle = '#efe6d2'; ctx.fillText(label, X, Y - 2); ctx.globalAlpha = 1;
   }
-  MyHome.drawFriends(ctx, p); Friends.edge(ctx, x0 + 40, y0 + 40, x1 - 40, y1 - 40); // 친구네 집 이름표 · 화면 밖 친구 화살표 (v155)
+  if (Z3) worldToScreen(); MyHome.drawFriends(ctx, p); Friends.edge(ctx, x0 + 40, y0 + 40, x1 - 40, y1 - 40); // 친구네 집 이름표 · 화면 밖 친구 화살표 (v155)
 }
 function targetPos() {
   const z = Game.zone; if (!State.targetPlace) return null;
@@ -8800,7 +8804,7 @@ function drawTimeTint(t) {
     ctx.fillStyle = 'rgba(16,22,60,.55)'; ctx.fillRect(0, 0, VW, VH);
     ctx.globalCompositeOperation = 'lighter';
     for (const tr of Game.zone.trees) {
-      const sx = (tr.x - Cam.x) * Cam.zoom + VW / 2, sy = (tr.y - Cam.y) * Cam.zoom + VH / 2; if (sx < -80 || sy < -80 || sx > VW + 80 || sy > VH + 80) continue;
+      const sx = (tr.x - Cam.x) * Cam.zoom + VW / 2, sy = (tr.y - Cam.y) * Cam.zoom * zoneSq() + VH / 2 - (Room3D.zNow ? 16 * Cam.zoom : 0); if (sx < -80 || sy < -80 || sx > VW + 80 || sy > VH + 80) continue;
       const gr = ctx.createRadialGradient(sx, sy + 10, 0, sx, sy + 10, 60); gr.addColorStop(0, 'rgba(255,200,120,.35)'); gr.addColorStop(1, 'rgba(255,200,120,0)'); ctx.fillStyle = gr; ctx.fillRect(sx - 60, sy - 50, 120, 120);
     }
     ctx.globalCompositeOperation = 'source-over';
@@ -8811,17 +8815,17 @@ function drawIris() {
   if (!Game.trans) return;
   const { close, p } = Game.trans; const k = close ? 1 - p : p;
   let sx = (Game.player.x - Cam.x) * Cam.zoom + VW / 2, sy = (Game.player.y - 8 - Cam.y) * Cam.zoom + VH / 2;
-  if (Game.scene === 'room' && Room3D.cv && Room3D.cv.style.display === 'block' && Room3D.room === Game.room) { const a = Room3D.proj(Game.player.x, Game.player.y, 0.6); sx = a.x; sy = a.y; }
+  if ((Game.scene === 'room' && Room3D.cv && Room3D.cv.style.display === 'block' && Room3D.room === Game.room) || (Game.scene === 'zone' && Room3D.zNow)) { const a = Room3D.proj(Game.player.x, Game.player.y, 0.6); sx = a.x; sy = a.y; }
   const R = Math.hypot(VW, VH) * k;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = '#0a0b0f';
   ctx.beginPath(); ctx.rect(0, 0, VW, VH); ctx.arc(sx, sy, Math.max(0.1, R), 0, Math.PI * 2, true); ctx.fill('evenodd');
 }
 function draw() {
-  const r3 = Game.scene === 'room' && Room3D.active(Game.room); if (!r3) Room3D.show(false);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); if (r3) ctx.clearRect(0, 0, VW, VH); else { ctx.fillStyle = '#14161c'; ctx.fillRect(0, 0, VW, VH); }
+  const r3 = Game.scene === 'room' && Room3D.active(Game.room), z3 = Game.scene === 'zone' && Room3D.zActive(Game.zone); Room3D.zNow = z3; if (!r3 && !z3) Room3D.show(false); if (!z3) Room3D.zShowG(false);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); if (r3 || z3) ctx.clearRect(0, 0, VW, VH); else { ctx.fillStyle = '#14161c'; ctx.fillRect(0, 0, VW, VH); }
   if (Game.scene === 'title') return;
   worldToScreen(); ctx.imageSmoothingEnabled = false;
-  if (Game.scene === 'zone') drawZone(Game.t); else if (r3) drawRoom3D(Game.t); else if (Game.scene === 'room') drawRoom(Game.t);
+  if (z3) drawZone3D(Game.t); else if (Game.scene === 'zone') drawZone(Game.t); else if (r3) drawRoom3D(Game.t); else if (Game.scene === 'room') drawRoom(Game.t);
   if (Net.on) Net.drawMine(ctx);
   drawPrompt(Game.t);
   if (Game.keyIcon > 0) drawKeyIcon(Game.t);
@@ -17160,7 +17164,7 @@ const Room3D = {
   init() {
     if (this.r) return; const { THREE } = T3, cv = this.cv = document.createElement('canvas'); cv.id = 'room3d';
     cv.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; const g = $('game'); g.parentNode.insertBefore(cv, g);
-    const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+    const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' }); r.setClearColor(0x000000, 0);
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.toneMapping = THREE.NoToneMapping;
     const gv = [86, 90, 98, 150, 218, 240, 252, 255], gd = new Uint8Array(gv.flatMap(v => [v, v, v, 255])), gm = this.grad = new THREE.DataTexture(gd, gv.length, 1, THREE.RGBAFormat); gm.minFilter = gm.magFilter = THREE.LinearFilter; gm.needsUpdate = true;
     this.cam = new THREE.PerspectiveCamera(32, 1, 0.1, 200); this.ct = null; this.hg = {}; this.mats = {}; this.eg = {}; this.q = 1;
@@ -17187,7 +17191,7 @@ const Room3D = {
   ball(par, x, y, z, r, col, sy = 1) { const { THREE } = T3, m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 2), this.toon(col, { flatShading: true })); m.position.set(x, y, z); m.scale.y = sy; m.castShadow = true; par.add(m); return m; },
   cvTex(w, h, fn) { const { THREE } = T3, c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; },
   /* ---- 방 한 번 세우기 (같은 방이면 그대로) ---- */
-  dispose() { if (!this.S) return; this.S.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); if (o.material && o.material.map && o.material.map._own) o.material.map.dispose(); }); this.S = null; this.A = new Map(); },
+  dispose() { if (!this.S) return; this.S.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); for (const m of [].concat(o.material || [])) if (m.map && m.map._own) m.map.dispose(); }); this.S = null; this.A = new Map(); },
   build(rm) {
     if (this.S && this.room === rm) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
@@ -17467,7 +17471,7 @@ const Room3D = {
     const cam = this.cam, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * cam.aspect), wt = Math.max(12, Math.min(17, rm.W + 2)) * Math.max(1, 2.1 / cam.aspect) /* 방 너비가 화면에 다 들어오게 (세로로 긴 화면이면 조금 더 멀리) */, dist = (wt / 2) / Math.tan(hf / 2);
     let tx = p.x / TILE, tz = p.y / TILE; const W = rm.W, Hh = rm.H; tx = wt >= W ? W / 2 : Math.max(wt / 2, Math.min(W - wt / 2, tx)); tz = Hh * 0.5 - 0.5 + (tz - Hh * 0.5) * 0.4; /* 방 가운데 쪽으로 당겨서 뒷벽(창구·간판)도 늘 보이게 */
     if (!this.ct || this.ctRoom !== rm) { this.ct = { x: tx, z: tz }; this.ctRoom = rm; } this.ct.x += (tx - this.ct.x) * Math.min(1, dt * 6); this.ct.z += (tz - this.ct.z) * Math.min(1, dt * 6);
-    cam.position.set(this.ct.x, 0.6 + Math.sin(R3_EL) * dist, this.ct.z + Math.cos(R3_EL) * dist); cam.lookAt(this.ct.x, 0.6, this.ct.z); cam.updateMatrixWorld();
+    cam.position.set(this.ct.x, 0.6 + Math.sin(R3_EL) * dist, this.ct.z + Math.cos(R3_EL) * dist); cam.lookAt(this.ct.x, 0.6, this.ct.z); cam.updateMatrixWorld(); this.cc = cam;
   },
   /* ---- 펫 (v301): 게임이 2D 캔버스에 펫을 그리려는 순간(Pets.draw)을 가로채서, 그 그림을 부풀린 입체로 3D 방에 세운다 ----
    * 자세·진화·꾸미기는 그 순간 그대로 (콜로세움과 같은 petData). 사람 펫(친구·여친·남친)은 사람 모델. 이름표만 2D */
@@ -17506,14 +17510,147 @@ const Room3D = {
       let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
       H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.inner.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05; H.sh.scale.setScalar(Math.max(0.6, Math.min(2.2, q.h * 1.4))); });
     for (const [k, H] of this.A) if (H.seen !== this.fr) { this.S.remove(H.root); this.A.delete(k); }
-    this.r.render(this.S, this.cam);
+    this.r.render(this.S, this.cc || this.cam);
   },
   // 게임 좌표(픽셀) + 높이(칸) → 화면 CSS 픽셀
-  proj(x, y, h = 0) { const v = this.v3 || (this.v3 = new T3.THREE.Vector3()); v.set(x / TILE, h, y / TILE).project(this.cam); return { x: (v.x + 1) / 2 * VW, y: (1 - v.y) / 2 * VH }; },
+  proj(x, y, h = 0) { const v = this.v3 || (this.v3 = new T3.THREE.Vector3()); v.set(x / TILE, h, y / TILE).project(this.cc || this.cam); return { x: (v.x + 1) / 2 * VW, y: (1 - v.y) / 2 * VH }; },
   // 2D 그림을 3D 자리에 맞춰 그리게: 게임 좌표 (x, y)가 3D의 (x, y, 높이 h) 위로 가고, 크기는 그 자리의 확대 비율. off = 2D 그림에서 그 높이까지 (픽셀)
   anchor(c, x, y, h = 0, off = 0, cap = true) { const a = this.proj(x, y, h), b = this.proj(x + TILE, y, h), k0 = Math.hypot(b.x - a.x, b.y - a.y) / TILE, k = cap && h > 0 ? Math.min(k0, Cam.zoom * 1.1) : k0, S = DPR * k; /* 이름표·말풍선은 2D 때 크기 이상으로 커지지 않게 */
     c.setTransform(S, 0, 0, S, DPR * (a.x + off * k) - x * S, DPR * (a.y + off * k) - y * S); return k; },
 };
+
+/* ===================== 3D 바깥 도시 (v303, 사용자 2026-10-22 '밖도 3D로' '네') =====================
+ * 실내(room3d.js)와 같은 그림체로 구 지도를 세운다. 게임 규칙(길·충돌·차·사람 움직임)은 그대로, 그림만 바뀐다.
+ * 카메라는 비스듬히 내려다보는 직교 카메라: 땅 위 한 점이 화면 어디에 오는지가 2D 변환 하나(가로 그대로, 세로 sin(Z3_EL)배)라서
+ * 길·차선·스키드 자국·철로 같은 땅 그림은 예전 2D 코드 그대로 맨 아래 캔버스(#zground)에 그리고,
+ * 건물·나무·차·사람·펫은 3D 캔버스(#room3d, 배경 투명)에, 이름표·말풍선·화살표는 맨 위 #game에 그린다.
+ * 건물 앞벽·지붕 그림은 예전 2D 그림(drawBuildingFront · drawBuildingTop)을 그대로 붙인다. 사람·차는 2D 그리기 순간(drawWalker · drawCarSprite)을 가로채 3D로 세운다.
+ */
+const Z3_EL = 0.72, Z3_BH = 1.9; // 내려다보는 각 (약 41도) · 건물 높이 배율 (2D 앞벽 높이 대비)
+Object.assign(Room3D, {
+  zOn() { return this.on() && !!Store.get('zone3d', 1); },
+  zActive(z) {
+    if (!z || !this.zOn() || this.zbad) return false;
+    if (!window.T3) { Arena3J.load(); return false; }
+    try { this.init(); this.zBuild(z); return true; } catch (e) { console.warn('zone3d', e); this.zbad = 1; this.zShowG(false); this.show(false); return false; }
+  },
+  zShowG(v) { if (this.gcv) { const d = v ? 'block' : 'none'; if (this.gcv.style.display !== d) this.gcv.style.display = d; } },
+  zSq() { return Math.sin(Z3_EL); },
+  /* ---- 구 한 번 세우기: 빛·그림자 받는 땅·가로수 (건물은 보이는 것만 그때그때) ---- */
+  zBuild(z) {
+    if (this.S && this.room === z) return; this.dispose(); const { THREE } = T3;
+    Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
+    if (!this.gcv) { const g = this.gcv = document.createElement('canvas'); g.id = 'zground'; g.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; this.cv.parentNode.insertBefore(g, this.cv); this.gctx = g.getContext('2d'); }
+    if (!this.ocam) this.ocam = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.5, 300);
+    this.room = z; this.A = new Map(); this.zb = new Map(); this.zw = []; this.zc = []; this.zid = 0; this.zEve = State.evening;
+    const S = this.S = new THREE.Scene(); S.background = null;
+    S.add(new THREE.HemisphereLight(0xfff4e6, 0x6a7080, 1.35));
+    const sun = this.zsun = new THREE.DirectionalLight(0xfff0d8, 1.9); S.add(sun); S.add(sun.target); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
+    // 그림자만 받는 땅 (색은 아래 2D 땅 그림이 보인다)
+    const gp = new THREE.Mesh(new THREE.PlaneGeometry(z.W + 40, z.H + 40), new THREE.ShadowMaterial({ opacity: 0.28 })); gp.rotation.x = -Math.PI / 2; gp.position.set(z.W / 2, 0, z.H / 2); gp.receiveShadow = true; S.add(gp);
+    // 가로수: 한 번에 (줄기 + 잎 두 덩어리)
+    const n = z.trees.length; if (n) {
+      const tg = new THREE.CylinderGeometry(0.07, 0.1, 0.9, 7), lg = new THREE.IcosahedronGeometry(0.62, 1), lg2 = new THREE.IcosahedronGeometry(0.42, 1);
+      const tm = new THREE.InstancedMesh(tg, this.toon('#6a4a30'), n), lm = new THREE.InstancedMesh(lg, this.toon('#4f8a3c', { flatShading: true }), n), lm2 = new THREE.InstancedMesh(lg2, this.toon('#64a24a', { flatShading: true }), n);
+      const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), Sc = new THREE.Vector3();
+      z.trees.forEach((tr, i) => { const x = tr.x / TILE, y = tr.y / TILE, s = 0.85 + ((i * 37) % 10) / 30;
+        Sc.set(1, s, 1); M.compose(V.set(x, 0.45 * s, y), Q.identity(), Sc); tm.setMatrixAt(i, M);
+        Sc.set(s, s * 0.92, s); Q.setFromAxisAngle(V.set(0, 1, 0), tr.phase); M.compose(V.set(x, 1.15 * s, y), Q, Sc); lm.setMatrixAt(i, M);
+        M.compose(V.set(x + 0.18, 1.55 * s, y - 0.1), Q, Sc); lm2.setMatrixAt(i, M); });
+      for (const m of [tm, lm, lm2]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; S.add(m); }
+    }
+  },
+  /* ---- 건물 하나: 상자 + 앞벽(2D 앞벽 그림) · 옆벽(창문 줄) · 지붕(2D 지붕 그림) ---- */
+  zBld(b, pl) {
+    const { THREE } = T3, wh = bWallH(b), H = wh / TILE * Z3_BH, X = b.x * TILE, base = (b.y + b.h) * TILE;
+    const tex = (w, h, fn) => { const t = this.cvTex(Math.max(2, Math.round(w * 2)), Math.max(2, Math.round(h * 2)), c => { c.scale(2, 2); fn(c); }); t._own = 1; return t; };
+    const front = tex(b.w * TILE, wh, c => { c.translate(-X, -(base - wh)); drawBuildingFront(c, b, 0, pl); });
+    const sb = Object.assign({}, b, { x: 0, y: 0, w: b.h, h: 0, seed: b.seed ^ 77 }), side = tex(b.h * TILE, wh, c => { c.translate(0, wh); drawBuildingFront(c, sb, 0, null); });
+    const roof = tex(b.w * TILE, b.h * TILE, c => { c.translate(-X, -b.y * TILE); drawBuildingTop(c, b, 0); });
+    const m = t => new THREE.MeshToonMaterial({ map: t, gradientMap: this.grad, transparent: false });
+    const mats = [m(side), m(side), m(roof), m(roof), m(front), m(side)];
+    const g = new THREE.Mesh(new THREE.BoxGeometry(b.w, H, b.h), mats); g.position.set(b.x + b.w / 2, H / 2, b.y + b.h / 2); g.castShadow = true; g.receiveShadow = true;
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(g.geometry), this.lineM));
+    return { m: g, mats, H, o: 1 };
+  },
+  // 이번 프레임에 보일 건물만 세우고, 멀어진 건물은 치운다. 내가 건물 뒤(북쪽)에 가려지면 그 건물은 반투명
+  zStream(z, cx, cz, vw, vd, dt) {
+    if (this.zEve !== State.evening) { for (const [, e] of this.zb) this.zDrop(e); this.zb.clear(); this.zEve = State.evening; }
+    const plOf = this.zpl && this.zplZ === z ? this.zpl : (this.zplZ = z, this.zpl = {}); if (!Object.keys(plOf).length) for (const pl of z.places) plOf[pl.building] = pl;
+    const x0 = cx - vw / 2 - 3, x1 = cx + vw / 2 + 3, z0 = cz - vd / 2 - 3, z1 = cz + vd / 2 + 7, me = Game.driving ? Game.car : Game.player, mx = me.x / TILE, mz = me.y / TILE, cot = 1 / Math.tan(Z3_EL);
+    let made = 0;
+    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e0 = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
+      if (!inV) { if (e0 && (b.x > x1 + 12 || b.x + b.w < x0 - 12 || b.y > z1 + 12 || b.y + b.h < z0 - 12)) { this.zDrop(e0); this.zb.delete(id); } continue; }
+      let e = e0; if (!e) { if (made > 6) continue; /* 한 프레임에 너무 많이 만들지 않게 */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
+      const hide = mx > b.x - 0.4 && mx < b.x + b.w + 0.4 && mz < b.y + 0.3 && mz > b.y - e.H * cot - 0.6, tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
+      const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
+    }
+  },
+  zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.map) mt.map.dispose(); mt.dispose(); } e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
+  /* ---- 차 (앞 = +x): 몸통 · 유리 지붕 · 바퀴 · 불빛 ---- */
+  car3(len, wid, col, stripe, kind) {
+    const { THREE } = T3, g = new THREE.Group(), L = len / TILE, W = wid / TILE, bus = kind === 'bus';
+    this.box(g, 0, 0, L, W, bus ? 0.95 : 0.36, col, 0.12);
+    if (bus) { this.box(g, 0.04, 0, L - 0.2, W + 0.01, 0.3, '#22303c', 0.6, { line: false }); this.box(g, 0, 0, L, W, 0.05, col, 1.07); }
+    else { this.box(g, -L * 0.06, 0, L * 0.5, W * 0.84, 0.28, '#24303a', 0.48, { line: false }); this.box(g, -L * 0.08, 0, L * 0.42, W * 0.86, 0.05, col, 0.76); }
+    if (stripe) this.box(g, 0, 0, L * 0.96, 0.08, 0.02, stripe, bus ? 1.12 : 0.81, { line: false });
+    if (kind === 'taxi') this.box(g, -L * 0.08, 0, 0.2, 0.12, 0.1, '#fff3c0', 0.81, { glow: 1 });
+    for (const [a, c] of [[L * 0.3, 1], [L * 0.3, -1], [-L * 0.3, 1], [-L * 0.3, -1]]) { const w = this.cyl(g, a, c * (W / 2 - 0.02), 0.14, 0.14, 0.1, '#1c1c20', 0.0, 12); w.rotation.x = Math.PI / 2; w.position.y = 0.14; }
+    for (const c of [1, -1]) { this.box(g, L / 2 + 0.005, c * W * 0.32, 0.02, 0.12, 0.07, '#ffe9a0', 0.32, { glow: 1, line: false }); this.box(g, -L / 2 - 0.005, c * W * 0.32, 0.02, 0.12, 0.07, '#c02020', 0.32, { glow: 1, line: false }); }
+    return g;
+  },
+  /* ---- 2D 그리기 가로채기 (zq가 있는 동안, 메인 캔버스에 그리려는 것만) ---- */
+  zHook() { if (this.zhooked) return; this.zhooked = 1; const R = this, dw0 = drawWalker, dc0 = drawCarSprite;
+    drawWalker = function (c, w, t, opts) { if (!R.zq || c !== ctx) return dw0(c, w, t, opts);
+      const now = performance.now(); R.zq.w.push({ sprite: w.sprite, x: w.x, y: w.y, dir: w.dir | 0, moving: !!w.moving, sit: w.sit, run: w.run, low: (w.bowT && now < w.bowT) || (w.kneelT && now < w.kneelT) });
+      R.anchor(c, w.x, w.y, 1.32, 15); // 다음 이름표·말풍선은 이 사람 머리 기준
+      if (w.vip) { c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 22); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 22); c.restore(); }
+      if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w); c.restore(); } };
+    drawCarSprite = function (c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
+      if (!R.zq || c !== ctx || (col && typeof col === 'object' && col.ride)) return dc0(c, x, y, a, col, len, wid, kind, speed);
+      let stripe = null, cc = col; if (col && typeof col === 'object') { stripe = col.stripe || null; cc = col.col; } R.zq.c.push({ x, y, a, col: cc || '#c8ccd2', stripe, len, wid, kind }); };
+  },
+  // 2D 그림이 쓰는 변환 (땅 = 세로만 sin배): worldToScreen과 같다
+  zFrame(z, t) {
+    const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.zdt = dt; this.show(true); this.zShowG(true); this.zHook();
+    this.fe = this.fe ? this.fe * 0.95 + dt * 1000 * 0.05 : 16; if (this.fr % 60 === 0) { if (this.fe > 24) this.q = Math.max(0.55, this.q * 0.85); else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.1); }
+    const pr = Math.min(DPR, 2) * this.q; if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
+    if (this.sw !== VW || this.sh !== VH) { r.setSize(VW, VH, true); this.sw = VW; this.sh = VH; this.cam.aspect = VW / VH; this.cam.updateProjectionMatrix(); }
+    if (this.gcv.width !== Math.round(VW * DPR) || this.gcv.height !== Math.round(VH * DPR)) { this.gcv.width = Math.round(VW * DPR); this.gcv.height = Math.round(VH * DPR); this.gcv.style.width = VW + 'px'; this.gcv.style.height = VH + 'px'; }
+    // 직교 카메라: 화면 가운데 = 카메라 (2D와 같은 확대)
+    const k = Cam.zoom * TILE, vw = VW / k, vh = VH / k, cx = camSnapX() / TILE, cz = camSnapY() / TILE, D = 60, oc = this.ocam;
+    oc.left = -vw / 2; oc.right = vw / 2; oc.top = vh / 2; oc.bottom = -vh / 2; oc.updateProjectionMatrix();
+    oc.position.set(cx, Math.sin(Z3_EL) * D, cz + Math.cos(Z3_EL) * D); oc.lookAt(cx, 0, cz); oc.updateMatrixWorld(); this.cc = oc;
+    const sun = this.zsun, R2 = Math.max(vw, vh / this.zSq()) * 0.62 + 6; sun.position.set(cx - 9, 22, cz + 14); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
+    const sc = sun.shadow.camera; if (sc.right !== R2) { sc.left = -R2; sc.right = R2; sc.top = R2; sc.bottom = -R2; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
+    this.zStream(z, cx, cz, vw, vh / this.zSq(), dt);
+    this.zq = { w: [], c: [] }; this.pq = [];
+  },
+  // 같은 사람·차를 프레임마다 이어 주기: 같은 종류 + 가장 가까운 지난 자리
+  zMatch(list, prev, same, far, pre) {
+    const used = new Set(), out = [];
+    for (const q of list) { let best = null, bd = far; for (const p of prev) { if (used.has(p.key) || !same(p, q)) continue; const d = Math.hypot(p.x - q.x, p.y - q.y); if (d < bd) { bd = d; best = p; } }
+      const key = best ? best.key : pre + (this.zid++); used.add(key); out.push(Object.assign(q, { key })); }
+    return out;
+  },
+  zRender() {
+    const zq = this.zq || { w: [], c: [] }; this.zq = null; const t = performance.now() / 1000, dt = this.zdt || 0.016;
+    this.zw = this.zMatch(zq.w, this.zw, (p, q) => p.sprite === q.sprite, 26, 'zw');
+    this.zw.forEach((w, i) => { const H = this.actor(w.key, Sprites.PAL[w.sprite] || Sprites.PAL.walker1 || Sprites.PAL.player, w, t, dt, i * 1.3); if (w.low) H.root.position.y -= 0.25; });
+    this.zc = this.zMatch(zq.c, this.zc, (p, q) => p.col === q.col && p.kind === q.kind && p.len === q.len, 48, 'zc');
+    for (const c of this.zc) { let H = this.A.get(c.key); if (!H) { H = { root: this.car3(c.len, c.wid, c.col, c.stripe, c.kind), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); }
+      H.seen = this.fr; H.root.position.set(c.x / TILE, 0, c.y / TILE); H.root.rotation.y = -c.a; }
+    this.render(); // 펫 + 안 보인 것 치우기 + 그리기
+  },
+});
+// 땅 그림 변환 (drawZone이 #zground에 그릴 때도 같이 쓴다)
+function zoneSq() { return Game.scene === 'zone' && Room3D.zNow ? Room3D.zSq() : 1; }
+// 3D 바깥: 땅은 #zground에 2D 그대로, 나머지는 3D (drawZone 안에서 g = 땅 캔버스)
+function drawZone3D(t) {
+  Room3D.zFrame(Game.zone, t);
+  const g = Room3D.gctx; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#14161c'; g.fillRect(0, 0, g.canvas.width, g.canvas.height); g.setTransform(ctx.getTransform()); g.imageSmoothingEnabled = false;
+  try { drawZone(t, g); } finally { Room3D.zRender(); }
+}
 
 /* ===================== 펫 진화 모습 (v263, 사용자 2026-10-20 '볏 말고 뭔가 다른 게 없을까' · '형태가 바뀌어도 돼') =====================
  * 머리 볏·흰 날개 대신 펫마다 몸 모양이 바뀐다: 1단계(Lv15)는 한 군데, 최종(Lv30)은 크게 여러 군데 (꼬리·갈기·등·날개·뿔…).

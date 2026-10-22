@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v322</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v323</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -12522,10 +12522,10 @@ const Pets = {
   // 거북이 (사용자 2026-10-16): 걸어가면 모래와 물길이 기찻길처럼 깔리고, 가만히 있으면 갈매기가 날아와 등껍질을 쪼아서 머리·팔다리를 쏙 집어넣는다
   turtle(c, s, key, idle, t) {
     if (s.moving) { /* v237 사용자 '거북이는 그냥 물줄기 그거 없애자': 모래·물길(Beach) 안 깐다 */ if (s.gw && !s.gOff) s.gOff = Object.assign({ t }, s.gw); s.gw = null; } // 걷기 시작하면 앉아 있던 갈매기는 날아가 버린다
-    const O = s.gOff; if (O) { const p = (t - O.t) / 1.2; if (p > 1 || p < 0) s.gOff = null; else { const gx = O.x + O.f * p * 70, up = O.up + p * p * 60 + p * 10; this.extra.push({ top: 1, y: s.y + 60, d: () => this.gull(c, gx, O.y, O.f, up, t, 0) }); } }
+    const O = s.gOff; if (O) { const p = (t - O.t) / 1.2; if (p > 1 || p < 0) s.gOff = null; else { const gx = O.x + O.f * p * 70, up = O.up + p * p * 60 + p * 10; this.extra.push({ top: 1, y: s.y + 60, d: () => this.gull(c, gx, O.y, O.f, up, t, 0, s) }); } }
     const T = this.tSeq(s.moving ? 0 : idle, s.face); if (!T.g) { s.gw = null; return T; }
     const g = T.g, gx = s.x + g.dx, gy = s.y + 0.3; s.gw = { x: gx, y: gy, up: g.up, f: g.f };
-    this.extra.push({ y: g.up > 0 ? s.y + 60 : s.y + 0.2, d: () => { this.gull(c, gx, gy, g.f, g.up, t, g.peck); if (T.say && typeof Net !== 'undefined') Net.label(c, T.say, T.sayAt === 'g' ? gx : s.x, (T.sayAt === 'g' ? gy - 14 - g.up : s.y - 13)); } });
+    this.extra.push({ y: g.up > 0 ? s.y + 60 : s.y + 0.2, d: () => { this.gull(c, gx, gy, g.f, g.up, t, g.peck, s); if (T.say && typeof Net !== 'undefined') Net.label(c, T.say, T.sayAt === 'g' ? gx : s.x, (T.sayAt === 'g' ? gy - 14 - g.up : s.y - 13)); } });
     return T;
   },
   // 눈사람 올라푸 (v234, 사용자 '가만히 있으면 서서히 녹아내리자'): 3초 넘게 서 있으면 14초에 걸쳐 녹아 물웅덩이, 걸으면 다시 뭉친다
@@ -12539,7 +12539,7 @@ const Pets = {
   // 악어 (v234, 사용자 '가만히 있으면 악어새가 날라와서 입에 있는 찌꺼기 빼주는 걸로'): 3초 서 있으면 11초마다 — 날아와 아래턱 끝에 앉고, 악어가 입을 쩍, 콕콕 찌꺼기 빼고, 내려와 날아간다
   crocBird(c, s, idle, t) {
     if (s.moving) { if (s.cbw && !s.cbOff) s.cbOff = Object.assign({ t }, s.cbw); s.cbw = null; } // 걸으면 놀라서 날아간다
-    const O = s.cbOff; if (O) { const p = (t - O.t) / 1.2; if (p > 1 || p < 0) s.cbOff = null; else { const bx = O.x + O.f * p * 70, by = O.y - p * p * 50 - p * 10; this.extra.push({ top: 1, y: s.y + 60, d: () => this.plover(c, bx, by, O.f, s.y + 1, t, 0, true) }); } }
+    const O = s.cbOff; if (O) { const p = (t - O.t) / 1.2; if (p > 1 || p < 0) s.cbOff = null; else { const bx = O.x + O.f * p * 70, by = O.y - p * p * 50 - p * 10; this.extra.push({ top: 1, y: s.y + 60, d: () => this.plover(c, bx, by, O.f, s.y + 1, t, 0, true, s.y) }); } }
     const u0 = s.moving ? -1 : idle - 3; if (u0 < 0) { s.cbw = null; return null; }
     const u = u0 % 11, f = s.face || 1, ease = p => 1 - (1 - p) * (1 - p), jx = s.x + f * 12.3, jy = s.y - 2.4, open = u > 1.1 && u < 6.1;
     let b = null, say = null, at = 'b';
@@ -12553,12 +12553,13 @@ const Pets = {
     if (!b) { s.cbw = null; return { open }; }
     s.cbw = { x: b.x, y: b.y, f };
     const B = b, sh = B.fly ? s.y + 1 : B.y > s.y - 0.5 ? B.y : null;
-    this.extra.push({ y: B.fly ? s.y + 60 : s.y + 0.3, d: () => { this.plover(c, B.x, B.y, B.f, sh, t, B.pk, B.fly); if (say && typeof Net !== 'undefined') Net.label(c, say, at === 'b' ? B.x : s.x, at === 'b' ? B.y - 12 : s.y - 13); } });
+    this.extra.push({ y: B.fly ? s.y + 60 : s.y + 0.3, d: () => { this.plover(c, B.x, B.y, B.f, sh, t, B.pk, B.fly, s.y); if (say && typeof Net !== 'undefined') Net.label(c, say, at === 'b' ? B.x : s.x, at === 'b' ? B.y - 12 : s.y - 13); } });
     return { open };
   },
   crumbs(x, y, f) { if (typeof Particles === 'undefined' || (typeof REDUCED_MOTION !== 'undefined' && REDUCED_MOTION)) return; for (let i = 0; i < 4; i++) Particles.push({ x, y, vx: f * (8 + Math.random() * 22) + (Math.random() - 0.5) * 14, vy: -18 - Math.random() * 22, g: 90, life: 0.55, max: 0.55, col: ['rgba(150,110,70,', 'rgba(220,200,150,', 'rgba(120,150,80,'][i % 3], r: 0.8 }); },
   // 악어새 (물떼새, 펫 그림체 반 픽셀): 회색 등, 하얀 배, 까만 머리띠·눈줄·가슴띠. (x, y) = 발, sh = 그림자 y (null이면 없음), pk = 고개 숙여 콕 (0~1)
-  plover(c, x, y, f, sh, t, pk, fly) {
+  plover(c, x, y, f, sh, t, pk, fly, gy) {
+    if (typeof Bird3D !== 'undefined' && Bird3D.want(c)) { const g = gy != null ? gy : sh != null ? sh : y; return Bird3D.push({ k: 'plover', x, y: g, up: g - y, f, peck: pk, fly }); } // v323 3D (gy = 악어가 선 땅)
     const W = '#f4f2ea', G = '#9a9488', GD = '#6e695f', K = '#1e1e22', L = '#c8a060', r = (X, Y0, w, h, col) => { c.fillStyle = col; c.fillRect(X, Y0, w, h); };
     c.save(); if (sh != null) { c.fillStyle = `rgba(0,0,0,${Math.max(0.06, 0.2 - Math.max(0, sh - y) / 300).toFixed(2)})`; c.beginPath(); c.ellipse(Math.round(x), Math.round(sh), 3, 1, 0, 0, 7); c.fill(); }
     c.translate(snapPx(c, x), snapPx(c, y)); c.scale(f, 1);
@@ -12582,7 +12583,8 @@ const Pets = {
     return out;
   },
   // 갈매기 (펫 그림체, 반 픽셀): 하얀 몸, 회색 날개 + 까만 날개 끝, 노란 부리에 빨간 점, 주황 다리. up > 0이면 날고 있다
-  gull(c, x, y, f, up, t, peck) {
+  gull(c, x, y, f, up, t, peck, on) {
+    if (typeof Bird3D !== 'undefined' && Bird3D.want(c)) { const u0 = up; if (on && typeof Pet3D !== 'undefined' && Pet3D.has('turtle')) { const top = Pet3D.topOf('turtle', PetRT.petH('turtle') / TILE * 1.1) * TILE * 0.92; x = on.x + (x - on.x) * 0.3; up += top; } return Bird3D.push({ k: 'gull', x, y, up, f, peck, fly: u0 > 0 }); } // v323 3D: 큰 3D 거북이 등껍질 위에 내려앉아 쫀다 (on = 거북이)
     const W = '#f6f6f2', WS = '#d8dce0', G = '#9aa4b0', GD = '#78828e', K = '#22242a', Y = '#f2c230', R = '#d83a2a', O = '#f0a040', r = (X, Y0, w, h, col) => { c.fillStyle = col; c.fillRect(X, Y0, w, h); };
     c.save(); c.fillStyle = `rgba(0,0,0,${up > 0 ? Math.max(0.06, 0.22 - up / 300).toFixed(2) : 0.22})`; c.beginPath(); c.ellipse(Math.round(x), Math.round(y), up > 0 ? 4 : 3.5, 1.3, 0, 0, 7); c.fill();
     c.translate(snapPx(c, x), snapPx(c, y - up)); c.scale(f, 1);
@@ -12601,6 +12603,7 @@ const Pets = {
     const R = 22 + Math.max(0, 3 - idle) * 40;
     for (let i = 0; i < 2; i++) {
       const a = t * 1.5 + i * Math.PI, px = s.x + Math.cos(a) * R, oy = Math.sin(a) * 6, py = s.y - 46 + oy - Math.sin(t * 2 + i) * 2, f = Math.sin(a) > 0 ? -1 : 1;
+      if (typeof Bird3D !== 'undefined' && Bird3D.want(c)) { Bird3D.push({ k: 'ptero', x: px, y: s.y + Math.sin(a) * R * 0.5, up: s.y + oy - py, a: Math.atan2(Math.cos(a) * 0.5, -Math.sin(a)), fly: true }); continue; } // v323 3D: 원 그리며 날기 (진행 방향을 본다)
       c.fillStyle = 'rgba(0,0,0,.14)'; c.beginPath(); c.ellipse(Math.round(px), Math.round(s.y + 4 + oy), 5, 1.5, 0, 0, 7); c.fill();
       const B = '#8a5a6a', W = '#a87a8a', fl = Math.floor(t * 7 + i * 3) % 2, r = (X, Y, w, h, col) => { c.fillStyle = col; c.fillRect(X, Y, w, h); };
       c.save(); c.translate(snapPx(c, px), snapPx(c, py)); c.scale(f, 1);
@@ -17641,6 +17644,7 @@ const Room3D = {
       let want = H.ang; if (Math.hypot(dx, dz) > 0.004 && Math.hypot(dx, dz) < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face) want = q.face < 0 ? Math.PI : 0; // 걷는 쪽을 본다 (서 있으면 2D 그림의 왼쪽·오른쪽)
       let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
       H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.inner.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05; H.sh.scale.setScalar(Math.max(0.6, Math.min(2.2, q.h * 1.4))); });
+    if (typeof Bird3D !== 'undefined') Bird3D.flush(this, now / 1000); // v323 날아오는 새
     for (const [k, H] of this.A) if (H.seen !== this.fr) { this.drop(H); this.A.delete(k); }
     this.r.render(this.S, this.cc || this.cam);
   },
@@ -18591,6 +18595,63 @@ const Pet3D = {
     r.position.copy(at).add(new T3.THREE.Vector3(H.top * 0.2, H.top * 0.05, 0)); r.children.forEach((c, i) => { const ph = (t * 2 + i / 3) % 1; c.position.x = ph * H.top * 0.5; c.rotation.set(0, Math.PI / 2, -0.8); c.scale.setScalar(H.top * (0.12 + ph * 0.25)); c.material.opacity = 0.7 * (1 - ph); }); },
   wings(H) { if (H.wg) return H.wg; const { THREE } = T3, g = H.wg = new THREE.Group(), mt = new THREE.MeshBasicMaterial({ color: 0xe8e8f4, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
     for (const sd of [1, -1]) { const p = new THREE.Group(), w = new THREE.Mesh(this.pg('wing', T => new T.CircleGeometry(1, 14)), mt); w.rotation.x = -Math.PI / 2; w.scale.set(H.top * 1.4, H.top * 0.5, 1); w.position.z = sd * H.top * 0.5; p.add(w); g.add(p); } H.root.add(g); return g; },
+};
+
+/* ===================== 날아오는 새 3D (v323, 사용자 '날라오는 새도 바꿔야하는거 알지') =====================
+ * 거북이를 쪼는 갈매기 · 악어 입 청소하는 악어새(물떼새) · 티라노 머리 위 익룡. 대본(언제 날아와 어디 앉고 콕 쪼는지)은 pets.js 그대로,
+ * 3D일 때(Room3D.pq가 열려 있고 게임 화면 ctx에 그릴 때)는 2D 그림 대신 여기 줄에 넣고 Room3D.render0이 입체로 세운다.
+ * 모델: 앞 = +x, 위 = +y, 단위 = 칸. 날개는 어깨에서 도는 축(wl, wr), 머리는 목에서 (hd), 쪼기는 다리 위에서 몸 전체(bd)를 숙인다. */
+const BIRD3 = {
+  gull: { s: 1, body: '#f6f6f2', belly: '#ffffff', wing: '#9aa4b0', tip: '#22242a', head: '#f6f6f2', beak: '#f2c230', spot: '#d83a2a', leg: '#f0a040', span: 0.36 },
+  plover: { s: 0.72, body: '#9a9488', belly: '#f4f2ea', wing: '#6e695f', tip: '#1e1e22', head: '#f4f2ea', beak: '#1e1e22', leg: '#c8a060', band: '#1e1e22', span: 0.3 },
+  ptero: { s: 1.5, body: '#8a5a6a', belly: '#a87a8a', wing: '#a87a8a', tip: '#7a4a5a', head: '#8a5a6a', beak: '#e0a040', crest: 1, span: 0.5 },
+};
+const Bird3D = {
+  q: [], G: null,
+  // 3D가 그릴 차례인가 (아니면 2D 그림)
+  want(c) { return typeof Room3D !== 'undefined' && !!Room3D.pq && typeof ctx !== 'undefined' && c === ctx && !!window.T3; },
+  // b = { k, x, y (땅 px), up (높이 px), f (보는 쪽 ±1), a (나는 방향 라디안, 있으면 f 대신), peck 0~1, fly }
+  push(b) { this.q.push(b); },
+  geo() { if (this.G) return this.G; const { THREE } = T3, keep = g => (g._keep = 1, g);
+    const flat = (pts, d = 0.012) => { const sh = new THREE.Shape(); pts.forEach(([x, z], i) => i ? sh.lineTo(x, z) : sh.moveTo(x, z)); const g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: false }); g.rotateX(Math.PI / 2); g.translate(0, d / 2, 0); return keep(g); }; // (x, z) 평면 모양 → 얇은 판 (어깨 z=0에서 +z로)
+    const wing = flat([[0.07, 0], [0.06, 0.35], [0.0, 0.7], [-0.16, 1.0], [-0.1, 0.62], [-0.11, 0.3], [-0.1, 0]]), tip = flat([[0.0, 0.7], [-0.16, 1.0], [-0.1, 0.66], [-0.02, 0.62]], 0.014); // 앞이 둥글고 끝이 뒤로 젖혀진 갈매기 날개 + 까만 끝
+    const tri = new THREE.BufferGeometry(); tri.setAttribute('position', new THREE.Float32BufferAttribute([0.09, 0, 0, -0.1, 0, 0, -0.02, 0, 1, 0.09, 0, 0, -0.02, 0, 1, -0.1, 0, 0], 3)); tri.computeVertexNormals(); // 익룡 날개막 (양면)
+    this.G = { sph: keep(new THREE.SphereGeometry(1, 18, 12)), cone: keep(new THREE.ConeGeometry(1, 1, 12).rotateZ(-Math.PI / 2)), cyl: keep(new THREE.CylinderGeometry(1, 1, 1, 6)), wing, tip, tri: keep(tri) };
+    return this.G; },
+  make(k) {
+    const { THREE } = T3, R = Room3D, B = BIRD3[k], G = this.geo(), root = new THREE.Group(), inner = new THREE.Group(), bd = new THREE.Group(); root.add(inner); inner.add(bd); inner.scale.setScalar(B.s);
+    const ol = R.olMat(), M = (geo, col, x, y, z, sx, sy, sz, par = bd, line = true, o) => { const m = new THREE.Mesh(geo, o || R.toon(col)); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = true; par.add(m); if (line) { const e = new THREE.Mesh(geo, ol); e.scale.setScalar(1.12); m.add(e); } return m; };
+    // 몸 · 배 · 꼬리
+    M(G.sph, B.body, 0, 0.19, 0, 0.17, 0.085, 0.085); M(G.sph, B.belly, 0.02, 0.165, 0, 0.14, 0.07, 0.075, bd, false);
+    M(G.cone, B.wing, -0.2, 0.2, 0, 0.09, 0.05, 0.05); M(G.sph, B.tip, -0.27, 0.205, 0, 0.03, 0.012, 0.035, bd, false);
+    if (B.band) M(G.sph, B.band, 0.11, 0.19, 0, 0.03, 0.07, 0.078, bd, false); // 물떼새 가슴띠
+    // 머리 (목에서 돈다)
+    const hd = new THREE.Group(); hd.position.set(0.13, 0.24, 0); bd.add(hd);
+    M(G.sph, B.head, 0.04, 0.04, 0, 0.06, 0.058, 0.055, hd);
+    M(G.cone, B.beak, 0.13, 0.03, 0, k === 'ptero' ? 0.16 : 0.07, 0.016, 0.016, hd, false); if (B.spot) M(G.sph, B.spot, 0.135, 0.018, 0, 0.008, 0.007, 0.008, hd, false);
+    for (const z of [-1, 1]) M(G.sph, '#111', 0.075, 0.055, z * 0.042, 0.011, 0.011, 0.011, hd, false, R.toon('#111'));
+    if (B.band) M(G.sph, B.band, 0.03, 0.065, 0, 0.045, 0.012, 0.058, hd, false); // 까만 머리띠
+    if (B.crest) M(G.cone, B.body, -0.06, 0.07, 0, 0.09, 0.025, 0.01, hd, false).rotation.z = Math.PI + 0.35; // 익룡 볏
+    // 날개 (어깨 축): 날 때 펴는 날개 · 앉으면 몸 옆에 접은 날개(fold)
+    const wings = [-1, 1].map(sd => { const p = new THREE.Group(); p.position.set(0.02, 0.23, sd * 0.05); bd.add(p); const w = new THREE.Group(); w.scale.z = sd; p.add(w);
+      if (k === 'ptero') { const m = new THREE.Mesh(G.tri, R.toon(B.wing, { side: THREE.DoubleSide })); m.scale.set(1.3, 1, B.span); m.castShadow = true; w.add(m); }
+      else { const m = new THREE.Mesh(G.wing, R.toon(B.wing, { side: THREE.DoubleSide })), e = new THREE.Mesh(G.tip, R.toon(B.tip, { side: THREE.DoubleSide })); m.scale.set(1, 1, B.span); e.scale.set(1, 1, B.span); e.position.y = 0.001; m.castShadow = true; w.add(m, e); }
+      return p; });
+    const fold = new THREE.Group(); bd.add(fold); if (k !== 'ptero') for (const sd of [-1, 1]) { M(G.sph, B.wing, -0.05, 0.215, sd * 0.07, 0.15, 0.05, 0.028, fold, false).rotation.z = 0.12; M(G.sph, B.tip, -0.2, 0.225, sd * 0.045, 0.06, 0.02, 0.02, fold, false).rotation.z = 0.2; }
+    // 다리
+    const legs = new THREE.Group(); inner.add(legs); if (B.leg) for (const z of [-1, 1]) { M(G.cyl, B.leg, 0, 0.055, z * 0.028, 0.008, 0.11, 0.008, legs, false); M(G.sph, B.leg, 0.02, 0.004, z * 0.028, 0.03, 0.006, 0.02, legs, false); }
+    const sh = new THREE.Mesh(R.shGeo || (R.shGeo = new THREE.CircleGeometry(0.3, 20)), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: 0.2, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.012; sh.scale.setScalar(0.5 * B.s); root.add(sh);
+    return { root, inner, bd, hd, wings, fold, legs, sh, bird: k };
+  },
+  // Room3D.render0에서: 이번 장면에 들어온 새들 세우기 (A 목록 열쇠 'b0'…, 안 보인 건 Room3D가 치운다)
+  flush(R, t) {
+    const q = this.q; this.q = []; if (!window.T3) return;
+    q.forEach((b, i) => { const key = 'b' + i; let H = R.A.get(key); if (!H || H.bird !== b.k) { if (H) R.drop(H); H = this.make(b.k); R.S.add(H.root); R.A.set(key, H); } H.seen = R.fr;
+      const up = Math.max(0, b.up || 0) / TILE, fly = !!b.fly || up > 0.05; H.root.position.set(b.x / TILE, 0, b.y / TILE); H.inner.position.y = up;
+      H.root.rotation.y = b.a != null ? -b.a : b.f < 0 ? Math.PI : 0; H.sh.material.opacity = Math.max(0.05, 0.22 - up * 0.05);
+      const ph = t * (b.k === 'ptero' ? 7 : 11) + i * 1.7, pk = b.peck || 0; H.bd.rotation.z = -pk * 0.7; H.hd.rotation.z = -pk * 0.5; H.legs.visible = !fly; H.inner.rotation.z = fly ? Math.sin(ph) * 0.06 : 0;
+      H.fold.visible = !fly; H.wings.forEach((p, j) => { const sd = j ? 1 : -1; p.visible = fly || b.k === 'ptero'; p.rotation.set(-sd * (Math.sin(ph) * 0.55 + 0.12), 0, 0); }); });
+  },
 };
 
 /* ===================== 3D 사진 (v310, 사용자 2026-10-22 '여기 나타나는 사진도 바꿔야 하는 건가 통일성 있으려면' · 편집숍 '여기도 도트야') =====================

@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v313</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v314</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17524,13 +17524,13 @@ const Room3D = {
     let lift = 0; if (pose === 'ride') { const P = Game.player; x = P.x; y = P.y; lift = 1.3 * TILE; } // 원숭이: 주인 머리 위
     else for (const k in Pets.st) { const s = Pets.st[k]; if (Math.abs(s.x - x) < 1 && s.y - y > 1 && s.y - y < 70) { lift = s.y - y; y = s.y; break; } } // 펄쩍 뛰기·날기: 2D에서 위로 그린 만큼 3D 높이로
     const e0 = Pets.evoNow, ev = e0 && Pets.evoK === kind && e0.st, e = ev ? Object.assign({}, e0, { fl: true, flat: true }) : e0; // 진화 빛·날리는 가루는 빼고 (몸만 입체로), 최종 진화로 커지는 건 3D에서 키운다
-    this.curSt = ev ? e0.st | 0 : 0; this.curDeco = Pets.decoNow && Pets.decoK === kind ? Pets.decoNow : null; this.curPose = pose; // v312 진화 단계는 모델에 진화 조각, 꾸미기는 모델에 모자·안경·목줄·털 색
+    this.curSt = ev ? e0.st | 0 : 0; this.curDeco = Pets.decoNow && Pets.decoK === kind ? Pets.decoNow : null; this.curPose = pose; this.curIdle = idle; // v312 진화 단계는 모델에 진화 조각, 꾸미기는 모델에 모자·안경·목줄·털 색
     return this.put(c, kind, x, y, lift, face, moving, t, tag, ev && !e0.flat ? PetEvo.scOf(kind, ev, pose) : 1, s => { Pets.evoNow = e; try { d0.call(Pets, s, kind, 25, 40, 1, moving, Math.floor(t * 12) / 12, '', idle, pose); } finally { Pets.evoNow = e0; } });
   },
   // 펫 하나 세우기: (x, y) 바닥 자리 · lift 높이 (게임 픽셀) · paint(s) = 오른쪽 보는 그림을 스크래치 (25, 40)에 발로 그리기. 이름표 위치(3D 높이)를 돌려준다
   put(c, kind, x, y, lift, face, moving, t, tag, big, paint) {
     const people = !!PET_PEOPLE[kind], h = PetRT.petH(kind) / TILE * 1.1, q = { kind, x, y, lift: lift / TILE, face, moving, people, h, big };
-    const st = this.curSt | 0, model = !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind, st); this.noModel = false; this.curSt = 0; q.pose = this.curPose; this.curPose = null; q.st = st; q.deco = this.curDeco; this.curDeco = null; q.dk = q.deco ? JSON.stringify(q.deco) : '';
+    const st = this.curSt | 0, model = !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind, st); this.noModel = false; this.curSt = 0; q.pose = this.curPose; this.curPose = null; q.idle = this.curIdle || 0; this.curIdle = 0; q.st = st; q.deco = this.curDeco; this.curDeco = null; q.dk = q.deco ? JSON.stringify(q.deco) : '';
     if (people) { const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]); q.pal = Sprites.PAL[sp]; }
     else if (model) { q.m = 1; q.top = Pet3D.topOf(kind, h); } // v312 블렌더 펫 모델 (pet3d.js)
     else { const pl = this.pLast || (this.pLast = new Map()), lk = kind + '|' + (tag || ''), b0 = this.pc.built | 0, t0 = performance.now(); this.pc.lock = pl.has(lk) && performance.now() - (this.pbT || 0) < 160; // v310 시간으로: 컴퓨터에서 펫 하나가 한 장에 13~19ms 쓰던 것 (진화한 펭귄은 매번 모양이 달라서)
@@ -17558,7 +17558,7 @@ const Room3D = {
         let want = H.ang; if (d > 0.004 && d < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face && !q.moving) want = q.face < 0 ? Math.PI : 0;
         let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
         H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.root.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05;
-        Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, q.pose && typeof q.pose === 'object' ? q.pose : null); return; }
+        Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, Object.assign({ idle: q.idle, wall: typeof q.pose === 'number' ? q.pose : null, ride: q.pose === 'ride' }, q.pose && typeof q.pose === 'object' ? q.pose : null)); return; }
       if (!q.e) return; let H = this.A.get(key); if (!H || !H.pet || H.model) { if (H) this.S.remove(H.root); H = this.mkPet(); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr;
       H.mesh.geometry = H.ol.geometry = q.e.geo; if (H.mat.map !== q.e.tex) { const first = !H.mat.map; H.mat.map = q.e.tex; if (first) H.mat.needsUpdate = true; }
       const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz; H.lx = X; H.lz = Z;
@@ -17621,6 +17621,7 @@ Object.assign(Room3D, {
   },
   /* ---- 건물 하나: 상자 + 앞벽(2D 앞벽 그림) · 옆벽(창문 줄) · 지붕(2D 지붕 그림) ---- */
   zBld(b, pl) {
+    if (typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld) try { return Bld3D.make(this, b, pl, bWallH(b) / TILE * Z3_BH); } catch (e) { console.warn('bld3d', e); this.zOld = 1; } // v314 고해상도 건물
     const { THREE } = T3, wh = bWallH(b), H = wh / TILE * Z3_BH, X = b.x * TILE, base = (b.y + b.h) * TILE, fw = b.w * TILE, sw = b.h * TILE, rh = b.h * TILE, P = 2, K = 2;
     // v304 (사용자 '렉이 너무 많이 걸리는데'): 그림 세 장·재질 여섯 개 → 한 장에 모아 (위 줄 = 앞벽 | 옆벽, 아래 = 지붕) 재질 하나, 그리기 한 번
     const CW = (fw + P + sw) * K, CH = (wh + P + rh) * K, sb = Object.assign({}, b, { x: 0, y: 0, w: b.h, h: 0, seed: b.seed ^ 77 });
@@ -17645,7 +17646,7 @@ Object.assign(Room3D, {
     let made = 0;
     for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e0 = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
       if (!inV) { if (e0 && (b.x > x1 + 12 || b.x + b.w < x0 - 12 || b.y > z1 + 12 || b.y + b.h < z0 - 12)) { this.zDrop(e0); this.zb.delete(id); } continue; }
-      let e = e0; if (!e) { if (made >= (this.fe > 20 ? 1 : 2)) continue; /* 한 프레임에 둘까지만 (미리 넉넉히 바깥부터 세워 둔다) */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
+      let e = e0; if (!e) { if (made >= (this.fe > 20 || (typeof Bld3D !== 'undefined' && Bld3D.on()) ? 1 : 2)) continue; /* 한 프레임에 둘까지만 (미리 넉넉히 바깥부터 세워 둔다) */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
       const hide = F.some(([fx, fz]) => fx > b.x - 0.4 && fx < b.x + b.w + 0.4 && fz < b.y + 0.3 && fz > b.y - e.H * cot - 0.6), tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
       const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
@@ -17729,6 +17730,264 @@ const PerfHud = {
       const R = typeof Room3D !== 'undefined' ? Room3D : {}, info = R.r && R.r.info && R.r.info.render, mode = Game.scene === 'zone' ? (R.zNow ? '바깥 3D' : '바깥 2D') : Game.scene === 'room' ? (R.room && R.room === Game.room ? '실내 3D' : '실내 2D') : Game.scene;
       this.el.textContent = `${Math.round(fps)} fps · 5초 동안 끊김 ${this.long.length}번 · ${mode}\n3D 해상도 ${(R.pr || 0).toFixed(2)}배 · 그리기 ${info ? info.calls : '-'}번 · 건물 ${R.zb ? R.zb.size : 0} · 사람·차 ${R.A ? R.A.size : 0}\n한 장에 계산 ${f1('up')}ms · 그리기 ${f1('dr')}ms (3D ${f1('gl')} · 펫 ${f1('pet')} · 새 모양 ${M.pbn | 0}번 ${(M.pb || 0).toFixed(0)}ms)\n화면 ${VW}×${VH} · 배율 ${DPR} · ${String(R.gpu || '그래픽카드 모름').slice(0, 60)}`; this.ms = {}; }
     requestAnimationFrame(tt => this.tick(tt)); },
+};
+
+/* ===================== 3D 건물 고해상도 (v314, 사용자 2026-10-22 '건물들도 더 사실적으로 만들수있나? 해상도 높게') =====================
+ * v303~v313 건물 벽은 2D 도트 앞벽 그림(drawBuildingFront, 1칸 16px)을 두 배로 늘려 붙인 것이었다.
+ * 이제 건물마다 1칸 D px 그림을 새로 그린다: 벽 재질(미장·벽돌·타일·패널·유리), 창틀·유리 반사·커튼, 층 띠, 1층 가게 간판·문, 필로티 주차장, 초록 방수 옥상.
+ * 입체(옥상 난간·계단실·물탱크·실외기·태양광·화단·안테나, 발코니·창 밑 실외기·차양, 법원 기둥·국기)는 상자와 한 모양으로 합치고,
+ * 색은 같은 그림 구석의 '색 견본' 칸을 가리켜서 건물 하나 = 재질 하나 = 그리기 한 번 그대로다 (v304 렉 줄이기 유지).
+ * 카메라는 남쪽에서만 내려다보므로 앞벽과 지붕에 공을 들이고 옆벽은 간단히. Store 'bldhd'=0 이면 예전 그림.
+ */
+const Bld3D = {
+  SHOPS: ['편의점', '카페', '약국', '치킨', '분식', '미용실', '세탁소', '안경', '꽃집', '베이커리', '노래방', '피자', '정육점', '문구', '김밥', '국밥', 'PC방', '반찬', '휴대폰', '빨래방'],
+  UP: ['치과', '수학학원', '내과', '태권도', '피아노', '헬스', '스터디카페', '한의원', '당구장', '영어학원'],
+  NAME: ['한빛빌딩', '대성타워', '미래빌딩', '서울센터', '새롬빌딩', '동아타워', '우리빌딩', '태양빌딩', '청운타워', '하나빌딩'],
+  SIGN: ['#1f6fb8', '#c0302a', '#2a8a4a', '#e08a1a', '#6a3a9a', '#22303e', '#d04a7a', '#0f7a7a', '#8a5a2a', '#c89a10'],
+  BRICK: ['#8a4a3a', '#9a5a44', '#7a4636', '#a06a52', '#6e564a'],
+  TILE: ['#dcd4c4', '#cfcac0', '#e4dccb', '#bdb5a8', '#d8cfc0'],
+  LABEL: { court: '법원', office: '경매 사무소', registry: '등기소', center: '주민센터', bank: '은행', savings: '저축은행', agent: '공인중개사', shop: '편집숍', arcade: '게임장', casino: '카지노', hospital: '병원', forsale: '분양', home: '우리 집' },
+  on() { return !!Store.get('bldhd', 1); },
+  rng(s) { s = (s >>> 0) % 0x7fffffff || 1; return () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff); },
+  mix(a, b, k) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * k).toString(16).padStart(2, '0')).join(''); },
+  grain() { // 벽·옥상 얼룩 (한 번만 만들어 반복)
+    if (this.gr) return this.gr; const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), r = this.rng(4242);
+    for (let i = 0; i < 2600; i++) { const v = r(); g.fillStyle = v < 0.55 ? `rgba(0,0,0,${0.04 + r() * 0.07})` : `rgba(255,255,255,${0.04 + r() * 0.06})`; g.fillRect(r() * 128, r() * 128, 1 + r() * 1.6, 1 + r() * 1.6); }
+    for (let i = 0; i < 18; i++) { g.fillStyle = `rgba(0,0,0,${0.02 + r() * 0.03})`; g.beginPath(); g.ellipse(r() * 128, r() * 128, 6 + r() * 16, 4 + r() * 10, r() * 3, 0, 7); g.fill(); }
+    return this.gr = c;
+  },
+  /* ---- 건물 하나의 설계: 재질·층·창·가게 (그림과 입체가 같은 설계를 본다) ---- */
+  plan(b, pl, H) {
+    const r = this.rng(b.seed * 7 + 3), kind = pl && pl.kind || (b.fixedPlace && b.fixedPlace.kind) || '', court = kind === 'court';
+    const pub = court || ['registry', 'center', 'bank', 'savings', 'hospital', 'office'].includes(kind);
+    let st = court ? 'court' : pub ? 'office' : b.floors >= 9 && r() < 0.5 ? 'glass' : ['stucco', 'brick', 'tile', 'panel', 'stucco', 'brick'][r() * 6 | 0];
+    if (b.floors >= 9 && st === 'brick') st = 'tile';
+    const res = (!kind || kind === 'site') && st !== 'glass' && st !== 'panel' && b.floors <= 7 && (kind === 'site' || r() < 0.55); // 빌라: 1층 필로티 주차장 + 발코니
+    const gf = court ? H * 0.42 : H > 1.9 ? 1.05 : H * 0.55, up = H - gf - 0.14, n = Math.max(1, Math.round(up / 0.8)), fh = up / n;
+    const wall = st === 'brick' ? this.BRICK[r() * 5 | 0] : st === 'tile' ? this.TILE[r() * 5 | 0] : st === 'glass' ? '#3c4a58' : st === 'office' ? '#d4cec2' : st === 'court' ? '#ddd6c6' : st === 'panel' ? this.mix(b.color, '#c8c8c4', 0.45) : this.mix(b.color, '#ebe4d6', 0.62);
+    const frame = st === 'glass' ? '#2a323a' : r() < 0.62 ? '#e4e6e4' : '#4a4c50';
+    const shops = [], nS = kind || res || st === 'glass' ? 0 : Math.max(1, Math.round(b.w / 3.4));
+    for (let i = 0; i < nS; i++) shops.push({ n: this.SHOPS[r() * this.SHOPS.length | 0], c: this.SIGN[r() * this.SIGN.length | 0], aw: r() < 0.45 });
+    const upSign = !kind && !res && st !== 'glass' && n >= 2 && r() < 0.6 ? { n: this.UP[r() * this.UP.length | 0], c: this.SIGN[r() * this.SIGN.length | 0] } : null;
+    const roof = st === 'glass' || pub ? '#a3a39b' : r() < 0.75 ? ['#5d8f6c', '#4f8a6a', '#6b9a72'][r() * 3 | 0] : '#9c9a90'; // 초록 우레탄 방수 옥상
+    const cols = Math.max(1, Math.floor((b.w - 0.25) / 1.05)), sp = b.w / cols, ww = Math.min(0.7, sp * 0.6), eve = State.evening, wins = [];
+    for (let f = 0; f < n; f++) for (let i = 0; i < cols; i++) { const sk = upSign && f === n - 1 && i < Math.max(1, cols - 1); // 2층 유리창 글씨 칸
+      wins.push({ f, i, lit: eve && r() < 0.55, cur: r(), bal: res && (cols <= 2 || i % 2 === 0), ac: !res && !sk && st !== 'glass' && !pub && r() < 0.2, acx: r() - 0.5, sk }); }
+    return { r, kind, K: FRONT_KIND[kind], court, pub, st, res, gf, n, fh, wall, frame, shops, upSign, roof, cols, sp, ww, wins, eve, name: b.floors >= 8 && !kind && r() < 0.7 ? this.NAME[r() * this.NAME.length | 0] : '', ant: r() < 0.35 };
+  },
+  winRect(P, w, H) { // 창 자리 (앞벽 위 왼쪽이 0,0)
+    const yt = 0.14 + w.f * P.fh, xc = (w.i + 0.5) * P.sp, ww = w.bal ? Math.min(P.sp * 0.8, P.ww * 1.3) : P.ww;
+    return w.bal ? [xc - ww / 2, yt + P.fh * 0.16, ww, P.fh * 0.78, xc, yt] : [xc - ww / 2, yt + P.fh * 0.22, ww, P.fh * 0.5, xc, yt];
+  },
+  /* ---- 그림 도우미 (단위: 칸) ---- */
+  txt(c, s, x, y, sz, col, maxW, o = {}) { const D = this.D; c.save(); const m = c.getTransform(); c.setTransform(1, 0, 0, 1, 0, 0);
+    c.font = `${o.w || 'bold'} ${Math.max(7, sz * D).toFixed(1)}px "IBM Plex Sans KR", sans-serif`; c.fillStyle = col; c.textAlign = o.al || 'center'; c.textBaseline = 'middle';
+    if (o.glow) { c.shadowColor = o.glow; c.shadowBlur = sz * D * 0.5; }
+    c.fillText(s, m.e + x * m.a, m.f + y * m.d, maxW ? maxW * m.a : undefined); c.restore(); },
+  grainOver(c, x, y, w, h, a = 1) { c.save(); const m = c.getTransform(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = a; c.fillStyle = c.createPattern(this.grain(), 'repeat'); c.fillRect(m.e + x * m.a, m.f + y * m.d, w * m.a, h * m.d); c.restore(); },
+  wallFill(c, P, x, y, w, h) {
+    const r = this.rng(P.wall.length * 977 + Math.round(w * 13)), wl = P.wall; c.fillStyle = wl; c.fillRect(x, y, w, h);
+    if (P.st === 'brick') { // 벽돌: 줄눈 + 한 장씩 조금 다른 색
+      const bh = 0.075, bw = 0.24; c.fillStyle = this.mix(wl, '#d8cfc0', 0.55); c.fillRect(x, y, w, h);
+      for (let yy = y, row = 0; yy < y + h; yy += bh, row++) for (let xx = x - (row % 2) * bw / 2; xx < x + w; xx += bw) { c.fillStyle = shade(wl, (r() - 0.5) * 0.22); c.fillRect(xx + 0.008, yy + 0.008, bw - 0.016, bh - 0.014); }
+    } else if (P.st === 'tile') { // 외장 타일
+      const s = 0.19; for (let yy = y; yy < y + h; yy += s) for (let xx = x; xx < x + w; xx += s) { c.fillStyle = shade(wl, (r() - 0.5) * 0.08); c.fillRect(xx, yy, s - 0.012, s - 0.012); }
+    } else if (P.st === 'panel' || P.st === 'office' || P.st === 'court') { // 큰 판 이음매
+      const pw = P.st === 'panel' ? 1.2 : 0.9, ph = P.st === 'panel' ? P.fh : 0.32; c.fillStyle = 'rgba(0,0,0,.13)';
+      for (let xx = x + pw; xx < x + w; xx += pw) c.fillRect(xx, y, 0.012, h); for (let yy = y + ph; yy < y + h; yy += ph) c.fillRect(x, yy, w, 0.012);
+      c.fillStyle = 'rgba(255,255,255,.12)'; for (let yy = y + ph; yy < y + h; yy += ph) c.fillRect(x, yy + 0.012, w, 0.01);
+    }
+    this.grainOver(c, x, y, w, h, P.st === 'glass' ? 0.4 : 1);
+    const g = c.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, 'rgba(255,255,255,.07)'); g.addColorStop(0.7, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.14)'); c.fillStyle = g; c.fillRect(x, y, w, h);
+  },
+  glassGrad(c, x, y, w, h, lit, P) { const g = c.createLinearGradient(x, y, x + w * 0.5, y + h);
+    if (lit) { g.addColorStop(0, '#ffe8ac'); g.addColorStop(1, '#eeac5c'); } else if (P.eve) { g.addColorStop(0, '#3c4c5e'); g.addColorStop(1, '#1c2632'); }
+    else { g.addColorStop(0, '#c2d6e4'); g.addColorStop(0.42, '#7d99b0'); g.addColorStop(1, '#465c70'); } return g; },
+  win(c, P, x, y, w, h, o) {
+    const t = Math.min(0.04, w * 0.07), fr = P.frame;
+    c.fillStyle = 'rgba(0,0,0,.24)'; c.fillRect(x - t * 0.8, y - t * 0.8, w + t * 1.6, h + t * 1.5); // 벽에 파인 깊이
+    c.fillStyle = fr; c.fillRect(x - t * 0.3, y - t * 0.3, w + t * 0.6, h + t * 0.6);
+    const gx = x + t, gy = y + t, gw = w - 2 * t, gh = h - 2 * t; c.fillStyle = this.glassGrad(c, gx, gy, gw, gh, o.lit, P); c.fillRect(gx, gy, gw, gh);
+    c.save(); c.beginPath(); c.rect(gx, gy, gw, gh); c.clip();
+    const cu = o.cur; if (cu < 0.3) { c.globalAlpha = o.lit ? 0.7 : 0.9; c.fillStyle = ['#e8dcc0', '#c8d4dc', '#e2c6bc', '#d8d0e0'][(cu * 13 | 0) % 4]; c.fillRect(gx, gy, gw * 0.3, gh); c.fillRect(gx + gw * 0.82, gy, gw * 0.18, gh); c.globalAlpha = 1; }
+    else if (cu < 0.45) { c.fillStyle = 'rgba(238,234,224,.8)'; for (let yy = gy; yy < gy + gh * 0.5; yy += 0.034) c.fillRect(gx, yy, gw, 0.017); }
+    if (!o.lit) { c.fillStyle = 'rgba(255,255,255,.2)'; c.beginPath(); c.moveTo(gx + gw * 0.1, gy + gh); c.lineTo(gx + gw * 0.4, gy); c.lineTo(gx + gw * 0.55, gy); c.lineTo(gx + gw * 0.25, gy + gh); c.fill(); }
+    c.restore();
+    c.fillStyle = fr; c.fillRect(x + w / 2 - t * 0.45, y, t * 0.9, h); if (o.door) c.fillRect(x, y + h * 0.42, w, t * 0.7); // 미닫이 가운데 창살
+    if (!o.door) { c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(x - t * 1.2, y + h + t * 0.3, w + t * 2.4, t * 0.8); c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(x - t * 1.2, y + h + t * 1.1, w + t * 2.4, t * 0.5);
+      const g = c.createLinearGradient(0, y + h + t * 1.6, 0, y + h + P.fh * 0.4); g.addColorStop(0, 'rgba(0,0,0,.1)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x + w * 0.1, y + h + t * 1.6, w * 0.8, P.fh * 0.4); } // 빗물 자국
+  },
+  door(c, P, x, y, w, h, lit) {
+    c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(x - 0.05, y - 0.05, w + 0.1, h + 0.05); c.fillStyle = '#2b2e32'; c.fillRect(x - 0.03, y - 0.03, w + 0.06, h + 0.03);
+    c.fillStyle = this.glassGrad(c, x, y, w, h, lit || P.eve, P); c.fillRect(x + 0.03, y + 0.03, w - 0.06, h - 0.03);
+    c.fillStyle = '#2b2e32'; c.fillRect(x + w / 2 - 0.015, y, 0.03, h); c.fillStyle = '#d8d4c8'; c.fillRect(x + w / 2 - 0.07, y + h * 0.45, 0.025, h * 0.22); c.fillRect(x + w / 2 + 0.045, y + h * 0.45, 0.025, h * 0.22);
+    c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x + 0.06, y + 0.05, 0.05, h - 0.1);
+    c.fillStyle = P.eve ? '#ffe9b0' : '#f2efe6'; c.fillRect(x + w / 2 - 0.08, y - 0.1, 0.16, 0.04); // 문 위 등
+  },
+  signBand(c, P, x, y, w, col, label, tc) { // 1층 간판 띠
+    const bc = P.eve ? shade(col, 0.2) : col; c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(x, y + 0.3, w, 0.03); c.fillStyle = bc; c.fillRect(x, y, w, 0.3);
+    c.fillStyle = 'rgba(255,255,255,.28)'; c.fillRect(x, y, w, 0.02); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x, y + 0.27, w, 0.03);
+    if (label) this.txt(c, label, x + w / 2, y + 0.155, 0.19, tc || '#fff', w - 0.16, P.eve ? { glow: tc || '#fff' } : {});
+  },
+  storefront(c, P, x, y, w, h, lit) { // 통유리 + 안쪽 진열
+    c.fillStyle = '#2c3034'; c.fillRect(x, y, w, h); const r = this.rng(Math.round(x * 100 + w * 31));
+    c.fillStyle = this.glassGrad(c, x, y, w, h, lit, P); c.fillRect(x + 0.03, y + 0.03, w - 0.06, h - 0.1);
+    for (let k = 0; k < 2; k++) { const sy = y + h * (0.38 + k * 0.28); c.fillStyle = 'rgba(30,30,34,.35)'; c.fillRect(x + 0.06, sy, w - 0.12, 0.02);
+      for (let xx = x + 0.08; xx < x + w - 0.12; xx += 0.07 + r() * 0.08) { c.fillStyle = this.SIGN[r() * 10 | 0]; c.globalAlpha = 0.45; c.fillRect(xx, sy - 0.05 - r() * 0.06, 0.05, 0.1); } c.globalAlpha = 1; }
+    c.fillStyle = 'rgba(255,255,255,.16)'; c.beginPath(); c.moveTo(x + w * 0.2, y + h); c.lineTo(x + w * 0.38, y); c.lineTo(x + w * 0.46, y); c.lineTo(x + w * 0.28, y + h); c.fill();
+    c.fillStyle = '#2c3034'; for (let xx = x + 0.75; xx < x + w - 0.3; xx += 0.75) c.fillRect(xx, y, 0.03, h); c.fillRect(x, y + h - 0.08, w, 0.08);
+  },
+  carRear(c, x, y, col) { // 필로티 안 세워 둔 차 뒷모습
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x - 0.02, y + 0.42, 0.84, 0.05);
+    c.fillStyle = col; c.beginPath(); c.roundRect ? c.roundRect(x, y + 0.1, 0.8, 0.34, 0.06) : c.rect(x, y + 0.1, 0.8, 0.34); c.fill();
+    c.fillStyle = shade(col, -0.15); c.beginPath(); c.moveTo(x + 0.12, y + 0.12); c.lineTo(x + 0.2, y - 0.04); c.lineTo(x + 0.6, y - 0.04); c.lineTo(x + 0.68, y + 0.12); c.fill();
+    c.fillStyle = '#26303a'; c.beginPath(); c.moveTo(x + 0.17, y + 0.1); c.lineTo(x + 0.23, y - 0.01); c.lineTo(x + 0.57, y - 0.01); c.lineTo(x + 0.63, y + 0.1); c.fill();
+    c.fillStyle = '#d0302a'; c.fillRect(x + 0.04, y + 0.17, 0.14, 0.06); c.fillRect(x + 0.62, y + 0.17, 0.14, 0.06); c.fillStyle = '#e8e4d8'; c.fillRect(x + 0.3, y + 0.26, 0.2, 0.07);
+  },
+  /* ---- 앞벽 ---- */
+  front(c, b, P, W, H, pl) {
+    const y0 = H - P.gf, r = this.rng(b.seed + 11);
+    this.wallFill(c, P, 0, 0, W, H);
+    if (P.st === 'glass') { // 유리 커튼월: 하늘 비침 + 멀리언 + 층 띠
+      const g = c.createLinearGradient(0, 0, W * 0.7, y0); if (P.eve) { g.addColorStop(0, '#34465a'); g.addColorStop(1, '#1a2430'); } else { g.addColorStop(0, '#b4cadb'); g.addColorStop(0.35, '#6e8ea8'); g.addColorStop(0.6, '#93b2c8'); g.addColorStop(1, '#46607a'); }
+      c.fillStyle = g; c.fillRect(0.06, 0.1, W - 0.12, y0 - 0.1);
+      if (!P.eve) for (let i = 0; i < 4; i++) { c.fillStyle = 'rgba(255,255,255,.1)'; c.beginPath(); c.ellipse(r() * W, 0.3 + r() * (y0 - 0.6), 0.6 + r() * 1.2, 0.18 + r() * 0.2, 0, 0, 7); c.fill(); }
+      for (const w of P.wins) if (w.lit) { const yt = 0.14 + w.f * P.fh; c.fillStyle = 'rgba(255,214,140,.75)'; c.fillRect(w.i * P.sp + 0.06, yt + 0.1, P.sp - 0.12, P.fh - 0.2); }
+      c.fillStyle = '#26303a'; for (let x = 0.06; x <= W - 0.05; x += 0.5) c.fillRect(x, 0.1, 0.03, y0 - 0.1);
+      for (let f = 0; f <= P.n; f++) { const yy = 0.14 + f * P.fh - 0.06; c.fillStyle = '#323e4a'; c.fillRect(0.06, yy, W - 0.12, 0.1); c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(0.06, yy, W - 0.12, 0.015); }
+      if (P.name) this.txt(c, P.name, W / 2, 0.36, 0.22, P.eve ? '#fff4d8' : '#f4f6f8', W * 0.7, P.eve ? { glow: '#ffe0a0' } : {});
+    } else if (P.st === 'office' || P.st === 'court') { // 관공서: 돌판 + 띠창
+      for (let f = 0; f < P.n; f++) { const yt = 0.14 + f * P.fh, y = yt + P.fh * 0.22, h = P.fh * 0.5, x0 = P.court ? 0.5 : 0.3, x1 = W - x0;
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x0 - 0.03, y - 0.03, x1 - x0 + 0.06, h + 0.06); c.fillStyle = this.glassGrad(c, x0, y, x1 - x0, h, false, P); c.fillRect(x0, y, x1 - x0, h);
+        if (P.eve) for (let x = x0; x < x1 - 0.4; x += 0.5) if (r() < 0.5) { c.fillStyle = 'rgba(255,214,140,.8)'; c.fillRect(x + 0.02, y + 0.02, 0.46, h - 0.04); }
+        c.fillStyle = 'rgba(255,255,255,.14)'; for (let x = x0 + 0.3; x < x1; x += 2.2) { c.beginPath(); c.moveTo(x, y + h); c.lineTo(x + 0.35, y); c.lineTo(x + 0.6, y); c.lineTo(x + 0.25, y + h); c.fill(); }
+        c.fillStyle = '#5a5e62'; for (let x = x0; x <= x1; x += 0.5) c.fillRect(x - 0.012, y, 0.024, h); c.fillStyle = 'rgba(255,255,255,.5)'; c.fillRect(x0 - 0.04, y + h + 0.01, x1 - x0 + 0.08, 0.03); }
+      if (P.court) { const w = Math.min(W * 0.45, 7); c.fillStyle = '#c8bfa8'; c.fillRect(W / 2 - w / 2 - 0.1, 0.02, w + 0.2, 0.12); c.fillStyle = '#0f3358'; c.fillRect(W / 2 - w / 2, y0 - 0.62, w, 0.42); c.fillStyle = '#c9a852'; c.fillRect(W / 2 - w / 2, y0 - 0.62, w, 0.025); c.fillRect(W / 2 - w / 2, y0 - 0.225, w, 0.025);
+        this.txt(c, pl ? pl.name : '법원', W / 2, y0 - 0.41, 0.26, '#ead48e', w - 0.3); }
+    } else { // 미장·벽돌·타일·패널: 창 한 칸씩
+      for (const w of P.wins) { const [x, y, ww, wh] = this.winRect(P, w, H); this.win(c, P, x, y, ww, wh, { lit: w.lit, cur: w.cur, door: w.bal }); }
+      if (P.st !== 'brick') for (let f = 1; f < P.n; f++) { const yy = 0.14 + f * P.fh; c.fillStyle = shade(P.wall, -0.1); c.fillRect(0, yy - 0.03, W, 0.05); c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(0, yy - 0.03, W, 0.012); }
+      if (P.upSign) { const yt = 0.14 + (P.n - 1) * P.fh, w = Math.min(W - 0.3, Math.max(1.6, (P.cols - 1) * P.sp)); // 2층 유리창 글씨 (학원·병원)
+        c.fillStyle = P.upSign.c; c.globalAlpha = 0.92; c.fillRect(0.15, yt + P.fh * 0.06, w, P.fh * 0.15); c.globalAlpha = 1; this.txt(c, P.upSign.n, 0.15 + w / 2, yt + P.fh * 0.135, Math.min(0.2, P.fh * 0.14), '#fff', w - 0.1); }
+    }
+    // 위 마감 (옥상 난간 아래 띠)
+    c.fillStyle = shade(P.st === 'glass' ? '#5a6672' : P.wall, 0.12); c.fillRect(0, 0, W, 0.08); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, 0.08, W, 0.025);
+    // 1층
+    c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(0, y0 - 0.02, W, 0.04);
+    const dr = pl && pl.door && pl.door.face === 0 ? pl.door : null, dx = dr ? dr.tx - b.x + 0.15 : -9, dh = Math.min(0.9, P.gf - 0.14);
+    if (P.court) { c.fillStyle = '#cfc7b4'; c.fillRect(0, y0, W, P.gf); this.grainOver(c, 0, y0, W, P.gf); for (let x = 0.9; x < W - 0.6; x += 1.6) { c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x + 0.35, y0 + 0.3, 0.9, P.gf - 0.36); c.fillStyle = this.glassGrad(c, x + 0.38, y0 + 0.33, 0.84, P.gf - 0.42, P.eve, P); c.fillRect(x + 0.38, y0 + 0.33, 0.84, P.gf - 0.42); } }
+    else if (P.K) { this.signBand(c, P, 0.06, y0 + 0.03, W - 0.12, P.K[0], this.LABEL[P.kind], P.K[1]); this.storefront(c, P, 0.1, y0 + 0.36, W - 0.2, H - y0 - 0.38, P.eve); }
+    else if (P.st === 'glass') { this.storefront(c, P, 0.08, y0 + 0.12, W - 0.16, H - y0 - 0.14, P.eve); c.fillStyle = '#26303a'; c.fillRect(0.06, y0, W - 0.12, 0.12); }
+    else if (P.res) { // 필로티 주차장
+      const g = c.createLinearGradient(0, y0, 0, H); g.addColorStop(0, '#16181c'); g.addColorStop(1, '#34373c'); c.fillStyle = g; c.fillRect(0, y0, W, P.gf);
+      const bays = Math.max(1, Math.round(W / 2.2)), bw = W / bays, cc = ['#e8e8e4', '#2a2c30', '#8a9098', '#a83a32', '#3a5a8a'];
+      for (let i = 0; i < bays; i++) { const x = i * bw; c.fillStyle = '#fff6d8'; c.fillRect(x + bw / 2 - 0.12, y0 + 0.05, 0.24, 0.035);
+        if (r() < 0.7 && !(dr && dx > x - 0.6 && dx < x + bw)) this.carRear(c, x + bw / 2 - 0.4, H - 0.5, cc[r() * 5 | 0]); }
+      for (let i = 0; i <= bays; i++) { const x = Math.min(W - 0.24, Math.max(0, i * bw - 0.12)); c.fillStyle = P.wall; c.fillRect(x, y0, 0.24, P.gf); this.grainOver(c, x, y0, 0.24, P.gf); c.fillStyle = 'rgba(0,0,0,.2)'; c.fillRect(x + 0.18, y0, 0.06, P.gf); }
+      if (!dr) this.door(c, P, Math.min(W - 0.85, 0.32), H - dh, 0.6, dh, P.eve);
+    } else { // 가게 줄
+      const n = P.shops.length, uw = W / n;
+      P.shops.forEach((s, i) => { const x = i * uw + 0.06, w = uw - 0.12; this.signBand(c, P, x, y0 + 0.03, w, s.c, s.n, '#fff'); this.storefront(c, P, x + 0.04, y0 + 0.36, w - 0.08, H - y0 - 0.38, P.eve);
+        if (!(dr && dx > x - 0.7 && dx < x + w)) this.door(c, P, x + w - 0.62, H - dh, 0.52, dh, P.eve); });
+      c.fillStyle = shade(P.wall, -0.08); for (let i = 0; i <= n; i++) c.fillRect(Math.min(W - 0.08, Math.max(0, i * uw - 0.06)), y0, 0.12, P.gf);
+    }
+    if (dr) this.door(c, P, dx, H - dh, 0.7, dh, P.eve);
+    if (P.kind === 'site') { const w = Math.min(W - 0.4, 2.8), x = (W - w) / 2, y = y0 - Math.min(0.75, P.fh * 0.9); // 경매 현수막
+      c.strokeStyle = '#555'; c.lineWidth = 0.015; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 0.1, y - 0.15); c.moveTo(x + w, y); c.lineTo(x + w + 0.1, y - 0.15); c.stroke();
+      c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x + 0.03, y + 0.03, w, 0.4); c.fillStyle = '#c8322a'; c.fillRect(x, y, w, 0.4); c.fillStyle = '#fff'; c.fillRect(x + 0.04, y + 0.04, w - 0.08, 0.015); c.fillRect(x + 0.04, y + 0.345, w - 0.08, 0.015);
+      this.txt(c, '경매 진행 중', x + w / 2, y + 0.2, 0.24, '#fff', w - 0.2); }
+    c.fillStyle = '#8c8880'; c.fillRect(0, H - 0.06, W, 0.06); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(0, H - 0.06, W, 0.012); // 밑 돌띠
+    c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(0, 0, 0.04, H); c.fillRect(W - 0.04, 0, 0.04, H);
+  },
+  side(c, b, P, W, H) {
+    this.wallFill(c, P, 0, 0, W, H); const n = Math.floor((W - 0.6) / 1.7);
+    if (P.st === 'glass') { c.fillStyle = this.glassGrad(c, 0, 0, W, H, false, P); c.fillRect(0.1, 0.12, W - 0.2, H - P.gf - 0.1); c.fillStyle = '#26303a'; for (let x = 0.1; x < W - 0.1; x += 0.5) c.fillRect(x, 0.12, 0.03, H - P.gf - 0.1); }
+    else for (let f = 0; f < P.n; f++) for (let i = 0; i < n; i++) { const x = 0.6 + i * 1.7 + 0.4, y = 0.14 + f * P.fh + P.fh * 0.28; this.win(c, P, x, y, 0.42, P.fh * 0.4, { cur: (f * 7 + i * 3) % 10 / 10 }); }
+    c.fillStyle = '#8a8e92'; c.fillRect(0.12, 0.08, 0.05, H); c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(0.12, 0.08, 0.015, H); // 빗물 홈통
+    c.fillStyle = shade(P.st === 'glass' ? '#5a6672' : P.wall, 0.12); c.fillRect(0, 0, W, 0.08); c.fillStyle = '#8c8880'; c.fillRect(0, H - 0.06, W, 0.06);
+  },
+  roofTop(c, b, P, W, D) {
+    const r = this.rng(b.seed + 29); c.fillStyle = P.roof; c.fillRect(0, 0, W, D);
+    for (let i = 0; i < 6 + W * D / 6; i++) { c.fillStyle = r() < 0.5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.06)'; c.beginPath(); c.ellipse(r() * W, r() * D, 0.2 + r() * 0.8, 0.15 + r() * 0.5, r() * 3, 0, 7); c.fill(); } // 덧칠 자국
+    this.grainOver(c, 0, 0, W, D);
+    c.fillStyle = 'rgba(0,0,0,.12)'; for (let x = 1.5; x < W - 0.5; x += 1.5) c.fillRect(x, 0.1, 0.012, D - 0.2); // 방수 이음
+    c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(0.07, 0.07, W - 0.14, 0.12); c.fillRect(0.07, 0.07, 0.1, D - 0.14); // 난간 그늘
+    c.fillStyle = '#3a3c3e'; for (const [x, y] of [[0.3, 0.3], [W - 0.3, 0.3], [0.3, D - 0.3], [W - 0.3, D - 0.3]]) { c.beginPath(); c.arc(x, y, 0.06, 0, 7); c.fill(); } // 배수구
+    if (b.detail === 'garden') { c.fillStyle = '#6a5038'; c.fillRect(0.4, 0.5, W * 0.45, D * 0.4); c.fillStyle = '#5c9448'; c.fillRect(0.45, 0.55, W * 0.45 - 0.1, D * 0.4 - 0.1);
+      for (let i = 0; i < 40; i++) { c.fillStyle = r() < 0.5 ? '#76ae58' : '#4a7c3a'; c.beginPath(); c.arc(0.5 + r() * (W * 0.45 - 0.2), 0.6 + r() * (D * 0.4 - 0.2), 0.04 + r() * 0.06, 0, 7); c.fill(); } }
+    if (P.court) { c.fillStyle = '#b8b0a0'; c.fillRect(2, 2, W - 4, D - 4); c.fillStyle = '#7e9cb4'; c.fillRect(W / 2 - 3, D / 2 - 2, 6, 4); c.fillStyle = '#5a5e62'; for (let x = W / 2 - 3; x <= W / 2 + 3; x += 0.75) c.fillRect(x - 0.02, D / 2 - 2, 0.04, 4); }
+  },
+  solarTex(c, x, y, w, h) { c.fillStyle = '#c8ccd0'; c.fillRect(x, y, w, h); c.fillStyle = '#1e3358'; c.fillRect(x + 1, y + 1, w - 2, h - 2); c.fillStyle = 'rgba(140,170,230,.35)';
+    for (let i = 1; i < 4; i++) c.fillRect(x + 1 + i * (w - 2) / 4, y + 1, 0.8, h - 2); for (let j = 1; j < 6; j++) c.fillRect(x + 1, y + 1 + j * (h - 2) / 6, w - 2, 0.8);
+    c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x + 2, y + 2, (w - 4) * 0.4, h * 0.3); },
+  flagTex(c, x, y, w, h) { c.fillStyle = '#fbfbf6'; c.fillRect(x, y, w, h); const cx = x + w / 2, cy = y + h / 2, R = h * 0.24;
+    c.fillStyle = '#cd2e3a'; c.beginPath(); c.arc(cx, cy, R, Math.PI, 0); c.fill(); c.fillStyle = '#0047a0'; c.beginPath(); c.arc(cx, cy, R, 0, Math.PI); c.fill();
+    c.fillStyle = '#cd2e3a'; c.beginPath(); c.arc(cx - R / 2, cy, R / 2, 0, 7); c.fill(); c.fillStyle = '#0047a0'; c.beginPath(); c.arc(cx + R / 2, cy, R / 2, 0, 7); c.fill();
+    c.fillStyle = '#111'; for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { c.save(); c.translate(cx + sx * w * 0.32, cy + sy * h * 0.3); c.rotate(sx * sy * -0.6); for (let k = -1; k <= 1; k++) c.fillRect(-w * 0.06, k * h * 0.05 - h * 0.015, w * 0.12, h * 0.03); c.restore(); } },
+  /* ---- 만들기: 그림 한 장 + 합친 모양 하나 ---- */
+  make(R, b, pl, H) {
+    const { THREE } = T3, P = this.plan(b, pl, H), W = b.w, Dp = b.h, D = this.D = Math.max(20, Math.min(48, Math.floor(2000 / (W + Dp + 0.3)), Math.floor(2000 / (H + Math.max(Dp, 3.6) + 0.3))));
+    const PAD = 4, fw = Math.ceil(W * D), fhp = Math.ceil(H * D), sw = Math.ceil(Dp * D), rh = Math.ceil(Dp * D), EX = fw + PAD, EY = fhp + PAD;
+    const CW = Math.max(fw + PAD + sw, fw + PAD + 72), CH = fhp + PAD + Math.max(rh, 72 + 60 + 40);
+    // 색 견본 (입체 조각이 가리키는 곳): 8×8 칸, 칸 하나 8px
+    const sws = new Map(), swUV = col => { let k = sws.get(col); if (k === undefined) { k = sws.size; if (k >= 64) k = 63; else sws.set(col, k); } return [(EX + (k % 8) * 8 + 4) / CW, 1 - (EY + (k >> 3) * 8 + 4) / CH]; };
+    const solR = [EX + 4, EY + 70, 40, 56], flagR = [EX + 4, EY + 132, 48, 32], rect = (x, y, w, h) => (u, v) => [(x + u * w) / CW, 1 - (y + (1 - v) * h) / CH];
+    const pos = [], nor = [], uvs = [], V = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), N3 = new THREE.Matrix3();
+    // 단위 상자·원기둥 (점 목록을 한 번만 만들어 두고 크기·회전만 바꿔 붙인다: 건물 하나 5ms → 1ms 남짓)
+    const U = this.unit || (this.unit = {}), unit = (k, mk) => { if (!U[k]) { const g = mk().toNonIndexed(); U[k] = { p: g.attributes.position.array, n: g.attributes.normal.array, u: g.attributes.uv.array, c: g.attributes.position.count }; g.dispose(); } return U[k]; };
+    const add = (G, m, uvOf) => { N3.getNormalMatrix(m); const e = m.elements, ne = N3.elements, Pa = G.p, Na = G.n, Ua = G.u;
+      for (let i = 0, j = 0; i < G.c; i++, j += 3) { const x = Pa[j], y = Pa[j + 1], z = Pa[j + 2]; pos.push(e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14]);
+        const a = Na[j], b = Na[j + 1], c = Na[j + 2]; let nx = ne[0] * a + ne[3] * b + ne[6] * c, ny = ne[1] * a + ne[4] * b + ne[7] * c, nz = ne[2] * a + ne[5] * b + ne[8] * c; const l = Math.hypot(nx, ny, nz) || 1; nor.push(nx / l, ny / l, nz / l);
+        const t = uvOf(i, Ua[i * 2], Ua[i * 2 + 1]); uvs.push(t[0], t[1]); } };
+    const S3 = new THREE.Vector3(), mtx = (x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0) => M4.compose(V.set(x, y, z), Q.setFromEuler(E.set(rx, ry, rz)), S3.set(sx, sy, sz));
+    const box = (x, y, z, sx, sy, sz, col, o = {}) => { const s = swUV(col), F = o.faces; add(unit('b', () => new THREE.BoxGeometry(1, 1, 1)), mtx(x, y, z, sx, sy, sz, o.rx, o.ry, o.rz), (i, u, v) => F && F[i / 6 | 0] ? F[i / 6 | 0](u, v) : s); };
+    const cyl = (x, y, z, r0, r1, h, col, seg = 12, o = {}) => { const s = swUV(col), k = 'c' + (r1 / r0).toFixed(2) + '|' + seg; add(unit(k, () => new THREE.CylinderGeometry(1, r1 / r0, 1, seg)), mtx(x, y, z, r0, h, r0, o.rx, o.ry, o.rz), () => s); };
+    // 몸통 상자: 면 순서 +x −x 위 아래 앞(+z) 뒤
+    const fR = rect(0, 0, fw, fhp), sR = rect(fw + PAD, 0, sw, fhp), rR = rect(0, EY, fw, rh), RG = [sR, sR, rR, rR, fR, sR];
+    add(unit('b', () => new THREE.BoxGeometry(1, 1, 1)), mtx(W / 2, H / 2, Dp / 2, W, H, Dp), (i, u, v) => RG[i / 6 | 0](u, v));
+    const r = this.rng(b.seed + 47), lite = shade(P.st === 'glass' ? '#5a6672' : P.wall, 0.1), cap = shade(lite, 0.08);
+    // 옥상: 난간 · 계단실 · 기계
+    const ph = 0.15, t = 0.08; box(W / 2, H + ph / 2, t / 2, W, ph, t, lite); box(W / 2, H + ph / 2, Dp - t / 2, W, ph, t, lite); box(t / 2, H + ph / 2, Dp / 2, t, ph, Dp - 2 * t, lite); box(W - t / 2, H + ph / 2, Dp / 2, t, ph, Dp - 2 * t, lite);
+    box(W / 2, H + ph + 0.012, Dp - t / 2, W + 0.02, 0.024, t + 0.03, cap);
+    const sx = Math.min(1.4, W * 0.32), sz = Math.min(1.1, Dp * 0.34), sy = P.court ? 0.9 : 0.72, hx = W - 0.25 - sx / 2, hz = 0.25 + sz / 2;
+    if (W >= 2 && Dp >= 2) { const sc = P.st === 'glass' ? '#7a848e' : shade(P.wall, 0.05); box(hx, H + sy / 2, hz, sx, sy, sz, sc); box(hx, H + sy + 0.025, hz, sx + 0.08, 0.05, sz + 0.08, cap);
+      box(hx - sx * 0.18, H + 0.27, hz + sz / 2 + 0.012, 0.34, 0.52, 0.025, '#4a6a5a'); box(hx - sx * 0.18, H + 0.56, hz + sz / 2 + 0.06, 0.46, 0.03, 0.12, cap); box(hx + sx * 0.25, H + 0.66, hz + sz / 2 + 0.01, 0.12, 0.05, 0.02, '#fff4cc'); }
+    const fx0 = 0.35, fx1 = W - sx - 0.5, fz0 = 0.35, fz1 = Dp - 0.45, rx = () => fx0 + r() * Math.max(0.1, fx1 - fx0), rz = () => fz0 + r() * Math.max(0.1, fz1 - fz0);
+    if (b.detail === 'tank' || (P.res && r() < 0.5)) { const x = Math.min(fx1, 0.8), z = 0.75; box(x, H + 0.08, z, 0.7, 0.16, 0.7, '#6a6c70'); cyl(x, H + 0.46, z, 0.32, 0.32, 0.6, b.detail === 'tank' ? '#4f86c6' : '#c4c8cc', 14); cyl(x, H + 0.79, z, 0.14, 0.18, 0.06, '#e2e6ea', 10); }
+    if (b.detail === 'ac' || P.pub || P.st === 'glass') { const k = 2 + (W * Dp > 30 ? 3 : 0) + (P.st === 'glass' ? 2 : 0); for (let i = 0; i < k; i++) { const x = rx(), z = rz(); box(x, H + 0.17, z, 0.48, 0.34, 0.32, '#dcdcd6'); box(x + 0.04, H + 0.18, z + 0.165, 0.3, 0.24, 0.012, '#55595e'); box(x, H + 0.345, z, 0.5, 0.012, 0.34, '#eeeee8'); } }
+    if (b.detail === 'solar') { const n = Math.max(2, Math.min(5, Math.floor((fx1 - fx0) / 0.8))); for (let i = 0; i < n; i++) { const x = fx0 + 0.35 + i * 0.8, z = Math.min(fz1 - 0.5, Dp * 0.55);
+      box(x, H + 0.32, z, 0.66, 0.035, 0.92, '#1e3358', { rx: 0.5, faces: { 2: rect(...solR) } }); box(x, H + 0.15, z + 0.3, 0.05, 0.3, 0.05, '#9a9ea2'); box(x, H + 0.28, z - 0.3, 0.05, 0.56, 0.05, '#9a9ea2'); } }
+    if (b.detail === 'garden') { for (let i = 0; i < 3; i++) { const x = 0.4 + (i + 0.5) * W * 0.15, z = 0.5 + Dp * 0.42; box(x, H + 0.12, z, W * 0.13, 0.24, 0.3, '#7a5a3e'); box(x, H + 0.25, z, W * 0.13 - 0.06, 0.03, 0.24, '#5c9448'); cyl(x, H + 0.42, z, 0.02, 0.14, 0.32, '#4e8a3c', 6); } }
+    if (P.ant && !P.court) { const x = hx + sx * 0.3, z = hz; box(x, H + sy + 0.38, z, 0.03, 0.72, 0.03, '#8a8e92'); box(x, H + sy + 0.6, z, 0.4, 0.02, 0.02, '#8a8e92'); box(x, H + sy + 0.45, z, 0.3, 0.02, 0.02, '#8a8e92');
+      cyl(hx - sx * 0.35, H + sy + 0.16, hz, 0.15, 0.15, 0.03, '#e4e4e0', 12, { rx: 1.1 }); }
+    if (P.court) { // 법원: 앞 기둥 줄 · 처마 · 국기
+      const ch = H - P.gf * 0.15; for (let x = 0.9; x < W - 0.5; x += 1.6) { cyl(x, ch / 2, Dp + 0.14, 0.17, 0.19, ch, '#ece6d8', 12); box(x, 0.06, Dp + 0.14, 0.46, 0.12, 0.46, '#d4ccba'); box(x, ch - 0.04, Dp + 0.14, 0.44, 0.08, 0.44, '#d4ccba'); }
+      box(W / 2, ch + 0.08, Dp + 0.12, W - 0.4, 0.16, 0.5, '#e2dccc'); box(W / 2, 0.04, Dp + 0.2, W - 0.2, 0.08, 0.5, '#bdb5a3');
+      cyl(W / 2, H + 1.2, Dp * 0.75, 0.035, 0.035, 2.4, '#d8d8d4', 8); cyl(W / 2, H + 2.42, Dp * 0.75, 0.06, 0.06, 0.06, '#d4b04a', 8); box(W / 2 + 0.42, H + 2.15, Dp * 0.75, 0.78, 0.52, 0.015, '#fbfbf6', { faces: { 4: rect(...flagR), 5: rect(...flagR) } }); }
+    // 앞벽 입체: 발코니 · 창 밑 실외기 · 차양
+    const railC = P.frame === '#4a4c50' ? '#3c3e42' : '#d8dadc', balC = shade(P.wall, -0.06);
+    for (const w of P.wins) { const [x, y, ww, wh, xc, yt] = this.winRect(P, w, H), fy = H - (yt + P.fh); // fy = 이 층 바닥 높이
+      if (w.bal) { const bw = Math.min(P.sp * 0.94, ww + 0.36), d = 0.34; box(xc, fy + 0.03, Dp + d / 2, bw, 0.06, d, cap); box(xc, fy + 0.16, Dp + d - 0.02, bw, 0.2, 0.04, balC); box(xc - bw / 2 + 0.02, fy + 0.16, Dp + d / 2, 0.04, 0.2, d, balC); box(xc + bw / 2 - 0.02, fy + 0.16, Dp + d / 2, 0.04, 0.2, d, balC);
+        box(xc, fy + 0.31, Dp + d - 0.02, bw + 0.02, 0.025, 0.05, railC); if (r() < 0.35) box(xc - bw * 0.25, fy + 0.1, Dp + 0.12, 0.2, 0.14, 0.14, ['#5c9448', '#c86a3a', '#e8e0d0'][r() * 3 | 0]); }
+      if (w.ac) { const ax = Math.max(0.25, Math.min(W - 0.25, xc + w.acx * 0.3)), ay = H - (y + wh) - 0.2; box(ax, ay, Dp + 0.12, 0.4, 0.28, 0.22, '#d8d8d2'); box(ax + 0.03, ay, Dp + 0.235, 0.26, 0.2, 0.012, '#5a5e62'); box(ax, ay - 0.16, Dp + 0.08, 0.42, 0.025, 0.16, '#7a7e82'); } }
+    const awn = (x0, x1, col, y) => { const n = Math.max(2, Math.round((x1 - x0) / 0.22)), s = (x1 - x0) / n, th = 0.62, dd = 0.34, c2 = shade(col, 0.45); for (let i = 0; i < n; i++) box(x0 + (i + 0.5) * s, y - dd / 2 * Math.sin(th), Dp + dd / 2 * Math.cos(th), s + 0.002, 0.03, dd, i % 2 ? c2 : col, { rx: th });
+      box((x0 + x1) / 2, y - dd * Math.sin(th) - 0.05, Dp + dd * Math.cos(th), x1 - x0, 0.1, 0.02, col); };
+    const y0 = P.gf; // 1층 꼭대기 높이 (땅에서)
+    if (P.K && !P.court) awn(0.12, W - 0.12, P.K[0], y0 - 0.36);
+    else if (P.shops.length) { const uw = W / P.shops.length; P.shops.forEach((s, i) => { if (s.aw) awn(i * uw + 0.12, (i + 1) * uw - 0.12, s.c, y0 - 0.36); }); }
+    const dr = pl && pl.door && pl.door.face === 0 ? pl.door : null; if (dr && (P.res || P.pub)) { const x = dr.tx - b.x + 0.5; box(x, Math.min(0.98, P.gf - 0.1) + 0.05, Dp + 0.22, 1.0, 0.05, 0.44, cap); } // 출입구 지붕
+    // 그림
+    const tex = R.cvTex(CW, CH, c => {
+      const face = (x, y, w, h, fn) => { c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip(); c.setTransform(D, 0, 0, D, x, y); fn(); c.restore(); };
+      face(0, 0, fw, fhp, () => this.front(c, b, P, W, H, pl)); face(fw + PAD, 0, sw, fhp, () => this.side(c, b, P, Dp, H)); face(0, EY, fw, rh, () => this.roofTop(c, b, P, W, Dp));
+      for (const [col, k] of sws) { c.fillStyle = col; c.fillRect(EX + (k % 8) * 8, EY + (k >> 3) * 8, 8, 8); }
+      this.solarTex(c, ...solR); this.flagTex(c, ...flagR);
+    }); tex._own = 1;
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); geo.computeBoundingSphere();
+    const mt = new THREE.MeshToonMaterial({ map: tex, gradientMap: R.grad }), g = new THREE.Mesh(geo, mt); g.position.set(b.x, 0, b.y); g.castShadow = true; g.receiveShadow = true;
+    const eb = new THREE.BoxGeometry(W, H, Dp); eb.translate(W / 2, H / 2, Dp / 2); g.add(new THREE.LineSegments(new THREE.EdgesGeometry(eb), R.lineM)); eb.dispose();
+    return { m: g, mats: [mt], H, o: 1 };
+  },
 };
 
 /* ===================== 3D 사람 새 몸 (v308, 사용자 2026-10-22 '젤다 전설 스위치2처럼 캐릭터를 다듬을 수 없어? … 얼굴도 너무 둥근게' + '옷이라든지 그런 거는 우리 정체성 유지해야 해') =====================
@@ -18007,7 +18266,91 @@ const Pet3D = {
     if (H.rainbow) H.tint.color.setHSL((t * 0.15) % 1, 0.75, 0.68);
     // 눈사람: 서 있으면 녹는다
     if (k === 'snowman') { const ml = P && P.melt > 0 ? Math.min(1, P.melt) : 0, b = N.body; if (b) b.o.scale.set(b.s.x * (1 + ml * 0.35), b.s.y * (1 - ml * 0.55), b.s.z * (1 + ml * 0.35)); }
+    try { this.act(H, m, t, dt, P || {}); } catch (e) { console.warn('pet3d act', e); H.noAct = 1; }
   },
+  /* ---- 펫마다 성격 (v314, 사용자 '펭귄 따라올때 배로 안오는데? 다른 펫들도 각자 성격 빠졌어?'): 2D 그림의 PET_ACT 행동을 3D로 ----
+   * 움직일 때: 펭귄 배 미끄럼 · 호랑이 낮게 살금 · 장수풍뎅이 날기 · 티라노 짧은 팔 버둥 · 강아지 깡충.
+   * 5초 넘게 서 있으면: 펭귄 웅덩이 낚시 · 강아지 앉아 헥헥 · 고양이 말고 쿨쿨 · 토끼 당근 · 원숭이 바나나 · 기린 나뭇잎 · 코끼리 물 뿜기 · 돌고래 공 · 쥐 구멍에 쏙 · 풍뎅이 나무 타기 · 사마귀 권법 · 도마뱀 보호색 · 호랑이·티라노 어흥.
+   * 소품은 펫마다 한 번 만들어 root에 달고 (안 쓸 땐 숨김), 크기는 펫 키(H.top)에 맞춘다. */
+  pg(n, mk) { const c = this.pgc || (this.pgc = {}); if (!c[n]) { c[n] = mk(T3.THREE); c[n]._keep = 1; } return c[n]; },
+  prop(H, n, mk) { const pp = H.pp || (H.pp = {}); let o = pp[n]; if (!o) { o = pp[n] = mk(T3.THREE); o.traverse(x => { if (x.isMesh) { x.castShadow = true; x.frustumCulled = false; } }); H.root.add(o); } o.visible = true; H.used[n] = 1; return o; },
+  act(H, m, t, dt, P) {
+    if (H.noAct) return; const { THREE } = T3, N = H.nd, k = H.k, I = H.inner, s = H.s, hh = H.top, B = this.M[k], L = B.len * s, A = B.an, idle = m > 0.5 ? 0 : P.idle || 0, still = idle > 5, q = idle - 5;
+    const R = (n, x, y, z) => { const a = N[n]; if (a) a.o.rotation.set(a.r.x + x, a.r.y + y, a.r.z + z); }, T = c => Room3D.toon(c), ms = (g, c) => new THREE.Mesh(g, T(c));
+    I.position.set(0, 0, 0); I.rotation.set(0, 0, 0); I.scale.setScalar(s); I.visible = true; H.used = {};
+    const hp = A ? new THREE.Vector3(A.eye.x * s, (A.eye.y - B.y0) * s, 0) : new THREE.Vector3(L * 0.5, hh * 0.8, 0); // 입 근처 (root 좌표)
+    const pond = (x, r) => { const o = this.prop(H, 'pond', () => { const g = new THREE.Group(), w = new THREE.Mesh(this.pg('pond', T => new T.CircleGeometry(1, 28)), new THREE.MeshBasicMaterial({ color: 0x4a9ee6, transparent: true, opacity: 0.6, depthWrite: false })); w.rotation.x = -Math.PI / 2; g.add(w);
+      const rim = new THREE.Mesh(this.pg('rim', T => new T.RingGeometry(0.92, 1, 28)), new THREE.MeshBasicMaterial({ color: 0xe1f2ff, transparent: true, opacity: 0.75, depthWrite: false })); rim.rotation.x = -Math.PI / 2; rim.position.y = 0.002; g.add(rim); return g; }); o.position.set(x, 0.012, 0); o.scale.set(r, 1, r * 0.55); return o; };
+    if (k === 'penguin') {
+      if (P.fat) { const f = 1 + P.fat * 0.28; I.scale.set(s * f, s, s * f); }
+      if (m > 0.05) { const a = -1.32 * m; I.rotation.z = a; I.position.set(-hh * 0.35 * m, B.len * s * 0.42 * m, 0); R('body', 0, 0, 0); R('legL', 0, 0, 1.1 * m); R('legR', 0, 0, 1.1 * m); // 따라올 땐 배로 쭉 미끄러진다
+        if (N.wingL) { const fl = 0.5 * m + Math.sin(t * 9) * 0.12; R('wingL', -fl, 0, 0); R('wingR', fl, 0, 0); }
+        const tr = this.prop(H, 'trail', () => { const g = new THREE.Group(); for (let i = 0; i < 4; i++) g.add(new THREE.Mesh(this.pg('puff', T => new T.SphereGeometry(1, 8, 6)), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }))); return g; });
+        tr.children.forEach((c, i) => { const ph = (t * 2.2 + i / 4) % 1; c.position.set(-hh * 0.6 - ph * hh * 0.7, 0.03 + ph * 0.05, (i % 2 ? 1 : -1) * hh * 0.12 * ph); c.scale.setScalar(hh * (0.05 + ph * 0.07)); c.material.opacity = 0.55 * (1 - ph) * m; }); }
+      if (P.eat != null) { const e = P.eat; I.position.y += e < 0.35 ? Math.sin(e / 0.35 * Math.PI) * hh * 0.35 : 0; I.rotation.z = e < 0.35 ? 0.15 : 0; if (e < 0.8) this.fish(H, hp, e < 0.5 ? 1 : 1 - (e - 0.5) / 0.3, t);
+        if (e >= 1.05 && N.wingL) { const fl = 0.6 + Math.sin(t * 20) * 0.4; R('wingL', -fl, 0, 0); R('wingR', fl, 0, 0); } }
+      else if (still) { const p = q % 3.2, lean = p < 1 ? 0.12 : p < 1.5 ? 0.12 + (p - 1) * 1.1 : p < 1.9 ? 0.67 - (p - 1.5) * 1.4 : 0.1; pond(hh * 0.75, hh * 0.42); I.rotation.z = -lean; // 서 있으면 앞 웅덩이에서 물고기 낚시
+        if (p >= 1.4 && p < 1.8) { const sp = this.prop(H, 'splash', () => { const g = new THREE.Group(); for (let i = 0; i < 5; i++) g.add(new THREE.Mesh(this.pg('drop', T => new T.SphereGeometry(1, 6, 4)), T('#dff0ff'))); return g; }); sp.children.forEach((c, i) => { const a = i / 5 * 6.28, r = (p - 1.4) * 2.5; c.position.set(hh * 0.75 + Math.cos(a) * hh * 0.15 * r, Math.sin(r * 3.1) * hh * 0.2, Math.sin(a) * hh * 0.1 * r); c.scale.setScalar(hh * 0.025); }); }
+        if (p >= 1.6 && p < 2.9) this.fish(H, hp.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), -lean), p < 2.4 ? 1 : 1 - (p - 2.4) / 0.5, t); }
+    } else if (k === 'dog') {
+      if (m > 0.05) I.position.y = Math.abs(Math.sin(H.ph)) * hh * 0.08 * m; // 꼬리 흔들며 깡충
+      if (idle > 6.6) { I.rotation.z = 0.42; I.position.set(-L * 0.1, -L * 0.06, 0); R('legFL', 0, 0, -0.42); R('legFR', 0, 0, -0.42); R('legBL', 0, 0, 1.1); R('legBR', 0, 0, 1.1); R('head', 0, 0, -0.3 + Math.sin(t * 12) * 0.03); // 앉아서 헥헥
+        const tg = this.prop(H, 'tongue', () => ms(this.pg('tongue', T => new T.BoxGeometry(1, 0.3, 0.6)), '#ee6a84')); tg.position.copy(hp).applyAxisAngle(new THREE.Vector3(0, 0, 1), 0.12); tg.position.x -= L * 0.2; tg.position.y -= hh * 0.12 - Math.sin(t * 12) * hh * 0.01; tg.scale.setScalar(hh * 0.09); }
+    } else if (k === 'cat') {
+      if (still) { I.scale.set(s * 1.08, s * 0.58, s * 1.12); I.position.y = -hh * 0.02; for (const n of ['legFL', 'legFR', 'legBL', 'legBR']) R(n, 0, 0, n[3] === 'F' ? -1.3 : 1.3); R('head', 0, 0.5, -0.45); R('tail', 0, 1.6, 0); // 동그랗게 말고 쿨쿨
+        const z = this.prop(H, 'zz', () => { const tx = Room3D.cvTex(64, 64, c => { c.fillStyle = '#fff'; c.strokeStyle = 'rgba(40,40,60,.8)'; c.lineWidth = 4; c.font = 'bold 50px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.strokeText('z', 32, 34); c.fillText('z', 32, 34); }); tx._keep = 1; const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, transparent: true, depthWrite: false })); return sp; });
+        const ph = (t * 0.7) % 1; z.position.set(L * 0.3 + ph * hh * 0.3, hh * 0.6 + ph * hh * 0.6, 0); z.scale.setScalar(hh * (0.18 + ph * 0.14)); z.material.opacity = 1 - ph; }
+    } else if (k === 'rabbit') {
+      if (still) { const c = this.prop(H, 'carrot', () => { const g = new THREE.Group(), b = ms(this.pg('carrot', T => new T.ConeGeometry(0.12, 0.6, 8)), '#f08a20'); b.rotation.z = Math.PI / 2; g.add(b); const l = ms(this.pg('leaf', T => new T.ConeGeometry(0.08, 0.25, 5)), '#4ab04a'); l.position.x = -0.38; l.rotation.z = Math.PI / 2; g.add(l); return g; }); // 당근 오물오물
+        c.position.copy(hp).add(new THREE.Vector3(hh * 0.12, -hh * 0.12 + (Math.floor(t * 6) % 2) * hh * 0.015, 0)); c.scale.setScalar(hh * 0.5); R('head', 0, 0, -0.12 + (Math.floor(t * 6) % 2) * 0.05); }
+    } else if (k === 'monkey') {
+      if (still) { const b = this.prop(H, 'banana', () => { const g = new THREE.Group(), y = ms(this.pg('banana', T => new T.TorusGeometry(0.3, 0.07, 6, 12, 2.2)), '#f6d040'); g.add(y); return g; }); // 바나나 냠냠
+        b.position.copy(hp).add(new THREE.Vector3(hh * 0.05, -hh * 0.14, 0)); b.rotation.set(0, Math.PI / 2, 2.4); b.scale.setScalar(hh * 0.35); R('armL', 0, 0, 0.9); R('armR', 0, 0, 0.9); R('head', 0, 0, (Math.floor(t * 5) % 2) * 0.06); }
+      if (P.ride) { R('legL', 0, 0, 1.2); R('legR', 0, 0, 1.2); R('armL', 0, 0, 2.6); R('armR', 0, 0, 2.6); }
+    } else if (k === 'tiger') {
+      if (m > 0.05) { I.position.y = -hh * 0.07 * m; R('head', 0, 0, -0.15 * m); } // 낮게 살금살금
+      if (still && q % 4 < 1.2) { R('head', 0, 0, 0.35); this.roar(H, hp, t); } // 어흥
+    } else if (k === 'trex') {
+      if (m > 0.05) { const fl = Math.sin(t * 22) * 0.6; R('armL', 0, 0, fl); R('armR', 0, 0, -fl); } // 짧은 팔 버둥
+      if (N.jaw) R('jaw', 0, 0, still && q % 4 < 1.2 ? -0.5 : 0); if (still && q % 4 < 1.2) { R('head', 0, 0, 0.25); this.roar(H, hp, t); } // 크앙
+    } else if (k === 'giraffe') {
+      if (still) { R('neck', 0, 0, 0.18); R('head', 0, 0, 0.1 + (Math.floor(t * 3) % 2) * 0.06); const l = this.prop(H, 'leaves', () => { const g = new THREE.Group(), br = ms(this.pg('branch', T => new T.CylinderGeometry(0.03, 0.04, 1.2, 5)), '#7a5a2a'); br.rotation.z = Math.PI / 2; g.add(br); // 목을 빼서 나뭇잎
+        for (const [x, y, r, c] of [[0.3, 0.05, 0.28, '#4aa04a'], [0.05, 0.12, 0.22, '#3a8a3a'], [0.5, -0.08, 0.2, '#5ab05a']]) { const b = ms(this.pg('ico', T => new T.IcosahedronGeometry(1, 0)), c); b.position.set(x, y, 0); b.scale.setScalar(r); g.add(b); } return g; });
+        l.position.copy(hp).add(new THREE.Vector3(hh * 0.12, hh * 0.1, 0)); l.scale.setScalar(hh * 0.28); }
+    } else if (k === 'elephant') {
+      if (still) { const p = q % 4, suck = p < 1.4, up = p >= 1.6; pond(L * 0.8, hh * 0.38); R('trunk', 0, 0, suck ? -0.55 : up ? 1.3 : 0.4); // 코로 물을 길어 하늘로 뿜는다
+        if (up && p < 3.6) { const tip = hp.clone().add(new THREE.Vector3(L * 0.32, hh * 0.25, 0)), w = this.prop(H, 'spray', () => { const g = new THREE.Group(); for (let i = 0; i < 16; i++) g.add(new THREE.Mesh(this.pg('drop', T => new T.SphereGeometry(1, 6, 4)), new THREE.MeshBasicMaterial({ color: 0x8ad0ff, transparent: true, opacity: 0.85 }))); return g; });
+          w.children.forEach((c, i) => { const ph = (t * 1.3 + i / 16) % 1, sd = (i % 5 - 2) * 0.35; c.position.set(tip.x + sd * ph * hh * 0.3, tip.y + ph * hh * 1.6 - ph * ph * hh * 1.5, ((i * 7) % 5 - 2) * 0.1 * ph * hh); c.scale.setScalar(hh * 0.035); c.material.opacity = 0.9 - ph * 0.5; }); } }
+    } else if (k === 'dolphin') {
+      if (still) { const b = this.prop(H, 'ball', () => { const g = new THREE.Group(), r = ms(this.pg('ball', T => new T.SphereGeometry(0.5, 14, 10)), '#e83a4a'), w = ms(this.pg('band', T => new T.TorusGeometry(0.5, 0.07, 6, 16)), '#ffffff'); g.add(r); g.add(w); return g; }); // 코끝 공 튕기기
+        b.position.copy(hp).add(new THREE.Vector3(hh * 0.1, hh * 0.3 + Math.abs(Math.sin(t * 5)) * hh * 0.45, 0)); b.scale.setScalar(hh * 0.3); b.rotation.z = t * 3; R('head', 0, 0, 0.2 + Math.abs(Math.sin(t * 5)) * 0.1); }
+    } else if (k === 'mouse') {
+      if (still) { const run = Math.min(1, q / 0.7), hx = Math.max(0.55, hh * 1.9); const h = this.prop(H, 'hole', () => { const g = new THREE.Group(), d = new THREE.Mesh(this.pg('pond', T => new T.CircleGeometry(1, 28)), T('#141010')); d.rotation.x = -Math.PI / 2; g.add(d); // 하수구로 쪼르르 쏙
+          for (let i = -2; i <= 2; i++) { const b = ms(this.pg('bar', T => new T.BoxGeometry(0.16, 0.06, 1.7)), '#3a3e46'); b.position.set(i * 0.38, 0.03, 0); g.add(b); } return g; });
+        h.position.set(hx, 0.012, 0); h.scale.set(Math.max(0.2, hh * 0.55), 1, Math.max(0.12, hh * 0.32));
+        if (run < 1) { I.position.x = hx * run; } else { const pk = (q - 0.7) % 3.4, upk = pk > 2.2 ? Math.min(1, (pk - 2.2) * 5) * (pk > 3.1 ? (3.4 - pk) / 0.3 : 1) : 0; I.position.set(hx, 0, 0); I.scale.set(s * 0.8, s * upk * 0.45, s * 0.8); I.visible = upk > 0.02; H.sh.visible = false; } } // 가끔 고개만 빼꼼
+    } else if (k === 'beetle') {
+      if (m > 0.05) { I.position.y = (0.45 + Math.sin(t * 6) * 0.04) * m; const w = this.wings(H); w.visible = true; w.position.set(0, I.position.y + hh * 0.9, 0); w.children.forEach((c, i) => { c.rotation.x = (i ? 1 : -1) * (0.5 + Math.sin(t * 60) * 0.5); }); } // 날개 펴고 붕
+      else if (still) { const qq = Math.min(1, q / 2.4), tx = L * 0.95; const tr = this.prop(H, 'tree', () => { const g = new THREE.Group(), c = ms(this.pg('trunk', T => new T.CylinderGeometry(0.16, 0.2, 1.6, 9)), '#7a5230'); c.position.y = 0.8; g.add(c); // 옆 나무를 기어 올라가 수액
+          for (const [x, y, r, cl] of [[0, 1.9, 0.6, '#3f8a3a'], [-0.35, 1.7, 0.4, '#3f8a3a'], [0.35, 1.75, 0.38, '#5aaa4a']]) { const b = ms(this.pg('ico1', T => new T.IcosahedronGeometry(1, 1)), cl); b.position.set(x, y, 0); b.scale.setScalar(r); g.add(b); }
+          const sap = ms(this.pg('sap', T => new T.SphereGeometry(0.05, 6, 4)), '#e0a030'); sap.position.set(-0.16, 1.0, 0); sap.name = 'sap'; g.add(sap); return g; });
+        tr.position.set(tx + 0.2, 0, 0); tr.scale.setScalar(0.62); I.rotation.z = Math.PI / 2 * Math.min(1, qq * 3); I.position.set(tx + 0.2 - 0.62 * 0.18, 0.05 + L * 0.5 * Math.min(1, qq * 3) + qq * 0.42, 0); H.sh.visible = false; }
+    } else if (k === 'mantis') {
+      if (still) { const pu = Math.floor(t * 5) % 3; R('armL', 0, 0, pu === 2 ? 0.9 : pu === 1 ? -0.3 : 0.4); R('armR', 0, 0, pu === 2 ? -0.2 : pu === 0 ? 0.9 : 0.3); } // 사마귀 권법
+    } else if (k === 'lizard') {
+      const cm = still ? Math.min(1, q / 2.5) : 0; H.cam = (H.cam || 0) + (cm - (H.cam || 0)) * Math.min(1, dt * 3); // 서 있으면 땅 색 보호색
+      if (H.cam > 0.01 || H.camM) { if (!H.camM) { H.camM = this.mat().clone(); H.camM.onBeforeCompile = this.mat().onBeforeCompile; H.inner.traverse(o => { if (o.isMesh && o.material === this.m) o.material = H.camM; }); } H.camM.color.setRGB(1, 1, 1).lerp(new THREE.Color('#d8c8a0'), H.cam * 0.85); }
+      if (still && t % 1.2 < 0.25) { const tg = this.prop(H, 'tongue', () => ms(this.pg('tongue', T => new T.BoxGeometry(1, 0.3, 0.6)), '#e8607a')); tg.position.copy(hp).add(new THREE.Vector3(hh * 0.35, -hh * 0.2, 0)); tg.scale.set(hh * 0.4, hh * 0.08, hh * 0.1); }
+    }
+    if (H.pp) for (const n in H.pp) if (!H.used[n]) H.pp[n].visible = false;
+    if (H.wg && !(k === 'beetle' && m > 0.05)) H.wg.visible = false;
+  },
+  fish(H, at, sz, t) { const f = this.prop(H, 'fish', () => { const { THREE } = T3, g = new THREE.Group(), b = new THREE.Mesh(this.pg('fishb', T => new T.SphereGeometry(0.5, 10, 6)), Room3D.toon('#a8c4dc')); b.scale.set(1, 0.42, 0.3); g.add(b); const tl = new THREE.Mesh(this.pg('fisht', T => new T.ConeGeometry(0.25, 0.35, 4)), Room3D.toon('#7a9ab8')); tl.rotation.z = Math.PI / 2; tl.position.x = 0.62; g.add(tl); return g; });
+    f.position.copy(at).add(new T3.THREE.Vector3(H.top * 0.12, -H.top * 0.04, 0)); f.scale.setScalar(H.top * 0.28 * Math.max(0.05, sz)); f.rotation.y = Math.sin(t * 20) * 0.25; },
+  roar(H, at, t) { const r = this.prop(H, 'roar', () => { const { THREE } = T3, g = new THREE.Group(); for (let i = 0; i < 3; i++) g.add(new THREE.Mesh(this.pg('ring', T => new T.TorusGeometry(1, 0.06, 4, 18, 1.6)), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false }))); return g; });
+    r.position.copy(at).add(new T3.THREE.Vector3(H.top * 0.2, H.top * 0.05, 0)); r.children.forEach((c, i) => { const ph = (t * 2 + i / 3) % 1; c.position.x = ph * H.top * 0.5; c.rotation.set(0, Math.PI / 2, -0.8); c.scale.setScalar(H.top * (0.12 + ph * 0.25)); c.material.opacity = 0.7 * (1 - ph); }); },
+  wings(H) { if (H.wg) return H.wg; const { THREE } = T3, g = H.wg = new THREE.Group(), mt = new THREE.MeshBasicMaterial({ color: 0xe8e8f4, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    for (const sd of [1, -1]) { const p = new THREE.Group(), w = new THREE.Mesh(this.pg('wing', T => new T.CircleGeometry(1, 14)), mt); w.rotation.x = -Math.PI / 2; w.scale.set(H.top * 1.4, H.top * 0.5, 1); w.position.z = sd * H.top * 0.5; p.add(w); g.add(p); } H.root.add(g); return g; },
 };
 
 /* ===================== 3D 사진 (v310, 사용자 2026-10-22 '여기 나타나는 사진도 바꿔야 하는 건가 통일성 있으려면' · 편집숍 '여기도 도트야') =====================

@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v314</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v315</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17178,7 +17178,7 @@ const Room3D = {
   active(rm) {
     if (!rm || !this.on() || this.bad) return false;
     if (!window.T3) { Arena3J.load(); return false; }
-    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
+    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); if (typeof Car3D !== 'undefined') Car3D.load(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
   },
   // v309 느릴 때 화질 낮추기 (사용자 '해상도가 너무 떨어지는데'): 해 그림자 먼저, 그다음 해상도 (0.75배까지만).
   // 낮춘 뒤 2초 지나도 15% 넘게 빨라지지 않으면 (그래픽카드 탓이 아니면) 되돌리고 한동안 다시 안 낮춘다
@@ -17229,7 +17229,7 @@ const Room3D = {
     if (this.S && this.room === rm) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
     if (rm.home) { this.room = rm; this.A = new Map(); this.dispT = null; return this.buildHome(rm); } // 내 집 (homein.js 평면도)
-    this.room = rm; this.A = new Map(); this.doorG = null; const S = this.S = new THREE.Scene(), P = RoomTilt.pal(rm), W = rm.W, H = rm.H, m = rm.def.map, dark = P.key === 'arcade' || P.key === 'casino';
+    this.room = rm; this.A = new Map(); this.doorG = null; this.turn = []; this.vOld = 0; const S = this.S = new THREE.Scene(), P = RoomTilt.pal(rm), W = rm.W, H = rm.H, m = rm.def.map, dark = P.key === 'arcade' || P.key === 'casino';
     S.background = new THREE.Color(dark ? 0x0a0812 : 0x1c1814);
     S.add(new THREE.HemisphereLight(dark ? 0x9a8ad0 : 0xfff2e2, dark ? 0x2a1a30 : 0x7a6a58, dark ? 0.9 : 1.35));
     const sun = new THREE.DirectionalLight(dark ? 0xd8c8ff : 0xfff0d8, dark ? 1.0 : 1.8); sun.position.set(W * 0.5 - 4, 14, H + 6); sun.target.position.set(W / 2, 0, H / 2); S.add(sun); S.add(sun.target);
@@ -17464,7 +17464,7 @@ const Room3D = {
     if (ch === 'n') { this.cyl(S, X, Z, 0.22, 0.22, 0.04, '#9a9790'); this.box(S, X, Z, 0.04, 0.04, 0.7, '#9a9790', 0.04, { line: false }); this.box(S, X, Z, 0.42, 0.24, 0.5, ['#c84a4a', '#3a6ad0', '#2a2a2e'][x % 3], 0.72); this.ball(S, X, 1.36, Z, 0.13, '#e8dcc8'); return; }
     if (ch === 'p') { this.box(S, X, Z, 0.9, 0.6, 0.18, '#e0d2b4'); this.ball(S, X - 0.15, 0.32, Z, 0.15, '#c8925a'); this.ball(S, X + 0.18, 0.3, Z + 0.05, 0.13, '#f2f2f2'); return; }
     if (ch === 'x') { this.box(S, X, Z, 0.8, 0.12, 1.8, '#8a6a48'); this.box(S, X, Z + 0.065, 0.64, 0.01, 1.6, '#cfe6f4', 0.1, { line: false }); return; }
-    if (ch === 'V') { this.cyl(S, X, Z, 0.55, 0.55, 0.1, '#f4ead8', 0, 28); const cc = ['#d84a4a', '#3a6ad0', '#f2c94c'][x % 3]; this.box(S, X, Z, 0.8, 0.42, 0.22, cc, 0.14); this.box(S, X - 0.05, Z, 0.42, 0.38, 0.16, '#cfe6f4', 0.36); for (const a of [-0.25, 0.25]) for (const b of [-0.2, 0.2]) this.cyl(S, X + a, Z + b, 0.07, 0.07, 0.06, '#222', 0.1, 10); return; }
+    if (ch === 'V') { this.cyl(S, X, Z, 0.55, 0.55, 0.1, '#f4ead8', 0, 28); const cc = ['#d84a4a', '#3a6ad0', '#f2c94c'][x % 3]; if (typeof Car3D !== 'undefined' && Car3D.ready()) { const sk = (SHOP_ITEMS.car || []).filter(it => it.col && !it.ride), it = sk.length ? sk[(x * 5 + 3) % sk.length] : { col: cc }, m = Car3D.make(22, 11, it.col, it.stripe, 'car', 0); m.position.set(X, 0.1, Z); m.rotation.y = x * 0.7; S.add(m); (this.turn = this.turn || []).push(m); return; } if (typeof Car3D !== 'undefined' && Car3D.st === 1) this.vOld = 1; /* v315 전시대 차 모델, 천천히 돈다 */ this.box(S, X, Z, 0.8, 0.42, 0.22, cc, 0.14); this.box(S, X - 0.05, Z, 0.42, 0.38, 0.16, '#cfe6f4', 0.36); for (const a of [-0.25, 0.25]) for (const b of [-0.2, 0.2]) this.cyl(S, X + a, Z + b, 0.07, 0.07, 0.06, '#222', 0.1, 10); return; }
   },
   /* ---- 사람: 꼬마 모델 부위 (같은 색이면 도형을 같이 쓴다) ---- */
   hgeo(P) { const key = PetRT.arena.hkey(P, 'kick'); if (this.hg[key]) return this.hg[key]; const { THREE } = T3, parts = PetRT.arena.hparts(P, 'kick'), L = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4), out = {};
@@ -17507,6 +17507,7 @@ const Room3D = {
     for (const f of Net.visible('room')) { const fp = f.p; if (fp.rd) continue; let spr = f.sp; if (fp.pal) { spr = 'f:' + fp.name; Sprites.setPal(spr, Profile.pal(fp.pal)); } this.actor('f:' + fp.name, Sprites.PAL[spr] || Sprites.PAL.player, { x: fp.x, y: fp.y, dir: fp.d || 0, moving: !!fp.m }, t, dt, fp.x * 0.3); }
     rm.npcs.forEach((n, i) => this.actor('n' + i, Sprites.PAL[n.sprite] || Sprites.PAL.clerk, n, t, dt, i * 1.7 + 1));
     rm.guests.forEach((g, i) => { if (!g.gone) this.actor('g' + i, Sprites.PAL[g.sprite] || Sprites.PAL.walker1, g, t, dt, i * 2.3 + 5); });
+    if (this.turn) for (const m of this.turn) m.rotation.y += dt * 0.35; if (this.vOld && typeof Car3D !== 'undefined' && Car3D.ready()) { this.vOld = 0; this.room = null; } // 차 모델이 늦게 오면 방을 다시 세운다
     if (this.doorG) { this.doorV += ((this.doorT || 0) - this.doorV) * Math.min(1, dt * 7); this.doorG.rotation.y = -this.doorV * 1.45; }
     this.bankTick(rm, t); this.S.traverse(o => { if (o.userData.spin) o.rotation.y = t * 1.5; if (o.userData.fish) o.position.x = Math.sin(t * 1.3 + o.id) * 0.28; });
     // 카메라: 나를 따라가되 방 밖은 덜 보이게
@@ -17591,7 +17592,7 @@ Object.assign(Room3D, {
   zActive(z) {
     if (!z || !this.zOn() || this.zbad) return false;
     if (!window.T3) { Arena3J.load(); return false; }
-    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); this.zBuild(z); return true; } catch (e) { console.warn('zone3d', e); this.zbad = 1; this.zShowG(false); this.show(false); return false; }
+    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); if (typeof Car3D !== 'undefined') Car3D.load(); this.zBuild(z); return true; } catch (e) { console.warn('zone3d', e); this.zbad = 1; this.zShowG(false); this.show(false); return false; }
   },
   zShowG(v) { if (this.gcv) { const d = v ? 'block' : 'none'; if (this.gcv.style.display !== d) this.gcv.style.display = d; } },
   zSq() { return Math.sin(Z3_EL); },
@@ -17653,7 +17654,8 @@ Object.assign(Room3D, {
   },
   zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.map) mt.map.dispose(); mt.dispose(); } e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
   /* ---- 차 (앞 = +x): 몸통 · 유리 지붕 · 바퀴 · 불빛 ---- */
-  car3(len, wid, col, stripe, kind) {
+  car3(len, wid, col, stripe, kind, v) { if (typeof Car3D !== 'undefined' && Car3D.ready()) try { return Car3D.make(len, wid, col, stripe, kind, v); } catch (e) { console.warn('car3d', e); Car3D.st = -1; } return this.car3b(len, wid, col, stripe, kind); },
+  car3b(len, wid, col, stripe, kind) {
     const { THREE } = T3, g = new THREE.Group(), L = len / TILE, W = wid / TILE, bus = kind === 'bus';
     this.box(g, 0, 0, L, W, bus ? 0.95 : 0.36, col, 0.12);
     if (bus) { this.box(g, 0.04, 0, L - 0.2, W + 0.01, 0.3, '#22303c', 0.6, { line: false }); this.box(g, 0, 0, L, W, 0.05, col, 1.07, { line: false, cast: false }); }
@@ -17674,7 +17676,7 @@ Object.assign(Room3D, {
       if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w); c.restore(); } };
     drawCarSprite = function (c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
       if (!R.zq || c !== ctx || (col && typeof col === 'object' && col.ride)) return dc0(c, x, y, a, col, len, wid, kind, speed);
-      let stripe = null, cc = col; if (col && typeof col === 'object') { stripe = col.stripe || null; cc = col.col; } R.zq.c.push({ x, y, a, col: cc || '#c8ccd2', stripe, len, wid, kind }); };
+      let stripe = null, cc = col; if (col && typeof col === 'object') { stripe = col.stripe || null; cc = col.col; } R.zq.c.push({ x, y, a, col: cc || '#c8ccd2', stripe, len, wid, kind, skin: !!(col && typeof col === 'object') }); };
   },
   // 2D 그림이 쓰는 변환 (땅 = 세로만 sin배): worldToScreen과 같다
   zFrame(z, t) {
@@ -17705,7 +17707,7 @@ Object.assign(Room3D, {
     this.zw = this.zMatch(zq.w, this.zw, (p, q) => p.sprite === q.sprite, 26, 'zw');
     this.zw.forEach((w, i) => { const H = this.actor(w.key, Sprites.PAL[w.sprite] || Sprites.PAL.walker1 || Sprites.PAL.player, w, t, dt, i * 1.3); if (w.low && !H.hero) H.root.position.y -= 0.25; });
     this.zc = this.zMatch(zq.c, this.zc, (p, q) => p.col === q.col && p.kind === q.kind && p.len === q.len, 48, 'zc');
-    for (const c of this.zc) { let H = this.A.get(c.key); if (!H) { H = { root: this.car3(c.len, c.wid, c.col, c.stripe, c.kind), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); }
+    for (const c of this.zc) { let H = this.A.get(c.key); if (H && H.old && Car3D.ready()) { this.S.remove(H.root); H = null; } if (!H) { const v = c.skin ? 0 : [...c.key].reduce((h, ch) => h * 31 + ch.charCodeAt(0) | 0, 7) >>> 0; H = { root: this.car3(c.len, c.wid, c.col, c.stripe, c.kind, v), car: 1, old: !Car3D.ready() }; this.S.add(H.root); this.A.set(c.key, H); } // v315 차 모델 (늦게 받아지면 바꿔 끼운다)
       H.seen = this.fr; H.root.position.set(c.x / TILE, 0, c.y / TILE); H.root.rotation.y = -c.a; }
     this.render(); // 펫 + 안 보인 것 치우기 + 그리기
   },
@@ -17730,6 +17732,27 @@ const PerfHud = {
       const R = typeof Room3D !== 'undefined' ? Room3D : {}, info = R.r && R.r.info && R.r.info.render, mode = Game.scene === 'zone' ? (R.zNow ? '바깥 3D' : '바깥 2D') : Game.scene === 'room' ? (R.room && R.room === Game.room ? '실내 3D' : '실내 2D') : Game.scene;
       this.el.textContent = `${Math.round(fps)} fps · 5초 동안 끊김 ${this.long.length}번 · ${mode}\n3D 해상도 ${(R.pr || 0).toFixed(2)}배 · 그리기 ${info ? info.calls : '-'}번 · 건물 ${R.zb ? R.zb.size : 0} · 사람·차 ${R.A ? R.A.size : 0}\n한 장에 계산 ${f1('up')}ms · 그리기 ${f1('dr')}ms (3D ${f1('gl')} · 펫 ${f1('pet')} · 새 모양 ${M.pbn | 0}번 ${(M.pb || 0).toFixed(0)}ms)\n화면 ${VW}×${VH} · 배율 ${DPR} · ${String(R.gpu || '그래픽카드 모름').slice(0, 60)}`; this.ms = {}; }
     requestAnimationFrame(tt => this.tick(tt)); },
+};
+
+/* ===================== 차 3D 모델 (v315, 사용자 '차들도 다시 3d로 바꿔야하는거아니야?') =====================
+ * 블렌더로 만든 세단 · SUV · 해치백 · 택시 · 버스 (3d/cars.glb, assets3d/build_cars.py). 앞 = +x, 길이 1.
+ * 차마다 _paint(차 색) · _fix(유리·바퀴·불빛, 정점 색) · _stripe(상점 줄무늬) 세 덩어리라 차 한 대 = 그리기 두세 번.
+ * 길 위 보통 차는 번호(v)로 세단·SUV·해치백 중 하나, 내 차·상점 스킨은 세단. */
+const Car3D = {
+  st: 0, M: {},
+  load() { if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
+    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('cars.glb?v=1'), ok, undefined, no))).then(G => {
+      for (const o of G.scene.children) { const parts = {}; o.traverse(m => { if (!m.isMesh) return; let w = m; while (w && !/_(paint|fix|stripe)$/.test(w.name)) w = w.parent; if (!w) return; m.geometry._keep = 1; const t = w.name.split('_').pop(); m.updateWorldMatrix(true, false); (parts[t] = parts[t] || []).push({ geo: m.geometry, M: m.matrixWorld.clone() }); });
+        this.M[o.name] = parts; }
+      this.st = 2; }).catch(e => { console.warn('car3d', e); this.st = -1; }); },
+  ready() { return this.st === 2; },
+  fixM() { if (!this.fm) this.fm = new T3.THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Room3D.grad }); return this.fm; },
+  make(len, wid, col, stripe, kind, v = 0) {
+    const { THREE } = T3, k = kind === 'bus' ? 'bus' : kind === 'taxi' ? 'taxi' : ['sedan', 'suv', 'hatch', 'sedan', 'suv'][v % 5], B = this.M[k] || this.M.sedan, g = new THREE.Group(), L = len / TILE, W = wid / TILE;
+    const inner = new THREE.Group(); inner.scale.set(L, k === 'bus' ? L * 0.95 : (L + W * 2) * 0.48, W / (k === 'bus' ? 0.35 : 0.5)); g.add(inner);
+    for (const t of ['paint', 'fix', 'stripe']) { if (t === 'stripe' && !stripe) continue; for (const p of B[t] || []) { const m = new THREE.Mesh(p.geo, t === 'fix' ? this.fixM() : Room3D.toon(t === 'paint' ? col : stripe)); p.M.decompose(m.position, m.quaternion, m.scale); m.castShadow = true; inner.add(m); } }
+    return g;
+  },
 };
 
 /* ===================== 3D 건물 고해상도 (v314, 사용자 2026-10-22 '건물들도 더 사실적으로 만들수있나? 해상도 높게') =====================
@@ -18419,7 +18442,7 @@ const Snap3D = {
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);
     if (kind === 'outfit' || kind === 'hat') { const P = Profile.pal(Object.assign({}, me, kind === 'hat' ? { hat: it.id } : { outfit: it.id })); key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
-    else if (kind === 'car') { key = 'th:car:' + it.col + ':' + (it.stripe || ''); build = g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); m.rotation.y = -0.55; g.add(m); }; aim = (b, c) => this.fit(b, c, 0.42, 1.02); }
+    else if (kind === 'car') { if (typeof Car3D !== 'undefined') { Car3D.load(); if (Car3D.st === 1 && !this.cw) this.cw = setInterval(() => { if (Car3D.st === 1) return; clearInterval(this.cw); this.cw = 0; if (Car3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); } key = 'th:car' + (Car3D.ready() ? '3:' : ':') + it.col + ':' + (it.stripe || ''); /* v315 차 모델이 오면 다시 그리기 */ build = g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); m.rotation.y = -0.55; g.add(m); }; aim = (b, c) => this.fit(b, c, 0.42, 1.02); }
     else { const k = it.pet; if (PET_PEOPLE[k]) { const sp = 'pet:' + k; Sprites.setPal(sp, PET_PEOPLE[k]); const P = Sprites.PAL[sp]; key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
       else if (typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(k))) { key = 'th:pet3:' + k; build = g => { const H = Pet3D.make(k, PetRT.petH(k) / TILE * 1.1); H.sh.visible = false; H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }; aim = (b, c) => this.fit(b, c, 0.26, 1.1); } // v312 펫 모델
       else { if (typeof Pet3D !== 'undefined' && Pet3D.st === 1 && !this.pw) this.pw = setInterval(() => { if (Pet3D.st === 1) return; clearInterval(this.pw); this.pw = 0; if (Pet3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); // 모델이 오면 다시 그리기

@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v301</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v302</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5245,7 +5245,7 @@ const HomeIn = {
   },
   /* ---- 그리기 ---- */
   h(x, y, s) { let v = (x * 374761393 + y * 668265263 + s * 2246822519) >>> 0; v = Math.imul(v ^ (v >>> 13), 1274126177) >>> 0; return ((v ^ (v >>> 16)) >>> 0) / 4294967296; },
-  draw(ctx, r, t) {
+  draw(ctx, r, t, fo) { // fo: 바닥 그림만 (v301 3D 집이 바닥 무늬로 쓴다: 벽·가구 자리는 바닥, 러그는 그대로)
     const H = r.home, map = r.def.map, W = r.W, Hh = r.H, furn = H.furn, shop = H.key.startsWith('shop'), off = H.key.startsWith('off');
     const bad = H.repair !== 'done' ? H.cond : 'good', doing = H.repair === 'doing';
     const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= Hh ? '#' : map[y][x]);
@@ -5275,6 +5275,7 @@ const HomeIn = {
         else if (glass) { ctx.fillStyle = 'rgba(150,200,230,.35)'; ctx.fillRect(X + 1, Y + 2, 14, 14); ctx.fillStyle = '#5a6068'; ctx.fillRect(X, Y, TILE, 2); ctx.fillRect(X, Y, 1, TILE); ctx.fillRect(X + 15, Y, 1, TILE); ctx.fillRect(X + 7, Y + 2, 2, 14); }
         else { ctx.fillStyle = '#3a2a22'; ctx.fillRect(X, Y, TILE, TILE); ctx.fillStyle = '#5a4436'; ctx.fillRect(X + 1, Y + 1, 14, 15); ctx.fillStyle = '#4a382c'; ctx.fillRect(X + 3, Y + 3, 10, 5); ctx.fillRect(X + 3, Y + 10, 10, 5); ctx.fillStyle = '#d4b46a'; ctx.fillRect(X + 12, Y + 8, 2, 2); ctx.fillStyle = '#9ad'; ctx.fillRect(X + 11, Y + 4, 2, 2); }
         continue; }
+      if (fo && (ch === 'x' || ch === 'G' || isWall(ch))) { floor(ch === 'x' ? "'" : under(x, y), X, Y, x, y); continue; }
       if (ch === 'x') { floor("'", X, Y, x, y); ctx.fillStyle = '#8a6440'; const hz = at(x - 1, y) === 'x' || at(x + 1, y) === 'x'; if (hz && y > 0 && at(x, y - 1) !== 'x') { ctx.fillRect(X, Y + 6, TILE, 2); ctx.fillRect(X, Y + 11, TILE, 2); ctx.fillStyle = '#a07a50'; ctx.fillRect(X + 2, Y + 3, 3, 13); ctx.fillRect(X + 10, Y + 3, 3, 13); } else { ctx.fillRect(X + 6, Y, 2, TILE); ctx.fillRect(X + 10, Y, 2, TILE); ctx.fillStyle = '#a07a50'; ctx.fillRect(X + 5, Y + 2, 8, 3); ctx.fillRect(X + 5, Y + 10, 8, 3); } continue; }
       if (ch === 'G') { floor('.', X, Y, x, y); ctx.fillStyle = 'rgba(160,210,235,.55)'; ctx.fillRect(X, Y + 2, TILE, 14); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(X + 3 + (x % 3), Y + 4, 2, 9); ctx.fillStyle = '#5a6068'; ctx.fillRect(X, Y, TILE, 2); ctx.fillRect(X + 15, Y + 2, 1, 14);
         if (!furn && x === 2) { ctx.fillStyle = '#fffaf0'; ctx.fillRect(X + 2, Y + 4, 12, 9); ctx.fillStyle = '#c0302a'; ctx.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('임대', X + 8, Y + 10); } continue; } // 빈 점포: 유리에 '임대' 종이
@@ -5294,6 +5295,7 @@ const HomeIn = {
       // 가구·붙박이: 밑바닥을 깔고, 큰 것은 나중에 (위 칸을 덮으니까)
       floor(under(x, y), X, Y, x, y);
       if (HOME_FURN.includes(ch) && !furn) continue;
+      if (fo) { if (ch === 'R') this.piece(ctx, ch, x, y, at, H, t, bad); continue; }
       late.push([ch, x, y]);
     }
     // 바닥 얼룩·파손 (수리 전)
@@ -5301,6 +5303,7 @@ const HomeIn = {
       if (doing) { if (v < 0.12) { ctx.fillStyle = '#4a7ac0'; ctx.fillRect(X + 1, Y + 2, 14, 12); ctx.fillStyle = '#5a8ad0'; ctx.fillRect(X + 1, Y + 2, 14, 2); } else if (v < 0.18) { ctx.fillStyle = '#e8e8e4'; ctx.fillRect(X + 4, Y + 6, 6, 7); ctx.fillStyle = '#4a9a5a'; ctx.fillRect(X + 4, Y + 6, 6, 2); ctx.fillStyle = '#8a8a8a'; ctx.fillRect(X + 5, Y + 4, 4, 1); } else if (v < 0.22) { ctx.fillStyle = '#c8a040'; ctx.fillRect(X + 3, Y + 1, 2, 14); ctx.fillRect(X + 11, Y + 1, 2, 14); for (let i = 0; i < 4; i++) ctx.fillRect(X + 5, Y + 3 + i * 4, 6, 1); } continue; }
       if (bad === 'worn' && v < 0.25) { ctx.fillStyle = 'rgba(90,60,30,.22)'; ctx.fillRect(X + 3, Y + 5, 8, 5); ctx.fillRect(X + 5, Y + 4, 4, 7); }
       if (bad === 'wrecked') { if (v < 0.22) { ctx.fillStyle = 'rgba(60,70,80,.35)'; ctx.fillRect(X + 1, Y + 3, 13, 9); ctx.fillRect(X + 4, Y + 1, 7, 13); } else if (v < 0.34) { ctx.fillStyle = '#6a5a4a'; ctx.fillRect(X + 3, Y + 9, 4, 3); ctx.fillStyle = '#8a7a64'; ctx.fillRect(X + 9, Y + 5, 3, 2); ctx.fillStyle = '#e8e0d0'; ctx.fillRect(X + 6, Y + 3, 3, 2); } else if (v < 0.4) { ctx.fillStyle = '#4a3a2a'; ctx.fillRect(X + 2, Y + 7, 11, 1); ctx.fillRect(X + 6, Y + 4, 1, 7); } } }
+    if (fo) return;
     if (furn) for (const e of (H.deco && H.deco.items) || []) late.push(['@', e[0], e[1], e[2]]); // 놓은 소품도 같이 위아래 순서로
     late.sort((a, b) => a[2] - b[2] || a[1] - b[1]);
     for (const [ch, x, y, a] of late) if (ch === '@') this.art(ctx, a, x * TILE, y * TILE, t); else this.piece(ctx, ch, x, y, at, H, t, bad);
@@ -17149,7 +17152,7 @@ const Room3D = {
   on() { return !!Store.get('room3d', 1) && typeof WebGL2RenderingContext !== 'undefined' && Arena3J.on(); },
   // 이번 프레임에 3D로 그릴 수 있나 (엔진이 아직이면 받기 시작하고 2D로)
   active(rm) {
-    if (!rm || rm.home || !this.on() || this.bad) return false;
+    if (!rm || !this.on() || this.bad) return false;
     if (!window.T3) { Arena3J.load(); return false; }
     try { this.init(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
   },
@@ -17188,6 +17191,7 @@ const Room3D = {
   build(rm) {
     if (this.S && this.room === rm) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
+    if (rm.home) { this.room = rm; this.A = new Map(); this.dispT = null; return this.buildHome(rm); } // 내 집 (homein.js 평면도)
     this.room = rm; this.A = new Map(); const S = this.S = new THREE.Scene(), P = RoomTilt.pal(rm), W = rm.W, H = rm.H, m = rm.def.map, dark = P.key === 'arcade' || P.key === 'casino';
     S.background = new THREE.Color(dark ? 0x0a0812 : 0x1c1814);
     S.add(new THREE.HemisphereLight(dark ? 0x9a8ad0 : 0xfff2e2, dark ? 0x2a1a30 : 0x7a6a58, dark ? 0.9 : 1.35));
@@ -17209,6 +17213,129 @@ const Room3D = {
     const seen = new Set(), run = (x, y, ch) => { let n = 1; while (m[y][x + n] === ch) { seen.add((x + n) + ',' + y); n++; } return n; };
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const ch = m[y][x]; if (seen.has(x + ',' + y)) continue; this.furn(S, rm, P, ch, x, y, m, run, seen); }
     this.dispT = null; if (rm.place.kind === 'bank') this.bankBoard(S, rm);
+  },
+  /* ---- 내 집 (v301): HomeIn 평면도 글자 → 3D. 바닥 무늬·러그는 HomeIn.draw(바닥만) 그대로, 벽은 안쪽 벽만 낮게 (안이 보이게) ---- */
+  buildHome(rm) {
+    const { THREE } = T3, S = this.S = new THREE.Scene(), Ho = rm.home, m = rm.def.map, W = rm.W, H = rm.H, furn = Ho.furn, lv = (Ho.deco && Ho.deco.lv) || {}, sd = Ho.seed | 0;
+    const bad = Ho.repair !== 'done' ? Ho.cond : 'good', shop = Ho.key.startsWith('shop'), TN = HOME_TONES[(Ho.deco && Ho.deco.tone) || 'base'] || HOME_TONES.base, toned = TN !== HOME_TONES.base;
+    const PAPER = bad === 'wrecked' ? '#bfb49a' : bad === 'worn' ? '#d9cca6' : toned ? TN.paper : shop ? '#ecebe6' : '#efe7d6', TOP = toned ? TN.top : '#4a3f38', TRIM = toned ? TN.trim : shop ? '#9a968e' : '#8a6a48';
+    const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? '#' : m[y][x]), isWall = c => '#=y'.includes(c), floorC = c => ".,:_'~Rd".includes(c);
+    S.background = new THREE.Color(0x1c1814);
+    S.add(new THREE.HemisphereLight(0xfff4e6, 0x7a6a58, 1.4));
+    const sun = new THREE.DirectionalLight(0xfff0d8, 1.75); sun.position.set(W * 0.5 - 4, 14, H + 6); sun.target.position.set(W / 2, 0, H / 2); S.add(sun); S.add(sun.target);
+    sun.castShadow = true; const sc = sun.shadow.camera, R = Math.max(W, H) * 0.75; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 1; sc.far = 60; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.03;
+    // 바닥: 2D 집 그림의 바닥만 (2배)
+    const fl = this.cvTex(W * 32, H * 32, c => { c.scale(2, 2); c.imageSmoothingEnabled = false; HomeIn.draw(c, rm, 0, true); }); fl._own = 1;
+    const fm = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshToonMaterial({ map: fl, gradientMap: this.grad })); fm.rotation.x = -Math.PI / 2; fm.position.set(W / 2, 0, H / 2); fm.receiveShadow = true; S.add(fm);
+    // 벽: 바깥 벽은 높게, 안쪽 벽은 허리 높이 (위에서 방 안이 다 보이게), 맨 아래 줄은 낮게
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const ch = m[y][x];
+      if (ch === 'x') { const hz = at(x - 1, y) === 'x' || at(x + 1, y) === 'x'; this.box(S, x + 0.5, y + 0.5, 0.14, 0.14, 0.7, '#7a5838'); if (hz) { for (const hh of [0.28, 0.55]) this.box(S, x + 0.5, y + 0.5, 1, 0.07, 0.07, '#a07a50', hh, { line: false }); } else for (const hh of [0.28, 0.55]) this.box(S, x + 0.5, y + 0.5, 0.07, 1, 0.07, '#a07a50', hh, { line: false }); continue; }
+      if (ch === 'G') { this.box(S, x + 0.5, y + 0.5, 1, 0.12, 0.12, '#5a6068', 0); this.box(S, x + 0.5, y + 0.5, 1, 0.12, 0.1, '#5a6068', 1.5); if (x % 2 === 0) this.box(S, x, y + 0.5, 0.08, 0.12, 1.6, '#5a6068');
+        const gm = this.mats.glassG || (this.mats.glassG = new THREE.MeshBasicMaterial({ color: 0xa8d4ec, transparent: true, opacity: 0.32, depthWrite: false })), gl = new THREE.Mesh(this.eg.glass || (this.eg.glass = new THREE.BoxGeometry(1, 1.38, 0.04)), gm); this.eg.glass._keep = 1; gl.position.set(x + 0.5, 0.81, y + 0.5); S.add(gl);
+        if (!furn && x === 2) { const tx = this.cvTex(64, 48, c => { c.fillStyle = '#fffaf0'; c.fillRect(0, 0, 64, 48); c.fillStyle = '#c0302a'; c.font = 'bold 22px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('임대', 32, 25); }); tx._own = 1; const pm = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.45), new THREE.MeshBasicMaterial({ map: tx })); pm.position.set(x + 0.5, 0.9, y + 0.56); S.add(pm); }
+        continue; }
+      if (!isWall(ch)) continue;
+      const edge = x === 0 || x === W - 1 || y === 0, front = y === H - 1, h = front ? 0.34 : edge ? R3_WALL : 1.15, below = at(x, y + 1);
+      this.box(S, x + 0.5, y + 0.5, 1, 1, h, front ? TRIM : PAPER, 0, { line: false }); this.box(S, x + 0.5, y + 0.5, 1.01, 1.01, 0.05, TOP, h, { line: false, cast: false });
+      if (!front && floorC(below)) this.box(S, x + 0.5, y + 1.02, 1, 0.04, 0.12, TRIM, 0, { line: false, cast: false }); // 걸레받이
+      const fz = floorC(below) ? 1 : floorC(at(x + 1, y)) ? 2 : floorC(at(x - 1, y)) ? 3 : 0; // 방 쪽 면: 1 남 · 2 동 · 3 서
+      const onFace = (w, hh, y0, col, o) => { if (!fz) return null; const t = 0.03; return fz === 1 ? this.box(S, x + 0.5, y + 1 + t / 2, w, t, hh, col, y0, o) : this.box(S, fz === 2 ? x + 1 + t / 2 : x - t / 2, y + 0.5, t, w, hh, col, y0, o); };
+      if (ch === '=' && h > 1) { onFace(0.86, 0.8, 0.95, '#f2f2ee'); const g = onFace(0.74, 0.66, 1.02, Ho.pent ? '#8ec8f0' : '#a8d4ec', { glow: 1, line: false }); if (g) { if (fz === 1) g.position.z += 0.012; else g.position.x += fz === 2 ? 0.012 : -0.012; }
+        if (bad === 'wrecked' && HomeIn.h(x, y, 8) < 0.35) { const k = onFace(0.04, 0.5, 1.1, '#2a2a2a', { line: false }); if (k) { if (fz === 1) k.position.z += 0.02; else k.position.x += fz === 2 ? 0.02 : -0.02; } } }
+      if (ch === 'y') { const p = onFace(0.34, 0.3, 1.15, '#d8dade'); const g = onFace(0.26, 0.18, 1.2, '#4a9af0', { glow: 1, line: false }); if (g) { if (fz === 1) g.position.z += 0.012; else g.position.x += fz === 2 ? 0.012 : -0.012; } }
+    }
+    // 가구·붙박이: 이어진 같은 글자 = 한 덩어리
+    const seen = new Set(), tv = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (m[y][x] === 'v') tv.push([x + 0.5, y + 0.5]);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const ch = m[y][x]; if (seen.has(x + ',' + y) || !'bsvtzcPamfenkgoluhrT'.includes(ch)) continue; if (HOME_FURN.includes(ch) && !furn) continue;
+      let w = 1; while (at(x + w, y) === ch && !seen.has((x + w) + ',' + y)) w++; let d = 1; while ([...Array(w)].every((_, i) => at(x + i, y + d) === ch)) d++;
+      if ('vtzcPamfnoh'.includes(ch) && ch !== 't' && ch !== 'v' && ch !== 'n') { w = 1; d = 1; } // 한 칸짜리
+      for (let j = 0; j < d; j++) for (let i = 0; i < w; i++) seen.add((x + i) + ',' + (y + j));
+      this.hfurn(S, ch, x, y, w, d, { at, isWall, tv, lv, sd, Ho, bad, rm });
+    }
+    // 놓은 소품: 2D 그림을 부풀려 세운다 (펫과 같은 방법)
+    if (furn) for (const e of (Ho.deco && Ho.deco.items) || []) { const a = e[2]; if (this.deco3(S, a, e[0], e[1], at, isWall)) continue; const g = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k: 'deco', h: 14 / TILE, paint: c => HomeIn.art(c, a, 17, 25, 0) }, false, 0); if (!g) continue; g.geo._keep = 1;
+      const mt = new THREE.MeshToonMaterial({ map: g.tex, gradientMap: this.grad, alphaTest: 0.2, side: THREE.DoubleSide }), ms = new THREE.Mesh(g.geo, mt), inner = new THREE.Group(); inner.rotation.x = -Math.PI / 2; inner.add(ms); ms.castShadow = true; ms.add(new THREE.Mesh(g.geo, this.olMat()));
+      inner.position.set(e[0] + 0.5, 0, e[1] + 0.85); S.add(inner); }
+  },
+  // 큰 소품은 도형으로 (화분은 2D 그림을 부풀린 게 더 예쁘다). 앞(+Z)을 보게 만들고 벽 반대쪽으로 돌린다
+  deco3(S, a, x, y, at, isWall) {
+    if (!['chair', 'egg', 'massage', 'ctable', 'mirror', 'gmirror', 'glass', 'books', 'lamp', 'air', 'fish', 'piano'].includes(a)) return false;
+    const { THREE } = T3, g = new THREE.Group(), n = [isWall(at(x, y - 1)), isWall(at(x, y + 1)), isWall(at(x - 1, y)), isWall(at(x + 1, y))], b = n[0] ? 0 : n[1] ? 1 : n[2] ? 2 : n[3] ? 3 : 0;
+    g.position.set(x + 0.5, 0, y + 0.5); g.rotation.y = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b]; S.add(g);
+    const B = (px, pz, w, d, h, col, y0 = 0, o) => this.box(g, px, pz, w, d, h, col, y0, o);
+    const glass = (px, pz, w, d, h, y0, op = 0.3) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color: 0xbfe2f0, transparent: true, opacity: op, depthWrite: false })); m.position.set(px, y0 + h / 2, pz); g.add(m); return m; };
+    switch (a) {
+      case 'chair': B(0, 0.05, 0.46, 0.42, 0.06, '#a07a50', 0.42); B(0, -0.17, 0.46, 0.06, 0.5, '#8a6440', 0.42); for (const [p, q] of [[-0.19, -0.14], [0.19, -0.14], [-0.19, 0.22], [0.19, 0.22]]) B(p, q, 0.05, 0.05, 0.42, '#6a4a30', 0, { line: false }); break;
+      case 'egg': { this.cyl(g, 0, 0, 0.22, 0.22, 0.04, '#9a9ea4'); B(0, 0, 0.06, 0.06, 0.3, '#b8bcc2', 0, { line: false }); const e = this.ball(g, 0, 0.75, -0.02, 0.42, '#c8302a', 1.15); e.scale.z = 0.9; this.ball(g, 0, 0.72, 0.16, 0.3, '#f4f0e8', 1.05).scale.z = 0.6; break; }
+      case 'massage': B(0, 0, 0.7, 0.8, 0.3, '#1e1e22'); B(0, 0.05, 0.56, 0.6, 0.12, '#3a3a40', 0.3); const bk = B(0, -0.32, 0.56, 0.22, 0.85, '#2e2e34', 0.3); bk.rotation.x = -0.25; for (const p of [-0.33, 0.33]) { B(p, 0, 0.14, 0.7, 0.32, '#1e1e22', 0.3); B(p, 0.1, 0.15, 0.3, 0.04, '#c8302a', 0.62, { line: false }); } B(0, 0.42, 0.4, 0.2, 0.28, '#1e1e22'); B(0, -0.33, 0.3, 0.02, 0.08, '#5ab0e0', 1.0, { glow: 1, line: false }); break;
+      case 'ctable': for (const [p, q] of [[-0.35, -0.2], [0.35, -0.2], [-0.35, 0.2], [0.35, 0.2]]) B(p, q, 0.04, 0.04, 0.4, '#b8bcc2', 0, { line: false }); glass(0, 0, 0.86, 0.52, 0.03, 0.4, 0.55); B(-0.15, 0, 0.18, 0.14, 0.04, '#d8d0c0', 0.43); B(0.2, -0.05, 0.06, 0.06, 0.18, '#5a8ad0', 0.43); this.ball(g, 0.2, 0.64, -0.05, 0.05, '#e05a7a'); break;
+      case 'mirror': case 'gmirror': { const fc = a === 'gmirror' ? '#c89a30' : '#8a6440'; B(0, -0.3, 0.62, 0.06, 1.65, fc); const gm = B(0, -0.265, 0.5, 0.01, 1.45, a === 'gmirror' ? '#e4f2fa' : '#d8eef8', 0.1, { glow: 1, line: false }); void gm; B(0, -0.18, 0.5, 0.2, 0.04, fc); if (a === 'gmirror') this.ball(g, 0, 1.72, -0.3, 0.06, '#f8e090'); break; }
+      case 'glass': { B(0, -0.15, 0.9, 0.45, 0.08, '#3a3a40'); B(0, -0.15, 0.9, 0.45, 0.06, '#3a3a40', 1.7); for (const p of [-0.43, 0.43]) B(p, -0.15, 0.04, 0.45, 1.7, '#3a3a40', 0, { line: false }); B(0, -0.36, 0.86, 0.02, 1.62, '#4a4a52', 0.08, { line: false });
+        for (let i = 0; i < 3; i++) { B(0, -0.15, 0.84, 0.4, 0.02, '#8a8e94', 0.5 + i * 0.4, { line: false }); for (let j = 0; j < 3; j++) B(-0.25 + j * 0.25, -0.18, 0.12, 0.12, 0.18 - (j % 2) * 0.06, ['#e8c050', '#d84a5a', '#ffffff', '#5a8ad0'][(i + j) % 4], 0.52 + i * 0.4); } glass(0, 0.08, 0.84, 0.02, 1.6, 0.08, 0.28); break; }
+      case 'books': { B(0, -0.2, 0.96, 0.5, 1.9, '#8a5e38'); const bc = ['#b3392a', '#1b5ea6', '#cdae70', '#3d7040', '#7a3a8a']; for (let s2 = 0; s2 < 4; s2++) { B(0, 0.02, 0.86, 0.04, 0.04, '#6a4428', 0.12 + s2 * 0.44, { line: false }); for (let i = 0; i < 6; i++) B(-0.36 + i * 0.145, -0.02, 0.11, 0.3, 0.26 + (i * 3 + s2) % 3 * 0.04, bc[(i + s2 * 2) % 5], 0.16 + s2 * 0.44, { line: false }); } break; }
+      case 'lamp': { this.cyl(g, 0, 0, 0.16, 0.18, 0.05, '#3a3a40'); B(0, 0, 0.04, 0.04, 1.35, '#5a5a62', 0.05, { line: false }); const sh = this.cyl(g, 0, 0, 0.26, 0.17, 0.3, '#f4ead0', 1.3, 18, { glow: 1 }); void sh; const pl = new THREE.PointLight(0xffe6a8, 1.4, 4, 1.6); pl.position.set(0, 1.35, 0); g.add(pl); break; }
+      case 'air': B(0, 0, 0.42, 0.34, 1.3, '#f2f2f0'); for (let i = 0; i < 3; i++) B(0, 0.175, 0.32, 0.01, 0.03, '#d8d8d6', 0.6 + i * 0.12, { line: false }); B(0, 0.175, 0.16, 0.01, 0.05, '#4ab0f0', 1.12, { glow: 1, line: false }); break;
+      case 'fish': { B(0, 0, 0.92, 0.46, 0.5, '#6a4a30'); B(0, 0, 0.94, 0.48, 0.04, '#8a6440', 0.5); const w = glass(0, 0, 0.88, 0.42, 0.5, 0.54, 0.5); w.material.color.set(0x4a9ad0); B(0, 0, 0.88, 0.42, 0.04, '#d8c890', 0.54, { line: false }); B(-0.25, 0, 0.03, 0.03, 0.3, '#3a8a4a', 0.58, { line: false }); B(0.28, 0.05, 0.03, 0.03, 0.36, '#3a8a4a', 0.58, { line: false });
+        for (const [p, h2, c] of [[-0.1, 0.8, '#ff8a3a'], [0.15, 0.72, '#ffd84a']]) { const f = this.ball(g, p, h2, 0.02, 0.05, c); f.scale.x = 1.6; f.userData.fish = 1; } B(0, 0, 0.9, 0.44, 0.04, '#2a3a48', 1.04); break; }
+      case 'piano': { B(0, -0.2, 1.3, 0.5, 1.15, '#0e0e12'); B(0, 0.1, 1.3, 0.3, 0.08, '#0e0e12', 0.7); B(0, 0.12, 1.2, 0.26, 0.03, '#f4f4f0', 0.78, { line: false }); for (let i = 0; i < 10; i++) B(-0.54 + i * 0.12, 0.06, 0.04, 0.14, 0.02, '#0e0e12', 0.81, { line: false }); B(0, 0.21, 1.2, 0.04, 0.4, '#0e0e12', 0.3, { line: false });
+        B(0, -0.44, 1.24, 0.02, 0.04, '#d4b46a', 1.05, { line: false }); B(0, 0.62, 0.7, 0.32, 0.08, '#1e1e24', 0.42); for (const p of [-0.3, 0.3]) for (const q of [0.5, 0.74]) B(p, q, 0.05, 0.05, 0.42, '#0e0e12', 0, { line: false }); break; }
+    }
+    return true;
+  },
+  // 집 가구 한 덩어리 (x, y 왼쪽 위 칸부터 w×d). 색·등급은 2D 그림(HomeIn.piece)과 같게
+  hfurn(S, ch, x, y, w, d, o) {
+    const { at, isWall, tv, lv, sd, Ho, bad } = o, cx = x + w / 2, cz = y + d / 2, X = x + 0.5, Z = y + 0.5;
+    // 등 쪽 (벽이 가장 많이 붙은 쪽): 0 북 · 1 남 · 2 서 · 3 동
+    const back = () => { const n = [0, 0, 0, 0]; for (let i = 0; i < w; i++) { if (isWall(at(x + i, y - 1))) n[0]++; if (isWall(at(x + i, y + d))) n[1]++; } for (let j = 0; j < d; j++) { if (isWall(at(x - 1, y + j))) n[2]++; if (isWall(at(x + w, y + j))) n[3]++; } let b = 0; for (let k = 1; k < 4; k++) if (n[k] > n[b]) b = k; return b; };
+    // 등 쪽 b에 붙인 판 (두께 t, 높이 hh, y0부터)
+    const slab = (b, t, hh, col, y0 = 0, inset = 0, op) => b < 2 ? this.box(S, cx, b === 0 ? y + t / 2 + inset : y + d - t / 2 - inset, w - 0.08, t, hh, col, y0, op) : this.box(S, b === 2 ? x + t / 2 + inset : x + w - t / 2 - inset, cz, t, d - 0.08, hh, col, y0, op);
+    switch (ch) {
+      case 'b': { const k = lv.bed | 0, blanket = k === 1 ? '#f8f8f6' : k === 2 ? '#8a2a3a' : ['#6a8ac8', '#d88aa0', '#7ab08a', '#e0b860'][(sd + x + y) % 4], frame = k === 1 ? '#8a8a90' : k === 2 ? '#3a2418' : '#7a5236', head = k === 1 ? '#6a6a72' : k === 2 ? '#2a1810' : '#5a3a26';
+        this.box(S, cx, cz, w - 0.06, d - 0.06, 0.3, frame); this.box(S, cx, cz + 0.02, w - 0.14, d - 0.12, 0.14, '#f4f2ee', 0.3); this.box(S, cx, y + 0.08, w - 0.06, 0.12, k ? 0.95 : 0.75, head);
+        this.box(S, cx, cz + 0.22, w - 0.12, d - 0.5, 0.07, blanket, 0.44); for (let i = 0; i < w; i++) this.box(S, x + i + 0.5, y + 0.38, 0.62, 0.32, 0.12, '#ffffff', 0.44);
+        if (k === 1) this.box(S, cx, cz + 0.5, w - 0.12, 0.12, 0.075, '#4a4e58', 0.44, { line: false }); if (k === 2) this.box(S, cx, cz + 0.6, w - 0.12, 0.06, 0.075, '#d4b46a', 0.44, { line: false });
+        if (k === 2) { for (const [a, b] of [[x + 0.06, y + 0.06], [x + w - 0.06, y + 0.06], [x + 0.06, y + d - 0.06], [x + w - 0.06, y + d - 0.06]]) this.box(S, a, b, 0.07, 0.07, 1.9, '#3a2418'); this.box(S, cx, cz, w, d, 0.06, '#3a2418', 1.9, { line: false });
+          const cm = this.mats.canopy || (this.mats.canopy = new T3.THREE.MeshBasicMaterial({ color: 0xfff8ec, transparent: true, opacity: 0.35, depthWrite: false, side: T3.THREE.DoubleSide })), cp = new T3.THREE.Mesh(new T3.THREE.PlaneGeometry(w, 1.2), cm); cp.position.set(cx, 1.3, y + 0.02); S.add(cp); }
+        return; }
+      case 's': { const k = lv.sofa | 0, c = k === 1 ? ['#8a5230', '#6a3c22'] : k === 2 ? ['#2e7a64', '#225a4a'] : k === 3 ? ['#f4eee2', '#ddd3c0'] : Ho.pent ? ['#e8e2d6', '#d2cabc'] : ['#6a7a90', '#56667c'];
+        let b; if (tv.length) { const t = tv.reduce((p, q) => Math.hypot(q[0] - cx, q[1] - cz) < Math.hypot(p[0] - cx, p[1] - cz) ? q : p), dx = t[0] - cx, dz = t[1] - cz; b = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 1 : 0) : (dx < 0 ? 3 : 2); } else b = back();
+        this.box(S, cx, cz, w - 0.06, d - 0.08, 0.36, c[1]); this.box(S, cx, cz, w - 0.2, d - 0.2, 0.1, c[0], 0.34); slab(b, 0.24, 0.82, c[1], 0, 0.02);
+        const ends = b < 2 ? [[x + 0.1, cz, 0.18, d - 0.1], [x + w - 0.1, cz, 0.18, d - 0.1]] : [[cx, y + 0.1, w - 0.1, 0.18], [cx, y + d - 0.1, w - 0.1, 0.18]]; for (const [a, bb, ww, dd] of ends) this.box(S, a, bb, ww, dd, 0.6, c[1]);
+        if (k === 3) { this.box(S, cx, cz, w, d, 0.04, '#c8a040', 0, { line: false }); this.ball(S, x + 0.45, 0.62, cz + (b === 0 ? -0.15 : b === 1 ? 0.15 : 0), 0.14, '#d8b860'); this.ball(S, x + w - 0.45, 0.62, cz + (b === 0 ? -0.15 : b === 1 ? 0.15 : 0), 0.14, '#5a6a90'); }
+        return; }
+      case 'v': { const k = lv.tv | 0, b = back(), fw = [0.75, 0.85, 0.95, 1.05][k] * w, fh = [0.5, 0.6, 0.75, 0.9][k];
+        this.box(S, cx, cz, w - 0.06, d - 0.3, 0.42, k >= 2 ? '#2e2e34' : '#7a5a3e');
+        const tex = this.cvTex(128, 80, c => { if (!k) { c.fillStyle = '#2a4a7a'; c.fillRect(0, 0, 128, 80); } else { c.fillStyle = '#3a7ad8'; c.fillRect(0, 0, 128, 50); c.fillStyle = '#3a9a5a'; c.fillRect(0, 50, 128, 30); c.fillStyle = '#fff'; c.fillRect(70, 18, 8, 8); } c.fillStyle = 'rgba(255,255,255,.2)'; c.fillRect(6, 6, 10, 60); }); tex._own = 1;
+        const { THREE } = T3, sc = new THREE.Group(), bz = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, 0.05), this.toon(k === 3 ? '#0a0a0c' : '#16181e')), pn = new THREE.Mesh(new THREE.PlaneGeometry(fw - 0.06, fh - 0.06), new THREE.MeshBasicMaterial({ map: tex })); pn.position.z = 0.027; sc.add(bz); sc.add(pn); bz.castShadow = true;
+        const ang = [0, Math.PI, -Math.PI / 2, Math.PI / 2][b]; sc.rotation.y = ang; const off = 0.18; sc.position.set(cx + (b === 2 ? -off : b === 3 ? off : 0), 0.46 + fh / 2 + (k >= 2 ? 0.08 : 0.02), cz + (b === 0 ? -off : b === 1 ? off : 0)); S.add(sc);
+        if (k === 3) { const gl = new THREE.PointLight(0x8cb4ff, 1.2, 3, 1.5); gl.position.set(sc.position.x, sc.position.y, sc.position.z + (b === 0 ? 0.4 : b === 1 ? -0.4 : 0)); S.add(gl); }
+        return; }
+      case 't': { const k = lv.table | 0, top = k === 1 ? '#aad7eb' : k === 2 ? '#f0eeea' : '#8a6440', ch2 = k === 2 ? '#2a2a30' : k === 1 ? '#e8e8e4' : '#c8b090';
+        for (const [a, bb] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) this.box(S, cx + a * (w / 2 - 0.15), cz + bb * (d / 2 - 0.2), 0.07, 0.07, 0.7, k === 1 ? '#9aa0a8' : '#6a4a30', 0, { line: false });
+        this.box(S, cx, cz, w - 0.06, d - 0.2, 0.06, top, 0.7); if (k === 2) this.box(S, cx, cz, w - 0.05, d - 0.19, 0.02, '#c8a040', 0.69, { line: false });
+        for (let i = 0; i < w; i++) for (const side of [-1, 1]) { const zz = side < 0 ? y - 0.05 : y + d + 0.05; this.box(S, x + i + 0.5, zz, 0.42, 0.4, 0.06, ch2, 0.42); this.box(S, x + i + 0.5, zz + side * 0.18, 0.42, 0.06, 0.45, ch2, 0.42); for (const a of [-0.17, 0.17]) this.box(S, x + i + 0.5 + a, zz, 0.05, 0.05, 0.42, ch2, 0, { line: false }); }
+        this.box(S, cx - 0.15, cz, 0.3, 0.24, 0.03, '#f4f2ee', 0.76, { line: false }); this.ball(S, cx - 0.15, 0.8, cz, 0.06, '#e8c070'); if (k) this.box(S, cx + 0.25, cz - 0.05, 0.08, 0.08, 0.18, '#d84a5a', 0.76); return; }
+      case 'z': { const b = back(); this.box(S, X, Z, 0.95, 0.55, 0.05, '#8a6440', 0.7); for (const [a, bb] of [[-0.42, -0.22], [0.42, -0.22], [-0.42, 0.22], [0.42, 0.22]]) this.box(S, X + a, Z + bb, 0.05, 0.05, 0.7, '#6a4a30', 0, { line: false });
+        this.box(S, X, Z - 0.15, 0.5, 0.04, 0.34, '#1e2028', 0.82); this.box(S, X, Z - 0.125, 0.44, 0.01, 0.28, '#4a8ad0', 0.85, { glow: 1, line: false }); this.box(S, X, Z - 0.15, 0.06, 0.06, 0.1, '#3a3a40', 0.75); this.box(S, X, Z + 0.1, 0.36, 0.12, 0.02, '#3a3a40', 0.75);
+        this.box(S, X, Z + 0.55, 0.42, 0.4, 0.06, '#2a2a30', 0.44); this.box(S, X, Z + 0.74, 0.42, 0.06, 0.5, '#2a2a30', 0.44); this.box(S, X, Z + 0.55, 0.06, 0.06, 0.44, '#5a5a60', 0, { line: false }); void b; return; }
+      case 'c': { const b = back(); this.box(S, X, Z, 0.92, 0.92, 1.85, '#6a4a30'); slab(b ^ 1, 0.02, 1.75, '#8a6440', 0.05, -0.01, { line: false }); this.box(S, X, Z, 0.94, 0.94, 0.06, '#5a3a24', 1.85, { line: false }); return; }
+      case 'P': { this.cyl(S, X, Z, 0.16, 0.2, 0.34, '#8a5a3a'); this.ball(S, X, 0.62, Z, 0.3, '#4a9a4a'); this.ball(S, X + 0.12, 0.86, Z - 0.05, 0.22, '#5ab05a'); this.ball(S, X - 0.13, 0.8, Z + 0.06, 0.2, '#3f8a42'); return; }
+      case 'a': { this.box(S, X, Z, 0.5, 0.4, 1.6, '#e8eaec'); for (let i = 0; i < 3; i++) this.box(S, X, Z + 0.205, 0.38, 0.01, 0.03, '#c8ccd0', 1.2 + i * 0.1, { line: false }); this.box(S, X - 0.1, Z + 0.205, 0.1, 0.01, 0.04, '#5ab0e0', 0.95, { glow: 1, line: false }); return; }
+      case 'm': { const b = back(); this.box(S, X, Z, 0.8, 0.75, 0.85, '#f0f0f0'); this.box(S, X, Z, 0.82, 0.77, 0.06, '#c8ccd0', 0.85); const dr = this.cyl(S, X, Z, 0.24, 0.24, 0.04, '#3a4a5a', 0, 20); dr.rotation.x = Math.PI / 2; dr.rotation.z = [0, 0, Math.PI / 2, Math.PI / 2][b]; dr.position.set(X + (b === 2 ? 0.39 : b === 3 ? -0.39 : 0), 0.42, Z + (b === 0 ? 0.39 : b === 1 ? -0.39 : 0)); return; }
+      case 'f': { this.box(S, X, Z, 0.85, 0.72, 1.85, '#c8ccd2'); this.box(S, X, Z, 0.87, 0.74, 0.03, '#aab0b8', 1.15, { line: false }); return; }
+      case 'e': { const b = back(); this.box(S, cx, cz, w - 0.06, d - 0.06, 0.08, '#9a9ca0'); slab(b, 0.06, 1.55, '#9a9ca0'); for (let s = 0; s < 3; s++) { this.box(S, cx, cz, w - 0.08, d - 0.08, 0.04, '#c8cacc', 0.35 + s * 0.42); for (let i = 0; i < w * 3; i++) for (let j = 0; j < d; j++) this.box(S, x + 0.2 + i * 0.3, y + j + 0.5, 0.18, 0.22, 0.22, ['#e05a4a', '#4a8ad0', '#f0c040', '#5ab06a'][(i + s + j + x) % 4], 0.39 + s * 0.42, { line: false }); } return; }
+      case 'n': { this.box(S, cx, cz, w - 0.04, d - 0.1, 0.9, '#5a5e66'); this.box(S, cx, cz, w, d - 0.04, 0.05, '#e8e8e4', 0.9); this.box(S, x + 0.5, cz, 0.42, 0.32, 0.22, '#2a2a30', 0.95); this.box(S, x + 0.5, cz + 0.17, 0.34, 0.01, 0.14, '#8ad0ff', 1.0, { glow: 1, line: false }); return; }
+      case 'k': case 'g': { const b = back(); this.box(S, cx, cz, w - 0.02, d - 0.04, 0.85, '#f2f0ea'); this.box(S, cx, cz, w, d, 0.05, '#d8d2c4', 0.85);
+        if (ch === 'g') for (let i = 0; i < w; i++) { this.box(S, x + i + 0.5, cz, 0.8, 0.7, 0.02, '#2a2a2e', 0.9, { line: false }); for (const a of [-0.2, 0.2]) this.cyl(S, x + i + 0.5 + a, cz, 0.12, 0.12, 0.02, '#5a5a60', 0.91, 16); }
+        else { const si = Math.min(w - 1, (sd + x) % 3 === 1 ? 1 : 0); this.box(S, x + si + 0.5, cz, 0.6, 0.45, 0.02, '#7a8a98', 0.9, { line: false }); const fx = x + si + 0.5, fz = b === 0 ? y + 0.12 : b === 1 ? y + d - 0.12 : cz; this.box(S, fx, fz, 0.05, 0.05, 0.28, '#c8ccd0', 0.9); }
+        this.box(S, cx, cz, w - 0.1, d - 0.1, 0.06, '#b8b0a0', 0.42, { line: false }); return; }
+      case 'o': { const b = back(); this.cyl(S, X, Z + 0.05, 0.18, 0.22, 0.4, '#e2e6ea', 0, 16); this.cyl(S, X, Z + 0.05, 0.2, 0.2, 0.04, '#ffffff', 0.4, 16); slab(b, 0.2, 0.75, '#f4f6f8', 0, 0.08); return; }
+      case 'l': { const b = back(); this.box(S, X, Z, 0.14, 0.14, 0.7, '#c8d0d6'); this.box(S, X, Z, 0.6, 0.45, 0.14, '#ffffff', 0.7); this.box(S, X, Z, 0.46, 0.3, 0.02, '#b8c4cc', 0.83, { line: false }); slab(b, 0.03, 0.55, '#cfe6f2', 1.05, 0.02, { line: false }); return; }
+      case 'u': { this.box(S, cx, cz, w - 0.04, d - 0.04, 0.5, '#f4f6f8'); this.box(S, cx, cz, w - 0.24, d - 0.24, 0.02, '#a8d0e2', 0.44, { line: false }); return; }
+      case 'h': { const b = back(); this.box(S, X, Z, 0.92, 0.92, 1.0, '#6a4a30'); slab(b ^ 1, 0.02, 0.9, '#8a6440', 0.05, -0.01, { line: false }); return; }
+      case 'r': { for (let j = 0; j < d; j++) for (let s = 0; s < 4; s++) { const hh = (d - j - 1) * 0.6 + (4 - s) * 0.15; this.box(S, cx, y + j + s * 0.25 + 0.125, w - 0.04, 0.25, hh, (s % 2) ? '#8a6440' : '#a07a50'); } return; }
+      case 'T': { this.cyl(S, X, Z, 0.1, 0.13, 0.8, '#6a4a30'); this.ball(S, X, 1.15, Z, 0.55, '#4a8a3a'); this.ball(S, X + 0.25, 1.4, Z - 0.1, 0.36, '#5a9a4a'); this.ball(S, X - 0.22, 1.3, Z + 0.12, 0.34, '#3a7a32'); return; }
+    }
   },
   /* ---- 바닥 그림 ---- */
   floorTex(c, rm, P, w, h) {
@@ -17335,7 +17462,7 @@ const Room3D = {
     for (const f of Net.visible('room')) { const fp = f.p; if (fp.rd) continue; let spr = f.sp; if (fp.pal) { spr = 'f:' + fp.name; Sprites.setPal(spr, Profile.pal(fp.pal)); } this.actor('f:' + fp.name, Sprites.PAL[spr] || Sprites.PAL.player, { x: fp.x, y: fp.y, dir: fp.d || 0, moving: !!fp.m }, t, dt, fp.x * 0.3); }
     rm.npcs.forEach((n, i) => this.actor('n' + i, Sprites.PAL[n.sprite] || Sprites.PAL.clerk, n, t, dt, i * 1.7 + 1));
     rm.guests.forEach((g, i) => { if (!g.gone) this.actor('g' + i, Sprites.PAL[g.sprite] || Sprites.PAL.walker1, g, t, dt, i * 2.3 + 5); });
-    this.bankTick(rm, t); this.S.traverse(o => { if (o.userData.spin) o.rotation.y = t * 1.5; });
+    this.bankTick(rm, t); this.S.traverse(o => { if (o.userData.spin) o.rotation.y = t * 1.5; if (o.userData.fish) o.position.x = Math.sin(t * 1.3 + o.id) * 0.28; });
     // 카메라: 나를 따라가되 방 밖은 덜 보이게
     const cam = this.cam, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * cam.aspect), wt = Math.max(12, Math.min(17, rm.W + 2)) * Math.max(1, 2.1 / cam.aspect) /* 방 너비가 화면에 다 들어오게 (세로로 긴 화면이면 조금 더 멀리) */, dist = (wt / 2) / Math.tan(hf / 2);
     let tx = p.x / TILE, tz = p.y / TILE; const W = rm.W, Hh = rm.H; tx = wt >= W ? W / 2 : Math.max(wt / 2, Math.min(W - wt / 2, tx)); tz = Hh * 0.5 - 0.5 + (tz - Hh * 0.5) * 0.4; /* 방 가운데 쪽으로 당겨서 뒷벽(창구·간판)도 늘 보이게 */

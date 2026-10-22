@@ -1,0 +1,21 @@
+# 제미나이 그림 → 3D (무료 Hugging Face Space 호출). gen3d 브랜치에서만 돈다. 게임 배포와 무관.
+name: Gen3D
+on:
+  push:
+    branches: [gen3d]
+    paths: ['gen3d/run.txt']
+permissions:
+  contents: write
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -q gradio_client
+      - run: python gen3d/gen.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: out, path: gen3d/out, if-no-files-found: ignore}

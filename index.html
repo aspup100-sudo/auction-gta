@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v326</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v327</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5107,6 +5107,19 @@ return { WH, pal,
  * 범례: # 벽  = 창  y 월패드  G 유리 전면  x 울타리 | . 마루  , 욕실 타일  : 현관  _ 베란다  ' 잔디  ~ 디딤돌 | D 나가는 문  d 방문
  *       가구(살 때만): b 침대 s 소파 v TV R 러그 t 식탁 z 책상 c 옷장 P 화분 a 에어컨 m 세탁기 f 냉장고 e 진열대 n 계산대
  *       붙박이: k 싱크대 g 가스레인지 o 변기 l 세면대 u 욕조 h 신발장 r 계단 T 나무 */
+/* v327 실사 가구 이름·대응표 (모델은 props3d.js Props3D.need · 상점 목록 shop.js가 먼저 읽어서 여기 둔다) */
+const REAL3 = {
+  sofa_02: '체스터필드 가죽 소파', Sofa_01: '클래식 패브릭 소파', sofa_03: '이태리 명품 소파', ArmChair_01: '화이트 클래식 암체어', GreenChair_01: '초록 앤틱 의자', Ottoman_01: '가죽 오토만',
+  mid_century_lounge_chair: '미드센추리 라운지 체어', modern_arm_chair_01: '원목 가죽 암체어', dining_chair_02: '가죽 식탁 의자', bar_chair_round_01: '원목 바 의자', plastic_monobloc_chair_01: '플라스틱 의자',
+  CoffeeTable_01: '민트 빈티지 테이블', coffee_table_round_01: '화이트 원형 커피 테이블', industrial_coffee_table: '인더스트리얼 테이블', modern_coffee_table_01: '콘크리트 원목 테이블', modern_coffee_table_02: '블랙 패턴 테이블',
+  round_wooden_table_01: '원형 원목 테이블', side_table_01: '원목 사이드 테이블', ClassicConsole_01: '클래식 콘솔', ClassicNightstand_01: '클래식 협탁', drawer_cabinet: '철제 원목 선반', modern_wooden_cabinet: '원목 TV장',
+  vintage_cabinet_01: '빈티지 장식장', wooden_bookshelf_worn: '화이트워시 책장', wooden_display_shelves_01: '원목 진열 선반', vintage_day_bed: '빈티지 데이베드', Television_01: '레트로 TV', gaming_console: '게임기',
+  ornate_mirror_01: '골드 프레임 거울', ceramic_vase_01: '도자기 꽃병', potted_plant_01: '테라코타 화분', potted_plant_02: '몬스테라', potted_plant_04: '작은 다육 화분', planter_box_01: '나무 화단 상자',
+};
+// 예전 집 꾸미기 소품 그림 → 실사 모델 (산 기록은 그대로, 그리는 것만 바꾼다)
+const REAL_ART = { chair: 'modern_arm_chair_01', egg: 'mid_century_lounge_chair', ctable: 'coffee_table_round_01', gmirror: 'ornate_mirror_01', glass: 'vintage_cabinet_01', books: 'wooden_bookshelf_worn', mon: 'potted_plant_02', olive: 'potted_plant_01' };
+const REAL_SOFA = ['', 'sofa_02', 'Sofa_01', 'sofa_03']; // 집 소파 등급별
+function realArt(a) { return REAL_ART[a] ? 'k:r_' + REAL_ART[a] : a; }
 const HOME_PLANS = {
   apt_s: { label: '아파트 59㎡형 · 방2 화1', map: [
     '#=====#=======#',
@@ -5503,6 +5516,7 @@ Object.assign(HomeIn, {
   art(ctx, a, X, Y, t) {
     const r = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(X + x, Y + y, w, h); };
     const pot = (c, c2) => { r(c, 4, 10, 8, 5); r(c2, 3, 9, 10, 2); r('rgba(0,0,0,.18)', 4, 14, 8, 1); };
+    if (REAL_ART[a]) a = realArt(a); // v327 실사 사진으로
     switch (a) {
       case 'rose': pot('#b8643a', '#c8744a'); r('#3a7a3a', 5, 4, 6, 6); r('#4a8a4a', 3, 6, 3, 3); r('#4a8a4a', 10, 5, 3, 3); for (const [x, y] of [[5, 2], [9, 3], [7, 5], [4, 5], [10, 6]]) { r('#d8324a', x, y, 3, 3); r('#f05a6a', x, y, 1, 1); } break;
       case 'sun': pot('#b8643a', '#c8744a'); r('#3a7a3a', 7, -4, 2, 14); r('#4a8a4a', 4, 2, 4, 2); r('#4a8a4a', 9, 4, 4, 2); r('#f4c430', 3, -11, 10, 9); r('#f8d84a', 5, -12, 6, 11); r('#6a4a20', 6, -9, 4, 4); break;
@@ -5521,7 +5535,7 @@ Object.assign(HomeIn, {
       case 'air': r('#f2f2f0', 4, -6, 8, 21); r('#d8d8d6', 5, -2, 6, 1); r('#d8d8d6', 5, 1, 6, 1); r('#d8d8d6', 5, 4, 6, 1); r(Math.floor(t) % 2 ? '#4ab0f0' : '#3a9ae0', 6, -5, 4, 2); r('rgba(0,0,0,.15)', 4, 14, 8, 1); break;
       case 'fish': { r('#6a4a30', 1, 8, 14, 7); r('#8a6440', 1, 8, 14, 2); r('#2a3a48', 0, -5, 16, 13); r('#4a9ad0', 1, -4, 14, 11); r('#6ab8e8', 1, -4, 14, 2); r('#3a8a4a', 3, 2, 1, 5); r('#3a8a4a', 12, 1, 1, 6); r('#d8c890', 1, 6, 14, 1); const f = (t * 4) % 24, fx = f < 12 ? f : 24 - f; r('#f08a2a', 2 + Math.round(fx), -1, 3, 2); r('#f8d84a', 11 - Math.round(fx * 0.7), 2, 2, 2); if (Math.floor(t * 3) % 3 === 0) r('rgba(255,255,255,.8)', 9, -3 + Math.floor(t * 3) % 2, 1, 1); break; }
       case 'piano': r('#0e0e12', -3, -4, 22, 15); r('#1e1e24', -2, -3, 20, 6); r('#0e0e12', 0, -10, 14, 7); r('rgba(255,255,255,.18)', 1, -9, 8, 1); r('#f4f4f0', -2, 9, 20, 4); for (let i = 0; i < 6; i++) r('#0e0e12', -1 + i * 3, 9, 1, 2); r('#0e0e12', -2, 13, 2, 3); r('#0e0e12', 16, 13, 2, 3); r('#d4b46a', 6, 5, 4, 1); break;
-      default: if (a.startsWith('k:')) { const img = typeof Snap3D !== 'undefined' && Snap3D.prop(a.slice(2), 96); if (img) { ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(img, X - 4, Y - 12, 24, 24); ctx.restore(); } else { const sf = a.startsWith('k:sf'); r(sf ? '#4a5868' : '#7a5434', 2, -2, 12, 16); r(sf ? '#8ad0ff' : '#a07a50', 3, -1, 10, 3); r('rgba(0,0,0,.2)', 2, 13, 12, 1); } } // v325 장르 가구: 3D 사진 (아직이면 상자 모양)
+      default: if (a.startsWith('k:')) { const img = a.startsWith('k:r_') ? Props3D.thumb(a.slice(2)) : typeof Snap3D !== 'undefined' && Snap3D.prop(a.slice(2), 96); if (img) { ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(img, X - 4, Y - 12, 24, 24); ctx.restore(); } else { const sf = a.startsWith('k:sf'); r(sf ? '#4a5868' : '#7a5434', 2, -2, 12, 16); r(sf ? '#8ad0ff' : '#a07a50', 3, -1, 10, 3); r('rgba(0,0,0,.2)', 2, 13, 12, 1); } } // v325 장르 가구: 3D 사진 (아직이면 상자 모양)
     }
   },
   // 편집숍 미리보기: 그 톤·가구가 놓인 작은 방 (정수 배율만)
@@ -5533,6 +5547,8 @@ Object.assign(HomeIn, {
     const H = { seed: 1, deco: { lv } };
     const room = (map, X0, Y0, sc) => { const M = map.split('/'), f = (a, b) => (M[b] && M[b][a]) || ' '; x.save(); x.translate(X0, Y0); x.scale(sc, sc); for (let b = 0; b < M.length; b++) for (let a = 0; a < M[b].length; a++) if (M[b][a] !== ' ') this.piece(x, M[b][a], a, b, f, H, t, 'good'); x.restore(); };
     const art = (a, X0, Y0, sc) => { x.save(); x.translate(X0, Y0); x.scale(sc, sc); this.art(x, a, 0, 0, t); x.restore(); };
+    const ra = it.home === 'place' ? realArt(it.art) : it.home === 'sofa' && REAL_SOFA[it.lv] ? 'k:r_' + REAL_SOFA[it.lv] : ''; // v327 실사 사진
+    if (ra.startsWith('k:r_')) { const img = Props3D.thumb(ra.slice(2)); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } }
     if (it.home === 'place' && it.art.startsWith('k:')) { const S = Math.max(1, Math.round(x.getTransform().a)), img = typeof Snap3D !== 'undefined' && Snap3D.prop(it.art.slice(2), 104 * S); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } } // v325 장르 가구: 방 위에 3D 사진
     if (it.home === 'place') return art(it.art, 56, 52, 3);
     if (it.home === 'tone') { room('vv', 48, 26, 2); room('ss', 48, 70, 2); art('mon', 8, 66, 2); art('lamp', 120, 66, 2); return; }
@@ -11964,6 +11980,30 @@ const SHOP_ITEMS = {
     { id: 'h_k_sf_barrel', name: '연료 통', new: '2026-10-22', nb: 325, price: 250e4, home: 'place', art: 'k:sf_barrel', genre: 'sf' },
     { id: 'h_k_sf_light', name: '바닥 조명', new: '2026-10-22', nb: 325, price: 400e4, home: 'place', art: 'k:sf_light', genre: 'sf' },
     { id: 'h_k_sf_holder', name: '홀로 진열대', new: '2026-10-22', nb: 325, price: 1500e4, home: 'place', art: 'k:sf_holder', genre: 'sf' },
+    // v327 실사 가구 (Poly Haven 스캔 모델, 사용자 '2D인거 전부 3D로 바꿔' '리얼리스틱 팩으로')
+    { id: 'h_r_GreenChair_01', name: REAL3.GreenChair_01, new: '2026-10-22', nb: 327, price: 80e4, home: 'place', art: 'k:r_GreenChair_01' },
+    { id: 'h_r_Ottoman_01', name: REAL3.Ottoman_01, new: '2026-10-22', nb: 327, price: 120e4, home: 'place', art: 'k:r_Ottoman_01' },
+    { id: 'h_r_dining_chair_02', name: REAL3.dining_chair_02, new: '2026-10-22', nb: 327, price: 60e4, home: 'place', art: 'k:r_dining_chair_02' },
+    { id: 'h_r_ArmChair_01', name: REAL3.ArmChair_01, new: '2026-10-22', nb: 327, price: 180e4, home: 'place', art: 'k:r_ArmChair_01' },
+    { id: 'h_r_bar_chair_round_01', name: REAL3.bar_chair_round_01, new: '2026-10-22', nb: 327, price: 40e4, home: 'place', art: 'k:r_bar_chair_round_01' },
+    { id: 'h_r_plastic_monobloc_chair_01', name: REAL3.plastic_monobloc_chair_01, new: '2026-10-22', nb: 327, price: 3e4, home: 'place', art: 'k:r_plastic_monobloc_chair_01' },
+    { id: 'h_r_CoffeeTable_01', name: REAL3.CoffeeTable_01, new: '2026-10-22', nb: 327, price: 150e4, home: 'place', art: 'k:r_CoffeeTable_01' },
+    { id: 'h_r_industrial_coffee_table', name: REAL3.industrial_coffee_table, new: '2026-10-22', nb: 327, price: 90e4, home: 'place', art: 'k:r_industrial_coffee_table' },
+    { id: 'h_r_modern_coffee_table_01', name: REAL3.modern_coffee_table_01, new: '2026-10-22', nb: 327, price: 120e4, home: 'place', art: 'k:r_modern_coffee_table_01' },
+    { id: 'h_r_modern_coffee_table_02', name: REAL3.modern_coffee_table_02, new: '2026-10-22', nb: 327, price: 100e4, home: 'place', art: 'k:r_modern_coffee_table_02' },
+    { id: 'h_r_round_wooden_table_01', name: REAL3.round_wooden_table_01, new: '2026-10-22', nb: 327, price: 80e4, home: 'place', art: 'k:r_round_wooden_table_01' },
+    { id: 'h_r_side_table_01', name: REAL3.side_table_01, new: '2026-10-22', nb: 327, price: 30e4, home: 'place', art: 'k:r_side_table_01' },
+    { id: 'h_r_ClassicConsole_01', name: REAL3.ClassicConsole_01, new: '2026-10-22', nb: 327, price: 200e4, home: 'place', art: 'k:r_ClassicConsole_01' },
+    { id: 'h_r_ClassicNightstand_01', name: REAL3.ClassicNightstand_01, new: '2026-10-22', nb: 327, price: 90e4, home: 'place', art: 'k:r_ClassicNightstand_01' },
+    { id: 'h_r_drawer_cabinet', name: REAL3.drawer_cabinet, new: '2026-10-22', nb: 327, price: 120e4, home: 'place', art: 'k:r_drawer_cabinet' },
+    { id: 'h_r_modern_wooden_cabinet', name: REAL3.modern_wooden_cabinet, new: '2026-10-22', nb: 327, price: 180e4, home: 'place', art: 'k:r_modern_wooden_cabinet' },
+    { id: 'h_r_wooden_display_shelves_01', name: REAL3.wooden_display_shelves_01, new: '2026-10-22', nb: 327, price: 60e4, home: 'place', art: 'k:r_wooden_display_shelves_01' },
+    { id: 'h_r_vintage_day_bed', name: REAL3.vintage_day_bed, new: '2026-10-22', nb: 327, price: 400e4, home: 'place', art: 'k:r_vintage_day_bed' },
+    { id: 'h_r_Television_01', name: REAL3.Television_01, new: '2026-10-22', nb: 327, price: 50e4, home: 'place', art: 'k:r_Television_01' },
+    { id: 'h_r_gaming_console', name: REAL3.gaming_console, new: '2026-10-22', nb: 327, price: 60e4, home: 'place', art: 'k:r_gaming_console' },
+    { id: 'h_r_ceramic_vase_01', name: REAL3.ceramic_vase_01, new: '2026-10-22', nb: 327, price: 20e4, home: 'place', art: 'k:r_ceramic_vase_01' },
+    { id: 'h_r_potted_plant_04', name: REAL3.potted_plant_04, new: '2026-10-22', nb: 327, price: 5e4, home: 'place', art: 'k:r_potted_plant_04' },
+    { id: 'h_r_planter_box_01', name: REAL3.planter_box_01, new: '2026-10-22', nb: 327, price: 25e4, home: 'place', art: 'k:r_planter_box_01' },
   ],
 };
 // v317 사용자 '탈것도 보니까 유형별로 나눠야할거같애': 차·탈것 탭 안의 작은 탭
@@ -17456,6 +17496,9 @@ const Room3D = {
   },
   // 큰 소품은 도형으로 (화분은 2D 그림을 부풀린 게 더 예쁘다). 앞(+Z)을 보게 만들고 벽 반대쪽으로 돌린다
   deco3(S, a, x, y, at, isWall) {
+    a = realArt(a);
+    if (a.startsWith('k:r_')) { const k = a.slice(2); if (!Props3D.has(k)) { Props3D.need(k); this.rWait = 1; return Props3D.rs[k] !== -1; } /* v327 실사: 받는 중이면 비워 두고 오면 다시 세운다 */
+      const n = [isWall(at(x, y - 1)), isWall(at(x, y + 1)), isWall(at(x - 1, y)), isWall(at(x + 1, y))], b = n[0] ? 0 : n[1] ? 1 : n[2] ? 2 : n[3] ? 3 : 0, m = Props3D.make(k); m.position.set(x + 0.5, 0, y + 0.5); m.rotation.y = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b]; S.add(m); return true; }
     if (a.startsWith('k:')) { if (typeof Props3D === 'undefined') return false; if (!Props3D.ready()) { Props3D.load(); if (Props3D.st === 1) this.pOld = 1; return Props3D.st === 1; } /* v325 장르 가구 (킷 모델): 받는 중이면 비워 두고 오면 방을 다시 세운다 */
       const { THREE } = T3, n = [isWall(at(x, y - 1)), isWall(at(x, y + 1)), isWall(at(x - 1, y)), isWall(at(x + 1, y))], b = n[0] ? 0 : n[1] ? 1 : n[2] ? 2 : n[3] ? 3 : 0, m = Props3D.make(a.slice(2)); m.position.set(x + 0.5, 0, y + 0.5); m.rotation.y = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b]; S.add(m); return true; }
     if (!['chair', 'egg', 'massage', 'ctable', 'mirror', 'gmirror', 'glass', 'books', 'lamp', 'air', 'fish', 'piano'].includes(a)) return false;
@@ -17496,7 +17539,12 @@ const Room3D = {
         if (k === 2) { for (const [a, b] of [[x + 0.06, y + 0.06], [x + w - 0.06, y + 0.06], [x + 0.06, y + d - 0.06], [x + w - 0.06, y + d - 0.06]]) this.box(S, a, b, 0.07, 0.07, 1.9, '#3a2418'); this.box(S, cx, cz, w, d, 0.06, '#3a2418', 1.9, { line: false });
           const cm = this.mats.canopy || (this.mats.canopy = new T3.THREE.MeshBasicMaterial({ color: 0xfff8ec, transparent: true, opacity: 0.35, depthWrite: false, side: T3.THREE.DoubleSide })), cp = new T3.THREE.Mesh(new T3.THREE.PlaneGeometry(w, 1.2), cm); cp.position.set(cx, 1.3, y + 0.02); S.add(cp); }
         return; }
-      case 's': { const k = lv.sofa | 0, c = k === 1 ? ['#8a5230', '#6a3c22'] : k === 2 ? ['#2e7a64', '#225a4a'] : k === 3 ? ['#f4eee2', '#ddd3c0'] : Ho.pent ? ['#e8e2d6', '#d2cabc'] : ['#6a7a90', '#56667c'];
+      case 's': { const k = lv.sofa | 0, rk = REAL_SOFA[k] && 'r_' + REAL_SOFA[k];
+        if (rk && (Props3D.has(rk) || (Props3D.need(rk), this.rWait = 1, Props3D.rs[rk] !== -1))) { if (!Props3D.has(rk)) return; // v327 실사 소파: TV 쪽을 보고 자리에 맞게
+          let b; if (tv.length) { const t = tv.reduce((p, q) => Math.hypot(q[0] - cx, q[1] - cz) < Math.hypot(p[0] - cx, p[1] - cz) ? q : p), dx = t[0] - cx, dz = t[1] - cz; b = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 1 : 0) : (dx < 0 ? 3 : 2); } else b = back();
+          const m = Props3D.make(rk), bx = new T3.THREE.Box3().setFromObject(m), mw = bx.max.x - bx.min.x, md = bx.max.z - bx.min.z, along = b < 2 ? w : d, across = b < 2 ? d : w, sc = Math.min(1.15, (along - 0.05) / mw, (across + 0.2) / md);
+          m.scale.setScalar(sc); m.rotation.y = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b]; const off = (across - md * sc) / 2; m.position.set(cx + (b === 2 ? -off : b === 3 ? off : 0), 0, cz + (b === 0 ? -off : b === 1 ? off : 0)); S.add(m); return; }
+        const c = k === 1 ? ['#8a5230', '#6a3c22'] : k === 2 ? ['#2e7a64', '#225a4a'] : k === 3 ? ['#f4eee2', '#ddd3c0'] : Ho.pent ? ['#e8e2d6', '#d2cabc'] : ['#6a7a90', '#56667c'];
         let b; if (tv.length) { const t = tv.reduce((p, q) => Math.hypot(q[0] - cx, q[1] - cz) < Math.hypot(p[0] - cx, p[1] - cz) ? q : p), dx = t[0] - cx, dz = t[1] - cz; b = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 1 : 0) : (dx < 0 ? 3 : 2); } else b = back();
         this.box(S, cx, cz, w - 0.06, d - 0.08, 0.36, c[1]); this.box(S, cx, cz, w - 0.2, d - 0.2, 0.1, c[0], 0.34); slab(b, 0.24, 0.82, c[1], 0, 0.02);
         const ends = b < 2 ? [[x + 0.1, cz, 0.18, d - 0.1], [x + w - 0.1, cz, 0.18, d - 0.1]] : [[cx, y + 0.1, w - 0.1, 0.18], [cx, y + d - 0.1, w - 0.1, 0.18]]; for (const [a, bb, ww, dd] of ends) this.box(S, a, bb, ww, dd, 0.6, c[1]);
@@ -17669,7 +17717,7 @@ const Room3D = {
     for (const f of Net.visible('room')) { const fp = f.p; if (fp.rd) continue; let spr = f.sp; if (fp.pal) { spr = 'f:' + fp.name; Sprites.setPal(spr, Profile.pal(fp.pal)); } this.actor('f:' + fp.name, Sprites.PAL[spr] || Sprites.PAL.player, { x: fp.x, y: fp.y, dir: fp.d || 0, moving: !!fp.m }, t, dt, fp.x * 0.3); }
     rm.npcs.forEach((n, i) => this.actor('n' + i, Sprites.PAL[n.sprite] || Sprites.PAL.clerk, n, t, dt, i * 1.7 + 1));
     rm.guests.forEach((g, i) => { if (!g.gone) this.actor('g' + i, Sprites.PAL[g.sprite] || Sprites.PAL.walker1, g, t, dt, i * 2.3 + 5); });
-    if (this.turn) for (const m of this.turn) m.rotation.y += dt * 0.35; if (this.pOld && typeof Props3D !== 'undefined' && Props3D.st !== 1) { this.pOld = 0; this.room = null; } if (this.vOld && typeof Car3D !== 'undefined' && Car3D.ready() && (typeof Ride3D === 'undefined' || Ride3D.st !== 1)) { this.vOld = 0; this.room = null; } // 차 모델이 늦게 오면 방을 다시 세운다
+    if (this.turn) for (const m of this.turn) m.rotation.y += dt * 0.35; if (this.pOld && typeof Props3D !== 'undefined' && Props3D.st !== 1) { this.pOld = 0; this.room = null; } if (this.rWait && Props3D.ver !== this.rVer) { this.rVer = Props3D.ver; this.rWait = 0; this.room = null; } if (this.vOld && typeof Car3D !== 'undefined' && Car3D.ready() && (typeof Ride3D === 'undefined' || Ride3D.st !== 1)) { this.vOld = 0; this.room = null; } // 차 모델이 늦게 오면 방을 다시 세운다
     if (this.doorG) { this.doorV += ((this.doorT || 0) - this.doorV) * Math.min(1, dt * 7); this.doorG.rotation.y = -this.doorV * 1.45; }
     this.bankTick(rm, t); this.S.traverse(o => { if (o.userData.spin) o.rotation.y = t * 1.5; if (o.userData.fish) o.position.x = Math.sin(t * 1.3 + o.id) * 0.28; });
     // 카메라: 나를 따라가되 방 밖은 덜 보이게
@@ -18756,15 +18804,24 @@ const PROP3 = {
   fan_cauldron: '마녀 가마솥', fan_weapons: '무기 거치대', fan_anvil: '대장간 모루', fan_dummy: '훈련 허수아비', fan_candle: '촛대', fan_bottles: '물약 선반', fan_work: '대장간 작업대', fan_vase: '항아리', fan_stool: '나무 걸상',
   sf_computer: '우주선 컴퓨터', sf_crate: 'SF 보급 상자', sf_barrel: '연료 통', sf_light: '바닥 조명', sf_holder: '홀로 진열대',
 };
+/* v327 실사 가구 (사용자 '여기는 안바꾸냐' · '2D인거 전부 3D로 바꿔' · '리얼리스틱 팩으로'): Poly Haven CC0 스캔 모델 (assets3d/build_real.py).
+ * 키 'r_<슬러그>' = 3d/real/<슬러그>.glb 하나씩, 방에 놓이거나 크게 볼 때만 받는다. 목록 칸 그림은 미리 찍은 사진 (3d/real/th/<슬러그>.jpg). 재질은 원본 PBR 그대로. */
 const Props3D = {
-  st: 0, M: {}, mats: new Map(),
+  st: 0, M: {}, mats: new Map(), rs: {}, ver: 0, th: {},
+  // 실사 모델 하나 받기 (받으면 ver가 올라 방이 다시 선다)
+  need(k) { if (!k.startsWith('r_') || this.rs[k] || !window.T3) return; this.rs[k] = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
+    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('real/' + k.slice(2) + '.glb?v=1'), ok, undefined, no))).then(G => {
+      G.scene.updateMatrixWorld(true); const parts = []; G.scene.traverse(m => { if (!m.isMesh) return; m.geometry._keep = 1; const mt = m.material; if (mt.map) mt.map.anisotropy = 8; mt._keep = 1; parts.push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: typeof PBR !== 'undefined' && PBR.done ? mt : this.toon(mt, !!m.geometry.attributes.color) }); });
+      this.M[k] = parts; this.rs[k] = 2; this.ver++; }).catch(e => { console.warn('real3d', k, e); this.rs[k] = -1; }); },
+  // 목록 칸 사진 (미리 찍은 것)
+  thumb(k) { let im = this.th[k]; if (im) return im.complete && im.naturalWidth ? im : null; im = this.th[k] = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }; im.src = Arena3J.url('real/th/' + k.slice(2) + '.png?v=1'); return null; },
   load() { if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('props.glb?v=1'), ok, undefined, no))).then(G => {
       G.scene.updateMatrixWorld(true);
       for (const o of G.scene.children) { const parts = []; o.traverse(m => { if (!m.isMesh) return; m.geometry._keep = 1; parts.push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: this.toon(m.material, !!m.geometry.attributes.color) }); }); this.M[o.name] = parts; }
       this.st = 2; }).catch(e => { console.warn('props3d', e); this.st = -1; }); },
   ready() { return this.st === 2; },
-  has(k) { return this.st === 2 && !!this.M[k]; },
+  has(k) { return k.startsWith('r_') ? !!this.M[k] : this.st === 2 && !!this.M[k]; },
   // 킷 재질 → 게임 그림체(툰) 재질. 텍스처·노멀·빛나는 부분은 그대로
   toon(s, vc) { const k = s.uuid + (vc ? 'v' : ''); let m = this.mats.get(k); if (m) return m; const { THREE } = T3;
     m = new THREE.MeshToonMaterial({ map: s.map || null, normalMap: s.normalMap || null, color: s.color ? s.color.clone() : new THREE.Color(1, 1, 1), emissive: s.emissive ? s.emissive.clone() : new THREE.Color(0), emissiveMap: s.emissiveMap || null, emissiveIntensity: s.emissiveIntensity || 1, vertexColors: vc, transparent: !!s.transparent, alphaTest: s.alphaTest || 0, side: s.side, gradientMap: Room3D.grad });

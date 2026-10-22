@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v306</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v307</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -6520,7 +6520,7 @@ const ChatBar = {
   close() { this.open_ = false; $('chatBar').classList.remove('in'); document.body.classList.remove('chatOpen'); if (document.activeElement) document.activeElement.blur(); $('chatBar').style.top = ''; this.fit(); scrollTo(0, 0); },
   // 모바일 키보드가 열리면 보이는 영역(visualViewport)이 줄어든다 → 입력줄을 그 영역의 맨 위에 붙인다
   fit() { if (!document.body.classList.contains('touchOn')) return; const vv = window.visualViewport; const el = $('chatBar'); if (!vv || !this.open_) { el.style.top = ''; return; } el.style.top = `${Math.round(vv.offsetTop) + 8}px`; },
-  send() { const v = $('chatInput').value; if (v.trim()) Net.chat(v); $('chatInput').value = ''; this.close(); },
+  send() { const v = $('chatInput').value; if (v.trim() === '/fps') { PerfHud.toggle(); $('chatInput').value = ''; return this.close(); } if (v.trim()) Net.chat(v); $('chatInput').value = ''; this.close(); },
   bind() {
     const inp = $('chatInput');
     inp.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); this.send(); } else if (e.key === 'Escape') { e.preventDefault(); inp.value = ''; this.close(); } };
@@ -17627,7 +17627,7 @@ Object.assign(Room3D, {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.zdt = dt; this.show(true); this.zShowG(true); this.zHook();
     // 느리면 빨리 해상도를 낮추고, 가장 낮춰도 느리면 해 그림자를 끈다 (사람·차 발밑 동그란 그림자는 남는다)
     this.fe = this.fe ? this.fe * 0.92 + dt * 1000 * 0.08 : 16; if (this.fr % 30 === 0) { if (this.fe > 22) { if (this.q > 0.5) this.q = Math.max(0.5, this.q * 0.82); else if (this.zsun.castShadow) this.zsun.castShadow = false; } else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.06); }
-    const pr = Math.min(DPR, 1.5, Math.max(0.6, Math.sqrt(1.4e6 / (VW * VH)))) * this.q; // 큰 화면(컴퓨터)은 3D 점 수를 140만 개 안쪽으로 (1920×1080이면 0.8배) if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
+    const pr = Math.min(DPR, 1.5, Math.max(0.6, Math.sqrt(1.4e6 / (VW * VH)))) * this.q; /* 큰 화면(컴퓨터)은 3D 점 수를 140만 개 안쪽으로 (1920×1080이면 0.8배) */ if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
     if (this.sw !== VW || this.sh !== VH) { r.setSize(VW, VH, true); this.sw = VW; this.sh = VH; this.cam.aspect = VW / VH; this.cam.updateProjectionMatrix(); }
     if (this.gcv.width !== Math.round(VW * DPR) || this.gcv.height !== Math.round(VH * DPR)) { this.gcv.width = Math.round(VW * DPR); this.gcv.height = Math.round(VH * DPR); this.gcv.style.width = VW + 'px'; this.gcv.style.height = VH + 'px'; }
     // 직교 카메라: 화면 가운데 = 카메라 (2D와 같은 확대)
@@ -17664,6 +17664,18 @@ function drawZone3D(t) {
   const g = Room3D.gctx; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#14161c'; g.fillRect(0, 0, g.canvas.width, g.canvas.height); g.setTransform(ctx.getTransform()); g.imageSmoothingEnabled = false;
   try { drawZone(t, g); } finally { Room3D.zRender(); }
 }
+
+/* v307 성능 표시 (채팅에 /fps, 사용자 '컴퓨터에서 버벅거린다'): 초당 화면 수 · 끊김 · 3D 해상도 · 그리는 횟수 · 그래픽카드 */
+const PerfHud = {
+  on: false, el: null, n: 0, t0: 0, long: [], last: 0,
+  toggle() { this.on = !this.on; if (!this.el) { const d = this.el = document.createElement('div'); d.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 46px);transform:translateX(-50%);z-index:99;background:rgba(10,14,20,.82);color:#e8f0e0;font:600 12px/1.45 "IBM Plex Sans KR",sans-serif;padding:6px 10px;border-radius:8px;pointer-events:none;white-space:pre;text-align:center'; document.body.appendChild(d); }
+    this.el.style.display = this.on ? 'block' : 'none'; if (this.on) { this.t0 = performance.now(); this.n = 0; this.long = []; this.last = 0; requestAnimationFrame(t => this.tick(t)); } },
+  tick(t) { if (!this.on) return; if (this.last && t - this.last > 50) this.long.push(t); this.last = t; this.n++;
+    if (t - this.t0 >= 500) { const fps = this.n * 1000 / (t - this.t0); this.n = 0; this.t0 = t; while (this.long.length && t - this.long[0] > 5000) this.long.shift();
+      const R = typeof Room3D !== 'undefined' ? Room3D : {}, info = R.r && R.r.info && R.r.info.render, mode = Game.scene === 'zone' ? (R.zNow ? '바깥 3D' : '바깥 2D') : Game.scene === 'room' ? (R.room && R.room === Game.room ? '실내 3D' : '실내 2D') : Game.scene;
+      this.el.textContent = `${Math.round(fps)} fps · 5초 동안 끊김 ${this.long.length}번 · ${mode}\n3D 해상도 ${(R.pr || 0).toFixed(2)}배 · 그리기 ${info ? info.calls : '-'}번 · 건물 ${R.zb ? R.zb.size : 0} · 사람·차 ${R.A ? R.A.size : 0}\n화면 ${VW}×${VH} · 배율 ${DPR} · ${String(R.gpu || '그래픽카드 모름').slice(0, 60)}`; }
+    requestAnimationFrame(tt => this.tick(tt)); },
+};
 
 /* ===================== 펫 진화 모습 (v263, 사용자 2026-10-20 '볏 말고 뭔가 다른 게 없을까' · '형태가 바뀌어도 돼') =====================
  * 머리 볏·흰 날개 대신 펫마다 몸 모양이 바뀐다: 1단계(Lv15)는 한 군데, 최종(Lv30)은 크게 여러 군데 (꼬리·갈기·등·날개·뿔…).

@@ -150,7 +150,7 @@ body:not(.pagerOn) #pager { display:none !important; } /* 메뉴 설정으로 �
 
 /* 배너·카드 */
 #placeBanner { position:fixed; top:14px; left:50%; transform:translate(-50%, -140%); background: radial-gradient(120% 90% at 0% 0%, #2f3626 0%, #151a10 55%, #0e110b 100%); color: #e9ecdf; border-radius:8px; padding:8px 22px; z-index:20; font-family:var(--serif); box-shadow:0 4px 0 rgba(0,0,0,.4); transition:transform .25s ease-out; text-align:center; }
-#placeBanner.in { transform:translate(-50%, 0); }
+#placeBanner.in { transform:translate(-50%, 0); } #placeBanner:not(.in), #layoutBar:not(.in) { visibility:hidden; transition:transform .3s, visibility 0s .3s; } /* v316 숨긴 판 아래 끝이 화면 위에 살짝 보이던 것 */
 #placeBanner b { font-size:20px; display:block; } #placeBanner small { font-family:var(--ui); font-size:11px; opacity:.7; }
 #areaTitle { position:fixed; left:0; right:0; top:34%; text-align:center; z-index:15; opacity:0; transition:opacity .4s; pointer-events:none; }
 #areaTitle.in { opacity:1; }
@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v316</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v317</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -7748,13 +7748,13 @@ function drawWalker(c, w, t, opts = {}) {
   if (w.punchT && performance.now() < w.punchT) drawFist(c, w); // 때리기 (v143): 팔을 쭉 뻗은 주먹
 }
 // 주먹 (사용자 2026-10-16 '주먹이 좀 안 보이는데'): 보는 쪽으로 팔이 쭉 나갔다 들어온다. 맞히면 '퍽!'
-function drawFist(c, w) {
+function drawFist(c, w, hitOnly) { // hitOnly: 3D 몸이 직접 주먹을 뻗을 때는 '퍽!'만 (v317, 사용자 '이것도 고쳐 주먹')
   const P = Sprites.PAL[w.sprite] || Sprites.PLAYER_DEFAULT, e = 1 - (w.punchT - performance.now()) / 300, ext = e < 0.25 ? e / 0.25 : e > 0.7 ? Math.max(0, 1 - (e - 0.7) / 0.3) : 1;
   const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][w.dir] || [1, 0], L = Math.round(3 + ext * 8), sx = snapPx(c, w.x) + vx * 3, sy = snapPx(c, w.y) - 9 + vy * 2, fx = sx + vx * L, fy = sy + vy * L;
   const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
-  if (vx) r(Math.min(sx, fx), sy - 1, Math.abs(fx - sx), 3, P.shirt); else r(sx - 1, Math.min(sy, fy), 3, Math.abs(fy - sy), P.shirt); // 팔 (소매)
+  if (!hitOnly) { if (vx) r(Math.min(sx, fx), sy - 1, Math.abs(fx - sx), 3, P.shirt); else r(sx - 1, Math.min(sy, fy), 3, Math.abs(fy - sy), P.shirt); // 팔 (소매)
   r(fx - 3, fy - 3, 6, 6, '#2a1a10'); r(fx - 2, fy - 2, 4, 4, P.skin || '#f1c9a5'); r(fx - 2, fy - 2, 4, 1, 'rgba(255,255,255,.45)'); // 주먹 (테두리 + 살색)
-  if (vx) for (let i = 0; i < 3; i++) r(fx - vx * (6 + i * 3) - 1, fy - 3 + i * 3, 3, 1, 'rgba(255,255,255,.8)'); else for (let i = 0; i < 3; i++) r(fx - 3 + i * 3, fy - vy * (6 + i * 3) - 1, 1, 3, 'rgba(255,255,255,.8)'); // 휙 선
+  if (vx) for (let i = 0; i < 3; i++) r(fx - vx * (6 + i * 3) - 1, fy - 3 + i * 3, 3, 1, 'rgba(255,255,255,.8)'); else for (let i = 0; i < 3; i++) r(fx - 3 + i * 3, fy - vy * (6 + i * 3) - 1, 1, 3, 'rgba(255,255,255,.8)'); } // 휙 선
   if (w.punchHit && ext > 0.6) { const X = fx + vx * 6, Y = fy + vy * 6 - 4; c.save(); c.fillStyle = '#ffe14a'; c.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, R = i % 2 ? 4 : 9; c.lineTo(X + Math.cos(a) * R, Y + Math.sin(a) * R); } c.closePath(); c.fill(); c.strokeStyle = '#c0392b'; c.lineWidth = 1; c.stroke();
     c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = '#fff'; c.strokeText('퍽!', X, Y + 3); c.fillStyle = '#c0392b'; c.fillText('퍽!', X, Y + 3); c.restore(); }
 }
@@ -17673,7 +17673,7 @@ Object.assign(Room3D, {
       const now = performance.now(); R.zq.w.push({ sprite: w.sprite, x: w.x, y: w.y, dir: w.dir | 0, moving: !!w.moving, sit: w.sit, run: w.run, punchT: w.punchT, hurt: w.stun > 0, low: (w.bowT && now < w.bowT) || (w.kneelT && now < w.kneelT) });
       R.anchor(c, w.x, w.y, R.headH(), 15); // 다음 이름표·말풍선은 이 사람 머리 기준
       if (w.vip) { c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 22); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 22); c.restore(); }
-      if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w); c.restore(); } };
+      if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w, typeof Hero3D !== 'undefined' && Hero3D.ready()); c.restore(); } };
     drawCarSprite = function (c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
       if (!R.zq || c !== ctx || (col && typeof col === 'object' && col.ride)) return dc0(c, x, y, a, col, len, wid, kind, speed);
       let stripe = null, cc = col; if (col && typeof col === 'object') { stripe = col.stripe || null; cc = col.col; } R.zq.c.push({ x, y, a, col: cc || '#c8ccd2', stripe, len, wid, kind, skin: !!(col && typeof col === 'object') }); };

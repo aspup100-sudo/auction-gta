@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v324</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v325</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5491,6 +5491,7 @@ Object.assign(HomeIn, {
       case 'air': r('#f2f2f0', 4, -6, 8, 21); r('#d8d8d6', 5, -2, 6, 1); r('#d8d8d6', 5, 1, 6, 1); r('#d8d8d6', 5, 4, 6, 1); r(Math.floor(t) % 2 ? '#4ab0f0' : '#3a9ae0', 6, -5, 4, 2); r('rgba(0,0,0,.15)', 4, 14, 8, 1); break;
       case 'fish': { r('#6a4a30', 1, 8, 14, 7); r('#8a6440', 1, 8, 14, 2); r('#2a3a48', 0, -5, 16, 13); r('#4a9ad0', 1, -4, 14, 11); r('#6ab8e8', 1, -4, 14, 2); r('#3a8a4a', 3, 2, 1, 5); r('#3a8a4a', 12, 1, 1, 6); r('#d8c890', 1, 6, 14, 1); const f = (t * 4) % 24, fx = f < 12 ? f : 24 - f; r('#f08a2a', 2 + Math.round(fx), -1, 3, 2); r('#f8d84a', 11 - Math.round(fx * 0.7), 2, 2, 2); if (Math.floor(t * 3) % 3 === 0) r('rgba(255,255,255,.8)', 9, -3 + Math.floor(t * 3) % 2, 1, 1); break; }
       case 'piano': r('#0e0e12', -3, -4, 22, 15); r('#1e1e24', -2, -3, 20, 6); r('#0e0e12', 0, -10, 14, 7); r('rgba(255,255,255,.18)', 1, -9, 8, 1); r('#f4f4f0', -2, 9, 20, 4); for (let i = 0; i < 6; i++) r('#0e0e12', -1 + i * 3, 9, 1, 2); r('#0e0e12', -2, 13, 2, 3); r('#0e0e12', 16, 13, 2, 3); r('#d4b46a', 6, 5, 4, 1); break;
+      default: if (a.startsWith('k:')) { const img = typeof Snap3D !== 'undefined' && Snap3D.prop(a.slice(2), 96); if (img) { ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(img, X - 4, Y - 12, 24, 24); ctx.restore(); } else { const sf = a.startsWith('k:sf'); r(sf ? '#4a5868' : '#7a5434', 2, -2, 12, 16); r(sf ? '#8ad0ff' : '#a07a50', 3, -1, 10, 3); r('rgba(0,0,0,.2)', 2, 13, 12, 1); } } // v325 장르 가구: 3D 사진 (아직이면 상자 모양)
     }
   },
   // 편집숍 미리보기: 그 톤·가구가 놓인 작은 방 (정수 배율만)
@@ -5502,6 +5503,7 @@ Object.assign(HomeIn, {
     const H = { seed: 1, deco: { lv } };
     const room = (map, X0, Y0, sc) => { const M = map.split('/'), f = (a, b) => (M[b] && M[b][a]) || ' '; x.save(); x.translate(X0, Y0); x.scale(sc, sc); for (let b = 0; b < M.length; b++) for (let a = 0; a < M[b].length; a++) if (M[b][a] !== ' ') this.piece(x, M[b][a], a, b, f, H, t, 'good'); x.restore(); };
     const art = (a, X0, Y0, sc) => { x.save(); x.translate(X0, Y0); x.scale(sc, sc); this.art(x, a, 0, 0, t); x.restore(); };
+    if (it.home === 'place' && it.art.startsWith('k:')) { const S = Math.max(1, Math.round(x.getTransform().a)), img = typeof Snap3D !== 'undefined' && Snap3D.prop(it.art.slice(2), 104 * S); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } } // v325 장르 가구: 방 위에 3D 사진
     if (it.home === 'place') return art(it.art, 56, 52, 3);
     if (it.home === 'tone') { room('vv', 48, 26, 2); room('ss', 48, 70, 2); art('mon', 8, 66, 2); art('lamp', 120, 66, 2); return; }
     if (it.home === 'tv') room('vv', 32, 50, 3);
@@ -11908,6 +11910,29 @@ const SHOP_ITEMS = {
     { id: 'h_air', name: '엘쥐 공기청정기', new: '2026-10-19', nb: 259, price: 70e4, home: 'place', art: 'air' },
     { id: 'h_fish', name: '어항', new: '2026-10-19', nb: 259, price: 150e4, home: 'place', art: 'fish' },
     { id: 'h_piano', name: '그랜드 피아노', new: '2026-10-19', nb: 259, price: 5000e4, home: 'place', art: 'piano' },
+    // v325 장르 가구 (사용자 '가구도' 장르별로): 판타지 · SF 킷 모델 (props3d.js), 집 꾸미기로 놓는다
+    { id: 'h_k_fan_bed', name: '판타지 침대', new: '2026-10-22', nb: 325, price: 900e4, home: 'place', art: 'k:fan_bed', genre: 'fan' },
+    { id: 'h_k_fan_books', name: '마법 책장', new: '2026-10-22', nb: 325, price: 400e4, home: 'place', art: 'k:fan_books', genre: 'fan' },
+    { id: 'h_k_fan_cabinet', name: '옛날 찬장', new: '2026-10-22', nb: 325, price: 300e4, home: 'place', art: 'k:fan_cabinet', genre: 'fan' },
+    { id: 'h_k_fan_chair', name: '나무 의자', new: '2026-10-22', nb: 325, price: 40e4, home: 'place', art: 'k:fan_chair', genre: 'fan' },
+    { id: 'h_k_fan_table', name: '긴 원목 식탁', new: '2026-10-22', nb: 325, price: 500e4, home: 'place', art: 'k:fan_table', genre: 'fan' },
+    { id: 'h_k_fan_bench', name: '여관 벤치', new: '2026-10-22', nb: 325, price: 80e4, home: 'place', art: 'k:fan_bench', genre: 'fan' },
+    { id: 'h_k_fan_night', name: '협탁 선반', new: '2026-10-22', nb: 325, price: 120e4, home: 'place', art: 'k:fan_night', genre: 'fan' },
+    { id: 'h_k_fan_barrel', name: '사과 통', new: '2026-10-22', nb: 325, price: 60e4, home: 'place', art: 'k:fan_barrel', genre: 'fan' },
+    { id: 'h_k_fan_cauldron', name: '마녀 가마솥', new: '2026-10-22', nb: 325, price: 700e4, home: 'place', art: 'k:fan_cauldron', genre: 'fan' },
+    { id: 'h_k_fan_weapons', name: '무기 거치대', new: '2026-10-22', nb: 325, price: 1200e4, home: 'place', art: 'k:fan_weapons', genre: 'fan' },
+    { id: 'h_k_fan_anvil', name: '대장간 모루', new: '2026-10-22', nb: 325, price: 600e4, home: 'place', art: 'k:fan_anvil', genre: 'fan' },
+    { id: 'h_k_fan_dummy', name: '훈련 허수아비', new: '2026-10-22', nb: 325, price: 200e4, home: 'place', art: 'k:fan_dummy', genre: 'fan' },
+    { id: 'h_k_fan_candle', name: '촛대', new: '2026-10-22', nb: 325, price: 150e4, home: 'place', art: 'k:fan_candle', genre: 'fan' },
+    { id: 'h_k_fan_bottles', name: '물약 선반', new: '2026-10-22', nb: 325, price: 350e4, home: 'place', art: 'k:fan_bottles', genre: 'fan' },
+    { id: 'h_k_fan_work', name: '대장간 작업대', new: '2026-10-22', nb: 325, price: 450e4, home: 'place', art: 'k:fan_work', genre: 'fan' },
+    { id: 'h_k_fan_vase', name: '항아리', new: '2026-10-22', nb: 325, price: 50e4, home: 'place', art: 'k:fan_vase', genre: 'fan' },
+    { id: 'h_k_fan_stool', name: '나무 걸상', new: '2026-10-22', nb: 325, price: 20e4, home: 'place', art: 'k:fan_stool', genre: 'fan' },
+    { id: 'h_k_sf_computer', name: '우주선 컴퓨터', new: '2026-10-22', nb: 325, price: 2000e4, home: 'place', art: 'k:sf_computer', genre: 'sf' },
+    { id: 'h_k_sf_crate', name: 'SF 보급 상자', new: '2026-10-22', nb: 325, price: 300e4, home: 'place', art: 'k:sf_crate', genre: 'sf' },
+    { id: 'h_k_sf_barrel', name: '연료 통', new: '2026-10-22', nb: 325, price: 250e4, home: 'place', art: 'k:sf_barrel', genre: 'sf' },
+    { id: 'h_k_sf_light', name: '바닥 조명', new: '2026-10-22', nb: 325, price: 400e4, home: 'place', art: 'k:sf_light', genre: 'sf' },
+    { id: 'h_k_sf_holder', name: '홀로 진열대', new: '2026-10-22', nb: 325, price: 1500e4, home: 'place', art: 'k:sf_holder', genre: 'sf' },
   ],
 };
 // v317 사용자 '탈것도 보니까 유형별로 나눠야할거같애': 차·탈것 탭 안의 작은 탭
@@ -17373,6 +17398,8 @@ const Room3D = {
   },
   // 큰 소품은 도형으로 (화분은 2D 그림을 부풀린 게 더 예쁘다). 앞(+Z)을 보게 만들고 벽 반대쪽으로 돌린다
   deco3(S, a, x, y, at, isWall) {
+    if (a.startsWith('k:')) { if (typeof Props3D === 'undefined') return false; if (!Props3D.ready()) { Props3D.load(); if (Props3D.st === 1) this.pOld = 1; return Props3D.st === 1; } /* v325 장르 가구 (킷 모델): 받는 중이면 비워 두고 오면 방을 다시 세운다 */
+      const { THREE } = T3, n = [isWall(at(x, y - 1)), isWall(at(x, y + 1)), isWall(at(x - 1, y)), isWall(at(x + 1, y))], b = n[0] ? 0 : n[1] ? 1 : n[2] ? 2 : n[3] ? 3 : 0, m = Props3D.make(a.slice(2)); m.position.set(x + 0.5, 0, y + 0.5); m.rotation.y = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b]; S.add(m); return true; }
     if (!['chair', 'egg', 'massage', 'ctable', 'mirror', 'gmirror', 'glass', 'books', 'lamp', 'air', 'fish', 'piano'].includes(a)) return false;
     const { THREE } = T3, g = new THREE.Group(), n = [isWall(at(x, y - 1)), isWall(at(x, y + 1)), isWall(at(x - 1, y)), isWall(at(x + 1, y))], b = n[0] ? 0 : n[1] ? 1 : n[2] ? 2 : n[3] ? 3 : 0;
     g.position.set(x + 0.5, 0, y + 0.5); g.rotation.y = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b]; S.add(g);
@@ -17584,7 +17611,7 @@ const Room3D = {
     for (const f of Net.visible('room')) { const fp = f.p; if (fp.rd) continue; let spr = f.sp; if (fp.pal) { spr = 'f:' + fp.name; Sprites.setPal(spr, Profile.pal(fp.pal)); } this.actor('f:' + fp.name, Sprites.PAL[spr] || Sprites.PAL.player, { x: fp.x, y: fp.y, dir: fp.d || 0, moving: !!fp.m }, t, dt, fp.x * 0.3); }
     rm.npcs.forEach((n, i) => this.actor('n' + i, Sprites.PAL[n.sprite] || Sprites.PAL.clerk, n, t, dt, i * 1.7 + 1));
     rm.guests.forEach((g, i) => { if (!g.gone) this.actor('g' + i, Sprites.PAL[g.sprite] || Sprites.PAL.walker1, g, t, dt, i * 2.3 + 5); });
-    if (this.turn) for (const m of this.turn) m.rotation.y += dt * 0.35; if (this.vOld && typeof Car3D !== 'undefined' && Car3D.ready() && (typeof Ride3D === 'undefined' || Ride3D.st !== 1)) { this.vOld = 0; this.room = null; } // 차 모델이 늦게 오면 방을 다시 세운다
+    if (this.turn) for (const m of this.turn) m.rotation.y += dt * 0.35; if (this.pOld && typeof Props3D !== 'undefined' && Props3D.st !== 1) { this.pOld = 0; this.room = null; } if (this.vOld && typeof Car3D !== 'undefined' && Car3D.ready() && (typeof Ride3D === 'undefined' || Ride3D.st !== 1)) { this.vOld = 0; this.room = null; } // 차 모델이 늦게 오면 방을 다시 세운다
     if (this.doorG) { this.doorV += ((this.doorT || 0) - this.doorV) * Math.min(1, dt * 7); this.doorG.rotation.y = -this.doorV * 1.45; }
     this.bankTick(rm, t); this.S.traverse(o => { if (o.userData.spin) o.rotation.y = t * 1.5; if (o.userData.fish) o.position.x = Math.sin(t * 1.3 + o.id) * 0.28; });
     // 카메라: 나를 따라가되 방 밖은 덜 보이게
@@ -18657,6 +18684,30 @@ const Bird3D = {
   },
 };
 
+/* ===================== 장르 가구 3D (v325, 사용자 '옷들안에서도 장르 들어가서 고를수있게 하자, 가구도') =====================
+ * 3d/props.glb (assets3d/build_props.py): Quaternius Fantasy Props · Modular SciFi MegaKit (CC0) 가구를 원래 텍스처(기본색 2048 · 노멀 1024) 그대로.
+ * 이름 = 키 (fan_bed, sf_computer …), 1칸 기준 크기, 바닥 y = 0, 가운데. 상점 물건은 art: 'k:키' (집 꾸미기로 놓는 소품). */
+const PROP3 = {
+  fan_bed: '판타지 침대', fan_books: '마법 책장', fan_cabinet: '옛날 찬장', fan_chair: '나무 의자', fan_table: '긴 원목 식탁', fan_bench: '여관 벤치', fan_night: '협탁 선반', fan_barrel: '사과 통',
+  fan_cauldron: '마녀 가마솥', fan_weapons: '무기 거치대', fan_anvil: '대장간 모루', fan_dummy: '훈련 허수아비', fan_candle: '촛대', fan_bottles: '물약 선반', fan_work: '대장간 작업대', fan_vase: '항아리', fan_stool: '나무 걸상',
+  sf_computer: '우주선 컴퓨터', sf_crate: 'SF 보급 상자', sf_barrel: '연료 통', sf_light: '바닥 조명', sf_holder: '홀로 진열대',
+};
+const Props3D = {
+  st: 0, M: {}, mats: new Map(),
+  load() { if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
+    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('props.glb?v=1'), ok, undefined, no))).then(G => {
+      G.scene.updateMatrixWorld(true);
+      for (const o of G.scene.children) { const parts = []; o.traverse(m => { if (!m.isMesh) return; m.geometry._keep = 1; parts.push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: this.toon(m.material, !!m.geometry.attributes.color) }); }); this.M[o.name] = parts; }
+      this.st = 2; }).catch(e => { console.warn('props3d', e); this.st = -1; }); },
+  ready() { return this.st === 2; },
+  has(k) { return this.st === 2 && !!this.M[k]; },
+  // 킷 재질 → 게임 그림체(툰) 재질. 텍스처·노멀·빛나는 부분은 그대로
+  toon(s, vc) { const k = s.uuid + (vc ? 'v' : ''); let m = this.mats.get(k); if (m) return m; const { THREE } = T3;
+    m = new THREE.MeshToonMaterial({ map: s.map || null, normalMap: s.normalMap || null, color: s.color ? s.color.clone() : new THREE.Color(1, 1, 1), emissive: s.emissive ? s.emissive.clone() : new THREE.Color(0), emissiveMap: s.emissiveMap || null, emissiveIntensity: s.emissiveIntensity || 1, vertexColors: vc, transparent: !!s.transparent, alphaTest: s.alphaTest || 0, side: s.side, gradientMap: Room3D.grad });
+    if (s.normalScale) m.normalScale.copy(s.normalScale); this.mats.set(k, m); return m; },
+  make(k) { const { THREE } = T3, g = new THREE.Group(); for (const p of this.M[k] || []) { const m = new THREE.Mesh(p.geo, p.mat); p.M.decompose(m.position, m.quaternion, m.scale); m.castShadow = true; m.receiveShadow = true; g.add(m); } return g; },
+};
+
 /* ===================== 3D 사진 (v310, 사용자 2026-10-22 '여기 나타나는 사진도 바꿔야 하는 건가 통일성 있으려면' · 편집숍 '여기도 도트야') =====================
  * 대화창 얼굴과 편집숍 칸 그림을 게임 속 3D 모델(hero3d.js 사람, 부풀린 펫, 3D 차)로 한 번 찍어서 기억해 둔다.
  * 작은 그림 전용 렌더러 하나 (preserveDrawingBuffer). 3D를 못 쓰면(엔진·모델 아직, 그래픽 가속 꺼짐) 예전 도트 그림 그대로.
@@ -18739,6 +18790,11 @@ const Snap3D = {
         if (u.rp) { const a = Hero3D.handsAt(u.H); if (a) { u.m.worldToLocal(a); const r = u.st.rope, b = new THREE.Vector3(r.x / TILE, r.h, r.y / TILE), d = b.clone().sub(a), L = d.length(); u.rp.position.copy(a).add(b).multiplyScalar(0.5); u.rp.scale.set(1, L, 1); u.rp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); } } });
     if (!img) return false;
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, Hh); x.restore(); return true;
+  },
+  // v325 장르 가구 사진 (정사각형 N px, 비스듬히 위에서). 모델이 아직이면 받기 시작하고 null (오면 상점 다시 그리기)
+  prop(k, N) {
+    if (typeof Props3D === 'undefined' || !this.ok()) { this.warm(); return null; } if (!Props3D.ready()) { Props3D.load(); if (Props3D.st === 1 && !this.kw) this.kw = setInterval(() => { if (Props3D.st === 1) return; clearInterval(this.kw); this.kw = 0; if (Props3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); return null; }
+    return this.shot('prop:' + k + ':' + N, N, N, g => { const m = Props3D.make(k); m.rotation.y = -0.55; g.add(m); }, (b, c) => this.fit(b, c, 0.45, 1.08));
   },
   // v322 탈것 + 탄 나 (+ 업어 주는 친구) 한 묶음: 편집숍 큰 미리보기 · 칸 그림
   rideCast(k, P, mv) {

@@ -1602,7 +1602,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v343</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v344</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -18986,7 +18986,8 @@ const Pet3D = {
    * 뼈 동작이 있는 펫(강아지·토끼·쥐·돌고래)은 동작을 섞고, 뼈 없는 사진 모델은 몸 전체로 통통·뒤뚱. 성격(act)은 그대로 */
   SFP: { cat: 0, dog: 0, dolphin: 0, panda: 0, parrot: 0, mouse: Math.PI / 2, gary: 0, trex: 0, penguin: 0, rabbit: Math.PI, turtle: 0 }, // 앞을 +x로 돌리는 각
   R: {}, rs: {},
-  real(k, st, d) { if (st || d || !(k in this.SFP) || !window.T3) return false; this.needR(k); return this.rs[k] === 2; },
+  noReal: true, // v344 사용자 '캐릭터만 귀엽게' → 펫은 직접 만든 귀여운 모델 (실사 펫 코드는 그대로 둠)
+  real(k, st, d) { if (this.noReal || st || d || !(k in this.SFP) || !window.T3) return false; this.needR(k); return this.rs[k] === 2; },
   needR(k) { if (this.rs[k]) return; this.rs[k] = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('sfp/' + k + '.glb?v=1'), ok, undefined, no))).then(G => {
       const w = new THREE.Group(); w.rotation.y = this.SFP[k]; w.add(G.scene);
@@ -19105,11 +19106,12 @@ const Pet3D = {
   pose(H, mv, sp, t, dt, P) {
     if (H.real) return this.poseReal(H, mv, sp, t, dt, P || {});
     const N = H.nd, k = H.k, R = (n, x, y, z) => { const a = N[n]; if (a) a.o.rotation.set(a.r.x + x, a.r.y + y, a.r.z + z); }, Y = (n, dy) => { const a = N[n]; if (a) a.o.position.y = a.p.y + dy; };
-    const amp = Math.min(1, sp / 1.6); H.mv = H.mv == null ? 0 : H.mv + ((mv ? 1 : 0) - H.mv) * Math.min(1, dt * 8); const m = H.mv;
-    H.ph += dt * (mv ? Math.max(6, Math.min(14, 5 + sp * 3.2)) : 0); const p = H.ph, sw = Math.sin(p), cw = Math.cos(p);
+    const amp = Math.min(1, sp / 1.6); H.mv = H.mv == null ? 0 : H.mv + ((mv ? 1 : 0) - H.mv) * Math.min(1, dt * 5); const m = H.mv * H.mv * (3 - 2 * H.mv);
+    if (mv) H.rate = Math.max(6, Math.min(14, 5 + sp * 3.2)); H.ph += dt * (mv || m > 0.03 ? H.rate || 8 : 0); /* v344 멈출 때도 걸음 박자가 이어지며 잦아든다 (다리가 허공에서 얼지 않게, 사용자 '동작이 끊기지 않는거') */ const p = H.ph, sw = Math.sin(p), cw = Math.cos(p);
     const idle = 1 - m, br = Math.sin(t * 2.2) * 0.012 * idle; // 숨쉬기
     // 네 발
-    if (N.legFL) { const a = 0.55 * m * (0.6 + amp * 0.4); R('legFL', 0, 0, sw * a); R('legBR', 0, 0, sw * a); R('legFR', 0, 0, -sw * a); R('legBL', 0, 0, -sw * a); if (N.legML) { R('legML', 0, 0, -sw * a); R('legMR', 0, 0, sw * a); } }
+    if (N.legFL && k === 'rabbit') { const c = Math.cos(p); R('legFL', 0, 0, c * 0.55 * m); R('legFR', 0, 0, c * 0.55 * m); R('legBL', 0, 0, -c * 0.7 * m); R('legBR', 0, 0, -c * 0.7 * m); } // v344 토끼는 깡충: 앞발 둘·뒷발 둘이 같이
+    else if (N.legFL) { const a = 0.55 * m * (0.6 + amp * 0.4); R('legFL', 0, 0, sw * a); R('legBR', 0, 0, sw * a); R('legFR', 0, 0, -sw * a); R('legBL', 0, 0, -sw * a); if (N.legML) { R('legML', 0, 0, -sw * a); R('legMR', 0, 0, sw * a); } }
     // 두 발 + 팔
     if (N.legL && !N.legFL) { const a = (k === 'penguin' ? 0.3 : 0.6) * m; R('legL', 0, 0, sw * a); R('legR', 0, 0, -sw * a); }
     if (N.armL) { const a = 0.45 * m; R('armL', 0, 0, -sw * a + (k === 'trex' || k === 'mantis' ? 0 : Math.sin(t * 1.3) * 0.04 * idle)); R('armR', 0, 0, sw * a); }
@@ -19117,6 +19119,7 @@ const Pet3D = {
     const bob = Math.abs(sw) * 0.035 * m * (k === 'trex' || k === 'elephant' || k === 'giraffe' ? 0.6 : 1);
     if (N.body) { Y('body', bob); const b = N.body; b.o.scale.set(b.s.x, b.s.y * (1 + br), b.s.z * (1 + br * 0.6)); b.o.rotation.set(b.r.x, b.r.y, b.r.z); }
     // 펭귄·사람형: 좌우로 뒤뚱
+    if (k === 'rabbit') { const h = Math.max(0, Math.sin(p)); H.inner.position.y = h * h * 0.22 * H.top * m; H.inner.rotation.z = Math.cos(p) * 0.16 * m; } // 몸 전체가 떴다 내려오고, 뛸 때 코가 들리고 내릴 때 숙인다
     if (k === 'penguin' || k === 'snowman' || k === 'sponge' || k === 'dora' || k === 'kid') R('body', sw * (k === 'penguin' ? 0.16 : 0.07) * m, 0, 0);
     // 머리: 서 있으면 두리번, 걸으면 끄덕
     if (N.head) { const look = Math.sin(t * 0.55 + H.s * 3) * 0.32 * idle * (Math.sin(t * 0.21) > -0.2 ? 1 : 0); R('head', 0, look, Math.sin(p * 2) * 0.05 * m + (k === 'giraffe' ? Math.sin(t * 0.8) * 0.04 * idle : 0)); }

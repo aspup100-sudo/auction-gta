@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v311</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v312</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17178,7 +17178,7 @@ const Room3D = {
   active(rm) {
     if (!rm || !this.on() || this.bad) return false;
     if (!window.T3) { Arena3J.load(); return false; }
-    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
+    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
   },
   // v309 느릴 때 화질 낮추기 (사용자 '해상도가 너무 떨어지는데'): 해 그림자 먼저, 그다음 해상도 (0.75배까지만).
   // 낮춘 뒤 2초 지나도 15% 넘게 빨라지지 않으면 (그래픽카드 탓이 아니면) 되돌리고 한동안 다시 안 낮춘다
@@ -17524,17 +17524,20 @@ const Room3D = {
     let lift = 0; if (pose === 'ride') { const P = Game.player; x = P.x; y = P.y; lift = 1.3 * TILE; } // 원숭이: 주인 머리 위
     else for (const k in Pets.st) { const s = Pets.st[k]; if (Math.abs(s.x - x) < 1 && s.y - y > 1 && s.y - y < 70) { lift = s.y - y; y = s.y; break; } } // 펄쩍 뛰기·날기: 2D에서 위로 그린 만큼 3D 높이로
     const e0 = Pets.evoNow, ev = e0 && Pets.evoK === kind && e0.st, e = ev ? Object.assign({}, e0, { fl: true, flat: true }) : e0; // 진화 빛·날리는 가루는 빼고 (몸만 입체로), 최종 진화로 커지는 건 3D에서 키운다
+    this.noModel = !!ev || !!(Pets.decoNow && Pets.decoK === kind); this.curPose = pose; // v312 진화·꾸미기 한 펫은 예전 부풀린 그림 (모델에 아직 없음)
     return this.put(c, kind, x, y, lift, face, moving, t, tag, ev && !e0.flat ? PetEvo.scOf(kind, ev, pose) : 1, s => { Pets.evoNow = e; try { d0.call(Pets, s, kind, 25, 40, 1, moving, Math.floor(t * 12) / 12, '', idle, pose); } finally { Pets.evoNow = e0; } });
   },
   // 펫 하나 세우기: (x, y) 바닥 자리 · lift 높이 (게임 픽셀) · paint(s) = 오른쪽 보는 그림을 스크래치 (25, 40)에 발로 그리기. 이름표 위치(3D 높이)를 돌려준다
   put(c, kind, x, y, lift, face, moving, t, tag, big, paint) {
     const people = !!PET_PEOPLE[kind], h = PetRT.petH(kind) / TILE * 1.1, q = { kind, x, y, lift: lift / TILE, face, moving, people, h, big };
+    const model = !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind); this.noModel = false; q.pose = this.curPose; this.curPose = null;
     if (people) { const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]); q.pal = Sprites.PAL[sp]; }
+    else if (model) { q.m = 1; q.top = Pet3D.topOf(kind, h); } // v312 블렌더 펫 모델 (pet3d.js)
     else { const pl = this.pLast || (this.pLast = new Map()), lk = kind + '|' + (tag || ''), b0 = this.pc.built | 0, t0 = performance.now(); this.pc.lock = pl.has(lk) && performance.now() - (this.pbT || 0) < 160; // v310 시간으로: 컴퓨터에서 펫 하나가 한 장에 13~19ms 쓰던 것 (진화한 펭귄은 매번 모양이 달라서)
       q.e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k: kind, h, paint }, moving, t); this.pc.lock = false; if ((this.pc.built | 0) !== b0) { this.pbT = performance.now(); PerfHud.add('pb', this.pbT - t0); PerfHud.add('pbn', 1); }
       if (q.e) pl.set(lk, q.e); else q.e = pl.get(lk); if (pl.size > 40) pl.delete(pl.keys().next().value);
       if (q.e) q.e.geo._keep = 1; if (this.pc.size > 60) { const k = this.pc.keys().next().value, o = this.pc.get(k); this.pc.delete(k); o.geo.dispose(); o.tex.dispose(); } }
-    this.pq.push(q); const top = q.lift + (people ? 1.45 : h * (big || 1)) + 0.12;
+    this.pq.push(q); const top = q.lift + (people ? 1.45 : (q.m ? q.top : h) * (big || 1)) + 0.12;
     if (tag && typeof Net !== 'undefined') { c.save(); this.anchor(c, x, y, top, 0); Net.petLabel(c, tag, x, y); c.restore(); }
     return top;
   },
@@ -17549,7 +17552,14 @@ const Room3D = {
     const pq = this.pq || []; this.pq = null; const now = performance.now(), dt = Math.min(0.05, this.lpt ? (now - this.lpt) / 1000 : 0.016); this.lpt = now;
     pq.forEach((q, i) => { const key = 'p' + i;
       if (q.people) { const H = this.actor(key + 'h', q.pal || Sprites.PAL.player, { x: q.x, y: q.y, dir: q.face < 0 ? 1 : 2, moving: q.moving }, now / 1000, dt, i * 3.1 + 9); H.root.position.y += q.lift; return; }
-      if (!q.e) return; let H = this.A.get(key); if (!H || !H.pet) { if (H) this.S.remove(H.root); H = this.mkPet(); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr;
+      if (q.m) { let H = this.A.get(key); if (!H || !H.model || H.k !== q.kind) { if (H) this.S.remove(H.root); H = Pet3D.make(q.kind, q.h); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr;
+        const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz, d = Math.hypot(dx, dz); H.lx = X; H.lz = Z; H.sp = (H.sp || 0) * 0.85 + (d < 2 ? d / Math.max(0.008, dt) : 0) * 0.15;
+        if (H.ang == null) H.ang = q.face < 0 ? Math.PI : 0;
+        let want = H.ang; if (d > 0.004 && d < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face && !q.moving) want = q.face < 0 ? Math.PI : 0;
+        let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
+        H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.root.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05;
+        Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, q.pose && typeof q.pose === 'object' ? q.pose : null); return; }
+      if (!q.e) return; let H = this.A.get(key); if (!H || !H.pet || H.model) { if (H) this.S.remove(H.root); H = this.mkPet(); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr;
       H.mesh.geometry = H.ol.geometry = q.e.geo; if (H.mat.map !== q.e.tex) { const first = !H.mat.map; H.mat.map = q.e.tex; if (first) H.mat.needsUpdate = true; }
       const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz; H.lx = X; H.lz = Z;
       if (H.ang == null) H.ang = q.face < 0 ? Math.PI : 0;
@@ -17581,7 +17591,7 @@ Object.assign(Room3D, {
   zActive(z) {
     if (!z || !this.zOn() || this.zbad) return false;
     if (!window.T3) { Arena3J.load(); return false; }
-    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); this.zBuild(z); return true; } catch (e) { console.warn('zone3d', e); this.zbad = 1; this.zShowG(false); this.show(false); return false; }
+    try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); this.zBuild(z); return true; } catch (e) { console.warn('zone3d', e); this.zbad = 1; this.zShowG(false); this.show(false); return false; }
   },
   zShowG(v) { if (this.gcv) { const d = v ? 'block' : 'none'; if (this.gcv.style.display !== d) this.gcv.style.display = d; } },
   zSq() { return Math.sin(Z3_EL); },
@@ -17878,6 +17888,86 @@ const Hero3D = {
   },
 };
 
+/* ===================== 펫 3D 모델 (v312, 사용자 2026-10-22 '펫은 너무 밤티야 … 귀엽고 퀄리티 좋게' → '조금 더 사실적으로 그려봐') =====================
+ * 블렌더로 만든 펫 23종 (3d/pets.glb). 펫마다 부위 노드: body·head·neck·legFL/FR/BL/BR (또는 legL/R)·armL/R·tail·wingL/R·earL/R·trunk·jaw·shell.
+ * 정점 색 + 툰 재질 + 얇은 외곽선. 동작은 노드를 직접 돌린다 (다리 흔들기, 몸 통통, 고개, 꼬리, 날개, 펭귄 뒤뚱, 돌고래 꼬리 …).
+ * 진화해서 모양이 바뀐 펫 · 꾸미기를 한 펫 · 사람 펫은 예전 방식 (부풀린 그림 / 사람 모델).
+ */
+const Pet3D = {
+  st: 0, M: {},
+  // 키 대신 몸길이로 크기를 맞추는 납작하고 긴 펫 (칸)
+  LEN: { turtle: 1.05, croc: 1.9, lizard: 0.95, dolphin: 1.5, beetle: 0.62, mouse: 0.8, mantis: 0.72, gary: 0.8 },
+  load() {
+    if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder, THREE } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
+    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('pets.glb?v=1'), ok, undefined, no))).then(G => {
+      G.scene.updateMatrixWorld(true);
+      G.scene.traverse(o => { if (o.geometry) o.geometry._keep = 1; }); // 방을 나갈 때 장면 정리에서 지우지 않게 (모두 같이 쓴다)
+      for (const o of G.scene.children.slice()) { const b = new THREE.Box3().setFromObject(o); this.M[o.name] = { g: o, hgt: b.max.y - b.min.y, len: b.max.x - b.min.x, y0: b.min.y }; }
+      this.st = 2;
+    }).catch(e => { console.warn('pet3d', e); this.st = -1; });
+  },
+  ready() { return this.st === 2; },
+  has(k) { return this.st === 2 && !!this.M[k]; },
+  // 크기 배율: 게임 칸 단위 키 h (PetRT.petH 기준)에 맞추되, 긴 펫은 몸길이로
+  scale(k, h) { const B = this.M[k]; return this.LEN[k] ? this.LEN[k] / B.len : h / B.hgt; },
+  topOf(k, h) { const B = this.M[k]; return B.hgt * this.scale(k, h); },
+  mat() {
+    if (this.m) return this.m; const { THREE } = T3;
+    this.m = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Room3D.grad });
+    this.m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', 'float rimF = pow(1.0 - clamp(dot(normalize(vViewPosition), normal), 0.0, 1.0), 3.0); outgoingLight += rimF * 0.18 * vec3(1.0, 0.95, 0.85);\n#include <opaque_fragment>'); };
+    const ol = this.ol = new THREE.MeshBasicMaterial({ color: 0x2a1e18, side: THREE.BackSide });
+    ol.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  transformed += normalize(normal) * 0.011;'); };
+    return this.m;
+  },
+  // 하나 만들기: { root, inner, nd: {이름: {o, p, q}}, k, model: 1 }
+  make(k, h) {
+    const { THREE } = T3, B = this.M[k], g = B.g.clone(true), M = this.mat(), root = new THREE.Group(), inner = new THREE.Group(), nd = {};
+    const s = this.scale(k, h); inner.scale.setScalar(s); g.position.y -= B.y0; inner.add(g); root.add(inner);
+    const ms = []; g.traverse(o => { if (o === g) return; const n = o.name.startsWith(k) ? o.name.slice(k.length) : ''; if (n && !nd[n]) nd[n] = { o, p: o.position.clone(), r: o.rotation.clone(), s: o.scale.clone() }; if (o.isMesh) ms.push(o); }); // 이름 = 'dog' + 'legFL' (three가 ':' 를 뺀다)
+    ms.forEach(m => { m.material = M; m.castShadow = true; m.frustumCulled = false; if (!/eyes$/.test(m.name)) { const o = new THREE.Mesh(m.geometry, this.ol); o.frustumCulled = false; m.add(o); } });
+    const sh = new THREE.Mesh(Room3D.shGeo || (Room3D.shGeo = new THREE.CircleGeometry(0.3, 20)), Room3D.shMat || (Room3D.shMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false }))); Room3D.shGeo._keep = 1; sh.rotation.x = -Math.PI / 2; sh.position.y = 0.01; root.add(sh);
+    const w = Math.max(B.len, B.hgt * 0.6) * s; sh.scale.set(w * 1.6, Math.max(0.5, w * 0.9), 1);
+    return { root, inner, nd, k, s, sh, model: 1, pet: 1, ph: 0, top: B.hgt * s };
+  },
+  // 매 장 자세: mv = 걷는 중, sp = 빠르기(칸/초), t = 시간, P = 펫이 그때 하던 일 (pose: 'ride' · {open} · {melt} · {hide} …)
+  pose(H, mv, sp, t, dt, P) {
+    const N = H.nd, k = H.k, R = (n, x, y, z) => { const a = N[n]; if (a) a.o.rotation.set(a.r.x + x, a.r.y + y, a.r.z + z); }, Y = (n, dy) => { const a = N[n]; if (a) a.o.position.y = a.p.y + dy; };
+    const amp = Math.min(1, sp / 1.6); H.mv = H.mv == null ? 0 : H.mv + ((mv ? 1 : 0) - H.mv) * Math.min(1, dt * 8); const m = H.mv;
+    H.ph += dt * (mv ? Math.max(6, Math.min(14, 5 + sp * 3.2)) : 0); const p = H.ph, sw = Math.sin(p), cw = Math.cos(p);
+    const idle = 1 - m, br = Math.sin(t * 2.2) * 0.012 * idle; // 숨쉬기
+    // 네 발
+    if (N.legFL) { const a = 0.55 * m * (0.6 + amp * 0.4); R('legFL', 0, 0, sw * a); R('legBR', 0, 0, sw * a); R('legFR', 0, 0, -sw * a); R('legBL', 0, 0, -sw * a); if (N.legML) { R('legML', 0, 0, -sw * a); R('legMR', 0, 0, sw * a); } }
+    // 두 발 + 팔
+    if (N.legL && !N.legFL) { const a = (k === 'penguin' ? 0.3 : 0.6) * m; R('legL', 0, 0, sw * a); R('legR', 0, 0, -sw * a); }
+    if (N.armL) { const a = 0.45 * m; R('armL', 0, 0, -sw * a + (k === 'trex' || k === 'mantis' ? 0 : Math.sin(t * 1.3) * 0.04 * idle)); R('armR', 0, 0, sw * a); }
+    // 몸: 걸을 때 통통, 서 있으면 숨쉬기
+    const bob = Math.abs(sw) * 0.035 * m * (k === 'trex' || k === 'elephant' || k === 'giraffe' ? 0.6 : 1);
+    if (N.body) { Y('body', bob); const b = N.body; b.o.scale.set(b.s.x, b.s.y * (1 + br), b.s.z * (1 + br * 0.6)); b.o.rotation.set(b.r.x, b.r.y, b.r.z); }
+    // 펭귄·사람형: 좌우로 뒤뚱
+    if (k === 'penguin' || k === 'snowman' || k === 'sponge' || k === 'dora' || k === 'kid') R('body', sw * (k === 'penguin' ? 0.16 : 0.07) * m, 0, 0);
+    // 머리: 서 있으면 두리번, 걸으면 끄덕
+    if (N.head) { const look = Math.sin(t * 0.55 + H.s * 3) * 0.32 * idle * (Math.sin(t * 0.21) > -0.2 ? 1 : 0); R('head', 0, look, Math.sin(p * 2) * 0.05 * m + (k === 'giraffe' ? Math.sin(t * 0.8) * 0.04 * idle : 0)); }
+    if (N.neck) R('neck', 0, 0, Math.sin(p * 2) * 0.04 * m);
+    // 꼬리
+    if (N.tail) { const f = k === 'dog' ? 9 : k === 'cat' || k === 'tiger' ? 2.2 : 3.5, a = k === 'dog' ? 0.45 : k === 'dolphin' ? 0 : 0.22; R('tail', 0, Math.sin(t * f) * a, (k === 'dolphin' ? Math.sin(t * (mv ? 9 : 3)) * (mv ? 0.35 : 0.12) : 0)); }
+    // 귀·코·날개
+    if (N.earL) { const a = k === 'elephant' ? Math.sin(t * 2.4) * 0.18 : (Math.sin(t * 7) > 0.92 ? 0.15 : 0); R('earL', a, 0, 0); R('earR', -a, 0, 0); }
+    if (N.trunk) R('trunk', 0, Math.sin(t * 1.1) * 0.12, Math.sin(t * 1.6) * 0.14 + m * Math.sin(p) * 0.08);
+    if (N.wingL) { const fl = k === 'parrot' && P && P.fly ? Math.sin(t * 28) * 0.9 : (k === 'penguin' ? 0.12 + Math.abs(sw) * 0.35 * m : Math.sin(t * 2) * 0.03); R('wingL', -fl, 0, 0); R('wingR', fl, 0, 0); }
+    if (N.finL) { const a = Math.sin(t * 3) * 0.15; R('finL', a, 0, 0); R('finR', -a, 0, 0); }
+    // 입 벌리기 (악어새 청소 · 티라노 어흥)
+    if (N.jaw) R('jaw', 0, 0, -(P && P.open ? 0.5 : k === 'trex' && idle > 0.5 && Math.sin(t * 0.7) > 0.93 ? 0.45 : 0));
+    // 돌고래: 바닥을 헤엄치듯 몸을 위아래로
+    if (k === 'dolphin') { R('body', 0, 0, Math.sin(t * (mv ? 9 : 3)) * (mv ? 0.08 : 0.03)); Y('body', mv ? -0.12 + Math.sin(t * 9) * 0.02 : 0); }
+    // 달팽이: 기어갈 때 몸이 늘었다 줄었다
+    if (k === 'gary' && N.body) { const b = N.body, e = 1 + Math.sin(t * 6) * 0.06 * m; b.o.scale.set(b.s.x * e, b.s.y / Math.sqrt(e), b.s.z); }
+    // 거북이: 등껍질 속으로 숨기
+    if (k === 'turtle') { const hd = P && P.hide > 0 ? Math.min(1, P.hide) : 0; for (const n of ['head', 'legFL', 'legFR', 'legBL', 'legBR', 'tail']) { const a = N[n]; if (a) a.o.scale.setScalar(1 - hd * 0.8); } }
+    // 눈사람: 서 있으면 녹는다
+    if (k === 'snowman') { const ml = P && P.melt > 0 ? Math.min(1, P.melt) : 0, b = N.body; if (b) b.o.scale.set(b.s.x * (1 + ml * 0.35), b.s.y * (1 - ml * 0.55), b.s.z * (1 + ml * 0.35)); }
+  },
+};
+
 /* ===================== 3D 사진 (v310, 사용자 2026-10-22 '여기 나타나는 사진도 바꿔야 하는 건가 통일성 있으려면' · 편집숍 '여기도 도트야') =====================
  * 대화창 얼굴과 편집숍 칸 그림을 게임 속 3D 모델(hero3d.js 사람, 부풀린 펫, 3D 차)로 한 번 찍어서 기억해 둔다.
  * 작은 그림 전용 렌더러 하나 (preserveDrawingBuffer). 3D를 못 쓰면(엔진·모델 아직, 그래픽 가속 꺼짐) 예전 도트 그림 그대로.
@@ -17946,7 +18036,9 @@ const Snap3D = {
     if (kind === 'outfit' || kind === 'hat') { const P = Profile.pal(Object.assign({}, me, kind === 'hat' ? { hat: it.id } : { outfit: it.id })); key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
     else if (kind === 'car') { key = 'th:car:' + it.col + ':' + (it.stripe || ''); build = g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); m.rotation.y = -0.55; g.add(m); }; aim = (b, c) => this.fit(b, c, 0.42, 1.02); }
     else { const k = it.pet; if (PET_PEOPLE[k]) { const sp = 'pet:' + k; Sprites.setPal(sp, PET_PEOPLE[k]); const P = Sprites.PAL[sp]; key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
-      else { key = 'th:pet:' + k; build = g => { const h = PetRT.petH(k) / TILE * 1.1, e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k, h, paint: s => Pets.draw(s, k, 25, 40, 1, false, 0.7, '', 0) }, false, 0.7); if (!e) return;
+      else if (typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(k))) { key = 'th:pet3:' + k; build = g => { const H = Pet3D.make(k, PetRT.petH(k) / TILE * 1.1); H.sh.visible = false; H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }; aim = (b, c) => this.fit(b, c, 0.26, 1.1); } // v312 펫 모델
+      else { if (typeof Pet3D !== 'undefined' && Pet3D.st === 1 && !this.pw) this.pw = setInterval(() => { if (Pet3D.st === 1) return; clearInterval(this.pw); this.pw = 0; if (Pet3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); // 모델이 오면 다시 그리기
+        key = 'th:pet:' + k; build = g => { const h = PetRT.petH(k) / TILE * 1.1, e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k, h, paint: s => Pets.draw(s, k, 25, 40, 1, false, 0.7, '', 0) }, false, 0.7); if (!e) return;
         e.geo._keep = 1; const Hp = Room3D.mkPet(); Hp.mesh.geometry = Hp.ol.geometry = e.geo; Hp.mat.map = e.tex; Hp.sh.visible = false; Hp.root.rotation.y = -0.62; g.add(Hp.root); }; aim = (b, c) => this.fit(b, c, 0.26, 1.1); } }
     const img = this.shot(key + ':' + S, W, Hh, build, aim); if (!img) return false;
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true;

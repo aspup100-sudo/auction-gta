@@ -1559,7 +1559,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
 <div id="mapHover"></div>
 <div id="caseList"></div>
 <div id="dialog">
-  <div class="portraitWrap"><canvas id="dlgPortrait" width="96" height="96"></canvas><canvas id="dlgEmote" width="32" height="32"></canvas></div>
+  <div class="portraitWrap"><canvas id="dlgPortrait" width="288" height="288"></canvas><canvas id="dlgEmote" width="32" height="32"></canvas></div>
   <button class="dlgBack" id="dlgBack" hidden title="지난 말 다시 보기">◀ 이전 말</button><div class="dlgBody"><div id="dlgRv"></div><div id="dlgName"></div><div id="dlgText"></div><div id="dlgChoices"></div><div id="dlgMore"></div></div>
 </div>
 <div id="notebook" class="panel">
@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v309</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v310</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5611,8 +5611,8 @@ const Dialog = {
     const box = $('dialog'); this.open = true; box.classList.add('in');
     for (let li = 0; li < lines.length; li++) {
       const L = typeof lines[li] === 'string' ? { text: lines[li] } : lines[li];
-      const pc = $('dlgPortrait'); const px = pc.getContext('2d'); px.imageSmoothingEnabled = false; px.clearRect(0, 0, 96, 96);
-      if (L.sprite) { px.drawImage(Sprites.portrait(L.sprite), 0, 0, 96, 96); pc.style.display = ''; } else pc.style.display = 'none';
+      const pc = $('dlgPortrait'); const px = pc.getContext('2d'); px.imageSmoothingEnabled = false; px.clearRect(0, 0, pc.width, pc.height);
+      if (L.sprite) { if (!Snap3D.portrait(px, L.sprite)) px.drawImage(Sprites.portrait(L.sprite), 0, 0, pc.width, pc.height); pc.style.display = ''; } else pc.style.display = 'none';
       pc.classList.remove('nod'); if (L.nod) { void pc.offsetWidth; pc.classList.add('nod'); }
       const em = $('dlgEmote'); const ex = em.getContext('2d'); ex.imageSmoothingEnabled = false; ex.clearRect(0, 0, 32, 32);
       if (L.emote) { ex.drawImage(Sprites.emote(L.emote), 0, 0, 32, 32); em.classList.remove('pop'); void em.offsetWidth; em.classList.add('pop'); em.style.display = ''; } else em.style.display = 'none';
@@ -5652,7 +5652,7 @@ const Dialog = {
   },
   close() { $('dialog').classList.remove('in', 'review'); this.open = false; this.rv = -1; },
   show(L, tag) { // 다시 보기: 타이핑 없이 그 줄을 그대로
-    const pc = $('dlgPortrait'), px = pc.getContext('2d'); px.clearRect(0, 0, 96, 96); if (L.sprite) { px.imageSmoothingEnabled = false; px.drawImage(Sprites.portrait(L.sprite), 0, 0, 96, 96); pc.style.display = ''; } else pc.style.display = 'none';
+    const pc = $('dlgPortrait'), px = pc.getContext('2d'); px.clearRect(0, 0, pc.width, pc.height); if (L.sprite) { px.imageSmoothingEnabled = false; if (!Snap3D.portrait(px, L.sprite)) px.drawImage(Sprites.portrait(L.sprite), 0, 0, pc.width, pc.height); pc.style.display = ''; } else pc.style.display = 'none';
     $('dlgEmote').style.display = 'none'; $('dlgName').textContent = L.name; $('dlgName').style.display = L.name ? '' : 'none'; $('dlgText').textContent = L.text; $('dlgRv').textContent = tag || '';
   },
   back() {
@@ -8821,6 +8821,7 @@ function drawIris() {
   ctx.beginPath(); ctx.rect(0, 0, VW, VH); ctx.arc(sx, sy, Math.max(0.1, R), 0, Math.PI * 2, true); ctx.fill('evenodd');
 }
 function draw() {
+  const pbw = draw.pb || (draw.pb = $('pbWin')); if (pbw && pbw.classList.contains('in') && Game.scene !== 'title') return; // v310 콜로세움(펫 배틀·축구) 창이 화면을 덮는 동안 뒤 거리는 안 그린다 (컴퓨터에서 축구 11 fps)
   const r3 = Game.scene === 'room' && Room3D.active(Game.room), z3 = Game.scene === 'zone' && Room3D.zActive(Game.zone); Room3D.zNow = z3; if (!r3 && !z3) Room3D.show(false); if (!z3) Room3D.zShowG(false);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); if (r3 || z3) ctx.clearRect(0, 0, VW, VH); else { ctx.fillStyle = '#14161c'; ctx.fillRect(0, 0, VW, VH); }
   if (Game.scene === 'title') return;
@@ -10642,11 +10643,11 @@ async function evictAtSite(c) {
   if (ease) await Dialog.say([{ text: '인도명령 결정문을 보여 주자 점유자의 기세가 한풀 꺾였다.' }]);
   if (Tutorial.on && !Live.on) await Tutorial.evictTalk(c, P); // v287 튜토리얼: 단예가 같이 명도 (이사비 얼마를 왜)
   const panel = $('evictPanel');
-  const render = () => { panel.innerHTML = `<div class="epHead"><canvas id="epPortrait" width="64" height="64"></canvas><div><b>${P.name}</b><div class="small">경계심</div><div class="gauge"><div id="epGauge" style="width:${gauge}%"></div></div></div></div>
+  const render = () => { panel.innerHTML = `<div class="epHead"><canvas id="epPortrait" width="192" height="192"></canvas><div><b>${P.name}</b><div class="small">경계심</div><div class="gauge"><div id="epGauge" style="width:${gauge}%"></div></div></div></div>
     <div class="epBody"><div class="epRound">협상 ${E.rounds + 1} / 2</div>
     <div class="epRow"><input id="epOffer" type="number" min="0" step="100000" placeholder="이사비(원)"><button class="btn gold" id="epGive">이사비 제시</button></div><div id="epOfferTxt" class="small"></div>
     <textarea id="epTalk" placeholder="점유자에게 할 말을 적으세요."></textarea><button class="btn" id="epSay">대화하기</button></div>`;
-    const px = $('epPortrait').getContext('2d'); px.imageSmoothingEnabled = false; px.drawImage(Sprites.portrait(P.sprite), 0, 0, 64, 64);
+    const px = $('epPortrait').getContext('2d'); px.imageSmoothingEnabled = false; px.clearRect(0, 0, px.canvas.width, px.canvas.height); if (!Snap3D.portrait(px, P.sprite)) px.drawImage(Sprites.portrait(P.sprite), 0, 0, px.canvas.width, px.canvas.height);
     $('epOffer').oninput = e => ($('epOfferTxt').textContent = e.target.value ? fmtWon(+e.target.value) : ''); };
   panel.classList.add('in'); Game.formOpen = true;
   while (E.rounds < 2) {
@@ -10979,7 +10980,7 @@ function renderMore(S, c, a, G, missed) {
     h += `<div class="rSec"><h3>놓친 정보</h3>${missed.length ? `<ul class="missed">${missed.map(m => `<li><b>${m.place}</b>에 가지 않아 ${escapeHtml(m.text)}</li>`).join('')}</ul>` : '<p>핵심 장소는 다 다녀왔어요.</p>'}</div>`;
   }
   // 단예 한마디
-  h += `<div class="rSec danyeBox"><canvas id="rDanye" width="48" height="48"></canvas><div><b>${escapeHtml(castName('danye'))}</b><p>${escapeHtml(danyeLine(S, c, G, missed))}</p></div></div>`;
+  h += `<div class="rSec danyeBox"><canvas id="rDanye" width="144" height="144"></canvas><div><b>${escapeHtml(castName('danye'))}</b><p>${escapeHtml(danyeLine(S, c, G, missed))}</p></div></div>`;
   // 입찰하지 않은 물건들의 정답
   const others = State.week.cases.filter(x => !c || x.id !== c.id);
   h += `<details class="rSec"><summary>입찰하지 않은 물건들의 정답 (${others.length}건)</summary><ul class="others">${others.map(x => { const ax = Engine.analyze(x.data, x.minPrice); return `<li><b>${x.name}</b> <small>${x.caseNo}</small><div class="small">${'★'.repeat(x.stars)} · ${x.risks.length ? x.risks.map(r => RISK_NAME(r)).join(', ') : '깨끗한 물건이었다'} · 인수액 ${fmtWon(ax.assumeTotal)}${Engine.analyze(x.data, x.market * 2).assumeTotal !== ax.assumeTotal ? ' (최저가로 낙찰됐을 때)' : ''} · 적정가 ${fmtWon(fairBid(x))} 안팎 · 최저가 ${fmtWon(x.minPrice)}</div></li>`; }).join('')}</ul></details>`;
@@ -10987,7 +10988,7 @@ function renderMore(S, c, a, G, missed) {
   el.innerHTML = h;
   if (Practice.on) Practice.result($('result'), c, G); // v266 단계별 연습
   if (Tutorial.on) Tutorial.result($('result')); // 여기 el은 #rMore (결과 페이지의 아래쪽)라 페이지 전체를 넘긴다
-  const px = $('rDanye').getContext('2d'); px.imageSmoothingEnabled = false; px.drawImage(Sprites.portrait('danye'), 0, 0, 48, 48);
+  const px = $('rDanye').getContext('2d'); px.imageSmoothingEnabled = false; if (!Snap3D.portrait(px, 'danye')) px.drawImage(Sprites.portrait('danye'), 0, 0, px.canvas.width, px.canvas.height);
   $('rcAgain').onclick = () => { Sound.play('click'); location.reload(); };
   $('rcNote2').onclick = () => { Notebook.tab = 3; Notebook.toggle(true); };
   $('rcRec').onclick = () => Records.show();
@@ -12002,6 +12003,7 @@ const Shop = {
   },
   paint(x, it, t, mv, idle, thumb) {
     x.fillStyle = thumb ? '#e2d6bb' : it.ride ? '#5a5d66' : '#cfc6a8'; x.fillRect(0, 0, 160, 104);
+    if (thumb && typeof Snap3D !== 'undefined' && Snap3D.thumb(x, it)) return; // v310 칸 그림은 게임 속 3D 모델 사진으로
     if (it.ride === 'train') { const k = thumb ? 4 : 3, gap = 7 * k, off = mv ? (t * 80 * k) % gap : 0; /* v259 사용자 '기차길 나오게 해야지': 게임처럼 침목 + 레일 두 줄 */
       x.fillStyle = '#6a4a2e'; for (let X = -gap; X < 160 + gap; X += gap) x.fillRect(Math.round(X - off), 52 - 7 * k, k * 2, 14 * k);
       for (const sy of [-4.5, 4.5]) { const Y = Math.round(52 + sy * k - k); x.fillStyle = '#3a3e46'; x.fillRect(0, Y, 160, 2 * k); x.fillStyle = '#c4cad4'; x.fillRect(0, Y + Math.round(k / 2), 160, Math.max(1, Math.round(k / 2))); } }
@@ -17501,14 +17503,14 @@ const Room3D = {
     let lift = 0; if (pose === 'ride') { const P = Game.player; x = P.x; y = P.y; lift = 1.3 * TILE; } // 원숭이: 주인 머리 위
     else for (const k in Pets.st) { const s = Pets.st[k]; if (Math.abs(s.x - x) < 1 && s.y - y > 1 && s.y - y < 70) { lift = s.y - y; y = s.y; break; } } // 펄쩍 뛰기·날기: 2D에서 위로 그린 만큼 3D 높이로
     const e0 = Pets.evoNow, ev = e0 && Pets.evoK === kind && e0.st, e = ev ? Object.assign({}, e0, { fl: true, flat: true }) : e0; // 진화 빛·날리는 가루는 빼고 (몸만 입체로), 최종 진화로 커지는 건 3D에서 키운다
-    return this.put(c, kind, x, y, lift, face, moving, t, tag, ev && !e0.flat ? PetEvo.scOf(kind, ev, pose) : 1, s => { Pets.evoNow = e; try { d0.call(Pets, s, kind, 25, 40, 1, moving, t, '', idle, pose); } finally { Pets.evoNow = e0; } });
+    return this.put(c, kind, x, y, lift, face, moving, t, tag, ev && !e0.flat ? PetEvo.scOf(kind, ev, pose) : 1, s => { Pets.evoNow = e; try { d0.call(Pets, s, kind, 25, 40, 1, moving, Math.floor(t * 12) / 12, '', idle, pose); } finally { Pets.evoNow = e0; } });
   },
   // 펫 하나 세우기: (x, y) 바닥 자리 · lift 높이 (게임 픽셀) · paint(s) = 오른쪽 보는 그림을 스크래치 (25, 40)에 발로 그리기. 이름표 위치(3D 높이)를 돌려준다
   put(c, kind, x, y, lift, face, moving, t, tag, big, paint) {
     const people = !!PET_PEOPLE[kind], h = PetRT.petH(kind) / TILE * 1.1, q = { kind, x, y, lift: lift / TILE, face, moving, people, h, big };
     if (people) { const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]); q.pal = Sprites.PAL[sp]; }
-    else { const pl = this.pLast || (this.pLast = new Map()), lk = kind + '|' + (tag || ''), b0 = this.pc.built | 0; this.pc.lock = pl.has(lk) && this.fr - (this.pbF | 0) < 3;
-      q.e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k: kind, h, paint }, moving, t); this.pc.lock = false; if ((this.pc.built | 0) !== b0) this.pbF = this.fr;
+    else { const pl = this.pLast || (this.pLast = new Map()), lk = kind + '|' + (tag || ''), b0 = this.pc.built | 0, t0 = performance.now(); this.pc.lock = pl.has(lk) && performance.now() - (this.pbT || 0) < 160; // v310 시간으로: 컴퓨터에서 펫 하나가 한 장에 13~19ms 쓰던 것 (진화한 펭귄은 매번 모양이 달라서)
+      q.e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k: kind, h, paint }, moving, t); this.pc.lock = false; if ((this.pc.built | 0) !== b0) { this.pbT = performance.now(); PerfHud.add('pb', this.pbT - t0); PerfHud.add('pbn', 1); }
       if (q.e) pl.set(lk, q.e); else q.e = pl.get(lk); if (pl.size > 40) pl.delete(pl.keys().next().value);
       if (q.e) q.e.geo._keep = 1; if (this.pc.size > 60) { const k = this.pc.keys().next().value, o = this.pc.get(k); this.pc.delete(k); o.geo.dispose(); o.tex.dispose(); } }
     this.pq.push(q); const top = q.lift + (people ? 1.45 : h * (big || 1)) + 0.12;
@@ -17622,7 +17624,7 @@ Object.assign(Room3D, {
     this.box(g, 0, 0, L, W, bus ? 0.95 : 0.36, col, 0.12);
     if (bus) { this.box(g, 0.04, 0, L - 0.2, W + 0.01, 0.3, '#22303c', 0.6, { line: false }); this.box(g, 0, 0, L, W, 0.05, col, 1.07, { line: false, cast: false }); }
     else { this.box(g, -L * 0.06, 0, L * 0.5, W * 0.84, 0.28, '#24303a', 0.48, { line: false }); this.box(g, -L * 0.08, 0, L * 0.42, W * 0.86, 0.05, col, 0.76, { line: false, cast: false }); }
-    if (stripe) this.box(g, 0, 0, L * 0.96, 0.08, 0.02, stripe, bus ? 1.12 : 0.81, { line: false, cast: false });
+    if (stripe) { this.box(g, 0, 0, L * 0.96, 0.08, 0.02, stripe, bus ? 1.12 : 0.48, { line: false, cast: false }); if (!bus) this.box(g, -L * 0.08, 0, L * 0.42, 0.08, 0.02, stripe, 0.81, { line: false, cast: false }); } // v310 줄무늬는 차 몸 위 + 지붕 위 (예전엔 지붕 높이에 차 길이만큼 떠 있었다)
     if (kind === 'taxi') this.box(g, -L * 0.08, 0, 0.2, 0.12, 0.1, '#fff3c0', 0.81, { glow: 1, line: false, cast: false });
     const wg = this.wheelG || (this.wheelG = new THREE.CylinderGeometry(0.14, 0.14, 0.1, 10)), wm = this.toon('#1c1c20'); wg._keep = 1; // 바퀴 도형은 하나를 같이 쓴다 (차가 오갈 때마다 새로 만들면 쌓인다)
     for (const [a, c] of [[L * 0.3, 1], [L * 0.3, -1], [-L * 0.3, 1], [-L * 0.3, -1]]) { const w = new THREE.Mesh(wg, wm); w.rotation.x = Math.PI / 2; w.position.set(a, 0.14, c * (W / 2 - 0.02)); g.add(w); }
@@ -17692,7 +17694,7 @@ const PerfHud = {
   tick(t) { if (!this.on) return; if (this.last && t - this.last > 50) this.long.push(t); this.last = t; this.n++;
     if (t - this.t0 >= 500) { const fps = this.n * 1000 / (t - this.t0), nf = Math.max(1, this.n), M = this.ms, f1 = k => ((M[k] || 0) / nf).toFixed(1); this.n = 0; this.t0 = t; while (this.long.length && t - this.long[0] > 5000) this.long.shift();
       const R = typeof Room3D !== 'undefined' ? Room3D : {}, info = R.r && R.r.info && R.r.info.render, mode = Game.scene === 'zone' ? (R.zNow ? '바깥 3D' : '바깥 2D') : Game.scene === 'room' ? (R.room && R.room === Game.room ? '실내 3D' : '실내 2D') : Game.scene;
-      this.el.textContent = `${Math.round(fps)} fps · 5초 동안 끊김 ${this.long.length}번 · ${mode}\n3D 해상도 ${(R.pr || 0).toFixed(2)}배 · 그리기 ${info ? info.calls : '-'}번 · 건물 ${R.zb ? R.zb.size : 0} · 사람·차 ${R.A ? R.A.size : 0}\n한 장에 계산 ${f1('up')}ms · 그리기 ${f1('dr')}ms (3D ${f1('gl')} · 펫 ${f1('pet')})\n화면 ${VW}×${VH} · 배율 ${DPR} · ${String(R.gpu || '그래픽카드 모름').slice(0, 60)}`; this.ms = {}; }
+      this.el.textContent = `${Math.round(fps)} fps · 5초 동안 끊김 ${this.long.length}번 · ${mode}\n3D 해상도 ${(R.pr || 0).toFixed(2)}배 · 그리기 ${info ? info.calls : '-'}번 · 건물 ${R.zb ? R.zb.size : 0} · 사람·차 ${R.A ? R.A.size : 0}\n한 장에 계산 ${f1('up')}ms · 그리기 ${f1('dr')}ms (3D ${f1('gl')} · 펫 ${f1('pet')} · 새 모양 ${M.pbn | 0}번 ${(M.pb || 0).toFixed(0)}ms)\n화면 ${VW}×${VH} · 배율 ${DPR} · ${String(R.gpu || '그래픽카드 모름').slice(0, 60)}`; this.ms = {}; }
     requestAnimationFrame(tt => this.tick(tt)); },
 };
 
@@ -17792,7 +17794,8 @@ const Hero3D = {
   pose(H, w, t, dt, seed) {
     const X = w.x / TILE, Z = w.y / TILE, moved = H.lx == null ? 0 : Math.hypot(X - H.lx, Z - H.lz); H.lx = X; H.lz = Z;
     const sp = dt > 0 && moved < 3 ? moved / dt : 0; H.spd += (sp - H.spd) * Math.min(1, dt * 8); const mv = (!!w.moving && H.spd > 0.15) || H.spd > 0.4;
-    const want = [-Math.PI / 2, Math.PI, 0, Math.PI / 2][w.dir | 0] || 0; let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 14);
+    const dX = X - (H.px ?? X), dZ = Z - (H.pz ?? Z); H.px = X; H.pz = Z; if (Math.hypot(dX, dZ) > 0.002 && Math.hypot(dX, dZ) < 2) { H.mdir = Math.atan2(-dZ, dX); H.mdirD = w.dir | 0; } // v310 대각선으로 달리면 대각선을 본다 (사용자 '왼쪽 위 대각선으로 달릴 때도 앞을 보면서 달리는데')
+    const want = H.mdir != null && (mv || H.mdirD === (w.dir | 0)) ? H.mdir : [-Math.PI / 2, Math.PI, 0, Math.PI / 2][w.dir | 0] || 0; /* 멈춰도 다른 쪽을 보기 전까진 그 대각선 그대로 */ let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 14);
     H.root.position.set(X, H.ghost ? 0.12 + Math.sin(t * 2.4 + seed) * 0.05 : 0, Z); H.root.rotation.y = H.ang;
     const now = performance.now();
     if (w.punchT && now < w.punchT) { if (!H.punch) { H.punch = 1; const a = this.play(H, H.alt ? 'Punch_Cross' : 'Punch_Jab', 0.08, 1.6); H.alt = !H.alt; if (a) { a.setLoop(T3.THREE.LoopOnce); a.clampWhenFinished = true; } } }
@@ -17849,6 +17852,75 @@ const Hero3D = {
     else if (hat === 'pumpkin') { const g = Sp(r * 1.45, 20); put(HB, g, '#f08a2c', 0, hc.y + hs.y * 0.05, hc.z, 0, 0, 0, { m: R.toon('#f08a2c', { flatShading: true }) }).scale.set(1.15, 0.95, 1.1); put(HB, Cy(r * 0.1, r * 0.1, r * 0.4, 8), '#3a8a2a', 0, hc.y + r * 1.45, hc.z); for (const e of [-1, 1]) put(HB, Co(r * 0.25, r * 0.3, 3), '#2a1408', e * r * 0.5, hc.y + r * 0.2, hc.z + r * 1.52, Math.PI / 2, 0, 0); put(HB, Bx(r * 1.0, r * 0.18, 0.03), '#2a1408', 0, hc.y - r * 0.45, hc.z + r * 1.5); }
     else if (hat === 'space' || P.space && hat === 'space') { put(HB, Sp(r * 1.75, 22), '#e4ecf6', 0, hc.y + hs.y * 0.05, hc.z, 0, 0, 0, { m: R.bubM || (R.bubM = new THREE.MeshToonMaterial({ color: 0xdfeefc, transparent: true, opacity: 0.35, depthWrite: false, gradientMap: R.grad })) }); put(HB, Cy(r * 1.3, r * 1.3, r * 0.3, 22), '#c8ccd6', 0, fc.min.y + r * 0.1, hc.z); }
     if (P.hardhat) { put(HB, Sp(hr * 1.02, 18), P.hardhat, 0, top - r * 0.55, hc.z, 0, 0, 0, { m: R.toon(P.hardhat) }).scale.set(1, 0.75, 1.05); put(HB, Cy(hr * 1.2, hr * 1.2, 0.012, 22), P.hardhat, 0, top - r * 0.62, hc.z + r * 0.15); }
+  },
+};
+
+/* ===================== 3D 사진 (v310, 사용자 2026-10-22 '여기 나타나는 사진도 바꿔야 하는 건가 통일성 있으려면' · 편집숍 '여기도 도트야') =====================
+ * 대화창 얼굴과 편집숍 칸 그림을 게임 속 3D 모델(hero3d.js 사람, 부풀린 펫, 3D 차)로 한 번 찍어서 기억해 둔다.
+ * 작은 그림 전용 렌더러 하나 (preserveDrawingBuffer). 3D를 못 쓰면(엔진·모델 아직, 그래픽 가속 꺼짐) 예전 도트 그림 그대로.
+ */
+const Snap3D = {
+  cache: new Map(),
+  ok() { return !!window.T3 && typeof Hero3D !== 'undefined' && Hero3D.ready() && typeof Room3D !== 'undefined' && !!Room3D.r && !Room3D.soft && !Room3D.bad; },
+  // 아직이면 엔진·모델 받기 시작하고, 준비되면 done() (상점 다시 그리기 같은 것)
+  warm(done) {
+    if (this.ok() || typeof Room3D === 'undefined' || !Room3D.on()) return;
+    if (!window.T3) Arena3J.load(); clearTimeout(this.wt); let n = 0;
+    const tick = () => { if (this.ok()) { done && done(); return; } if (window.T3) { try { Room3D.init(); if (!Room3D.soft) Hero3D.load(); } catch (e) { return; } } if (++n < 60 && Hero3D.st !== -1) this.wt = setTimeout(tick, 500); };
+    tick();
+  },
+  init() {
+    if (this.r) return; const { THREE } = T3, cv = document.createElement('canvas');
+    const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setClearColor(0x000000, 0); r.toneMapping = THREE.NoToneMapping; r.setPixelRatio(1);
+    const S = this.S = new THREE.Scene(); S.add(new THREE.HemisphereLight(0xfff4e6, 0x7a6a58, 1.45));
+    const sun = new THREE.DirectionalLight(0xfff0d8, 1.7); sun.position.set(-2.5, 5, 6); S.add(sun);
+    this.cam = new THREE.PerspectiveCamera(24, 1, 0.05, 60); this.pc = new Map();
+  },
+  // 한 장 찍기: build(g) 가 g에 모델을 넣고, aim(box, cam) 이 카메라를 맞춘다. 결과는 2D 캔버스 (기억해 둠)
+  shot(key, W, H, build, aim) {
+    const hit = this.cache.get(key); if (hit) return hit; if (!this.ok()) return null;
+    try {
+      this.init(); const { THREE } = T3, g = new THREE.Group(); this.S.add(g); build(g); g.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(g, true), cam = this.cam; cam.aspect = W / H; aim(box, cam); cam.updateProjectionMatrix();
+      this.r.setSize(W, H, false); this.r.render(this.S, cam);
+      const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(this.r.domElement, 0, 0);
+      this.S.remove(g); g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); });
+      if (this.cache.size > 120) this.cache.delete(this.cache.keys().next().value);
+      this.cache.set(key, c); return c;
+    } catch (e) { console.warn('snap3d', e); this.bad = 1; return null; }
+  },
+  // 상자 전체가 들어오게 (el = 내려다보는 각, pad = 여백 배율)
+  fit(box, cam, el = 0.22, pad = 1.08, dy = 0) {
+    const { THREE } = T3, c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3()); c.y += dy;
+    const vf = cam.fov * Math.PI / 360, hf = Math.atan(Math.tan(vf) * cam.aspect), d = Math.max(s.y / 2 / Math.tan(vf), Math.max(s.x, s.z) / 2 / Math.tan(hf)) * pad + Math.max(s.x, s.z) / 2;
+    cam.position.set(c.x, c.y + Math.sin(el) * d, c.z + Math.cos(el) * d); cam.lookAt(c);
+  },
+  // 사람 한 명 (서 있는 자세, 살짝 비스듬히)
+  person(g, P, turn = 0.38) {
+    const z = Room3D.zNow; Room3D.zNow = false; let H; try { H = Hero3D.make(P); } finally { Room3D.zNow = z; } H.root.rotation.y = -Math.PI / 2 + turn; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; });
+    Hero3D.play(H, 'Idle_Loop', 0); H.mix.update(0.9); g.add(H.root); return H;
+  },
+  palOf(name) { return (Sprites.PAL && Sprites.PAL[name]) || Sprites.PAL.player; },
+  // 대화창 얼굴: 머리·어깨. px 캔버스 전체에 그린다. 그렸으면 true
+  portrait(px, name) {
+    const cv = px.canvas, P = this.palOf(name); if (!this.ok()) { cv.style.imageRendering = ''; this.warm(); return false; }
+    const N = Math.max(96, Math.min(384, cv.width)), img = this.shot('face:' + Hero3D.key(P), N, N, g => { const H = this.person(g, P, 0.3); g.userData.H = H; this.headAt = null; H.model.updateMatrixWorld(true); H.model.traverse(o => { if (o.isBone && o.name === 'Head') this.headAt = o.getWorldPosition(new T3.THREE.Vector3()); }); },
+      (box, cam) => { const h = this.headAt || new T3.THREE.Vector3(0, box.max.y - 0.12, 0), top = Math.max(box.max.y, h.y + 0.14), span = Math.max(0.5, (top - h.y) + 0.36), c = new T3.THREE.Vector3(h.x, top - span / 2 + 0.02, h.z), d = span / 2 / Math.tan(cam.fov * Math.PI / 360) * 1.08;
+        cam.position.set(c.x, c.y + d * 0.12, c.z + d); cam.lookAt(c); });
+    if (!img) return false; px.save(); px.setTransform(1, 0, 0, 1, 0, 0); px.imageSmoothingEnabled = true; px.imageSmoothingQuality = 'high'; px.clearRect(0, 0, cv.width, cv.height); px.drawImage(img, 0, 0, cv.width, cv.height); px.restore(); cv.style.imageRendering = 'auto'; return true;
+  },
+  // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
+  thumb(x, it) {
+    const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; }
+    const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
+    let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);
+    if (kind === 'outfit' || kind === 'hat') { const P = Profile.pal(Object.assign({}, me, kind === 'hat' ? { hat: it.id } : { outfit: it.id })); key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
+    else if (kind === 'car') { key = 'th:car:' + it.col + ':' + (it.stripe || ''); build = g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); m.rotation.y = -0.55; g.add(m); }; aim = (b, c) => this.fit(b, c, 0.42, 1.02); }
+    else { const k = it.pet; if (PET_PEOPLE[k]) { const sp = 'pet:' + k; Sprites.setPal(sp, PET_PEOPLE[k]); const P = Sprites.PAL[sp]; key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
+      else { key = 'th:pet:' + k; build = g => { const h = PetRT.petH(k) / TILE * 1.1, e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k, h, paint: s => Pets.draw(s, k, 25, 40, 1, false, 0.7, '', 0) }, false, 0.7); if (!e) return;
+        e.geo._keep = 1; const Hp = Room3D.mkPet(); Hp.mesh.geometry = Hp.ol.geometry = e.geo; Hp.mat.map = e.tex; Hp.sh.visible = false; Hp.root.rotation.y = -0.62; g.add(Hp.root); }; aim = (b, c) => this.fit(b, c, 0.26, 1.1); } }
+    const img = this.shot(key + ':' + S, W, Hh, build, aim); if (!img) return false;
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true;
   },
 };
 

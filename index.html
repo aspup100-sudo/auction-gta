@@ -508,7 +508,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .keys th { color:#c9c2a8; font-weight:600; white-space:nowrap; width:34%; }
 .keys td.tc { color:#9fb3c8; width:30%; }
 .keys .ksub { margin-top:6px; font-size:11px; color:#8b8f99; }
-.profileBox { display:flex; gap:12px; align-items:flex-start; } .profileBox canvas { width:72px; height:72px; image-rendering:pixelated; background:#e2d6bb; border-radius:8px; flex:none; } #title .profileBox canvas { background:#1b2232; } .profileBox .prow { display:flex; align-items:center; gap:6px; margin:4px 0; flex-wrap:wrap; } .profileBox .prow span { width:34px; font-size:12px; opacity:.8; } .profileBox .sw { width:22px; height:22px; border-radius:50%; border:2px solid rgba(0,0,0,.25); cursor:pointer; padding:0; } .profileBox .sw.sel { border-color:#ffd84a; box-shadow:0 0 0 2px #1b2232; } .profileBox .btn { font-size:11px; padding:4px 8px; margin-top:4px; }
+.profileBox { display:flex; gap:12px; align-items:flex-start; } .profileBox canvas { width:72px; height:96px; image-rendering:pixelated; object-fit:contain; background:#e2d6bb; border-radius:8px; flex:none; } #title .profileBox canvas { background:#1b2232; } .profileBox .prow { display:flex; align-items:center; gap:6px; margin:4px 0; flex-wrap:wrap; } .profileBox .prow span { width:34px; font-size:12px; opacity:.8; } .profileBox .sw { width:22px; height:22px; border-radius:50%; border:2px solid rgba(0,0,0,.25); cursor:pointer; padding:0; } .profileBox .sw.sel { border-color:#ffd84a; box-shadow:0 0 0 2px #1b2232; } .profileBox .btn { font-size:11px; padding:4px 8px; margin-top:4px; }
 #iosHint { margin-top:8px; font-size:12px; color:#c9c2a8; }
 /* 폰 가로(높이가 낮은 화면): HUD를 작게, 조작 버튼을 모서리로 */
   .short #pager { width:280px; font-size:11.5px; padding:4px 8px; }
@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v310</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v311</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -8712,11 +8712,11 @@ function drawRoom3D(t) {
   const vis = Net.visible('room'); Room3D.anchor(ctx, p.x, p.y, 0); // 바닥 기준 (펫 옆 2D 효과는 내 발 근처라 거의 맞는다)
   Room3D.pq = []; try { [...Pets.actors(ctx, vis, t), ...Fx.actors(ctx, vis, t)].sort((a, b) => a.y - b.y).forEach(a => a.d()); } finally { Room3D.render(); } // 펫은 3D로 (v301)
   for (const q of Particles) { ctx.fillStyle = q.col + (q.life / q.max * 0.6) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, 7); ctx.fill(); }
-  for (const f of vis) if (!f.p.rd) { Room3D.anchor(ctx, f.p.x, f.p.y, 1.32, 15); Net.tags(ctx, f.p); }
+  for (const f of vis) if (!f.p.rd) { Room3D.anchor(ctx, f.p.x, f.p.y, Room3D.headH(), 15); Net.tags(ctx, f.p); }
   drawGameTags(r, (x, y, cas) => Room3D.anchor(ctx, x, y, cas ? 0.8 : 1.75, 0));
-  if (r.place.kind === 'bank' && State.ticket && State.ticket.called) { const n = r.npcs.find(n => n.talk); if (n) { Room3D.anchor(ctx, n.x, n.y, 1.32, 15); const bob = Math.sin(t * 5) * 2; ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.moveTo(n.x - 5, n.y - 26 + bob); ctx.lineTo(n.x + 5, n.y - 26 + bob); ctx.lineTo(n.x, n.y - 19 + bob); ctx.fill(); } }
+  if (r.place.kind === 'bank' && State.ticket && State.ticket.called) { const n = r.npcs.find(n => n.talk); if (n) { Room3D.anchor(ctx, n.x, n.y, Room3D.headH(), 15); const bob = Math.sin(t * 5) * 2; ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.moveTo(n.x - 5, n.y - 26 + bob); ctx.lineTo(n.x + 5, n.y - 26 + bob); ctx.lineTo(n.x, n.y - 19 + bob); ctx.fill(); } }
   const g = typeof Tutorial !== 'undefined' && Tutorial.roomGoal && Tutorial.roomGoal(r); if (g) { Room3D.anchor(ctx, g.x, g.y, 1.2, 0); drawRoomGoal(ctx, t); }
-  Room3D.anchor(ctx, p.x, p.y, 1.32, 15); Titles.drawMine(ctx, p); // 여기서부터 내 머리 기준 (말풍선·E 표시도 이 기준으로 그려진다)
+  Room3D.anchor(ctx, p.x, p.y, Room3D.headH(), 15); Titles.drawMine(ctx, p); // 여기서부터 내 머리 기준 (말풍선·E 표시도 이 기준으로 그려진다)
   if (Game.excl > 0) { const s = Sprites.emote('excl'); ctx.drawImage(s, Math.round(p.x - 4), Math.round(p.y - 30 - (0.9 - Game.excl) * 6), 8, 8); }
 }
 function drawRoom(t) {
@@ -10287,7 +10287,7 @@ async function objectUse(o, kind) {
     if (pick !== 'go' || !(await spendSlot())) return;
     State.siteSession = c.id; markSeen(c.id, 'site', { day: State.day });
   }
-  if (o.type === 'bell') { Sound.play('ding'); await sleep(800); Sound.play('step', 'wood'); await sleep(250); Sound.play('step', 'wood'); await sleep(300); await Dialog.say(bellTalk(c)); recordClue(c, 'bell', bellTalk(c).map(l => (l.name ? `${l.name}: ` : '') + l.text).join(' / ')); return; }
+  if (o.type === 'bell') { Sound.play('ding'); await sleep(800); Sound.play('step', 'wood'); await sleep(250); Sound.play('step', 'wood'); await sleep(300); const tk = bellTalk(c), who = tk.find(l => l.sprite), np = who && await doorOut(o, who.sprite); await Dialog.say(tk); if (np) doorIn(np); recordClue(c, 'bell', bellTalk(c).map(l => (l.name ? `${l.name}: ` : '') + l.text).join(' / ')); return; }
   const clue = siteClues(c).find(x => x.obj === o.type);
   if (!clue) { await Dialog.say([{ text: '특별한 건 없다.' }]); return; }
   await clueFx(); await Dialog.say([{ text: clue.text }]);
@@ -10319,6 +10319,20 @@ async function takeTicket() {
     State.ticket.called = true; Game.room.callBlink = 2.5;
     HUD.page(`${State.ticket.no}번 고객님, 창구로 와 주세요.`, '은행');
   })();
+}
+
+/* ---- 초인종 (v311 사용자 '여기는 문 열리고 세입자 나오는 거까지 연출하자'): 문이 열리고 대답한 사람이 걸어 나왔다가, 이야기가 끝나면 들어가고 문이 닫힌다 ---- */
+async function doorOut(o, sprite) {
+  const r = Game.room; if (!r) return null; const x = o.tx * TILE + 8, y0 = o.ty * TILE + 1, y1 = o.ty * TILE + 15;
+  Sound.play('door'); Room3D.doorT = 1; await sleep(300);
+  const n = { sprite, tx: o.tx, ty: o.ty, x, y: y0, dir: 0, moving: true, frame: 0, role: 'door', breath: 0 }; r.npcs.push(n);
+  for (let i = 1; i <= 14; i++) { if (Game.room !== r) return null; n.y = y0 + (y1 - y0) * i / 14; n.frame = i; Sound.play('step', 'wood'); await sleep(i % 2 ? 40 : 45); }
+  n.moving = false; return n;
+}
+async function doorIn(n) {
+  const r = Game.room, y0 = n.y, y1 = n.ty * TILE + 1; n.dir = 3; n.moving = true;
+  for (let i = 1; i <= 12; i++) { if (Game.room !== r) break; n.y = y0 + (y1 - y0) * i / 12; n.frame = i; await sleep(42); }
+  const k = r.npcs.indexOf(n); if (k >= 0) r.npcs.splice(k, 1); await sleep(150); Room3D.doorT = 0; await sleep(250); Sound.play('door');
 }
 
 /* ===================== 4단계: 입찰 · 개찰 · 잔금 대출 · 잔금 납부 · 명도 · 정산 =====================
@@ -13158,7 +13172,7 @@ const Fx = {
   actors(c, vis, t) {
     const out = [], P = Game.player, me = Pets.mineF;
     // v304 3D 화면(실내·바깥)에선 3D 사람 머리 높이에 맞춰 그린다 (사용자 '이펙트 구름도 위치 바꿔야'): 2D 발밑에서 15픽셀 위 = 3D 1.32칸 높이, 위아래로 눌리지 않게
-    const dr = (f, x, y, lift) => () => { if (!(typeof Room3D !== 'undefined' && Room3D.pq)) return this.draw(c, f, x, y, t, lift); c.save(); try { Room3D.anchor(c, x, y, 1.42, 15, false); this.draw(c, f, x, y, t, lift); } finally { c.restore(); } };
+    const dr = (f, x, y, lift) => () => { if (!(typeof Room3D !== 'undefined' && Room3D.pq)) return this.draw(c, f, x, y, t, lift); c.save(); try { Room3D.anchor(c, x, y, Room3D.headH() + 0.1, 15, false); this.draw(c, f, x, y, t, lift); } finally { c.restore(); } };
     if (me && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push({ y: P.y + 0.3, d: dr(me, P.x, P.y, this.liftMe()) });
     for (const { p } of vis) { const f = p.pal && p.pal.fx; if (!f || p.rd || (p.dr && p.s === 'zone')) continue; out.push({ y: p.y + 0.3, d: dr(f, p.x, p.y, this.liftOf(p)) }); }
     return out;
@@ -17215,7 +17229,7 @@ const Room3D = {
     if (this.S && this.room === rm) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
     if (rm.home) { this.room = rm; this.A = new Map(); this.dispT = null; return this.buildHome(rm); } // 내 집 (homein.js 평면도)
-    this.room = rm; this.A = new Map(); const S = this.S = new THREE.Scene(), P = RoomTilt.pal(rm), W = rm.W, H = rm.H, m = rm.def.map, dark = P.key === 'arcade' || P.key === 'casino';
+    this.room = rm; this.A = new Map(); this.doorG = null; const S = this.S = new THREE.Scene(), P = RoomTilt.pal(rm), W = rm.W, H = rm.H, m = rm.def.map, dark = P.key === 'arcade' || P.key === 'casino';
     S.background = new THREE.Color(dark ? 0x0a0812 : 0x1c1814);
     S.add(new THREE.HemisphereLight(dark ? 0x9a8ad0 : 0xfff2e2, dark ? 0x2a1a30 : 0x7a6a58, dark ? 0.9 : 1.35));
     const sun = new THREE.DirectionalLight(dark ? 0xd8c8ff : 0xfff0d8, dark ? 1.0 : 1.8); sun.position.set(W * 0.5 - 4, 14, H + 6); sun.target.position.set(W / 2, 0, H / 2); S.add(sun); S.add(sun.target);
@@ -17420,9 +17434,15 @@ const Room3D = {
       return; }
     if (ch === 'W') { this.box(S, X, Z, 0.9, 0.55, 0.62, wood); this.box(S, X - 0.1, Z, 0.36, 0.28, 0.02, '#fffaf0', 0.62, { line: false }); return; }
     if (ch === 'G') { for (const a of [-0.36, 0.36]) this.box(S, X + a, Z, 0.07, 0.07, 1.3, '#5a3a24', 0, { line: false }); this.box(S, X, Z, 0.9, 0.06, 0.62, '#c49a6a', 0.6); for (let i = 0; i < 4; i++) this.box(S, X - 0.28 + i * 0.19, Z + 0.035, 0.14, 0.01, 0.18, ['#fffaf0', '#fff1a0', '#ffc9d2', '#cfe0ff'][i], 0.78 + (i % 2) * 0.16, { line: false }); return; }
-    if (ch === 'R') { this.box(S, X, y + 1.03, 0.9, 0.06, 1.75, P.trim || '#6a4a30'); this.box(S, X, y + 1.07, 0.76, 0.03, 1.6, '#7a5a3a'); this.box(S, X + 0.28, y + 1.1, 0.06, 0.04, 0.06, '#e8c860', 0.85, { line: false }); this.box(S, X + 0.52, y + 1.08, 0.1, 0.03, 0.14, '#f2f2f2', 1.1); return; }
+    if (ch === 'R') { // 현관문: 뒷벽에 붙인 문틀 + 경첩으로 열리는 문짝 (v311 사용자 '벽에 붙어 있든가 해야지' · '문 열리고 세입자 나오는 거까지')
+      const { THREE } = T3, Z0 = y + 0.005; this.box(S, X - 0.43, Z0 + 0.03, 0.08, 0.06, 1.8, P.trim || '#6a4a30'); this.box(S, X + 0.43, Z0 + 0.03, 0.08, 0.06, 1.8, P.trim || '#6a4a30'); this.box(S, X, Z0 + 0.03, 0.94, 0.06, 0.08, P.trim || '#6a4a30', 1.72);
+      const hole = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.72), new THREE.MeshBasicMaterial({ color: 0x120c08 })); hole.position.set(X, 0.86, Z0 + 0.004); S.add(hole);
+      const dg = new THREE.Group(); dg.position.set(X - 0.39, 0, Z0 + 0.04); S.add(dg); this.doorG = dg; this.doorV = 0; this.doorT = 0;
+      this.box(dg, 0.39, 0, 0.76, 0.05, 1.7, '#7a5a3a'); this.box(dg, 0.39, 0.03, 0.6, 0.02, 0.55, '#86664a', 0.98, { line: false }); this.box(dg, 0.39, 0.03, 0.6, 0.02, 0.55, '#86664a', 0.25, { line: false }); this.box(dg, 0.67, 0.04, 0.06, 0.04, 0.06, '#e8c860', 0.85, { line: false });
+      this.box(S, X + 0.58, Z0 + 0.02, 0.1, 0.03, 0.14, '#f2f2f2', 1.1); return; }
     if (ch === 'U') { if (cs && cs.type === '토지') { this.box(S, X, Z, 0.08, 0.08, 1.2, '#8a6a48'); this.box(S, X + 0.2, Z, 0.42, 0.04, 0.26, '#f2f2f2', 0.9); return; }
-      for (let i = 0; i < 6; i++) this.box(S, X, y + 1 + i * 0.16, 0.9, 0.18, 0.16 * (6 - i), '#9a8a74', 0, { line: true }); return; }
+      for (let i = 0; i < 6; i++) this.box(S, X, y + 0.08 + i * 0.16, 0.9, 0.16, 0.16 * (6 - i), '#9a8a74', 0, { line: true }); /* 뒷벽에서 내려오는 옥상 계단 */
+      for (const a of [-0.48, 0.48]) this.box(S, X + a, y + 0.5, 0.06, 0.98, 1.0, '#7a6a58'); return; }
     if (ch === 'H' && cs && cs.lien) { for (const a of [-0.7, 0.7]) this.box(S, X + a, Z, 0.06, 0.06, 1.5, '#7a6a5a'); const tx = this.cvTex(256, 64, c => { c.fillStyle = '#fffaf0'; c.fillRect(0, 0, 256, 64); c.fillStyle = '#c0302a'; c.font = 'bold 34px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('유치권 행사중', 128, 34); }); tx._own = 1;
       const bm = new T3.THREE.Mesh(new T3.THREE.PlaneGeometry(1.4, 0.36), new T3.THREE.MeshBasicMaterial({ map: tx, side: T3.THREE.DoubleSide })); bm.position.set(X, 1.25, Z); S.add(bm); return; }
     if (ch === 'X' && cs && cs.super) { let n = run(x, y, 'X'), d = 1; while (m[y + d] && m[y + d][x] === 'X') { for (let i = 0; i < n; i++) seen.add((x + i) + ',' + (y + d)); d++; }
@@ -17487,6 +17507,7 @@ const Room3D = {
     for (const f of Net.visible('room')) { const fp = f.p; if (fp.rd) continue; let spr = f.sp; if (fp.pal) { spr = 'f:' + fp.name; Sprites.setPal(spr, Profile.pal(fp.pal)); } this.actor('f:' + fp.name, Sprites.PAL[spr] || Sprites.PAL.player, { x: fp.x, y: fp.y, dir: fp.d || 0, moving: !!fp.m }, t, dt, fp.x * 0.3); }
     rm.npcs.forEach((n, i) => this.actor('n' + i, Sprites.PAL[n.sprite] || Sprites.PAL.clerk, n, t, dt, i * 1.7 + 1));
     rm.guests.forEach((g, i) => { if (!g.gone) this.actor('g' + i, Sprites.PAL[g.sprite] || Sprites.PAL.walker1, g, t, dt, i * 2.3 + 5); });
+    if (this.doorG) { this.doorV += ((this.doorT || 0) - this.doorV) * Math.min(1, dt * 7); this.doorG.rotation.y = -this.doorV * 1.45; }
     this.bankTick(rm, t); this.S.traverse(o => { if (o.userData.spin) o.rotation.y = t * 1.5; if (o.userData.fish) o.position.x = Math.sin(t * 1.3 + o.id) * 0.28; });
     // 카메라: 나를 따라가되 방 밖은 덜 보이게
     const cam = this.cam, vf = cam.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * cam.aspect), wt = Math.max(12, Math.min(17, rm.W + 2)) * Math.max(1, 2.1 / cam.aspect) /* 방 너비가 화면에 다 들어오게 (세로로 긴 화면이면 조금 더 멀리) */, dist = (wt / 2) / Math.tan(hf / 2);
@@ -17541,6 +17562,8 @@ const Room3D = {
   // 게임 좌표(픽셀) + 높이(칸) → 화면 CSS 픽셀
   proj(x, y, h = 0) { const v = this.v3 || (this.v3 = new T3.THREE.Vector3()); v.set(x / TILE, h, y / TILE).project(this.cc || this.cam); return { x: (v.x + 1) / 2 * VW, y: (1 - v.y) / 2 * VH }; },
   // 2D 그림을 3D 자리에 맞춰 그리게: 게임 좌표 (x, y)가 3D의 (x, y, 높이 h) 위로 가고, 크기는 그 자리의 확대 비율. off = 2D 그림에서 그 높이까지 (픽셀)
+  // 이름표·칭호·말풍선을 붙일 머리 높이 (v311 사용자 '경매왕 호칭 조금만 더 위로 하자 얼굴 가린다': 새 사람 모델은 키 HERO_H, 바깥은 1.18배)
+  headH() { return typeof Hero3D !== 'undefined' && Hero3D.ready() ? HERO_H * (this.zNow ? 1.18 : 1) + 0.06 : 1.32; },
   anchor(c, x, y, h = 0, off = 0, cap = true) { const a = this.proj(x, y, h), b = this.proj(x + TILE, y, h), k0 = Math.hypot(b.x - a.x, b.y - a.y) / TILE, k = cap && h > 0 ? Math.min(k0, Cam.zoom * 1.1) : k0, S = DPR * k; /* 이름표·말풍선은 2D 때 크기 이상으로 커지지 않게 */
     c.setTransform(S, 0, 0, S, DPR * a.x - x * S, DPR * (a.y + off * k) - y * S); return k; }, // v304: off는 세로만 (예전엔 가로로도 밀려 이름표·이펙트가 오른쪽으로 비켜 있었다)
 };
@@ -17635,7 +17658,7 @@ Object.assign(Room3D, {
   zHook() { if (this.zhooked) return; this.zhooked = 1; const R = this, dw0 = drawWalker, dc0 = drawCarSprite;
     drawWalker = function (c, w, t, opts) { if (!R.zq || c !== ctx) return dw0(c, w, t, opts);
       const now = performance.now(); R.zq.w.push({ sprite: w.sprite, x: w.x, y: w.y, dir: w.dir | 0, moving: !!w.moving, sit: w.sit, run: w.run, punchT: w.punchT, hurt: w.stun > 0, low: (w.bowT && now < w.bowT) || (w.kneelT && now < w.kneelT) });
-      R.anchor(c, w.x, w.y, 1.32, 15); // 다음 이름표·말풍선은 이 사람 머리 기준
+      R.anchor(c, w.x, w.y, R.headH(), 15); // 다음 이름표·말풍선은 이 사람 머리 기준
       if (w.vip) { c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 22); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 22); c.restore(); }
       if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w); c.restore(); } };
     drawCarSprite = function (c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
@@ -17908,6 +17931,12 @@ const Snap3D = {
       (box, cam) => { const h = this.headAt || new T3.THREE.Vector3(0, box.max.y - 0.12, 0), top = Math.max(box.max.y, h.y + 0.14), span = Math.max(0.5, (top - h.y) + 0.36), c = new T3.THREE.Vector3(h.x, top - span / 2 + 0.02, h.z), d = span / 2 / Math.tan(cam.fov * Math.PI / 360) * 1.08;
         cam.position.set(c.x, c.y + d * 0.12, c.z + d); cam.lookAt(c); });
     if (!img) return false; px.save(); px.setTransform(1, 0, 0, 1, 0, 0); px.imageSmoothingEnabled = true; px.imageSmoothingQuality = 'high'; px.clearRect(0, 0, cv.width, cv.height); px.drawImage(img, 0, 0, cv.width, cv.height); px.restore(); cv.style.imageRendering = 'auto'; return true;
+  },
+  // 설정 '내 캐릭터 꾸미기' 전신 (v311). 그렸으면 true
+  body(cv) {
+    if (!this.ok()) { this.warm(() => Profile.redraw && Profile.redraw()); return false; }
+    const P = Profile.pal(Profile.get()), W = cv.width, H = cv.height, img = this.shot('body:' + Hero3D.key(P) + ':' + W + 'x' + H, W, H, g => this.person(g, P, 0.45), (b, c) => this.fit(b, c, 0.14, 1.04));
+    if (!img) return false; const x = cv.getContext('2d'); x.clearRect(0, 0, W, H); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); cv.style.imageRendering = 'auto'; return true;
   },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {
@@ -21557,8 +21586,9 @@ const Instance = {
   // 내 캐릭터 꾸미기: 제목 화면과 메뉴 양쪽에 같은 편집기
   const drawProfile = () => document.querySelectorAll('.profileBox').forEach(box => {
     const p = Profile.get();
-    box.innerHTML = `<canvas width="32" height="32"></canvas><div>${Object.keys(PROFILE_SWATCHES).map(k => `<div class="prow"><span>${PROFILE_LABEL[k]}</span>${PROFILE_SWATCHES[k].map(c => `<button class="sw${(p[k] || Sprites.PLAYER_DEFAULT[k]) === c ? ' sel' : ''}" data-k="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div>`).join('')}${p.outfit && SHOP_BY_ID[p.outfit] ? `<div class="prow"><span>입은 옷</span><small>${esc(SHOP_BY_ID[p.outfit].name)}</small><button class="btn" data-off="outfit">벗기</button></div>` : ''}${p.car && SHOP_BY_ID[p.car] ? `<div class="prow"><span>내 차</span><small>${esc(SHOP_BY_ID[p.car].name)}</small><button class="btn" data-off="car">기본 차로</button></div>` : ''}<button class="btn" data-reset="1">기본 모습으로</button></div>`;
-    const cv = box.querySelector('canvas'); const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = false; cx.drawImage(Sprites.portrait('player'), 0, 0);
+    box.innerHTML = `<canvas width="192" height="256"></canvas><div>${Object.keys(PROFILE_SWATCHES).map(k => `<div class="prow"><span>${PROFILE_LABEL[k]}</span>${PROFILE_SWATCHES[k].map(c => `<button class="sw${(p[k] || Sprites.PLAYER_DEFAULT[k]) === c ? ' sel' : ''}" data-k="${k}" data-c="${c}" style="background:${c}" title="${c}"></button>`).join('')}</div>`).join('')}${p.outfit && SHOP_BY_ID[p.outfit] ? `<div class="prow"><span>입은 옷</span><small>${esc(SHOP_BY_ID[p.outfit].name)}</small><button class="btn" data-off="outfit">벗기</button></div>` : ''}${p.car && SHOP_BY_ID[p.car] ? `<div class="prow"><span>내 차</span><small>${esc(SHOP_BY_ID[p.car].name)}</small><button class="btn" data-off="car">기본 차로</button></div>` : ''}<button class="btn" data-reset="1">기본 모습으로</button></div>`;
+    const cv = box.querySelector('canvas'); const cx = cv.getContext('2d'); /* v311 사용자 '이것도 바꿔야 할 거 같은데': 3D 모델 전신 사진, 안 되면 예전 도트 얼굴 */
+    if (!(typeof Snap3D !== 'undefined' && Snap3D.body(cv))) { cv.width = cv.height = 32; cv.style.imageRendering = ''; cx.imageSmoothingEnabled = false; cx.drawImage(Sprites.portrait('player'), 0, 0); }
   });
   document.addEventListener('click', e => { const b = e.target.closest('.profileBox button'); if (!b) return; if (b.dataset.reset) Profile.reset(); else if (b.dataset.off) Profile.set(b.dataset.off, null); else Profile.set(b.dataset.k, b.dataset.c); Sound.play('tick'); drawProfile(); });
   { const pad = '.fgPad, .tetPad, .pbDirs, .pbBtns', typing = t => t && t.closest && t.closest('input, textarea, [contenteditable]'); /* v260: 게임 버튼을 꾹 눌러도 글자 선택·복사 메뉴가 안 뜨게 (iOS는 pointerdown만 막아서는 안 된다) */

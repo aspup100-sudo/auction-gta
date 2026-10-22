@@ -1602,7 +1602,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v341</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v342</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -6543,7 +6543,7 @@ const Net = {
   petLabel(c, name, x, y) { c.save(); c.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(name).width + 4; c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(x - w / 2, y - 5, w, 6.5); c.fillStyle = '#ffe9a0'; c.fillText(name, x, y); c.restore(); },
   label(c, name, x, y) { c.fillStyle = 'rgba(0,0,0,.6)'; c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; const w = c.measureText(name).width + 6; c.fillRect(x - w / 2, y - 7, w, 9); c.fillStyle = '#ffd84a'; c.fillText(name, x, y); },
   bubble(c, text, x, y) { // v334 큰 글씨로 그려서 줄이기 (아이폰에서 안 뭉개지게) · v338 사용자 '말풍선 어색한데 이질감들어': 띄어쓰기에서만 줄 바꾸고 줄 길이를 고르게, 굵은 검은 테두리 대신 흰 풍선 + 은은한 그림자
-    const Q = 4; c.save(); c.translate(x, y); c.scale(1 / Q, 1 / Q); c.font = `${7.5 * Q}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    const Q = 4, SM = document.body.classList.contains('touchOn') ? 0.8 : 1; c.save(); c.translate(x, y); c.scale(SM / Q, SM / Q); // v342 폰에선 80% (사용자 '폰에서는 말풍선 조금 작게') c.font = `${7.5 * Q}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
     const W = t => c.measureText(t).width, wrap = mw => { const out = []; let cur = ''; for (const wd of String(text).split(/\s+/).filter(Boolean)) { const nx = cur ? cur + ' ' + wd : wd; if (W(nx) <= mw) { cur = nx; continue; } if (cur) out.push(cur); cur = ''; for (const ch of wd) { if (W(cur + ch) > mw && cur) { out.push(cur); cur = ch; } else cur += ch; } } if (cur) out.push(cur); return out; };
     let lines = wrap(88 * Q); if (lines.length > 1) { let lo = 30 * Q, hi = 88 * Q; for (let k = 0; k < 8; k++) { const m = (lo + hi) / 2; if (wrap(m).length <= lines.length) hi = m; else lo = m; } lines = wrap(hi); } // 마지막 줄만 짧게 남지 않게 폭을 줄여 본다
     const LH = 10 * Q, w = Math.max(...lines.map(W)) + 13 * Q, h = lines.length * LH + 7 * Q, X = -w / 2, Y = -h - 3 * Q, r = Math.min(6 * Q, h / 2);
@@ -11803,46 +11803,16 @@ const AuctionRec = {
   add(profit) { if (!(profit > 0)) return; const r = this.get(); r.wins++; r.profit = (r.profit || 0) + profit; Store.set('auctionRec', r); },
 };
 const SHOP_ITEMS = {
-  clothes: [ // 꾸미기(무료 색)와 달리 투톤·넥타이가 붙는다
+  clothes: [ // v342 사용자 '지금 고증된 옷 말고 다른 옷은 다 빼자': 진짜 옷감 모델(v341 MakeHuman 셔츠·바지 / 정장 · 여자는 투피스)로 제대로 보이는 옷만. 이름도 보이는 그대로
     { id: 'c_white', name: '하얀 셔츠', price: 300e4, pal: { shirt: '#f4f4f4', shirt2: '#cfd4dc', pants: '#2b3a6e' } },
-    { id: 'c_hoodie', name: '파란 후드', price: 350e4, pal: { shirt: '#3b7dd8', shirt2: '#2a5aa0', pants: '#8a8a95' } },
-    { id: 'c_track', name: '빨간 트레이닝복', price: 400e4, pal: { shirt: '#d8323a', shirt2: '#f6f6f6', pants: '#d8323a' } },
-    { id: 'c_jumper', name: '초록 점퍼', price: 600e4, pal: { shirt: '#2f7d4f', shirt2: '#f0e4a0', pants: '#3a3a46' } },
+    { id: 'c_hoodie', name: '파란 셔츠', price: 350e4, pal: { shirt: '#3b7dd8', shirt2: '#2a5aa0', pants: '#8a8a95' } },
+    { id: 'c_track', name: '빨간 셔츠 세트', price: 400e4, pal: { shirt: '#d8323a', shirt2: '#f6f6f6', pants: '#d8323a' } },
+    { id: 'c_jumper', name: '초록 셔츠', price: 600e4, pal: { shirt: '#2f7d4f', shirt2: '#f0e4a0', pants: '#3a3a46' } },
     { id: 'c_army', name: '군복', new: '2026-10-16', price: 800e4, pal: { shirt: '#5b6b3a', shirt2: '#48552e', pants: '#56653a', camo: true } }, // 얼룩무늬 + 철모 (사용자 2026-10-16)
-    { id: 'c_suit', name: '검정 정장', price: 1200e4, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', tie: '#9b1f2a' } },
-    { id: 'c_navy', name: '남색 정장', price: 1500e4, pal: { shirt: '#1d2a4a', shirt2: '#152040', pants: '#1d2a4a', tie: '#2f8bd8' } },
-    { id: 'c_pink', name: '분홍 코트', price: 2000e4, pal: { shirt: '#e26a9a', shirt2: '#b84a78', pants: '#f1f1f1' } },
-    { id: 'c_purple', name: '보라 재킷', price: 2500e4, pal: { shirt: '#6a3fb5', shirt2: '#d9a441', pants: '#15151c' } },
-    { id: 'c_gold', name: '금빛 재킷', price: 5000e4, pal: { shirt: '#e0b43a', shirt2: '#fff0a0', pants: '#15151c', tie: '#15151c' } },
-    { id: 'c_vip', name: 'VIP 블랙', price: 1e8, pal: { shirt: '#15151c', shirt2: '#c9a24a', pants: '#15151c', tie: '#c9a24a' } },
-    { id: 'c_tux', name: '턱시도', price: 1e8, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', tux: true } },
-    { id: 'c_wedding', name: '웨딩드레스', price: 1.5e8, pal: { shirt: '#fbfbfb', shirt2: '#e8e8f0', pants: '#fbfbfb', dress: '#ffffff', veil: true } },
-    // 할로윈 옷 (사용자 2026-10-17 '숍에 옷 할로윈 옷 넣자')
-    { id: 'c_ghost', name: '유령 이불 (할로윈)', new: '2026-10-17', nb: 187, price: 800e4, pal: { shirt: '#f6f6fa', shirt2: '#f6f6fa', pants: '#f6f6fa', ghost: true } },
-    { id: 'c_skel', name: '해골 옷 (할로윈)', new: '2026-10-17', nb: 187, price: 1000e4, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', bones: true } },
-    { id: 'c_pumpkin', name: '호박 옷 (할로윈)', new: '2026-10-17', nb: 187, price: 1200e4, pal: { shirt: '#f08a20', shirt2: '#c8601a', pants: '#2a2a1a', tie: '#4a8a30' } },
-    { id: 'c_witch', name: '마녀 옷 (할로윈)', new: '2026-10-17', nb: 187, price: 1500e4, pal: { shirt: '#4a2a6a', shirt2: '#ff8a20', pants: '#2a1a3a', dress: '#4a2a6a' } },
-    { id: 'c_vamp', name: '드라큘라 망토 (할로윈)', new: '2026-10-17', nb: 187, price: 2000e4, pal: { shirt: '#f4f4f4', shirt2: '#15151c', pants: '#15151c', tie: '#b01a2a', cape: '#b01a2a' } },
-    // v233 (사용자 2026-10-18 '로봇 스킨, 해변옷, 한복, 미라, 우주복, 우주복 머리, 선장 구미호, 슈렉, 라푼젤'). 이름은 패러디만
-    { id: 'c_beach', name: '해변옷 (하와이안 셔츠·선글라스)', new: '2026-10-18', nb: 233, price: 500e4, pal: { shirt: '#ff7a3a', shirt2: '#ff9a5a', pants: '#3ab0e0', beach: true } },
-    { id: 'c_hanbok', name: '한복', new: '2026-10-18', nb: 233, price: 2000e4, pal: { shirt: '#fff0b0', shirt2: '#3a8ad8', pants: '#e84a6a', tie: '#d0303a', dress: '#e84a6a' } },
-    { id: 'c_mummy', name: '미라 붕대', new: '2026-10-18', nb: 233, price: 1500e4, pal: { shirt: '#e6dcc4', shirt2: '#d4c8aa', pants: '#e6dcc4', skin: '#e6dcc4', hairC: '#e6dcc4', mummy: true } },
-    { id: 'c_captain', name: '선장 옷', new: '2026-10-18', nb: 233, price: 2500e4, pal: { shirt: '#1d2a4a', shirt2: '#e0b43a', pants: '#f4f4f4', captain: true } },
-    { id: 'c_robot', name: '로봇 옷', new: '2026-10-18', nb: 233, price: 3000e4, pal: { shirt: '#aeb8c6', shirt2: '#8a94a4', pants: '#8a94a4', skin: '#aeb8c6', hairC: '#7a8494', robot: true } },
-    { id: 'c_ogre', name: '초록 괴물 슈랙', new: '2026-10-18', nb: 233, price: 3000e4, pal: { shirt: '#e8dcb8', shirt2: '#6a4a2a', pants: '#6a4a2a', skin: '#8ab83a', hairC: '#7aa830', ogre: true } },
-    { id: 'c_gumiho', name: '구미호 (꼬리 아홉)', new: '2026-10-18', nb: 233, price: 4000e4, pal: { shirt: '#f6f2ea', shirt2: '#d83a3a', pants: '#f6f2ea', dress: '#f6f2ea', hairC: '#1a1418', fox: true } },
-    { id: 'c_rapunzel', name: '라푼젤 드레스 (긴 머리)', new: '2026-10-18', nb: 233, price: 4000e4, pal: { shirt: '#9a6ad8', shirt2: '#e8c8f0', pants: '#9a6ad8', dress: '#9a6ad8', hairC: '#f2d060', rapunzel: true } },
-    { id: 'c_space', name: '우주복', new: '2026-10-18', nb: 233, price: 5000e4, pal: { shirt: '#f2f4f8', shirt2: '#d0d4dc', pants: '#f2f4f8', space: true } },
-    // v319 사용자 '옷들안에서도 장르 들어가서 고를수있게 하자': 판타지 (평민·레인저 = Quaternius 판타지 옷 모델, hero3d.js fantOn) · SF
-    { id: 'c_peasant', name: '마을 평민 옷', new: '2026-10-22', nb: 319, price: 1500e4, pal: { shirt: '#d8ccb0', shirt2: '#6a4a2a', pants: '#4a3626', shoe: '#3a2a1e', fant: 'peasant' } },
-    { id: 'c_peasant2', name: '마을 평민 옷 (갈색)', new: '2026-10-22', nb: 319, price: 1500e4, pal: { shirt: '#7a6a4a', shirt2: '#4a3a26', pants: '#3a2e22', shoe: '#2a2018', fant: 'peasant', fantV: 1 } },
-    { id: 'c_ranger', name: '숲의 레인저', new: '2026-10-22', nb: 319, price: 4000e4, pal: { shirt: '#3a8a3a', shirt2: '#1e4a22', pants: '#1e3a1e', shoe: '#3a2a1e', fant: 'ranger' } },
-    { id: 'c_ranger2', name: '사막 레인저', new: '2026-10-22', nb: 319, price: 4000e4, pal: { shirt: '#8a5a32', shirt2: '#5a3a22', pants: '#5a3a22', shoe: '#3a2a1e', fant: 'ranger', fantV: 1 } },
-    { id: 'c_knight', name: '기사 갑옷', new: '2026-10-22', nb: 319, price: 6000e4, pal: { shirt: '#b8c0cc', shirt2: '#8a94a4', pants: '#9aa2ae', shoe: '#5a6070', cape: '#b02a2a', sfx: 'knight' } },
-    { id: 'c_wizard', name: '마법사 로브', new: '2026-10-22', nb: 319, price: 5000e4, pal: { shirt: '#3a2a7a', shirt2: '#e8c040', pants: '#2a1e5a', sfx: 'wizard' } },
-    { id: 'c_cyber', name: '사이버 슈트', new: '2026-10-22', nb: 319, price: 5000e4, pal: { shirt: '#1a1e2a', shirt2: '#2a3040', pants: '#151820', shoe: '#101218', sfx: 'cyber' } },
-    { id: 'c_mecha', name: '메카 아머', new: '2026-10-22', nb: 319, price: 8000e4, pal: { shirt: '#d8dce4', shirt2: '#e8502a', pants: '#5a6070', shoe: '#3a3e48', sfx: 'mecha' } },
-    { id: 'c_pilot', name: '우주선 조종사', new: '2026-10-22', nb: 319, price: 3500e4, pal: { shirt: '#e8782a', shirt2: '#2a2e38', pants: '#e8782a', shoe: '#2a2e38', sfx: 'pilot' } },
+    { id: 'c_suit', name: '검정 정장', price: 1200e4, pal: { shirt: '#15151c', shirt2: '#15151c', pants: '#15151c', tux: true } }, // 진짜 정장 모델 (넥타이는 모델에 있음)
+    { id: 'c_pink', name: '분홍 셔츠', price: 2000e4, pal: { shirt: '#e26a9a', shirt2: '#b84a78', pants: '#f1f1f1' } },
+    { id: 'c_purple', name: '보라 셔츠', price: 2500e4, pal: { shirt: '#6a3fb5', shirt2: '#d9a441', pants: '#15151c' } },
+    { id: 'c_gold', name: '금빛 셔츠', price: 5000e4, pal: { shirt: '#e0b43a', shirt2: '#fff0a0', pants: '#15151c' } },
   ],
   hat: [ // 모자·머리 (사용자 2026-10-17 '왕관, 밀짚모자, 생일축하 꼬깔, 삐에로 분장 얼굴, 할로윈 모자, 호박머리, 해골 머리, 좀비 머리, 프랑켄슈타인'). 그림은 sprites.js wearables
     { id: 'h_straw', name: '밀짚모자', new: '2026-10-17', nb: 187, price: 300e4, hat: 'straw' },
@@ -12055,7 +12025,8 @@ const GENRE = { c_witch: 'hal', c_vamp: 'hal', c_ghost: 'hal', c_skel: 'hal', c_
   h_witch: 'hal', h_clown: 'hal', h_pumpkin: 'hal', h_skull: 'hal', h_zombie: 'hal', h_frank: 'hal', h_crown: 'fan', h_helm: 'fan', h_wizard: 'fan', h_space: 'sf', h_visor: 'sf' };
 function genreOf(it) { return it.genre || GENRE[it.id] || 'mod'; }
 function rideGroup(it) { return it.ride ? RIDE_GROUP[it.ride] || 'fun' : 'car'; }
-const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it);
+const OUT_GONE = { c_tux: 'c_suit', c_navy: 'c_suit', c_vip: 'c_suit' }; // v342 뺀 정장류는 검정 정장으로 (산 사람 몫 지킴)
+const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it); for (const k in OUT_GONE) SHOP_BY_ID[k] = SHOP_BY_ID[OUT_GONE[k]]; // 친구가 아직 예전 정장을 입고 있어도 정장으로
 const Shop = {
   open_: false, tab: 'clothes',
   // 새로 들어온 물건: 열흘 동안 NEW 딱지 (사용자 2026-10-16)
@@ -12069,7 +12040,7 @@ const Shop = {
   newsText(N) { if (N.length <= 3) return N.map(it => it.name).join(', ');
     const ids = new Set(N.map(it => it.id)), G = []; for (const k in SHOP_ITEMS) { const L = SHOP_ITEMS[k].filter(it => ids.has(it.id)); if (!L.length) continue; const lab = { clothes: L.every(it => it.name.includes('할로윈')) ? '할로윈 옷' : '옷', hat: '모자', petdeco: '펫 꾸미기', pet: '펫', car: '탈것', fx: '이펙트', home: '가구' }[k] || k; G.push(`${lab} ${L.length}${k === 'clothes' ? '벌' : k === 'pet' ? '마리' : '개'}`); }
     return G.join(', '); },
-  owned() { const w = Store.get('wardrobe', null); return (w && w.owned) || []; },
+  owned() { const w = Store.get('wardrobe', null); if (!this.mig && w && w.owned) { this.mig = 1; const o = [...new Set(w.owned.map(x => OUT_GONE[x] || x))]; if (o.join() !== w.owned.join()) Store.set('wardrobe', Object.assign({}, w, { owned: o })); return o; } return (w && w.owned) || []; }, // v342 뺀 정장류 → 검정 정장
   /* 번 돈으로만 사기 + 되팔기 (사용자 2026-10-16 '펫 사고 막 사면 경매할 자금이 없어지지 않나' → '되팔기도 가능하고 번 돈으로만 사기')
    * 쓸 수 있는 돈 = 지금 현금 − 시작 자금(State.capital). 경매 밑천은 상점에서 못 쓴다.
    * 되팔기: 산 값의 FEEL.shopResell(절반). 산 곳(혼자 하기 / 채널 N)에서만 되판다 (채널끼리 돈 옮기기 막기). */
@@ -12113,7 +12084,7 @@ const Shop = {
   },
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
   render() {
-    const p = Profile.get(); const gt = ['clothes', 'hat', 'home'].includes(this.tab), sub = this.tab === 'car' ? this.rsub || 'all' : gt ? (this.gsub || {})[this.tab] || 'all' : 'all', list = SHOP_ITEMS[this.tab].filter(it => (!it.giftOnly || this.has(it.id)) && (sub === 'all' || (gt ? genreOf(it) === sub : rideGroup(it) === sub))); const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
+    const p = Profile.get(); const gt = ['clothes', 'hat', 'home'].includes(this.tab), gens = GENRE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS[this.tab].some(it => genreOf(it) === g)), sub = this.tab === 'car' ? this.rsub || 'all' : gt && gens.some(([g]) => g === (this.gsub || {})[this.tab]) ? this.gsub[this.tab] : 'all', /* v342 옷이 '현대' 하나만 남으면 장르 줄은 숨김 */ list = SHOP_ITEMS[this.tab].filter(it => (!it.giftOnly || this.has(it.id)) && (sub === 'all' || (gt ? genreOf(it) === sub : rideGroup(it) === sub))); const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
     const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : isH ? p.hat : isD ? null : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
     const nt = k => SHOP_ITEMS[k].some(it => this.isNew(it)) ? '<i class="shNew">NEW</i>' : '';
     const sp = this.spendable(), rec = AuctionRec.wins(), nextNeed = list.map(it => this.need(it)).filter(n => n > rec).sort((a, b) => a - b)[0];
@@ -12126,7 +12097,7 @@ const Shop = {
       return `<div class="shItem${on ? ' on' : own ? ' own' : lock ? ' lock' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isHm ? HomeDeco.onWord(it) : isC ? '입는 중' : isH ? '쓰는 중' : isD ? '달고 있어요' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? (isP ? (home ? '집에 있어요' : '가게에 맡겨 둠') : '보유') : fmtWon(it.price)}</span>${btn}${sellBtn}</div>`;
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">번 돈 <b>${fmtWon(sp)}</b> ${typeof Live !== 'undefined' && Live.on ? earnNote() : ` <small>(밑천 ${fmtWon(State.capital || 0)}은 못 써요)</small>`} · 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
-      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">차·탈것${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">펫 꾸미기${nt('petdeco')}</button><button class="btn${isHm ? ' sel' : ''}" data-tab="home">가구${nt('home')}</button></div>${this.tab === 'car' ? `<div class="shTabs shSub">${RIDE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS.car.some(it => rideGroup(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-rsub="${g}">${n}${SHOP_ITEMS.car.some(it => (g === 'all' || rideGroup(it) === g) && this.isNew(it)) && g !== 'all' ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}${gt ? `<div class="shTabs shSub">${GENRE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS[this.tab].some(it => genreOf(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-gsub="${g}">${n}${g !== 'all' && SHOP_ITEMS[this.tab].some(it => genreOf(it) === g && this.isNew(it)) ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}
+      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">차·탈것${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">펫 꾸미기${nt('petdeco')}</button><button class="btn${isHm ? ' sel' : ''}" data-tab="home">가구${nt('home')}</button></div>${this.tab === 'car' ? `<div class="shTabs shSub">${RIDE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS.car.some(it => rideGroup(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-rsub="${g}">${n}${SHOP_ITEMS.car.some(it => (g === 'all' || rideGroup(it) === g) && this.isNew(it)) && g !== 'all' ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}${gt && gens.length > 2 ? `<div class="shTabs shSub">${gens.map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-gsub="${g}">${n}${g !== 'all' && SHOP_ITEMS[this.tab].some(it => genreOf(it) === g && this.isNew(it)) ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}
       ${isD ? `<div class="shNote" style="margin:0 0 6px;text-align:center">${p.pet ? `데리고 다니는 ${esc((SHOP_ITEMS.pet.find(x => x.pet === PetDeco.target()) || {}).name || '펫')}에게 달아요 · 옷장에서 바꿀 수 있어요` : '펫을 데리고 다녀야 달 수 있어요'}</div>` : isH || isC ? '<div class="shNote" style="margin:0 0 6px;text-align:center">산 옷·모자는 화면의 옷장에서 언제든 갈아입어요</div>' : ''}
       ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}${isHm ? '<div class="shNote" style="margin:0 0 6px;text-align:center">TV·소파·침대·식탁·러그·집 톤은 사면 바로 우리 집에 들어가요 · 화분·거울 같은 소품은 집 월패드 → 집 꾸미기에서 놓아요</div>' : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">그림을 누르면 움직이는 미리보기를 볼 수 있어요. ${isHm ? '가구는 산 내 집과 낙찰받아 사는 우리 집에 쓰여요. 친구가 놀러 오면 꾸민 그대로 보여요. 산 가구는 이 기기에서 계속 가져요.' : isF ? '이펙트는 걸어 다닐 때 내 몸 주변에 보이고, 친구 화면에도 보여요. 산 이펙트는 이 기기에서 계속 가져요.' : isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' + (home ? '' : ' 아직 내 집이 없으면 안 데리고 다니는 펫은 편집숍이 맡아 줘요. 공인중개사에서 집을 사면 집에 둘 수 있어요.') : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>

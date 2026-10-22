@@ -1602,7 +1602,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v338</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v339</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -18516,7 +18516,7 @@ const Bld3D = {
 };
 
 /* ===================== 3D 사람 새 몸 (v308, 사용자 2026-10-22 '젤다 전설 스위치2처럼 캐릭터를 다듬을 수 없어? … 얼굴도 너무 둥근게' + '옷이라든지 그런 거는 우리 정체성 유지해야 해') =====================
- * 몸·머리카락: Quaternius Universal Base Characters (CC0), 동작: Universal Animation Library 1·2 (CC0). 블렌더로 다듬어 3d/heroM.glb · heroF.glb · anim1.glb · anim2.glb.
+ * v339 몸·피부·눈·눈썹·머리카락: MakeHuman (CC0, 아시아 젊은 남녀 모양 + 2k 피부) — assets3d/build_mh.py가 Quaternius 뼈(T자 자세)에 맞춰 굽는다. 그 전 몸: Quaternius Universal Base Characters (CC0), 동작: Universal Animation Library 1·2 (CC0). 블렌더로 다듬어 3d/heroM.glb · heroF.glb · anim1.glb · anim2.glb.
  *   다듬은 것: 머리 1.1배, 팔다리·몸통 가늘게, 근육 선 지우기, 옷 경계를 깔끔한 선으로 자르고 옷 부분은 살짝 부풀림. 정점 색 R = (부위 번호 + 0.5) / 16.
  * 부위 번호: 0 얼굴·목 · 1 손 · 2 몸통 · 3 위팔 · 4 아래팔 · 5 엉덩이·허벅지 · 6 종아리 · 7 신발 · 8 옷깃 · 9 눈썹·머리카락 · 10 눈
  * 색은 우리 팔레트(Profile.pal / Sprites.PAL) 그대로: 셔츠·옷깃·바지·신발·피부·머리색. 모자·넥타이·드레스·망토·꼬리 같은 우리 옷은 뼈에 붙이는 작은 도형으로 만든다.
@@ -18529,7 +18529,7 @@ const Hero3D = {
   load() {
     if (this.st || !window.T3) return; this.st = 1;
     const { GLTFLoader, MeshoptDecoder } = T3; const L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
-    const get = f => new Promise((ok, no) => L.load(Arena3J.url(f + '?v=2'), ok, undefined, no));
+    const get = f => new Promise((ok, no) => L.load(Arena3J.url(f + (/^hero/.test(f) ? '?v=3' : '?v=2')), ok, undefined, no));
     MeshoptDecoder.ready.then(() => Promise.all(['heroM.glb', 'heroF.glb', 'anim1.glb', 'anim2.glb'].map(get))).then(([M, F, A1, A2]) => {
       const ar = {}; A1.scene.traverse(o => { if (o.isBone) ar[o.name] = o; }); // 동작 파일의 원래 뼈 (다리 길이·서 있는 자세)
       const raw = [...A1.animations, ...A2.animations];
@@ -18539,9 +18539,9 @@ const Hero3D = {
   },
   // 몸 하나 준비: 부위별 상자(모자·넥타이 자리), 이 몸에 맞춘 동작 (골반 높이 비율)
   prep(k, g, raw, ar) {
-    const { THREE } = T3, sc = g.scene; sc.updateMatrixWorld(true); let pelvis = null; const box = {}, bb = {}, inv = new THREE.Matrix4().copy(sc.matrixWorld).invert(), v = new THREE.Vector3();
+    const { THREE } = T3, sc = g.scene; sc.updateMatrixWorld(true); let pelvis = null, ref = null; const tex = {}, box = {}, bb = {}, inv = new THREE.Matrix4().copy(sc.matrixWorld).invert(), v = new THREE.Vector3();
     sc.traverse(o => { if (o.isBone) bb[o.name] = o; if (o.isBone && o.name === 'pelvis') pelvis = o; if (!o.isMesh) return; o.geometry._keep = 1;
-      const nm = (o.material && o.material.name || '').replace(/^MI?_/, ''); o.userData.part = nm;
+      const nm = (o.material && o.material.name || '').replace(/^MI?_/, ''); o.userData.part = nm; if (o.material && o.material.map && /^(Super|Hair|Eyebrows)/i.test(nm)) { tex[nm] = o.material.map; o.material.map.anisotropy = 4; if (/^Super/i.test(nm)) ref = o.material.userData.skinRef; } /* v339 실사 몸: 피부·머리카락 텍스처 */
       if (!/^Super/i.test(nm)) return; const P = o.geometry.attributes.position, C = o.geometry.attributes.color, m = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld);
       for (let i = 0; i < P.count; i++) { const r = Math.floor(C.getX(i) * 16); v.fromBufferAttribute(P, i).applyMatrix4(m); const b = box[r] || (box[r] = new THREE.Box3()); b.expandByPoint(v); } });
     // 다리 길이 비율로 골반 높이를 맞춘다 (몸이 동작 마네킹보다 다리가 길다). 서 있는 동작은 무릎을 반쯤 펴서 위에서 봐도 웅크린 것처럼 안 보이게
@@ -18554,7 +18554,7 @@ const Hero3D = {
         if (t.name === 'pelvis.position') { t.values = Float32Array.from(t.values); const rp = ar.pelvis && ar.pelvis.position; for (let i = 0; i < t.values.length; i += 3) for (let j = 0; j < 3; j++) { let v = t.values[i + j]; if (st && rp) v += (rp.getComponent(j) - v) * KS; t.values[i + j] = v * ratio; } } }
       clips[c.name] = c; }
     const top = box[0] ? box[0].max.y : 1.8, s = HERO_H / 1.834; // 같은 비율로 키운다 (여자 몸은 원래 키만큼)
-    return { g, box, clips, s, top };
+    return { g, box, clips, s, top, tex, ref: ref ? new THREE.Color(ref[0], ref[1], ref[2]).convertSRGBToLinear() : null };
   },
   kindOf(P) { return P.longHair || P.perm || P.dress || P.veil || P.rapunzel || P.fox ? 'F' : 'M'; },
   hairOf(P, k) { if (P.ghost || P.robot || P.hat === 'pumpkin' || P.hat === 'skull' || P.hat === 'helm' || P.hat === 'space' && P.space) return null; if (k === 'F') return P.perm ? 'Hair_Buns' : 'Hair_Long'; return P.hardhat || P.hat === 'frank' ? 'Hair_Buzzed' : 'Hair_SimpleParted'; },
@@ -18589,12 +18589,14 @@ const Hero3D = {
     const { THREE } = T3, L = c => new THREE.Color(c).convertSRGBToLinear(), g = src.clone(), C = src.attributes.color, shr = !!(P.fant && this.fst === 2 && /^Super/i.test(part)), Pp = shr ? g.attributes.position : src.attributes.position, Nn = src.attributes.normal, n = C.count, out = new Float32Array(n * 3);
     const skin = P.hat === 'skull' ? '#f2f0e6' : P.skin || '#f1c9a5', sh = P.bones || P.tux ? '#1d1d26' : P.shirt || '#2f4f86', pants = P.bones ? '#1d1d26' : P.pants || '#3a3a46';
     const reg = [skin, P.cape ? '#f0f0f0' : skin, sh, sh, sh, pants, pants, P.shoe || '#26222a', P.shirt2 || sh, P.hair || '#2a1e18'].map(L), tmp = new THREE.Color();
+    const RF = /^Super/i.test(part) && this.B[k] && this.B[k].ref; if (RF) for (const i of [0, 1]) { const c = reg[i]; c.setRGB(c.r / RF.r, c.g / RF.g, c.b / RF.b); } // v339 실사 피부 텍스처 × (고른 피부색 ÷ 텍스처 평균색)
     const hash = (x, y, z) => { const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return s - Math.floor(s); };
     for (let i = 0; i < n; i++) { const r = Math.min(9, Math.floor(C.getX(i) * 16)); tmp.copy(reg[r]); const x = Pp.getX(i), y = Pp.getY(i), z = Pp.getZ(i);
       if (P.camo && r >= 2 && r <= 6) { const q = hash(Math.floor(x * 9), Math.floor(y * 7), Math.floor(z * 9)); if (q < 0.33) tmp.multiplyScalar(0.62); else if (q > 0.72) tmp.lerp(L('#8a7a4a'), 0.45); }
       if (P.beach && r >= 2 && r <= 4) { const q = hash(Math.floor(x * 22), Math.floor(y * 22), Math.floor(z * 22)); if (q > 0.86) tmp.copy(L(['#fff4a0', '#ffffff', '#ff4a8a'][Math.floor(q * 100) % 3])); }
       if (P.mummy && r !== 9 && Math.sin(y * 70 + x * 8) > 0.55) tmp.multiplyScalar(0.8);
       if (P.bones && (r === 3 || r === 4 || r === 5 || r === 6) && Math.abs(x % 0.06) < 0.012) tmp.copy(L('#ecece4'));
+      if (shr && r === 8) tmp.copy(L(skin)); // v339 판타지 옷 위로 보이는 목 = 맨살
       if (shr && r >= 1 && r <= 8) { const d = r === 1 ? 0.012 : r === 8 ? 0.02 : 0.035; Pp.setXYZ(i, x - Nn.getX(i) * d, y - Nn.getY(i) * d, z - Nn.getZ(i) * d); } /* v319 판타지 옷 아래 몸은 안으로 */
       out[i * 3] = tmp.r; out[i * 3 + 1] = tmp.g; out[i * 3 + 2] = tmp.b; }
     if (shr && g.index) { const I = g.index.array, r0 = this.F[k] && this.F[k][P.fant + '_skin'] ? 1 : 2, cov = i => { const r = Math.floor(C.getX(i) * 16); return r >= r0 && r <= 7; }, keep = []; for (let t = 0; t < I.length; t += 3) if (!(cov(I[t]) && cov(I[t + 1]) && cov(I[t + 2]))) keep.push(I[t], I[t + 1], I[t + 2]); g.setIndex(keep); } /* 옷 밑 몸통·팔다리는 아예 빼기 (얼룩처럼 비침) */
@@ -18609,6 +18611,11 @@ const Hero3D = {
     const ol = new THREE.MeshBasicMaterial({ color: 0x2a1e18, side: THREE.BackSide }); if (PBR.done) ol.visible = false; ol.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  transformed += normalize(normal) * 0.011;'); };
     return (this.M = { body, ol, eye: null });
   },
+  // v339 실사 몸 재질: 피부(옷 부위는 텍스처의 흰 곳이라 정점 색 그대로) · 머리카락·눈썹(회색 텍스처 × 머리색, 투명 부분 잘라내기)
+  tm: {},
+  texMat(k, part) { const id = k + part; if (this.tm[id]) return this.tm[id]; const { THREE } = T3, map = this.B[k].tex[part], skin = /^Super/i.test(part);
+    const m = new THREE.MeshToonMaterial(skin ? { vertexColors: true, map, gradientMap: Room3D.grad } : { vertexColors: true, map, gradientMap: Room3D.grad, alphaTest: 0.4, side: THREE.DoubleSide });
+    if ('roughness' in m) m.roughness = skin ? 0.58 : 0.5; return (this.tm[id] = m); },
   /* ---- 사람 하나 ---- */
   make(P) {
     const { THREE, SkeletonUtils } = T3, k = this.kindOf(P), B = this.B[k], hair = this.hairOf(P, k), M = this.mats(), cast = !Room3D.zNow;
@@ -18618,8 +18625,8 @@ const Hero3D = {
       if (/^Hair/.test(part) && part !== hair) { o.visible = false; return; }
       if (P.ghost || hideFace && /^(Eyes|Eyebrows|Hair)/.test(part)) { o.visible = false; return; }
       if (/^Eyes/.test(part)) { if (!M.eye) M.eye = new THREE.MeshToonMaterial({ map: o.material.map, gradientMap: Room3D.grad }); o.material = M.eye; return; }
-      o.geometry = this.paint(k, part, o.geometry, P); o.material = M.body; if (/^Super/i.test(part)) body = o;
-      if (/^(Super|Hair)/.test(part)) { const l = new THREE.SkinnedMesh(o.geometry, M.ol); l.bind(o.skeleton, o.bindMatrix); l.frustumCulled = false; o.parent.add(l); } });
+      o.geometry = this.paint(k, part, o.geometry, P); o.material = B.tex[part] ? this.texMat(k, part) : M.body; if (/^Super/i.test(part)) body = o;
+      if (/^(Super|Hair)/.test(part) && !B.tex[part]) { const l = new THREE.SkinnedMesh(o.geometry, M.ol); l.bind(o.skeleton, o.bindMatrix); l.frustumCulled = false; o.parent.add(l); } });
     model.updateMatrixWorld(true); this.wear(model, bones, B.box, P, k);
     if (P.fant) { this.loadFant(); if (this.fst === 2 && body && this.fantOn(model, bones, P, k, body)) { const hg = new Set(); model.traverse(o => { if (o.isMesh && /^Hair/.test(o.userData.part || '')) hg.add(o.geometry); }); model.traverse(o => { if (o.isMesh && hg.has(o.geometry)) o.visible = false; }); } }
     const sh = new THREE.Mesh(Room3D.shGeo || (Room3D.shGeo = new THREE.CircleGeometry(0.3, 20)), Room3D.shMat || (Room3D.shMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })));
@@ -22814,7 +22821,7 @@ const CREDITS_SF = [["Classic Bicycle | LowPoly | Game ready", "by__Rx", "https:
 Cm.credits = () => { const li = CREDITS_SF.map(([t, a, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a> · ${esc(a)} <small>CC BY 4.0 · 수정함</small></li>`).join('');
   Cm.win(`<div class="rcHead">만든 사람들</div><div class="rcSub">경매 GTA는 아래 분들이 공개한 모델·사진 덕분에 만들 수 있었어요. 고마워요!</div>
   <div class="crBox"><h3>실사 탈것·펫 (Sketchfab)</h3><ul class="crList">${li}</ul>
-  <h3>사람·옷·가구 (CC0)</h3><ul class="crList"><li>Quaternius · Universal Base Characters, Universal Animation Library 1·2, Modular Character Outfits, Fantasy Props, Modular SciFi MegaKit</li></ul>
+  <h3>사람·옷·가구 (CC0)</h3><ul class="crList"><li>MakeHuman · 사람 몸 · 피부 · 눈 · 눈썹 · 머리카락 (makehumancommunity.org)</li><li>Quaternius · 뼈대, Universal Animation Library 1·2, Modular Character Outfits, Fantasy Props, Modular SciFi MegaKit</li></ul>
   <h3>실사 재질·하늘·소품 (CC0)</h3><ul class="crList"><li>Poly Haven · 벽돌·미장·바닥 사진, 하늘(HDRI), 가로등·나무·가구 스캔</li><li>ambientCG · 바닥·벽 재질 사진</li></ul>
   <h3>지도</h3><ul class="crList"><li>© OpenStreetMap contributors</li><li>서울 구 경계 · 통계청 (southkorea-maps)</li></ul></div>
   <div class="pcBtns"><button class="btn" data-x>닫기</button></div>`, true); };

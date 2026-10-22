@@ -485,6 +485,7 @@ details.rSec summary { cursor:pointer; font-weight:700; } .others { padding-left
 .short #closet .rcpt { padding:10px 12px; } .short #clCv { max-height:34vh; width:auto; margin:0 auto; } .short .clRow { margin:5px 0; } .short .clRow > b { flex-basis:72px; font-size:12px; }
 #shop { left:50%; top:50%; transform:translate(-50%, -46%); box-shadow:0 0 0 100vmax rgba(0,0,0,.55); width:min(640px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; z-index:70; } #shop.in { transform:translate(-50%, -50%); } #shop .rcpt { width:100%; } #shop .rcHead small { display:block; font:600 13px var(--ui); color: #c3c9b3; margin-top:2px; }
 .shTabs { display:flex; gap:6px; justify-content:center; margin:8px 0 10px; flex-wrap:wrap; } .shTabs .btn { white-space:nowrap; padding:7px 12px; font-size:14px; } #shop .shRec { white-space:nowrap; font-size:13px; } #shop .shEarn small { font-size:11px; } /* v223 (사용자 '글씨 줄여서 한 줄로'): 탭 이름·번 돈 줄이 두 줄로 꺾이지 않게 */ .shTabs .btn.sel { background:var(--gold); color:#1a1408; } .shTabs.shSub { margin:-4px 0 10px; gap:4px; } .shTabs.shSub .btn { padding:4px 10px; font-size:12.5px; } .short .shTabs.shSub { margin:-2px 0 6px; } .short .shTabs.shSub .btn { padding:3px 8px; font-size:11px; } /* v317 탈것 유형별 작은 탭 */
+#assetBox .abGo { padding:2px 9px; font-size:12px; margin-left:6px; min-height:0; vertical-align:middle; } /* v321 내 집 현황 길 안내 */
 #shBig { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:90; } #shBig.in { display:flex; } #shBig .sbIn { background:#fffdf7; border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; align-items:center; gap:6px; max-width:calc(100% - 24px); } #shBig canvas { width:min(640px, 86vw, calc((100vh - 150px) * 1.538)); aspect-ratio:160 / 104; height:auto; border-radius:8px; } #shBig b { color:#2a2016; font-size:15px; } #shBig small { color:#6a5a3a; font-size:12px; min-height:1em; } .shItem canvas { cursor:pointer; } /* #shop은 .ovl 그대로 fixed (relative면 iPhone에서 body에 잘려 아래가 밀림, 사용자 2026-10-17) */
 #shop .shTag { display:flex; gap:6px; align-items:center; justify-content:center; margin:0 0 8px; font-weight:700; font-size:13px; } #shop .shTag input { width:160px; padding:5px 8px; border: 1px solid #454b33; border-radius:6px; font:14px var(--ui); } .shGrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:8px; } .shItem { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border: 1px solid #454b33; border-radius:8px; background: rgba(255,255,255,.05); text-align:center; position:relative; } .shNew { position:absolute; top:4px; left:4px; background:#e8283a; color:#fff; font:800 10px/1 var(--ui); font-style:normal; padding:3px 5px; border-radius:4px; letter-spacing:.5px; box-shadow:0 1px 2px rgba(0,0,0,.25); z-index:1; } .shTabs .btn { position:relative; } .shTabs .shNew { top:-6px; left:auto; right:-6px; font-size:8px; padding:2px 4px; } .shItem.own { border-color:#8fb58f; } .shItem.on { border-color:var(--gold); background: rgba(255,216,74,.12); } .shItem canvas { width:104px; height:68px; background:#e2d6bb; border-radius:6px; } .shItem b { font-size:12.5px; } .shItem span { font-size:11.5px; color: #c3c9b3; } .shItem .btn { font-size:12px; padding:4px 10px; } .shItem .shSell { font-size:10.5px; padding:2px 8px; background: rgba(255,255,255,.05); color: #c3c9b3; border-color: #454b33; } .shItem .shSell.arm { background:#c0392b; color:#fff; border-color:#a02a1e; } #shop .shEarn { font-size:11.5px; margin-top:2px; } .shNote { font-size:12px; color: #c3c9b3; margin:10px 0 0; } #shop .shRec { text-align:center; font-size:12.5px; color: #e9ecdf; margin:2px 0 6px; } #shop .shRec b { color: #ffc56a; } .shItem.lock canvas { filter:grayscale(.6) brightness(.85); } .shItem.lock .shLockBtn, .shItem.lock .shLockBtn:disabled { font-size:11px; padding:4px 6px; color: #e9ecdf; background: rgba(255,216,74,.12); border-color: #454b33; opacity:1; }
 #shop .shEarn small { font-size:10.5px; color: #c3c9b3; } #shop .shLook { text-align:center; font-size:12px; font-weight:700; color: #ff7a6a; margin:0 0 4px; } /* 위쪽 안내는 한두 줄로 (사용자 2026-10-16 폰에서 물건이 가려짐) */
@@ -1568,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v320</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v321</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -7484,14 +7485,14 @@ const AssetBox = {
     const home = m => { const a = m.asset || {}; const Lo = m.loanState || { bank: 0, savings: 0 }; const loan = Debt.loans(m); const nxt = a.rentOn ? Math.max(0, (a.rentHeld || 0) + L.monthMs() - (a.held || 0)) : 0; const mi = L.monthlyInterest(m);
       const tag = a.rentOn ? '<span class="tag">임대 중</span>' : a.offer ? '<span class="tag">매수 희망</span>' : a.listed ? '<span class="tag gray">매수자 찾는 중</span>' : a.repair === 'doing' ? '<span class="tag gray">수리 중</span>' : '<span class="tag gray">비어 있음</span>';
       return `<div class="ah${a.rentOn ? ' rent' : ''}"><h3>${esc(m.name)} ${tag}</h3><div class="kv2">
-        <span>낙찰가</span><b>${f(m.bid)}</b>
+        ${this.where(m)}<span>낙찰가</span><b>${f(m.bid)}</b>
         ${a.live && !a.rentOn ? '<span>우리 집</span><b class="up">🏠 내가 사는 중 · 팔려면 부동산에 매도</b>' : ''}
         <span>상태</span><b>${a.cond ? L.COND[a.cond].label : '미확인 (현장에 들어가 보세요)'}${a.repair === 'done' ? ' · 수리 끝' : a.repair === 'doing' ? ` · 수리 중 ${L.mmss(Math.max(0, a.repairUntil - L.now()))}` : ''}</b>
         ${a.rentOn ? `<span>월세</span><b class="up">${f(a.rent)} · 다음 입금 ${L.mmss(nxt)}</b><span>받은 월세</span><b>${a.rentMonths || 0}회 · 누적 ${f(a.rentTotal || 0)}</b><span>세입자</span><b>${esc(a.tenant || '세입자')} · ${a.leaveAt !== undefined ? `이사 나감 ${L.mmss(Math.max(0, a.leaveAt - (a.held || 0)))} 뒤` : `계약 남은 ${L.mmss(Math.max(0, (a.leaseEnd || 0) - (a.held || 0)))}${a.renewUsed ? ' · 갱신요구권 씀' : ''}`}</b>` : `<span>임대</span><b>안 놓음 · 부동산(${esc(castName('agent'))})에서 임대·매도</b>`}
         ${a.offer ? `<span>매수 희망</span><b class="up">${f(a.offer.price)} · 부동산으로</b>` : a.listed ? `<span>매도</span><b>매수자 찾는 중 ${L.mmss(Math.max(0, a.listed + L.saleWaitMs(L.caseFor(L.key(m.k, m.n))) - L.now()))}${a.missNo ? ` · 허탕 ${a.missNo}번` : ''}</b>` : ''}
         ${loan ? `<span>대출</span><b class="down">${f(loan)}${Lo.savings ? ` (저축은행 ${f(Lo.savings)} 포함)` : ''}${m.extraLoan ? ` (추가 담보 ${f(m.extraLoan)} 포함)` : ''} · 매달 이자 ${f(mi)}</b><span>낸 이자</span><b>${f(a.intPaid || 0)}${a.rentOn ? ` · 월세 빼면 한 달 ${(a.rent - mi >= 0 ? '+' : '−') + f(Math.abs(a.rent - mi))}` : ''}</b>` : ''}
         <span>보유</span><b>${L.mmss(a.held || 0)} 째 <small>(켜 둔 시간만 · 한 달 = ${FEEL.liveMonthMin}분)</small></b></div></div>`; };
-    const pending = m => `<div class="ah"><h3>${esc(m.name)} <span class="tag red">${m.phase === 'forced' ? '강제집행 중' : m.phase === 'evict' ? '명도 중' : '잔금 전'}</span></h3><div class="kv2"><span>낙찰가</span><b>${f(m.bid)}</b>${m.phase === 'forced' ? `<span>정산까지</span><b>${L.mmss(Math.max(0, m.forcedUntil - L.now()))}</b>` : m.phase === 'evict' ? `<span>할 일</span><b>현장 초인종${m.order ? ' · 인도명령 받음' : ''}</b>` : `<span>잔금</span><b class="down">${f(m.bid - m.deposit)} · 기한 ${L.mmss(L.payLeft(m))}</b><span>할 일</span><b>${L.canPay(m) ? '법원에서 잔금 납부' : '은행에서 대출부터'}</b>`}</div></div>`;
+    const pending = m => `<div class="ah"><h3>${esc(m.name)} <span class="tag red">${m.phase === 'forced' ? '강제집행 중' : m.phase === 'evict' ? '명도 중' : '잔금 전'}</span></h3><div class="kv2">${this.where(m)}<span>낙찰가</span><b>${f(m.bid)}</b>${m.phase === 'forced' ? `<span>정산까지</span><b>${L.mmss(Math.max(0, m.forcedUntil - L.now()))}</b>` : m.phase === 'evict' ? `<span>할 일</span><b>현장 초인종${m.order ? ' · 인도명령 받음' : ''}</b>` : `<span>잔금</span><b class="down">${f(m.bid - m.deposit)} · 기한 ${L.mmss(L.payLeft(m))}</b><span>할 일</span><b>${L.canPay(m) ? '법원에서 잔금 납부' : '은행에서 대출부터'}</b>`}</div></div>`;
     const total = L.rentLog.reduce((s, r) => s + Math.max(0, r.amt), 0), intTot = L.rentLog.reduce((s, r) => s + Math.max(0, -r.amt), 0);
     const bids = Object.keys(L.mine).filter(k => !L.mine[k].opened && !L.mine[k].done).map(k => { const m = L.mine[k], c = L.caseFor(k); return `<span class="chip">${esc(m.name.split(' ').slice(0, 2).join(' '))} · ${f(m.bid)} · 개찰 ${L.mmss(L.left(c))}</span>`; });
     const res = L.results.slice(0, 5).map(r => `<div><span>${esc(r.name)}</span><b class="${r.won || r.forfeit ? (r.profit > 0 ? 'up' : r.profit < 0 ? 'down' : '') : 'dim'}">${r.won ? '낙찰 ' + fp(r.profit) : r.forfeit ? '보증금 몰수 ' + fp(r.profit) : '패찰'}</b></div>`);
@@ -7517,7 +7518,11 @@ const AssetBox = {
       <div class="pcBtns"><button class="btn" id="abClose">닫기</button></div></div>`;
     this.bind();
   },
-  bind() { for (const id of ['abClose', 'abX']) { const b = $(id); if (b) b.onclick = () => this.close(); } },
+  // v321 사용자 '이거 무슨구인지 나타내자 가고싶은데 못가': 집마다 구 이름 + 길 안내 (지도 목적지로)
+  where(m) { let c = null; try { c = Live.caseFor(Live.key(m.k, m.n)); } catch (e) {} if (!c || !DISTRICT[c.gu]) return ''; const here = Game.zone && [Game.zone.gu, ...(Game.zone.spec.guAlso || [])].includes(c.gu);
+    return `<span>위치</span><b>${esc(DISTRICT[c.gu].name)}${here ? ' · 지금 이 구' : ''} <button class="btn sm abGo" data-go="${esc(Live.key(m.k, m.n))}">길 안내</button></b>`; },
+  bind() { for (const id of ['abClose', 'abX']) { const b = $(id); if (b) b.onclick = () => this.close(); }
+    for (const b of $('assetBox').querySelectorAll('[data-go]')) b.onclick = () => { const c = Live.caseFor(b.dataset.go); if (!c) return; this.close(); setNavDest({ gu: c.gu, place: 'case:' + c.id, label: `${c.name} (${DISTRICT[c.gu].name})` }); }; },
 };
 /* ---- 자본 순위 창: 미니 순위판(#rankBox)을 누르면 순위만 (사용자 2026-10-14) ---- */
 const RankWin = {
@@ -8687,9 +8692,10 @@ function drawGuideArrow(c, t) {
   c.fillStyle = '#ffd84a'; c.strokeStyle = '#3a2a00'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(12, 0); c.lineTo(-7, -11); c.lineTo(-3, 0); c.lineTo(-7, 11); c.closePath(); c.fill(); c.stroke();
   c.restore();
   const m = Math.round(d / TILE * 4), label = `${(name || '').split(' · ')[0].slice(0, 10)} ${m >= 1000 ? (m / 1000).toFixed(1) + 'km' : m + 'm'}`;
-  c.save(); c.font = 'bold 5px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; // v291 '화살표 위 글씨도 줄이자' 7→5px
-  const lx = me.x + Math.cos(a) * (R + 18), ly = me.y - 6 + Math.sin(a) * (R + 13), w = c.measureText(label).width + 5;
-  c.fillStyle = 'rgba(20,16,0,.8)'; c.fillRect(Math.round(lx - w / 2), Math.round(ly - 4), Math.round(w), 8); c.fillStyle = '#ffd84a'; c.fillText(label, Math.round(lx), Math.round(ly + 0.5)); c.restore();
+  const fs = Math.max(5, 14 / (Cam.zoom || 2)); /* v321 사용자 '컴퓨터에서는 네비 글씨 너무 작다': 화면에서 14px 안팎이 되게 (폰은 그대로 5) */
+  c.save(); c.font = `bold ${fs}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; // v291 '화살표 위 글씨도 줄이자' 7→5px
+  const lx = me.x + Math.cos(a) * (R + 13 + fs), ly = me.y - 6 + Math.sin(a) * (R + 8 + fs), w = c.measureText(label).width + fs;
+  c.fillStyle = 'rgba(20,16,0,.8)'; c.fillRect(Math.round(lx - w / 2), Math.round(ly - fs * 0.8), Math.round(w), Math.round(fs * 1.6)); c.fillStyle = '#ffd84a'; c.fillText(label, Math.round(lx), Math.round(ly + fs * 0.1)); c.restore();
 }
 // v285 튜토리얼: 차를 타야 할 때 내 차 위에 '여기 타요'
 function drawCarGoal(c, t) {
@@ -17562,7 +17568,7 @@ const Room3D = {
     if (!H || H.pk !== pk) { if (H) this.drop(H); H = hero ? Hero3D.make(P) : this.person(P); H.pk = pk; H.amp = 0; H.ph = 0; H.ang = [-Math.PI / 2, Math.PI, 0, Math.PI / 2][w.dir | 0] || 0; this.S.add(H.root); this.A.set(key, H); }
     H.seen = this.fr; if (H.hero) Hero3D.pose(H, w, t, dt, seed); else this.pose(H, w, t, dt, seed); return H; },
   // 안 보이게 된 것 치우기 (새 몸에 붙인 옷 도형은 사람마다 따로라 같이 버린다)
-  drop(H) { this.S.remove(H.root); if (H.hero) { H.mix.stopAllAction(); H.root.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); } },
+  drop(H) { this.S.remove(H.root); if (H.rp) this.S.remove(H.rp); if (H.hero) { H.mix.stopAllAction(); H.root.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); } },
   /* ---- 매 프레임 ---- */
   draw(rm, t) {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.show(true);
@@ -17744,7 +17750,7 @@ Object.assign(Room3D, {
       if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w, typeof Hero3D !== 'undefined' && Hero3D.ready()); c.restore(); } };
     drawCarSprite = function (c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
       if (R.zq && c === ctx && col && typeof col === 'object' && col.ride && typeof RIDE3 !== 'undefined' && RIDE3[col.ride]) { Ride3D.load(); if (Ride3D.ready()) { const k = col.ride; R.zq.c.push({ x, y, a, ride: k, kind: 'ride:' + k, len: RIDE3[k].L, spd: col.spd || 0 }); /* v317 배·탱크 3D + 탄 사람 */
-        [col.rider, ...(col.pax || [])].filter(Boolean).forEach((p, i) => { const S = Ride3D.seat(k, i, x, y, a); R.zq.w.push({ sprite: 'rd' + i, pal: p, x: S.x, y: S.y, dir: 0, sit: !S.hatch, still: S.hatch, ride: { h: S.h, a, hatch: S.hatch } }); }); return; } }
+        [col.rider, ...(col.pax || [])].filter(Boolean).forEach((p, i) => { const S = Ride3D.seat(k, i, x, y, a); R.zq.w.push({ sprite: 'rd' + i, pal: p, x: S.x, y: S.y, dir: 0, sit: !S.hatch && !S.stand && S.pose !== 'row', still: S.hatch || S.stand, anim: S.pose === 'row' ? 'Driving_Loop' : null, ride: { h: S.h, a, hatch: S.hatch, stand: S.stand, pose: S.pose, rope: S.rope, mv: (col.spd || 0) > 4 } }); }); return; } }
       if (!R.zq || c !== ctx || (col && typeof col === 'object' && col.ride)) return dc0(c, x, y, a, col, len, wid, kind, speed);
       let stripe = null, cc = col; if (col && typeof col === 'object') { stripe = col.stripe || null; cc = col.col; } R.zq.c.push({ x, y, a, col: cc || '#c8ccd2', stripe, len, wid, kind, skin: !!(col && typeof col === 'object') }); };
   },
@@ -17772,15 +17778,20 @@ Object.assign(Room3D, {
       const key = best ? best.key : pre + (this.zid++); used.add(key); out.push(Object.assign(q, { key })); }
     return out;
   },
+  // v321 밧줄: 두 손 가운데 → 돛 모서리 (r = {x, y, h} 월드 px · 칸, 없으면 숨김)
+  rope(H, r) { const { THREE } = T3; if (!r) { if (H.rp) H.rp.visible = false; return; }
+    if (!H.rp) { H.rp = new THREE.Mesh(this.ropeG || (this.ropeG = new THREE.CylinderGeometry(0.022, 0.022, 1, 6)), Room3D.toon('#6a4a26')); this.ropeG._keep = 1; this.S.add(H.rp); H.rp.userData.own = H; }
+    const a = Hero3D.handsAt(H); if (!a) { H.rp.visible = false; return; } const b = new THREE.Vector3(r.x / TILE, r.h, r.y / TILE), d = b.clone().sub(a), L = d.length();
+    H.rp.visible = true; H.rp.position.copy(a).add(b).multiplyScalar(0.5); H.rp.scale.set(1, L, 1); H.rp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); },
   zRender() {
     const zq = this.zq || { w: [], c: [] }; this.zq = null; const t = performance.now() / 1000, dt = this.zdt || 0.016;
     this.zw = this.zMatch(zq.w, this.zw, (p, q) => p.sprite === q.sprite, 26, 'zw');
     this.zw.forEach((w, i) => { const H = this.actor(w.key, w.pal || Sprites.PAL[w.sprite] || Sprites.PAL.walker1 || Sprites.PAL.player, w, t, dt, i * 1.3); if (w.low && !H.hero) H.root.position.y -= 0.25;
-      if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.y = H.ang; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } else if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
+      if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.stand ? w.ride.h : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.y = H.ang; if (H.hero && w.ride.pose) Hero3D.ridePose(H, w.ride.pose, t, w.ride.mv); if (H.hero && w.ride.hatch) Hero3D.hideLegs(H); this.rope(H, H.hero && w.ride.rope); /* v321 노 젓기 · 밧줄 */ H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } else { if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } if (H.rp) this.rope(H, null); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
     this.zc = this.zMatch(zq.c, this.zc, (p, q) => p.col === q.col && p.kind === q.kind && p.len === q.len, 48, 'zc');
     for (const c of this.zc) { if (c.ride) { let H = this.A.get(c.key); if (!H) { H = { root: Ride3D.make(c.ride), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); } H.seen = this.fr; /* v317 배는 둥실, 탱크는 서 있으면 포탑이 천천히 두리번 */
         const water = RIDE_WATER.has(c.ride), mv = c.spd > 4, ph = c.key.length * 1.7; H.root.position.set(c.x / TILE, water ? 0.03 + Math.sin(t * 2.2 + ph) * 0.035 : 0, c.y / TILE); H.root.rotation.set(water ? Math.sin(t * 1.7 + ph) * 0.05 : 0, -c.a, water ? (mv ? 0.05 : 0) + Math.sin(t * 1.3 + ph) * 0.025 : 0, 'YXZ');
-        const tur = H.root.userData.tur; if (tur) { H.tr = H.tr || 0; const want = mv ? 0 : Math.sin(t * 0.5 + ph) * 0.7; H.tr += (want - H.tr) * Math.min(1, dt * 2); tur.rotation.y = H.tr; } continue; }
+        Ride3D.anim(H.root, t, mv); const tur = H.root.userData.tur; if (tur) { H.tr = H.tr || 0; const want = mv ? 0 : Math.sin(t * 0.5 + ph) * 0.7; H.tr += (want - H.tr) * Math.min(1, dt * 2); tur.rotation.y = H.tr; } continue; }
       let H = this.A.get(c.key); if (H && H.old && Car3D.ready()) { this.S.remove(H.root); H = null; } if (!H) { const v = c.skin ? 0 : [...c.key].reduce((h, ch) => h * 31 + ch.charCodeAt(0) | 0, 7) >>> 0; H = { root: this.car3(c.len, c.wid, c.col, c.stripe, c.kind, v), car: 1, old: !Car3D.ready() }; this.S.add(H.root); this.A.set(c.key, H); } // v315 차 모델 (늦게 받아지면 바꿔 끼운다)
       H.seen = this.fr; H.root.position.set(c.x / TILE, 0, c.y / TILE); H.root.rotation.y = -c.a; }
     this.render(); // 펫 + 안 보인 것 치우기 + 그리기
@@ -17832,26 +17843,27 @@ const Car3D = {
 /* ===================== 탈것 3D 모델 (v317, 사용자 '탈것에 유람선, 배 추가하자' · '탱크도 넣자 이건 쫌 더 실사처럼') =====================
  * Quaternius Ships · Tank Pack (CC0)을 블렌더로 길이 1, 앞 +x, 재질 색 → 정점 색으로 구웠다 (3d/rides.glb, assets3d/build_rides.py). 탱크는 얼룩·흙먼지를 더 굽고 포탑(_tur)이 따로 돈다.
  * 바깥 3D: 차 대신 이 모델 + 탄 사람(앉기, 탱크는 해치에 서서). 2D(바깥 2D·편집숍 큰 미리보기·전시대)는 위에서 찍은 3D 사진을 돌려 그린다 (drawRide → Ride3D.draw2).
- * L: 길이 (월드 px, 2D), s3: 3D에선 몇 배 크게 (사람이 크게 보여서), seats: 앉는 자리 [앞뒤(길이 배), 좌우(길이 배)], y: 앉는 높이 (길이 배), hatch: 서서 상체만 내밀기 */
+ * L: 길이 (월드 px, 2D), s3: 3D에선 몇 배 크게 (사람이 크게 보여서), seats: 앉는 자리 [앞뒤(길이 배), 좌우(길이 배)], y: 앉는 높이 (길이 배, 자리마다 [앞뒤, 좌우, 높이]로 따로 줄 수도), hatch: 서서 상체만 내밀기 */
 const RIDE3 = {
   lifeboat: { L: 30, s3: 1.15, y: 0.06, seats: [[-0.22, 0], [0.12, -0.12], [0.12, 0.12], [-0.05, 0.13]] },
   boat: { L: 30, s3: 1.2, y: 0.07, seats: [[-0.2, 0], [0.1, 0], [0.26, 0]] },
-  sailboat: { L: 34, s3: 1.3, y: 0.08, seats: [[-0.3, 0], [-0.1, 0.08], [0.18, 0]] },
-  viking: { L: 44, s3: 1.5, y: 0.1, seats: [[-0.28, 0], [-0.12, 0.08], [0.02, -0.08], [0.16, 0.08], [-0.2, -0.08], [-0.04, 0.08], [0.1, -0.08], [0.26, 0]] },
-  galleon: { L: 48, s3: 1.7, y: 0.2, seats: [[-0.33, 0], [-0.15, 0.06], [0, -0.06], [0.15, 0.06], [-0.22, -0.06], [-0.05, 0.06], [0.08, -0.06], [0.24, 0]] },
-  cruise: { L: 48, s3: 1.6, y: 0.21, seats: [[0.06, 0], [-0.1, 0.06], [-0.2, -0.06], [-0.3, 0.06], [-0.38, -0.05], [0.18, 0.05], [0.28, -0.04], [-0.38, 0.05]] },
+  sailboat: { L: 34, s3: 1.3, y: 0.08, pose: 'rope', seats: [[-0.3, 0], [-0.1, 0.08], [0.18, 0]] },
+  viking: { L: 44, s3: 1.5, y: 0.12, pose: 'row', seats: [[-0.3, 0], [-0.12, 0.08], [0.02, -0.08], [0.16, 0.08], [-0.2, -0.08], [0.22, -0.08], [0.1, -0.08], [0.3, 0]] },
+  galleon: { L: 48, s3: 1.7, y: 0.2, pose: 'rope', stand: 1, seats: [[-0.36, 0, 0.255], [-0.12, 0.06], [0, -0.06], [0.15, 0.06], [-0.22, -0.06], [-0.05, 0.06], [0.08, -0.06], [0.24, 0]] },
+  cruise: { L: 48, s3: 1.6, y: 0.3, seats: [[0.07, 0], [-0.2, 0.055], [-0.2, -0.055], [-0.25, 0.055], [-0.25, -0.055], [-0.15, 0.055], [-0.15, -0.055], [0.0, 0]] },
   tank: { L: 34, s3: 1.3, y: 0.3, hatch: 1, seats: [[-0.06, 0], [-0.3, 0.18], [-0.3, -0.18]] },
   tank2: { L: 34, s3: 1.3, y: 0.18, hatch: 1, seats: [[-0.04, 0], [-0.3, 0.18], [-0.3, -0.18]] },
   tank3: { L: 38, s3: 1.3, y: 0.36, hatch: 1, seats: [[0.02, 0], [-0.32, 0.2], [-0.32, -0.2]] },
-  tank4: { L: 38, s3: 1.3, y: 0.24, hatch: 1, seats: [[-0.1, 0], [-0.34, 0.18], [-0.34, -0.18]] },
+  tank4: { L: 38, s3: 1.3, y: 0.24, hatch: 1, seats: [[-0.04, 0.13], [-0.34, 0.15], [-0.34, -0.15]] }, // v321 긴 포가 몸을 뚫지 않게 포 옆 해치
 };
 const Ride3D = {
   st: 0, M: {},
   has(k) { return !!RIDE3[k]; },
   load() { if (this.st || !window.T3) return; this.st = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
-    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('rides.glb?v=1'), ok, undefined, no))).then(G => {
-      for (const o of G.scene.children) { const parts = { m: [], tur: [] }, bb = new THREE.Box3(); o.traverse(m => { if (!m.isMesh) return; let w = m; while (w && !/_(m|tur)$/.test(w.name)) w = w.parent; const t = w ? w.name.split('_').pop() : 'm'; m.geometry._keep = 1; m.updateWorldMatrix(true, false); parts[t].push({ geo: m.geometry, M: m.matrixWorld.clone() }); bb.expandByObject(m); });
-        parts.w = bb.max.z - bb.min.z; parts.h = bb.max.y; this.M[o.name] = parts; }
+    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('rides.glb?v=2'), ok, undefined, no))).then(G => {
+      for (const o of G.scene.children) { const parts = { m: [], tur: [], oar: [], sail: [] }, bb = new THREE.Box3(); o.traverse(m => { if (!m.isMesh) return; let w = m; while (w && !/_(m|tur|oar\d+|sail\d+)$/.test(w.name)) w = w.parent; const t = w ? w.name.split('_').pop().replace(/\d+$/, '') : 'm'; m.geometry._keep = 1; m.updateWorldMatrix(true, false); w && w.updateWorldMatrix(true, false); parts[t].push({ geo: m.geometry, M: m.matrixWorld.clone(), P: w ? w.matrixWorld.clone() : null }); bb.expandByObject(m); }); /* P = 노·돛이 도는 곳 (gltfpack 양자화 변환은 M 쪽에) */
+        parts.w = bb.max.z - bb.min.z; parts.h = bb.max.y; this.M[o.name] = parts;
+        if (parts.sail.length) { const R = RIDE3[o.name], S0 = R ? R.seats[0] : [0, 0]; let best = null; for (const p of parts.sail) { const v = new THREE.Vector3().setFromMatrixPosition(p.P || p.M); if (!p.geo.boundingBox) p.geo.computeBoundingBox(); const d = -Math.abs(v.x - S0[0]) + (v.x > S0[0] + 0.5 ? 9 : 0); if (!best || d < best.d) best = { d, v, b: p.geo.boundingBox.clone().applyMatrix4(new THREE.Matrix4().copy(p.P || p.M).invert().multiply(p.M)) }; } /* v321 밧줄 끝: 앞쪽(멀리 있는) 돛의 아래 모서리 → 비스듬히 당긴다 */ const b = best.b; parts.rope = [best.v.x + (b.max.x + b.min.x) / 2, best.v.y + b.min.y + (b.max.y - b.min.y) * 0.12, best.v.z + (S0[1] >= 0 ? b.max.z : b.min.z)]; } }
       this.st = 2; }).catch(e => { console.warn('ride3d', e); this.st = -1; }); },
   ready() { return this.st === 2; },
   mat() { if (!this.vm) this.vm = new T3.THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Room3D.grad }); return this.vm; },
@@ -17861,10 +17873,21 @@ const Ride3D = {
     const add = (par, p, off) => { const m = new THREE.Mesh(p.geo, this.mat()); p.M.decompose(m.position, m.quaternion, m.scale); if (off) m.position.sub(off); m.castShadow = true; par.add(m); };
     for (const p of B.m) add(inner, p);
     if (B.tur.length) { const tb = new THREE.Box3(); for (const p of B.tur) { if (!p.geo.boundingBox) p.geo.computeBoundingBox(); tb.union(p.geo.boundingBox.clone().applyMatrix4(p.M)); } const c = tb.getCenter(new THREE.Vector3()); c.y = 0; const pv = new THREE.Group(); pv.position.copy(c); inner.add(pv); for (const p of B.tur) add(pv, p, c); g.userData.tur = pv; }
+    const piv = (p, list) => { const pv = new THREE.Group(), P = p.P || p.M; P.decompose(pv.position, pv.quaternion, pv.scale); const m = new THREE.Mesh(p.geo, this.mat()); new THREE.Matrix4().copy(P).invert().multiply(p.M).decompose(m.position, m.quaternion, m.scale); m.castShadow = true; pv.add(m); inner.add(pv); list.push(pv); return pv; };
+    if (B.oar.length) { g.userData.oars = []; for (const p of B.oar) { const pv = piv(p, g.userData.oars); pv.userData.s = pv.position.z >= 0 ? 1 : -1; pv.userData.q0 = pv.quaternion.clone(); } }
+    if (B.sail.length) { g.userData.sails = []; for (const p of B.sail) { const pv = piv(p, g.userData.sails); pv.userData.q0 = pv.quaternion.clone(); } }
+    const R = RIDE3[k]; if (R.hatch) { const S0 = R.seats[0], hy = R.y / sc, rim = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.054, 0.022, 18, 1, true), Room3D.toon('#2a2c26', { side: THREE.DoubleSide })), hole = new THREE.Mesh(new THREE.CircleGeometry(0.05, 18), new THREE.MeshBasicMaterial({ color: 0x0c0c0c })), lid = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.012, 18), Room3D.toon('#4a4f3c'));
+      rim.position.set(S0[0], hy, S0[1]); hole.rotation.x = -Math.PI / 2; hole.position.set(S0[0], hy + 0.002, S0[1]); lid.position.set(S0[0] - 0.07, hy + 0.04, S0[1]); lid.rotation.z = 1.1; inner.add(rim, hole, lid); } /* v321 해치: 테두리 · 검은 구멍 · 열린 뚜껑 */
     g.userData.inner = inner; return g;
   },
+  // v321 노 젓기 · 돛 돌리기 (탄 사람 동작과 같은 박자: Ride3D.ph)
+  ph(t) { return t * Math.PI * 2 * 0.85; },
+  anim(g, t, mv) { const ph = this.ph(t), U = g.userData, T = T3.THREE;
+    if (U.oars) { const A = mv ? 0.42 : 0.16, e = new T.Euler(), q = new T.Quaternion(); for (const o of U.oars) { const s = o.userData.s, c = Math.cos(ph), lift = c > 0 ? 0.16 * c : 0.05 * c; e.set(-s * lift * (mv ? 1 : 0.5), s * A * Math.sin(ph), 0, 'YXZ'); q.setFromEuler(e); o.quaternion.copy(o.userData.q0).premultiply(q); } }
+    if (U.sails) { const q = new T.Quaternion(), ax = new T.Vector3(0, 1, 0); U.sails.forEach((o, i) => { q.setFromAxisAngle(ax, (mv ? 0.22 : 0.08) * Math.sin(ph * 0.5 + i * 0.3) + (mv ? 0.12 : 0)); o.quaternion.copy(o.userData.q0).premultiply(q); }); } },
   // 탄 사람 자리 (월드 px 기준 앞뒤·좌우 → x, y), 높이(칸)
-  seat(k, i, x, y, a) { const R = RIDE3[k], S = R.seats[Math.min(i, R.seats.length - 1)], L = R.L * (R.s3 || 1), f = S[0] * L, r = S[1] * L; return { x: x + Math.cos(a) * f - Math.sin(a) * r, y: y + Math.sin(a) * f + Math.cos(a) * r, h: R.y * L / TILE, hatch: !!R.hatch }; },
+  seat(k, i, x, y, a) { const R = RIDE3[k], S = R.seats[Math.min(i, R.seats.length - 1)], L = R.L * (R.s3 || 1), f = S[0] * L, r = S[1] * L, o = { x: x + Math.cos(a) * f - Math.sin(a) * r, y: y + Math.sin(a) * f + Math.cos(a) * r, h: (S[2] || R.y) * L / TILE, hatch: !!R.hatch, stand: !!(R.stand && !i), pose: i ? null : R.pose || null };
+    const B = this.M[k]; if (!i && R.pose === 'rope' && B && B.rope) { const [rx, ry, rz] = B.rope; o.rope = { x: x + Math.cos(a) * rx * L - Math.sin(a) * rz * L, y: y + Math.sin(a) * rx * L + Math.cos(a) * rz * L, h: ry * L / TILE }; } return o; }, // pose: row = 노 젓기, rope = 밧줄로 돛 (v321)
   // 2D 그림 (바깥 2D · 편집숍 큰 미리보기 · 전시대): 거의 바로 위에서 찍은 3D 사진. 아직이면 간단한 모양
   draw2(c, k, rider, pax, mv, t) {
     const R = RIDE3[k], L = R.L, B = this.M[k], water = typeof RIDE_WATER !== 'undefined' && RIDE_WATER.has(k), W = L * (B ? B.w : 0.4);
@@ -18266,13 +18289,22 @@ const Hero3D = {
     if (w.punchT && now < w.punchT) { if (!H.punch) { H.punch = 1; const a = this.play(H, H.alt ? 'Punch_Cross' : 'Punch_Jab', 0.08, 1.6); H.alt = !H.alt; if (a) { a.setLoop(T3.THREE.LoopOnce); a.clampWhenFinished = true; } } }
     else if (w.hurt || w.stun > 0) { H.punch = 0; if (H.cur !== 'Hit_Head') { const a = this.play(H, 'Hit_Head', 0.08); if (a) { a.setLoop(T3.THREE.LoopOnce); a.clampWhenFinished = true; } } }
     else { H.punch = 0;
-      if (w.low) this.play(H, 'Crouch_Idle_Loop', 0.25);
+      if (w.anim) this.play(H, w.anim, 0.25); // v321 탈것 위 동작 (노 젓기 = 운전 자세에 몸 흔들기)
+      else if (w.low) this.play(H, 'Crouch_Idle_Loop', 0.25);
       else if (w.sit) this.play(H, 'Sitting_Idle_Loop', 0.25);
       else if (w.still) this.play(H, 'Idle_Loop', 0.3); // v317 탱크 해치에 서 있기 (탈것이 움직여도 걷지 않는다)
       else if (mv) { const s = H.spd; if (H.ghost) this.play(H, 'Idle_Loop', 0.3); else if (s < 1.8) this.play(H, 'Walk_Loop', 0.2, Math.max(0.6, Math.min(1.5, s / 1.1))); else if (s < 3.8) this.play(H, 'Jog_Fwd_Loop', 0.2, Math.max(0.7, Math.min(1.5, s / 2.5))); else this.play(H, 'Sprint_Loop', 0.2, Math.max(0.7, Math.min(1.6, s / 4.6))); }
       else this.play(H, w.talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.3); }
     H.mix.update(dt);
   },
+  /* ---- v321 탈것 위 동작: 애니메이션 위에 뼈를 더 돌린다 (모델 기준 축: x = 옆, 앞 = +z) ---- */
+  bone(H, n) { const c = H.bn || (H.bn = {}); if (!(n in c)) c[n] = H.model.getObjectByName(n) || null; return c[n]; },
+  turn(H, n, ax, ang) { const b = this.bone(H, n); if (!b || !b.parent) return; const { THREE } = T3, mq = H.model.getWorldQuaternion(new THREE.Quaternion()), pq = b.parent.getWorldQuaternion(new THREE.Quaternion()), wa = ax.clone().applyQuaternion(mq), q = new THREE.Quaternion().setFromAxisAngle(wa, ang); const rq = H.rq || (H.rq = {}), q0 = b.quaternion.clone(); b.quaternion.premultiply(pq.clone().invert().multiply(q).multiply(pq)); rq[n] = { b, a: q0, m: b.quaternion.clone() }; b.updateMatrixWorld(true); },
+  ridePose(H, pose, t, mv) { const { THREE } = T3, X = new THREE.Vector3(1, 0, 0), ph = Ride3D.ph(t); if (H.rq) for (const k in H.rq) { const r = H.rq[k]; if (r.b.quaternion.equals(r.m)) r.b.quaternion.copy(r.a); } /* 애니메이션 값이 그대로면 믹서가 뼈를 다시 안 써서, 지난번 돌린 게 쌓이지 않게 되돌린다 */ H.root.updateMatrixWorld(true);
+    if (pose === 'row') { const k = mv ? 1 : 0.45, s = Math.sin(ph); this.turn(H, 'spine_01', X, 0.32 * s * k); this.turn(H, 'spine_02', X, 0.12 * s * k); for (const e of ['l', 'r']) { this.turn(H, 'upperarm_' + e, X, -0.35 * s * k); this.turn(H, 'lowerarm_' + e, X, -0.4 * Math.max(0, -s) * k); } } // 앞으로 뻗었다가 (노 날이 앞) 몸을 젖히며 당기기
+    else if (pose === 'rope') { const k = mv ? 1 : 0.6; ['l', 'r'].forEach((e, i) => { const s = Math.sin(ph + i * Math.PI); this.turn(H, 'upperarm_' + e, X, -(1.35 + 0.4 * s * k)); this.turn(H, 'lowerarm_' + e, X, -(0.35 + 0.35 * Math.max(0, -s) * k)); }); this.turn(H, 'spine_01', X, -0.12 - 0.06 * Math.sin(ph * 2) * k); } }, // 손을 번갈아 위로 뻗어 밧줄 당기기
+  hideLegs(H) { if (H.noLeg) return; H.noLeg = 1; for (const n of ['thigh_l', 'thigh_r']) { const b = this.bone(H, n); if (b) b.scale.setScalar(0.001); } }, // v321 해치 위로 상체만 (다리가 전차 밑으로 삐져나오지 않게)
+  handsAt(H) { const { THREE } = T3, a = this.bone(H, 'hand_l'), b = this.bone(H, 'hand_r'); if (!a || !b) return null; return a.getWorldPosition(new THREE.Vector3()).add(b.getWorldPosition(new THREE.Vector3())).multiplyScalar(0.5); },
   /* ---- 우리 옷: 뼈에 붙이는 도형 (모델 공간에서 만들고 그 뼈에 붙인다) ---- */
   wear(model, bones, box, P, k) {
     const { THREE } = T3, R = Room3D, V = (x, y, z) => new THREE.Vector3(x, y, z), fc = box[0], T = box[2], Hp = box[5], Sn = box[6] || Hp;
@@ -18606,15 +18638,29 @@ const Snap3D = {
     if (!img) return false; const x = cv.getContext('2d'); x.clearRect(0, 0, W, H); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); cv.style.imageRendering = 'auto'; return true;
   },
   // 편집숍 큰 미리보기: 배·탱크 (v317) 비스듬히 + 앉은 나. 배는 둥실, 달리면 탱크는 들썩. 그렸으면 true
+  // v321 움직이는 장면 하나 (편집숍 큰 미리보기): 만들어 두고 매번 tick 후 다시 찍는다. 다른 사진 찍을 땐 장면에서 빼 둔다
+  live(key, W, H, build, aim, tick) {
+    if (!this.ok()) return null;
+    try {
+      this.init(); const { THREE } = T3, L = this.lv;
+      if (!L || L.key !== key) { if (L) L.g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); const g = new THREE.Group(); const u = build(g) || {}; g.updateMatrixWorld(true); const box = new THREE.Box3().setFromObject(g, true); this.lv = { key, g, u, box, lt: performance.now() }; }
+      const V = this.lv, now = performance.now(), dt = Math.min(0.05, (now - V.lt) / 1000); V.lt = now; tick && tick(V.u, dt, now / 1000);
+      const cam = this.cam; cam.aspect = W / H; aim(V.box, cam); cam.updateProjectionMatrix(); this.S.add(V.g); this.r.setSize(W, H, false); this.r.render(this.S, cam); this.S.remove(V.g); return this.r.domElement;
+    } catch (e) { console.warn('snap3d live', e); this.bad = 1; return null; }
+  },
   rideBig(x, it, t, mv) {
     const k = it.ride; if (!this.ok() || !Ride3D.ready()) { Ride3D.load(); this.warm(); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, P = Profile.pal(Profile.get()), water = RIDE_WATER.has(k);
-    const img = this.shot('big:ride3:' + k + ':' + Hero3D.key(P) + ':' + S, W, Hh, g => { const m = Ride3D.make(k); m.rotation.y = -0.5; g.add(m);
+    const img = this.live('big:ride3:' + k + ':' + Hero3D.key(P) + ':' + S, W, Hh, g => { const m = Ride3D.make(k); m.rotation.y = -0.5; g.add(m);
       const z = Room3D.zNow; Room3D.zNow = true; let H; try { H = Hero3D.make(P); } finally { Room3D.zNow = z; } H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; });
-      const st = Ride3D.seat(k, 0, 0, 0, 0), hh = HERO_H * 1.18; H.root.position.set(st.x / TILE, st.hatch ? st.h - hh * 0.62 : st.h - hh * 0.2, st.y / TILE); Hero3D.play(H, st.hatch ? 'Idle_Loop' : 'Sitting_Idle_Loop', 0); H.mix.update(0.9); m.add(H.root); },
-      (b, c) => this.fit(b, c, 0.42, 1.06));
-    if (!img) return false; const dy = water ? Math.sin(t * 2.2) * 1.6 * S : mv ? Math.sin(t * 40) * 0.35 * S : 0, rot = water ? Math.sin(t * 1.7) * 0.015 : 0;
-    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.translate(W / 2, Hh / 2 + dy); x.rotate(rot); x.drawImage(img, -W / 2, -Hh / 2); x.restore(); return true;
+      const st = Ride3D.seat(k, 0, 0, 0, 0), hh = HERO_H * 1.18; H.root.position.set(st.x / TILE, st.hatch ? st.h - hh * 0.62 : st.stand ? st.h : st.h - hh * 0.2, st.y / TILE); Hero3D.play(H, st.pose === 'row' ? 'Driving_Loop' : st.hatch || st.stand ? 'Idle_Loop' : 'Sitting_Idle_Loop', 0); H.mix.update(0.9); if (st.hatch) Hero3D.hideLegs(H); m.add(H.root);
+      let rp = null; if (st.rope) { const { THREE } = T3; rp = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 6), Room3D.toon('#6a4a26')); m.add(rp); }
+      return { m, H, st, rp }; },
+      (b, c) => this.fit(b, c, 0.42, 1.06),
+      (u, dt, tt) => { const { THREE } = T3, mvv = !!mv; u.m.position.y = water ? Math.sin(tt * 2.2) * 0.04 : 0; u.m.rotation.z = water ? Math.sin(tt * 1.7) * 0.03 : 0; Ride3D.anim(u.m, tt, mvv); u.H.mix.update(dt); u.m.updateMatrixWorld(true); if (u.st.pose) Hero3D.ridePose(u.H, u.st.pose, tt, mvv);
+        if (u.rp) { const a = Hero3D.handsAt(u.H); if (a) { u.m.worldToLocal(a); const r = u.st.rope, b = new THREE.Vector3(r.x / TILE, r.h, r.y / TILE), d = b.clone().sub(a), L = d.length(); u.rp.position.copy(a).add(b).multiplyScalar(0.5); u.rp.scale.set(1, L, 1); u.rp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); } } });
+    if (!img) return false;
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, Hh); x.restore(); return true;
   },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {

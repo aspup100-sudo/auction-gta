@@ -1568,7 +1568,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v305</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v306</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17161,13 +17161,16 @@ const Room3D = {
   active(rm) {
     if (!rm || !this.on() || this.bad) return false;
     if (!window.T3) { Arena3J.load(); return false; }
-    try { this.init(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
+    try { this.init(); if (this.softNote()) return false; this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
   },
+  softNote() { return !!this.soft; }, // 알림 없이 조용히 예전 그림으로 (사용자 '일반 유저가 그래픽 가속 신경 쓰지 않는다')
   show(v) { if (this.cv) { const d = v ? 'block' : 'none'; if (this.cv.style.display !== d) this.cv.style.display = d; } },
   init() {
     if (this.r) return; const { THREE } = T3, cv = this.cv = document.createElement('canvas'); cv.id = 'room3d';
     cv.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; const g = $('game'); g.parentNode.insertBefore(cv, g);
     const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' }); r.setClearColor(0x000000, 0);
+    // v306 그래픽 가속이 꺼진 컴퓨터(소프트웨어로 그림)는 3D가 아주 느리다 → 예전 그림으로
+    try { const gl = r.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'), nm = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ''); this.gpu = nm; if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(nm) && !window.A3J_BASE) this.soft = 1; } catch (e) { }
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; /* v304: 부드러운 그림자는 화면 전체가 무거워서 */ r.toneMapping = THREE.NoToneMapping;
     const gv = [86, 90, 98, 150, 218, 240, 252, 255], gd = new Uint8Array(gv.flatMap(v => [v, v, v, 255])), gm = this.grad = new THREE.DataTexture(gd, gv.length, 1, THREE.RGBAFormat); gm.minFilter = gm.magFilter = THREE.LinearFilter; gm.needsUpdate = true;
     this.cam = new THREE.PerspectiveCamera(32, 1, 0.1, 200); this.ct = null; this.hg = {}; this.mats = {}; this.eg = {}; this.q = 1;
@@ -17462,7 +17465,7 @@ const Room3D = {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.show(true);
     // 크기: 화면 그대로, 느리면 해상도를 조금 낮춘다
     this.fe = this.fe ? this.fe * 0.95 + dt * 1000 * 0.05 : 16; if (this.fr % 60 === 0) { if (this.fe > 24) this.q = Math.max(0.55, this.q * 0.85); else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.1); }
-    const pr = Math.min(DPR, 2) * this.q; if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
+    const pr = Math.min(DPR, 2, Math.max(0.6, Math.sqrt(1.6e6 / (VW * VH)))) * this.q; /* 큰 화면(컴퓨터)은 그리는 점 수를 160만 개 안쪽으로 */ if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
     if (this.sw !== VW || this.sh !== VH) { r.setSize(VW, VH, true); this.sw = VW; this.sh = VH; this.cam.aspect = VW / VH; this.cam.updateProjectionMatrix(); }
     // 사람들
     const p = Game.player; this.actor('me', Sprites.PAL[p.sprite] || Sprites.PAL.player, p, t, dt, 0);
@@ -17535,7 +17538,7 @@ Object.assign(Room3D, {
   zActive(z) {
     if (!z || !this.zOn() || this.zbad) return false;
     if (!window.T3) { Arena3J.load(); return false; }
-    try { this.init(); this.zBuild(z); return true; } catch (e) { console.warn('zone3d', e); this.zbad = 1; this.zShowG(false); this.show(false); return false; }
+    try { this.init(); if (this.softNote()) return false; this.zBuild(z); return true; } catch (e) { console.warn('zone3d', e); this.zbad = 1; this.zShowG(false); this.show(false); return false; }
   },
   zShowG(v) { if (this.gcv) { const d = v ? 'block' : 'none'; if (this.gcv.style.display !== d) this.gcv.style.display = d; } },
   zSq() { return Math.sin(Z3_EL); },
@@ -17589,7 +17592,7 @@ Object.assign(Room3D, {
     let made = 0;
     for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e0 = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
       if (!inV) { if (e0 && (b.x > x1 + 12 || b.x + b.w < x0 - 12 || b.y > z1 + 12 || b.y + b.h < z0 - 12)) { this.zDrop(e0); this.zb.delete(id); } continue; }
-      let e = e0; if (!e) { if (made >= 2) continue; /* 한 프레임에 둘까지만 (미리 넉넉히 바깥부터 세워 둔다) */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
+      let e = e0; if (!e) { if (made >= (this.fe > 20 ? 1 : 2)) continue; /* 한 프레임에 둘까지만 (미리 넉넉히 바깥부터 세워 둔다) */ e = this.zBld(b, plOf[id]); this.S.add(e.m); this.zb.set(id, e); made++; }
       const hide = F.some(([fx, fz]) => fx > b.x - 0.4 && fx < b.x + b.w + 0.4 && fz < b.y + 0.3 && fz > b.y - e.H * cot - 0.6), tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
       const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
@@ -17624,7 +17627,7 @@ Object.assign(Room3D, {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.zdt = dt; this.show(true); this.zShowG(true); this.zHook();
     // 느리면 빨리 해상도를 낮추고, 가장 낮춰도 느리면 해 그림자를 끈다 (사람·차 발밑 동그란 그림자는 남는다)
     this.fe = this.fe ? this.fe * 0.92 + dt * 1000 * 0.08 : 16; if (this.fr % 30 === 0) { if (this.fe > 22) { if (this.q > 0.5) this.q = Math.max(0.5, this.q * 0.82); else if (this.zsun.castShadow) this.zsun.castShadow = false; } else if (this.fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.06); }
-    const pr = Math.min(DPR, 1.5) * this.q; if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
+    const pr = Math.min(DPR, 1.5, Math.max(0.6, Math.sqrt(1.4e6 / (VW * VH)))) * this.q; // 큰 화면(컴퓨터)은 3D 점 수를 140만 개 안쪽으로 (1920×1080이면 0.8배) if (this.pr !== pr) { r.setPixelRatio(pr); this.pr = pr; this.sw = 0; }
     if (this.sw !== VW || this.sh !== VH) { r.setSize(VW, VH, true); this.sw = VW; this.sh = VH; this.cam.aspect = VW / VH; this.cam.updateProjectionMatrix(); }
     if (this.gcv.width !== Math.round(VW * DPR) || this.gcv.height !== Math.round(VH * DPR)) { this.gcv.width = Math.round(VW * DPR); this.gcv.height = Math.round(VH * DPR); this.gcv.style.width = VW + 'px'; this.gcv.style.height = VH + 'px'; }
     // 직교 카메라: 화면 가운데 = 카메라 (2D와 같은 확대)

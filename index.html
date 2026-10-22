@@ -1602,7 +1602,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v342</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v343</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -12121,7 +12121,7 @@ const Shop = {
     const x = cv.getContext('2d'); x.setTransform(S, 0, 0, S, 0, 0); x.imageSmoothingEnabled = false; this.paint(x, it, 0.7, false, 0, true);
   },
   // 이펙트 칸 그림: 서 있는 내 캐릭터 + 이펙트 (k배)
-  fxPrev(x, it, t, k) { x.save(); x.scale(k, k); const W = 160 / k, H = 104 / k; Sprites.setPal('shop:me', Profile.pal(Profile.get())); x.drawImage(Sprites.sheet('shop:me'), 0, 0, 16, 16, Math.round(W / 2 - 8), Math.round(H - 21), 16, 16); FX_DRAW[it.fx](x, W / 2, H - 6, t || 0.7); x.restore(); },
+  fxPrev(x, it, t, k) { x.save(); x.scale(k, k); const W = 160 / k, H = 104 / k; const P = Profile.pal(Profile.get()); if (!(typeof Snap3D !== 'undefined' && Snap3D.fxMan(x, P, W / 2, H - 5, 17))) { Sprites.setPal('shop:me', P); x.drawImage(Sprites.sheet('shop:me'), 0, 0, 16, 16, Math.round(W / 2 - 8), Math.round(H - 21), 16, 16); } /* v343 사람은 3D 사진 */ FX_DRAW[it.fx](x, W / 2, H - 6, t || 0.7); x.restore(); },
   // 크게 움직이는 미리보기 (사용자 2026-10-15 '각각 다 미리보기 할 수 있게'): 달리기/멈춤(5초 넘게 서 있기)을 번갈아 보여 준다
   big(it) {
     if (!it) return; this.bigIt = it; this.bigMode = 'auto'; this.bigT0 = performance.now(); Sound.play('pop');
@@ -12209,9 +12209,11 @@ const Shop = {
       Pets.draw(x, it.pet, 0, 0, 1, mv, t, '', idle, it.pet === 'monkey' && mv ? 'ride' : undefined); if (it.pet === 'trex' && !mv && !thumb) Pets.ptero(x, { x: 0, y: 12 }, idle, t); /* 서 있으면 익룡 (미리보기에도) */ x.restore(); return; }
     if (it.home) return HomeIn.prev(x, it, t, thumb); // v259 가구: 작은 방 그림
     if (it.fx) { this.fxPrev(x, it, t, thumb ? 3 : 2.5); return; }
+    if ((it.hat || it.pal) && !thumb && typeof Snap3D !== 'undefined' && Snap3D.wearBig(x, Profile.pal(Object.assign({}, Profile.get(), it.hat ? { hat: it.id } : { outfit: it.id })), mv)) return; // v343 옷·모자 큰 미리보기도 3D 사람
     if (it.hat) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { hat: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, thumb ? 40 : 56, thumb ? 18 : 40, thumb ? 80 : 48, thumb ? 80 : 48); return; }
-    if (it.pd) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }); Closet.petPrev(x, k, d, t, mv, idle, thumb ? 1.2 : 1); return; } // 이펙트는 머리 위까지 올라가니 조금 작게
+    if (it.pd) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }); if (!thumb && typeof Snap3D !== 'undefined' && Snap3D.pdBig(x, k, d, mv, idle)) return; Closet.petPrev(x, k, d, t, mv, idle, thumb ? 1.2 : 1); return; } // 이펙트는 머리 위까지 올라가니 조금 작게
     if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, thumb ? 40 : 56, thumb ? 18 : 40, thumb ? 80 : 48, thumb ? 80 : 48); return; }
+    if (!thumb && typeof Snap3D !== 'undefined' && Snap3D.carBig(x, it, mv)) return; // v343 차 큰 미리보기도 3D
     x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); drawCarSprite(x, 0, 0, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0); x.restore();
   },
   // 경매 실적 조건 (사용자 2026-10-16 '돈이 있어도 실적이 쌓여야 살 수 있게'): 비쌀수록 이익 본 경매 횟수가 더 필요. 산 물건은 그대로 쓴다.
@@ -13513,10 +13515,10 @@ const Closet = {
     const x = cv.getContext('2d'), t = performance.now() / 1000, p = Profile.get(); x.setTransform(S, 0, 0, S, 0, 0); x.imageSmoothingEnabled = false;
     x.fillStyle = '#e8dcc0'; x.fillRect(0, 0, 160, 104); x.fillStyle = '#d6c8a6'; x.fillRect(0, 88, 160, 16);
     if (this.mv) { x.fillStyle = 'rgba(0,0,0,.1)'; const off = (t * 40) % 24; for (let X = -24; X < 184; X += 24) x.fillRect(Math.round(X - off), 94, 10, 2); }
-    if (this.tab === 'me') { Sprites.setPal('closet:me', Profile.pal(p)); const fr = this.mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = this.mv ? 2 : [0, 2, 3, 1][Math.floor(t / 1.6) % 4];
+    if (this.tab === 'me') { if (typeof Snap3D !== 'undefined' && Snap3D.wearBig(x, Profile.pal(p), this.mv)) { if (p.fx && typeof FX_DRAW !== 'undefined' && SHOP_BY_ID[p.fx]) { x.save(); x.scale(3, 3); FX_DRAW[SHOP_BY_ID[p.fx].fx](x, 80 / 3, 98 / 3, t); x.restore(); } return; } /* v343 옷장도 3D 사람 */ Sprites.setPal('closet:me', Profile.pal(p)); const fr = this.mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = this.mv ? 2 : [0, 2, 3, 1][Math.floor(t / 1.6) % 4];
       x.drawImage(Sprites.sheet('closet:me'), fr * 16, dir * 16, 16, 16, 56, 42, 48, 48);
       if (p.fx && typeof FX_DRAW !== 'undefined' && SHOP_BY_ID[p.fx]) { x.save(); x.scale(3, 3); FX_DRAW[SHOP_BY_ID[p.fx].fx](x, 80 / 3, 90 / 3, t); x.restore(); } }
-    else if (p.pet) { const k = PetDeco.target(); this.petPrev(x, k, PetDeco.get(k), t, this.mv, this.mv ? 0 : 1, 1); }
+    else if (p.pet) { const k = PetDeco.target(); if (typeof Snap3D !== 'undefined' && Snap3D.pdBig(x, k, PetDeco.get(k), this.mv, this.mv ? 0 : 1)) return; this.petPrev(x, k, PetDeco.get(k), t, this.mv, this.mv ? 0 : 1, 1); }
   },
 };
 
@@ -17772,7 +17774,7 @@ const Room3D = {
   },
   actor(key, P, w, t, dt, seed) { let H = this.A.get(key); const hero = typeof Hero3D !== 'undefined' && Hero3D.ready(), pk = hero ? 'H' + Hero3D.key(P) : PetRT.arena.hkey(P, 'kick'); // v308 새 몸이 준비되면 그걸로 (hero3d.js)
     if (!H || H.pk !== pk) { if (H) this.drop(H); H = hero ? Hero3D.make(P) : this.person(P); H.pk = pk; H.amp = 0; H.ph = 0; H.ang = [-Math.PI / 2, Math.PI, 0, Math.PI / 2][w.dir | 0] || 0; this.S.add(H.root); this.A.set(key, H); }
-    H.seen = this.fr; if (H.hero) Hero3D.pose(H, w, t, dt, seed); else this.pose(H, w, t, dt, seed); return H; },
+    H.seen = this.fr; if (H.hero) Hero3D.pose(H, w, t, dt, seed); else { this.pose(H, w, t, dt, seed); H.root.visible = typeof Hero3D === 'undefined' || Hero3D.st === -1; } /* v343 새 몸을 받는 동안 예전 꼬마는 숨김 (못 받았을 때만 꼬마) */ return H; },
   // 안 보이게 된 것 치우기 (새 몸에 붙인 옷 도형은 사람마다 따로라 같이 버린다)
   drop(H) { this.S.remove(H.root); if (H.rp) this.S.remove(H.rp); if (H.hero) { H.mix.stopAllAction(); H.root.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); } },
   /* ---- 매 프레임 ---- */
@@ -18989,10 +18991,54 @@ const Pet3D = {
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('sfp/' + k + '.glb?v=1'), ok, undefined, no))).then(G => {
       const w = new THREE.Group(); w.rotation.y = this.SFP[k]; w.add(G.scene);
       G.scene.traverse(m => { if (!m.isMesh) return; m.castShadow = true; m.frustumCulled = false; m.geometry._keep = 1; (Array.isArray(m.material) ? m.material : [m.material]).forEach(t => { t._keep = 1; for (const q of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap']) if (t[q]) { t[q]._keep = 1; t[q].anisotropy = 8; } }); });
+      const bad = this.BADTRK[k]; if (bad) for (const c of G.animations) c.tracks = c.tracks.filter(t => !bad.test(t.name.split('.')[0])); // v343 강아지 동작의 뒷발가락·눈꺼풀 트랙이 깨져 있었다 (뒷발이 뒤로 늘어나고 발가락이 줄처럼)
       const an = {}; for (const c of G.animations) an[c.name] = c; const c0 = an.idle || an.swim || G.animations[0]; let mx = null; if (c0) { mx = new THREE.AnimationMixer(G.scene); mx.clipAction(c0).play(); mx.update(0.01); } // 크기는 서 있는 동작 자세로
-      w.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(w, true); if (mx) mx.stopAllAction();
-      this.R[k] = { w, an, hgt: b.max.y - b.min.y, len: b.max.x - b.min.x, y0: b.min.y, cx: (b.min.x + b.max.x) / 2, cz: (b.min.z + b.max.z) / 2 }; this.rs[k] = 2;
+      w.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(w, true); let legs = null; try { legs = this.LEG[k] ? (this.LEG[k].bone ? this.boneLegs(k, w) : this.rig(k, w, b)) : null; } catch (e) { console.warn('pet3d rig', k, e); } if (mx) mx.stopAllAction();
+      this.R[k] = { w, an, legs, hgt: b.max.y - b.min.y, len: b.max.x - b.min.x, y0: b.min.y, cx: (b.min.x + b.max.x) / 2, cz: (b.min.z + b.max.z) / 2 }; this.rs[k] = 2;
     }).catch(e => { console.warn('pet3d real', k, e); this.rs[k] = -1; }); },
+  /* v343 사용자 '펫들 질질 끌려오는데? 동물이면 네발로 걷거나 그래야': 걷는 동작이 없는 실사 펫에 다리를 움직인다.
+   * 뼈 없는 사진 모델(판다·티라노·거북이)은 받을 때 발 정점을 찾아 다리 뼈를 심고(rig) 그 둘레 정점을 다리에 묶는다. 강아지는 원래 뼈(엉덩이·어깨)를 흔든다.
+   * n = 다리 수, hf = 엉덩이 높이(키 비율), amp = 흔드는 각. 고양이는 앉은 모델이라 다리가 없다 (서 있는 모델이 필요) */
+  BADTRK: { dog: /^(LB|RB)_(toes|index|mid|pinkie|ring)|_lid|whisker/ },
+  LEG: { panda: { n: 4, hf: 0.42, amp: 0.38 }, trex: { n: 2, hf: 0.5, amp: 0.42 }, turtle: { n: 4, hf: 0.6, amp: 0.4 }, dog: { bone: 1, amp: 0.42 } },
+  rig(k, w, b) {
+    const { THREE } = T3, C = this.LEG[k], hg = b.max.y - b.min.y, y0 = b.min.y, yh = y0 + C.hf * hg, v = new THREE.Vector3(), M = [];
+    w.traverse(o => { if (o.isMesh && !o.isSkinnedMesh) M.push(o); }); if (!M.length) return null;
+    const P = M.map(o => { const a = o.geometry.attributes.position, r = new Float32Array(a.count * 3); for (let i = 0; i < a.count; i++) { v.fromBufferAttribute(a, i).applyMatrix4(o.matrixWorld); r[i * 3] = v.x; r[i * 3 + 1] = v.y; r[i * 3 + 2] = v.z; } return r; });
+    const each = f => P.forEach(r => { for (let i = 0; i < r.length; i += 3) f(r[i], r[i + 1], r[i + 2]); });
+    // 발: 바닥 6% 정점. 가운데 줄(꼬리·배)은 빼고 사분면(앞뒤 × 좌우)으로 나눈다
+    let fx = 0, fz = 0, fn = 0; each((x, y, z) => { if (y < y0 + 0.06 * hg) { fx += x; fz += z; fn++; } }); if (fn < 8) return null; fx /= fn; fz /= fn;
+    const wz = b.max.z - b.min.z, legs = []; for (let i = 0; i < C.n; i++) legs.push({ front: C.n === 4 ? i >> 1 === 1 : true, left: (i & 1) === 0, x: 0, z: 0, c: 0 });
+    const which = (x, z) => (C.n === 4 ? (x > fx ? 2 : 0) : 0) + (z < fz ? 0 : 1); // 앞 = +x, 왼쪽 = -z
+    each((x, y, z) => { if (y >= y0 + 0.06 * hg || Math.abs(z - fz) < wz * 0.08) return; const L = legs[which(x, z)]; L.x += x; L.z += z; L.c++; });
+    if (legs.some(L => L.c < 4)) return null; legs.forEach(L => { L.x /= L.c; L.z /= L.c; });
+    // 다리 따라 위로: 띠마다 가까운 정점의 가운데로 (배에 닿으면 덜 움직이게 반만)
+    const sp = i => Math.min(...legs.filter((_, j) => j !== i).map(o => Math.hypot(o.x - legs[i].x, o.z - legs[i].z))), NB = 6;
+    legs.forEach((L, i) => { L.r = sp(i) * 0.5; L.cy = [[L.x, L.z]]; });
+    for (let j = 1; j <= NB; j++) { const ya = y0 + (yh - y0) * (j - 0.5) / NB, yb = y0 + (yh - y0) * (j + 0.5) / NB, acc = legs.map(() => [0, 0, 0]);
+      each((x, y, z) => { if (y < ya || y >= yb) return; let bi = -1, bd = 1e9; legs.forEach((L, i) => { const c = L.cy[j - 1], d = Math.hypot(x - c[0], z - c[1]); if (d < L.r && d < bd) { bd = d; bi = i; } }); if (bi >= 0) { const a = acc[bi]; a[0] += x; a[1] += z; a[2]++; } });
+      legs.forEach((L, i) => { const c = L.cy[j - 1], a = acc[i]; L.cy.push(a[2] > 3 ? [c[0] + (a[0] / a[2] - c[0]) * 0.5, c[1] + (a[1] / a[2] - c[1]) * 0.5] : c); }); }
+    const cAt = (L, y) => { const f = Math.max(0, Math.min(NB, (y - y0) / (yh - y0) * NB)), j = Math.floor(f), t = f - j, a = L.cy[j], c = L.cy[Math.min(NB, j + 1)]; return [a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t]; };
+    // 뼈: 뿌리 + 다리마다 엉덩이 높이 (w 기준 좌표)
+    const root = new THREE.Bone(); root.name = 'rigRoot'; w.add(root); const bones = [root], inv = w.quaternion.clone().invert(), out = [];
+    legs.forEach((L, i) => { const bn = new THREE.Bone(); bn.name = 'rigLeg' + i; const t = L.cy[NB]; bn.position.copy(w.worldToLocal(new THREE.Vector3(t[0], yh, t[1]))); root.add(bn); bones.push(bn); out.push({ name: bn.name, front: L.front, left: L.left, up: 1, ax: new THREE.Vector3(0, 0, 1).applyQuaternion(inv) }); });
+    w.updateMatrixWorld(true); const sk = new THREE.Skeleton(bones), sst = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+    M.forEach((o, mi) => { const r = P[mi], n = r.length / 3, si = new Uint16Array(n * 4), sw = new Float32Array(n * 4);
+      for (let i = 0; i < n; i++) { const x = r[i * 3], y = r[i * 3 + 1], z = r[i * 3 + 2], wy = sst(0, 0.4, (yh - y) / (yh - y0)); let tot = 0; const ws = [];
+        if (wy > 0) legs.forEach((L, li) => { const c = cAt(L, y), d = Math.hypot(x - c[0], z - c[1]), wl = 1 - sst(L.r * 0.6, L.r, d); if (wl > 0) ws.push([li + 1, wl * wy]); });
+        ws.sort((a, c) => c[1] - a[1]); ws.length = Math.min(ws.length, 3); for (const q of ws) tot += q[1]; if (tot > 1) ws.forEach(q => (q[1] /= tot)), tot = 1;
+        si[i * 4] = 0; sw[i * 4] = 1 - tot; ws.forEach((q, j) => { si[i * 4 + 1 + j] = q[0]; sw[i * 4 + 1 + j] = q[1]; }); }
+      const g = o.geometry; g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4)); g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+      const sm = new THREE.SkinnedMesh(g, o.material); sm.name = o.name; sm.position.copy(o.position); sm.quaternion.copy(o.quaternion); sm.scale.copy(o.scale); sm.castShadow = o.castShadow; sm.frustumCulled = false;
+      const par = o.parent; par.children[par.children.indexOf(o)] = sm; sm.parent = par; o.parent = null; sm.updateMatrixWorld(true); sm.bind(sk, sm.matrixWorld); });
+    return out;
+  },
+  boneLegs(k, w) { // 뼈 있는 모델: 엉덩이(뒷다리)·어깨(앞다리) 뼈. 축 = 옆(z)을 그 뼈 기준으로
+    const { THREE } = T3, out = [], q = new THREE.Quaternion();
+    for (const [pre, front, left] of [['L_shoulder', 1, 1], ['R_shoulder', 1, 0], ['L_hip', 0, 1], ['R_hip', 0, 0]]) { let bn = null; w.traverse(o => { if (!bn && o.isBone && o.name.startsWith(pre)) bn = o; }); if (!bn) continue;
+      bn.getWorldQuaternion(q); out.push({ name: bn.name, front: !!front, left: !!left, ax: new THREE.Vector3(0, 0, 1).applyQuaternion(q.invert()) }); }
+    return out.length === 4 ? out : null;
+  },
   makeReal(k, h) {
     const { THREE } = T3, B = this.R[k], root = new THREE.Group(), inner = new THREE.Group(), bob = new THREE.Group(), m = T3.SkeletonUtils.clone(B.w), o = this.M[k], s = this.LEN[k] ? this.LEN[k] / B.len : Math.min(h / B.hgt, o ? o.len * this.scale(k, h) * 1.15 / B.len : 1e9); // 예전 모델 몸길이를 넘지 않게 (티라노 꼬리)
     m.position.set(-B.cx, -B.y0, -B.cz); bob.add(m); inner.add(bob); inner.scale.setScalar(s); root.add(inner);
@@ -19000,16 +19046,21 @@ const Pet3D = {
     const w = Math.max(B.len, B.hgt * 0.6) * s; sh.scale.set(w * 1.6, Math.max(0.5, w * 0.9), 1);
     const H = { root, inner, bob, nd: {}, k, s, sh, st: 0, fx: [], model: 1, pet: 1, ph: 0, top: B.hgt * s, dk: '', real: 1, B: { len: B.len, hgt: B.hgt, y0: 0, an: null } };
     if (Object.keys(B.an).length) { H.mix = new THREE.AnimationMixer(m); H.acts = {}; for (const n in B.an) H.acts[n] = H.mix.clipAction(B.an[n]); }
+    if (B.legs) { H.legs = B.legs.map(l => Object.assign({ o: m.getObjectByName(l.name) }, l)).filter(l => l.o); H.legs.forEach(l => { l.q0 = l.o.quaternion.clone(); l.p0 = l.o.position.clone(); }); H.amp = this.LEG[k].amp; if (!H.legs.length) H.legs = null; }
     return H;
   },
   poseReal(H, mv, sp, t, dt, P) {
     const k = H.k, b = H.bob; H.mv = H.mv == null ? 0 : H.mv + ((mv ? 1 : 0) - H.mv) * Math.min(1, dt * 5); const m = H.mv * H.mv * (3 - 2 * H.mv), idle = m > 0.5 ? 0 : P.idle || 0;
-    if (mv) H.rate = Math.max(6, Math.min(14, 5 + sp * 3.2)); H.ph += dt * (mv || m > 0.03 ? H.rate || 8 : 0); const p = H.ph; // v340 멈춰도 걸음 박자는 이어 가며 잦아든다 (박자가 얼어붙으면 오뚜기처럼 기울어진 채 흔들렸다) b.position.set(0, 0, 0); b.rotation.set(0, 0, 0); b.scale.set(1, 1, 1);
+    if (mv) H.rate = Math.max(6, Math.min(14, 5 + sp * 3.2)); H.ph += dt * (mv || m > 0.03 ? H.rate || 8 : 0); const p = H.ph; /* v340 멈춰도 걸음 박자는 이어 가며 잦아든다 (박자가 얼어붙으면 오뚜기처럼 기울어진 채 흔들렸다) */ b.position.set(0, 0, 0); b.rotation.set(0, 0, 0); b.scale.set(1, 1, 1); // v343 이 줄이 주석에 먹혀 몸 기울기·숨쉬기 크기가 쌓이고 있었다
+    if (H.legs) for (const l of H.legs) { l.o.quaternion.copy(l.q0); l.o.position.copy(l.p0); } // 동작이 안 건드리는 뼈도 매번 처음 자세에서
     if (H.mix) { const A = H.acts, want = (P.pose === 'ride' || P.ride) && A.sit ? 'sit' : mv ? (sp > 2.6 && A.run ? 'run' : A.walk ? 'walk' : A.swim ? 'swim' : A.idle ? 'idle' : null) : idle > 5 && A.sit ? 'sit' : idle > 5 && A.eat ? 'eat' : A.idle ? 'idle' : A.swim ? 'swim' : null;
       if (want && H.cur !== want) { A[want].reset().setEffectiveWeight(1).fadeIn(H.cur ? 0.25 : 0).play(); if (H.cur) A[H.cur].fadeOut(0.25); H.cur = want; }
       H.mix.update(dt * (want === 'walk' || want === 'run' ? Math.max(0.6, Math.min(1.8, sp / (want === 'run' ? 3 : 1.4))) : want === 'swim' ? (mv ? 1.6 : 0.6) : 1)); }
+    const lg = H.legs && !(H.mix && (H.cur === 'walk' || H.cur === 'run' || H.cur === 'swim' || H.cur === 'sit')) && m > 0.01;
+    if (lg) { const qq = this._q || (this._q = new T3.THREE.Quaternion()), four = H.legs.length === 4; // v343 다리 걷기: 네발은 대각선끼리 (왼앞+오른뒤), 두 발은 번갈아. 앞으로 나갈 때 발을 든다
+      for (const l of H.legs) { const o = four ? (l.front === l.left ? 0 : Math.PI) : l.left ? 0 : Math.PI, a = Math.sin(p + o) * H.amp * m; l.o.quaternion.multiply(qq.setFromAxisAngle(l.ax, a)); if (l.up) l.o.position.y += Math.max(0, Math.cos(p + o)) * 0.05 * H.B.hgt * m; } }
     if (!(H.mix && (H.cur === 'walk' || H.cur === 'run' || H.cur === 'swim'))) { // 걷는 동작이 없으면 몸 전체로
-      const hop = { rabbit: 1, mouse: 0.5, cat: 0.6, dog: 0.7, panda: 0.5, trex: 0.35, penguin: 0.3, parrot: 0.8 }[k] || 0.15, hg = H.B.hgt;
+      const hop = ({ rabbit: 1, mouse: 0.5, cat: 0.6, dog: 0.7, panda: 0.5, trex: 0.35, penguin: 0.3, parrot: 0.8 }[k] || 0.15) * (lg ? 0.3 : 1), hg = H.B.hgt;
       if (k === 'gary') { const e = 1 + Math.sin(t * 6) * 0.06 * m; b.scale.set(e, 1 / Math.sqrt(e), 1); } // 달팽이: 늘었다 줄었다
       else if (k === 'turtle') { b.position.y = Math.abs(Math.sin(p)) * 0.02 * hg * m; b.rotation.x = Math.sin(p) * 0.04 * m; if (P.hide > 0) b.scale.y = 1 - Math.min(1, P.hide) * 0.3; }
       else if (k === 'penguin') { b.rotation.x = Math.sin(p) * 0.09 * m; b.position.y = Math.abs(Math.sin(p)) * 0.015 * hg * m; b.rotation.y = Math.sin(p) * 0.06 * m; } // 뒤뚱: 좌우로만 (앞뒤 끄덕임 없음, 사용자 '펭귄 오뚜기같애')
@@ -19332,6 +19383,19 @@ const Snap3D = {
     const P = Profile.pal(Profile.get()), W = cv.width, H = cv.height, img = this.shot('body:' + Hero3D.key(P) + ':' + W + 'x' + H, W, H, g => this.person(g, P, 0.45), (b, c) => this.fit(b, c, 0.14, 1.04));
     if (!img) return false; const x = cv.getContext('2d'); x.clearRect(0, 0, W, H); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); cv.style.imageRendering = 'auto'; return true;
   },
+  /* ---- v343 편집숍에 남은 도트 그림을 3D로 (사용자 '숍에 2D로 보이는거 왜이렇게많어'): 옷·모자 큰 미리보기(사람) · 차 큰 미리보기 · 펫 꾸미기 · 이펙트의 사람. 그렸으면 true */
+  liveBig(x, key, build, aim, tick) { const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, img = this.live(key + ':' + S, W, Hh, build, aim, tick); if (!img) { this.warm(); return false; }
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, Hh); x.restore(); return true; },
+  wearBig(x, P, mv) { return this.liveBig(x, 'big:wear:' + Hero3D.key(P), g => ({ H: this.person(g, P, 0.38) }), (b, c) => this.fit(b, c, 0.12, 1.14),
+    (u, dt, tt) => { Hero3D.play(u.H, mv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.H.mix.update(dt); u.H.root.rotation.y = -Math.PI / 2 + 0.38 + (mv ? 0 : Math.sin(tt * 0.5) * 0.9); }); }, // 서 있으면 천천히 돌아 옷 옆·뒤도 보이게
+  carBig(x, it, mv) { if (typeof Car3D !== 'undefined') Car3D.load(); return this.liveBig(x, 'big:car' + (typeof Car3D !== 'undefined' && Car3D.ready() ? '3:' : ':') + it.col + ':' + (it.stripe || ''), g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); g.add(m); return { m }; }, (b, c) => this.fit(b, c, 0.42, 1.25),
+    (u, dt, tt) => { u.m.rotation.y = mv ? -0.55 : -0.55 + tt * 0.5; u.m.position.y = mv ? Math.abs(Math.sin(tt * 11)) * 0.012 : 0; }); },
+  pdModel(k, d) { const H = Pet3D.make(k, PetRT.petH(k) / TILE * 1.1, 0, d && Object.keys(d).length ? d : null); /* 꾸미기 없으면 실사 모델 */ H.sh.visible = false; return H; },
+  pdBig(x, k, d, mv, idle) { if (typeof Pet3D === 'undefined' || (Pet3D.load(), !Pet3D.has(k))) return false; return this.liveBig(x, 'big:pd:' + k + ':' + JSON.stringify(d), g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; g.add(H.root); return { H }; }, (b, c) => this.fit(b, c, 0.26, 1.5),
+    (u, dt, tt) => { Pet3D.pose(u.H, mv, mv ? 2.2 : 0, tt, dt, { idle: idle || 0 }); u.H.root.rotation.y = mv ? -0.9 : -0.62; }); },
+  // 이펙트 칸: 도트 사람 자리(발 = 칸 아래)에 3D 사람 사진. 효과는 그 위에 예전처럼 2D로
+  fxMan(x, P, X, Y, h) { if (!this.ok()) { this.warm(); return false; } const a = x.getTransform().a, ph = Math.max(32, Math.round(h * a)), pw = Math.round(ph / 2), img = this.shot('fxman:' + Hero3D.key(P) + ':' + ph, pw, ph, g => this.person(g, P, 0.3), (b, c) => this.fit(b, c, 0.1, 1.02)); if (!img) return false;
+    x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, X - h / 4, Y - h, h / 2, h); x.restore(); return true; },
   // 편집숍 큰 미리보기: 배·탱크 (v317) 비스듬히 + 앉은 나. 배는 둥실, 달리면 탱크는 들썩. 그렸으면 true
   // v321 움직이는 장면 하나 (편집숍 큰 미리보기): 만들어 두고 매번 tick 후 다시 찍는다. 다른 사진 찍을 땐 장면에서 빼 둔다
   live(key, W, H, build, aim, tick) {
@@ -19410,6 +19474,7 @@ const Snap3D = {
   },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {
+    if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
     const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);

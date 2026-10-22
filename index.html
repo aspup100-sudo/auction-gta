@@ -1569,7 +1569,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v323</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v324</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -12041,7 +12041,7 @@ const Shop = {
     const big = ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(kind), k = big ? 2 : 3, Hw = 80 / k, now = performance.now();
     const PX = big ? -Hw + 9 : -15, NX = Hw - 7, petX = big ? (kind === 'trex' ? 4 : 2) : 5; // 나 · 행인 · 펫 자리 (펫 단위 좌표)
     const sh = n => { Sprites.setPal(n === 'me' ? 'shop:me' : n, n === 'me' ? Profile.pal(Profile.get()) : undefined); return Sprites.sheet(n === 'me' ? 'shop:me' : n); };
-    const person = (n, X, row, fr, rot) => { x.save(); x.translate(X, 0); if (rot) x.rotate(rot); x.fillStyle = 'rgba(0,0,0,.22)'; if (!rot) { x.beginPath(); x.ellipse(0, 0, 5, 1.8, 0, 0, 7); x.fill(); } x.imageSmoothingEnabled = false; x.drawImage(sh(n), fr * 16, row * 16, 16, 16, -8, -16, 16, 16); x.restore(); };
+    this.pvK = k; const person = (n, X, row, fr, rot) => { if (typeof Snap3D !== 'undefined' && Snap3D.cap && Snap3D.cap.c === x) { Snap3D.cap.people.push({ n, X, row, fr, rot }); return; } /* v323 3D 미리보기면 사람은 3D로 */ x.save(); x.translate(X, 0); if (rot) x.rotate(rot); x.fillStyle = 'rgba(0,0,0,.22)'; if (!rot) { x.beginPath(); x.ellipse(0, 0, 5, 1.8, 0, 0, 7); x.fill(); } x.imageSmoothingEnabled = false; x.drawImage(sh(n), fr * 16, row * 16, 16, 16, -8, -16, 16, 16); x.restore(); };
     const say = (text, X, Y) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.font = '7px "IBM Plex Sans KR", sans-serif'; const hw = (Math.min(90, x.measureText(text).width) + 10) * 0.58; x.translate(Math.max(2 + hw, Math.min(158 - hw, 80 + X * k)) * S, Math.max(26, 96 + Y * k) * S); /* v252 말풍선이 칸 밖으로 잘리지 않게 */ x.scale(S * 1.15, S * 1.15); if (typeof Net !== 'undefined') Net.bubble(x, text, 0, 0); x.restore(); };
     const tag = (text, X, Y) => { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.translate((80 + X * k) * S, Math.max(14, 96 + Y * k) * S); x.scale(S * 1.2, S * 1.2); if (typeof Net !== 'undefined') Net.label(x, text, 0, 0); x.restore(); };
     const cam = (X, flash) => { Pets.camera(x, { x: X, y: 0, dir: 1, photo: { flash } }, now); };
@@ -12084,7 +12084,7 @@ const Shop = {
     if (npc) person(npc.n, npc.X, 1, 0);
     if (!pet.hide) { if (pet.rot) { x.save(); x.translate(pet.x, pet.y); x.rotate(pet.rot); Pets.draw(x, kind, 0, 0, pet.face, false, t, '', 0); x.restore(); } else Pets.draw(x, kind, pet.x, pet.y, pet.face, pet.mv, t, '', pet.idle, pet.pose); }
     if (npc && (kind === 'trex' || kind === 'panda')) cam(npc.X, fl < 260 ? flash : 0);
-    if (TG && TG.g) { const g = TG.g; Pets.gull(x, pet.x + g.dx, 0.3, g.f, g.up, t, g.peck); if (TG.say) tag(TG.say, TG.sayAt === 'g' ? pet.x + g.dx : pet.x, TG.sayAt === 'g' ? -14 - g.up : -13); }
+    if (TG && TG.g) { const g = TG.g; Pets.gull(x, pet.x + g.dx, 0.3, g.f, g.up, t, g.peck, { x: pet.x, U: 12.8 }); if (TG.say) tag(TG.say, TG.sayAt === 'g' ? pet.x + g.dx : pet.x, TG.sayAt === 'g' ? -14 - g.up : -13); }
     x.restore();
     for (const [tx, X, Y] of bubbles) say(tx, X, Y);
   },
@@ -12098,7 +12098,7 @@ const Shop = {
     else if (mv) { x.fillStyle = 'rgba(0,0,0,.12)'; const off = (t * 40) % 24; for (let X = -24; X < 184; X += 24) x.fillRect(Math.round(X - off), 92, 10, 2); }
     if (it.ride && !thumb && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && typeof Snap3D !== 'undefined' && Snap3D.rideBig(x, it, t, mv)) return; // v317 배·탱크 큰 미리보기는 3D
     if (it.ride) { x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); const pal = Profile.pal(Profile.get()); drawRide(x, 0, 0, 0, it.ride, mv ? 80 : 0, pal, it.ride === 'piggy' ? String(Profile.get().rideName || '').slice(0, 10) : ''); x.restore(); return; }
-    if (it.pet && !thumb) return this.petScene(x, it.pet, t, mv, idle, this.moveT || 0); // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
+    if (it.pet && !thumb) { if (typeof Snap3D !== 'undefined' && Snap3D.petBig(x, it.pet, o => this.petScene(o, it.pet, t, mv, idle, this.moveT || 0), t)) return; return this.petScene(x, it.pet, t, mv, idle, this.moveT || 0); } // v323 3D (사람·펫·새는 3D, 나머지는 위에 2D) // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
     if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = thumb ? (hd ? 6 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 3 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 8 : 5) : hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 2 : it.pet === 'beetle' ? 3.5 : ['mouse', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, thumb ? 98 : 96); /* 칸 그림은 더 크게 (뭔지 한눈에) */ x.scale(hd ? k / 2 : k, hd ? k / 2 : k); if (it.pet === 'monkey' && !thumb) { /* 원숭이: 내 캐릭터와 같이 — 걸을 땐 머리 위에 타고, 서 있으면 내려와 바나나 */ Sprites.setPal('shop:me', Profile.pal(Profile.get())); const sh = Sprites.sheet('shop:me'); x.imageSmoothingEnabled = false; if (mv) { x.drawImage(sh, (1 + Math.floor(t * 8) % 4) * 16, 32, 16, 16, -8, -16, 16, 16); Pets.draw(x, 'monkey', 0, -15, 1, false, t, '', 0, 'ride'); } else { x.drawImage(sh, 0, 0, 16, 16, -14, -16, 16, 16); Pets.draw(x, 'monkey', 8, 0, 1, false, t, '', idle); } x.restore(); return; }
       Pets.draw(x, it.pet, 0, 0, 1, mv, t, '', idle, it.pet === 'monkey' && mv ? 'ride' : undefined); if (it.pet === 'trex' && !mv && !thumb) Pets.ptero(x, { x: 0, y: 12 }, idle, t); /* 서 있으면 익룡 (미리보기에도) */ x.restore(); return; }
     if (it.home) return HomeIn.prev(x, it, t, thumb); // v259 가구: 작은 방 그림
@@ -12584,7 +12584,7 @@ const Pets = {
   },
   // 갈매기 (펫 그림체, 반 픽셀): 하얀 몸, 회색 날개 + 까만 날개 끝, 노란 부리에 빨간 점, 주황 다리. up > 0이면 날고 있다
   gull(c, x, y, f, up, t, peck, on) {
-    if (typeof Bird3D !== 'undefined' && Bird3D.want(c)) { const u0 = up; if (on && typeof Pet3D !== 'undefined' && Pet3D.has('turtle')) { const top = Pet3D.topOf('turtle', PetRT.petH('turtle') / TILE * 1.1) * TILE * 0.92; x = on.x + (x - on.x) * 0.3; up += top; } return Bird3D.push({ k: 'gull', x, y, up, f, peck, fly: u0 > 0 }); } // v323 3D: 큰 3D 거북이 등껍질 위에 내려앉아 쫀다 (on = 거북이)
+    if (typeof Bird3D !== 'undefined' && Bird3D.want(c)) { const u0 = up; if (on && typeof Pet3D !== 'undefined' && Pet3D.has('turtle')) { const top = Pet3D.topOf('turtle', PetRT.petH('turtle') / TILE * 1.1) * (on.U || TILE) * 0.92; x = on.x + (x - on.x) * 0.3; up += top; } return Bird3D.push({ k: 'gull', x, y, up, f, peck, fly: u0 > 0 }); } // v323 3D: 큰 3D 거북이 등껍질 위에 내려앉아 쫀다 (on = 거북이)
     const W = '#f6f6f2', WS = '#d8dce0', G = '#9aa4b0', GD = '#78828e', K = '#22242a', Y = '#f2c230', R = '#d83a2a', O = '#f0a040', r = (X, Y0, w, h, col) => { c.fillStyle = col; c.fillRect(X, Y0, w, h); };
     c.save(); c.fillStyle = `rgba(0,0,0,${up > 0 ? Math.max(0.06, 0.22 - up / 300).toFixed(2) : 0.22})`; c.beginPath(); c.ellipse(Math.round(x), Math.round(y), up > 0 ? 4 : 3.5, 1.3, 0, 0, 7); c.fill();
     c.translate(snapPx(c, x), snapPx(c, y - up)); c.scale(f, 1);
@@ -18609,9 +18609,9 @@ const BIRD3 = {
 const Bird3D = {
   q: [], G: null,
   // 3D가 그릴 차례인가 (아니면 2D 그림)
-  want(c) { return typeof Room3D !== 'undefined' && !!Room3D.pq && typeof ctx !== 'undefined' && c === ctx && !!window.T3; },
+  want(c) { const C = typeof Snap3D !== 'undefined' && Snap3D.cap; if (C && c === C.c) { this.tgt = C.birds; return true; } this.tgt = null; return typeof Room3D !== 'undefined' && !!Room3D.pq && typeof ctx !== 'undefined' && c === ctx && !!window.T3; }, // 편집숍 큰 미리보기를 3D로 찍는 중이면 그쪽 줄로
   // b = { k, x, y (땅 px), up (높이 px), f (보는 쪽 ±1), a (나는 방향 라디안, 있으면 f 대신), peck 0~1, fly }
-  push(b) { this.q.push(b); },
+  push(b) { (this.tgt || this.q).push(b); this.tgt = null; },
   geo() { if (this.G) return this.G; const { THREE } = T3, keep = g => (g._keep = 1, g);
     const flat = (pts, d = 0.012) => { const sh = new THREE.Shape(); pts.forEach(([x, z], i) => i ? sh.lineTo(x, z) : sh.moveTo(x, z)); const g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: false }); g.rotateX(Math.PI / 2); g.translate(0, d / 2, 0); return keep(g); }; // (x, z) 평면 모양 → 얇은 판 (어깨 z=0에서 +z로)
     const wing = flat([[0.07, 0], [0.06, 0.35], [0.0, 0.7], [-0.16, 1.0], [-0.1, 0.62], [-0.11, 0.3], [-0.1, 0]]), tip = flat([[0.0, 0.7], [-0.16, 1.0], [-0.1, 0.66], [-0.02, 0.62]], 0.014); // 앞이 둥글고 끝이 뒤로 젖혀진 갈매기 날개 + 까만 끝
@@ -18646,11 +18646,14 @@ const Bird3D = {
   // Room3D.render0에서: 이번 장면에 들어온 새들 세우기 (A 목록 열쇠 'b0'…, 안 보인 건 Room3D가 치운다)
   flush(R, t) {
     const q = this.q; this.q = []; if (!window.T3) return;
-    q.forEach((b, i) => { const key = 'b' + i; let H = R.A.get(key); if (!H || H.bird !== b.k) { if (H) R.drop(H); H = this.make(b.k); R.S.add(H.root); R.A.set(key, H); } H.seen = R.fr;
-      const up = Math.max(0, b.up || 0) / TILE, fly = !!b.fly || up > 0.05; H.root.position.set(b.x / TILE, 0, b.y / TILE); H.inner.position.y = up;
-      H.root.rotation.y = b.a != null ? -b.a : b.f < 0 ? Math.PI : 0; H.sh.material.opacity = Math.max(0.05, 0.22 - up * 0.05);
-      const ph = t * (b.k === 'ptero' ? 7 : 11) + i * 1.7, pk = b.peck || 0; H.bd.rotation.z = -pk * 0.7; H.hd.rotation.z = -pk * 0.5; H.legs.visible = !fly; H.inner.rotation.z = fly ? Math.sin(ph) * 0.06 : 0;
-      H.fold.visible = !fly; H.wings.forEach((p, j) => { const sd = j ? 1 : -1; p.visible = fly || b.k === 'ptero'; p.rotation.set(-sd * (Math.sin(ph) * 0.55 + 0.12), 0, 0); }); });
+    q.forEach((b, i) => { const key = 'b' + i; let H = R.A.get(key); if (!H || H.bird !== b.k) { if (H) R.drop(H); H = this.make(b.k); R.S.add(H.root); R.A.set(key, H); } H.seen = R.fr; this.place(H, b, t, i, TILE); });
+  },
+  // 새 하나 자리·자세 (U = 1칸이 몇 단위인지: 게임 TILE, 편집숍 미리보기는 그 장면 단위)
+  place(H, b, t, i, U) {
+    const up = Math.max(0, b.up || 0) / U, fly = !!b.fly || up > 0.05; H.root.position.set(b.x / U, 0, b.y / U); H.inner.position.y = up;
+    H.root.rotation.y = b.a != null ? -b.a : b.f < 0 ? Math.PI : 0; H.sh.material.opacity = Math.max(0.05, 0.22 - up * 0.05);
+    const ph = t * (b.k === 'ptero' ? 7 : 11) + i * 1.7, pk = b.peck || 0; H.bd.rotation.z = -pk * 0.7; H.hd.rotation.z = -pk * 0.5; H.legs.visible = !fly; H.inner.rotation.z = fly ? Math.sin(ph) * 0.06 : 0;
+    H.fold.visible = !fly; H.wings.forEach((p, j) => { const sd = j ? 1 : -1; p.visible = fly || b.k === 'ptero'; p.rotation.set(-sd * (Math.sin(ph) * 0.55 + 0.12), 0, 0); });
   },
 };
 
@@ -18743,6 +18746,47 @@ const Snap3D = {
     const H = mk(P), st = Ride3D.seat(k, 0, 0, 0, 0, { mv: !!mv, n: 1 }); H.root.position.set(st.x / TILE, st.hatch ? st.h - hh * 0.62 : st.stand ? st.h : st.h - hh * 0.2, st.y / TILE); Hero3D.play(H, Ride3D.anim1(st, !!mv), 0); H.mix.update(0.9); if (st.hatch) Hero3D.hideLegs(H); m.add(H.root);
     let C = null; if (RIDE3[k].carry) { C = mk(PIGGY_PAL); Hero3D.play(C, mv ? 'Walk_Loop' : 'Idle_Loop', 0); C.mix.update(0.9); m.add(C.root); m.updateMatrixWorld(true); Hero3D.ridePose(C, 'carry', 0, !!mv); }
     m.updateMatrixWorld(true); if (st.pose) Hero3D.ridePose(H, st.pose, 0, !!mv); return { m, H, st, C };
+  },
+  /* ---- v323 편집숍 펫 큰 미리보기 3D (사용자 '여기도 다 3D로 바꿔야지'): 대본(Shop.petScene · petpv.js)은 그대로 돌리고,
+   * 사람(person) · 펫(Pets.draw · Parrot.draw) · 새(Bird3D)는 그리는 대신 cap에 모았다가 3D로 세운다. 하트·도구·말풍선 같은 나머지는 투명 판(pvO)에 2D로 그려 위에 얹는다.
+   * 카메라는 거의 정면 직교라 2D 좌표(펫 단위, 땅 y = 0)와 화면 자리가 그대로 맞는다. */
+  cap: null,
+  capHook() { if (this.capH) return; this.capH = 1; const S = this, d0 = Pets.draw, p0 = typeof Parrot !== 'undefined' ? Parrot.draw : null;
+    Pets.draw = function (c, kind, x, y, face, moving, t, tag, idle, pose) { const C = S.cap; if (C && c === C.c) { C.pets.push({ kind, x, y, face, mv: !!moving, idle: idle || 0, pose }); return; } return d0.apply(this, arguments); };
+    if (p0) Parrot.draw = function (c, x, y, face, pose, t) { const C = S.cap; if (C && c === C.c) { C.pets.push({ kind: 'parrot', x, y, face, mv: pose === 'fly', idle: 0, pose, fly: pose === 'fly' }); return; } return p0.apply(this, arguments); }; },
+  petBig(x, kind, run, t) {
+    if (!this.ok() || typeof Pet3D === 'undefined' || typeof Bird3D === 'undefined') { this.warm(); return false; } Pet3D.load();
+    const cv = x.canvas, W = cv.width, H = cv.height, O = this.pvO || (this.pvO = document.createElement('canvas')); if (O.width !== W || O.height !== H) { O.width = W; O.height = H; }
+    const ox = O.getContext('2d'); ox.setTransform(1, 0, 0, 1, 0, 0); ox.clearRect(0, 0, W, H); ox.setTransform(x.getTransform()); ox.imageSmoothingEnabled = false;
+    this.capHook(); const C = this.cap = { c: ox, people: [], pets: [], birds: [] }; try { run(ox); } finally { this.cap = null; }
+    const img = this.pvRender(C, W, H, t); if (!img) return false;
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, H); x.drawImage(O, 0, 0); x.restore(); return true;
+  },
+  pvRender(C, W, H, t) {
+    try {
+      this.init(); const { THREE } = T3, k = (typeof Shop !== 'undefined' && Shop.pvK) || 3, U = 12.8; // 1칸 = 펫 단위 12.8 (3D 사람이 칸 안에 들어오게 2D보다 조금 작게)
+      const V = this.pv || (this.pv = { g: new THREE.Group(), A: new Map(), lt: performance.now(), fr: 0 }), now = performance.now(), dt = Math.min(0.05, (now - V.lt) / 1000); V.lt = now; V.fr++;
+      const get = (key, mk) => { let a = V.A.get(key); if (!a) { a = mk(); if (!a) return null; V.g.add(a.root); V.A.set(key, a); } a.fr = V.fr; return a; };
+      const blob = (par, r) => { const m = new THREE.Mesh(this.blobG || (this.blobG = Object.assign(new THREE.CircleGeometry(1, 20), { _keep: 1 })), this.blobM || (this.blobM = new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: 0.2, depthWrite: false }))); m.rotation.x = -Math.PI / 2; m.position.y = 0.004; m.scale.setScalar(r); par.add(m); return m; };
+      const yaw = (row, face) => row === 0 ? -Math.PI / 2 + 0.3 : row === 1 ? Math.PI + 0.45 : row === 3 ? Math.PI / 2 : row === 2 ? -0.45 : face < 0 ? Math.PI + 0.4 : -0.4; // 0 앞 · 1 왼쪽 · 2 오른쪽 · 3 뒤 (조금씩 카메라 쪽으로)
+      const hero = P => { const z = Room3D.zNow; Room3D.zNow = false; let Hh; try { Hh = Hero3D.make(P); } finally { Room3D.zNow = z; } Hh.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); Hero3D.play(Hh, 'Idle_Loop', 0); Hh.mix.update(0.4); const r = new THREE.Group(); r.add(Hh.root); blob(r, 0.32); return { root: r, H: Hh }; };
+      const used = {}, uk = b => (used[b] = (used[b] | 0) + 1, b + '#' + used[b]);
+      C.people.forEach(p => { const P = p.n === 'me' ? Profile.pal(Profile.get()) : this.palOf(p.n), a = get(uk('h:' + p.n + ':' + Hero3D.key(P)), () => hero(P));
+        a.root.position.set(p.X / U, 0, 0); a.root.rotation.set(0, 0, -(p.rot || 0)); a.H.root.rotation.y = yaw(p.row); Hero3D.play(a.H, p.fr ? 'Walk_Loop' : 'Idle_Loop', 0.2); a.H.mix.update(dt); });
+      C.pets.forEach((q, i) => { const hp = PetRT.petH(q.kind) / TILE * 1.1, ppl = PET_PEOPLE[q.kind], up = q.y < -2.5 ? -q.y / U : 0, z = q.y >= -2.5 ? q.y * 2 / U : 0;
+        if (ppl) { const sp = 'pet:' + q.kind; Sprites.setPal(sp, ppl); const a = get(uk('pp:' + q.kind), () => hero(Sprites.PAL[sp])); a.root.position.set(q.x / U, up, z); a.H.root.rotation.y = yaw(-1, q.face); Hero3D.play(a.H, q.mv ? 'Walk_Loop' : 'Idle_Loop', 0.2); a.H.mix.update(dt); return; }
+        if (Pet3D.has(q.kind)) { const a = get(uk('pm:' + q.kind), () => { const Hm = Pet3D.make(q.kind, hp, 0, null); Hm.sh.visible = false; const r = new THREE.Group(); r.add(Hm.root); Hm.blob = blob(r, Math.max(0.2, Math.min(0.8, hp * 0.5))); return { root: r, H: Hm }; });
+          a.root.position.set(q.x / U, 0, z); a.H.root.position.y = up; a.H.blob.visible = up < 0.05; a.H.ang = yaw(-1, q.face); a.H.root.rotation.y = a.H.ang;
+          Pet3D.pose(a.H, q.mv, q.mv ? 2.2 : 0, now / 1000, dt, Object.assign({ idle: q.idle, ride: q.pose === 'ride', fly: !!q.fly }, q.pose && typeof q.pose === 'object' ? q.pose : null)); return; }
+        const a = get(uk('ps:' + q.kind), () => { const e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k: q.kind, h: hp, paint: s => Pets.draw(s, q.kind, 25, 40, 1, false, 0.7, '', 0) }, false, 0.7); if (!e) return null; e.geo._keep = 1; const Hp = Room3D.mkPet(); Hp.mesh.geometry = Hp.ol.geometry = e.geo; Hp.mat.map = e.tex; Hp.sh.visible = false; const r = new THREE.Group(); r.add(Hp.root); blob(r, Math.max(0.2, hp * 0.5)); return { root: r, H: Hp }; });
+        if (a) { a.root.position.set(q.x / U, 0, z); a.H.root.position.y = up + (q.mv ? Math.abs(Math.sin(now / 1000 * 9)) * 0.05 : 0); a.H.root.rotation.y = yaw(-1, q.face); } }); // 3D 모델이 없는 펫은 부풀린 그림
+      C.birds.forEach((b, i) => { const a = get(uk('b:' + b.k), () => { const Hb = Bird3D.make(b.k); return { root: Hb.root, H: Hb }; }); Bird3D.place(a.H, b, now / 1000, i, U); a.root.position.z += 0.02; });
+      for (const [key, a] of V.A) if (a.fr !== V.fr) { V.g.remove(a.root); V.A.delete(key); if (a.H && a.H.mix) a.H.mix.stopAllAction(); }
+      V.g.updateMatrixWorld(true);
+      const oc = this.oc || (this.oc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.05, 60)), el = 0.2; // 2D 단위 → 칸: 1/U. 화면 160×104 = 펫 단위 (160/k)×(104/k)
+      oc.left = -80 / k / U; oc.right = 80 / k / U; oc.top = 96 / k / U; oc.bottom = -8 / k / U; oc.position.set(0, Math.sin(el) * 20, Math.cos(el) * 20); oc.lookAt(0, 0, 0); oc.updateProjectionMatrix();
+      this.S.add(V.g); this.r.setSize(W, H, false); this.r.render(this.S, oc); this.S.remove(V.g); return this.r.domElement;
+    } catch (e) { console.warn('snap3d pet', e); this.bad = 1; return null; }
   },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {

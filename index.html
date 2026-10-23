@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v364</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v365</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -12281,6 +12281,7 @@ const SHOP_ITEMS = {
     { id: 'p_sparrow', name: '참새', new: '2026-10-23', nb: 364, price: 150e4, pet: 'sparrow' }, // v364 사용자 2026-10-23 '닭,참새,멧돼지 넣자' (실사 모델 3d/sfp, 튜토리얼 선물)
     { id: 'p_chicken', name: '닭', new: '2026-10-23', nb: 364, price: 250e4, pet: 'chicken' },
     { id: 'p_boar', name: '멧돼지', new: '2026-10-23', nb: 364, price: 1500e4, pet: 'boar' },
+    { id: 'p_raptor', name: '벨로시랩터', new: '2026-10-23', nb: 365, price: 8000e4, pet: 'raptor' }, // v365 사용자 2026-10-23 '이거 좋다' (펫 동작 스레드 후보, 실사 모델 3d/sfp/raptor.glb)
     { id: 'p_beetle', name: '장수풍뎅이', price: 200e4, pet: 'beetle' },
     { id: 'p_mantis', name: '사마귀', price: 200e4, pet: 'mantis' },
     { id: 'p_dog', name: '강아지', price: 300e4, pet: 'dog' },
@@ -13236,7 +13237,7 @@ const Pets = {
       if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - 22); return;
     }
     const f0 = PET_DRAW[kind]; if (!f0) return; const rec = this.accRec, f = rec ? (...a) => { f0(...a); rec(a[3], a[4]); } : f0; /* v224: 펫 꾸미기가 몸을 그린 자리(기울기·뛰기 포함)를 알 수 있게 */ PET_FAT.n = kind === 'penguin' && pose && pose.fat ? pose.fat : 0;
-    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13, sparrow: 8, chicken: 13, boar: 15 }[kind] || 15));
+    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13, sparrow: 8, chicken: 13, boar: 15, raptor: 20 }[kind] || 15));
     const step = moving ? Math.floor(t * 8) % 2 : 0;
     c.save(); c.translate(snapPx(c, x), snapPx(c, y));
     if (pose !== 'ride' && kind !== 'dolphin' && !((kind === 'mouse' || kind === 'beetle') && !moving && idle > 5)) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' || kind === 'turtle' || kind === 'tiger' ? 6 + (kind === 'tiger') * 2 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill(); }
@@ -13843,7 +13844,7 @@ const PetDeco = {
     if (key.startsWith('f:') && typeof Net !== 'undefined') { const nm = key.slice(2).replace(/#2$/, ''); for (const id in Net.players) { const q = Net.players[id]; if (q && q.name === nm && q.pal) return this.get(kind, q.pal); } }
     return null;
   },
-  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13, sparrow: 8, chicken: 13, boar: 15 }[kind] || 15); },
+  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13, sparrow: 8, chicken: 13, boar: 15, raptor: 20 }[kind] || 15); },
   draw(c, kind, x, y, face, moving, t, tag, idle, pose, d) {
     // v224 (사용자 '서 있을 때, 움직일 때 같이 따라가야지' — 물고기 낚는 펭귄이 기울어도 목도리는 제자리였다): 몸을 그릴 때의 변환(뒤집기·기울기·폴짝)을 받아 두고 그대로 덧그린다. 몸 그림 없이 따로 그리는 자세(앉은 강아지 등)는 예전처럼
     let rec = null, off = null; if (d.eye || d.neck || d.head) Pets.accRec = (cx, mv) => { if (cx && cx.getTransform) rec = { cx, m: cx.getTransform(), mv }; };
@@ -14079,7 +14080,7 @@ const PetNPC = {
   end(s, S) { this.free(S, false); s.npc = null; s.npcNext = performance.now() + 5000 + Math.random() * 4000; },
   free(S, flee) { if (S.freed) return; S.freed = true; const w = S.w; if (Game.decor.includes(w)) w.x = S.wx; delete w.petNpc;
     if (w.ai) { w.ai.t = flee ? 1.6 : 0.3; if (flee) { w.ai.ix = Math.sign(w.x - S.px) || 1; w.ai.iy = Math.sign(w.y - S.py); w.ai.flee = true; } } },
-  LH: { sparrow: 12, chicken: 17, boar: 19, sponge: 25, gary: 19, parrot: 17, tiger: 26, dora: 24, snowman: 26, croc: 12, trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
+  LH: { sparrow: 12, chicken: 17, boar: 19, raptor: 26, sponge: 25, gary: 19, parrot: 17, tiger: 26, dora: 24, snowman: 26, croc: 12, trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
   // 장면에서 쓰는 도구: 시간 구간, 오가기, 던지기, 말풍선, 하트
   api(c, s, S, e, now, k) {
     const H = S.H, W = S.W, side = S.side, ex = Pets.extra, A = {
@@ -14719,6 +14720,17 @@ Object.assign(PNPC, {
     else if (e < 2.9) { R.face = A.face; R.pose = { act: 'idle' }; A.say(2.1, 2.9, '흥!'); }
     A.snd(1.1, 'deny'); A.snd(hit, 'pop'); A.wsay(hit - 0.05, ['으아악! 멧돼지다!', '살려 주세요!!', '엄마야!!'][Math.floor(S.r * 3)], 1.6); A.free(hit, true);
     if (e >= hit - 0.05 && e < hit + 0.25) { S.wdir = null; S.jit = true; } return R; } },
+  // v365 벨로시랩터 (사용자 2026-10-23 '이거 좋다'): 행인을 노려보다 킁킁 → 달려가 덮치기 → 행인 도망 → 포효
+  raptor: { dur: 6.0, min: 40, say: ['저거 공룡 아니야?!', '헉 랩터다…', '진짜 살아 있는 거야?'], run(S, e, A) {
+    const H = A.H, M = A.near(5), hit = 2.25;
+    const R = A.go([[1.6, H], [hit, M], [3.4, M], [5.4, H]]); R.face = A.face;
+    if (e < 0.9) { R.pose = { act: 'alert' }; A.say(0.2, 0.9, '…'); }
+    else if (e < 1.6) { R.pose = { act: 'sniff' }; A.say(0.9, 1.6, '킁킁'); }
+    else if (e < hit - 0.45) { R.mv = true; A.say(1.6, 2.4, '캬아악!'); }
+    else if (e < hit + 0.3) { R.pose = { act: 'leap' }; }
+    else if (e < 3.4) { R.pose = { act: 'roar' }; A.say(2.7, 3.4, '크와아앙!'); }
+    A.snd(1.6, 'deny'); A.snd(hit, 'pop'); A.wsay(hit - 0.05, ['으아악! 공룡이다!', '살려 주세요!!', '쥬라기 공원이야?!'][Math.floor(S.r * 3)], 1.6); A.free(hit, true);
+    if (e >= hit - 0.05 && e < hit + 0.25) { S.wdir = null; S.jit = true; } return R; } },
 });
 { const it0 = PetNPC.item; PetNPC.item = function (c, kind, x, y, dir, amt, spin) { if (kind !== 'seed') return it0.apply(this, arguments); c.fillStyle = '#e8c060'; c.fillRect(Math.round(x * 2) / 2, Math.round(y * 2) / 2, 0.8, 0.6); }; }
 // 2D 그림 (3D 모델을 받기 전·2D 화면): 오른쪽 보는 모습, 발 = (0, 0)
@@ -14741,6 +14753,14 @@ Object.assign(PET_DRAW, {
     r(-7, -9, 13, 6.5, B); r(-6.5, -9.5, 11, 0.5, BD); for (let i = 0; i < 4; i++) r(-6 + i * 3, -8, 2.2, 0.6, BL); r(-6, -3.4, 11, 0.6, BD); // 몸 · 줄무늬
     r(-8, -8, 1.2, 0.8, BD); r(-8.6, -7.5, 0.8, 1.6, BD); // 꼬리
     r(5, -9, 4, 5, B); r(5.5, -10.5, 1.5, 1.6, BD); r(9, -7, 2.5, 2.4, B); r(11.3, -6.8, 0.8, 2, N); r(10.4, -5.2, 0.8, 0.8, '#e8e0c8'); r(7, -8, 0.8, 0.8, K); // 머리 · 귀 · 주둥이 · 코 · 송곳니 · 눈
+  },
+  raptor(r, s, t) { // 벨로시랩터: 두 발, 긴 꼬리, 등 줄무늬, 앞발 갈고리
+    const G = '#7a6a48', GD = '#4e4230', GL = '#b8a478', K = '#111', C = '#e8e0c8';
+    r(-1 + s, -6, 1.5, 6, GD); r(1.5 - s, -6, 1.5, 6, GD); r(-1.5 + s, -0.6, 2.5, 0.6, GD); r(1 - s, -0.6, 2.5, 0.6, GD); // 다리
+    r(-13, -12, 6, 1.6, G); r(-16, -11.6, 3.5, 1.2, GD); // 꼬리
+    r(-7, -14, 10, 6, G); r(-6, -8.6, 8, 0.8, GL); for (let i = 0; i < 4; i++) r(-6 + i * 2.4, -14, 1.2, 1.4, GD); // 몸 · 배 · 줄무늬
+    r(3.5, -11, 1, 3, GD); r(4.3, -8.4, 1, 0.6, C); // 앞발 · 발톱
+    r(2, -17, 2.5, 4, G); r(3, -19, 6, 3, G); r(6, -16.3, 3, 1, GD); r(6.5, -16.3, 0.5, 0.6, C); r(7.6, -16.3, 0.5, 0.6, C); r(5, -18.6, 0.9, 0.9, K); // 목 · 머리 · 턱 · 이빨 · 눈
   },
 });
 
@@ -15304,7 +15324,7 @@ const PetRT = {
   /* ---- 그리기 공통 (v154, 사용자 2026-10-16 '펫 배틀 퀄리티 더 올리자, 너무 투박해'): 큰 펫, 관중·무대, 효과(먼지·별·땀·색종이), 화면 흔들림, 이름표 카드, 카운트다운·승리 연출 ---- */
   view(W, H, B) { const s = Math.min(W / 320, H / 180), ox = (W - 320 * s) / 2, oy = (H - 180 * s) / 2, mir = !!B.mir; return { s, ox, oy, mir, k: Math.max(2, 2 * Math.round(s * 0.9)), X: x => ox + (mir ? 320 - x : x) * s, Y: y => oy + y * s, F: f => (mir ? -f : f), SX: x => ox + x * s }; },
   petK(kind, base) { return Math.max(2, 2 * Math.round(base * (['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 2 : ['trex', 'giraffe', 'elephant'].includes(kind) ? 0.5 : 1) / 2)); },
-  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7, snowman: 20, croc: 7, dora: 18, sponge: 18, gary: 11, parrot: 11, sparrow: 5, chicken: 10, boar: 13 }[kind] || 14; }, // 펫 키 (펫 픽셀)
+  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7, snowman: 20, croc: 7, dora: 18, sponge: 18, gary: 11, parrot: 11, sparrow: 5, chicken: 10, boar: 13, raptor: 18 }[kind] || 14; }, // 펫 키 (펫 픽셀)
   pet(c, V, P, x, y, face, mv, t, al, sx, rot) { // sx: 화면 x를 직접 줄 때
     const k = this.petK(P.kind, V.k); c.save(); c.globalAlpha = al == null ? 1 : al; c.translate(Math.round(sx != null ? sx : V.X(x)), Math.round(V.Y(y))); if (rot) c.rotate(rot); c.scale(k, k); PetEvo.with(P.kind, PetEvo.stOf(P.lv), false, () => Pets.draw(c, P.kind, 0, 0, sx != null ? face : V.F(face), mv, t, '', 0)); c.restore();
   },
@@ -20970,7 +20990,7 @@ const Suit3D = {
 const Pet3D = {
   st: 0, M: {},
   // 키 대신 몸길이로 크기를 맞추는 납작하고 긴 펫 (칸)
-  LEN: { boar: 1.3, sparrow: 0.65, turtle: 1.05, croc: 1.9, lizard: 0.95, dolphin: 1.5, beetle: 0.62, mouse: 0.8, mantis: 0.72, gary: 0.8 },
+  LEN: { boar: 1.3, sparrow: 0.65, raptor: 1.9, turtle: 1.05, croc: 1.9, lizard: 0.95, dolphin: 1.5, beetle: 0.62, mouse: 0.8, mantis: 0.72, gary: 0.8 },
   load() {
     if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder, THREE } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     const get = f => new Promise((ok, no) => L.load(Arena3J.url(f), ok, undefined, no));
@@ -21011,10 +21031,10 @@ const Pet3D = {
   },
   /* ---- v335 실사 펫 (Sketchfab CC BY, '만든 사람들'에 출처): 기본 모습일 때만 (진화·꾸미기는 위 모델). 3d/sfp/<키>.glb, 처음 보일 때 받는다.
    * 뼈 동작이 있는 펫(강아지·토끼·쥐·돌고래)은 동작을 섞고, 뼈 없는 사진 모델은 몸 전체로 통통·뒤뚱. 성격(act)은 그대로 */
-  SFP: { cat: 0, dog: 0, dolphin: 0, panda: 0, parrot: 0, mouse: Math.PI / 2, gary: 0, trex: 0, penguin: 0, rabbit: Math.PI, turtle: 0, chicken: Math.PI / 2, boar: Math.PI / 2, sparrow: -Math.PI / 2 }, // 앞을 +x로 돌리는 각
+  SFP: { cat: 0, dog: 0, dolphin: 0, panda: 0, parrot: 0, mouse: Math.PI / 2, gary: 0, trex: 0, penguin: 0, rabbit: Math.PI, turtle: 0, chicken: Math.PI / 2, boar: Math.PI / 2, sparrow: -Math.PI / 2, raptor: Math.PI / 2 }, // 앞을 +x로 돌리는 각
   R: {}, rs: {},
   noReal: true, // v344 사용자 '캐릭터만 귀엽게' → 펫은 직접 만든 귀여운 모델 (실사 펫 코드는 그대로 둠)
-  REAL_OK: { cat: 1, dog: 1, rabbit: 1, mouse: 1, chicken: 1, boar: 1, sparrow: 1 }, REAL_ONLY: { chicken: 1, boar: 1, sparrow: 1 }, /* v364 실사만 있는 펫 (귀여운 모델 없음): 받기 전엔 2D 그림 */ /* 돌고래는 물 밖에서 떠 보여 아직 뺌 */ /* v351 동작 있는 실사 펫 (사용자 '동작 없는건 다 빼' 뒤 남은 실사 모델) */ /* v345 noReal이어도 실사로 쓰는 종류: 사용자가 고른 긴 털 갈색 고양이 */
+  REAL_OK: { cat: 1, dog: 1, rabbit: 1, mouse: 1, chicken: 1, boar: 1, sparrow: 1, raptor: 1 }, REAL_ONLY: { chicken: 1, boar: 1, sparrow: 1, raptor: 1 }, /* v365 벨로시랩터 (사용자 '이거 좋다') */ /* v364 실사만 있는 펫 (귀여운 모델 없음): 받기 전엔 2D 그림 */ /* 돌고래는 물 밖에서 떠 보여 아직 뺌 */ /* v351 동작 있는 실사 펫 (사용자 '동작 없는건 다 빼' 뒤 남은 실사 모델) */ /* v345 noReal이어도 실사로 쓰는 종류: 사용자가 고른 긴 털 갈색 고양이 */
   real(k, st, d) { if ((this.noReal && !this.REAL_OK[k]) || st || d || !(k in this.SFP) || !window.T3) return false; this.needR(k); return this.rs[k] === 2; },
   needR(k) { if (this.rs[k]) return; this.rs[k] = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('sfp/' + k + '.glb?v=' + (k === 'cat' ? 2 : 1)), ok, undefined, no))).then(G => {
@@ -21069,8 +21089,8 @@ const Pet3D = {
     return out.length === 4 ? out : null;
   },
   /* v364 실사만 있는 펫 동작: IDLE = 가만히 있을 때 돌리는 동작 (초), SPD = [걷기, 뛰기] 동작 한 번 빠르기(모델 단위/초) + 뛰기로 바꾸는 빠르기 */
-  IDLE: { chicken: { L: [['idle', 2.5], ['eat', 3], ['idle', 2], ['eat', 2.5], ['idle', 2], ['sit', 9]] }, boar: { L: [['idle', 3], ['eat', 4.5], ['idle', 3], ['sit', 10]] }, sparrow: { L: [['idle', 2], ['eat', 1.6], ['idle', 1.4], ['shake', 1.1], ['eat', 1.6], ['idle', 1.5]] } },
-  SPD: { chicken: [1.1, 7.5, 2.4], boar: [0.95, 1.6, 2.2], sparrow: [0.5, 0.5, 99] },
+  IDLE: { chicken: { L: [['idle', 2.5], ['eat', 3], ['idle', 2], ['eat', 2.5], ['idle', 2], ['sit', 9]] }, boar: { L: [['idle', 3], ['eat', 4.5], ['idle', 3], ['sit', 10]] }, sparrow: { L: [['idle', 2], ['eat', 1.6], ['idle', 1.4], ['shake', 1.1], ['eat', 1.6], ['idle', 1.5]] }, raptor: { L: [['idle', 3], ['sniff', 3.5], ['idle', 2.5], ['roar', 2.6], ['idle', 3], ['eat', 4], ['sit', 12]] } },
+  SPD: { chicken: [1.1, 7.5, 2.4], boar: [0.95, 1.6, 2.2], sparrow: [0.5, 0.5, 99], raptor: [2.1, 2.4, 2.4] },
   /* 참새 날개 접기 (Sketchfab 모델은 모든 동작에서 날개를 펴고 있다): 받을 때 묶음 자세에서 날개 정점으로 날개 면(Mb)을 재 두고,
    * 매 장 어깨를 몸 옆에 붙인 면(FP)으로 돌린다. 축은 모두 모델 원래 좌표 (w로 돌리기 전) */
   FOLD: { sparrow: 1 }, FP: { sd: 0.5, nu: 1.4, so: -0.1, sc: 0.64 },
@@ -21121,7 +21141,7 @@ const Pet3D = {
     if (H.legs) for (const l of H.legs) { l.o.quaternion.copy(l.q0); l.o.position.copy(l.p0); } // 동작이 안 건드리는 뼈도 매번 처음 자세에서
     if (H.cat) { this.catPose(H, mv, dt); try { this.act(H, m, t, dt, P); } catch (e) { console.warn('pet3d act', e); H.noAct = 1; } return; }
     if (H.fk) this.foldReset(H);
-    if (H.mix) { const A = H.acts, C = this.IDLE[k], SP = this.SPD[k], cyc = () => { let u = (idle - 1.5) % C.T; for (const [n, d] of C.L) { if (u < d) return A[n] ? n : 'idle'; u -= d; } return 'idle'; };
+    if (H.mix) { const A = H.acts, C = this.IDLE[k], SP = this.SPD[k], cyc = () => { let u = (idle - 1.5) % (C.T || (C.T = C.L.reduce((a, b) => a + b[1], 0))); /* v365 한 바퀴 길이를 안 재서 늘 idle만 나오던 것 */ for (const [n, d] of C.L) { if (u < d) return A[n] ? n : 'idle'; u -= d; } return 'idle'; };
       const want = k === 'mouse' && !mv && idle > 5 && A.walk ? this.mouseAt(idle - 5).clip : P.act && A[P.act] ? P.act : P.fly && A.fly ? 'fly' : (P.pose === 'ride' || P.ride) && A.sit ? 'sit' : mv ? (sp > (SP ? SP[2] : 2.6) && A.run ? 'run' : A.walk ? 'walk' : A.swim ? 'swim' : A.idle ? 'idle' : null) : C && idle > 1.5 ? cyc() : idle > 5 && A.sit ? 'sit' : idle > 5 && A.eat ? 'eat' : A.idle ? 'idle' : A.swim ? 'swim' : null;
       if (want && H.cur !== want) { A[want].reset().setEffectiveWeight(1).fadeIn(H.cur ? 0.25 : 0).play(); if (H.cur) A[H.cur].fadeOut(0.25); H.cur = want; }
       const ts = want === 'walk' || want === 'run' ? (SP ? Math.max(0.6, Math.min(2.4, sp / (SP[want === 'run' ? 1 : 0] * H.s))) : Math.max(0.6, Math.min(1.8, sp / (want === 'run' ? 3 : 1.4)))) : want === 'swim' ? (mv ? 1.6 : 0.6) : 1; /* v364 걸음 빠르기 = 실제로 가는 빠르기 ÷ 동작 한 번에 가는 거리 (닭·멧돼지 발이 미끄러지지 않게) */
@@ -21676,7 +21696,7 @@ const Snap3D = {
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {
     if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
-    if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); return this.baked(x, it.ride, 160 * S, 104 * S); } /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
+    if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); if (this.baked(x, it.ride, 160 * S, 104 * S)) return true; return !(this.bk[it.ride] && this.bk[it.ride].bad); } /* v365 사진이 아직 오는 중이면 빈 칸으로 기다림 (예전엔 2D 그림으로 넘어가며 배·탱크 실사 모델을 칸마다 받아 폰이 튕겼다, 사용자 '스킨구경 e누르면 튕겼어') */ /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
     const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);
@@ -25459,7 +25479,8 @@ const CREDITS_SF = [["Classic Bicycle | LowPoly | Game ready", "by__Rx", "https:
   // v364 새 펫 닭·참새·멧돼지 (3d/sfp/)
   ["ANIMAL & FOOD - Chicken Model (CS2)", "kill6lucius", "https://sketchfab.com/3d-models/7c72450ac7e0472eb9b647b6efee2984"],
   ["Animated Sparrow – 3D Animal Model", "AnimalMesh 3D", "https://sketchfab.com/3d-models/026d23b0c0954f328694cb339ade4045"],
-  ["Animated Realistic Boar – 3D Animal Model", "AnimalMesh3D", "https://sketchfab.com/3d-models/f672a7fd93e84997b80a54ba30956111"]
+  ["Animated Realistic Boar – 3D Animal Model", "AnimalMesh3D", "https://sketchfab.com/3d-models/f672a7fd93e84997b80a54ba30956111"],
+  ["PBR Velociraptor (Animated)", "ferociousindustries.matthias", "https://sketchfab.com/3d-models/8f1744af7b0847a2aabe3df90be802f0"] // v365 벨로시랩터 펫
 ];
 Cm.credits = () => { const li = CREDITS_SF.map(([t, a, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a> · ${esc(a)} <small>CC BY 4.0 · 수정함</small></li>`).join('');
   Cm.win(`<div class="rcHead">만든 사람들</div><div class="rcSub">경매 GTA는 아래 분들이 공개한 모델·사진 덕분에 만들 수 있었어요. 고마워요!</div>
@@ -25496,7 +25517,7 @@ const Access = {
     const got = this.gift(n); if (got && !quiet) setTimeout(() => { try { Toast.show(`환영해요, ${n} 님! 옷·모자·펫·탈것을 전부 선물로 드렸어요.`, 4200); Sound.play('chime'); } catch (e) { } }, 600);
   },
   gift(n) {
-    const key = 'gift364all_' + n; /* v364 새 펫(닭·참새·멧돼지)도 받게 키를 올림 */ if (Store.get(key, false) || typeof SHOP_ITEMS === 'undefined' || typeof Shop === 'undefined') return 0;
+    const key = 'gift365all_' + n; /* v364 새 펫(닭·참새·멧돼지) · v365 벨로시랩터도 받게 키를 올림 */ if (Store.get(key, false) || typeof SHOP_ITEMS === 'undefined' || typeof Shop === 'undefined') return 0;
     const w = Store.get('wardrobe', null) || {}, own = new Set(Shop.owned()), src = Object.assign({}, w.src || {}); let c = 0;
     for (const cat of this.GIFT_CATS) for (const it of SHOP_ITEMS[cat] || []) if (it && it.id && !own.has(it.id)) { own.add(it.id); src[it.id] = 'gift'; c++; }
     Store.set('wardrobe', Object.assign({}, w, { owned: [...own], src })); Store.set(key, true); Store.set('ungift241', true); /* 예전 선물 회수(v241)가 이번 선물을 다시 가져가지 않게 */

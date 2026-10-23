@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v366</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v367</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -4055,7 +4055,7 @@ function issueFine(why, amt) {
 /* ---- NPC 차량: 차선을 따라 달리고 신호를 지킨다 ---- */
 function spawnTraffic(z) {
   const cars = [];
-  const KINDS = [['taxi', '#f08a24', 22, 12, 6], ['bus', '#2c6fb3', 40, 14, 2], ['bus', '#3a9a5a', 40, 14, 2], ['car', '#d9dde3', 22, 12, 8], ['car', '#2f3a4f', 22, 12, 8], ['car', '#8a1f1f', 22, 12, 5], ['car', '#e8e2c8', 22, 12, 5]];
+  const KINDS = [['taxi', '#e8913a', 52, 20, 6], ['bus', '#2a62c4', 104, 26, 2], ['bus', '#4fae45', 104, 26, 2], ['car', '#d9dde3', 52, 20, 8], ['car', '#2f3a4f', 52, 20, 8], ['car', '#8a1f1f', 52, 20, 5], ['car', '#e8e2c8', 52, 20, 5], ['car', '#15161a', 52, 20, 6], ['car', '#7d838a', 52, 20, 6]]; // v347 실사 차: 차선 폭(약 27px)에 맞춘 실제 비율 (승용 4.7 m · 버스 11 m, 사람이 커서 조금 키움), 택시는 서울 꽃담황토색, 흔한 검정 · 회색 추가
   for (const r of z.roads) {
     let L = 0; for (let i = 0; i < r.pts.length - 1; i++) L += Math.hypot(r.pts[i + 1][0] - r.pts[i][0], r.pts[i + 1][1] - r.pts[i][1]);
     r.len = L * TILE;
@@ -7995,14 +7995,14 @@ function drawWalker(c, w, t, opts = {}) {
   if (w.punchT && performance.now() < w.punchT) drawFist(c, w); // 때리기 (v143): 팔을 쭉 뻗은 주먹
 }
 // 주먹 (사용자 2026-10-16 '주먹이 좀 안 보이는데'): 보는 쪽으로 팔이 쭉 나갔다 들어온다. 맞히면 '퍽!'
-function drawFist(c, w, hitOnly) { // hitOnly: 3D 몸이 직접 주먹을 뻗을 때는 '퍽!'만 (v317, 사용자 '이것도 고쳐 주먹')
+function drawFist(c, w, hitOnly, noPow) { // noPow: 3D 거리는 '퍽!' 대신 Hit3D (v367) // hitOnly: 3D 몸이 직접 주먹을 뻗을 때는 '퍽!'만 (v317, 사용자 '이것도 고쳐 주먹')
   const P = Sprites.PAL[w.sprite] || Sprites.PLAYER_DEFAULT, e = 1 - (w.punchT - performance.now()) / 300, ext = e < 0.25 ? e / 0.25 : e > 0.7 ? Math.max(0, 1 - (e - 0.7) / 0.3) : 1;
   const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][w.dir] || [1, 0], L = Math.round(3 + ext * 8), sx = snapPx(c, w.x) + vx * 3, sy = snapPx(c, w.y) - 9 + vy * 2, fx = sx + vx * L, fy = sy + vy * L;
   const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); };
   if (!hitOnly) { if (vx) r(Math.min(sx, fx), sy - 1, Math.abs(fx - sx), 3, P.shirt); else r(sx - 1, Math.min(sy, fy), 3, Math.abs(fy - sy), P.shirt); // 팔 (소매)
   r(fx - 3, fy - 3, 6, 6, '#2a1a10'); r(fx - 2, fy - 2, 4, 4, P.skin || '#f1c9a5'); r(fx - 2, fy - 2, 4, 1, 'rgba(255,255,255,.45)'); // 주먹 (테두리 + 살색)
   if (vx) for (let i = 0; i < 3; i++) r(fx - vx * (6 + i * 3) - 1, fy - 3 + i * 3, 3, 1, 'rgba(255,255,255,.8)'); else for (let i = 0; i < 3; i++) r(fx - 3 + i * 3, fy - vy * (6 + i * 3) - 1, 1, 3, 'rgba(255,255,255,.8)'); } // 휙 선
-  if (w.punchHit && ext > 0.6) { const X = fx + vx * 6, Y = fy + vy * 6 - 4; c.save(); c.fillStyle = '#ffe14a'; c.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, R = i % 2 ? 4 : 9; c.lineTo(X + Math.cos(a) * R, Y + Math.sin(a) * R); } c.closePath(); c.fill(); c.strokeStyle = '#c0392b'; c.lineWidth = 1; c.stroke();
+  if (w.punchHit && ext > 0.6 && !noPow) { const X = fx + vx * 6, Y = fy + vy * 6 - 4; c.save(); c.fillStyle = '#ffe14a'; c.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, R = i % 2 ? 4 : 9; c.lineTo(X + Math.cos(a) * R, Y + Math.sin(a) * R); } c.closePath(); c.fill(); c.strokeStyle = '#c0392b'; c.lineWidth = 1; c.stroke();
     c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = '#fff'; c.strokeText('퍽!', X, Y + 3); c.fillStyle = '#c0392b'; c.fillText('퍽!', X, Y + 3); c.restore(); }
 }
 // 큰절: 무릎 꿇고 엎드려 이마를 바닥에 (옆모습, 보던 쪽으로). 1.2초마다 한 번 꾸벅
@@ -9080,7 +9080,7 @@ function drawIris() {
   ctx.beginPath(); ctx.rect(0, 0, VW, VH); ctx.arc(sx, sy, Math.max(0.1, R), 0, Math.PI * 2, true); ctx.fill('evenodd');
 }
 function draw() {
-  const pbw = draw.pb || (draw.pb = $('pbWin')); if (pbw && pbw.classList.contains('in') && Game.scene !== 'title') return; const fsw = draw.fs || (draw.fs = [$('hjWin'), $('fightWin'), $('tetWin'), $('rpsWin'), $('quizWin'), $('examWin'), $('mineWin')].filter(Boolean)); const stw = draw.st || (draw.st = $('studyWin')), stF = stw && stw.classList.contains('in') && matchMedia('(max-width:700px), (max-height:500px)').matches; /* 폰에선 사례 공부도 화면 전체를 덮는다 */ if (Game.scene !== 'title' && (stF || fsw.some(e => e.classList.contains('in')))) { if (typeof Perf !== 'undefined' && Perf.cover) Perf.cover(); return; } // 카지노·게임장 창은 화면 전체를 불투명하게 덮어서 뒤 거리 안 그림 (그림 똑같음, 렉만 줄임) // v310 콜로세움(펫 배틀·축구) 창이 화면을 덮는 동안 뒤 거리는 안 그린다 (컴퓨터에서 축구 11 fps)
+  const pbw = draw.pb || (draw.pb = $('pbWin')); if (pbw && pbw.classList.contains('in') && Game.scene !== 'title') return; const fsw = draw.fs || (draw.fs = [$('hjWin'), $('fightWin'), $('tetWin'), $('rpsWin'), $('quizWin'), $('examWin'), $('mineWin')].filter(Boolean)); const stw = draw.st || (draw.st = $('studyWin')), stF = stw && stw.classList.contains('in') && matchMedia('(max-width:700px), (max-height:500px)').matches; /* 폰에선 사례 공부도 화면 전체를 덮는다 */ if (Game.scene !== 'title' && (stF || fsw.some(e => e.classList.contains('in')))) { if (typeof Perf !== 'undefined' && Perf.cover) Perf.cover(); return; } const shw = draw.sh || (draw.sh = [$('shop'), $('shBig'), $('closet'), $('evoWin')].filter(Boolean)); if (Game.scene !== 'title' && draw.once && shw.some(e => e.classList.contains('in'))) return; draw.once = 1; /* v367 편집숍·큰 미리보기·옷장이 열린 동안 뒤 거리는 마지막 장면 그대로 (어둡게 덮여 있고, 미리보기 3D와 거리 3D를 한꺼번에 그리던 렉, 사용자 '미리보기 눌렀을때 튕기거나 렉걸리거나') */ // 카지노·게임장 창은 화면 전체를 불투명하게 덮어서 뒤 거리 안 그림 (그림 똑같음, 렉만 줄임) // v310 콜로세움(펫 배틀·축구) 창이 화면을 덮는 동안 뒤 거리는 안 그린다 (컴퓨터에서 축구 11 fps)
   const r3 = Game.scene === 'room' && Room3D.active(Game.room), z3 = Game.scene === 'zone' && Room3D.zActive(Game.zone); Room3D.zNow = z3; if (!r3 && !z3) Room3D.show(false); if (!z3) Room3D.zShowG(false);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); if (r3 || z3) ctx.clearRect(0, 0, VW, VH); else { ctx.fillStyle = '#14161c'; ctx.fillRect(0, 0, VW, VH); }
   if (Game.scene === 'title') return;
@@ -9294,17 +9294,17 @@ const Punch = {
   fee() { return Math.round((FEEL.hospitalMin + Math.random() * (FEEL.hospitalMax - FEEL.hospitalMin)) / 100000) * 100000; },
   pow(x, y) {
     shake(4, 0.18); Game.hitstop = 0.05; Sound.play('crash');
-    if (!REDUCED_MOTION) for (let i = 0; i < 7; i++) Particles.push({ x, y: y - 10, vx: (Math.random() - 0.5) * 140, vy: -30 - Math.random() * 80, g: 240, life: 0.4, max: 0.4, col: 'rgba(255,220,90,', r: 1.6 });
-    const pl = Game.player, a = Math.atan2(y - pl.y, x - pl.x); pl.dir = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) < 0 ? 1 : 2) : (Math.sin(a) < 0 ? 3 : 0); this.swing(true);
+    if (!REDUCED_MOTION && !(typeof Hit3D !== 'undefined' && Hit3D.on())) for (let i = 0; i < 7; i++) Particles.push({ x, y: y - 10, vx: (Math.random() - 0.5) * 140, vy: -30 - Math.random() * 80, g: 240, life: 0.4, max: 0.4, col: 'rgba(255,220,90,', r: 1.6 });
+    const pl = Game.player, a = Math.atan2(y - pl.y, x - pl.x); pl.punchTo = { x, y, t: performance.now() }; /* v367 Hit3D: 맞은 사람 쪽으로 */ pl.dir = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) < 0 ? 1 : 2) : (Math.sin(a) < 0 ? 3 : 0); this.swing(true);
   },
   // 팔 뻗기 (drawFist) · 친구 화면에도 보이게 pos에 pc(휘두른 횟수)·ph(맞힘)
-  seq: 0, swing(hit) { const pl = Game.player; pl.punchT = performance.now() + 300; pl.punchHit = hit; this.seq++; this.hit = hit; },
+  seq: 0, swing(hit) { const pl = Game.player; pl.punchT = performance.now() + 300; pl.punchHit = hit; this.seq++; this.hit = hit; if (typeof Hit3D !== 'undefined' && Hit3D.on()) Hit3D.from(pl); },
   pos() { return this.seq ? { pc: this.seq, ph: this.hit ? 1 : undefined } : {}; },
   // 옆에 아무도 없을 때: 보는 쪽으로 허공에 주먹 (횟수는 안 센다, 사용자 2026-10-16 '그냥 평소에도 G 누를 수 있게')
   whiff() {
     const pl = Game.player; if (Game.scene !== 'zone' || Game.driving || !pl) return; this.cd = 0.35; Sound.play('flip'); this.swing(false);
     const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][pl.dir] || [1, 0], hx = pl.x + vx * 7, hy = pl.y - 9 + vy * 4;
-    if (!REDUCED_MOTION) for (let i = 0; i < 5; i++) Particles.push({ x: hx, y: hy + (i - 2) * 1.2, vx: vx * (110 + i * 25) + vy * (i - 2) * 20, vy: vy * (110 + i * 25) + vx * (i - 2) * 20, g: 0, life: 0.18, max: 0.18, col: 'rgba(255,255,255,', r: 1.1 });
+    if (!REDUCED_MOTION && !(typeof Hit3D !== 'undefined' && Hit3D.on())) for (let i = 0; i < 5; i++) Particles.push({ x: hx, y: hy + (i - 2) * 1.2, vx: vx * (110 + i * 25) + vy * (i - 2) * 20, vy: vy * (110 + i * 25) + vx * (i - 2) * 20, g: 0, life: 0.18, max: 0.18, col: 'rgba(255,255,255,', r: 1.1 });
   },
   async go() {
     if (this.cd > 0) return; const t = this.tg || this.target(); if (!t) return this.whiff(); this.cd = 0.55; this.pow(t.x, t.y);
@@ -12512,7 +12512,8 @@ const Shop = {
     if (this.open_) return; this.open_ = true; this.look = !!look; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
     $('shop').classList.add('in'); this.render();
   },
-  close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); },
+  close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); this.free(); },
+  free() { if (typeof Snap3D !== 'undefined' && Snap3D.release) Snap3D.release(); if (typeof Pet3D !== 'undefined' && Pet3D.drop) { const p = Profile.get(); Pet3D.drop([p.pet, p.pet2].filter(Boolean)); } }, /* v367 미리보기에 쓴 그래픽 메모리 놓기 (사용자 '미리보기 눌렀을때 튕기거나 렉걸리거나') */
   render() {
     const p = Profile.get(); const gt = ['clothes', 'hat', 'home'].includes(this.tab), gens = GENRE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS[this.tab].some(it => genreOf(it) === g)), sub = this.tab === 'car' ? this.rsub || 'all' : gt && gens.some(([g]) => g === (this.gsub || {})[this.tab]) ? this.gsub[this.tab] : 'all', /* v342 옷이 '현대' 하나만 남으면 장르 줄은 숨김 */ list = SHOP_ITEMS[this.tab].filter(it => (!it.giftOnly || this.has(it.id)) && (sub === 'all' || (gt ? genreOf(it) === sub : rideGroup(it) === sub))); const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
     const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : isH ? p.hat : isD ? null : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
@@ -12560,9 +12561,10 @@ const Shop = {
     box.innerHTML = `<div class="sbIn"><b>${esc(it.name)}</b><canvas id="shBigCv" width="160" height="104"></canvas><small id="shBigLb"></small>
       <div class="pcBtns">${two ? `<button class="btn" data-bm="move">${it.ride ? '달리기' : '걷기'}</button><button class="btn" data-bm="still">멈추기</button>` : ''}<button class="btn gold" id="shBigX">닫기</button></div></div>`;
     box.classList.add('in'); box.querySelectorAll('[data-bm]').forEach(b => (b.onclick = () => { this.bigMode = b.dataset.bm; this.bigT0 = performance.now(); }));
-    $('shBigX').onclick = () => { box.classList.remove('in'); this.bigIt = null; }; box.onclick = e => { if (e.target === box) $('shBigX').onclick(); };
-    const loop = () => { if (!this.bigIt || this.bigIt !== it || !this.open_) return; this.bigDraw(it); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+    $('shBigX').onclick = () => { box.classList.remove('in'); this.bigIt = null; this.free(); }; /* v367 큰 미리보기를 닫으면 그 모델 그림·구경만 한 실사 펫 모델을 놓는다 */ box.onclick = e => { if (e.target === box) $('shBigX').onclick(); };
+    let lt = 0; const loop = ts => { if (!this.bigIt || this.bigIt !== it || !this.open_) return; if (ts - lt >= 31) { lt = ts; this.bigDraw(it); } requestAnimationFrame(loop); }; requestAnimationFrame(loop); /* v367 큰 미리보기는 1초 30장 (120Hz 폰에서 3D를 1초 120번 찍던 렉) */
   },
+  loading3d(x) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.font = `${Math.round(7 * S)}px "IBM Plex Sans KR", sans-serif`; const tx = '3D 불러오는 중…', w = x.measureText(tx).width + 12 * S; x.fillStyle = 'rgba(20,24,30,.62)'; x.fillRect((x.canvas.width - w) / 2, x.canvas.height / 2 - 6 * S, w, 12 * S); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(tx, x.canvas.width / 2, x.canvas.height / 2); x.restore(); },
   bigDraw(it) {
     const cv = $('shBigCv'); if (!cv) return; const S = Math.max(3, Math.min(8, Math.ceil((cv.clientWidth || 640) * (window.devicePixelRatio || 1) / 160))); if (cv.width !== 160 * S) { cv.width = 160 * S; cv.height = 104 * S; } // 화면 픽셀만큼 크게 그려서 반 픽셀 그림까지 또렷하게
     const x = cv.getContext('2d'); x.setTransform(S, 0, 0, S, 0, 0); x.imageSmoothingEnabled = false; const t = performance.now() / 1000, el = (performance.now() - this.bigT0) / 1000;
@@ -12627,6 +12629,7 @@ const Shop = {
   paint(x, it, t, mv, idle, thumb) {
     x.fillStyle = thumb ? '#e2d6bb' : it.ride ? '#5a5d66' : '#cfc6a8'; x.fillRect(0, 0, 160, 104);
     if (thumb && typeof Snap3D !== 'undefined' && Snap3D.thumb(x, it)) return; // v310 칸 그림은 게임 속 3D 모델 사진으로
+    if (thumb && it.pet) return; /* v367 펫 칸은 3D 사진이 올 때까지 빈 칸 (2D 그림 안 나오게, 사용자 '2d안나오게') */
     if (it.ride === 'train') { const k = thumb ? 4 : 3, gap = 7 * k, off = mv ? (t * 80 * k) % gap : 0; /* v259 사용자 '기차길 나오게 해야지': 게임처럼 침목 + 레일 두 줄 */
       x.fillStyle = '#6a4a2e'; for (let X = -gap; X < 160 + gap; X += gap) x.fillRect(Math.round(X - off), 52 - 7 * k, k * 2, 14 * k);
       for (const sy of [-4.5, 4.5]) { const Y = Math.round(52 + sy * k - k); x.fillStyle = '#3a3e46'; x.fillRect(0, Y, 160, 2 * k); x.fillStyle = '#c4cad4'; x.fillRect(0, Y + Math.round(k / 2), 160, Math.max(1, Math.round(k / 2))); } }
@@ -12635,7 +12638,7 @@ const Shop = {
     if (it.ride && !thumb && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && typeof Snap3D !== 'undefined' && Snap3D.rideBig(x, it, t, mv)) return; // v317 배·탱크 큰 미리보기는 3D
     if (it.ride && !thumb && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && typeof Snap3D !== 'undefined' && Snap3D.baked && Snap3D.baked(x, it.ride, x.canvas.width, x.canvas.height)) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.font = `${Math.round(7 * S)}px "IBM Plex Sans KR", sans-serif`; const tx = '3D 불러오는 중…', w = x.measureText(tx).width + 12 * S; x.fillStyle = 'rgba(20,24,30,.62)'; x.fillRect((x.canvas.width - w) / 2, x.canvas.height - 18 * S, w, 12 * S); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(tx, x.canvas.width / 2, x.canvas.height - 12 * S); x.restore(); return; } // v346 (탈것 스레드) 사용자 '뜨다가 3d나오는건 왜': 받는 동안 옛 도트 대신 3D 칸 사진
     if (it.ride) { x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); const pal = Profile.pal(Profile.get()); drawRide(x, 0, 0, 0, it.ride, mv ? 80 : 0, pal, it.ride === 'piggy' ? String(Profile.get().rideName || '').slice(0, 10) : ''); x.restore(); return; }
-    if (it.pet && !thumb) { if (typeof Snap3D !== 'undefined' && Snap3D.petBig(x, it.pet, o => this.petScene(o, it.pet, t, mv, idle, this.moveT || 0), t)) return; return this.petScene(x, it.pet, t, mv, idle, this.moveT || 0); } // v323 3D (사람·펫·새는 3D, 나머지는 위에 2D) // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
+    if (it.pet && !thumb) { if (typeof Snap3D !== 'undefined' && Snap3D.petBig(x, it.pet, o => this.petScene(o, it.pet, t, mv, idle, this.moveT || 0), t)) return; return this.loading3d(x); } /* v367 3D가 준비될 때까지 '3D 불러오는 중' (2D 장면 안 나오게) */ // v323 3D (사람·펫·새는 3D, 나머지는 위에 2D) // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
     if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = thumb ? (hd ? 6 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 3 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 8 : 5) : hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 2 : it.pet === 'beetle' ? 3.5 : ['mouse', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, thumb ? 98 : 96); /* 칸 그림은 더 크게 (뭔지 한눈에) */ x.scale(hd ? k / 2 : k, hd ? k / 2 : k); if (it.pet === 'monkey' && !thumb) { /* 원숭이: 내 캐릭터와 같이 — 걸을 땐 머리 위에 타고, 서 있으면 내려와 바나나 */ Sprites.setPal('shop:me', Profile.pal(Profile.get())); const sh = Sprites.sheet('shop:me'); x.imageSmoothingEnabled = false; if (mv) { x.drawImage(sh, (1 + Math.floor(t * 8) % 4) * 16, 32, 16, 16, -8, -16, 16, 16); Pets.draw(x, 'monkey', 0, -15, 1, false, t, '', 0, 'ride'); } else { x.drawImage(sh, 0, 0, 16, 16, -14, -16, 16, 16); Pets.draw(x, 'monkey', 8, 0, 1, false, t, '', idle); } x.restore(); return; }
       Pets.draw(x, it.pet, 0, 0, 1, mv, t, '', idle, it.pet === 'monkey' && mv ? 'ride' : undefined); if (it.pet === 'trex' && !mv && !thumb) Pets.ptero(x, { x: 0, y: 12 }, idle, t); /* 서 있으면 익룡 (미리보기에도) */ x.restore(); return; }
     if (it.home) return HomeIn.prev(x, it, t, thumb); // v259 가구: 작은 방 그림
@@ -12643,7 +12646,7 @@ const Shop = {
     if (it.fx) { this.fxPrev(x, it, t, thumb ? 3 : 2.5); return; }
     if ((it.hat || it.pal) && !thumb && typeof Snap3D !== 'undefined' && Snap3D.wearBig(x, Profile.pal(Object.assign({}, Profile.get(), it.hat ? { hat: it.id } : { outfit: it.id })), mv)) return; // v343 옷·모자 큰 미리보기도 3D 사람
     if (it.hat) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { hat: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, thumb ? 40 : 56, thumb ? 18 : 40, thumb ? 80 : 48, thumb ? 80 : 48); return; }
-    if (it.pd) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }); if (!thumb && typeof Snap3D !== 'undefined' && Snap3D.pdBig(x, k, d, mv, idle)) return; Closet.petPrev(x, k, d, t, mv, idle, thumb ? 1.2 : 1); return; } // 이펙트는 머리 위까지 올라가니 조금 작게
+    if (it.pd) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }); if (!thumb && typeof Snap3D !== 'undefined' && Snap3D.pdBig(x, k, d, mv, idle)) return; if (!thumb) this.loading3d(x); return; } /* v367 2D 펫 그림 대신 3D가 올 때까지 기다림 */ // 이펙트는 머리 위까지 올라가니 조금 작게
     if (it.pal) { const name = 'shop:' + it.id; Sprites.setPal(name, Profile.pal(Object.assign({}, Profile.get(), { outfit: it.id }))); const fr = mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = mv ? 2 : Math.floor(t / 1.5) % 4; x.drawImage(Sprites.sheet(name), fr * 16, (mv ? 2 : [0, 2, 3, 1][dir]) * 16, 16, 16, thumb ? 40 : 56, thumb ? 18 : 40, thumb ? 80 : 48, thumb ? 80 : 48); return; }
     if (!thumb && typeof Snap3D !== 'undefined' && Snap3D.carBig(x, it, mv)) return; // v343 차 큰 미리보기도 3D
     x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); drawCarSprite(x, 0, 0, 0, { col: it.col, stripe: it.stripe }, 24, 12, 'car', 0); x.restore();
@@ -13919,7 +13922,7 @@ const Closet = {
     if (this.open_ || Game.busy || Dialog.open || Game.formOpen || PetBattle.open_) return; this.open_ = true; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
     $('closet').classList.add('in'); this.render(); const loop = () => { if (!this.open_) return; this.paint(); this.raf = requestAnimationFrame(loop); }; this.raf = requestAnimationFrame(loop);
   },
-  close() { if (!this.open_) return; this.open_ = false; Game.formOpen = false; cancelAnimationFrame(this.raf); $('closet').classList.remove('in'); Sound.play('flip'); },
+  close() { if (!this.open_) return; this.open_ = false; Game.formOpen = false; cancelAnimationFrame(this.raf); $('closet').classList.remove('in'); Sound.play('flip'); if (typeof Snap3D !== 'undefined' && Snap3D.release) Snap3D.release(); }, /* v367 옷장 미리보기 그래픽 메모리 놓기 */
   kindName(k) { return (SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k; },
   chips(list, cur, none, key) { // 산 것만 보여 준다 (사용자 2026-10-17 '옷장 내가 가지고 있는 것만 선택할 수 있게')
     const own = list.filter(it => Shop.has(it.id));
@@ -13964,7 +13967,7 @@ const Closet = {
     if (this.tab === 'me') { if (p.fx && SHOP_BY_ID[p.fx] && typeof Snap3D !== 'undefined' && Snap3D.fxBig(x, Profile.pal(p), SHOP_BY_ID[p.fx].fx, this.mv)) return; /* v345 이펙트도 3D */ if (typeof Snap3D !== 'undefined' && Snap3D.wearBig(x, Profile.pal(p), this.mv)) { if (p.fx && typeof FX_DRAW !== 'undefined' && SHOP_BY_ID[p.fx]) { x.save(); x.scale(3, 3); FX_DRAW[SHOP_BY_ID[p.fx].fx](x, 80 / 3, 98 / 3, t); x.restore(); } return; } /* v343 옷장도 3D 사람 */ Sprites.setPal('closet:me', Profile.pal(p)); const fr = this.mv ? 1 + Math.floor(t * 8) % 4 : 0, dir = this.mv ? 2 : [0, 2, 3, 1][Math.floor(t / 1.6) % 4];
       x.drawImage(Sprites.sheet('closet:me'), fr * 16, dir * 16, 16, 16, 56, 42, 48, 48);
       if (p.fx && typeof FX_DRAW !== 'undefined' && SHOP_BY_ID[p.fx]) { x.save(); x.scale(3, 3); FX_DRAW[SHOP_BY_ID[p.fx].fx](x, 80 / 3, 90 / 3, t); x.restore(); } }
-    else if (p.pet) { const k = PetDeco.target(); if (typeof Snap3D !== 'undefined' && Snap3D.pdBig(x, k, PetDeco.get(k), this.mv, this.mv ? 0 : 1)) return; this.petPrev(x, k, PetDeco.get(k), t, this.mv, this.mv ? 0 : 1, 1); }
+    else if (p.pet) { const k = PetDeco.target(); if (typeof Snap3D !== 'undefined' && Snap3D.pdBig(x, k, PetDeco.get(k), this.mv, this.mv ? 0 : 1)) return; Shop.loading3d(x); } /* v367 2D 펫 그림 대신 3D가 올 때까지 기다림 (사용자 '2d안나오게') */
   },
 };
 
@@ -18448,9 +18451,10 @@ const Room3D = {
   // 펫 하나 세우기: (x, y) 바닥 자리 · lift 높이 (게임 픽셀) · paint(s) = 오른쪽 보는 그림을 스크래치 (25, 40)에 발로 그리기. 이름표 위치(3D 높이)를 돌려준다
   put(c, kind, x, y, lift, face, moving, t, tag, big, paint) {
     const people = !!PET_PEOPLE[kind], h = PetRT.petH(kind) / TILE * 1.1, q = { kind, x, y, lift: lift / TILE, face, moving, people, h, big };
-    const st = this.curSt | 0, model = !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind, st); this.noModel = false; this.curSt = 0; q.pose = this.curPose; this.curPose = null; q.idle = this.curIdle || 0; this.curIdle = 0; q.ang = this.curAng; this.curAng = null; q.st = st; q.deco = this.curDeco; this.curDeco = null; q.dk = q.deco ? JSON.stringify(q.deco) : '';
+    let st = this.curSt | 0, model = !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind, st); if (!model && st && !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind, 0)) { model = true; st = 0; } /* v367 진화 조각이 없는 모델은 기본 모델로 (부풀린 2D 그림 대신, 사용자 '2d안나오게') */ this.noModel = false; this.curSt = 0; q.pose = this.curPose; this.curPose = null; q.idle = this.curIdle || 0; this.curIdle = 0; q.ang = this.curAng; this.curAng = null; q.st = st; q.deco = this.curDeco; this.curDeco = null; q.dk = q.deco ? JSON.stringify(q.deco) : '';
     if (people) { const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]); q.pal = Sprites.PAL[sp]; }
     else if (model) { q.m = 1; q.top = Pet3D.topOf(kind, h); } // v312 블렌더 펫 모델 (pet3d.js)
+    else if (typeof Pet3D !== 'undefined' && Pet3D.st !== -1 && !(Pet3D.REAL_ONLY[kind] && Pet3D.rs[kind] === -1)) { Pet3D.load(); return q.lift + h + 0.12; } /* v367 모델 받는 중엔 안 보임 (부풀린 2D 그림이 나오지 않게, 사용자 '펫들 3d아닌거 다빼 미리보기 3d로 고쳐 2d안나오게'). 받기 실패면 예전처럼 그림 */
     else { const pl = this.pLast || (this.pLast = new Map()), lk = kind + '|' + (tag || ''), b0 = this.pc.built | 0, t0 = performance.now(); this.pc.lock = pl.has(lk) && performance.now() - (this.pbT || 0) < 160; // v310 시간으로: 컴퓨터에서 펫 하나가 한 장에 13~19ms 쓰던 것 (진화한 펭귄은 매번 모양이 달라서)
       q.e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k: kind, h, paint }, moving, t); this.pc.lock = false; if ((this.pc.built | 0) !== b0) { this.pbT = performance.now(); PerfHud.add('pb', this.pbT - t0); PerfHud.add('pbn', 1); }
       if (q.e) pl.set(lk, q.e); else q.e = pl.get(lk); if (pl.size > 40) pl.delete(pl.keys().next().value);
@@ -18485,6 +18489,7 @@ const Room3D = {
       let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
       H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.inner.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05; H.sh.scale.setScalar(Math.max(0.6, Math.min(2.2, q.h * 1.4))); });
     if (typeof Bird3D !== 'undefined') Bird3D.flush(this, now / 1000); // v323 날아오는 새
+    if (typeof Hit3D !== 'undefined') Hit3D.flush(this, now / 1000); // v367 때리기 실사 효과
     for (const [k, H] of this.A) if (H.seen !== this.fr) { this.drop(H); this.A.delete(k); }
     this.r.render(this.S, this.cc || this.cam);
   },
@@ -19139,7 +19144,7 @@ Object.assign(Room3D, {
       const now = performance.now(); R.zq.w.push({ sprite: w.sprite, x: w.x, y: w.y, dir: w.dir | 0, moving: !!w.moving, sit: w.sit, run: w.run, punchT: w.punchT, hurt: w.stun > 0, low: (w.bowT && now < w.bowT) || (w.kneelT && now < w.kneelT) });
       R.anchor(c, w.x, w.y, R.headH(), 15); // 다음 이름표·말풍선은 이 사람 머리 기준
       if (w.vip) { c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, w.y - 22); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, w.y - 22); c.restore(); }
-      if (w.punchT && now < w.punchT) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w, typeof Hero3D !== 'undefined' && Hero3D.ready()); c.restore(); } };
+      if (w.punchT && now < w.punchT) { if (typeof Hit3D !== 'undefined') Hit3D.from(w); /* v367 '퍽!' 대신 실사 타격 (hit3d.js) */ if (typeof Hero3D === 'undefined' || !Hero3D.ready()) { c.save(); R.anchor(c, w.x, w.y, 0.75, 9); drawFist(c, w, false, typeof Hit3D !== 'undefined'); c.restore(); } } };
     drawCarSprite = function (c, x, y, a, col, len = 22, wid = 12, kind = 'car', speed = 0) {
       if (R.zq && c === ctx && col && typeof col === 'object' && col.ride && typeof RIDE3 !== 'undefined' && RIDE3[col.ride]) { Ride3D.load(col.ride); if (Ride3D.ready(col.ride)) { const k = col.ride; const ce = { x, y, a, ride: k, kind: 'ride:' + k, len: RIDE3[k].L, spd: col.spd || 0 }; R.zq.c.push(ce); /* v317 배·탱크 3D + 탄 사람 */
         const who = [col.rider, ...(col.pax || [])].filter(Boolean), spd = Math.abs(col.spd || 0), mv = spd > 4;
@@ -19317,15 +19322,43 @@ const PerfHud = {
  * 차마다 _paint(차 색) · _fix(유리·바퀴·불빛, 정점 색) · _stripe(상점 줄무늬) 세 덩어리라 차 한 대 = 그리기 두세 번.
  * 길 위 보통 차는 번호(v)로 세단·SUV·해치백 중 하나, 내 차·상점 스킨은 세단. */
 const Car3D = {
-  st: 0, M: {},
+  st: 0, M: {}, real: 0,
+  /* v347 사용자 '길거리 차랑 버스 쫌 실사화, 우리가 타는 차도': Sketchfab CC BY 실사 차 (3d/cars2.glb, assets3d/build_cars2.py) — 아반떼(세단) · 투싼(SUV) · 아이오닉5(해치백) · 슈퍼 에어로시티(시내버스), 택시는 세단 + 지붕 택시 등.
+   * 차마다 _paint(차 색 · 줄무늬는 셰이더로 가운데 줄) · _fix(정점 색) · _glass · _tex(원래 텍스처, 버스는 흰 몸만 노선 색으로) → 한 대 그리기 2~3번. 크기는 차선 폭(약 27px)에 맞춘 실제 비율 (REAL px) */
+  REAL: { sedan: 52, suv: 52, hatch: 49, taxi: 52, bus: 104 }, // 사람(1.55)이 실제보다 커서 차도 조금 키움 (승용 높이 = 사람 0.7배)
   load() { if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
-    MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('cars.glb?v=1'), ok, undefined, no))).then(G => {
+    const get = f => MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url(f), ok, undefined, no)));
+    get('cars2.glb?v=1').then(G => { for (const o of G.scene.children) { const parts = {}; o.traverse(m => { if (!m.isMesh) return; let w = m; while (w && !/_(paint|fix|glass|tex)$/.test(w.name)) w = w.parent; if (!w) return; m.geometry._keep = 1; if (m.material) m.material._keep = 1; const t = w.name.split('_').pop(); m.updateWorldMatrix(true, false); (parts[t] = parts[t] || []).push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: m.material }); });
+        const bb = new T3.THREE.Box3(); o.updateMatrixWorld(true); bb.setFromObject(o); parts.bb = bb; this.M[o.name] = parts; }
+      this.real = 1; this.st = 2; }).catch(e => { console.warn('car3d real', e); this.real = 0; this.loadOld(get); }); },
+  loadOld(get) { get('cars.glb?v=1').then(G => { /* 예전 장난감 차 (실사 파일을 못 받으면) */
       for (const o of G.scene.children) { const parts = {}; o.traverse(m => { if (!m.isMesh) return; let w = m; while (w && !/_(paint|fix|stripe)$/.test(w.name)) w = w.parent; if (!w) return; m.geometry._keep = 1; const t = w.name.split('_').pop(); m.updateWorldMatrix(true, false); (parts[t] = parts[t] || []).push({ geo: m.geometry, M: m.matrixWorld.clone() }); });
         this.M[o.name] = parts; }
       this.st = 2; }).catch(e => { console.warn('car3d', e); this.st = -1; }); },
   ready() { return this.st === 2; },
-  fixM() { if (!this.fm) this.fm = new T3.THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Room3D.grad }); return this.fm; },
+  fixM() { if (!this.fm) this.fm = this.real ? new T3.THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.12, roughness: 0.55 }) : new T3.THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Room3D.grad }); return this.fm; },
+  glassM() { return this.gm || (this.gm = new T3.THREE.MeshStandardMaterial({ color: 0x18222c, metalness: 0.3, roughness: 0.08, transparent: true, opacity: 0.6, depthWrite: false })); },
+  // 차 색 (번쩍이는 도장) + 줄무늬: 차 가운데 (모델 z ≈ 0) 앞뒤로 한 줄, 바닥 쪽은 빼고
+  paintM(col, stripe) { const c = this.pm || (this.pm = {}), key = col + '|' + (stripe || ''); if (c[key]) return c[key]; const { THREE } = T3, m = new THREE.MeshStandardMaterial({ color: col, metalness: 0.32, roughness: 0.3 });
+    if (stripe) { const sc = new THREE.Color(stripe); m.onBeforeCompile = sh => { sh.uniforms.uSt = { value: sc }; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vMp;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvMp = position;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vMp; uniform vec3 uSt;').replace('#include <color_fragment>', '#include <color_fragment>\nfloat zz = abs(vMp.z); diffuseColor.rgb = mix(diffuseColor.rgb, uSt, (step(zz, 0.05) - step(zz, 0.03) + step(zz, 0.018)) * step(0.17, vMp.y));'); }; m.customProgramCacheKey = () => 'carStripe'; }
+    return (c[key] = m); },
+  // 버스 텍스처: 흰 몸 (밝고 색 없는 곳) · 지붕 아래만 노선 색으로 (서울 간선 파랑 · 지선 초록)
+  busM(src, col) { const c = this.bm || (this.bm = {}); if (c[col]) return c[col]; const { THREE } = T3, m = src.clone(), bc = new THREE.Color(col);
+    m.onBeforeCompile = sh => { sh.uniforms.uBc = { value: bc }; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vMp;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvMp = position;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vMp; uniform vec3 uBc;').replace('#include <map_fragment>', '#include <map_fragment>\nfloat mx = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)), mn = min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b)); diffuseColor.rgb = mix(diffuseColor.rgb, uBc * (0.8 + 0.25 * mx), smoothstep(0.62, 0.8, mx) * (1.0 - smoothstep(0.06, 0.14, mx - mn)) * (1.0 - smoothstep(0.235, 0.25, vMp.y)) * step(0.03, vMp.y));'); };
+    m.customProgramCacheKey = () => 'busTint'; return (c[col] = m); },
+  signM() { if (this.sg) return this.sg; const { THREE } = T3, cv = document.createElement('canvas'); cv.width = 128; cv.height = 40; const x = cv.getContext('2d'); x.fillStyle = '#fff6d8'; x.fillRect(0, 0, 128, 40); x.fillStyle = '#1d2a6e'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('TAXI', 64, 22);
+    const t = new THREE.CanvasTexture(cv); if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace; const g = new THREE.BoxGeometry(0.075, 0.032, 0.15); g._keep = 1; return (this.sg = { g, m: new THREE.MeshStandardMaterial({ map: t, emissive: 0xfff0c0, emissiveIntensity: 0.35, emissiveMap: t, roughness: 0.5 }) }); },
   make(len, wid, col, stripe, kind, v = 0) {
+    if (!this.real) return this.makeOld(len, wid, col, stripe, kind, v);
+    const { THREE } = T3, k = kind === 'bus' ? 'bus' : kind === 'taxi' ? 'taxi' : ['sedan', 'suv', 'hatch', 'sedan', 'suv'][v % 5], B = this.M[k === 'taxi' ? 'sedan' : k] || this.M.sedan, g = new THREE.Group(), L = this.REAL[k] / TILE;
+    const inner = new THREE.Group(); inner.scale.set(L, L, L * (k === 'bus' ? 1 : 1.06)); g.add(inner);
+    for (const t of ['paint', 'fix', 'glass', 'tex']) for (const p of B[t] || []) { const mt = t === 'paint' ? this.paintM(col, stripe) : t === 'fix' ? this.fixM() : t === 'glass' ? this.glassM() : k === 'bus' ? this.busM(p.mat, col) : p.mat; const m = new THREE.Mesh(p.geo, mt); p.M.decompose(m.position, m.quaternion, m.scale); m.castShadow = t !== 'glass'; inner.add(m); }
+    if (k === 'taxi') { const S = this.signM(), m = new THREE.Mesh(S.g, S.m); m.position.set(-0.06, B.bb.max.y + 0.012, 0); m.castShadow = true; inner.add(m); }
+    return g;
+  },
+  makeOld(len, wid, col, stripe, kind, v = 0) {
     const { THREE } = T3, k = kind === 'bus' ? 'bus' : kind === 'taxi' ? 'taxi' : ['sedan', 'suv', 'hatch', 'sedan', 'suv'][v % 5], B = this.M[k] || this.M.sedan, g = new THREE.Group(), L = len / TILE, W = wid / TILE;
     const inner = new THREE.Group(); inner.scale.set(L, k === 'bus' ? L * 0.95 : (L + W * 2) * 0.48, W / (k === 'bus' ? 0.35 : 0.5)); g.add(inner);
     for (const t of ['paint', 'fix', 'stripe']) { if (t === 'stripe' && !stripe) continue; for (const p of B[t] || []) { const m = new THREE.Mesh(p.geo, t === 'fix' ? this.fixM() : Room3D.toon(t === 'paint' ? col : stripe)); p.M.decompose(m.position, m.quaternion, m.scale); m.castShadow = true; inner.add(m); } }
@@ -21041,7 +21074,9 @@ const Pet3D = {
   R: {}, rs: {},
   noReal: true, // v344 사용자 '캐릭터만 귀엽게' → 펫은 직접 만든 귀여운 모델 (실사 펫 코드는 그대로 둠)
   REAL_OK: { cat: 1, dog: 1, rabbit: 1, mouse: 1, chicken: 1, boar: 1, sparrow: 1, raptor: 1 }, REAL_ONLY: { chicken: 1, boar: 1, sparrow: 1, raptor: 1 }, /* v365 벨로시랩터 (사용자 '이거 좋다') */ /* v364 실사만 있는 펫 (귀여운 모델 없음): 받기 전엔 2D 그림 */ /* 돌고래는 물 밖에서 떠 보여 아직 뺌 */ /* v351 동작 있는 실사 펫 (사용자 '동작 없는건 다 빼' 뒤 남은 실사 모델) */ /* v345 noReal이어도 실사로 쓰는 종류: 사용자가 고른 긴 털 갈색 고양이 */
-  real(k, st, d) { if ((this.noReal && !this.REAL_OK[k]) || st || d || !(k in this.SFP) || !window.T3) return false; this.needR(k); return this.rs[k] === 2; },
+  real(k, st, d) { if ((this.noReal && !this.REAL_OK[k]) || (!this.REAL_ONLY[k] && (st || d)) || !(k in this.SFP) || !window.T3) return false; /* v367 실사만 있는 펫은 진화·꾸미기여도 실사 (진화는 빛나는 테두리로) */ this.needR(k); return this.rs[k] === 2; },
+  /* v367 편집숍에서 구경만 한 실사 펫 모델은 숍을 나가면 놓는다 (미리보기 튕김). 데리고 다니는 펫·길에 보이는 펫은 그대로 */
+  drop(keep) { const used = new Set(keep || []); if (typeof Room3D !== 'undefined' && Room3D.A) for (const H of Room3D.A.values()) if (H && H.k) used.add(H.k); for (const k in this.R) { if (used.has(k)) continue; const R = this.R[k]; delete this.R[k]; this.rs[k] = 0; R.w.traverse(m => { if (!m.isMesh) return; m.geometry.dispose(); (Array.isArray(m.material) ? m.material : [m.material]).forEach(t => { for (const q of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap']) if (t[q]) t[q].dispose(); t.dispose(); }); }); } },
   needR(k) { if (this.rs[k]) return; this.rs[k] = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('sfp/' + k + '.glb?v=' + (k === 'cat' ? 2 : 1)), ok, undefined, no))).then(G => {
       const w = new THREE.Group(); w.rotation.y = this.SFP[k]; let fold = null; if (this.FOLD[k]) try { fold = this.foldBind(G.scene, G.animations); } catch (e) { console.warn('pet3d fold', e); } w.add(G.scene);
@@ -21129,19 +21164,27 @@ const Pet3D = {
     if (q < 0.7 || (q > 2.2 && q < 4)) o.clip = 'walk'; if (q >= 4) { const pk = (q - 4) % 3.4; o.peek = pk > 1.5 && pk < 3 ? Math.min(1, (pk - 1.5) * 3, (3 - pk) * 3) : 0; o.hid = o.peek < 0.02; o.dive = 1; } return o; },
   clipOn(H) { if (H.clip) return H.clip; const { THREE } = T3; if (!Room3D.r) return null; Room3D.r.localClippingEnabled = true; const pl = H.clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 50);
     H.root.traverse(o => { if (!o.isMesh || o === H.sh) return; o.material = (Array.isArray(o.material) ? o.material : [o.material]).map(m => { const c = m.clone(); c.clippingPlanes = [pl]; return c; }); if (o.material.length === 1) o.material = o.material[0]; }); return pl; },
-  makeReal(k, h) {
+  makeReal(k, h, st) {
     const { THREE } = T3, B = this.R[k], root = new THREE.Group(), inner = new THREE.Group(), bob = new THREE.Group(), m = T3.SkeletonUtils.clone(B.w), o = this.M[k], s = this.LEN[k] ? this.LEN[k] / B.len : Math.min(h / B.hgt, o ? o.len * this.scale(k, h) * 1.15 / B.len : 1e9); // 예전 모델 몸길이를 넘지 않게 (티라노 꼬리)
     m.position.set(-B.cx, -B.y0, -B.cz); bob.add(m); inner.add(bob); inner.scale.setScalar(s); root.add(inner);
     const sh = new THREE.Mesh(Room3D.shGeo || (Room3D.shGeo = new THREE.CircleGeometry(0.3, 20)), Room3D.shMat || (Room3D.shMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false }))); Room3D.shGeo._keep = 1; sh.rotation.x = -Math.PI / 2; sh.position.y = 0.01; root.add(sh);
     const w = Math.max(B.len, B.hgt * 0.6) * s; sh.scale.set(w * 1.6, Math.max(0.5, w * 0.9), 1);
     const H = { root, inner, bob, nd: {}, k, s, sh, st: 0, fx: [], model: 1, pet: 1, ph: 0, top: B.hgt * s, dk: '', real: 1, B: { len: B.len, hgt: B.hgt, y0: 0, an: null } };
+    if (st) this.evoGlow(H, m, k, st);
     if (Object.keys(B.an).length) { H.mix = new THREE.AnimationMixer(m); H.acts = {}; for (const n in B.an) H.acts[n] = H.mix.clipAction(B.an[n]); }
     if (B.legs) { H.legs = B.legs.map(l => Object.assign({ o: m.getObjectByName(l.name) }, l)).filter(l => l.o); H.legs.forEach(l => { l.q0 = l.o.quaternion.clone(); l.p0 = l.o.position.clone(); }); H.amp = this.LEG[k].amp; if (!H.legs.length) H.legs = null; }
     if (B.fold) { H.fk = {}; m.traverse(n => { if (n.isBone) H.fk[n.name.replace(/_\d+$/, '')] = n; }); H.fkK = B.fold.keep.map(([n, q, p]) => [m.getObjectByName(n), q, p]).filter(a => a[0]); }
     if (k === 'cat') try { H.cat = this.catRig(m, B.y0); } catch (e) { console.warn('pet3d cat', e); } // v345 실사 고양이: 걷기·기지개
     return H;
   },
+  /* v367 실사 펫 진화 모습 (사용자 '진화모습 안보여'): 실사 모델엔 진화 조각이 없어서 타입 색으로 몸 테두리가 빛나고 (최종 진화는 더 세게 + 둘레에 반짝이), 숨 쉬듯 밝아졌다 어두워진다 */
+  evoGlow(H, m, k, st) { const { THREE } = T3, col = new THREE.Color(typeof PetEvo !== 'undefined' && PetEvo.col ? PetEvo.col(k) : '#f2c230'), U = { value: col.clone().multiplyScalar(st >= 2 ? 1.5 : 0.85) }, seen = new Map();
+    m.traverse(o => { if (!o.isMesh) return; o.material = (Array.isArray(o.material) ? o.material : [o.material]).map(t => { if (seen.has(t)) return seen.get(t); const c = t.clone(); c.onBeforeCompile = sh => { sh.uniforms.uRim = U; sh.fragmentShader = 'uniform vec3 uRim;\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += uRim * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 2.2);'); }; c.customProgramCacheKey = () => 'rim367'; seen.set(t, c); return c; }); if (o.material.length === 1) o.material = o.material[0]; });
+    H.rim = U; H.rim0 = U.value.clone(); H.st = st;
+    if (st >= 2) { const n = 26, P = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, r = 0.55 + (i % 3) * 0.12; P[i * 3] = Math.cos(a) * r; P[i * 3 + 1] = 0.15 + ((i * 7) % 10) / 10 * 0.9; P[i * 3 + 2] = Math.sin(a) * r; } const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3));
+      const sp = new THREE.Points(g, new THREE.PointsMaterial({ color: col, size: 0.06, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending })); sp.frustumCulled = false; sp.scale.setScalar(Math.max(0.6, H.top * 0.9)); H.root.add(sp); H.spk = sp; } },
   poseReal(H, mv, sp, t, dt, P) {
+    if (H.rim) { const f = 0.75 + 0.25 * Math.sin(t * 2.4); H.rim.value.copy(H.rim0).multiplyScalar(f); if (H.spk) { H.spk.rotation.y = t * 0.8; H.spk.position.y = Math.sin(t * 1.7) * 0.04; } } /* v367 진화 빛 숨쉬기 */
     const k = H.k, b = H.bob; H.mv = H.mv == null ? 0 : H.mv + ((mv ? 1 : 0) - H.mv) * Math.min(1, dt * 5); const m = H.mv * H.mv * (3 - 2 * H.mv), idle = m > 0.5 ? 0 : P.idle || 0;
     if (mv) H.rate = Math.max(6, Math.min(14, 5 + sp * 3.2)); H.ph += dt * (mv || m > 0.03 ? H.rate || 8 : 0); const p = H.ph; /* v340 멈춰도 걸음 박자는 이어 가며 잦아든다 (박자가 얼어붙으면 오뚜기처럼 기울어진 채 흔들렸다) */ b.position.set(0, 0, 0); b.rotation.set(0, 0, 0); b.scale.set(1, 1, 1); // v343 이 줄이 주석에 먹혀 몸 기울기·숨쉬기 크기가 쌓이고 있었다
     if (H.legs) for (const l of H.legs) { l.o.quaternion.copy(l.q0); l.o.position.copy(l.p0); } // 동작이 안 건드리는 뼈도 매번 처음 자세에서
@@ -21219,7 +21262,7 @@ const Pet3D = {
     R.F.position.y = R.oy;
   },
   ready() { return this.st === 2; },
-  has(k, st) { if (this.REAL_ONLY[k]) return !st && !this.noRealOnly && this.real(k); return this.st === 2 && !!this.M[k] && (!st || !!(this.M[k].evo[st] && this.M[k].evo[st].length)); },
+  has(k, st) { if (this.REAL_ONLY[k]) return !this.noRealOnly && this.real(k); /* v367 진화해도 실사 (빛나는 테두리) */ return this.st === 2 && !!this.M[k] && (!st || !!(this.M[k].evo[st] && this.M[k].evo[st].length)); },
   // 크기 배율: 게임 칸 단위 키 h (PetRT.petH 기준)에 맞추되, 긴 펫은 몸길이로
   SZ: CUTE ? 0.78 : 1, // v345 동물의 숲처럼 사람보다 작고 귀엽게 (사람이 꼬마 몸이 돼서 펫이 상대적으로 커 보였다)
   scale(k, h) { const B = this.M[k]; if (!B) return 1; return (this.LEN[k] ? this.LEN[k] / B.len : h / B.hgt) * this.SZ; },
@@ -21247,7 +21290,7 @@ const Pet3D = {
   eyeMat() { return this.em || (this.em = new T3.THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.1, metalness: 0 })); },
   // 하나 만들기: { root, inner, nd: {이름: {o, p, q}}, k, model: 1 }
   make(k, h, st, d) {
-    if (this.real(k, st, d)) return this.makeReal(k, h); // v335 실사
+    if (this.real(k, st, d)) { const H = this.makeReal(k, h, st); H.dk = d ? JSON.stringify(d) : ''; return H; } // v335 실사
     const { THREE } = T3, B = this.M[k], g = B.g.clone(true), M = this.mat(), root = new THREE.Group(), inner = new THREE.Group(), nd = {};
     const s = this.scale(k, h); inner.scale.setScalar(s); g.position.y -= B.y0; inner.add(g); root.add(inner);
     const ms = []; g.traverse(o => { if (o === g) return; const n = o.name.startsWith(k) ? o.name.slice(k.length) : ''; if (n && !nd[n]) nd[n] = { o, p: o.position.clone(), r: o.rotation.clone(), s: o.scale.clone() }; if (o.isMesh) ms.push(o); }); // 이름 = 'dog' + 'legFL' (three가 ':' 를 뺀다)
@@ -21463,6 +21506,61 @@ const Bird3D = {
   },
 };
 
+/* ===================== 때리기 실사 효과 (v367, 사용자 2026-10-23 '이거 퍽퍽하는것도 실사화') =====================
+ * 3D 거리에서 주먹이 맞으면 만화 '퍽!' 별 대신: 아주 짧은 맞닿는 빛 · 공기가 퍼지는 고리 · 주먹 지나간 바람 줄 · 튀는 땀방울 · 밀려난 발밑 먼지.
+ * 허공에 휘두르면 바람 줄만. 나·친구·행인 모두 zone3d의 drawWalker 가로채기에서 punchT가 새로 생길 때 한 번씩 부른다.
+ * 그림은 처음 한 번 캔버스로 만들고 (64~128px), 판 묶음 2벌을 장면에 두고 돌려 쓴다 (맞을 때만 보인다 · 그림자 없음). */
+const Hit3D = {
+  ev: [], seen: new Map(), P: null,
+  on() { return typeof Room3D !== 'undefined' && !!Room3D.zNow && !!window.T3 && Game.scene === 'zone'; },
+  // zone3d drawWalker에서: 새 주먹이면 효과를 하나 건다 (같은 punchT는 한 번만)
+  from(w) { const k = w.punchT; if (!k || this.seen.has(k)) return; const now = performance.now(); this.seen.set(k, now); if (this.seen.size > 24) for (const [q, t] of this.seen) if (now - t > 2000) this.seen.delete(q);
+    const [vx, vy] = [[0, 1], [-1, 0], [1, 0], [0, -1]][w.dir] || [1, 0]; let dx = vx, dy = vy, at = null;
+    const to = w.punchTo; if (to && now - to.t < 400) { dx = to.x - w.x; dy = to.y - w.y; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L; at = to; }
+    if (REDUCED_MOTION) return; this.ev.push({ x: w.x, y: w.y, dx, dy, hit: !!w.punchHit, t0: now / 1000, at, r: [...Array(12)].map(() => Math.random()) }); if (this.ev.length > 2) this.ev.shift(); },
+  /* ---- 그림 (Fx3D.T 캐시를 같이 쓴다) ---- */
+  ring() { return Fx3D.T('hitRing', (x, n) => { const N = Fx3D.noise(21), im = x.createImageData(n, n); for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const dx = i / n - 0.5, dy = j / n - 0.5, r = Math.sqrt(dx * dx + dy * dy) * 2, q = N(Math.atan2(dy, dx) * 2 + 9, r * 3), a = Math.exp(-Math.pow((r - 0.78) / 0.07, 2)) * (0.45 + q * 0.8) + Math.exp(-Math.pow((r - 0.6) / 0.16, 2)) * 0.12, o = (j * n + i) * 4; im.data[o] = im.data[o + 1] = im.data[o + 2] = 255; im.data[o + 3] = Math.min(255, a * 255); } x.putImageData(im, 0, 0); }); },
+  streak() { return Fx3D.T('hitStreak', (x, w, h) => { const g = x.createLinearGradient(0, 0, w, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.75, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; const v = x.createLinearGradient(0, 0, 0, h); x.fillRect(0, 0, w, h); x.globalCompositeOperation = 'destination-in'; v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(0.5, 'rgba(0,0,0,1)'); v.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = v; x.fillRect(0, 0, w, h); }, 128, 16); },
+  drop() { return Fx3D.T('hitDrop', (x, n) => { const c = n / 2, g = x.createRadialGradient(c * 0.8, c * 0.75, 0, c, c, c); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.22, 'rgba(235,242,248,.85)'); g.addColorStop(0.7, 'rgba(170,185,200,.55)'); g.addColorStop(0.92, 'rgba(110,125,140,.35)'); g.addColorStop(1, 'rgba(110,125,140,0)'); x.fillStyle = g; x.beginPath(); x.arc(c, c, c, 0, 7); x.fill(); }, 32); }, // 투명한 물방울: 밝은 반사점 + 어두운 테
+  pool(R) {
+    if (this.P && this.P.g.parent === R.S) return this.P; const { THREE } = T3; if (this.P) { R.S.add(this.P.g); return this.P; }
+    const g = new THREE.Group(), add = s => (s.visible = false, s.renderOrder = 6, g.add(s), s), slot = () => ({
+      flash: add(Fx3D.spr(Fx3D.glow(), '#fff1d6', 1, true)), glare: add(Fx3D.spr(Fx3D.flare(), '#fff6e6', 1, true)), ring: add(Fx3D.spr(this.ring(), '#ffffff', 1, true)), rim: add(Fx3D.spr(this.ring(), '#2a2620', 1)),
+      st: [0, 1, 2].map(() => add(Fx3D.spr(this.streak(), '#eef1f4', 1))), dr: [...Array(12)].map(() => add(Fx3D.spr(this.drop(), '#ffffff', 1))),
+      du: [0, 1, 2, 3].map(i => add(Fx3D.spr(Fx3D.puff('hitDust' + (i % 2), 31 + (i % 2), 0.6), '#cdbfa6', 1))) });
+    g.frustumCulled = false; R.S.add(g); return (this.P = { g, s: [slot(), slot()] });
+  },
+  // Room3D.render0에서 (새 다음): 걸린 효과들 그리기
+  flush(R, t) {
+    const now = performance.now() / 1000; this.ev = this.ev.filter(e => now - e.t0 < 0.9); if (!this.ev.length && !this.P) return; if (!window.T3 || !R.zNow) { if (this.P) this.P.g.visible = false; return; }
+    const P = this.pool(R); P.g.visible = true; const el = typeof Z3_EL !== 'undefined' ? Z3_EL : 0.72; P.g.position.set(0, Math.sin(el) * 0.7, Math.cos(el) * 0.7); // 직교 카메라 쪽으로 당겨 둔다: 화면 자리는 그대로, 가게 앞벽·사람 몸에 안 묻힌다 const H = (typeof HERO_H !== 'undefined' ? HERO_H : 1.55) * 1.18, cam = R.cc || R.cam;
+    P.s.forEach((S, si) => { const e = this.ev[si]; const all = [S.flash, S.glare, S.ring, S.rim, ...S.st, ...S.dr, ...S.du]; if (!e) { all.forEach(s => s.visible = false); return; }
+      const a = now - e.t0, r = e.r, X0 = e.x / TILE, Z0 = e.y / TILE, dx = e.dx, dz = e.dy;
+      // 맞는 자리: 때린 사람 앞, 얼굴 높이 (맞은 사람 쪽이 있으면 둘 사이 70%)
+      const reach = e.at ? Math.min(0.75, Math.hypot(e.at.x - e.x, e.at.y - e.y) / TILE * 0.7) : 0.42, hx = X0 + dx * reach, hz = Z0 + dz * reach, hy = H * 0.84;
+      // 화면에서 주먹이 나가는 방향 (스프라이트 돌리기)
+      const v1 = (this.v1 || (this.v1 = new T3.THREE.Vector3())).set(hx, hy, hz).project(cam), v2 = (this.v2 || (this.v2 = new T3.THREE.Vector3())).set(hx + dx, hy, hz + dz).project(cam), sa = Math.atan2((v2.y - v1.y) * VH, (v2.x - v1.x) * VW);
+      // 바람 줄: 주먹 지나간 길을 따라 가늘게 (맞든 안 맞든), 0~0.14초
+      S.st.forEach((s, i) => { const u = a / 0.14, on = u < 1; s.visible = on; if (!on) return; const off = (i - 1) * 0.07 * H, f = (0.2 + u * 0.3) * H; s.position.set(X0 + dx * f - dz * off * 0.3, hy - 0.04 * H + off * 0.5, Z0 + dz * f + dx * off * 0.3); s.scale.set((0.95 - i * 0.18) * H * (0.7 + u * 0.4), (0.09 - i * 0.015) * H, 1); s.material.rotation = sa; s.material.opacity = (e.hit ? 0.35 : 0.6) * Math.sin(Math.min(1, u) * Math.PI) * (1 - i * 0.2); });
+      const hit = e.hit && a > 0.05; [S.flash, S.glare, S.ring, S.rim, ...S.dr, ...S.du].forEach(s => s.visible = hit); if (!hit) return; const b = a - 0.05; // 주먹이 닿는 때 (Punch_Jab 1.6배 빠르기)
+      // 맞닿는 빛: 0.1초 안에 번쩍 (작게)
+      const fo = Math.max(0, 1 - b / 0.12); S.flash.visible = b < 0.12; S.flash.position.set(hx, hy, hz); S.flash.scale.setScalar(H * (0.22 + Math.min(1, b / 0.03) * 0.26)); S.flash.material.opacity = fo;
+      S.glare.visible = b < 0.09; S.glare.position.set(hx, hy, hz); S.glare.scale.setScalar(H * (0.5 + b * 3)); S.glare.material.rotation = sa + 0.3; S.glare.material.opacity = Math.max(0, 1 - b / 0.09); // 카메라에 맺히는 짧은 빛 갈래
+      // 공기 고리: 맞은 자리에서 퍼지며 옅어진다 (0.2초)
+      S.ring.visible = b < 0.2; S.ring.position.set(hx + dx * 0.05 * H, hy, hz + dz * 0.05 * H); S.ring.scale.setScalar(H * (0.1 + Math.pow(Math.min(1, b / 0.22), 0.6) * 0.8)); S.ring.material.opacity = 0.75 * Math.pow(Math.max(0, 1 - b / 0.2), 1.4); S.ring.material.rotation = r[0] * 6;
+      S.rim.visible = S.ring.visible; S.rim.position.copy(S.ring.position); S.rim.scale.setScalar(S.ring.scale.x * 1.06); S.rim.material.opacity = 0.32 * Math.pow(Math.max(0, 1 - b / 0.2), 1.6); S.rim.material.rotation = r[1] * 6; // 공기 파면의 그늘진 테 (밝은 길 위에서도 보이게)
+      // 땀방울: 맞은 쪽으로 튀어 포물선으로 떨어지고, 땅에 닿으면 작게 번지며 사라진다
+      S.dr.forEach((s, i) => { const q = r[(i + 1) % 12], q2 = r[(i + 4) % 12], sp = (1.6 + q * 2.2), side = (q2 - 0.5) * 1.6, vy = 0.6 + q * 1.6, T = Math.min(b, 0.6), y = hy + vy * T - 4.9 * T * T * 0.9;
+        const px = hx + (dx * sp + -dz * side) * T, pz = hz + (dz * sp + dx * side) * T, land = y <= 0.01; s.position.set(px, Math.max(0.012, y), pz); const z = (0.03 + q2 * 0.025) * H; s.scale.set(land ? z * 1.8 : z, land ? z * 0.6 : z * (1 + Math.min(1, sp * T) * 0.4), 1);
+        s.material.opacity = b < 0.6 ? 0.9 : Math.max(0, 0.9 - (b - 0.6) / 0.25); });
+      // 발밑 먼지: 맞은 사람이 밀려난 자리에서 뭉게뭉게 (0.85초)
+      const fx = (e.at ? e.at.x / TILE : hx + dx * 0.2) , fz = (e.at ? e.at.y / TILE : hz + dz * 0.2);
+      S.du.forEach((s, i) => { const u = Math.min(1, b / 0.8), q = r[(i + 7) % 12], ang = (i - 1.5) * 0.7 + (q - 0.5) * 0.5, ex = dx * Math.cos(ang) - dz * Math.sin(ang), ez = dz * Math.cos(ang) + dx * Math.sin(ang), go = (0.12 + q * 0.18) * H * Math.pow(u, 0.5);
+        s.position.set(fx + ex * go, (0.05 + u * 0.14 + q * 0.04) * H, fz + ez * go); s.scale.setScalar(H * (0.18 + q * 0.08 + u * 0.4)); s.material.rotation = q * 6 + u * (i % 2 ? 0.5 : -0.5); s.material.opacity = 0.7 * Math.min(1, b / 0.06) * Math.pow(1 - u, 1.3); });
+    });
+  },
+};
+
 /* ===================== 장르 가구 3D (v325, 사용자 '옷들안에서도 장르 들어가서 고를수있게 하자, 가구도') =====================
  * 3d/props.glb (assets3d/build_props.py): Quaternius Fantasy Props · Modular SciFi MegaKit (CC0) 가구를 원래 텍스처(기본색 2048 · 노멀 1024) 그대로.
  * 이름 = 키 (fan_bed, sf_computer …), 1칸 기준 크기, 바닥 y = 0, 가운데. 상점 물건은 art: 'k:키' (집 꾸미기로 놓는 소품). */
@@ -21516,6 +21614,22 @@ const Snap3D = {
     const S = this.S = new THREE.Scene(); S.add(new THREE.HemisphereLight(0xfff4e6, 0x7a6a58, 1.45));
     const sun = new THREE.DirectionalLight(0xfff0d8, 1.7); sun.position.set(-2.5, 5, 6); S.add(sun);
     this.cam = new THREE.PerspectiveCamera(24, 1, 0.05, 60); this.pc = new Map();
+  },
+  /* v367 미리보기를 닫으면 사진 전용 렌더러를 통째로 놓는다 (사용자 '미리보기 눌렀을때 튕기거나 렉걸리거나'): 큰 미리보기에 올린 모델 그림이 그래픽 메모리에 쌓여 폰이 튕겼다. 칸 사진(2D)은 그대로, 다음에 찍을 때 렌더러를 새로 만든다 */
+  release() { if (!this.r) return; const dz = g => g && g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); if (this.lv) dz(this.lv.g); this.lv = null; if (this.pv) for (const a of this.pv.A.values()) if (a.H && a.H.mix) a.H.mix.stopAllAction(); this.pv = null; this.fv = null; this.ev = null; try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { } this.r = null; },
+  /* v367 펫 진화 장면 3D (사용자 '2d안나오게'): 진화 전·후 모습을 3D 모델로 (진화 조각이 있으면 붙이고, 하얗게 번쩍일 땐 흰 실루엣). W×H 캔버스를 돌려준다, 못 그리면 null */
+  evo(k, st, d, white, W, H) {
+    if (!this.ok() || typeof Pet3D === 'undefined') { this.warm(); return null; } Pet3D.load();
+    try {
+      this.init(); const { THREE } = T3, ppl = PET_PEOPLE[k], s0 = st && !ppl && Pet3D.has(k, st) ? st : 0, dd = d && PetDeco.any && PetDeco.any(d) ? d : null, key = k + ':' + s0 + ':' + (dd ? JSON.stringify(dd) : '');
+      if (!ppl && !Pet3D.has(k, s0)) return null;
+      let E = this.ev; if (!E || E.key !== key) { if (E) this.S.remove(E.g); const g = new THREE.Group(); let Hm = null;
+        if (ppl) { const sp = 'pet:' + k; Sprites.setPal(sp, ppl); this.person(g, Sprites.PAL[sp], 0.5); } else { Hm = Pet3D.make(k, PetRT.petH(k) / TILE * 1.1, s0, dd); Hm.sh.visible = false; Hm.root.rotation.y = -0.62; Pet3D.pose(Hm, false, 0, 0.3, 0.016, null); g.add(Hm.root); }
+        g.updateMatrixWorld(true); E = this.ev = { key, g, H: Hm, box: new THREE.Box3().setFromObject(g, true), lt: performance.now() }; }
+      const now = performance.now(), dt = Math.min(0.05, (now - E.lt) / 1000); E.lt = now; if (E.H) Pet3D.pose(E.H, false, 0, now / 1000, dt, { idle: 1 });
+      const cam = this.cam; cam.aspect = W / H; this.fit(E.box, cam, 0.16, 1.04); cam.updateProjectionMatrix();
+      this.S.add(E.g); if (white) this.S.overrideMaterial = this.whM || (this.whM = new THREE.MeshBasicMaterial({ color: 0xffffff })); this.r.setSize(W, H, false); try { this.r.render(this.S, cam); } finally { this.S.overrideMaterial = null; this.S.remove(E.g); } return this.r.domElement;
+    } catch (e) { console.warn('snap3d evo', e); return null; }
   },
   // 한 장 찍기: build(g) 가 g에 모델을 넣고, aim(box, cam) 이 카메라를 맞춘다. 결과는 2D 캔버스 (기억해 둠)
   shot(key, W, H, build, aim) {
@@ -21630,6 +21744,7 @@ const Snap3D = {
       const used = {}, uk = b => (used[b] = (used[b] | 0) + 1, b + '#' + used[b]);
       C.people.forEach(p => { const P = p.n === 'me' ? Profile.pal(Profile.get()) : this.palOf(p.n), a = get(uk('h:' + p.n + ':' + Hero3D.key(P)), () => hero(P));
         a.root.position.set(p.X / U, 0, 0); a.root.rotation.set(0, 0, -(p.rot || 0)); a.H.root.rotation.y = yaw(p.row); Hero3D.play(a.H, p.fr ? 'Walk_Loop' : 'Idle_Loop', 0.2); a.H.mix.update(dt); });
+      if (C.pets.some(q => !PET_PEOPLE[q.kind] && !Pet3D.has(q.kind)) && Pet3D.st !== -1) return null; /* v367 장면 속 펫 모델이 다 올 때까지 기다림 (부풀린 2D 그림 안 나오게) */
       C.pets.forEach((q, i) => { const hp = PetRT.petH(q.kind) / TILE * 1.1, ppl = PET_PEOPLE[q.kind], up = q.y < -2.5 ? -q.y / U : 0, z = q.y >= -2.5 ? q.y * 2 / U : 0;
         if (ppl) { const sp = 'pet:' + q.kind; Sprites.setPal(sp, ppl); const a = get(uk('pp:' + q.kind), () => hero(Sprites.PAL[sp])); a.root.position.set(q.x / U, up, z); a.H.root.rotation.y = yaw(-1, q.face); Hero3D.play(a.H, q.mv ? 'Walk_Loop' : 'Idle_Loop', 0.2); a.H.mix.update(dt); return; }
         if (Pet3D.has(q.kind)) { const a = get(uk('pm:' + q.kind + (Pet3D.real(q.kind) ? ':r' : '')), () => { const Hm = Pet3D.make(q.kind, hp, 0, null); Hm.sh.visible = false; const r = new THREE.Group(); r.add(Hm.root); Hm.blob = blob(r, Math.max(0.2, Math.min(0.8, hp * 0.5))); return { root: r, H: Hm }; });
@@ -22109,7 +22224,7 @@ const PetEvo = {
   },
   END: 4.6,
   skip() { const T = (performance.now() - this.t0) / 1000; if (T > 0.6 && T < this.END) this.t0 = performance.now() - this.END * 1000; else if (this.done) this.close(); },
-  close() { if (!this.open_) return; this.open_ = false; cancelAnimationFrame(this.raf); window.removeEventListener('keydown', this.key, true); $('evoWin').classList.remove('in'); Game.formOpen = false; Pets.mineT = -1; Sound.play('flip'); },
+  close() { if (!this.open_) return; this.open_ = false; cancelAnimationFrame(this.raf); window.removeEventListener('keydown', this.key, true); $('evoWin').classList.remove('in'); Game.formOpen = false; Pets.mineT = -1; Sound.play('flip'); if (typeof Snap3D !== 'undefined' && Snap3D.release) Snap3D.release(); }, /* v367 진화 장면 3D 그래픽 메모리 놓기 */
   off: null,
   paint() {
     const cv = $('evoCv'), q = this.q, dpr = Math.min(3, window.devicePixelRatio || 1), Wc = innerWidth, Hc = innerHeight, W = Math.round(Wc * dpr), H = Math.round(Hc * dpr); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
@@ -22120,7 +22235,8 @@ const PetEvo = {
     const pw = Math.min(1, T / this.END); c.save(); c.translate(cx, cy - h * K * scN * 0.5); c.rotate(now * 0.6); c.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 12; i++) { c.rotate(Math.PI / 6); c.globalAlpha = (T >= this.END ? 0.22 : 0.06 + pw * 0.2) * (i % 2 ? 0.6 : 1); c.fillStyle = i % 2 ? col : '#fff2b0'; c.beginPath(); c.moveTo(0, 0); c.lineTo(-W * 0.08, -Math.max(W, H)); c.lineTo(W * 0.08, -Math.max(W, H)); c.fill(); } c.restore();
     const one = (st, white) => { const o = this.off || (this.off = document.createElement('canvas')); if (o.width !== W || o.height !== H) { o.width = W; o.height = H; } const x = o.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.clearRect(0, 0, W, H); x.imageSmoothingEnabled = false; x.setTransform(K, 0, 0, K, Math.round(cx), Math.round(cy));
-      const d = PetDeco.get(q.kind); Pets.decoNow = PetDeco.any(d) ? d : null; Pets.decoK = q.kind; const e0 = Pets.evoNow; Pets.evoNow = st ? { st, fl: !!white } : null; Pets.evoK = q.kind;
+      const d = PetDeco.get(q.kind); if (typeof Snap3D !== 'undefined' && typeof Room3D !== 'undefined' && Room3D.on() && !Room3D.soft && !Room3D.bad) { const sc = this.scOf(q.kind, st), Hr = Math.round(H * (sc > 1 ? 0.46 : 0.36)), Wr = Math.min(W, Math.round(Hr * 1.7)), img = Snap3D.evo(q.kind, st, d, white, Wr, Hr); if (img) c.drawImage(img, Math.round(cx - Wr / 2), Math.round(cy - Hr * 0.95), Wr, Hr); return; } /* v367 진화 장면도 3D 모델 (2D 그림 안 나오게, 사용자 '2d안나오게'). 3D를 아예 못 쓰는 기기만 예전 그림 */
+      Pets.decoNow = PetDeco.any(d) ? d : null; Pets.decoK = q.kind; const e0 = Pets.evoNow; Pets.evoNow = st ? { st, fl: !!white } : null; Pets.evoK = q.kind;
       try { Pets.draw(x, q.kind, 0, 0, 1, false, now, '', 0); } finally { Pets.decoNow = null; Pets.evoNow = e0; }
       x.setTransform(1, 0, 0, 1, 0, 0); if (white) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over'; } c.drawImage(o, 0, 0); };
     if (T < 1.2) one(q.from, false);
@@ -25407,6 +25523,10 @@ const CREDITS_SF = [["Classic Bicycle | LowPoly | Game ready", "by__Rx", "https:
   ["1965 Ford Mustang Convertible", "Kristian LaGrange", "https://sketchfab.com/3d-models/05f2a294087541ab82f681136d134344"],
   ["Horse", "Henry S", "https://sketchfab.com/3d-models/a6f860e43e364619bccb174a1ac7d0c9"], // v345 말 교체
   ["Bull", "stealth86", "https://sketchfab.com/3d-models/d0f2ff31252a4c9cb084b1ac3a2e4d8b"],
+  ["Hyundai Elantra 2022 [ Ultra Low Poly ]", "AhmedE", "https://sketchfab.com/3d-models/b30d0baf6c3d4ca4adf2f484a90fc861"],
+  ["2015 Hyundai Tucson", "razor24", "https://sketchfab.com/3d-models/7674a3bd168a451daf73fc0a33d39589"],
+  ["Hyundai Ioniq 5 - Lowpoly", "andikapratamaw", "https://sketchfab.com/3d-models/675e78311e8440d88714bd212cb7a8fb"],
+  ["2006 Hyundai Super Aero Space City", "asian3dmodel", "https://sketchfab.com/3d-models/c794a70aeaa54685ab3f53a4ec4dbc2f"],
   ["Mercedes-Benz 300 SL Gullwing", "Lexyc16", "https://sketchfab.com/3d-models/505241c829c540a4921533000736904e"],
   ["Grey Wolf Rebuilt", "kenchoo", "https://sketchfab.com/3d-models/c0fd1738fa31413b906e2914f5a332b9"], // v345 늑대 교체 (걷기·달리기는 Quaternius 동작을 옮겨 심음)
   ["Inflatable Boat 3", "emelyarules", "https://sketchfab.com/3d-models/862f8161a1ff458ba9d31b14d0a264b1"], // v345 배 6 · 전차 4
@@ -25547,7 +25667,7 @@ const Access = {
  * 다 끝나면 실내 바닥·가구(LATER)를 하나씩 천천히 더 받아 둔다. 파일은 서비스 워커(sw.js)가 3d/ 를 따로 저장해서 다음부터는 바로 열린다.
  * 목록은 실제로 한 판 돌며 받은 파일 (/tmp/claude-0/focus/r4/reqs.js). 버전(?v=)이 바뀐 파일은 그냥 게임이 다시 받을 뿐 깨지진 않는다. */
 const Preload = {
-  CORE: [['three-gta.js?v=160b',735],['env/sky.bin?v=1',1024],['anims2.glb?v=1',1085],['Knight.glb?v=1',164],['Barbarian.glb?v=1',148],['Mage.glb?v=1',131],['Rogue_Hooded.glb?v=1',140],['anim1.glb?v=2',446],['anim2.glb?v=2',369],['heroF.glb?v=4',3326],['heroM.glb?v=4',3371],['ground/walk.jpg?v=1',97],['ground/road.jpg?v=1',68],['ground/dirt.jpg?v=1',124],['ground/grass.jpg?v=1',363],['ground/brick.jpg?v=1',185],['ground/marble.jpg?v=1',131],['real/trees.png?v=1',964],['bld/brickR_c.jpg?v=2',198],['bld/brickR_n.jpg?v=2',339],['bld/brickR_m.jpg?v=2',17],['bld/brickB_c.jpg?v=2',332],['bld/brickB_n.jpg?v=2',340],['bld/brickB_m.jpg?v=2',100],['bld/plaster_c.jpg?v=2',314],['bld/plaster_n.jpg?v=2',247],['bld/plaster_m.jpg?v=2',8],['bld/tile_c.jpg?v=2',176],['bld/tile_n.jpg?v=2',261],['bld/tile_m.jpg?v=2',17],['bld/conc_c.jpg?v=2',229],['bld/conc_n.jpg?v=2',233],['bld/conc_m.jpg?v=2',35],['bld/glass_c.jpg?v=2',105],['bld/glass_n.jpg?v=2',112],['bld/glass_m.jpg?v=2',34],['pets.glb?v=2',1062],['cars.glb?v=1',89],['rides.glb?v=3',566],['evo.glb?v=1',552],['real/metal_trash_can.glb?v=1',404],['real/water_manhole_cover.glb?v=1',172],['bld/kit.glb?v=1',285],['real/street_lamp_01.glb?v=1',157],['real/utility_box_01.glb?v=1',152],['real/painted_wooden_bench.glb?v=1',134],['real/modular_street_seating.glb?v=1',499],['real/fire_hydrant.glb?v=1',326]],
+  CORE: [['three-gta.js?v=160b',735],['env/sky.bin?v=1',1024],['anims2.glb?v=1',1085],['Knight.glb?v=1',164],['Barbarian.glb?v=1',148],['Mage.glb?v=1',131],['Rogue_Hooded.glb?v=1',140],['anim1.glb?v=2',446],['anim2.glb?v=2',369],['heroF.glb?v=4',3326],['heroM.glb?v=4',3371],['ground/walk.jpg?v=1',97],['ground/road.jpg?v=1',68],['ground/dirt.jpg?v=1',124],['ground/grass.jpg?v=1',363],['ground/brick.jpg?v=1',185],['ground/marble.jpg?v=1',131],['real/trees.png?v=1',964],['bld/brickR_c.jpg?v=2',198],['bld/brickR_n.jpg?v=2',339],['bld/brickR_m.jpg?v=2',17],['bld/brickB_c.jpg?v=2',332],['bld/brickB_n.jpg?v=2',340],['bld/brickB_m.jpg?v=2',100],['bld/plaster_c.jpg?v=2',314],['bld/plaster_n.jpg?v=2',247],['bld/plaster_m.jpg?v=2',8],['bld/tile_c.jpg?v=2',176],['bld/tile_n.jpg?v=2',261],['bld/tile_m.jpg?v=2',17],['bld/conc_c.jpg?v=2',229],['bld/conc_n.jpg?v=2',233],['bld/conc_m.jpg?v=2',35],['bld/glass_c.jpg?v=2',105],['bld/glass_n.jpg?v=2',112],['bld/glass_m.jpg?v=2',34],['pets.glb?v=2',1062],['cars2.glb?v=1',3371],['rides.glb?v=3',566],['evo.glb?v=1',552],['real/metal_trash_can.glb?v=1',404],['real/water_manhole_cover.glb?v=1',172],['bld/kit.glb?v=1',285],['real/street_lamp_01.glb?v=1',157],['real/utility_box_01.glb?v=1',152],['real/painted_wooden_bench.glb?v=1',134],['real/modular_street_seating.glb?v=1',499],['real/fire_hydrant.glb?v=1',326]],
   LATER: [['floor/wood_c.jpg?v=1',221],['floor/wood_n.jpg?v=1',83],['floor/wood_r.jpg?v=1',32],['floor/oak_c.jpg?v=1',215],['floor/oak_n.jpg?v=1',125],['floor/oak_r.jpg?v=1',33],['floor/marble_c.jpg?v=1',319],['floor/marble_n.jpg?v=1',17],['floor/marble_r.jpg?v=1',44],['floor/concrete_c.jpg?v=1',415],['floor/concrete_n.jpg?v=1',322],['floor/concrete_r.jpg?v=1',47],['floor/trav_n.jpg?v=1',17],['floor/trav_r.jpg?v=1',16],['floor/trav_c.jpg?v=1',181],['floor/parquet_c.jpg?v=1',189],['floor/parquet_n.jpg?v=1',97],['floor/parquet_r.jpg?v=1',41],['floor/checker_c.jpg?v=1',223],['floor/checker_n.jpg?v=1',25],['floor/checker_r.jpg?v=1',37],['floor/shop_c.jpg?v=1',211],['floor/shop_n.jpg?v=1',80],['floor/carpet_c.jpg?v=1',229],['floor/carpet_n.jpg?v=1',508],['floor/shop_r.jpg?v=1',36],['floor/pent_c.jpg?v=1',154],['floor/carpet_r.jpg?v=1',68],['floor/pent_n.jpg?v=1',50],['floor/pent_r.jpg?v=1',28],['floor/bath_c.jpg?v=1',77],['floor/bath_n.jpg?v=1',106],['floor/entry_c.jpg?v=1',208],['floor/bath_r.jpg?v=1',38],['floor/entry_n.jpg?v=1',147],['floor/deck_c.jpg?v=1',257],['floor/entry_r.jpg?v=1',50],['floor/deck_n.jpg?v=1',119],['floor/deck_r.jpg?v=1',37],['floor/grass_c.jpg?v=1',456],['floor/grass_n.jpg?v=1',606],['floor/grass_r.jpg?v=1',102],['floor/plaster_c.jpg?v=1',165],['floor/plaster_n.jpg?v=1',526],['floor/plaster_r.jpg?v=1',23],['room/desk_metal.glb?v=1',304],['room/bookcase.glb?v=1',478],['room/pcset.glb?v=1',458],['room/frame_b.glb?v=1',362],['room/clock_wall.glb?v=1',522],['room/chair_off.glb?v=1',174],['room/desk_old.glb?v=1',781],['room/laptop.glb?v=1',759],['real/sofa_02.glb?v=1',288],['real/potted_plant_01.glb?v=1',1851],['real/potted_plant_04.glb?v=1',514],['real/sofa_03.glb?v=1',577],['real/potted_plant_02.glb?v=1',1084]],
   st: 0, got: 0, tot: 0, // st: 0 아직 · 1 받는 중 · 2 준비 중 · 3 끝
   on() { return !window.PRELOAD_OFF && typeof Room3D !== 'undefined' && Room3D.on(); }, // PRELOAD_OFF = 시험 스크립트용

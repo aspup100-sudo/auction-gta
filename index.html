@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v365</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v366</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3922,7 +3922,7 @@ function collideTraffic(c, z) {
 }
 
 // 천사 날개 (v235 사용자 '천사는 날 수 있으니까 안 박는 걸로'): 건물·차·사람 위로 날아간다 (부딪힘·수리비·합의금·신호 과태료 없음, 지붕 위에 그린다)
-function carFlying() { return Game.driving && typeof Shop !== 'undefined' && !(typeof CarSwap !== 'undefined' && CarSwap.stolen()) && Shop.myCar(true).ride === 'wings'; }
+function carFlying() { return Game.driving && typeof Shop !== 'undefined' && !(typeof CarSwap !== 'undefined' && CarSwap.stolen()) && (Shop.myCar(true).ride === 'wings' || Shop.myCar(true).ride === 'dragon'); } /* v366 용도 건물 위로 날아 지붕에 앉는다 (사용자 '건물 위에 앉아있을수있게') */
 function updateMyCar(dt, z, input) {
   const c = Game.car, fly = carFlying(), carBlocked = fly ? () => false : window.carBlocked;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
@@ -8720,7 +8720,7 @@ function update(dt) {
   // 카메라
   const k = 1 - Math.exp(-FEEL.camLerp * dt);
   if (Game.scene === 'zone') {
-    const lead = Game.driving ? 0.35 : 0; const tx = p.x + (Game.driving ? Game.car.vx * lead : 0), ty = p.y + (Game.driving ? Game.car.vy * lead : 0);
+    const lead = Game.driving ? 0.35 : 0; const tx = p.x + (Game.driving ? Game.car.vx * lead : 0), ty = p.y + (Game.driving ? Game.car.vy * lead : 0) - (typeof zFlyCam === 'function' ? zFlyCam() : 0); /* v366 나는 탈것 높이만큼 */
     Cam.x += (tx - Cam.x) * k; Cam.y += (ty - Cam.y) * k;
     const zt = FEEL.zoom * (Game.driving && !REDUCED_MOTION ? 1 - (1 - FEEL.camZoomAtMax) * Math.min(1, Game.car.speed / FEEL.carMaxSpeed) : 1);
     Cam.zoom += (zt - Cam.zoom) * Math.min(1, dt * 3);
@@ -19253,6 +19253,10 @@ Object.assign(Room3D, {
     return out;
   },
   // v321 밧줄: 두 손 가운데 → 돛 모서리 (r = {x, y, h} 월드 px · 칸, 없으면 숨김)
+  /* v366 나는 탈것 밑 지붕 (칸): [x, y 둘레 r px 안에 걸친 지붕 중 가장 높은 것, 가운데가 지붕 위면 그 지붕 높이] */
+  zRoof(x, y, r) { const z = this.room, tx = x / TILE, ty = y / TILE, rt = r / TILE; let nr = 0, on = 0; if (!z || !z.buildings) return [0, 0];
+    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], dx = Math.max(b.x - tx, 0, tx - b.x - b.w), dy = Math.max(b.y - ty, 0, ty - b.y - b.h); if (dx > rt || dy > rt) continue; const d = Math.hypot(dx, dy); if (d > rt) continue;
+      const e = this.zb.get(id), h = e && e.H > 0 ? e.H : bWallH(b) / TILE * Z3_BH; if (h > nr) nr = h; if (d < rt * 0.3 && h > on) on = h; } return [nr, on]; },
   rope(H, r) { const { THREE } = T3; if (!r) { if (H.rp) H.rp.visible = false; return; }
     if (!H.rp) { H.rp = new THREE.Mesh(this.ropeG || (this.ropeG = new THREE.CylinderGeometry(0.022, 0.022, 1, 6)), Room3D.toon('#6a4a26')); this.ropeG._keep = 1; this.S.add(H.rp); H.rp.userData.own = H; }
     const a = Hero3D.handsAt(H); if (!a) { H.rp.visible = false; return; } const b = new THREE.Vector3(r.x / TILE, r.h, r.y / TILE), d = b.clone().sub(a), L = d.length();
@@ -19264,8 +19268,8 @@ Object.assign(Room3D, {
       if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.stand ? w.ride.h : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.set(0, H.ang, 0); if (H.hero && (w.ride.pose || w.ride.grip || w.ride.leg)) Hero3D.ridePose(H, w.ride.pose, t, w.ride.mv, w.ride.grip, w.ride.leg); if (H.hero && (w.ride.hatch || w.ride.noLeg)) Hero3D.hideLegs(H); this.rope(H, H.hero && w.ride.rope); /* v321 노 젓기 · 밧줄 */ if (!w.ride.gnd) { H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } } else { if (H.hero && H.fdw != null) { Hero3D.fdOff(H); H.fdw = null; } /* 내리면 발 딛기 몸 위치 되돌리기 */ if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } if (H.rp) this.rope(H, null); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
     this.zc = this.zMatch(zq.c, this.zc, (p, q) => p.col === q.col && p.kind === q.kind && p.len === q.len, 48, 'zc');
     for (const c of this.zc) { if (c.ride) { let H = this.A.get(c.key); if (!H) { H = { root: Ride3D.make(c.ride), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); } H.seen = this.fr; if (!H.wok) { H.wok = Ride3D.warmUp(this, H.root, c.ride); H.root.visible = H.wok; } /* v363 처음 타는 탈것: 셰이더·그림을 미리 올린 뒤 보인다 */ /* v317 배는 둥실, 탱크는 서 있으면 포탑이 천천히 두리번 */
-        const water = RIDE_WATER.has(c.ride), mv = c.spd > 4, ph = c.key.length * 1.7; const hv = RIDE3[c.ride].hover; if (hv) H.hv = (H.hv || 0) + ((mv ? hv : 0) - (H.hv || 0)) * Math.min(1, dt * 1.6); /* v345 용: 달리면 살짝 떠서 (사용자 '완전 공중은 아니고'), 서면 내려앉기 · v346 천사 날개 (사용자 '쫌 더 높이 날아야'): 날면 보통 건물(3~5층) 지붕 위로, 서면 땅에 내려앉는다 */
-        H.root.position.set(c.x / TILE, water ? 0.03 + Math.sin(t * 2.2 + ph) * 0.035 : hv ? H.hv + Math.sin(t * 2.6 + ph) * Math.min(H.hv * 0.12, 0.15) : 0, c.y / TILE); const ln = Ride3D.LEAN[c.ride]; let lx = 0, lz = 0; if (ln) { const da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), v = mv ? c.spd / TILE : 0, w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제처럼: 두 바퀴는 도는 쪽으로 눕고 (tan = 속도 × 회전 / 중력), 차는 바깥으로 살짝 쏠리고 출발하면 앞이 들리고 서면 숙인다 */
+        const water = RIDE_WATER.has(c.ride), mv = c.spd > 4, ph = c.key.length * 1.7; const hv = RIDE3[c.ride].hover; if (hv) { H.hv = (H.hv || 0) + ((mv ? hv : 0) - (H.hv || 0)) * Math.min(1, dt * 1.6); const r = RIDE3[c.ride].L * 0.5, k = Math.min(c.spd, 400) * 0.45, R0 = this.zRoof(c.x, c.y, r), R1 = mv ? this.zRoof(c.x + Math.cos(c.a) * k, c.y + Math.sin(c.a) * k, r) : R0, rf = mv ? (Math.max(R0[0], R1[0]) > 0 ? Math.max(R0[0], R1[0]) + Math.min(hv, 0.9) : 0) : R0[1]; H.hr = H.hr == null ? rf : H.hr + (rf - H.hr) * Math.min(1, dt * (rf > H.hr ? 3.5 : 1.3)); } /* v366 나는 탈것은 건물 위로 (사용자 '건물 겹칠수있다'): 날면 둘레·앞쪽 지붕보다 높이, 지붕 위에 서면 지붕에 앉는다 (사용자 '건물 위에 앉아있을수있게') · v345 용: 달리면 살짝 떠서 (사용자 '완전 공중은 아니고'), 서면 내려앉기 · v346 천사 날개 (사용자 '쫌 더 높이 날아야'): 날면 보통 건물(3~5층) 지붕 위로, 서면 땅에 내려앉는다 */
+        H.root.position.set(c.x / TILE, water ? 0.03 + Math.sin(t * 2.2 + ph) * 0.035 : hv ? Math.max(H.hv, H.hr) + Math.sin(t * 2.6 + ph) * Math.min(H.hv * 0.12, 0.15) : 0, c.y / TILE); if (hv && Game.driving && Math.abs(c.x - Game.car.x) < 3 && Math.abs(c.y - Game.car.y) < 3) this.myFly = { h: Math.max(H.hv, H.hr), fr: this.fr }; /* v366 내 나는 탈것 높이 → 카메라 (zFlyCam) */ const ln = Ride3D.LEAN[c.ride]; let lx = 0, lz = 0; if (ln) { const da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), v = mv ? c.spd / TILE : 0, w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제처럼: 두 바퀴는 도는 쪽으로 눕고 (tan = 속도 × 회전 / 중력), 차는 바깥으로 살짝 쏠리고 출발하면 앞이 들리고 서면 숙인다 */
           const want = ln > 0 ? (mv ? Math.max(-0.55, Math.min(0.55, Math.atan(v * w * 0.06))) : -0.09) /* 서면 딛은 왼발 쪽으로 살짝 기운다 */ : Math.max(-0.05, Math.min(0.05, -v * w * 0.006)); H.ln = (H.ln || 0) + (want - (H.ln || 0)) * Math.min(1, dt * 5); lx = H.ln;
           if (ln < 0) { const ac = dt > 0 ? (v - (H.pv || 0)) / dt : 0; H.pv = v; H.pt = (H.pt || 0) + (Math.max(-0.03, Math.min(0.03, ac * 0.004)) - (H.pt || 0)) * Math.min(1, dt * 4); lz = H.pt; } }
         if (water) { const Bt = Ride3D.BOAT[c.ride] || Ride3D.BOAT.lifeboat, f = Bt.p, v = mv ? c.spd / TILE : 0, da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제 배처럼: 큰 범선은 느리고 작게 흔들리고 돌면 바깥으로, 모터보트는 안으로 눕고 빨리 달리면 뱃머리가 든다 */
@@ -19285,6 +19289,8 @@ Object.assign(Room3D, {
   },
 });
 // 땅 그림 변환 (drawZone이 #zground에 그릴 때도 같이 쓴다)
+/* v366 내가 높이 날거나 지붕에 앉으면 카메라도 그만큼 위로 (안 그러면 높은 지붕 위 내 탈것이 화면 위로 나간다) */
+function zFlyCam() { const R = typeof Room3D !== 'undefined' && Room3D, f = R && R.zNow && Game.driving && Game.scene === 'zone' && R.myFly; return f && R.fr - f.fr < 3 ? f.h * TILE / Math.tan(Z3_EL) * 0.85 : 0; }
 function zoneSq() { return Game.scene === 'zone' && Room3D.zNow ? Room3D.zSq() : 1; }
 // 3D 바깥: 땅은 #zground에 2D 그대로, 나머지는 3D (drawZone 안에서 g = 땅 캔버스)
 function drawZone3D(t) {
@@ -21691,12 +21697,13 @@ const Snap3D = {
   },
   // v360 실사 탈것 칸 사진: 3d/th/ride/<키>.webp (assets: Snap3D.thumb 로 찍어 둔 것, 320×208). 오면 상점 다시 그리기
   bk: {},
-  baked(x, k, W, H) { let im = this.bk[k]; if (!im) { im = this.bk[k] = new Image(); im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }; im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/ride/' + k + '.webp?v=1'); }
+  baked(x, k, W, H, dir) { const id = (dir || 'ride') + '/' + k; let im = this.bk[id]; if (!im) { im = this.bk[id] = new Image(); im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }; im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/' + id + '.webp?v=1'); }
     if (!im.complete || im.bad || !im.naturalWidth) return false; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, W, H); x.restore(); return true; },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {
     if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
-    if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); if (this.baked(x, it.ride, 160 * S, 104 * S)) return true; return !(this.bk[it.ride] && this.bk[it.ride].bad); } /* v365 사진이 아직 오는 중이면 빈 칸으로 기다림 (예전엔 2D 그림으로 넘어가며 배·탱크 실사 모델을 칸마다 받아 폰이 튕겼다, 사용자 '스킨구경 e누르면 튕겼어') */ /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
+    if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); if (this.baked(x, it.ride, 160 * S, 104 * S)) return true; return !(this.bk['ride/' + it.ride] && this.bk['ride/' + it.ride].bad); } /* v365 사진이 아직 오는 중이면 빈 칸으로 기다림 (예전엔 2D 그림으로 넘어가며 배·탱크 실사 모델을 칸마다 받아 폰이 튕겼다, 사용자 '스킨구경 e누르면 튕겼어') */ /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
+    if (it.pet && typeof Pet3D !== 'undefined' && it.pet in Pet3D.SFP && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)), im = this.bk['pet/' + it.pet]; if (this.baked(x, it.pet, 160 * S, 104 * S, 'pet')) return true; if (!im || !im.bad) return true; } /* v366 실사 펫 칸도 미리 찍은 사진 (펫 칸을 열면 실사 펫 8마리 모델 18MB를 한꺼번에 받아 폰이 튕김, 사용자 '자꾸 숍 들어가서 보려고하면 튕긴다') */
     const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);

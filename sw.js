@@ -1,5 +1,5 @@
 // 경매 GTA 서비스 워커: 온라인이면 항상 최신 index.html을 받고, 끊기면 저장해 둔 파일로 열어요.
-const CACHE = "auction-gta-v365";
+const CACHE = "auction-gta-v366";
 const C3D = "auction-gta-3d", CHK = new Set(); // v360 3D 파일 저장 칸 (게임 버전이 바뀌어도 남긴다)
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });

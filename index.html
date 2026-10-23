@@ -1629,7 +1629,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v362</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v363</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -17763,23 +17763,7 @@ PetRT.arena.big3 = () => Arena3J.st === 2 && Arena3J.on(); // v296: 새 3D 그�
     Arena3J.hide(); const cv = glDraw0.call(this, R, G, B, ci, cam, t, dt); if (cv) cv.style.display = ''; return cv;
   }; }
 
-/* ===================== 폰 그래픽 메모리 정리 (사용자 2026-10-23 '폰에서 실사화가 진행될수록 렉걸려?', 튕김) ===================== */
-const Perf = {
-  phone() { if (this.ph == null) { let p = false; try { p = !Store.get('hiTex', 0) && ((window.matchMedia && matchMedia('(pointer: coarse)').matches) || /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)); } catch (e) { } this.ph = p; } return this.ph; },
-  /* 그래픽 메모리 정리 (폰만): 거리·실내·숍을 돌수록 한 번 쓴 모델 그림이 그래픽 메모리에 계속 쌓여 1GB를 넘으면 폰이 게임을 꺼 버린다.
-   * 3초마다 지금 그리는 장면에 걸린 그림·모양을 '본 시각'으로 적어 두고, 15초 넘게 안 그린 것은 그래픽 메모리에서만 내린다.
-   * 모델(파일)은 그대로 기억하고 있어서, 다시 보이면 받기 없이 바로 다시 올라간다 (한 장에 몇 ms). */
-  seen: new Map(), rs: new Map(), IDLE: 15000,
-  watch(r) { if (!r || r._pf) return; r._pf = 1; const f = r.render, me = this; r.render = function (s, c) { if (s && s.isObject3D) me.rs.set(r, { s, t: performance.now() }); return f.call(this, s, c); }; },
-  trim() {
-    if (!window.T3) return; for (const o of [typeof Room3D !== 'undefined' && Room3D, typeof Arena3J !== 'undefined' && Arena3J, typeof Snap3D !== 'undefined' && Snap3D, typeof Study3D !== 'undefined' && Study3D]) if (o && o.r) this.watch(o.r);
-    if (!this.phone()) return; const now = performance.now(), S = this.seen, put = x => { if (x && !x.isRenderTargetTexture) S.set(x, now); };
-    for (const [r, v] of this.rs) { if (now - v.t > 3000) continue; const sc = v.s; if (sc.environment) S.delete(sc.environment);
-      sc.traverse(o => { if (o.geometry) put(o.geometry); if (!o.material) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) for (const k in m) { const t = m[k]; if (t && t.isTexture) put(t); } }); }
-    for (const [x, t] of S) if (now - t > this.IDLE) { S.delete(x); try { x.dispose(); } catch (e) { } }
-  },
-};
-setInterval(() => { try { Perf.trim(); } catch (e) { } }, 3000);
+/* v363 폰 그래픽 메모리 정리(Perf.trim) 뺌: 다시 올릴 때 그림이 깨져 폰에서 사람이 사라졌다 */
 
 /* ===================== 실사 집 바닥·벽 (v329, 사용자 '2D인거 전부 3D로 바꿔' · '리얼리스틱 팩으로') =====================
  * 내 집 3D 바닥을 ambientCG·Poly Haven 바닥 사진(색·노멀·거칠기, CC0)으로 그린다. 바닥 글자(거실·욕실·현관·베란다·마당)와 집 톤마다 재질이 다르다.

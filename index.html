@@ -1560,7 +1560,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   </div>
   <div id="soloPick"><!-- v285 사용자 '처음이에요 누르고 시작 누르면 되는 건데 잘 모를 거 같애, 단계별도 따로 움직이는 건데 같이 되는 거 같잖아': 혼자 하기를 세 갈래로 -->
     <div class="smTabs"><button class="smTab" data-sm="tut"><b>튜토리얼</b><small>처음이라면 여기</small></button><button class="smTab" data-sm="free"><b>자유 플레이</b><small>자본 골라서</small></button><button class="smTab" data-sm="prac"><b>단계별 연습</b><small>1~5단계</small></button></div>
-    <div class="smPane" id="smTut"><p class="tutGiftLine" id="tutGiftLine"><b>끝까지 하면 고양이 펫을 선물로 줘요.</b> 혼자 하기에서도 실시간 채널에서도 옆에서 졸졸 따라오고, 멈추면 기지개를 켜요. 튜토리얼에서만 받을 수 있어요.</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
+    <div class="smPane" id="smTut"><p class="tutGiftLine" id="tutGiftLine"><b>끝까지 하면 고양이 펫을 선물로 줘요.</b> 혼자 하기에서도 실시간 채널에서도 옆에서 졸졸 따라오고, 멈추면 기지개를 켜요. (편집숍에서는 300만 원)</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
     <div class="smPane" id="smFree"><p>이번 주 물건 중 하나를 골라 혼자 조사하고 입찰해요. 안내 없이 해요.</p></div>
     <div class="smPane" id="smPrac"><p>함정을 하나씩 늘려 가며 1단계부터 5단계까지 해요. 단계마다 정해진 물건과 자본으로 시작해요.</p><div class="row"><button class="btn gold" id="btnPrac">단계 고르기</button></div></div>
     <label id="tutRow" hidden><input type="checkbox" id="tutOn"></label>
@@ -1629,7 +1629,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v350</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v362</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5238,11 +5238,11 @@ const HOME_PLANS = {
     '########D######'] },
   apt_m: { label: '아파트 84㎡형 · 방3 화2', map: [
     '#======#==========#',
-    '#cc..bb#P...vv...a#',
-    '##d..bb#..........#',
-    '#o,#...#...RRRR...#',
-    '#ul#...#...ssss...#',
-    '#####dy#..........#',
+    '#cc..bb#P........a#',
+    '##d..bb#...s......#',
+    '#o,#...#...s.RR..v#',
+    '#ul#...#...s.RR..v#',
+    '#####dy#...s......#',
     '#.................#',
     '##d##d##...tt..#d##',
     '#b.z#,o#::.....#.b#',
@@ -5252,11 +5252,11 @@ const HOME_PLANS = {
     '#=======#============#',
     '#cc.bb.P#m__________P#',
     '#...bb..#=d========d=#',
-    '#.......#c.b#P.vv...a#',
-    '##d#....#..b#........#',
-    '#o,#....#z..#..RRRR..#',
-    '#ul#.c..#...#..ssss..#',
-    '######d#y#d##........#',
+    '#.......#c.b#P......a#',
+    '##d#....#..b#..s.....#',
+    '#o,#....#z..#..s.RR.v#',
+    '#ul#.c..#...#..s.RR.v#',
+    '######d#y#d##..s.....#',
     '#....................#',
     '##d###d##d##....tt...#',
     '#b.z#z.b#,o#::.......#',
@@ -8446,8 +8446,8 @@ async function asylum(victim, total, why, line) {
 async function iris(close) {
   const dur = FEEL.irisTime * 1000, t0 = performance.now();
   return new Promise(res => {
-    Game.trans = { close, p: 0 };
-    const tick = () => { const k = Math.min(1, (performance.now() - t0) / dur); Game.trans.p = k; if (k < 1) requestAnimationFrame(tick); else res(); };
+    const tr = Game.trans = { close, p: 0 }; /* v357: 다른 화면 전환이 Game.trans를 비워도 이 전환은 끝까지 (전엔 null 오류로 멈춰 Game.busy가 안 풀렸다) */
+    const tick = () => { const k = Math.min(1, (performance.now() - t0) / dur); tr.p = k; if (k < 1) requestAnimationFrame(tick); else res(); };
     tick();
   });
 }
@@ -9057,7 +9057,7 @@ function drawHudExtras() {
   const items = c ? [['명세서', s.spec || s.survey], ['등기부', s.registry], ['전입세대', s.movein], ['현장', s.site], ['은행', s.bank]] : [];
   const key = `${slots}|${c ? c.id : ''}|${items.map(i => +!!i[1]).join('')}|${State.day}|${Live.on ? Math.floor(Live.now() / 1000) : ''}`;
   if (key === _hudKey) return; const prevKey = _hudKey; _hudKey = key;
-  $('hudSlots').innerHTML = (Live.on && !FEEL.liveSlots ? '' : [0, 1].map(i => `<span class="pip ${i < slots ? 'used' : i === slots ? 'now' : ''}"></span>`).join('')) + `<small>${Live.on ? (!FEEL.liveSlots ? '' : Live.used >= FEEL.liveSlots ? `오늘 조사 끝 · 다음 날 ${Live.untilDay()}` : `오늘 남은 조사 ${FEEL.liveSlots - Live.used}`) : State.evening ? '오늘 조사 끝' : `오늘 남은 조사 ${2 - slots}`}</small>`;
+  $('hudSlots').innerHTML = Tutorial.timeLock() ? '' /* v357 튜토리얼: 시간은 할 일을 끝낼 때만 흐르니 '오늘 남은 조사 n' 칸은 안 보인다 */ : (Live.on && !FEEL.liveSlots ? '' : [0, 1].map(i => `<span class="pip ${i < slots ? 'used' : i === slots ? 'now' : ''}"></span>`).join('')) + `<small>${Live.on ? (!FEEL.liveSlots ? '' : Live.used >= FEEL.liveSlots ? `오늘 조사 끝 · 다음 날 ${Live.untilDay()}` : `오늘 남은 조사 ${FEEL.liveSlots - Live.used}`) : State.evening ? '오늘 조사 끝' : `오늘 남은 조사 ${2 - slots}`}</small>`;
   const q = $('quest');
   if (!c) { q.classList.remove('in'); return; }
   const prevDone = (prevKey.split('|')[2] || '');
@@ -9786,6 +9786,7 @@ const Mine = {
     if (Net.on) Net.send({ t: 'mpos', out: 1 }); this.unlock(); this.lift = null; this.lz = null;
     let at = null; try { at = this.dropRemote(); } catch (e) { console.error(e); }
     this.open_ = false; this.hold = false; this.ph = null; $('mineWin').classList.remove('in'); this.el.innerHTML = '';
+    if (this.G3) { try { const x = this.G3.gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) {} this.G3 = undefined; } // v356 폰 메모리: 광산 나가면 그래픽 메모리(바위 재질·광부 그림)를 바로 돌려준다, 다시 들어오면 새로 만든다
     for (const k in Pressed) Pressed[k] = false; for (const k in Keys) Keys[k] = false;
     Game.busy = false; Game.formOpen = false; Sound.playBgm(Game.room ? Game.room.def.bgm : 'town'); Sound.play('chime');
     Toast.show(`석탄 광산에서 나왔다${left ? ` · 들고 나온 돈 +${fmtWon(left)}` : ''}`, 3200);
@@ -10773,6 +10774,7 @@ async function runOpening(c, r) {
   const comp = [...c.competition.bids.map(b => ({ name: b.name, bid: b.bid, me: false })), ...(Net.on ? Net.friendBids(c) : [])];
   const meB = { name: Net.on ? Net.me : '본인', bid: r.bid, me: true, invalid: (r.rate || 0.1) < CourtRules.depRate(c) - 1e-9 }; // 재매각 사건에 10%만 넣으면 무효
   const all = [...comp, meB];
+  if (!Net.on && !Tutorial.on && !meB.invalid) await extraBid(c, all, meB, r); // v357 동액 최고가는 그 사람들끼리 추가입찰부터 (민사집행규칙 66조)
   // 동액: 혼자면 무작위, 같이 하기면 사건 시드로 (양쪽 결과가 같도록 이름순 정렬 뒤 뽑기)
   let tie = false;
   const pickTop = list => { const top = Math.max(...list.map(x => x.bid)); const tops = list.filter(x => x.bid === top); tie = tops.length > 1; return tops.length > 1 ? (Net.on ? [...tops].sort((a, b) => a.name.localeCompare(b.name))[Net.tieIndex(c, tops.length)] : tops[Math.floor(Math.random() * tops.length)]) : tops[0]; };
@@ -10806,7 +10808,7 @@ async function runOpening(c, r) {
     await hitStamp(); shake(8, 0.3); Sound.play('stamp');
     for (let i = 0; i < 40; i++) Particles.push({ x: room.W * TILE / 2 + (Math.random() - 0.5) * 60, y: 2 * TILE, vx: (Math.random() - 0.5) * 140, vy: -40 - Math.random() * 90, g: 160, life: 1.6, max: 1.6, col: ['rgba(255,216,74,', 'rgba(205,174,112,', 'rgba(255,240,180,'][i % 3], r: 1.5 + Math.random() * 1.5 });
     Verdict.win(room, { c, bid: r.bid, second, dep: r.deposit });
-    res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b id="obGap">0원</b>` : '단독 입찰'}${tie ? ' · 동액 입찰이라 추첨으로 정함' : ''}</div>`;
+    res.innerHTML = `<div class="win">최고가매수신고인 · 본인</div><div>${second ? `2등(${fmtWon(second.bid)})과의 차이 <b id="obGap">0원</b>` : '단독 입찰'}${tie ? (Net.on ? ' · 동액 입찰이라 추첨으로 정함' : ' · 추가입찰에서도 같은 값이라 추첨으로 정함') : ''}</div>`;
     const seal = $('bigSeal'); seal.innerHTML = '최고가<br>매수신고인'; seal.className = 'in'; Sound.play('chime'); if (second) Verdict.count($('obGap'), r.bid - second.bid);
     await sleep(1600); seal.className = '';
   } else {
@@ -10824,16 +10826,16 @@ async function runOpening(c, r) {
   if (!won && Tutorial.on && Tutorial.c && c.id === Tutorial.c.id && !Tutorial.retried) { State.cash += r.deposit; HUD.setCash(State.cash); Toast.show(`보증금 ${fmtWon(r.deposit)} 반환`); return Tutorial.retry(c, r, winner); }
   // 차순위매수신고: 2등이 (최고가 − 보증금)보다 높게 썼으면 그 자리에서 신고할 수 있다
   if (!won && CourtRules.canSecond(c, O, meB, r.deposit)) {
-    const pick = await Dialog.say([say('court', `차순위매수신고하실 분 계십니까? 본인이 쓴 ${fmtWon(r.bid)}은(는) 최고가 ${fmtWon(winner.bid)}에서 보증금 ${fmtWon(r.deposit)}을 뺀 금액보다 높아서 신고할 수 있습니다.`), say('court', '신고하시면 최고가매수인이 대금을 낼 때까지 보증금은 돌려드리지 않습니다. 대금을 안 내면 재매각 없이 본인에게 매각을 허가합니다.')], [{ label: '차순위매수신고 하기', value: 'y' }, { label: '안 하고 보증금 돌려받기', value: 'n' }]);
+    const pick = await Dialog.say([say('court', O.coowner ? `공유자가 우선매수를 했으니 최고가를 쓰신 본인은 차순위매수신고인으로 봅니다 (민사집행규칙 76조). 원하지 않으면 지금 포기하고 보증금을 돌려받으실 수 있어요.` : `차순위매수신고하실 분 계십니까? 본인이 쓴 ${fmtWon(r.bid)}은(는) 최고가 ${fmtWon(winner.bid)}에서 보증금 ${fmtWon(r.deposit)}을 뺀 금액보다 높아서 신고할 수 있습니다.`), say('court', '신고하시면 최고가매수인이 대금을 낼 때까지 보증금은 돌려드리지 않습니다. 대금을 안 내면 재매각 없이 본인에게 매각을 허가합니다.')], [{ label: '차순위매수신고 하기', value: 'y' }, { label: '안 하고 보증금 돌려받기', value: 'n' }]);
     if (pick === 'y') {
       br.secondReport = true; await hitStamp();
       await iris(true); await sleep(500); await iris(false); Game.trans = null;
       if (CourtRules.x(c).payFail) {
-        await Dialog.say([{ text: '한 달 뒤. 법원에서 우편이 왔다.' }, say('court', `최고가매수인이 대금지급기한까지 대금을 내지 않았습니다. 차순위매수신고인인 본인에게 매각을 허가합니다. 최고가매수인의 보증금은 몰수되었어요.`)]);
+        await Dialog.say([{ text: '한 달 뒤. 법원에서 우편이 왔다.' }, say('court', `${O.coowner ? '매수인(공유자)' : '최고가매수인'}이 대금지급기한까지 대금을 내지 않았습니다. 차순위매수신고인인 본인에게 매각을 허가합니다. 최고가매수인의 보증금은 몰수되었어요.`)]);
         br.won = true; br.winner = meB; br.fromSecond = true;
         return winAfterOpening(c, r);
       }
-      await Dialog.say([{ text: '한 달 뒤. 법원에서 우편이 왔다.' }, say('court', '최고가매수인이 대금을 다 냈습니다. 차순위매수신고는 효력이 없어졌어요. 묶여 있던 보증금을 돌려드립니다.')]);
+      await Dialog.say([{ text: '한 달 뒤. 법원에서 우편이 왔다.' }, say('court', `${O.coowner ? '매수인(공유자)' : '최고가매수인'}이 대금을 다 냈습니다. 차순위매수신고는 효력이 없어졌어요. 묶여 있던 보증금을 돌려드립니다.`)]);
       br.why = '차순위매수신고를 했지만 최고가매수인이 대금을 다 내서 보증금만 돌려받았다.';
     }
   }
@@ -10843,6 +10845,17 @@ async function runOpening(c, r) {
   State.cash += r.deposit; HUD.setCash(State.cash); Toast.show(`보증금 ${fmtWon(r.deposit)} 반환`);
   State.phase = 'lost'; HUD.page(br.why ? '이번엔 절차에서 막혔네. 결과 같이 보자.' : '떨어졌네. 결과 같이 보자.');
   setTimeout(() => finishGame(), 1200);
+}
+/* v357 추가입찰 (사용자 2026-10-23 '경매 로직 오류 없어?'): 최고가가 같은 사람이 여럿이면 그 사람들만 다시 쓴다. 처음 쓴 값보다 낮게는 못 쓰고, 또 같으면 추첨.
+ * 혼자 하기에서 내가 그 안에 낀 경우만 묻는다. 경쟁자는 사건 난수로 정한다 (보증금은 최저가 기준이라 그대로). */
+async function extraBid(c, all, meB, r) {
+  const valid = all.filter(b => !b.invalid), top = Math.max(...valid.map(b => b.bid)), tops = valid.filter(b => b.bid === top);
+  if (tops.length < 2 || !tops.includes(meB)) return;
+  const R = caseRng(c, 1410), step = Math.max(1e5, Math.round(top * 0.005 / 1e5) * 1e5);
+  const pick = await Dialog.say([say('court', `최고가 ${fmtWon(top)}을(를) 쓴 분이 ${tops.length}명입니다. 이분들만 추가입찰을 하겠습니다. 처음 쓴 금액보다 낮게는 쓸 수 없습니다.`)],
+    [0, 1, 2, 5].map(k => ({ label: k ? `${fmtWon(top + step * k)} <small>(+${fmtWon(step * k)})</small>` : `${fmtWon(top)} 그대로`, value: String(k) })));
+  meB.bid = r.bid = top + step * (+pick || 0);
+  for (const b of tops) if (b !== meB) b.bid = top + step * R.pick([0, 0, 1, 2, 3]);
 }
 async function winAfterOpening(c, r) {
   const br = State.bidResult;
@@ -10990,7 +11003,7 @@ function occupantProfile(c) {
   if (o.kind === 'vacant') return { kind: 'vacant' };
   if (o.kind === 'lien') return { kind: c.lien.real ? 'lienReal' : 'lienFake', name: c.lien.holder, sprite: 'occ_worker', base: c.appraisal * 0.3, hard: c.lien.real };
   if (o.kind === 'heir') return { kind: 'heir', name: '상속인들', sprite: 'occ_young', base: c.appraisal * 0.3, hard: true };
-  if (o.kind === 'tenant') return { kind: t.daehang ? 'tenantSenior' : 'tenantJunior', name: t.name, sprite: 'occ_auntie', base: t.paid > 0 ? t.paid : c.appraisal * 0.3, assumed: t.daehang ? t.assumed : 0, hard: t.daehang };
+  if (o.kind === 'tenant') return { kind: t.daehang ? 'tenantSenior' : 'tenantJunior', name: t.name, sprite: 'occ_auntie', base: t.paid > 0 ? t.paid : c.appraisal * 0.3, assumed: t.daehang ? t.assumed : 0, hard: t.daehang, paid: t.paid };
   return { kind: 'owner', name: c.owner, sprite: 'occ_oldman', base: c.appraisal * 0.3, hard: false };
 }
 async function evictAtSite(c) {
@@ -11003,9 +11016,15 @@ async function evictAtSite(c) {
     await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: '받았으니 이사 날짜 맞춰서 나갈게요.', emote: 'sweat', nod: true }]);
     return evictDone(c, true);
   }
+  if (P.kind === 'lienReal') { // v357 진짜 유치권자는 매수인에게도 맞설 수 있어 인도명령·강제집행으로 못 내보낸다. 공사대금을 갚아야 넘겨준다 (그 돈은 처분가치에서 이미 뺐다)
+    await Dialog.say([{ name: P.name, sprite: P.sprite, voice: 'occ', text: `공사대금 ${fmtWon(c.lien.amount)} 받기 전엔 열쇠 못 드립니다.`, emote: 'anger' }, { text: '진짜 유치권은 낙찰자에게도 주장할 수 있어서 인도명령이나 강제집행으로 내보낼 수 없다. 공사대금을 갚고 넘겨받았다. 이 돈은 정산서의 처분가치(시세 − 유치권)에서 이미 빠져 있다.' }]);
+    return evictDone(c, true);
+  }
   const ease = (Live.on ? Live.pending() && Live.pending().order : State.indoOrder) ? FEEL.liveOrderEase : 0; // 인도명령을 받아 두면 점유자가 덜 버틴다
-  const need = RESIST[P.kind] - ease; let gauge = Math.min(95, need + 10);
+  const proof = P.paid > 0 ? 20 : 0; // v358 배당받는 임차인은 낙찰자의 명도확인서가 있어야 배당금을 찾는다 (집을 비워 줘야 받을 수 있다)
+  const need = RESIST[P.kind] - ease - proof; let gauge = Math.min(95, need + 10);
   if (ease) await Dialog.say([{ text: '인도명령 결정문을 보여 주자 점유자의 기세가 한풀 꺾였다.' }]);
+  if (proof) await Dialog.say([{ text: `${P.name}님은 배당금 ${fmtWon(P.paid)}을 받는다. 그 돈을 법원에서 찾으려면 낙찰자의 명도확인서가 있어야 해서, 집을 비워 주는 게 본인에게도 급하다.` }]);
   if (Tutorial.on && !Live.on) await Tutorial.evictTalk(c, P); // v287 튜토리얼: 단예가 같이 명도 (이사비 얼마를 왜)
   const panel = $('evictPanel');
   const render = () => { panel.innerHTML = `<div class="epHead"><canvas id="epPortrait" width="192" height="192"></canvas><div><b>${P.name}</b><div class="small">경계심</div><div class="gauge"><div id="epGauge" style="width:${gauge}%"></div></div></div></div>
@@ -11117,7 +11136,11 @@ const CourtRules = {
     return { winner, coowner, second };
   },
   // 차순위매수신고 자격: 내가 2등이고 (최고가 − 보증금)을 넘게 썼으며 1등이 사람(친구)이 아닐 때
-  canSecond(c, res, me, deposit) { return !!(res.winner && !res.coowner && !res.winner.me && !res.winner.friend && res.second === me && !me.invalid && me.bid > res.winner.bid - deposit); },
+  canSecond(c, res, me, deposit) {
+    if (!res.winner || res.winner.me || me.invalid) return false;
+    if (res.coowner) return me.bid === res.coowner.bid; // v358 공유자가 우선매수하면 최고가매수신고인은 차순위매수신고인으로 본다 (민사집행규칙 76조 3항)
+    return !!(!res.winner.friend && res.second === me && me.bid > res.winner.bid - deposit);
+  },
   hangul(n) {
     n = Math.round(n); if (!n) return '영';
     const D = '영일이삼사오육칠팔구', U = ['', '십', '백', '천'], B = ['', '만', '억', '조']; let out = '', i = 0;
@@ -11274,7 +11297,7 @@ const RISK_NAME = r => ({ normal: '후순위 임차인 (전액 배당)', junior:
 /* 정리본 2묶음 위험: 결과 화면에서만 왜 그런지 설명 */
 const TRAP_WHY = {
   jeonN: '선순위 전세권자가 배당요구를 안 하면 전세권은 말소기준이 못 되고 낙찰자가 전세금을 그대로 떠안는다.',
-  jeonY: '선순위 전세권자가 배당요구하면 그 전세권이 말소기준이 된다. 배당받고 소멸하며, 그 뒤 권리도 모두 지워진다.',
+  jeonY: '집 전체에 설정된 선순위 전세권자가 배당요구하면 그 전세권이 말소기준이 된다. 배당받고 소멸하며, 그 뒤 권리도 모두 지워진다.',
   claimreg: '말소기준보다 앞선 매매예약 가등기는 소멸하지 않는다. 본등기가 되면 낙찰자는 소유권을 잃을 수 있어, 지키려면 가등기권자와 합의해야 한다.',
   fakegd: '등기부에는 똑같이 소유권이전청구권가등기로 보여도, 가등기권자가 채권계산서를 냈다면 돈을 받으려는 담보가등기다. 담보가등기는 근저당처럼 말소기준이 되고 배당받고 소멸한다.',
   inj: '말소기준보다 앞선 처분금지가처분은 소멸하지 않는다. 가처분권자가 본안에서 이기면 낙찰자가 소유권을 잃을 수 있다.',
@@ -11622,7 +11645,7 @@ const Tutorial = {
     return [
       { id: 'pc', title: '사무실 PC 보기', how: `${K.moveWith} 사무실에 들어가 PC 앞에서 ${K.act}`, place: 'office', ok: () => !!State.pcOpened, lines: [
         '왔어? 나 단예야. 경매도 게임도 처음이라며. 이번 주는 내가 옆에서 한 바퀴 같이 돌게.',
-        ...(Store.get('giftTut281', false) ? [] : ['끝까지 같이 하면 선물로 고양이 펫을 줄게. 혼자 할 때도 실시간 채널에서도 옆에서 졸졸 따라다녀. 튜토리얼에서만 주는 거야.']),
+        ...(Store.get('giftTut281', false) ? [] : ['끝까지 같이 하면 선물로 고양이 펫을 줄게. 혼자 할 때도 실시간 채널에서도 옆에서 졸졸 따라다녀. 편집숍에선 300만 원 받는 애야.']),
         `걷는 건 ${K.move}. 문이나 사람 앞에 서면 말풍선이 뜨는데, 그때 ${K.act}를 누르면 들어가거나 말을 걸 수 있어.`,
         `${K.box}에 지금 할 일이 떠 있어. 상자를 누르면 설명을 다시 들을 수 있고. 먼저 사무실에 들어가서 PC부터 봐.`,
         '그리고 이번 주는 연습이라 시계가 저절로 안 가. 할 일을 하나 끝낼 때마다 시간이 한 칸씩(오전 → 오후 → 다음 날 아침) 넘어가.'] },
@@ -17740,6 +17763,24 @@ PetRT.arena.big3 = () => Arena3J.st === 2 && Arena3J.on(); // v296: 새 3D 그�
     Arena3J.hide(); const cv = glDraw0.call(this, R, G, B, ci, cam, t, dt); if (cv) cv.style.display = ''; return cv;
   }; }
 
+/* ===================== 폰 그래픽 메모리 정리 (사용자 2026-10-23 '폰에서 실사화가 진행될수록 렉걸려?', 튕김) ===================== */
+const Perf = {
+  phone() { if (this.ph == null) { let p = false; try { p = !Store.get('hiTex', 0) && ((window.matchMedia && matchMedia('(pointer: coarse)').matches) || /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)); } catch (e) { } this.ph = p; } return this.ph; },
+  /* 그래픽 메모리 정리 (폰만): 거리·실내·숍을 돌수록 한 번 쓴 모델 그림이 그래픽 메모리에 계속 쌓여 1GB를 넘으면 폰이 게임을 꺼 버린다.
+   * 3초마다 지금 그리는 장면에 걸린 그림·모양을 '본 시각'으로 적어 두고, 15초 넘게 안 그린 것은 그래픽 메모리에서만 내린다.
+   * 모델(파일)은 그대로 기억하고 있어서, 다시 보이면 받기 없이 바로 다시 올라간다 (한 장에 몇 ms). */
+  seen: new Map(), rs: new Map(), IDLE: 15000,
+  watch(r) { if (!r || r._pf) return; r._pf = 1; const f = r.render, me = this; r.render = function (s, c) { if (s && s.isObject3D) me.rs.set(r, { s, t: performance.now() }); return f.call(this, s, c); }; },
+  trim() {
+    if (!window.T3) return; for (const o of [typeof Room3D !== 'undefined' && Room3D, typeof Arena3J !== 'undefined' && Arena3J, typeof Snap3D !== 'undefined' && Snap3D, typeof Study3D !== 'undefined' && Study3D]) if (o && o.r) this.watch(o.r);
+    if (!this.phone()) return; const now = performance.now(), S = this.seen, put = x => { if (x && !x.isRenderTargetTexture) S.set(x, now); };
+    for (const [r, v] of this.rs) { if (now - v.t > 3000) continue; const sc = v.s; if (sc.environment) S.delete(sc.environment);
+      sc.traverse(o => { if (o.geometry) put(o.geometry); if (!o.material) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) for (const k in m) { const t = m[k]; if (t && t.isTexture) put(t); } }); }
+    for (const [x, t] of S) if (now - t > this.IDLE) { S.delete(x); try { x.dispose(); } catch (e) { } }
+  },
+};
+setInterval(() => { try { Perf.trim(); } catch (e) { } }, 3000);
+
 /* ===================== 실사 집 바닥·벽 (v329, 사용자 '2D인거 전부 3D로 바꿔' · '리얼리스틱 팩으로') =====================
  * 내 집 3D 바닥을 ambientCG·Poly Haven 바닥 사진(색·노멀·거칠기, CC0)으로 그린다. 바닥 글자(거실·욕실·현관·베란다·마당)와 집 톤마다 재질이 다르다.
  * 2D 집 그림(HomeIn.draw 바닥만)의 floor() 자리에 끼워 넣어서 문턱·러그·얼룩은 그대로 위에 그려진다. 벽은 칠한 석고 노멀.
@@ -17798,14 +17839,16 @@ const Room3D = {
   },
   // v309 느릴 때 화질 낮추기 (사용자 '해상도가 너무 떨어지는데'): 해 그림자 먼저, 그다음 해상도 (0.75배까지만).
   // 낮춘 뒤 2초 지나도 15% 넘게 빨라지지 않으면 (그래픽카드 탓이 아니면) 되돌리고 한동안 다시 안 낮춘다
-  adapt(slow, sun) {
+  adapt(slow, sun) { // v361 (폰 성능 점검): 해 그림자를 끄고 켜면 재질 셰이더 15개쯤을 한꺼번에 다시 만들어 폰에서 1~3초 멈췄다 → 그림자는 켠 채로 두고 두 장에 한 번만 다시 그린다
     const fe = this.fe, T = this.qTry;
-    if (T) { if (this.fr - T.fr < 60) return; if (fe > T.fe * 0.85) { if (T.sh) { if (sun) sun.castShadow = true; this.shNo = 1; } else this.q = T.q; this.qNo = this.fr; } this.qTry = null; return; }
+    if (T) { if (this.fr - T.fr < 60) return; if (fe > T.fe * 0.85) { if (T.sh) { this.shEv = 1; this.shNo = 1; } else this.q = T.q; this.qNo = this.fr; } this.qTry = null; return; }
     if (fe > slow) { if (this.qNo && this.fr - this.qNo < 1800) return;
-      if (sun && sun.castShadow && !this.shNo) { this.qTry = { fr: this.fr, fe, sh: 1 }; sun.castShadow = false; return; }
+      if (sun && sun.castShadow && !this.shNo && (this.shEv || 1) < 2) { this.qTry = { fr: this.fr, fe, sh: 1 }; this.shEv = 2; this.shHook(); return; }
       if (this.q > 0.75) { this.qTry = { fr: this.fr, fe, q: this.q }; this.q = Math.max(0.75, this.q * 0.85); } }
     else if (fe < 17 && this.q < 1) this.q = Math.min(1, this.q * 1.06);
   },
+  shHook() { const r = this.r; if (!r || r._shH) return; r._shH = 1; let n = 0; const f = r.render; // 그림자 지도만 건너뛴다 (셰이더는 그대로)
+    r.render = function (s, c) { const ev = Room3D.shEv || 1; r.shadowMap.autoUpdate = ev < 2; if (ev >= 2) r.shadowMap.needsUpdate = n++ % ev === 0; return f.call(this, s, c); }; },
   softNote() { return !!this.soft; }, // 알림 없이 조용히 예전 그림으로 (사용자 '일반 유저가 그래픽 가속 신경 쓰지 않는다')
   show(v) { if (this.cv) { const d = v ? 'block' : 'none'; if (this.cv.style.display !== d) this.cv.style.display = d; } },
   init() {
@@ -17963,8 +18006,8 @@ const Room3D = {
     // 등 쪽 b에 붙인 판 (두께 t, 높이 hh, y0부터)
     const slab = (b, t, hh, col, y0 = 0, inset = 0, op) => b < 2 ? this.box(S, cx, b === 0 ? y + t / 2 + inset : y + d - t / 2 - inset, w - 0.08, t, hh, col, y0, op) : this.box(S, b === 2 ? x + t / 2 + inset : x + w - t / 2 - inset, cz, t, d - 0.08, hh, col, y0, op);
     const RK = { b: ['bed', lv.bed], v: ['tv', lv.tv], t: ['table', lv.table], R: ['rug', lv.rug] }[ch]; // v328 실사 TV·침대·식탁·러그 (받는 동안은 예전 모양)
-    if (RK) { const k = realHome(RK[0], RK[1]); if (Props3D.has(k)) return this.realFit(S, k, ch, x, y, w, d, ch === 't' || ch === 'R' ? -1 : back()); Props3D.need(k); this.rWait = 1; if (ch === 'R') return; }
-    if (this.mOver && RoomReal.HOME[ch] && this.rrHome(S, ch, x, y, w, d, ch === 'P' || ch === 'T' ? 0 : back(), sd, o.rm)) return; // 실사 주방·욕실
+    if (RK) { const k = realHome(RK[0], RK[1]); if (Props3D.has(k)) { const r = this.realFit(S, k, ch, x, y, w, d, ch === 't' || ch === 'R' ? -1 : back()); if (ch === 'b' && this.mOver && this.rrBedSide) this.rrBedSide(S, x, y, w, d, back(), o); return r; } Props3D.need(k); this.rWait = 1; if (ch === 'R') return; }
+    if (this.mOver && RoomReal.HOME[ch] && this.rrHome(S, ch, x, y, w, d, ch === 'P' || ch === 'T' ? 0 : back(), sd, o.rm, o)) return; // 실사 주방·욕실
     switch (ch) {
       case 'b': { const k = lv.bed | 0, blanket = k === 1 ? '#f8f8f6' : k === 2 ? '#8a2a3a' : ['#6a8ac8', '#d88aa0', '#7ab08a', '#e0b860'][(sd + x + y) % 4], frame = k === 1 ? '#8a8a90' : k === 2 ? '#3a2418' : '#7a5236', head = k === 1 ? '#6a6a72' : k === 2 ? '#2a1810' : '#5a3a26';
         this.box(S, cx, cz, w - 0.06, d - 0.06, 0.3, frame); this.box(S, cx, cz + 0.02, w - 0.14, d - 0.12, 0.14, '#f4f2ee', 0.3); this.box(S, cx, y + 0.08, w - 0.06, 0.12, k ? 0.95 : 0.75, head);
@@ -18248,8 +18291,8 @@ const RoomReal = {
   done() { if (Object.values(this.rs).includes(1)) return; if (typeof Room3D !== 'undefined' && Room3D.room && Room3D.rrWait) { Room3D.rrWait = 0; Room3D.room = null; } }, // 집도 (빈집은 다른 다시 세우기 계기가 없다)
   // 방 지도 글자마다 쓰는 모델: 들어가자마자 한꺼번에 받기 시작
   USE: { K: ['water'], C: ['monitor', 'register'], S: ['wait2', 'stool'], P: ['desk_metal', 'pcset', 'chair_off'], T: ['desk_old', 'laptop'], B: ['bookcase'], A: ['arcade1', 'arcade2'], t: ['arcade1'], q: ['arcade2'], d: ['claw'], O: ['holjjak'], Z: ['blackjack'], E: ['roulette'], I: ['poker'], Y: ['slot'], J: ['shirt'], n: ['mannequin'] },
-  HOME: { f: 'fridge', g: 'stove', k: 'ksink', o: 'toilet', l: 'vanity', u: 'bathtub', m: 'washer', c: 'wardrobe', h: 'cabinet', z: 'desk_metal', n: 'desk_old', e: 'bookcase', P: '*', T: '*', a: '*' },
-  preHome(m) { Room3D.rrWait = 0; const s = new Set(), x = { z: ['pcset', 'chair_off'], n: ['laptop', 'chair_off'] }; let pl = 0; for (const r of m) for (const c of r) { const k = this.HOME[c]; if (k === '*') pl |= c !== 'a'; else if (k) s.add(k); for (const e of x[c] || []) s.add(e); } for (const k of s) this.need(k); if (pl) ['r_potted_plant_01', 'r_potted_plant_02', 'r_potted_plant_04'].forEach(k => Props3D.need(k)); },
+  HOME: { s: 'sofa', f: 'fridge', g: 'stove', k: 'ksink', o: 'toilet', l: 'vanity', u: 'bathtub', m: 'washer', c: 'wardrobe', h: 'cabinet', z: 'desk_metal', n: 'desk_old', e: 'bookcase', P: '*', T: '*', a: '*' },
+  preHome(m) { Room3D.rrWait = 0; const s = new Set(), x = { z: ['pcset', 'chair_off'], n: ['laptop', 'chair_off'], b: ['nstand'] }; let pl = 0; for (const r of m) for (const c of r) { const k = this.HOME[c]; if (k === '*') pl |= c !== 'a'; else if (k) s.add(k); for (const e of x[c] || []) s.add(e); } for (const k of s) this.need(k); if (pl) ['r_potted_plant_01', 'r_potted_plant_02', 'r_potted_plant_04'].forEach(k => Props3D.need(k)); },
   pre(m) { const s = new Set(['clock_wall', 'frame_b']); for (const r of m) for (const c of r) for (const k of this.USE[c] || []) s.add(k); for (const k of s) this.need(k); if (m.some(r => r.includes('M'))) ['r_potted_plant_01', 'r_potted_plant_02', 'r_potted_plant_04'].forEach(k => Props3D.need(k)); if (m.some(r => r.includes('F'))) ['r_sofa_02', 'r_sofa_03'].forEach(k => Props3D.need(k)); },
   has(k) { return !!this.M[k]; },
   // 쓸 수 있으면 true, 받는 중이면 false (그동안 예전 가구)
@@ -18649,12 +18692,54 @@ Object.assign(Room3D, {
     let k = Ho.furn ? 0 : 9; const shoe = [['#2a2a2e', '#f4f4f2'], ['#f2f2f0', '#c8ccd0'], ['#6a4a30', '#3a2a1c'], ['#d84a5a', '#f4f4f2']]; for (let y = 0; y < H && k < 3; y++) for (let x = 0; x < W && k < 3; x++) { if (at(x, y) !== ':') continue; const c = shoe[(k + (Ho.seed >>> 0)) % 4];
       for (const sx of [-0.07, 0.07]) { const g = new THREE.Group(); g.position.set(x + 0.3 + (k % 2) * 0.35 + sx, 0, y + 0.45 + (k > 1 ? 0.2 : 0)); g.rotation.y = (k * 0.7 + sx) % 0.6 - 0.3; S.add(g);
         R.bx(g, 0, 0, 0.1, 0.27, 0.025, R.flat(c[1], 0.6), 0, 1); const up = R.bx(g, 0, 0.02, 0.095, 0.2, 0.06, R.flat(c[0], 0.5), 0.025, 1); void up; } k++; } },
+  // 안방: 침대 머리맡 양옆 협탁 + 스탠드 (실제 안방처럼). 빈 바닥 칸일 때만
+  rrBedSide(S, x, y, w, d, b, O) {
+    const { THREE } = T3, R = RoomReal; if (!R.ok('nstand')) return; const ux = b === 2 ? 1 : b === 3 ? -1 : 0, uz = b === 0 ? 1 : b === 1 ? -1 : 0, D = R.dim('nstand');
+    const hx = b === 2 ? x : b === 3 ? x + w - 1 : null, hz = b === 0 ? y : b === 1 ? y + d - 1 : null; // 머리맡 줄
+    const sides = b < 2 ? [[x - 1, hz, 1], [x + w, hz, -1]] : [[hx, y - 1, 1], [hx, y + d, -1]];
+    for (const [tx, tz, s] of sides) { if (O.at(tx, tz) !== '.') continue;
+      const px = tx + 0.5 - ux * 0.28 + (b < 2 ? s * 0.22 : 0), pz = tz + 0.5 - uz * 0.28 + (b < 2 ? 0 : s * 0.22), RY = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b], sc = 0.5 / D.w;
+      const g = R.put(S, 'nstand', px, pz, RY, sc); g.userData.at = [tx, tz]; const top = D.h * sc, L = new THREE.Group(); L.position.set(px, top, pz); L.userData.at = [tx, tz];
+      const add = (geo, mt, yy) => { const m = new THREE.Mesh(geo, mt); m.position.y = yy; m.castShadow = true; L.add(m); return m; };
+      add(new THREE.CylinderGeometry(0.05, 0.07, 0.04, 20), R.flat('#c8b090', 0.4, 0.5), 0.02); add(new THREE.CylinderGeometry(0.012, 0.012, 0.22, 8), R.flat('#c8b090', 0.4, 0.5), 0.15);
+      const ev = typeof State !== 'undefined' && State.evening; add(new THREE.CylinderGeometry(0.09, 0.13, 0.16, 24, 1, true), R.flat('#f4ead8', 0.9, 0, { side: THREE.DoubleSide, emissive: new THREE.Color('#ffcf8a'), emissiveIntensity: ev ? 0.9 : 0.15 }), 0.3);
+      if (ev) { const pl = new THREE.PointLight(0xffc890, 1.6, 2.6, 1.6); pl.position.y = 0.3; L.add(pl); }
+      if (O.Ho && O.Ho.furn && (tx + tz) % 2) { const bk = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.03, 0.12), R.flat('#5a6a88', 0.7)); bk.position.set(0.08, 0.015, 0.06); bk.rotation.y = 0.4; L.add(bk); } // 읽던 책
+      S.add(L); } },
+  // 거실: 밝은 회색 패브릭 소파 (TV 쪽을 봄) + 소파 앞 러그 + TV 뒤 대리석 아트월 (실제 아파트 거실처럼)
+  rrSofa(S, x, y, w, d, b, O, rm) {
+    const { THREE } = T3, R = RoomReal, cx = x + w / 2, cz = y + d / 2, at = O.at, W = rm.W, H = rm.H; let t = null;
+    if (O.tv.length) { t = O.tv.reduce((p, q) => Math.hypot(q[0] - cx, q[1] - cz) < Math.hypot(p[0] - cx, p[1] - cz) ? q : p); const dx = t[0] - cx, dz = t[1] - cz; b = Math.abs(dz) >= Math.abs(dx) ? (dz < 0 ? 1 : 0) : (dx < 0 ? 3 : 2); } else if (w >= d) b = b === 1 ? 1 : 0; else b = b === 3 ? 3 : 2; // TV 없으면 긴 쪽으로 앉게
+    const RY = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b], ux = b === 2 ? 1 : b === 3 ? -1 : 0, uz = b === 0 ? 1 : b === 1 ? -1 : 0, along = b < 2 ? w : d, across = b < 2 ? d : w;
+    R.fit(S, 'sofa', x + 0.02 - (b === 3 ? 0.15 : 0), y + 0.02 - (b === 1 ? 0.15 : 0), w - 0.04 + (b >= 2 ? 0.15 : 0), d - 0.04 + (b < 2 ? 0.15 : 0), RY, 1.1, 'nswe'[b]);
+    let rug = false; for (let j = 0; j < H && !rug; j++) for (let i = 0; i < W; i++) if (at(i, j) === 'R') { rug = true; break; }
+    if (!rug) { // 러그: 소파 앞쪽 반부터 TV 쪽으로, TV 앞 0.5칸까지
+      let len = 1.9; if (t) len = Math.min(len, Math.abs(ux ? t[0] - cx : t[1] - cz) - across / 2 - 0.15); if (len > 0.8) {
+        const L = Math.min(along + 0.3, 3.2), c = document.createElement('canvas'); c.width = 256; c.height = 160; const g = c.getContext('2d');
+        g.fillStyle = '#cfc8bc'; g.fillRect(0, 0, 256, 160); for (let i = 0; i < 9000; i++) { const v = 150 + Math.random() * 70 | 0; g.fillStyle = `rgba(${v},${v - 6},${v - 16},.22)`; g.fillRect(Math.random() * 256, Math.random() * 160, 2, 1); }
+        g.strokeStyle = 'rgba(120,110,96,.55)'; g.lineWidth = 5; g.strokeRect(10, 10, 236, 140); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2; g.strokeRect(18, 18, 220, 124);
+        const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4; tx._own = 1;
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(L, len), new THREE.MeshStandardMaterial({ map: tx, roughness: 1, metalness: 0 })); m.rotation.x = -Math.PI / 2; m.rotation.z = -RY; m.receiveShadow = true;
+        const off = across / 2 - 0.25 + len / 2; m.position.set(cx + ux * off, 0.008, cz + uz * off); m.userData.at = [x, y]; S.add(m); } }
+    if (t) { // 아트월: TV 뒤 바깥 높은 벽('#')에 대리석 판
+      const sx = ux, sz = uz; let tx0 = Math.floor(t[0]), tz0 = Math.floor(t[1]), n = 0; while (n++ < 6 && !O.isWall(at(tx0, tz0))) { tx0 += sx; tz0 += sz; }
+      const edge = (sz < 0 && tz0 === 0) || (sx < 0 && tx0 === 0) || (sx > 0 && tx0 === W - 1);
+      if (edge && at(tx0, tz0) === '#') { let a = 0, bb = 0; const ok = k => at(tx0 + (sz ? k : 0), tz0 + (sz ? 0 : k)) === '#'; while (a < 2 && ok(-a - 1)) a++; while (bb < 2 && ok(bb + 1)) bb++; a = Math.min(a, 1); bb = Math.min(bb, 1);
+        const span = 1 + a + bb, mid = (bb - a) / 2, hh = R3_WALL - 0.12, pw = span - 0.1, mt = R.mat('marble', '#ffffff', { ns: 0.3, p: { roughness: 0.3, envMapIntensity: 1.3 } }), g = new THREE.Group();
+        R.bx(g, 0, 0, pw, 0.03, hh, mt, 0, 1.1); R.bx(g, 0, 0.018, pw, 0.006, 0.012, R.flat('#ffe2b0', 0.4, 0, { emissive: new THREE.Color('#ffd9a0'), emissiveIntensity: 0.9 }), hh - 0.03, 1, { cast: false }); // 위 간접등 줄
+        for (let i = 1; i < 3; i++) R.bx(g, -pw / 2 + pw * i / 3, 0.016, 0.006, 0.004, hh, R.flat('#cfcac0', 0.6), 0, 1, { cast: false }); // 판 이음새
+        if (sz < 0) g.position.set(tx0 + 0.5 + mid, 0, 1.0 + 0.015); else if (sx < 0) { g.rotation.y = Math.PI / 2; g.position.set(1.0 + 0.015, 0, tz0 + 0.5 + mid); } else { g.rotation.y = -Math.PI / 2; g.position.set(W - 1 - 0.015, 0, tz0 + 0.5 + mid); }
+        g.traverse(o => { o.userData.at = [Math.floor(t[0]), Math.floor(t[1])]; }); g.userData.at = [Math.floor(t[0]), Math.floor(t[1])]; S.add(g); } }
+    return true;
+  },
   // 집 주방·욕실 실사 모델 (f 냉장고 · g 가스레인지 · k 싱크대 · o 변기 · l 세면대 · u 욕조 · m 세탁기). 못 받았으면 false → 예전 상자
-  rrHome(S, ch, x, y, w, d, b, sd, rm) {
+  rrHome(S, ch, x, y, w, d, b, sd, rm, O) {
+    if (ch === 's' && (!O || (O.lv.sofa | 0))) return false; // 기본 소파만 실사 (등급 소파는 room3d 쪽)
     const R = RoomReal, k = R.HOME[ch], old = this.rrBad === 'wrecked' || this.rrBad === 'worn', CB = old ? '#d4c9ae' : '#f2f0ea', CT = old ? '#bdb39a' : '#e8e8e4'; if (!k || (k !== '*' && !R.ok(k))) return false;
     const RY = [0, Math.PI, Math.PI / 2, -Math.PI / 2][b], AL = 'nswe'[b], ux = b === 2 ? 1 : b === 3 ? -1 : 0, uz = b === 0 ? 1 : b === 1 ? -1 : 0, cx = x + w / 2, cz = y + d / 2;
     if (ch === 'P' || ch === 'T') { const ks = ['r_potted_plant_01', 'r_potted_plant_02', 'r_potted_plant_04'], pk = ks[(x * 3 + y) % 3]; if (!Props3D.has(pk)) { Props3D.need(pk); if (Props3D.rs[pk] !== -1) this.rWait = 1; return false; } // 화분 · 큰 나무 화분
       const { THREE } = T3, g = Props3D.make(pk), bb = new THREE.Box3().setFromObject(g), hh = ch === 'T' ? 1.9 : 1.15, sc = Math.min(2.2, hh / (bb.max.y - bb.min.y), (ch === 'T' ? 1.2 : 0.95) / Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z)); g.scale.setScalar(sc); g.position.set(cx - (bb.min.x + bb.max.x) / 2 * sc, 0, cz - (bb.min.z + bb.max.z) / 2 * sc); S.add(g); return true; }
+    if (ch === 's') return this.rrSofa(S, x, y, w, d, b, O, rm);
     if (ch === 'a') { const { THREE } = T3, g = new THREE.Group(), wh = R.flat('#f4f4f2', 0.25, 0, { envMapIntensity: 1.2 }), gr = R.flat('#c8ccd0', 0.4, 0.6); // 스탠드 에어컨: 흰 몸통 · 위 바람구멍 · 검은 화면
       const add = (geo, mt, px, py, pz) => { const o = new THREE.Mesh(geo, mt); o.position.set(px, py, pz); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
       add(new THREE.CylinderGeometry(0.22, 0.24, 1.62, 28, 1, false, -Math.PI / 2, Math.PI), wh, 0, 0.83, 0).rotation.y = Math.PI; add(new THREE.BoxGeometry(0.46, 1.62, 0.16), wh, 0, 0.83, -0.08); add(new THREE.BoxGeometry(0.48, 0.04, 0.4), gr, 0, 0.02, -0.04);
@@ -18666,7 +18751,10 @@ Object.assign(Room3D, {
       if (R.ok('laptop')) R.put(S, 'laptop', cx - (q ? ux * 0.1 : 0.2 * (run > 1)), cz - (q ? 0.2 * (run > 1) : uz * 0.1), RY, 1, top); if (R.ok('chair_off')) R.put(S, 'chair_off', cx + ux * 0.55, cz + uz * 0.55, RY + Math.PI, 0.95); return true; }
     if (ch === 'e') { const run = b < 2 ? w : d; for (let i = 0; i < run; i++) R.fit(S, k, b < 2 ? x + i + 0.02 : x + 0.02, b < 2 ? y + 0.02 : y + i + 0.02, b < 2 ? 0.96 : d - 0.04, b < 2 ? d - 0.04 : 0.96, RY, 1.15, AL); return true; } // 책장 줄
     if ('folm'.includes(ch)) { R.fit(S, k, x + 0.03, y + 0.03, 0.94, 0.94, RY, { f: 1.12, o: 1.15, l: 1, m: 1.15 }[ch], AL); return true; }
-    if (ch === 'c') { const D = R.dim(k), sc = Math.min(1, 0.92 / D.d), g = R.put(S, k, x + 0.5 + (b === 2 ? -1 : b === 3 ? 1 : 0) * (0.48 - D.d * sc / 2), y + 0.5 + (b === 0 ? -1 : b === 1 ? 1 : 0) * (0.48 - D.d * sc / 2), RY, sc); g.children[0].scale.x = Math.min(sc, 0.96 / D.w); return true; } // 옷장: 키는 그대로, 폭만 한 칸에 맞춤
+    if (ch === 'c') { const { THREE } = T3, g = new THREE.Group(), q = b >= 2, dp = 0.62, hh = 2.15, wh = R.flat(old ? '#e2dccb' : '#f3f1ec', 0.3, 0, { envMapIntensity: 1.1 }), sm = R.flat('#c9c5bc', 0.6), hd = R.flat('#b8b4ac', 0.25, 0.8); // 붙박이장: 흰 무광 문 2짝 · 이음새 · 세로 손잡이 (실제 안방 붙박이장처럼)
+      R.bx(g, 0, 0, 0.98, dp, hh, wh, 0, 1); R.bx(g, 0, dp / 2 + 0.003, 0.006, 0.004, hh - 0.08, sm, 0.04, 1, { cast: false }); R.bx(g, 0.49, dp / 2 + 0.003, 0.006, 0.004, hh - 0.08, sm, 0.04, 1, { cast: false });
+      for (const s2 of [-1, 1]) R.bx(g, s2 * 0.035, dp / 2 + 0.012, 0.012, 0.012, 0.32, hd, 1.0, 1); R.bx(g, 0, dp / 2 - 0.02, 0.98, 0.04, 0.06, R.flat('#dedad2', 0.6), 0, 1, { cast: false });
+      g.rotation.y = RY; g.position.set(x + 0.5 - ux * (0.5 - dp / 2 - 0.02), 0, y + 0.5 - uz * (0.5 - dp / 2 - 0.02)); S.add(g); void q; return true; } // 옷장
     if (ch === 'h') { R.fit(S, k, x + 0.03, y + 0.03, 0.94, 0.94, RY, 1.2, AL); return true; }
     if (ch === 'u') { R.fit(S, k, x + 0.03, y + 0.03, w - 0.06, d - 0.06, w >= d ? (b === 1 ? Math.PI : 0) : (b === 3 ? -Math.PI / 2 : Math.PI / 2), 1.15); return true; }
     // 조리대 줄: 한 칸마다 하부장 + 대리석 상판, 가스레인지/싱크 칸만 다르게
@@ -18755,19 +18843,41 @@ Object.assign(Room3D, {
   },
   // 이번 프레임에 보일 건물만 세우고, 멀어진 건물은 치운다. 내가 건물 뒤(북쪽)에 가려지면 그 건물은 반투명
   zStream(z, cx, cz, vw, vd, dt) {
-    const bg = typeof Bld3D !== 'undefined' ? Bld3D.rgen : 0; // v340 실사 건물 사진을 다 받으면 다시 세운다
-    if (this.zEve !== State.evening || this.zbg !== bg) { for (const [, e] of this.zb) this.zDrop(e); this.zb.clear(); this.zEve = State.evening; this.zbg = bg; }
+    /* v360 끊김 (사용자 '버스 타고 다닐때 개 끊겨'): 실사 건물 한 채 짓기 = 수 ms~수십 ms. 예전엔 화면 끝에 닿을 때 한 채씩 지어서 달리면 계속 끊겼다.
+     * 이제 ① 달리는 쪽으로 미리 (빠를수록 멀리) ② 가까운 것부터 ③ 한 장에 쓸 시간 안에서만 ④ 지나간 건물은 꼭짓점 한도까지 남겨 둔다 (되돌아와도 다시 안 지음)
+     * ⑤ 저녁·사진 바뀜은 다 부수지 않고 하나씩 바꿔 끼운다 ⑥ 동네에 처음 들어가면 보이는 건물을 다 지을 때까지 '동네 불러오는 중' */
+    const bg = typeof Bld3D !== 'undefined' ? Bld3D.rgen : 0, now = performance.now();
+    if (this.zbZ !== z || !this.zb.size) { if (this.zbZ !== z) { for (const [, e] of this.zb) this.zDrop(e); this.zb.clear(); } this.zbZ = z; if (!this.zWarm) { this.zWarm = 1; this.zWarm0 = 0; this.zWarmD = 0; } }
+    if (this.zEve !== State.evening || this.zbg !== bg) { for (const [, e] of this.zb) e.stale = 1; this.zEve = State.evening; this.zbg = bg; }
     const plOf = this.zpl && this.zplZ === z ? this.zpl : (this.zplZ = z, this.zpl = {}); if (!Object.keys(plOf).length) for (const pl of z.places) plOf[pl.building] = pl;
-    const x0 = cx - vw / 2 - 6, x1 = cx + vw / 2 + 6, z0 = cz - vd / 2 - 6, z1 = cz + vd / 2 + 10, me = Game.driving ? Game.car : Game.player, cot = 1 / Math.tan(Z3_EL), F = [[me.x / TILE, me.y / TILE]]; // 가려지면 안 되는 사람: 나 · 편집숍 사장님 · 친구
+    const me = Game.driving ? Game.car : Game.player, cot = 1 / Math.tan(Z3_EL), F = [[me.x / TILE, me.y / TILE]]; // 가려지면 안 되는 사람: 나 · 편집숍 사장님 · 친구
+    const vx = Game.driving && Game.car ? (Game.car.vx || 0) / TILE : 0, vy = Game.driving && Game.car ? (Game.car.vy || 0) / TILE : 0, la = Math.min(1.4, 26 / Math.max(1, Math.hypot(vx, vy))); // 앞을 1.4초어치 (멀어야 26칸)
+    const ax = vx * la, ay = vy * la, x0 = cx - vw / 2 - 6 + Math.min(0, ax), x1 = cx + vw / 2 + 6 + Math.max(0, ax), z0 = cz - vd / 2 - 6 + Math.min(0, ay), z1 = cz + vd / 2 + 10 + Math.max(0, ay);
     const sp = typeof ShopPromo !== 'undefined' && ShopPromo.w; if (sp && Game.decor.includes(sp)) F.push([sp.x / TILE, sp.y / TILE]); if (typeof Net !== 'undefined' && Net.on) for (const { p } of Net.visible('zone')) if (p && Number.isFinite(p.x)) F.push([p.x / TILE, p.y / TILE]);
-    let made = 0;
-    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e0 = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
-      if (!inV) { if (e0 && (b.x > x1 + 12 || b.x + b.w < x0 - 12 || b.y > z1 + 12 || b.y + b.h < z0 - 12)) { this.zDrop(e0); this.zb.delete(id); } continue; }
-      let e = e0; if (!e) { if (made >= (this.fe > 20 || (typeof Bld3D !== 'undefined' && Bld3D.on()) ? 1 : 2)) continue; /* 한 프레임에 둘까지만 (미리 넉넉히 바깥부터 세워 둔다) */ e = this.zBld(b, plOf[id]); try { e.H = Math.max(e.H || 0, new T3.THREE.Box3().setFromObject(e.m).max.y); } catch (er) {} /* v346 건물 1층을 높여서 (건물 스레드) 보이는 높이로 가림 판단 */ this.S.add(e.m); this.zb.set(id, e); made++; }
+    const need = [], far = []; let vt = 0;
+    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
+      if (e) { vt += e.nv || 0; e.m.visible = inV || b.x < cx + vw / 2 + 4 && b.x + b.w > cx - vw / 2 - 4 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 4; if (!inV) { far.push(id); continue; } if (e.stale) need.push(id); }
+      else if (inV) need.push(id);
+      if (!e) continue;
       const hide = F.some(([fx, fz]) => fx > b.x - 0.4 && fx < b.x + b.w + 0.4 && fz < b.y + 0.3 && fz > b.y - e.H * cot - 0.6), tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
       const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
+    // 지나간 건물: 한도(폰 120만 · PC 300만 꼭짓점)를 넘으면 먼 것부터 치운다
+    const cap = Ride3D.mob() ? 1.2e6 : 3e6, d2 = id => { const b = z.buildings[id], dx = b.x + b.w / 2 - cx - ax * 0.5, dz = b.y + b.h / 2 - cz - ay * 0.5; return dx * dx + dz * dz; };
+    if (vt > cap && far.length) { far.sort((a, b) => d2(b) - d2(a)); for (const id of far) { if (vt <= cap) break; const e = this.zb.get(id); vt -= e.nv || 0; this.zDrop(e); this.zb.delete(id); } }
+    if (!need.length) { if (this.zWarm) this.zWarmEnd(); return; }
+    need.sort((a, b) => (this.zb.has(a) ? 1e6 : 0) + d2(a) - (this.zb.has(b) ? 1e6 : 0) - d2(b)); // 없는 것 먼저, 가까운 것 먼저
+    const warm = this.zWarm && now - this.zWarm0 < 12000, budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
+    let made = 0;
+    for (const id of need) { if (made && performance.now() - now > budget) break; const b = z.buildings[id], old = this.zb.get(id), e = this.zBld(b, plOf[id]);
+      if (e.top != null) e.H = Math.max(e.H || 0, e.top); else try { e.H = Math.max(e.H || 0, new T3.THREE.Box3().setFromObject(e.m).max.y); } catch (er) {} /* v346 건물 1층을 높여서 (건물 스레드) 보이는 높이로 가림 판단 · v362 실사 건물은 makeReal이 top·nv를 알려 줌 (Box3·traverse 생략) */
+      if (!e.nv) { let nv = 0; e.m.traverse(o => { const g = o.geometry; if (g && g.attributes && g.attributes.position) nv += g.attributes.position.count; }); e.nv = nv; }
+      if (old) { e.o = old.o; this.zDrop(old); } this.S.add(e.m); this.zb.set(id, e); made++; }
+    if (this.zWarm) { if (!warm) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); }
   },
+  zWarmShow(left, made) { this.zWarmD = (this.zWarmD || 0) + made; clearTimeout(this.zwT); this.zwT = setTimeout(() => this.zWarmEnd(), 600); /* 바깥을 안 그리면 (실내로 들어가면) 바로 걷는다 */ let el = document.getElementById('zLoad'); if (!el) { if (!document.getElementById('zLoadCss')) { const st = document.createElement('style'); st.id = 'zLoadCss'; st.textContent = '#zLoad{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(14,18,24,.78);pointer-events:auto}#zLoad .b{width:min(280px,80vw);text-align:center;color:#f2ead8;font:600 14px/1.4 "IBM Plex Sans KR",sans-serif}#zLoad b{display:block;font-size:17px;margin-bottom:10px}#zLoad i{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}#zLoad s{display:block;height:100%;width:0;background:#e8c34a;transition:width .15s}#zLoad small{display:block;margin-top:8px;opacity:.75}'; document.head.appendChild(st); } el = document.createElement('div'); el.id = 'zLoad'; el.innerHTML = '<div class="b"><b>동네 불러오는 중</b><i><s></s></i><small></small></div>'; document.body.appendChild(el); }
+    const done = this.zWarmD, all = done + left, pct = all ? Math.round(done / all * 100) : 100; el.querySelector('s').style.width = pct + '%'; el.querySelector('small').textContent = `건물 ${done} / ${all}`; },
+  zWarmEnd() { this.zWarm = 0; this.zWarm0 = 0; this.zWarmD = 0; const el = document.getElementById('zLoad'); if (el) el.remove(); },
   zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.map && !mt.map._sh) mt.map.dispose(); mt.dispose(); } e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
   /* ---- 차 (앞 = +x): 몸통 · 유리 지붕 · 바퀴 · 불빛 ---- */
   car3(len, wid, col, stripe, kind, v) { if (typeof Car3D !== 'undefined' && Car3D.ready()) try { return Car3D.make(len, wid, col, stripe, kind, v); } catch (e) { console.warn('car3d', e); Car3D.st = -1; } return this.car3b(len, wid, col, stripe, kind); },
@@ -18911,14 +19021,17 @@ Object.assign(Room3D, {
     const zq = this.zq || { w: [], c: [] }; this.zq = null; const t = performance.now() / 1000, dt = this.zdt || 0.016;
     this.zw = this.zMatch(zq.w, this.zw, (p, q) => p.sprite === q.sprite, 26, 'zw');
     this.zw.forEach((w, i) => { const H = this.actor(w.key, w.pal || Sprites.PAL[w.sprite] || Sprites.PAL.walker1 || Sprites.PAL.player, w, t, dt, i * 1.3); if (w.low && !H.hero) H.root.position.y -= 0.25;
-      if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.stand ? w.ride.h : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.set(0, H.ang, 0); if (H.hero && (w.ride.pose || w.ride.grip || w.ride.leg)) Hero3D.ridePose(H, w.ride.pose, t, w.ride.mv, w.ride.grip, w.ride.leg); if (H.hero && (w.ride.hatch || w.ride.noLeg)) Hero3D.hideLegs(H); this.rope(H, H.hero && w.ride.rope); /* v321 노 젓기 · 밧줄 */ if (!w.ride.gnd) { H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } } else { if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } if (H.rp) this.rope(H, null); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
+      if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.stand ? w.ride.h : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.set(0, H.ang, 0); if (H.hero && (w.ride.pose || w.ride.grip || w.ride.leg)) Hero3D.ridePose(H, w.ride.pose, t, w.ride.mv, w.ride.grip, w.ride.leg); if (H.hero && (w.ride.hatch || w.ride.noLeg)) Hero3D.hideLegs(H); this.rope(H, H.hero && w.ride.rope); /* v321 노 젓기 · 밧줄 */ if (!w.ride.gnd) { H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } } else { if (H.hero && H.fdw != null) { Hero3D.fdOff(H); H.fdw = null; } /* 내리면 발 딛기 몸 위치 되돌리기 */ if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } if (H.rp) this.rope(H, null); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
     this.zc = this.zMatch(zq.c, this.zc, (p, q) => p.col === q.col && p.kind === q.kind && p.len === q.len, 48, 'zc');
     for (const c of this.zc) { if (c.ride) { let H = this.A.get(c.key); if (!H) { H = { root: Ride3D.make(c.ride), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); } H.seen = this.fr; /* v317 배는 둥실, 탱크는 서 있으면 포탑이 천천히 두리번 */
         const water = RIDE_WATER.has(c.ride), mv = c.spd > 4, ph = c.key.length * 1.7; const hv = RIDE3[c.ride].hover; if (hv) H.hv = (H.hv || 0) + ((mv ? hv : 0) - (H.hv || 0)) * Math.min(1, dt * 1.6); /* v345 용: 달리면 살짝 떠서 (사용자 '완전 공중은 아니고'), 서면 내려앉기 */
         H.root.position.set(c.x / TILE, water ? 0.03 + Math.sin(t * 2.2 + ph) * 0.035 : hv ? H.hv * (1 + Math.sin(t * 2.6 + ph) * 0.12) : 0, c.y / TILE); const ln = Ride3D.LEAN[c.ride]; let lx = 0, lz = 0; if (ln) { const da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), v = mv ? c.spd / TILE : 0, w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제처럼: 두 바퀴는 도는 쪽으로 눕고 (tan = 속도 × 회전 / 중력), 차는 바깥으로 살짝 쏠리고 출발하면 앞이 들리고 서면 숙인다 */
           const want = ln > 0 ? (mv ? Math.max(-0.55, Math.min(0.55, Math.atan(v * w * 0.06))) : -0.09) /* 서면 딛은 왼발 쪽으로 살짝 기운다 */ : Math.max(-0.05, Math.min(0.05, -v * w * 0.006)); H.ln = (H.ln || 0) + (want - (H.ln || 0)) * Math.min(1, dt * 5); lx = H.ln;
           if (ln < 0) { const ac = dt > 0 ? (v - (H.pv || 0)) / dt : 0; H.pv = v; H.pt = (H.pt || 0) + (Math.max(-0.03, Math.min(0.03, ac * 0.004)) - (H.pt || 0)) * Math.min(1, dt * 4); lz = H.pt; } }
-        H.root.rotation.set((water ? Math.sin(t * 1.7 + ph) * 0.05 : 0) + lx, -c.a, (water ? (mv ? 0.05 : 0) + Math.sin(t * 1.3 + ph) * 0.025 : 0) + lz, 'YXZ');
+        if (water) { const Bt = Ride3D.BOAT[c.ride] || Ride3D.BOAT.lifeboat, f = Bt.p, v = mv ? c.spd / TILE : 0, da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제 배처럼: 큰 범선은 느리고 작게 흔들리고 돌면 바깥으로, 모터보트는 안으로 눕고 빨리 달리면 뱃머리가 든다 */
+          H.hl = (H.hl || 0) + (Bt.h * Math.tanh(v * w * 0.15) - (H.hl || 0)) * Math.min(1, dt * 2.2 * f); H.bw = (H.bw || 0) + ((mv ? Bt.bow * Math.min(1, v / 6) : 0) - (H.bw || 0)) * Math.min(1, dt * 1.5 * f);
+          lx += Math.sin(t * 1.7 * f + ph) * 0.05 * Bt.a + H.hl; lz += H.bw + Math.sin(t * 1.3 * f + ph) * 0.025 * Bt.a; H.root.position.y = 0.03 + Math.sin(t * 2.2 * f + ph) * 0.035 * Bt.a; }
+        H.root.rotation.set(lx, -c.a, lz, 'YXZ');
         const fl = RIDE3[c.ride].fly; if (fl) { H.fl = (H.fl || 0) + ((mv ? Math.min(1, c.spd / (TILE * 4)) : 0) - (H.fl || 0)) * Math.min(1, dt * 3); const th = fl * H.fl, hc = RIDE3[c.ride].y * RIDE3[c.ride].L / TILE + HERO_H * 0.55; /* v346 날개: 날면 실제 비행처럼 몸을 앞으로 눕힌다 (몸 가운데를 축으로, 빠를수록 더) */
           H.root.rotation.z -= th; H.root.position.x -= Math.cos(c.a) * hc * Math.sin(th); H.root.position.z -= Math.sin(c.a) * hc * Math.sin(th); H.root.position.y += hc * (1 - Math.cos(th)); }
         const BK = H.root.userData.brk; if (BK) { const v = Math.abs(c.spd) / TILE, ac = dt > 0 && H.bv != null ? (v - H.bv) / dt : 0; H.bv = v; const on = v < 0.3 || ac < -0.8 ? 1 : 0; H.bk = (H.bk || 0) + (on - (H.bk || 0)) * Math.min(1, dt * 10); for (const mt of BK) mt.emissiveIntensity = 0.15 + H.bk * 1.1; } /* 미등은 늘 살짝, 밟으면 밝게 */
@@ -18994,9 +19107,9 @@ const RIDE3 = {
   chair: { L: 13, s3: 1, y: 0.72, spin: 1, seats: [[0.04, 0]] }, // 사무실 의자: 다섯 갈래 다리(_spin)가 빙글빙글
   piggy: { L: 14, s3: 1, carry: 1, seats: [[0, 0]] }, // 친구 등에 업히기: 모델 없음, 업어 주는 친구 = 사람 모델 (PIGGY_PAL) · 나는 그 등에
   // v335 Sketchfab 실사 탈것 (CC BY 4.0, 사용자 '리얼리스틱 팩으로'): 3d/sf/<키>.glb 하나씩 (assets3d/build_sf.py: 앞 +x, 길이 1, 바닥 0). sf = 따로 받는 실사 모델, idle = 서 있을 때 동작 빠르기
-  bike: { sf: 1, v: 2, L: 28, y: 0.46, grip: [0.04, 0.12, 0.62, 0.75], ped: [-0.053, 0.163, 0.06, 0.089], seats: [[-0.12, 0]] }, // v345 ped = 크랭크 [앞뒤, 높이, 페달 간격 반, 크랭크 길이] (길이 배) → 발이 페달 따라 돈다
-  scooter: { sf: 1, v: 2, L: 30, y: 0.42, grip: [0.07, 0.15, 0.53, 0.6], seats: [[-0.07, 0], [-0.27, 0]] },
-  moto: { sf: 1, v: 5, L: 34, y: 0.4, grip: [0.12, 0.15, 0.51, 0.85], seats: [[-0.06, 0], [-0.24, 0]], fd: [0.3, 0.32, 0.06] }, // v345 원본이 꺾어 둔 핸들·앞바퀴를 바로 세움 (assets3d/wheels.py straight)
+  bike: { sf: 1, v: 2, L: 28, y: 0.46, grip: [0.04, 0.12, 0.62, 0.75], ped: [-0.053, 0.163, 0.06, 0.089], seats: [[-0.12, 0]], fd: [-0.22, 0.3, 0.07, 0.16, 0.06] }, // v345 ped = 크랭크 [앞뒤, 높이, 페달 간격 반, 크랭크 길이] (길이 배) → 발이 페달 따라 돈다
+  scooter: { sf: 1, v: 2, L: 30, y: 0.42, grip: [0.07, 0.15, 0.53, 0.6], seats: [[-0.07, 0], [-0.27, 0]], fd: [-0.15, 0.3, 0.07, 0.12, 0.03] },
+  moto: { sf: 1, v: 5, L: 34, y: 0.4, grip: [0.12, 0.15, 0.51, 0.85], seats: [[-0.06, 0], [-0.24, 0]], fd: [-0.15, 0.34, 0.07, 0.17, 0.03] }, // v345 원본이 꺾어 둔 핸들·앞바퀴를 바로 세움 (assets3d/wheels.py straight)
   uni: { sf: 1, v: 3, L: 11, y: 1.22, grip: [0, 0.9, 2], leg: [0.12, 0.6], ped: [0, 0.488, 0.2, 0.19, 3.98], seats: [[0.72, 0]] }, // ped[4] = 서 있을 때 왼쪽 페달 각도, 자리 0.72 앞 = 엉덩이가 안장 바로 위 (앉은 자세는 골반이 뒤로 빠짐)
   bus: { sf: 1, v: 2, L: 130, y: 0.1, noLeg: 1, grip: [0.45, 0.025, 0.135, 0.05], seats: [[0.4, -0.07], [0.25, 0.07], [0.1, -0.07], [0.1, 0.07], [-0.1, -0.07], [-0.1, 0.07]] },
   cabrio: { sf: 1, v: 2, L: 70, y: 0.07, noLeg: 1, grip: [0.05, 0.035, 0.13, 0.05], seats: [[-0.06, -0.1], [-0.06, 0.1], [-0.26, -0.1], [-0.26, 0.1]] },
@@ -19006,7 +19119,7 @@ const RIDE3 = {
   wolf: { sf: 1, v: 3, L: 54, y: 0.33, bone: 'Torso2', grip: [0.24, 0.07, 0.17, 0.6], leg: [0.32, 0.8], seats: [[0.04, 0], [-0.13, 0]] }, // v345 털 2K 늑대 + 걷기·달리기 동작
   shark: { sf: 1, L: 64, y: 0.33, idle: 0.4, bone: 'Spine_01', grip: [0, 0.03, 0.4, 0.15], leg: [0.5, 1], seats: [[-0.08, 0], [-0.22, 0]] },
   ferrari: { sf: 1, brake: 'taillight', v: 2, L: 70, y: 0.015, noLeg: 1, grip: [0.05, 0.035, 0.13, 0.05], seats: [[-0.04, -0.1], [-0.04, 0.1]] },
-  train: { sf: 1, v: 2, L: 160, y: 0.03, stand: 1, seats: [[-0.08, 0], [-0.34, -0.03], [-0.34, 0.03], [-0.4, -0.03], [-0.4, 0.03], [-0.28, 0], [-0.22, 0], [-0.16, 0]] },
+  train: { sf: 1, v: 2, L: 160, y: 0.03, stand: 1, rods: [['Cube002_0', 'Cube000_0', 'Cube004_0'], ['Cube021_0', 'Cube022_0', 'Cube020_0']], seats: [[-0.08, 0], [-0.34, -0.03], [-0.34, 0.03], [-0.4, -0.03], [-0.4, 0.03], [-0.28, 0], [-0.22, 0], [-0.16, 0]] },
   lambo: { sf: 1, brake: 'OuterRed', v: 2, L: 68, y: 0.015, noLeg: 1, grip: [0.07, 0.035, 0.13, 0.05], seats: [[-0.02, -0.1], [-0.02, 0.1]] },
   jet: { sf: 1, L: 150, y: 0.105, noLeg: 1, grip: [0.31, 0.04, 0.135, 0.05], seats: [[0.25, 0], [0.19, 0]] }, // v337 조종석 안에 상체만 (사용자 '제트기도')
   wings: { sf: 1, L: 34, y: 0.35, stand: 1, fly: 1.2, flap: 1, off: [-0.12, 0.42], seats: [[0, 0]] },
@@ -19015,22 +19128,35 @@ const RIDE3 = {
 };
 const PIGGY_PAL = { hair: '#3a2a1a', skin: '#f0c8a0', shirt: '#2f9a5a', shirt2: '#257a48', pants: '#2b3a6e', shoe: '#15151c' }; // 2D 업어 주는 친구 색 그대로
 const Ride3D = {
-  st: 0, M: {}, sfs: {},
+  st: 0, M: {}, sfs: {}, use: {},
   has(k) { return !!RIDE3[k]; },
   // v335 실사 탈것은 하나씩 받는다 (처음 보일 때). 오기 전엔 예전 2D 그림
-  needSf(k) { if (this.sfs[k] || !window.T3) return; this.sfs[k] = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
+  /* v360 폰 튕김 (사용자 '탈것 편집숍에서 누르면 계속 튕긴다'): 실사 탈것을 한꺼번에 받으면 폰 메모리가 넘쳐 창이 다시 열린다.
+   * 한 번에 하나씩 받고 (마지막에 부른 것 먼저), 모델 하나의 그림 총량을 줄이고 (폰 3백만 화소), 오래 안 본 모델은 비운다 (폰 4개까지) */
+  needSf(k) { if (this.sfs[k] || !window.T3) return; this.sfs[k] = 1; (this.sq || (this.sq = [])).push(k); this.sqRun(); },
+  sqRun() { if (this.sqB || !this.sq || !this.sq.length) return; this.sqB = 1; this.sfGo(this.sq.pop()); },
+  sqDone(k) { this.sqB = 0; this.use[k] = performance.now(); if (this.sfs[k] === 2) { try { this.shrink(this.M[k].sf); this.evict(k); } catch (e) { console.warn('ride3d shrink', e); } } setTimeout(() => this.sqRun(), 40); },
+  mob() { return !!(window.matchMedia && matchMedia('(pointer: coarse)').matches); },
+  shrink(sc) { const set = new Set(); sc.traverse(o => { if (!o.isMesh) return; for (const t of [].concat(o.material)) for (const q in t) { const v = t[q]; if (v && v.isTexture && v.image && v.image.width) set.add(v); } });
+    let px = 0; for (const t of set) px += t.image.width * t.image.height; const f = Math.sqrt((this.mob() ? 3e6 : 1.2e7) / Math.max(1, px)); if (f >= 1) return; const done = new Map();
+    for (const t of set) { const im = t.image, p2 = v => Math.max(64, 1 << Math.floor(Math.log2(Math.max(1, v * f)))), w = Math.min(im.width, p2(im.width)), h = Math.min(im.height, p2(im.height)); if (w >= im.width && h >= im.height) continue;
+      let c = done.get(im); if (!c) { c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h); done.set(im, c); } t.image = c; t.needsUpdate = true; }
+    for (const im of done.keys()) if (im.close) im.close(); },
+  evict(k0) { const now = performance.now(), live = Object.keys(this.sfs).filter(k => this.sfs[k] === 2), old = live.filter(k => k !== k0 && now - (this.use[k] || 0) > 4000).sort((a, b) => (this.use[a] || 0) - (this.use[b] || 0)); let n = live.length;
+    while (n > (this.mob() ? 4 : 10) && old.length) { const k = old.shift(), B = this.M[k]; if (B && B.sf) B.sf.traverse(o => { if (!o.isMesh) return; o.geometry.dispose(); for (const t of [].concat(o.material)) { for (const q in t) { const v = t[q]; if (v && v.isTexture) v.dispose(); } t.dispose(); } }); delete this.M[k]; this.sfs[k] = 0; n--; } },
+  sfGo(k) { const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('sf/' + k + '.glb?v=' + (RIDE3[k].v || 1)), ok, undefined, no))).then(G => {
       G.scene.traverse(m => { if (!m.isMesh) return; m.castShadow = true; m.frustumCulled = false; m.geometry._keep = 1; const ms = Array.isArray(m.material) ? m.material : [m.material]; for (const t of ms) { t._keep = 1; for (const q of ['map', 'normalMap', 'roughnessMap', 'metalnessMap']) if (t[q]) { t[q].anisotropy = 8; t[q]._keep = 1; } if (t.transparent && t.opacity < 0.95 && !t.map && t.color && Math.max(t.color.r, t.color.g, t.color.b) - Math.min(t.color.r, t.color.g, t.color.b) < 0.15) { t.opacity = Math.min(t.opacity, 0.3); t.roughness = 0.04; t.metalness = 0; t.depthWrite = false; } } }); /* v346 유리: 진한 유리는 옅게 (실제 차처럼 안에 탄 사람이 비쳐 보이게, 색 있는 등 유리는 그대로) */
       G.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(G.scene, true), sz = bb.getSize(new THREE.Vector3());
       let y0 = 0; if (G.animations && G.animations.length) { const mx = new THREE.AnimationMixer(G.scene); mx.clipAction(G.animations[0]).play(); mx.update(0.01); G.scene.updateMatrixWorld(true); y0 = new THREE.Box3().setFromObject(G.scene, true).min.y; mx.stopAllAction(); } /* 날아가는 동작(용)은 몸이 떠 있다 → 발이 땅에 */
-      this.M[k] = { sf: G.scene, anims: G.animations || [], w: sz.z, h: bb.max.y, y0, m: [], tur: [], oar: [], sail: [] }; this.sfs[k] = 2; }).catch(e => { console.warn('ride3d sf', k, e); this.sfs[k] = -1; }); },
+      this.M[k] = { sf: G.scene, anims: G.animations || [], w: sz.z, h: bb.max.y, y0, m: [], tur: [], oar: [], sail: [] }; this.sfs[k] = 2; }).catch(e => { console.warn('ride3d sf', k, e); this.sfs[k] = -1; }).then(() => this.sqDone(k)); },
   load(k) { if (k && RIDE3[k] && RIDE3[k].sf) this.needSf(k); if (this.st || !window.T3) return; this.st = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('rides.glb?v=3'), ok, undefined, no))).then(G => {
       for (const o of G.scene.children) { const parts = { m: [], tur: [], oar: [], sail: [] }, bb = new THREE.Box3(); o.traverse(m => { if (!m.isMesh) return; let w = m; while (w && !/_(m|tur|oar\d+|sail\d+)$/.test(w.name)) w = w.parent; const t = w ? w.name.split('_').pop().replace(/\d+$/, '') : 'm'; m.geometry._keep = 1; m.updateWorldMatrix(true, false); w && w.updateWorldMatrix(true, false); parts[t].push({ geo: m.geometry, M: m.matrixWorld.clone(), P: w ? w.matrixWorld.clone() : null }); bb.expandByObject(m); }); /* P = 노·돛이 도는 곳 (gltfpack 양자화 변환은 M 쪽에) */
         parts.w = bb.max.z - bb.min.z; parts.h = bb.max.y; this.M[o.name] = parts;
         if (parts.sail.length) { const R = RIDE3[o.name], S0 = R ? R.seats[0] : [0, 0]; let best = null; for (const p of parts.sail) { const v = new THREE.Vector3().setFromMatrixPosition(p.P || p.M); if (!p.geo.boundingBox) p.geo.computeBoundingBox(); const d = -Math.abs(v.x - S0[0]) + (v.x > S0[0] + 0.5 ? 9 : 0); if (!best || d < best.d) best = { d, v, b: p.geo.boundingBox.clone().applyMatrix4(new THREE.Matrix4().copy(p.P || p.M).invert().multiply(p.M)) }; } /* v321 밧줄 끝: 앞쪽(멀리 있는) 돛의 아래 모서리 → 비스듬히 당긴다 */ const b = best.b; parts.rope = [best.v.x + (b.max.x + b.min.x) / 2, best.v.y + b.min.y + (b.max.y - b.min.y) * 0.12, best.v.z + (S0[1] >= 0 ? b.max.z : b.min.z)]; } }
       this.st = 2; }).catch(e => { console.warn('ride3d', e); this.st = -1; }); },
-  ready(k) { if (k && RIDE3[k] && RIDE3[k].sf) { this.needSf(k); return this.sfs[k] === 2; } return this.st === 2; },
+  ready(k) { if (k && RIDE3[k] && RIDE3[k].sf) { this.needSf(k); this.use[k] = performance.now(); return this.sfs[k] === 2; } return this.st === 2; },
   failed(k) { return k && RIDE3[k] && RIDE3[k].sf ? this.sfs[k] === -1 : this.st === -1; },
   mat() { if (!this.vm) this.vm = new T3.THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Room3D.grad }); return this.vm; },
   // 모델 하나: g.userData.tur = 포탑 (탱크), 길이 = L/TILE 칸
@@ -19038,7 +19164,7 @@ const Ride3D = {
     const { THREE } = T3, B = this.M[k], g = new THREE.Group(), inner = new THREE.Group(), s = RIDE3[k].L / TILE * sc; inner.scale.setScalar(s); g.add(inner); if (!B) return g;
     if (B.sf) { const m = T3.SkeletonUtils.clone(B.sf), R = RIDE3[k]; inner.add(m); if (Math.abs(B.y0) > 0.03) m.position.y = -B.y0; if (R.off) inner.position.set(R.off[0] * s, R.off[1] * s, 0); // v335 실사 모델 (뼈 동작이 있으면 섞개)
       m.traverse(o => { if (!g.userData.tur && /_tur$/.test(o.name)) g.userData.tur = o; }); /* v345 실사 전차 포탑 (assets3d/build_sf2.py: 원점 = 도는 축) */
-      this.whFind(k, g, m); if (R.flap) this.flapFind(g, m);
+      this.whFind(k, g, m); if (R.flap) this.flapFind(g, m); if (R.rods) this.rodFind(g, m, R.rods);
       if (R.brake) { const re = new RegExp(R.brake), B = []; m.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material) || !re.test(o.material.name)) return; const mt = o.material = o.material.clone(); mt.emissive = new THREE.Color(1, 0, 0); if (mt.map) mt.emissiveMap = mt.map; if (mt.transparent) mt.opacity = Math.max(mt.opacity, 0.85); /* 반투명 등 유리도 실제 등처럼 빨갛게 차 보이게 */ mt.emissiveIntensity = 0; B.push(mt); }); if (B.length) g.userData.brk = B; } // v346 브레이크등 (서거나 속도를 줄이면 빨갛게)
       if (B.anims.length) { const mix = new THREE.AnimationMixer(m), byN = {}; for (const c of B.anims) byN[c.name] = c; g.userData.mix = mix; g.userData.idle = R.idle == null ? 0.2 : R.idle;
         if (byN.idle && (byN.walk || byN.run)) { const A = g.userData.acts = {}; for (const n of ['idle', 'walk', 'run', 'eat']) if (byN[n]) { const ac = mix.clipAction(byN[n]); ac.play(); ac.setEffectiveWeight(n === 'idle' ? 1 : 0); A[n] = ac; } g.userData.w = { idle: 1, walk: 0, run: 0, eat: 0 }; g.userData.L3 = R.L / TILE * sc; } /* v345 말·늑대: 쉬기 · 걷기 · 달리기(· 풀 뜯기)를 빠르기 따라 섞는다 (뚝 바뀌지 않게) */
@@ -19103,6 +19229,7 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
   // v345 바퀴 굴리기 (사용자 '차들도 움직이면 바퀴 움직이게, 고증 살려'): assets3d/wheels.py가 떼어 낸 'wh_<n>' (원점 = 바퀴 가운데) · 'cr_0' (자전거 크랭크)
   // 간 거리 / 반지름만큼 굴리고, 앞바퀴는 도는 만큼 꺾는다 (바퀴 사이 거리로 자전거 모형 각도). 기차·전차·외발은 안 꺾음
   HEAD: -1, // 고개 돌리는 방향 (zhead.js로 확인: -1 = 도는 안쪽)
+  BOAT: { lifeboat: { p: 1, a: 1, h: 0.26, bow: 0.07 }, galleon: { p: 0.5, a: 0.75, h: -0.07, bow: 0.012 } }, // v346 배 흔들림: p = 빠르기 배수, a = 크기, h = 돌 때 기울기 (+ 안 / − 바깥), bow = 달리면 뱃머리 들기
   LEAN: { bike: 1, scooter: 1, moto: 1, bus: -1, cabrio: -1, benz: -1, ferrari: -1, lambo: -1 }, // 1 = 안으로 눕기 (두 바퀴), -1 = 차 몸 쏠림
   NOSTEER: new Set(['train', 'tank', 'tank2', 'tank3', 'tank4', 'uni', 'bike', 'scooter', 'moto']), // 두 바퀴는 핸들째 꺾여야 해서 (바퀴만 꺾으면 포크를 뚫는다) 안 꺾음
   whFind(k, g, m) { const { THREE } = T3, W = [], V = () => new THREE.Vector3(); let cr = null; g.updateMatrixWorld(true);
@@ -19111,6 +19238,22 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
     const trk = this.trkFind(g, m); if (!W.length && !cr) { if (trk) g.userData.wh = { W: [], cr: null, wb: 1, a: 0, d: 0, yaw: null, trk }; return; } const xs = W.map(w => w.x), x0 = Math.min(...xs), x1 = Math.max(...xs), mid = (x0 + x1) / 2, st = !this.NOSTEER.has(k) && x1 - x0 > 0.05;
     W.forEach(w => { w.fr = st && w.x > mid + (x1 - x0) * 0.25; w.cr = k === 'uni'; }); /* 외발: 페달이 바퀴에 바로 붙어 있어 바퀴 = 크랭크 각도 */ g.userData.wh = { W, cr, wb: Math.max(0.05, x1 - x0), a: 0, d: 0, yaw: null, trk }; },
   /* v346 날갯짓 (사용자 '실제 영상같은거 참고해서'): 날개 두 짝 (wings.glb polySurface…)을 어깨 쪽 안쪽 끝을 축으로 위아래로 친다. 날면 크고 빠르게, 서 있으면 천천히 접었다 폈다 */
+  /* v346 증기기관차 연결봉 (실제 기관차 영상처럼): 바퀴가 돌면 연결봉 [c]는 크랭크 핀을 따라 원을 그리며 평행 이동, 주연봉 [m]은 뒤 끝이 핀에 붙고 앞 끝은 크로스헤드 [x]와 함께 앞뒤로만 미끄러진다 */
+  rodFind(g, m, cfg) { const { THREE } = T3; g.updateMatrixWorld(true); const gi = new THREE.Matrix4().copy(g.matrixWorld).invert(), by = n => m.getObjectByName(n), box = o => new THREE.Box3().setFromObject(o, true).applyMatrix4(gi), W = [], out = [];
+    m.traverse(o => { if (/^wh_\d+$/.test(o.name)) W.push(o.getWorldPosition(new THREE.Vector3()).applyMatrix4(gi)); });
+    const node = o => { const Mp = new THREE.Matrix4().copy(gi).multiply(o.parent.matrixWorld); o.updateMatrix(); o.matrixAutoUpdate = false; return { o, Mp, Mi: Mp.clone().invert(), N0: Mp.clone().multiply(o.matrix) }; };
+    for (const [cn, mn, xn] of cfg) { const C = by(cn), M = by(mn), X = by(xn); if (!C || !M || !X) continue; const cb = box(C), mb = box(M), xb = box(X), zc = (cb.min.z + cb.max.z) / 2, py = (cb.min.y + cb.max.y) / 2;
+      let wd = null; for (const w of W) if (Math.sign(w.z) === Math.sign(zc) && w.y > py && (!wd || Math.abs(w.x - mb.min.x) < Math.abs(wd.x - mb.min.x))) wd = w; if (!wd) continue; /* 주연봉 뒤 끝에 가장 가까운 큰 바퀴 = 크랭크 */
+      const r = wd.y - py, P0 = new THREE.Vector3(wd.x, py, zc), yc = (xb.min.y + xb.max.y) / 2, F0 = new THREE.Vector3(mb.max.x - (xb.max.y - xb.min.y) / 2, yc, zc), L = Math.hypot(F0.x - P0.x, F0.y - P0.y);
+      out.push({ c: node(C), m: node(M), x: node(X), wd, r, P0, F0, L, b0: Math.atan2(F0.y - P0.y, F0.x - P0.x) }); }
+    if (out.length) g.userData.rods = out; },
+  rods(g) { const U = g.userData, H = U.wh; if (!H) return; const T = T3.THREE, A = this._rA || (this._rA = [new T.Matrix4(), new T.Matrix4(), new T.Matrix4()]);
+    const set = (n, M) => n.o.matrix.multiplyMatrices(n.Mi, M);
+    for (const R of U.rods) { const al = -Math.PI / 2 + H.a / R.wd.y, px = R.wd.x + Math.cos(al) * R.r, py = R.wd.y + Math.sin(al) * R.r, dx = px - R.P0.x, dy = py - R.P0.y; /* 바퀴 각도 = wheels() 와 같은 H.a / 반지름 */
+      set(R.c, A[0].makeTranslation(dx, dy, 0).multiply(R.c.N0));
+      const fx = px + Math.sqrt(Math.max(0, R.L * R.L - (R.F0.y - py) ** 2)), b = Math.atan2(R.F0.y - py, fx - px) - R.b0;
+      set(R.m, A[0].makeTranslation(px, py, 0).multiply(A[1].makeRotationZ(b)).multiply(A[2].makeTranslation(-R.P0.x, -R.P0.y, 0)).multiply(R.m.N0));
+      set(R.x, A[0].makeTranslation(fx - R.F0.x, 0, 0).multiply(R.x.N0)); } },
   flapFind(g, m) { const { THREE } = T3, out = []; g.updateMatrixWorld(true); const gi = new THREE.Matrix4().copy(g.matrixWorld).invert();
     m.traverse(o => { if (!/^polySurface\d+$/.test(o.name) || !o.children.length) return; const bb = new THREE.Box3(); o.traverse(c => { if (c.isMesh) bb.union(new THREE.Box3().setFromObject(c, true).applyMatrix4(gi)); }); if (bb.isEmpty()) return;
       const c = bb.getCenter(new THREE.Vector3()), sd = c.z >= 0 ? 1 : -1, P = new THREE.Vector3(c.x, c.y + (bb.max.y - bb.min.y) * 0.25, sd > 0 ? bb.min.z : bb.max.z), Mp = new THREE.Matrix4().copy(gi).multiply(o.parent.matrixWorld);
@@ -19193,7 +19336,7 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
   gait(spd) { const s = spd / TILE; return s < 1.8 ? 'Walk_Loop' : s < 3.8 ? 'Jog_Fwd_Loop' : 'Sprint_Loop'; }, // v322 미는 사람 · 업어 주는 친구 걸음
   anim1(S, mv, spd) { return S.walk ? (mv ? this.gait(spd || 30) : 'Idle_Loop') : S.pose === 'row' ? 'Driving_Loop' : S.hatch || S.stand ? 'Idle_Loop' : 'Sitting_Idle_Loop'; }, // 탄 사람 동작 이름
   anim(g, t, mv, spd) { const ph = this.ph(t), U = g.userData, T = T3.THREE;
-    if (U.wh) this.wheels(g, t, mv, spd);
+    if (U.wh) this.wheels(g, t, mv, spd); if (U.rods) this.rods(g);
     if (U.flap) { const A = mv ? 0.5 : 0.1, f = Math.sin(t * (mv ? 6.5 : 2)) * A + (mv ? 0.1 : 0), T4 = new T.Matrix4(), Rr = new T.Matrix4(); for (const w of U.flap) { Rr.makeRotationX(-w.sd * f); T4.makeTranslation(w.P.x, w.P.y, w.P.z).multiply(Rr).multiply(new T.Matrix4().makeTranslation(-w.P.x, -w.P.y, -w.P.z)); w.o.matrix.copy(w.Mi).multiply(T4).multiply(w.Mp).multiply(w.b0); } }
     if (U.acts) { const dt = U.lt == null ? 0 : Math.max(0, Math.min(0.1, t - U.lt)); U.lt = t; const A = U.acts, W = U.w, L3 = U.L3, s = mv ? Math.max(0.5, Math.abs(spd || 3 * TILE * L3) / TILE) : 0, sm = (a, b, x) => { const q = Math.max(0, Math.min(1, (x - a) / (b - a))); return q * q * (3 - 2 * q); };
       U.still = mv ? 0 : (U.still || 0) + dt; const eatT = A.eat ? A.eat.getClip().duration : 0, ec = U.still - 10, eat = !mv && A.eat && ec > 0 && ec % (eatT + 14) < eatT ? 1 : 0; // v345 오래 서 있으면 가끔 풀 뜯기
@@ -19211,7 +19354,7 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
     if (R.carry) { const b = -0.09 * TILE; return { x: x + Math.cos(a) * b, y: y + Math.sin(a) * b, h: 0.92, pose: 'hug' }; } // v322 업힌 나: 친구 허리 바로 뒤
     const f = S[0] * L, r = S[1] * L, o = { x: x + Math.cos(a) * f - Math.sin(a) * r, y: y + Math.sin(a) * f + Math.cos(a) * r, h: (S[2] || R.y) * L / TILE, hatch: !!R.hatch && !i, noLeg: !!R.noLeg, leg: R.leg || null, stand: !!(R.stand && !i), pose: i ? null : R.pose || null };
     if (!i && R.grip) { const G = R.grip; o.grip = { f: (G[0] - S[0]) * L / TILE, s: G[1] * L / TILE, h: G[2] * L / TILE, d: G[3] || 0 }; if (G[4] != null) { o.grip.fl = (G[4] - S[0]) * L / TILE; o.grip.fr = (G[5] - S[0]) * L / TILE; o.grip.tw = G[6] || 0; } if (R.ped) { const P = R.ped; o.grip.p = { f: (P[0] - S[0]) * L / TILE, h: P[1] * L / TILE, s: P[2] * L / TILE, r: P[3] * L / TILE, ank: 0.07, a0: P[4] == null ? -Math.PI / 2 : P[4] }; } } // v336 손잡이·고삐 (앞뒤, 두 손 간격의 반, 높이 = 길이 배) → 손이 거기 닿게
-    if (!i && q && !q.mv && o.grip && this.LEAN[k] > 0) { const D = R.fd || [0.1, 0.3, 0.06]; o.grip.fd = { f: D[0], s: D[1], h: D[2] }; } // v346 서면 실제 라이더처럼 왼발을 땅에 딛는다 (Hero3D.grip G.fd, 몸 기준 앞 · 옆 · 발목 높이)
+    if (!i && q && o.grip && this.LEAN[k] > 0) { const D = R.fd || [0.1, 0.3, 0.06]; o.grip.fd = { f: D[0], s: D[1], h: D[2], dy: D[3] || 0, fx: D[4] || 0, on: !q.mv }; } /* on = 서 있음, Hero3D.grip 이 천천히 내리고 올린다 */ // v346 서면 실제 라이더처럼 왼발을 땅에 딛는다 (Hero3D.grip G.fd, 몸 기준 앞 · 옆 · 발목 높이)
     if (R.jockey && !i && q && q.spd) { const J = R.jockey, L3 = L / TILE, u = Math.max(0, Math.min(1, (Math.abs(q.spd) / TILE - L3 * 1.3) / (L3 * 0.8))), e = u * u * (3 - 2 * u); o.h += J[0] * L / TILE * e; if (o.grip) { o.grip.d += J[1] * e; o.grip.h += J[2] * L / TILE * e; o.grip.f += J[3] * L / TILE * e; } } // v346 경마 자세 (실제 질주): 빨리 달리면 엉덩이를 들고 몸을 앞으로, 손은 목을 따라 앞·아래로 [엉덩이 높이, 숙이기, 손 높이, 손 앞]
     const B = this.M[k]; if (!i && R.pose === 'rope' && B && B.rope) { const [rx, ry, rz] = B.rope; o.rope = { x: x + Math.cos(a) * rx * L - Math.sin(a) * rz * L, y: y + Math.sin(a) * rx * L + Math.cos(a) * rz * L, h: ry * L / TILE }; } return o; }, // pose: row = 노 젓기, rope = 밧줄로 돛 (v321)
   // 2D 그림 (바깥 2D · 편집숍 큰 미리보기 · 전시대): 거의 바로 위에서 찍은 3D 사진. 아직이면 간단한 모양
@@ -19563,7 +19706,8 @@ Object.assign(Bld3D, {
   makeReal(R, b, pl, H) {
     const GF = this.GF, k0 = pl && pl.kind || (b.fixedPlace && b.fixedPlace.kind) || '', gf0 = H > 1.9 ? 1.05 : H * 0.55; if (k0 !== 'court' && GF > gf0) H += GF - gf0; // v348 1층을 사람 키(1.55)에 맞춰 높임 (위층은 그대로, 건물이 그만큼 높아짐)
     const { THREE } = T3, P = this.plan(b, pl, H, k0 !== 'court' && GF > gf0 ? GF : 0), W = b.w, Dp = b.h, M = this.rmats(), r = this.rng(b.seed + 47), eve = P.eve, CS = 128;
-    const B = {}, bk = k => B[k] || (B[k] = { p: [], n: [], u: [], c: [] }), col3 = new THREE.Color(), cc = {}, lin = h => cc[h] || (cc[h] = (col3.set(h), [col3.r, col3.g, col3.b]));
+    const B = {}, bk = k => B[k] || (B[k] = { p: new Float32Array(3072), n: new Float32Array(3072), u: new Float32Array(2048), c: new Float32Array(3072), len: 0, cap: 1024 }), // v362 미리 잡아 둔 Float32Array (모자라면 두 배로): 꼭짓점마다 push 하던 것보다 가볍다 (폰 끊김)
+      grow = (o, k) => { if (o.len + k <= o.cap) return; let c = o.cap * 2; while (c < o.len + k) c *= 2; for (const [a, w] of [['p', 3], ['n', 3], ['u', 2], ['c', 3]]) { const t = new Float32Array(c * w); t.set(o[a].subarray(0, o.len * w)); o[a] = t; } o.cap = c; }, UV0 = [0.5, 0.5], col3 = new THREE.Color(), cc = {}, lin = h => cc[h] || (cc[h] = (col3.set(h), [col3.r, col3.g, col3.b]));
     // 단위 상자 (+x −x 위 앞 네 면만) · 원기둥
     const U = this.ru || (this.ru = {}), unit = (k, mk, keep) => { if (U[k]) return U[k]; const g = mk().toNonIndexed(), p = g.attributes.position.array, n = g.attributes.normal.array, u = g.attributes.uv.array, o = { p: [], n: [], u: [], f: [] };
       const nf = p.length / 18; for (let f = 0; f < nf; f++) { if (keep && !keep.includes(f)) continue; for (let i = f * 6; i < f * 6 + 6; i++) { o.p.push(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]); o.n.push(n[i * 3], n[i * 3 + 1], n[i * 3 + 2]); o.u.push(u[i * 2], u[i * 2 + 1]); o.f.push(f); } }
@@ -19571,10 +19715,10 @@ Object.assign(Bld3D, {
     const BOX = unit('b4', () => new THREE.BoxGeometry(1, 1, 1), [0, 1, 2, 4]), BOX3 = unit('b3', () => new THREE.BoxGeometry(1, 1, 1), [0, 1, 2]); // b3: 앞면 없이 (앞벽은 창 구멍을 뚫어 따로)
     const V = new THREE.Vector3(), S3 = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), N3 = new THREE.Matrix3(), ox = (b.seed % 17) * 0.37;
     const plan = k => { const s = 1 / this.REP[k]; return (f, u, v, x, y, z, nx, ny, nz) => { const ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz); return ax >= ay && ax >= az ? [(z + ox) * s, y * s] : ay >= az ? [(x + ox) * s, -(z + ox) * s] : [(x + ox) * s, y * s]; }; };
-    const add = (G, m, k, col, uvf, aof) => { const vc = G.vc; const o = bk(k), rgb = lin(col); N3.getNormalMatrix(m); const e = m.elements, ne = N3.elements, f = uvf || (k in this.REP ? plan(k) : null);
+    const add = (G, m, k, col, uvf, aof) => { const vc = G.vc; const o = bk(k), rgb = lin(col); N3.getNormalMatrix(m); const e = m.elements, ne = N3.elements, f = uvf || (k in this.REP ? plan(k) : null); grow(o, G.c); const OP = o.p, ON = o.n, OU = o.u, OC = o.c;
       for (let i = 0, j = 0; i < G.c; i++, j += 3) { const x = G.p[j], y = G.p[j + 1], z = G.p[j + 2], wx = e[0] * x + e[4] * y + e[8] * z + e[12], wy = e[1] * x + e[5] * y + e[9] * z + e[13], wz = e[2] * x + e[6] * y + e[10] * z + e[14];
         const a = G.n[j], bb = G.n[j + 1], c = G.n[j + 2]; let nx = ne[0] * a + ne[3] * bb + ne[6] * c, ny = ne[1] * a + ne[4] * bb + ne[7] * c, nz = ne[2] * a + ne[5] * bb + ne[8] * c; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
-        o.p.push(wx, wy, wz); o.n.push(nx, ny, nz); const ka = aof ? aof(wx, wy, wz) : 1; if (vc) o.c.push(rgb[0] * ka * vc[j], rgb[1] * ka * vc[j + 1], rgb[2] * ka * vc[j + 2]); else o.c.push(rgb[0] * ka, rgb[1] * ka, rgb[2] * ka); const t = f ? f(G.f[i], G.u[i * 2], G.u[i * 2 + 1], wx, wy, wz, nx, ny, nz) : [0.5, 0.5]; o.u.push(t[0], t[1]); } };
+        const q3 = o.len * 3, q2 = o.len * 2; o.len++; OP[q3] = wx; OP[q3 + 1] = wy; OP[q3 + 2] = wz; ON[q3] = nx; ON[q3 + 1] = ny; ON[q3 + 2] = nz; const ka = aof ? aof(wx, wy, wz) : 1; if (vc) { OC[q3] = rgb[0] * ka * vc[j]; OC[q3 + 1] = rgb[1] * ka * vc[j + 1]; OC[q3 + 2] = rgb[2] * ka * vc[j + 2]; } else { OC[q3] = rgb[0] * ka; OC[q3 + 1] = rgb[1] * ka; OC[q3 + 2] = rgb[2] * ka; } const t = f ? f(G.f[i], G.u[i * 2], G.u[i * 2 + 1], wx, wy, wz, nx, ny, nz) : UV0; OU[q2] = t[0]; OU[q2 + 1] = t[1]; } };
     const mtx = (x, y, z, sx, sy, sz, o) => M4.compose(V.set(x, y, z), Q.setFromEuler(E.set(o && o.rx || 0, o && o.ry || 0, o && o.rz || 0)), S3.set(sx, sy, sz));
     // box(가운데 x, y(땅에서), z, 크기…, 재질 키, 색, {uv: 면마다 uv 함수 · rx …})
     const box = (x, y, z, sx, sy, sz, k, col, o) => add(o && o.f3 ? BOX3 : BOX, mtx(x, y, z, sx, sy, sz, o), k, col, o && o.uv, o && o.ao);
@@ -19589,9 +19733,9 @@ Object.assign(Bld3D, {
     /* ---- v345 깊이 (사용자 '빌라사진만큼 깊이감이 있게'): 앞벽에 창 구멍을 뚫어 창을 벽 안으로 넣고 (안쪽 면 넷 + 유리 위쪽 그늘),
      * 오목한 모서리 그늘(AO)은 꼭짓점 색으로 굽는다: 벽 밑동 · 처마 밑 · 층 띠 밑 · 발코니 위아래 · 창턱 밑 빗물 자국 · 옥상 난간 둘레 · 땅 접지 그늘 ---- */
     const RD = 0.075, SD = 0.1, SUNY = 22 / 14, SUNX = 9 / 14, holes = [], aoT = [], XL = [], YL = [], cl01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
-    const quad = (k, col, q, a4, uvf) => { const o = bk(k), rgb = lin(col), f = uvf || (k in this.REP ? plan(k) : null); // q: 네 꼭짓점 (앞에서 볼 때 반시계) · a4: 꼭짓점마다 그늘
+    const QI = [0, 1, 2, 0, 2, 3], quad = (k, col, q, a4, uvf) => { const o = bk(k), rgb = lin(col), f = uvf || (k in this.REP ? plan(k) : null); // q: 네 꼭짓점 (앞에서 볼 때 반시계) · a4: 꼭짓점마다 그늘
       const [A, B2, C] = q, ux = B2[0] - A[0], uy = B2[1] - A[1], uz = B2[2] - A[2], vx = C[0] - A[0], vy = C[1] - A[1], vz = C[2] - A[2]; let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
-      for (const i of [0, 1, 2, 0, 2, 3]) { const Q3 = q[i], a = a4 ? a4[i] : 1; o.p.push(Q3[0], Q3[1], Q3[2]); o.n.push(nx, ny, nz); o.c.push(rgb[0] * a, rgb[1] * a, rgb[2] * a); const t = f ? f(0, 0, 0, Q3[0], Q3[1], Q3[2], nx, ny, nz) : [0.5, 0.5]; o.u.push(t[0], t[1]); } };
+      grow(o, 6); for (const i of QI) { const Q3 = q[i], a = a4 ? a4[i] : 1, q3 = o.len * 3, q2 = o.len * 2; o.len++; o.p[q3] = Q3[0]; o.p[q3 + 1] = Q3[1]; o.p[q3 + 2] = Q3[2]; o.n[q3] = nx; o.n[q3 + 1] = ny; o.n[q3 + 2] = nz; o.c[q3] = rgb[0] * a; o.c[q3 + 1] = rgb[1] * a; o.c[q3 + 2] = rgb[2] * a; const t = f ? f(0, 0, 0, Q3[0], Q3[1], Q3[2], nx, ny, nz) : UV0; o.u[q2] = t[0]; o.u[q2 + 1] = t[1]; } };
     // 창 구멍: 앞벽에서 d만큼 들어간 자리. 아래 면은 위에서 보이고 (창턱이 있으면 생략), 위 면은 유리에 그늘을 드리운다. 돌려주는 값 = 유리 놓을 z
     const hole = (x0, y0, x1, y1, d, noBot) => { holes.push([x0, y0, x1, y1]); XL.push(x0, x1); YL.push(y0, y1); const z0 = Dp - d, k = wk === 'glass' ? 'conc' : wk, c = wk === 'glass' ? '#8a929a' : wcol;
       if (!noBot) quad(k, c, [[x0, y0, Dp], [x1, y0, Dp], [x1, y0, z0], [x0, y0, z0]], [0.9, 0.9, 0.62, 0.62]);
@@ -19660,8 +19804,8 @@ Object.assign(Bld3D, {
     } else {
       for (const w of P.wins) { const [x, y, ww, wh, xc, yt] = this.winRect(P, w, H), top = Ht(y), bot = top - wh, fy = Ht(yt + P.fh);
         const zr = hole(x, bot, x + ww, top, RD, !w.bal), q = vr(), ck = vr(), cc6 = CUR[vr() * 6 | 0], cu = eve && w.lit || q > 0.55 ? 0 : { t: q < 0.33 ? 1 : 2, k: ck, c: shade(cc6, -0.3) }; glassPane(x, bot, ww, wh, winCell(w), frmW, true, zr, w.f === 0 ? WT : WS, cu); if (eve && w.lit) LT.push([0, x, bot, x + ww, top, zr]);
-        const fl = FL.get(w); if (fl) { const tx = fl.tx; if (tx) { const lh = wh * 0.62; box(x + ww / 2, bot + wh * 0.56, zr + 0.04, ww * 0.9, lh, 0.004, 'lett', '#ffffff', { uv: sign(ww * 0.9, lh, (c, cw, ch) => { c.clearRect(0, 0, cw, ch); c.font = `bold ${(ch * 0.8).toFixed(1)}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = Math.max(1.5, ch * 0.08); c.strokeStyle = fl.c === '#ffffff' || fl.c === '#f2c21a' ? 'rgba(20,24,30,.85)' : 'rgba(255,255,255,.9)'; c.strokeText(tx, cw / 2, ch / 2, cw * 0.96); c.fillStyle = fl.c; c.fillText(tx, cw / 2, ch / 2, cw * 0.96); }) }); }
-          if (fl.ph) { const ph = wh * 0.16; box(x + ww / 2, bot + ph * 0.7, zr + 0.04, ww * 0.9, ph, 0.004, 'lett', '#ffffff', { uv: sign(ww * 0.9, ph, (c, cw, ch) => { c.clearRect(0, 0, cw, ch); this.ptxt(c, fl.ph, cw / 2, ch / 2, ch * 0.8, fl.c === '#ffffff' ? '#f4f4f0' : fl.c, cw * 0.95); }) }); } } // 첫 창엔 전화번호 if (!w.bal && w.f >= P.n - 1 && r() < 0.6) kit('grille', x + ww / 2, bot, Dp + 0.012, [ww + 0.02, wh, 1]); // v346 낮은 층 방범창
+        const fl = FL.get(w); if (fl) { const tx = fl.tx; if (tx) { const lh = wh * 0.62; box(x + ww / 2, bot + wh * 0.56, zr + 0.04, ww * 0.9, lh, 0.004, 'lett', '#ffffff', { uv: sign(ww * 0.55, lh * 0.6, (c, cw, ch) => { c.clearRect(0, 0, cw, ch); c.font = `bold ${(ch * 0.8).toFixed(1)}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = Math.max(1.5, ch * 0.08); c.strokeStyle = fl.c === '#ffffff' || fl.c === '#f2c21a' ? 'rgba(20,24,30,.85)' : 'rgba(255,255,255,.9)'; c.strokeText(tx, cw / 2, ch / 2, cw * 0.96); c.fillStyle = fl.c; c.fillText(tx, cw / 2, ch / 2, cw * 0.96); }) }); }
+          if (fl.ph) { const ph = wh * 0.16; box(x + ww / 2, bot + ph * 0.7, zr + 0.04, ww * 0.9, ph, 0.004, 'lett', '#ffffff', { uv: sign(ww * 0.6, ph * 0.66, (c, cw, ch) => { c.clearRect(0, 0, cw, ch); this.ptxt(c, fl.ph, cw / 2, ch / 2, ch * 0.8, fl.c === '#ffffff' ? '#f4f4f0' : fl.c, cw * 0.95); }) }); } } // 첫 창엔 전화번호 if (!w.bal && w.f >= P.n - 1 && r() < 0.6) kit('grille', x + ww / 2, bot, Dp + 0.012, [ww + 0.02, wh, 1]); // v346 낮은 층 방범창
         if (!w.bal) { box(xc, bot - 0.016, (zr + Dp + 0.07) / 2, ww + 0.1, 0.032, Dp + 0.07 - zr, 'conc', conc); // 창턱 (유리 밑에서 벽 밖까지 한 장)
           const s = bot - 0.032, L = Math.min(0.6, s - yb - 0.08), k = 0.07 + 0.1 * r(), a = xc - ww / 2 + 0.03, b2 = xc + ww / 2 - 0.03; // 창턱 밑 빗물 자국
           sunSh(xc - ww / 2 - 0.05, xc + ww / 2 + 0.05, s, 0.07); // 창턱 그림자
@@ -19692,7 +19836,7 @@ Object.assign(Bld3D, {
     const band = (x, w, bg, label, tc) => { const y = gf - 0.33; if (eve) LT.push([2, x, y, x + w, y + 0.3, Dp + 0.1, bg]); box(x + w / 2, y + 0.305, Dp + 0.06, w + 0.02, 0.02, 0.12, 'trim', '#8a8e92'); box(x + w / 2, y - 0.005, Dp + 0.06, w + 0.02, 0.02, 0.12, 'trim', '#5a5e62'); /* v346 간판 상자 위아래 쇠 틀 */ box(x + w / 2, y + 0.15, Dp + 0.05, w, 0.3, 0.1, 'sign', '#ffffff', { uv: sign(w, 0.3, (c, cw, ch) => { const g = c.createLinearGradient(0, 0, 0, ch); g.addColorStop(0, shade(bg, 0.12)); g.addColorStop(1, shade(bg, -0.12)); c.fillStyle = g; c.fillRect(0, 0, cw, ch); c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(0, 0, cw, ch * 0.05); if (label) { const wide = w > 2.2 && label.length < 6, k = ((x * 7.7 + b.seed) | 0) % 4; this.ptxt(c, label, wide ? cw * 0.46 : cw / 2, ch * 0.53, ch * 0.62, tc || '#fff', cw * (wide ? 0.55 : 0.9)); // v355 넓은 간판엔 옆에 작은 글씨 (전화번호 · 24시 · 배달 · since)
         if (wide) { c.globalAlpha = 0.9; this.ptxt(c, '☎ 0' + (2 + k % 2 * 29) + '-' + (300 + (b.seed * 11 + (x * 10 | 0)) % 600) + '-' + (1000 + (b.seed * 37 + (x * 31 | 0)) % 9000), cw * 0.86, ch * 0.55, ch * 0.24, tc || '#fff', cw * 0.24); this.ptxt(c, ['24시', '배달', 'since 1998', '본점'][k], cw * 0.12, ch * 0.55, ch * 0.26, tc || '#fff', cw * 0.18); c.globalAlpha = 1; } } }) }); };
     const front = (x, w, cl, o = {}) => { const y0 = o.bk || 0.07, h = gf - 0.4 - y0, sd = o.sd || SD, fc = o.fc || '#2c3034'; box(x + w / 2, y0 / 2, Dp + 0.02, w, y0, 0.04, o.bk ? 'trim' : 'conc', o.bc || concD); // 진열 유리 + 아래 받침
-      const zr = hole(x, y0, x + w, y0 + h, sd), n = Math.max(1, Math.round(w / 0.75)), pw = w / n; if (eve) LT.push([1, x, y0, x + w, y0 + h * (1 - (o.sh || 0)), zr]); for (let i = 0; i < n; i++) glassQ(x + i * pw, y0, pw, h, zr, 2, (cl + i) % 6, sd);
+      const zr = hole(x, y0, x + w, y0 + h, sd), n = Math.max(1, Math.round(w / 0.75)), pw = w / n; if (eve) LT.push([1, x, y0, x + w, y0 + h * (1 - (o.sh || 0)), zr, o.nm === '편의점' || o.nm === '약국' || o.nm === '휴대폰' ? 'cool' : '']); /* v359 편의점·약국·휴대폰: 하얀 형광 불빛 */ for (let i = 0; i < n; i++) glassQ(x + i * pw, y0, pw, h, zr, 2, (cl + i) % 6, sd);
       for (let i = 0; i <= n; i++) box(x + i * pw, y0 + h / 2, zr + 0.02, 0.03, h, 0.04, 'trim', fc); box(x + w / 2, y0 + h - 0.0175, zr + 0.02, w, 0.035, 0.04, 'trim', fc);
       if (o.sh) { const sh = h * o.sh, ns = Math.max(3, Math.round(sh / 0.035)), c1 = o.scol || '#b8bcbe'; box(x + w / 2, y0 + h + 0.035, Dp + 0.055, w + 0.04, 0.09, 0.11, 'trim', shade(c1, -0.12)); // v347 셔터 통 + 반쯤 내린 셔터 (가로 골)
         for (let i = 0; i < ns; i++) box(x + w / 2, y0 + h - (i + 0.5) * sh / ns, Dp + 0.012, w, sh / ns * 0.82, 0.012, 'trim', i % 2 ? c1 : shade(c1, -0.08)); box(x + w / 2, y0 + h - sh - 0.012, Dp + 0.02, w, 0.024, 0.03, 'trim', shade(c1, -0.3));
@@ -19736,7 +19880,7 @@ Object.assign(Bld3D, {
         box(dr ? dx + 0.85 : 1.0, 1.0, Dp - pd + 0.04, 0.08, 0.13, 0.03, 'trim', '#1e2024'); box(dr ? dx + 0.85 : 1.0, 1.02, Dp - pd + 0.057, 0.05, 0.05, 0.004, 'trim', '#5ab0e8'); } } // 공동현관 번호키
     else { const n = P.shops.length, uw = W / n; // 가게 줄
       P.shops.forEach((s, i) => { const x = i * uw + 0.06, w = uw - 0.12, hasD = !(dr && dx > x - 0.7 && dx < x + w), q = vr(), BK = ['#4a3a2e', '#3a3e44', '#a8a49a', '#6a2e2a'];
-        band(x, w, s.c, s.n, '#fff'); front(x + 0.04, w - 0.08, this.SHOPS.indexOf(s.n) % 8, q < 0.22 ? { sh: 0.25 + 0.3 * vr(), scol: vr() < 0.6 ? '#b8bcbe' : '#8a9aa8' } : q < 0.5 ? { box: 1, sd: SD * 2.2 } : q < 0.72 ? { bk: 0.16, bc: BK[vr() * 4 | 0], fc: vr() < 0.5 ? '#c8ccce' : '#4a3a2e' } : {});
+        band(x, w, s.c, s.n, '#fff'); front(x + 0.04, w - 0.08, this.SHOPS.indexOf(s.n) % 8, Object.assign({ nm: s.n }, q < 0.22 ? { sh: 0.25 + 0.3 * vr(), scol: vr() < 0.6 ? '#b8bcbe' : '#8a9aa8' } : q < 0.5 ? { box: 1, sd: SD * 2.2 } : q < 0.72 ? { bk: 0.16, bc: BK[vr() * 4 | 0], fc: vr() < 0.5 ? '#c8ccce' : '#4a3a2e' } : {}));
         if (hasD) door(x + w - 0.8, 0.7, dh); const d0 = hasD ? x + w - 0.88 : dr ? dx - 0.1 : 99, d1 = hasD ? x + w : dr ? dx + 1.0 : 99; outside(s, x, w, d0, d1); });
       for (let i = 0; i <= n; i++) box(Math.min(W - 0.06, Math.max(0.06, i * uw)), gf / 2, Dp + 0.03, 0.12, gf, 0.06, wk, wcol); }
     if (dr) { door(dx, 0.9, dh, res ? Dp - pd + 0.02 : Dp); if (!res) kit('cctv', Math.min(W - 0.1, dx + 1.05), Math.min(dh + 0.25, gf - 0.12), Dp + 0.02); if (res || P.pub && !P.K) box(dx + 0.45, Math.min(dh + 0.06, gf - 0.1) + 0.025, Dp + 0.26, 1.2, 0.05, 0.52, 'conc', conc); } // 출입구 지붕
@@ -19810,6 +19954,14 @@ Object.assign(Bld3D, {
       if (res && r() < 0.5) { const z = Math.min(fz1 - 0.1, Dp * 0.62), x0 = fx0 + 0.1, x1 = Math.min(fx1, W - 0.4); if (x1 - x0 > 1.2 && free(x0, z - 0.05, x1 - x0, 0.1)) { for (const x of [x0, x1]) { cyl(x, H + 0.3, z, 0.02, 0.6, 'trim', '#a8acae', 6); box(x, H + 0.6, z, 0.02, 0.02, 0.3, 'trim', '#a8acae'); }
         for (const dz of [-0.13, 0.13]) { box((x0 + x1) / 2, H + 0.6, z + dz, x1 - x0, 0.008, 0.008, 'trim', '#d8d8d4'); for (let x = x0 + 0.2; x < x1 - 0.2; x += 0.22 + r() * 0.2) if (r() < 0.6) box(x, H + 0.6 - 0.1, z + dz, 0.12 + r() * 0.1, 0.2, 0.01, 'trim', ['#f2f0ea', '#8aa8d0', '#d88a8a', '#f0d070', '#5a6a7a'][r() * 5 | 0]); } } }
       for (let i = 0, n = 1 + (r() * 2 | 0); i < n; i++) { const x = rx(), z = rz(); if (!free(x - 0.1, z - 0.1, 0.2, 0.2) || kit('vent', x, H, z, 1, r() * 6)) continue; cyl(x, H + 0.16, z, 0.035, 0.32, 'trim', '#c4c6c2', 8); box(x + 0.04, H + 0.33, z, 0.12, 0.05, 0.05, 'trim', '#b4b6b2'); } // ㄱ자 환기관
+      for (let rep = 0, reps = Math.min(4, Math.max(1, Math.round(W * Dp / 40))); rep < reps; rep++) { const tryAt = (w, d) => { for (let k = 0; k < 8; k++) { const x = 0.3 + vr() * Math.max(0, W - 0.6 - w), z = 0.3 + vr() * Math.max(0, Dp - 0.6 - d); if (free(x, z, w, d)) { robs.push([x, z, x + w, z + d]); return [x, z]; } } return null; }; // v360 옥상 살림 더 (서울 옥상 사진 참고): 평상 · 고추 말리기 · 파라솔 탁자 · 스티로폼 텃밭 · 고무 대야. 따로 굴리는 vr라 예전 배치 그대로
+        if ((res || vr() < 0.25) && vr() < 0.45) { const q = tryAt(1.1, 0.75); if (q) { const [x, z] = q, wd = ['#9a6a3a', '#a87a48', '#8a5a30'][vr() * 3 | 0]; for (const [lx, lz] of [[0.06, 0.06], [1.04, 0.06], [0.06, 0.69], [1.04, 0.69]]) box(x + lx, H + 0.12, z + lz, 0.06, 0.24, 0.06, 'trim', shade(wd, -0.2)); box(x + 0.55, H + 0.26, z + 0.375, 1.1, 0.05, 0.75, 'trim', wd); for (let i = 0; i < 6; i++) box(x + 0.55, H + 0.29, z + 0.07 + i * 0.122, 1.08, 0.004, 0.01, 'trim', shade(wd, -0.25)); // 평상
+          if (vr() < 0.6) { box(x + 0.5, H + 0.293, z + 0.37, 0.8, 0.008, 0.55, 'trim', ['#3a6ab0', '#c84a3a', '#d8b84a'][vr() * 3 | 0]); for (let i = 0; i < 14; i++) { const px = x + 0.18 + vr() * 0.64, pz = z + 0.16 + vr() * 0.42; box(px, H + 0.305, pz, 0.16, 0.018, 0.05, 'trim', vr() < 0.7 ? '#c81e14' : '#a8180e'); } } } } // 돗자리 위 고추 말리기
+        if ((!res && P.st !== 'glass' || vr() < 0.3) && vr() < (rep < 2 ? 0.35 : 0.08)) { const q = tryAt(0.9, 0.9); if (q) { const [x, z] = q, cx = x + 0.45, cz = z + 0.45, uc = ['#2a8a4a', '#c8302a', '#2a5ab0', '#e8e4da'][vr() * 4 | 0]; cyl(cx, H + 0.6, cz, 0.018, 1.2, 'trim', '#d8d8d4', 6); cyl(cx, H + 1.18, cz, 0.55, 0.06, 'trim', uc, 12); cyl(cx, H + 1.22, cz, 0.3, 0.05, 'trim', shade(uc, 0.1), 12); // 파라솔
+          cyl(cx, H + 0.3, cz, 0.24, 0.025, 'trim', '#ecebe4', 14); cyl(cx, H + 0.15, cz, 0.03, 0.3, 'trim', '#ecebe4', 6); for (const a of [0.4, 2.5, 4.4]) { const sx = cx + Math.cos(a) * 0.36, sz = cz + Math.sin(a) * 0.36; box(sx, H + 0.18, sz, 0.18, 0.025, 0.18, 'trim', '#ecebe4'); box(sx + Math.cos(a) * 0.08, H + 0.28, sz + Math.sin(a) * 0.08, 0.04, 0.2, 0.18, 'trim', '#e0dfd8'); } } } // 하얀 플라스틱 탁자·의자
+        if (res && vr() < 0.5) { const n = 2 + (vr() * 3 | 0), q = tryAt(n * 0.42, 0.32); if (q) { const [x, z] = q; for (let i = 0; i < n; i++) { const bxx = x + 0.2 + i * 0.42; box(bxx, H + 0.1, z + 0.16, 0.38, 0.2, 0.28, 'trim', '#f2f2ee'); box(bxx, H + 0.205, z + 0.16, 0.34, 0.01, 0.24, 'trim', '#5a4030'); for (let j = 0; j < 5; j++) cyl(bxx - 0.12 + vr() * 0.24, H + 0.25, z + 0.08 + vr() * 0.16, 0.04 + vr() * 0.03, 0.06 + vr() * 0.08, 'trim', ['#3a8a3a', '#4a9a3a', '#2e7a34', '#6aa040'][j % 4], 6); } } } // 스티로폼 상자 텃밭 (상추·고추)
+        if (vr() < 0.3) { const q = tryAt(0.5, 0.5); if (q) { const [x, z] = q, uc = ['#c42a24', '#2c5aa8', '#2a8a4a'][vr() * 3 | 0]; cyl(x + 0.25, H + 0.09, z + 0.25, 0.24, 0.18, 'trim', uc, 14); cyl(x + 0.25, H + 0.18, z + 0.25, 0.2, 0.005, 'trim', '#5a6a72', 14); } } } // 고무 대야 (고인 물) · 넓은 옥상은 넓이만큼 여러 번
+      if (W * Dp > 40 && P.st !== 'glass') { const jc = shade(P.roof, -0.22); for (let x = 3; x < W - 1; x += 3) box(x, H + 0.012, Dp / 2, 0.05, 0.006, Dp - 0.5, 'trim', jc); for (let z = 3; z < Dp - 1; z += 3) box(W / 2, H + 0.012, z, W - 0.5, 0.006, 0.05, 'trim', jc); } // v360 넓은 방수 옥상의 줄눈 (3칸마다)
       for (let i = 0; i < 3; i++) drains.push([0.6 + r() * (W - 1.2), 0.6 + r() * (Dp - 1.2), 0.15 + r() * 0.3]); } // 빗물 고였던 얼룩
     // ---- 옥상 바닥: 격자로 깔고 꼭짓점마다 그늘 (난간 둘레 · 계단실·물탱크 둘레 · 배수구·고인 물 얼룩 · 얼룩덜룩한 방수 페인트) ----
     { const g = /^#[9a]/.test(P.roof) ? 'conc' : 'roof', Y = H + 0.01, xs = [t, W - t], zs = [t, Dp - t];
@@ -19839,14 +19991,17 @@ Object.assign(Bld3D, {
         flush(); } }
     // ---- 간판 그림 (건물마다 한 장, 칸당 CS px) ----
     const mats = []; let sTex = null;
-    if (signs.length) { let y = 2, cw = 64; for (const s of signs) cw = Math.max(cw, Math.ceil(s.w * CS) + 4); cw = Math.min(2048, cw); const sc = Math.min(1, (cw - 4) / (Math.max(...signs.map(s => s.w)) * CS));
-      for (const s of signs) { s.px = [2, y, Math.max(8, Math.round(s.w * CS * sc)), Math.max(8, Math.round(s.h * CS * sc))]; y += s.px[3] + 3; } const chh = y + 1;
+    if (signs.length) { let cw = 64; for (const s of signs) cw = Math.max(cw, Math.ceil(s.w * CS) + 4); cw = Math.min(2048, cw); const sc = Math.min(1, (cw - 4) / (Math.max(...signs.map(s => s.w)) * CS));
+      // v362 선반 채우기: 작은 글씨 칸(창문 시트지 등)을 한 줄에 옆으로 나란히 → 예전처럼 칸마다 한 줄씩 쌓으면 텍스처가 몇 배로 커졌다 (폰 끊김)
+      for (const s of signs) s.px = [0, 0, Math.max(8, Math.round(s.w * CS * sc)), Math.max(8, Math.round(s.h * CS * sc))];
+      let x = 2, y = 2, rowH = 0; for (const s of [...signs].sort((a, b) => b.px[3] - a.px[3])) { if (x + s.px[2] + 2 > cw) { x = 2; y += rowH + 3; rowH = 0; } s.px[0] = x; s.px[1] = y; x += s.px[2] + 3; rowH = Math.max(rowH, s.px[3]); } const chh = y + rowH + 3;
       sTex = R.cvTex(cw, chh, c => { for (const s of signs) { c.save(); c.translate(s.px[0], s.px[1]); c.beginPath(); c.rect(0, 0, s.px[2], s.px[3]); c.clip(); s.draw(c, s.px[2], s.px[3]); c.restore(); } }); sTex._own = 1;
       for (const s of signs) s.uv = [(s.px[0] + 0.5) / cw, 1 - (s.px[1] + s.px[3] - 0.5) / chh, (s.px[2] - 1) / cw, (s.px[3] - 1) / chh];
-      for (const o of [B.sign, B.lett]) if (o) for (let i = 0; i < o.u.length; i += 2) if (o.u[i] < 0) { const s = signs[-o.u[i] - 1], q = o.u[i + 1], u = q & 1, v = (q >> 1) & 1; o.u[i] = s.uv[0] + u * s.uv[2]; o.u[i + 1] = s.uv[1] + v * s.uv[3]; } }
+      for (const o of [B.sign, B.lett]) if (o) for (let i = 0; i < o.len * 2; i += 2) if (o.u[i] < 0) { const s = signs[-o.u[i] - 1], q = o.u[i + 1], u = q & 1, v = (q >> 1) & 1; o.u[i] = s.uv[0] + u * s.uv[2]; o.u[i + 1] = s.uv[1] + v * s.uv[3]; } }
     // ---- 재질별 모양 → 그룹 ----
     const root = new THREE.Group(); root.position.set(b.x, 0, b.y);
-    for (const k in B) { const o = B[k]; if (!o.p.length) continue; const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(o.p, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(o.n, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(o.u, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(o.c, 3)); geo.computeBoundingSphere();
+    let NV = 0, TOP = 0; for (const k in B) { const o = B[k], n = o.len; if (!n) continue; NV += n; const geo = new THREE.BufferGeometry(), pp = o.p.subarray(0, n * 3); geo.setAttribute('position', new THREE.BufferAttribute(pp, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(o.n.subarray(0, n * 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(o.u.subarray(0, n * 2), 2)); geo.setAttribute('color', new THREE.BufferAttribute(o.c.subarray(0, n * 3), 3));
+      { let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity; for (let i = 0; i < n * 3; i += 3) { const x = pp[i], y = pp[i + 1], z = pp[i + 2]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z; } geo.boundingBox = new THREE.Box3(new THREE.Vector3(x0, y0, z0), new THREE.Vector3(x1, y1, z1)); geo.boundingSphere = geo.boundingBox.getBoundingSphere(new THREE.Sphere()); if (y1 > TOP) TOP = y1; } // v362 경계는 한 번 훑어 직접 (three가 두 번 훑지 않게) · 꼭대기 높이는 zone3d에 넘김
       let mt; if (k === 'lett') mt = new THREE.MeshStandardMaterial({ map: sTex, alphaTest: 0.5, roughness: 0.35, metalness: 0.15 }); // 투명 바탕 금속 글자
       else if (k === 'sign') { mt = new THREE.MeshStandardMaterial({ map: sTex, emissiveMap: sTex, emissive: 0xffffff, emissiveIntensity: eve ? 0.85 : 0.08, roughness: 0.4, metalness: 0 }); mt.shadowSide = THREE.DoubleSide; }
       else { mt = M[k].clone(); if (k === 'win') mt.emissiveIntensity = eve ? 1.15 : 0; }
@@ -19854,7 +20009,7 @@ Object.assign(Bld3D, {
     root.add(this.gAO(W, Dp)); // v345 땅 접지 그늘
     root.userData.L = LT; root.userData.bx = [W, Dp, cTop];
     root.geometry = { dispose() { } }; // zDrop 호환 (모양은 자식들이 갖고 있다)
-    return { m: root, mats, H: cTop, o: 1 };
+    return { m: root, mats, H: cTop, o: 1, nv: NV, top: TOP }; // v362 nv · top: zone3d가 Box3·traverse로 다시 재지 않게
   },
   // v345 땅 접지 그늘: 건물 둘레 땅에 깔리는 반투명 검은 띠 (앞과 양옆, 멀어질수록 옅게). 재질은 모든 건물이 같이 쓴다
   gAO(W, D) { const { THREE } = T3, m = this.gAOm || (this.gAOm = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 1; const g = c.getContext('2d'); for (let i = 0; i < 256; i++) { g.fillStyle = `rgba(0,0,0,${i / 255})`; g.fillRect(i, 0, 1, 1); } // 꼭짓점 알파가 이 렌더러에선 안 먹어서 진하기를 u 좌표로 (가로 띠 그림에서 찾기)
@@ -19877,7 +20032,7 @@ Object.assign(Bld3D, {
   zPoles(R, z) { if (!R.S || (R._poleS === R.S && R._poleZ === z)) return; R._poleS = R.S; R._poleZ = z; const { THREE } = T3, at = (x, y) => z.at(Math.floor(x), Math.floor(y));
     const nearDoor = (x, y) => z.places.some(p => p.door && Math.hypot(x - p.door.tx - 0.5, y - p.door.ty - 0.5) < 2.2), nearX = (x, y) => (z.crossings || []).some(c => Math.hypot(x - c.x, y - c.y) < Math.max(c.halfA, c.halfB) + 2);
     const LP = R.zPropSpots ? R.zPropSpots(z).lamp : [], clear = (x, y) => !LP.some(l => (l[0] - x) ** 2 + (l[1] - y) ** 2 < 2.3) && !z.trees.some(t => (t.x / TILE - x) ** 2 + (t.y / TILE - y) ** 2 < 4.8); // 가로등·가로수와 겹치지 않게 (나무 그늘 폭)
-    const ok = (x, y) => { const v = at(x, y); return (v === T.WALK || v === T.ALLEY) && !nearDoor(x, y) && !nearX(x, y) && clear(x, y); }, P = [], E = [], far = (x, y, d) => !P.some(q => (q.x - x) ** 2 + (q.y - y) ** 2 < d * d);
+    const inPk = (x, y) => (z.parking || []).some(p => x > p.x - 1.5 && x < p.x + p.w + 1.5 && y > p.y - 1.5 && y < p.y + p.h + 1.5); /* v360 공용 주차장 안·둘레엔 안 세움 */ const ok = (x, y) => { const v = at(x, y); return (v === T.WALK || v === T.ALLEY) && !inPk(x, y) && !nearDoor(x, y) && !nearX(x, y) && clear(x, y); }, P = [], E = [], far = (x, y, d) => !P.some(q => (q.x - x) ** 2 + (q.y - y) ** 2 < d * d);
     for (const r of z.roads || []) { if (r.width > 7) continue; let prev = null; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1], L = Math.hypot(bx - ax, by - ay); if (L < 3) continue; const ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux;
       for (let sv = 4; sv < L - 1; sv += 10) { const cx = ax + ux * sv, cy = ay + uy * sv; let d = 0.5; while (d < r.width / 2 + 5 && at(cx + nx * d, cy + ny * d) === T.ROAD) d += 0.25; const x = cx + nx * (d + 0.3), y = cy + ny * (d + 0.3);
         if (!ok(x, y) || !far(x, y, 5) || [1.5, 3, 4.5, 6, 8].some(k => at(x + nx * k, y + ny * k) === T.ROAD)) /* 중앙 분리대·겹친 길 사이엔 안 세움 */ { prev = null; continue; } const q = { x, y }; P.push(q); if (prev && Math.hypot(prev.x - x, prev.y - y) < 15) E.push([prev, q]); prev = q; } } }
@@ -19912,9 +20067,9 @@ Object.assign(Bld3D, {
     const put = (x, y, yaw, sh = 1) => { const c = cellOf(x, y); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); M4.compose(V.set(x, 0, y), Qn.setFromAxisAngle(up, yaw), S1); for (const [g, col] of parts) { const nn = g.attributes.position.count, cc = new Float32Array(nn * 3), C = new THREE.Color(col); for (let i = 0; i < nn; i++) { const k = sh ? 0.78 + Math.min(0.22, g.attributes.position.getY(i) * 0.2) : 1; cc[i * 3] = C.r * k; cc[i * 3 + 1] = C.g * k; cc[i * 3 + 2] = C.b * k; } g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); const g2 = g.index ? g.toNonIndexed() : g; if (g2 !== g) g.dispose(); g2.applyMatrix4(M4); cells.get(c).g.push(g2); } parts.length = 0; };
     const hh = (x, y) => (Math.imul((x * 92.1 | 0) ^ (y * 47.3 | 0) * 2654435761, 1597334677) >>> 0) / 4294967296, A4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], NP = [], open = v => v === T.ALLEY || v === T.ROAD || v === T.WALK, U = [];
     for (let gy = 3; gy < Hh - 3; gy += 7) for (let gx = 3; gx < W - 3; gx += 7) for (let k = 0; k < 49; k++) { const cx = gx + (k % 7) + 0.5, cy = gy + (k / 7 | 0) + 0.5; if (at(cx, cy) !== T.ALLEY) continue; const ds = A4.filter(([dx, dy]) => open(at(cx + dx * 1.6, cy + dy * 1.6)) && open(at(cx + dx * 2.6, cy + dy * 2.6))); if (ds.length < 3) continue; // 골목 갈림길 → 모퉁이에 거울
-      let best = null; for (const [ex, ey] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { const x = cx + ex * 1.2, y = cy + ey * 1.2; if (at(x, y) !== T.ALLEY && at(x, y) !== T.WALK) continue; if (!A4.some(([dx, dy]) => at(x + dx * 0.9, y + dy * 0.9) === T.BLD)) continue; if (nearDoor(x, y) || !far(x, y, 1.5) || U.some(u => Math.hypot(u.x - x, u.y - y) < 9)) continue; if (!best || ey < best.ey) best = { x, y, ex, ey }; } // 뒤(북쪽) 모퉁이 우선: 남쪽을 보고 서서 카메라에 거울 얼굴이 보이게
+      let best = null; for (const [ex, ey] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { const x = cx + ex * 1.2, y = cy + ey * 1.2; if (at(x, y) !== T.ALLEY && at(x, y) !== T.WALK) continue; if (!A4.some(([dx, dy]) => at(x + dx * 0.9, y + dy * 0.9) === T.BLD)) continue; if (nearDoor(x, y) || inPk(x, y) || !far(x, y, 1.5) || U.some(u => Math.hypot(u.x - x, u.y - y) < 9)) continue; if (!best || ey < best.ey) best = { x, y, ex, ey }; } // 뒤(북쪽) 모퉁이 우선: 남쪽을 보고 서서 카메라에 거울 얼굴이 보이게
       if (best) { U.push(best); parts.length = 0; cyl(0, 1.35, 0, 0.045, 0.04, 2.7, '#e0661a', 8); { const rg = new THREE.CylinderGeometry(0.36, 0.36, 0.07, 20); rg.rotateX(Math.PI / 2); rg.translate(0, 2.7, 0); parts.push([rg, '#e0661a']); } const mg = new THREE.CircleGeometry(0.31, 20); mg.translate(0, 2.7, 0.04); parts.push([mg, '#cfdce4']); const bk = new THREE.CircleGeometry(0.3, 16); bk.rotateY(Math.PI); bk.translate(0, 2.7, -0.03); parts.push([bk, '#3a3c40']); bx(0, 2.24, 0.03, 0.34, 0.11, 0.02, '#f2f2ee'); bx(0, 2.24, 0.042, 0.28, 0.035, 0.005, '#c82820'); put(best.x, best.y, Math.atan2(-best.ex, -best.ey), 0); break; } }
-    for (let gy = 2; gy < Hh - 2; gy += 6) for (let gx = 2; gx < W - 2; gx += 6) { if (hh(gx, gy) > 0.42) continue; let f = null; for (let k = 0; k < 36 && !f; k++) { const x = gx + (k * 5 % 6) + 0.5, y = gy + (k * 7 % 6) + 0.5; if (at(x, y) === T.ALLEY && at(x, y - 0.9) === T.BLD && at(x, y + 1.5) !== T.BLD && at(x, y + 3) !== T.BLD && !nearDoor(x, y) && far(x, y, 1.6) && !U.some(u => Math.hypot(u.x - x, u.y - y) < 2)) f = { x, y: y - 0.25 }; } if (!f) continue; NP.push(f); // 남쪽 벽 앞 (집 앞 내 자리)
+    for (let gy = 2; gy < Hh - 2; gy += 6) for (let gx = 2; gx < W - 2; gx += 6) { if (hh(gx, gy) > 0.42) continue; let f = null; for (let k = 0; k < 36 && !f; k++) { const x = gx + (k * 5 % 6) + 0.5, y = gy + (k * 7 % 6) + 0.5; if (at(x, y) === T.ALLEY && at(x, y - 0.9) === T.BLD && z.buildings.some(b => x > b.x + 0.4 && x < b.x + b.w - 0.4 && Math.abs(b.y + b.h - y) < 1.1) && at(x, y + 1.5) !== T.BLD && at(x, y + 3) !== T.BLD && !inPk(x, y) && !nearDoor(x, y) && far(x, y, 1.6) && !U.some(u => Math.hypot(u.x - x, u.y - y) < 2)) f = { x, y: y - 0.25 }; } if (!f) continue; NP.push(f); // 남쪽 벽 앞 (집 앞 내 자리)
       const t = hh(f.x * 3, f.y * 5), n = 1 + (t * 3 | 0); for (let i = 0; i < n; i++) { const x = f.x + (i - (n - 1) / 2) * 0.55, kind = (t * 7 + i * 3 | 0) % 4; parts.length = 0;
         if (kind === 0) { cyl(0, 0.3, 0, 0.17, 0.035, 0.58, '#ec6a1c', 12); cyl(0, 0.33, 0, 0.115, 0.095, 0.08, '#f4f4f0', 12); cyl(0, 0.2, 0, 0.14, 0.125, 0.06, '#f4f4f0', 12); bx(0, 0.015, 0, 0.38, 0.03, 0.38, '#2a2a2a'); } // 고깔
         else if (kind === 1) { for (let j = 0; j < 2 + (t * 10 | 0) % 2; j++) { const g = new THREE.TorusGeometry(0.2, 0.085, 6, 14); g.rotateX(Math.PI / 2); g.translate(0, 0.085 + j * 0.16, 0); parts.push([g, '#26272a']); } bx(0, 0.75, 0, 0.04, 0.6, 0.04, '#8a8a86'); bx(0, 0.92, 0.025, 0.36, 0.24, 0.02, '#f4f2ea'); bx(0, 0.92, 0.037, 0.3, 0.07, 0.005, '#d0281e'); } // 폐타이어 + 주차금지 판
@@ -19922,6 +20077,30 @@ Object.assign(Bld3D, {
         else { cyl(0, 0.16, 0, 0.3, 0.26, 0.32, ['#2c5aa8', '#c42a24', '#2a8a4a'][(t * 9 | 0) % 3], 14); bx(0, 0.5, 0, 0.32, 0.22, 0.02, '#f4f2ea'); bx(0, 0.5, 0.012, 0.26, 0.06, 0.005, '#d0281e'); bx(0, 0.36, 0, 0.03, 0.12, 0.03, '#8a8a86'); } // 고무 대야 + 판
         put(x, f.y, (hh(x, i) - 0.5) * 0.6); } }
     for (const q of P) { const k = hh(q.x, q.y); if (k > 0.55) continue; const n = 1 + (k * 7 | 0) % 3; for (let i = 0; i < n; i++) { const col = ['#f4f2ea', '#f2e28a', '#f2b8c8', '#bfe0f2', '#f4f2ea'][(k * 13 + i * 3 | 0) % 5], y0 = 1.3 + i * 0.42 + (k * 0.2), w = 0.28 + (i % 2) * 0.06; bx(0, y0, 0.185, w, 0.36, 0.006, col); for (let j = 0; j < 3; j++) bx(0, y0 + 0.07 - j * 0.06, 0.19, w * 0.75, 0.018, 0.004, j ? '#6a6a6a' : '#c8281e'); bx(0, y0 + 0.125, 0.19, 0.03, 0.02, 0.006, '#dadada'); } put(q.x, q.y, 0, 0); } // 전단지 (남쪽 면: 카메라 쪽)
+    { // v361 큰길 이정표 (서울 파란 도로 안내판): 남북으로 뻗은 큰길 동쪽 인도에 기둥 + 길 위로 뻗은 팔 + 남쪽을 보는 파란 판 (카메라에 글씨가 보이게) + 속도 제한 원판
+      const PL = ['건대입구', '성수', '구의', '광나루', '군자', '어린이대공원', '잠실', '강변', '뚝섬', '중곡', '화양', '자양'], SG = [];
+      for (const r of z.roads || []) { if (!(r.width >= 5.5 || (r.oneway && r.width >= 3))) continue; let acc = 0; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx2, by2] = r.pts[i + 1], L = Math.hypot(bx2 - ax, by2 - ay); if (L < 6) { acc += L; continue; } const ux = (bx2 - ax) / L, uy = (by2 - ay) / L;
+        if (Math.abs(uy) > 0.75) for (let sv = 8; sv < L - 4; sv += 40) { const cx = ax + ux * sv, cy = ay + uy * sv, sx = uy > 0 ? -1 : 1; let d = 0.5; while (d < r.width / 2 + 6 && at(cx + d, cy) === T.ROAD) d += 0.25; const x = cx + d + 0.6, y = cy; // 동쪽 연석 밖
+          if (at(x, y) !== T.WALK && at(x, y) !== T.ALLEY || nearX(x, y) || nearDoor(x, y) || !clear(x, y) || !far(x, y, 2) || SG.some(q => Math.hypot(q.x - x, q.y - y) < 25) || inPk(x, y)) continue; SG.push({ x, y, arm: Math.min(4.2, d - 0.3), k: (x * 7 + y * 3 | 0) }); void sx; }
+        acc += L; } }
+      for (const q of SG) { parts.length = 0; const ph = 5.2, aL = q.arm; cyl(0, ph / 2, 0, 0.16, 0.12, ph, '#9aa0a4', 12); cyl(0, 0.25, 0, 0.26, 0.24, 0.5, '#8a9094', 12); { const g = new THREE.CylinderGeometry(0.08, 0.1, aL + 0.2, 8); g.rotateZ(Math.PI / 2); g.translate(-(aL + 0.2) / 2, ph - 0.25, 0); parts.push([g, '#9aa0a4']); } bx(-aL * 0.55, ph - 0.25 - 0.55, -0.05, 0.05, 1.1, 0.05, '#8a9094'); bx(-aL * 0.95, ph - 0.25 - 0.55, -0.05, 0.05, 1.1, 0.05, '#8a9094');
+        bx(0, 2.5, 0.12, 0.05, 0.05, 0.1, '#8a9094'); put(q.x, q.y, 0, 0);
+        const pw = Math.min(3.2, aL * 0.9 + 0.8), phh = 1.25, a = PL[q.k % PL.length], b = PL[(q.k + 1 + q.k % 4) % PL.length], c2 = PL[(q.k + 6 + q.k % 5) % PL.length], tex = R.cvTex(512, 200, (c, w, h) => { c.fillStyle = '#1a4fa0'; c.fillRect(0, 0, w, h); c.strokeStyle = '#f4f4f4'; c.lineWidth = 6; c.strokeRect(7, 7, w - 14, h - 14); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 46px "IBM Plex Sans KR", sans-serif'; c.fillText(a, w * 0.5, h * 0.3); c.font = 'bold 38px "IBM Plex Sans KR", sans-serif'; c.fillText('← ' + b, w * 0.24, h * 0.72); c.fillText(c2 + ' →', w * 0.76, h * 0.72); c.fillRect(w * 0.5 - 4, h * 0.5, 8, h * 0.4); c.beginPath(); c.moveTo(w * 0.5 - 14, h * 0.52); c.lineTo(w * 0.5 + 14, h * 0.52); c.lineTo(w * 0.5, h * 0.44); c.fill(); }); // 위: 곧장 / 아래: 좌·우
+        const sm = new THREE.Mesh(new THREE.PlaneGeometry(pw, phh), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5, metalness: 0.1 })); sm.position.set(q.x - aL + pw / 2 - 0.25, ph - 0.25 - 0.62, q.y + 0.02); sm.castShadow = true; R.S.add(sm);
+        const bk = new THREE.Mesh(new THREE.BoxGeometry(pw, phh, 0.04), new THREE.MeshStandardMaterial({ color: 0x8a9094, roughness: 0.6 })); bk.position.set(sm.position.x, sm.position.y, q.y - 0.02); bk.castShadow = true; R.S.add(bk);
+        const lt = R.cvTex(128, 128, (c, w, h) => { c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); c.strokeStyle = '#d0201a'; c.lineWidth = 14; c.beginPath(); c.arc(64, 64, 54, 0, 7); c.stroke(); c.fillStyle = '#111'; c.font = 'bold 52px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(q.k % 3 ? '50' : '30', 64, 68); });
+        const lm = new THREE.Mesh(new THREE.CircleGeometry(0.34, 24), new THREE.MeshStandardMaterial({ map: lt, roughness: 0.5 })); lm.position.set(q.x, 2.5, q.y + 0.18); R.S.add(lm); }
+      const BS = []; for (const r of z.roads || []) { if (!(r.width >= 5.5 || (r.oneway && r.width >= 3))) continue; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx2, by2] = r.pts[i + 1], L = Math.hypot(bx2 - ax, by2 - ay); if (L < 10) continue; const sg = bx2 >= ax ? 1 : -1, ux = sg * (bx2 - ax) / L, uy = sg * (by2 - ay) / L, nx = uy, ny = -ux; if (ux < 0.7) continue; // v361 버스 정류장 쉼터 (n = 길의 북쪽): 동서로 뻗은 큰길 북쪽 인도, 남쪽(차도·카메라)으로 열림
+        for (let sv = 10; sv < L - 6; sv += 23) { const t0 = sg > 0 ? sv : L - sv, cx = ax + (bx2 - ax) / L * t0, cy = ay + (by2 - ay) / L * t0; let d = 0.5; while (d < r.width / 2 + 6 && at(cx + nx * d, cy + ny * d) === T.ROAD) d += 0.25; const x = cx + nx * (d + 1.0), y = cy + ny * (d + 1.0); const okAll = [-1.6, 0, 1.6].every(o => { const v = at(x + ux * o, y + uy * o), v2 = at(x + ux * o + nx * 0.6, y + uy * o + ny * 0.6); return (v === T.WALK || v === T.ALLEY) && v2 !== T.ROAD && v2 !== T.BLD; });
+          if (!okAll || nearX(x, y) || nearDoor(x, y) || inPk(x, y) || BS.some(q => Math.hypot(q.x - x, q.y - y) < 30) || P.some(q => Math.hypot(q.x - x, q.y - y) < 2.2) || LP.some(l => Math.hypot(l[0] - x, l[1] - y) < 2)) continue; BS.push({ x, y });
+          parts.length = 0; const w = 3.2, hgt = 2.5; for (const sx of [-1, 1]) { bx(sx * w / 2, hgt / 2, -0.35, 0.08, hgt, 0.08, '#5a6068'); bx(sx * w / 2, hgt / 2, 0.45, 0.08, hgt, 0.08, '#5a6068'); bx(sx * w / 2, hgt * 0.55, 0.05, 0.02, hgt * 0.75, 0.75, '#a8c0cc'); } // 기둥 · 옆 유리
+          bx(0, hgt * 0.55, -0.37, w - 0.1, hgt * 0.75, 0.02, '#b4c8d2'); bx(-w * 0.28, hgt * 0.55, -0.34, 1.1, hgt * 0.62, 0.05, '#e8e4dc'); bx(-w * 0.28, hgt * 0.55, -0.31, 1.0, hgt * 0.55, 0.01, ['#d84a3a', '#2a7ac0', '#f0b030', '#3aa060'][(x | 0) % 4]); // 뒤 유리 · 광고판
+          bx(0, hgt + 0.06, 0.08, w + 0.4, 0.12, 1.2, '#3a4048'); bx(0, hgt + 0.13, 0.08, w + 0.3, 0.02, 1.1, '#5a6470'); bx(0, hgt - 0.02, 0.66, w + 0.4, 0.16, 0.04, '#1f5fbf'); // 지붕 · 앞 파란 띠
+          bx(w * 0.18, 0.45, -0.12, 1.5, 0.05, 0.38, '#9a6a3a'); for (const lx of [-0.55, 0.55]) bx(w * 0.18 + lx, 0.22, -0.12, 0.06, 0.44, 0.3, '#6a6e72'); // 벤치
+          bx(w / 2 + 0.55, 1.4, 0.4, 0.07, 2.8, 0.07, '#8a9094'); bx(w / 2 + 0.55, 2.55, 0.42, 0.55, 0.45, 0.03, '#1f5fbf'); bx(w / 2 + 0.55, 2.55, 0.44, 0.42, 0.12, 0.005, '#f4f4f4'); bx(w / 2 + 0.55, 1.6, 0.44, 0.45, 0.6, 0.02, '#f2d24a'); // 정류장 표지 · 노선표
+          put(x, y, Math.atan2(-uy, ux), 0); } } }
+      this._BS = BS;
+      this._SG = SG; }
     const tip = (q, dz, hh) => { const s = Math.sin(q.a), c = Math.cos(q.a); return [q.x - s * dz, hh, q.y + c * dz]; }; // 기둥 위 점 (완금은 전선과 직각)
     for (const [a, b] of E) { const c = cellOf((a.x + b.x) / 2, (a.y + b.y) / 2); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); const L = Math.hypot(b.x - a.x, b.y - a.y), w = cells.get(c).w;
       const flip = Math.cos(a.a - b.a) < 0 ? -1 : 1, wires = [[1.0, a.h - 0.15, b.h - 0.15, 0.022], [0, a.h - 0.15, b.h - 0.15, 0.022], [-1.0, a.h - 0.15, b.h - 0.15, 0.022], [0, 4.35, 4.35, 0.06]];
@@ -19944,10 +20123,10 @@ Object.assign(Bld3D, {
       for (const [t, x0, y0, x1, y1, zz, col] of L) { const a = P(bx + x0, bz + zz, y0), b = P(bx + x1, bz + zz, y0), d = P(bx + x1, bz + zz, y1), f = P(bx + x0, bz + zz, y1);
         if (hid(bz + zz + 0.1, { x: (a.x + d.x) / 2, y: (a.y + d.y) / 2 }) || hid(bz + zz + 0.1, a) || hid(bz + zz + 0.1, d)) continue;
         c.globalCompositeOperation = 'destination-out'; // 남색 덮개를 불 켜진 자리만 걷어 낸다 → 밑의 3D (저녁 창 그림·간판 글씨)가 제 밝기로 보임
-        c.fillStyle = `rgba(0,0,0,${(t === 0 ? 0.8 : t === 1 ? 0.75 : 0.9) * k})`; poly(a, b, d, f); c.globalCompositeOperation = 'lighter';
+        c.fillStyle = `rgba(0,0,0,${(t === 0 ? 0.8 : t === 1 ? 0.75 : 1) * k})`; poly(a, b, d, f); c.globalCompositeOperation = 'lighter';
         if (t === 0) { const cool = ((x0 * 7 + y0 * 13 + bx * 3) | 0) % 5 < 2; c.fillStyle = cool ? `rgba(150,190,255,${0.16 * k})` : `rgba(255,160,70,${0.12 * k})`; poly(a, b, d, f); } // 실제 밤 아파트처럼 형광등(파르스름)·백열등(주황) 섞기
-        else if (t === 1) { pool(bx + (x0 + x1) / 2, bz + zz + 1.1, Math.max(1.6, (x1 - x0) * 0.75), `rgba(255,222,170,${0.42 * k})`); c.fillStyle = `rgba(255,236,200,${0.08 * k})`; poly(a, b, d, f); } // 가게 불빛이 보도에 쏟아짐
-        else { const cc = new T3.THREE.Color(col || '#ffffff'), m = (a.y + f.y) / 2, h = Math.abs(a.y - f.y) * 1.6 + 6, g = c.createLinearGradient(0, m - h, 0, m + h); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.5, `rgba(${cc.r * 255 | 0},${cc.g * 255 | 0},${cc.b * 255 | 0},${0.32 * k})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(Math.min(a.x, f.x) - 4, m - h, Math.abs(b.x - a.x) + 8, h * 2); } // 간판 둘레 번짐
+        else if (t === 1) { const cw = col === 'cool'; pool(bx + (x0 + x1) / 2, bz + zz + 1.1, Math.max(1.6, (x1 - x0) * 0.75) * (cw ? 1.2 : 1), cw ? `rgba(215,235,255,${0.5 * k})` : `rgba(255,222,170,${0.42 * k})`); c.fillStyle = cw ? `rgba(220,240,255,${0.16 * k})` : `rgba(255,236,200,${0.08 * k})`; poly(a, b, d, f); } // 가게 불빛이 보도에 쏟아짐
+        else { const cc = new T3.THREE.Color(col || '#ffffff'), m = (a.y + f.y) / 2, h = Math.abs(a.y - f.y) * 1.6 + 6, g = c.createLinearGradient(0, m - h, 0, m + h); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.5, `rgba(${cc.r * 255 | 0},${cc.g * 255 | 0},${cc.b * 255 | 0},${0.32 * k})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(Math.min(a.x, f.x) - 4, m - h, Math.abs(b.x - a.x) + 8, h * 2); c.fillStyle = `rgba(255,255,255,${0.1 * k})`; poly(a, b, d, f); } // v359 간판: 덮개 다 걷고 면을 살짝 더 밝힘
         c.globalCompositeOperation = 'lighter'; } }
     const LP = R.zPropSpots ? R.zPropSpots(z).lamp : []; for (const [x, y] of LP) { const ox = x, oy = y; pool(ox, oy, 2.4, 'rgba(255,200,130,.30)'); const hd = P(ox, oy, this.LAMP_H || 2.8); if (hd.x > -40 && hd.y > -40 && hd.x < VW + 40 && hd.y < VH + 40) { const g = c.createRadialGradient(hd.x, hd.y, 0, hd.x, hd.y, 18 * Cam.zoom / 2.3); g.addColorStop(0, 'rgba(255,236,190,.75)'); g.addColorStop(1, 'rgba(255,200,120,0)'); c.fillStyle = g; c.fillRect(hd.x - 60, hd.y - 60, 120, 120); } }
     c.globalCompositeOperation = 'source-over'; },
@@ -20140,9 +20319,10 @@ const Hero3D = {
     if (w > 0.02) this.turn(H, 'Head', H.X1 || (H.X1 = new THREE.Vector3(1, 0, 0)), (0.5 - up) * (run ? 0.1 : 0.08) * w);
   },
   /* ---- v321 탈것 위 동작: 애니메이션 위에 뼈를 더 돌린다 (모델 기준 축: x = 옆, 앞 = +z) ---- */
+  fdOff(H) { const b0 = H.model && H.model.userData.fd0; if (b0) H.model.position.copy(b0); }, // v346 (탈것 스레드) 발 딛기로 내린 몸 제자리
   bone(H, n) { const c = H.bn || (H.bn = {}); if (!(n in c)) c[n] = H.model.getObjectByName(n) || null; return c[n]; },
   turn(H, n, ax, ang) { const b = this.bone(H, n); if (!b || !b.parent) return; const { THREE } = T3, mq = H.model.getWorldQuaternion(new THREE.Quaternion()), pq = b.parent.getWorldQuaternion(new THREE.Quaternion()), wa = ax.clone().applyQuaternion(mq), q = new THREE.Quaternion().setFromAxisAngle(wa, ang); const rq = H.rq || (H.rq = {}), q0 = rq[n] && rq[n].b === b && b.quaternion.equals(rq[n].m) ? rq[n].a : b.quaternion.clone(); b.quaternion.premultiply(pq.clone().invert().multiply(q).multiply(pq)); rq[n] = { b, a: q0, m: b.quaternion.clone() }; b.updateMatrixWorld(true); },
-  ridePose(H, pose, t, mv, grip, leg) { const { THREE } = T3, X = new THREE.Vector3(1, 0, 0), ph = Ride3D.ph(t); if (H.rq) for (const k in H.rq) { const r = H.rq[k]; if (r.b.quaternion.equals(r.m)) r.b.quaternion.copy(r.a); } /* 애니메이션 값이 그대로면 믹서가 뼈를 다시 안 써서, 지난번 돌린 게 쌓이지 않게 되돌린다 */ H.root.updateMatrixWorld(true);
+  ridePose(H, pose, t, mv, grip, leg) { const { THREE } = T3, X = new THREE.Vector3(1, 0, 0), ph = Ride3D.ph(t); this.fdOff(H); if (!grip || !grip.fd) H.fdw = null; if (H.rq) for (const k in H.rq) { const r = H.rq[k]; if (r.b.quaternion.equals(r.m)) r.b.quaternion.copy(r.a); } /* 애니메이션 값이 그대로면 믹서가 뼈를 다시 안 써서, 지난번 돌린 게 쌓이지 않게 되돌린다 */ H.root.updateMatrixWorld(true);
     if (pose === 'row') { const k = mv ? 1 : 0.45, s = Math.sin(ph); this.turn(H, 'spine_01', X, 0.32 * s * k); this.turn(H, 'spine_02', X, 0.12 * s * k); for (const e of ['l', 'r']) { this.turn(H, 'upperarm_' + e, X, -0.35 * s * k); this.turn(H, 'lowerarm_' + e, X, -0.4 * Math.max(0, -s) * k); } } // 앞으로 뻗었다가 (노 날이 앞) 몸을 젖히며 당기기
     else if (pose === 'rope') { const k = mv ? 1 : 0.6; ['l', 'r'].forEach((e, i) => { const s = Math.sin(ph + i * Math.PI); this.turn(H, 'upperarm_' + e, X, -(1.35 + 0.4 * s * k)); this.turn(H, 'lowerarm_' + e, X, -(0.35 + 0.35 * Math.max(0, -s) * k)); }); this.turn(H, 'spine_01', X, -0.12 - 0.06 * Math.sin(ph * 2) * k); } // 손을 번갈아 위로 뻗어 밧줄 당기기
     else if (pose === 'push') { this.turn(H, 'spine_01', X, 0.3); for (const e of ['l', 'r']) { this.turn(H, 'upperarm_' + e, X, -1.05); this.turn(H, 'lowerarm_' + e, X, -0.35); } } // v322 카트 손잡이 밀기: 몸 숙이고 두 팔 앞으로
@@ -20156,8 +20336,9 @@ const Hero3D = {
     if (G.d) { this.turn(H, 'spine_01', new THREE.Vector3(1, 0, 0), G.d * 0.6); this.turn(H, 'spine_02', new THREE.Vector3(1, 0, 0), G.d * 0.4); }
     if (G.tw) this.turn(H, 'spine_02', new THREE.Vector3(0, 1, 0), G.tw); // v345 몸 비틀기 (한 손잡이가 더 앞이면: 오토바이 원본 모형이 핸들을 꺾어 둠)
     for (const [e, sd] of [['l', -1], ['r', 1]]) { const T = new THREE.Vector3(sd < 0 ? (G.fl ?? G.f) : (G.fr ?? G.f), G.h - ry, G.s * sd).applyQuaternion(q).add(o), pole = new THREE.Vector3(-0.3, -1, sd * 0.9).applyQuaternion(q); this.reach(H, e, T, pole); }
-    if (G.p) { const P = G.p, A = Ride3D.crankA(t || 0, mv); for (const [e, sd, f0] of [['l', -1, 0], ['r', 1, Math.PI]]) { if (G.fd && e === 'l') continue; const th = A + f0 + (P.a0 == null ? -Math.PI / 2 : P.a0), T = new THREE.Vector3(P.f + Math.cos(th) * P.r, P.h + Math.sin(th) * P.r + P.ank - ry, P.s * sd).applyQuaternion(q).add(o), pole = new THREE.Vector3(1, 0.5, sd * 0.15).applyQuaternion(q); this.reach(H, e, T, pole, LEG_IK); } }
-    if (G.fd) { const F = G.fd, T = new THREE.Vector3(F.f, F.h - ry, -F.s).applyQuaternion(q).add(o), pole = new THREE.Vector3(1, 0.3, -0.4).applyQuaternion(q); this.reach(H, 'l', T, pole, LEG_IK); } }, // v346 (탈것 스레드) 서 있을 때 왼발 땅 딛기 · v345 자전거 페달 (사용자 '다리가 페달 따라 진짜 밟는 것처럼'): 크랭크 각도(Ride3D.crankA)대로 두 발목을 페달 위에, 무릎은 앞으로
+    let fw = 0, pl = null; if (G.fd) { const dt = H.fdt == null ? 1 : Math.max(0, Math.min(0.1, (t || 0) - H.fdt)); H.fdt = t || 0; H.fdw = H.fdw == null ? (G.fd.on ? 1 : 0) : H.fdw + ((G.fd.on ? 1 : 0) - H.fdw) * Math.min(1, dt * 5); fw = H.fdw;  const M = H.model, b0 = M.userData.fd0 || (M.userData.fd0 = M.position.clone()); M.position.set(b0.x + fw * (G.fd.fx || 0), b0.y - fw * (G.fd.dy || 0), b0.z); } /* 서면 안장에서 살짝 앞으로 내려와 (실제 자전거처럼) 발이 땅에 닿게 */
+    if (G.p) { const P = G.p, A = Ride3D.crankA(t || 0, mv); for (const [e, sd, f0] of [['l', -1, 0], ['r', 1, Math.PI]]) { if (fw > 0.99 && e === 'l') continue; const th = A + f0 + (P.a0 == null ? -Math.PI / 2 : P.a0), T = new THREE.Vector3(P.f + Math.cos(th) * P.r, P.h + Math.sin(th) * P.r + P.ank - ry, P.s * sd).applyQuaternion(q).add(o), pole = new THREE.Vector3(1, 0.5, sd * 0.15).applyQuaternion(q); if (e === 'l') pl = T; this.reach(H, e, T, pole, LEG_IK); } }
+    if (fw > 0.01) { const F = G.fd, T = new THREE.Vector3(F.f, F.h - ry, -F.s).applyQuaternion(q).add(o), pole = new THREE.Vector3(1, 0.3, -0.4).applyQuaternion(q); /* 페달·발판에서 땅까지 발을 살짝 들어 옮긴다 */ if (fw < 0.99) { const a = pl || (H.model.updateMatrixWorld(true), this.bone(H, LEG_IK[2] + 'l').getWorldPosition(new THREE.Vector3())); T.lerp(a, 1 - fw).y += Math.sin(Math.PI * fw) * 0.05; } this.reach(H, 'l', T, pole, LEG_IK); } }, // v346 (탈것 스레드) 서 있을 때 왼발 땅 딛기 · v345 자전거 페달 (사용자 '다리가 페달 따라 진짜 밟는 것처럼'): 크랭크 각도(Ride3D.crankA)대로 두 발목을 페달 위에, 무릎은 앞으로
   // 두 마디 팔 IK: 어깨(upperarm)·팔꿈치(lowerarm)를 돌려 손(hand)이 T(월드)에 닿게. 팔꿈치는 pole 쪽으로
   reach(H, e, T, pole, N = ARM_IK) { // N = 뼈 이름 세 마디 (팔: 어깨·팔꿈치·손, 다리: LEG_IK 허벅지·종아리·발목)
     const { THREE } = T3, ua = this.bone(H, N[0] + e), la = this.bone(H, N[1] + e), hd = this.bone(H, N[2] + e); if (!ua || !la || !hd || !ua.parent) return;
@@ -20248,7 +20429,7 @@ const Hat3D = {
   // fit = 크기·자리를 이 재질 덩어리로만 잰다 (밀짚모자 리본 꼬리 빼고). loop = 꼬깔 고무줄(바닥에 둥글게 누운 줄)은 빼고 strap으로 다시. strap = 턱 바로 밑으로 지나가는 끈 {r 굵기, c 색, at 모자 높이 비율}
   // w = 머리 지름에 대한 폭. 위에 얹는 모자: y = 모자 바닥이 정수리보다 r의 몇 배 아래. 머리를 덮는 것(head): 머리 가운데 기준 dy·dz
   S: {
-    party: { w: 0.95, y: -0.55, dz: -0.45, rx: -0.08, loop: 1, strap: { r: 0.0011, c: '#1c1c1c', at: 0.01 } },
+    party: { w: 0.95, y: -0.55, dz: -0.45, rx: -0.08, loop: 1, pom: [0.17, '#f4f0f0'], strap: { r: 0.0011, c: '#1c1c1c', at: 0.01 } },
     witch: { w: 2.7, y: -0.72, cut: -0.75 }, // v346 낡은 펠트 마녀 모자 (끝이 굽고 버클 띠)
     crown: { w: 1.08, y: -0.95, cut: -0.75, velvet: [0.2, 0.95, 0.8] },
     captain: { w: 1.22, y: -1.15, dz: 0.08, rx: -0.04, cut: -0.85, rough: 0.55 }, // v346 하얀 윗판·검은 띠·금줄·검은 챙 (실제 선장 모자)
@@ -20267,7 +20448,7 @@ const Hat3D = {
   need(h) {
     if (!h || !this.S[h] || this.st[h] || !window.T3) return; this.st[h] = 1;
     const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
-    MeshoptDecoder.ready.then(() => L.load(Arena3J.url('hat/' + h + '.glb?v=1'), g => {
+    MeshoptDecoder.ready.then(() => L.load(Arena3J.url('hat/' + h + '.glb?v=2'), g => {
       const s = this.S[h], o = g.scene, w = new THREE.Group(); const sk = []; o.traverse(m => { if (m.isSkinnedMesh) sk.push(m); }); for (const m of sk) { const n = new THREE.Mesh(m.geometry, m.material); n.position.copy(m.position); n.quaternion.copy(m.quaternion); n.scale.copy(m.scale); m.parent.add(n); m.parent.remove(m); } /* 뼈 붙은 모델(가발)은 뼈 없이 그냥 모양만 */ o.rotation.set(s.rx || 0, s.ry || 0, 0); w.add(o);
       w.updateMatrixWorld(true); if (s.drop) this.drop(w, s.drop); if (s.taper) this.taper(w, s.taper); const br = s.loop ? this.unloop(w) : 0;
       o.traverse(m => { if (m.isMesh) { m.geometry._keep = 1; m.frustumCulled = false; for (const t of [].concat(m.material)) t.side = s.front ? THREE.FrontSide : THREE.DoubleSide; } }); /* 한 겹짜리 모델은 뒤에서 보면 뚫려 보여서 */ w.updateMatrixWorld(true); this.shine(w);
@@ -20286,7 +20467,8 @@ const Hat3D = {
       if (s.hair) w.traverse(m => { if (!m.isMesh) return; const P = m.geometry.attributes.position, C = new Float32Array(P.count * 3), v = new THREE.Vector3(), [hy, hz, hc] = s.hair, col = new THREE.Color(hc).convertSRGBToLinear(); // 머리카락 칠하기 (색 없는 조각 모델)
         for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(m.matrixWorld); const ty = (v.y - bb.min.y) / bz.y, tz = (v.z - bb.min.z) / bz.z, hr = ty > hy + Math.max(0, tz - hz) * 1.6 ? 1 : 0; C.set(hr ? [col.r / s.tint[0], col.g / s.tint[1], col.b / s.tint[2]] : [1, 1, 1], i * 3); }
         m.geometry.setAttribute('color', new THREE.BufferAttribute(C, 3)); for (const t of [].concat(m.material)) { t.vertexColors = true; t.needsUpdate = true; } });
-      this.G[h] = { w, f: new THREE.Box3().setFromObject(w), b: bb, br }; this.st[h] = 2;
+      let apex = null; if (s.pom) { const v = new THREE.Vector3(); w.traverse(m => { if (!m.isMesh || !m.visible) return; const P = m.geometry.attributes.position; for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(m.matrixWorld); if (!apex || v.y > apex.y) apex = v.clone(); } }); } // 꼬깔 꼭대기 (방울 달 자리)
+      this.G[h] = { w, f: new THREE.Box3().setFromObject(w), b: bb, br, apex }; this.st[h] = 2;
       if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); // 숍 그림은 key가 바뀌어서 새로 찍힌다
     }, undefined, () => { this.st[h] = 3; }));
   },
@@ -20342,6 +20524,9 @@ const Hat3D = {
       this.strap(model, bones, fc, st, { x: st.ear ? hs.x * 0.5 + 0.004 : s.w * r * 0.93, y: ay, z: az }); }
     if (s.nose) { const [ny, nz, nr] = s.nose, n = new THREE.Mesh(new THREE.SphereGeometry(nr * r, 24, 16), this.nm || (this.nm = new THREE.MeshPhysicalMaterial({ color: '#d8141a', roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.25 })));
       n.position.set(hc.x, fc.max.y - ny * r, hc.z + nz * r); n.castShadow = !Room3D.zNow; model.add(n); n.updateMatrixWorld(true); (bones.Head || model).attach(n); } // 삐에로 빨간 코 (스펀지 공처럼 살짝 광)
+    if (s.pom && G.apex) { const [pr, pc] = s.pom, g = new THREE.IcosahedronGeometry(pr * r, 5), P = g.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); const u = v.clone().normalize(), n = Math.abs(Math.sin(u.x * 41 + u.y * 23) * Math.cos(u.z * 37 - u.x * 19)) ** 3; v.multiplyScalar(0.8 + 0.7 * n); P.setXYZ(i, v.x, v.y, v.z); } g.computeVertexNormals(); /* 가는 은박 술이 사방으로 뻗친 방울 */
+      const pm = new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({ color: pc, roughness: 0.35, metalness: 0.6, sheen: 1, sheenColor: new THREE.Color('#ffffff') })); this.shine({ userData: {}, traverse: f => f({ isMesh: 1, material: pm.material }) });
+      m.updateMatrixWorld(true); pm.position.copy(model.worldToLocal(G.apex.clone().applyMatrix4(m.matrixWorld))); pm.position.y += pr * r * 0.6; pm.castShadow = !Room3D.zNow; model.add(pm); pm.updateMatrixWorld(true); (bones.Head || model).attach(pm); } // 꼬깔 꼭대기 반짝이 방울 (실제 생일 고깔처럼)
     if (s.bolt) { const [by, bx] = s.bolt, bm = this.bm || (this.bm = new THREE.MeshStandardMaterial({ color: '#8a8c90', roughness: 0.45, metalness: 0.85 })); this.shine({ userData: {}, traverse: f => f({ isMesh: 1, material: bm }) });
       for (const e of [-1, 1]) { const b = new THREE.Group(), c1 = new THREE.Mesh(new THREE.CylinderGeometry(0.09 * r, 0.09 * r, 0.5 * r, 16), bm), c2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * r, 0.15 * r, 0.09 * r, 6), bm); c2.position.y = 0.22 * r; b.add(c1, c2); b.rotation.z = -e * Math.PI / 2;
         b.position.set(hc.x + e * hs.x * bx, fc.min.y + hs.y * by, hc.z - hs.z * 0.02); b.traverse(o => { if (o.isMesh) o.castShadow = !Room3D.zNow; }); model.add(b); b.updateMatrixWorld(true); (bones.neck_01 || bones.Head || model).attach(b); } } // 프랑켄슈타인 목 나사 (육각 머리)
@@ -20353,7 +20538,7 @@ const Hat3D = {
 const Suit3D = {
   st: 0, src: null, G: {},
   need() { if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
-    MeshoptDecoder.ready.then(() => L.load(Arena3J.url('hat/spacesuit.glb?v=1'), g => { g.scene.updateMatrixWorld(true); const src = []; g.scene.traverse(o => { if (!o.isMesh || o.geometry.attributes.position.count <= 60) return; const P = o.geometry.attributes.position, N = o.geometry.attributes.normal, W = new Float32Array(P.count * 3), WN = N ? new Float32Array(P.count * 3) : null, v = new T3.THREE.Vector3(), u = new T3.THREE.Vector3();
+    MeshoptDecoder.ready.then(() => L.load(Arena3J.url('hat/spacesuit.glb?v=2'), g => { g.scene.updateMatrixWorld(true); const src = []; g.scene.traverse(o => { if (!o.isMesh || o.geometry.attributes.position.count <= 60) return; const P = o.geometry.attributes.position, N = o.geometry.attributes.normal, W = new Float32Array(P.count * 3), WN = N ? new Float32Array(P.count * 3) : null, v = new T3.THREE.Vector3(), u = new T3.THREE.Vector3();
         /* 뼈 가중치가 있는 모델은 정점 그대로가 아니라 뼈를 거친 자리(보이는 T자 모습)를 쓴다 (배낭이 뼈에 붙어 있어서) */
         const sk = (i, w) => { if (o.isSkinnedMesh) o.applyBoneTransform(i, w); return w.applyMatrix4(o.matrixWorld); };
         for (let i = 0; i < P.count; i++) { sk(i, v.fromBufferAttribute(P, i)); W[i * 3] = v.x; W[i * 3 + 1] = v.y; W[i * 3 + 2] = v.z; if (N) { u.fromBufferAttribute(P, i).addScaledVector(new T3.THREE.Vector3().fromBufferAttribute(N, i), 0.01); if (o.isSkinnedMesh) o.applyBoneTransform(i, u); u.applyMatrix4(o.matrixWorld).sub(v).normalize(); WN[i * 3] = u.x; WN[i * 3 + 1] = u.y; WN[i * 3 + 2] = u.z; } }
@@ -20493,7 +20678,7 @@ const Pet3D = {
   SFP: { cat: 0, dog: 0, dolphin: 0, panda: 0, parrot: 0, mouse: Math.PI / 2, gary: 0, trex: 0, penguin: 0, rabbit: Math.PI, turtle: 0 }, // 앞을 +x로 돌리는 각
   R: {}, rs: {},
   noReal: true, // v344 사용자 '캐릭터만 귀엽게' → 펫은 직접 만든 귀여운 모델 (실사 펫 코드는 그대로 둠)
-  REAL_OK: { cat: 1 }, /* v345 noReal이어도 실사로 쓰는 종류: 사용자가 고른 긴 털 갈색 고양이 */
+  REAL_OK: { cat: 1, dog: 1, rabbit: 1, mouse: 1 }, /* 돌고래는 물 밖에서 떠 보여 아직 뺌 */ /* v351 동작 있는 실사 펫 (사용자 '동작 없는건 다 빼' 뒤 남은 실사 모델) */ /* v345 noReal이어도 실사로 쓰는 종류: 사용자가 고른 긴 털 갈색 고양이 */
   real(k, st, d) { if ((this.noReal && !this.REAL_OK[k]) || st || d || !(k in this.SFP) || !window.T3) return false; this.needR(k); return this.rs[k] === 2; },
   needR(k) { if (this.rs[k]) return; this.rs[k] = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('sfp/' + k + '.glb?v=' + (k === 'cat' ? 2 : 1)), ok, undefined, no))).then(G => {
@@ -21101,9 +21286,14 @@ const Snap3D = {
     if (A && tt != null) { const d = A.getClip().duration; A.time = d * Math.min(0.999, r0 + (r1 - r0) * Math.max(0, Math.min(1, tt))); }
     H.mix.update(dt);
   },
+  // v360 실사 탈것 칸 사진: 3d/th/ride/<키>.webp (assets: Snap3D.thumb 로 찍어 둔 것, 320×208). 오면 상점 다시 그리기
+  bk: {},
+  baked(x, k, W, H) { let im = this.bk[k]; if (!im) { im = this.bk[k] = new Image(); im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }; im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/ride/' + k + '.webp?v=1'); }
+    if (!im.complete || im.bad || !im.naturalWidth) return false; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, W, H); x.restore(); return true; },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {
     if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
+    if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); return this.baked(x, it.ride, 160 * S, 104 * S); } /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
     const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);
@@ -23186,7 +23376,7 @@ const QUIZ_BANK = [
   { q: '임대차계약서에 확정일자를 받을 수 없는 곳은?', a: ['경찰서', '주민센터(행정복지센터)', '등기소', '인터넷 등기소'], why: '확정일자는 주민센터, 등기소, 공증인, 온라인(인터넷 등기소 등)에서 받을 수 있어요.' },
   { q: '상가 임차인의 대항요건은 건물 인도와 무엇일까?', a: ['사업자등록 신청', '전입신고', '확정일자', '임차권등기'], why: '상가건물 임대차보호법에서는 인도와 사업자등록 신청이 대항요건이에요.' },
   { q: '보증금을 못 받은 임차인이 이사 가도 대항력·우선변제권을 지키려면 무엇을 할까?', a: ['임차권등기명령 신청', '전입신고만 유지', '집 열쇠를 가져간다', '집주인에게 문자'], why: '임차권등기가 된 뒤에 이사 가면 대항력과 우선변제권이 그대로 유지돼요.' },
-  { q: '전세권자가 배당요구를 하면 그 전세권은 매각 뒤 어떻게 될까?', a: ['매각으로 지워진다', '낙찰자가 떠안는다', '10년 연장된다', '다음 경매로 넘어간다'], why: '최선순위 전세권이라도 배당요구를 하면 매각으로 소멸하고 배당을 받아요.' },
+  { q: '전세권자가 배당요구를 하면 그 전세권은 매각 뒤 어떻게 될까?', a: ['매각으로 지워진다', '낙찰자가 떠안는다', '10년 연장된다', '다음 경매로 넘어간다'], why: '최선순위 전세권이라도 배당요구를 하면 매각으로 소멸하고 배당을 받아요. 집 전체에 설정된 전세권이면 말소기준도 돼요.' },
   { q: '말소기준권리보다 늦게 설정된 지상권은?', a: ['매각으로 지워진다', '낙찰자가 떠안는다', '더 강해진다', '배당받는다'], why: '말소기준권리보다 뒤의 용익권(지상권·지역권·전세권 등)은 원칙적으로 매각으로 소멸해요.' },
   { q: '낙찰받은 집에 사는 사람이 안 나가면 낙찰자가 하면 안 되는 것은?', a: ['문 따고 짐을 마음대로 빼기', '인도명령 신청', '이사비 협상', '강제집행 신청'], why: '직접 문을 따거나 짐을 빼면 범죄가 될 수 있어요. 인도명령·강제집행 같은 법 절차를 써요.' },
   { q: '가짜(허위) 임차인이 의심될 때, 그 집에 누가 언제 전입했는지 확인하려고 떼어 보는 서류는?', a: ['전입세대 열람 내역', '건축물대장', '토지이용계획확인서', '농지취득자격증명'], why: '전입세대 열람으로 전입 날짜와 세대를 보고, 현황조사서·계약서·보증금 송금 내역까지 맞춰 보면 진짜 임차인인지 가려낼 수 있어요.' },
@@ -23240,7 +23430,7 @@ const QUIZ_SHORT = [
   { q: '등기부에서 압류·가압류·가처분처럼 소유권에 관한 것이 적히는 칸은? (○구)', s: ['갑구', '갑'], why: '갑구는 소유권 관련, 을구는 근저당권·전세권 같은 소유권 외 권리예요.' },
   { q: '등기부에서 근저당권·전세권처럼 소유권 외의 권리가 적히는 칸은? (○구)', s: ['을구', '을'], why: '을구의 근저당권은 말소기준권리가 되는 경우가 많아요.' },
   { q: '입찰을 마감하고 입찰 봉투를 공개로 여는 일을 두 글자로?', s: ['개찰'], why: '개찰 뒤 최고가매수인을 부르고, 차순위매수신고할 사람이 있는지 물어봐요.' },
-  { q: '감정가에 비해 얼마에 낙찰됐는지 나타낸 비율을 뭐라고 할까?', s: ['낙찰가율', '매각가율', '낙찰률'], why: '낙찰가율이 높을수록 그 동네·물건에 경쟁이 세다는 뜻이에요.' },
+  { q: '감정가에 비해 얼마에 낙찰됐는지 나타낸 비율을 뭐라고 할까?', s: ['낙찰가율', '매각가율'], why: '낙찰가율이 높을수록 그 동네·물건에 경쟁이 세다는 뜻이에요. 낙찰률(매각률)은 진행한 사건 중 팔린 건수 비율이라 다른 말이에요.' },
   { q: '남의 빚을 대신 갚고 그 채권자 자리에 들어가는 것을 네 글자로?', s: ['대위변제'], why: '후순위 임차인이 선순위 근저당을 대위변제하면 순위가 바뀔 수 있어요.' },
 ];
 // O/X (사용자 2026-10-16 '퀴즈 더 문제 다양하게'): o가 정답 (true = O)
@@ -24167,7 +24357,7 @@ const STUDY_LESSONS = (() => {
     { id: 'jeonY', g: '등기 함정', title: '선순위 전세권 · 배당요구 함', bid: 15000,
       story: '같은 전세권인데, 이번엔 전세권자가 배당요구를 했다.',
       data: { small: true, deadline: DL, reg: [own('2017-05-01'), r('2018-03-01', 'jeonY', 12000, '박서윤'), r('2020-02-02', 'mort', 10000, '푸른은행'), start(ST)], tenants: [] },
-      point: '배당요구한 선순위 전세권은 말소기준이 된다. 먼저 배당받고 소멸하며, 뒤의 권리도 모두 지워진다.' },
+      point: '집 전체에 설정된 선순위 전세권이 배당요구를 하면 말소기준이 된다 (일부에만 설정된 전세권은 말소기준이 못 된다). 먼저 배당받고 소멸하며, 뒤의 권리도 모두 지워진다.' },
     { id: 'fakegd', g: '등기 함정', title: '가등기처럼 보이는 담보가등기', bid: 10000,
       story: '갑구에 "소유권이전청구권가등기"가 가장 빠르다. 그런데 명세서 비고에 "가등기권자 채권계산서 제출"이 있다.',
       data: { small: true, deadline: DL, reg: [own('2018-01-01'), r('2019-01-01', 'secreg', 4000, '윤아도', { look: 'claimreg' }), r('2020-01-01', 'mort', 10000, '한빛은행'), start(ST)], tenants: [t('강민찬', '2019-06-01', '2019-06-01', 12000, '2025-07-01')] },
@@ -24206,7 +24396,7 @@ const STUDY_CARDS = [
   { id: 'heir', g: '현장 위험', title: '상속인 점유', body: '소유자가 돌아가시고 가족 여러 명이 살고 있는 경우. 대항력 문제는 없지만 명도할 상대가 많아 이사비·시간이 더 든다.', where: '전입세대열람(사망말소) · 초인종' },
   { id: 'fake', g: '임차인 함정', title: '허위·통정 임차인', body: '계약서도 확정일자도 없이 보증금을 말로만 주장하고, 소유자 가족이라는 단서가 보이면 허위 임차인을 의심한다. 실제로는 소송으로 다투지만, 이기면 대항력이 인정되지 않는다.', where: '현황조사서 · 초인종' },
   { id: 'resale', g: '법정 절차', title: '재매각 사건 보증금 20%', body: '전 낙찰자가 대금을 안 내 다시 나온 물건은 보통 보증금이 최저가의 20%다. 명세서 특별매각조건을 안 보고 10%만 넣으면 입찰이 무효다.', where: '명세서 비고' },
-  { id: 'second', g: '법정 절차', title: '차순위매수신고', body: '2등이고 내 가격이 "1등 가격 − 보증금"보다 높으면 차순위매수신고를 할 수 있다. 1등이 대금을 안 내면 재매각 없이 내가 산다. 그동안 보증금은 묶인다.', where: '개찰 때 집행관' },
+  { id: 'second', g: '법정 절차', title: '차순위매수신고', body: '1등이 아니어도 내 가격이 "1등 가격 − 보증금"보다 높으면 차순위매수신고를 할 수 있다 (여럿이 신고하면 더 높게 쓴 사람). 1등이 대금을 안 내면 재매각 없이 내가 산다. 그동안 보증금은 묶인다.', where: '개찰 때 집행관' },
   { id: 'typo', g: '법정 절차', title: '입찰표 착오는 구제 안 됨', body: '0을 하나 더 붙여 써도 그대로 낙찰이다. 대금을 못 내면 보증금을 잃는다. 숫자와 한글 금액을 두 번 확인한다.', where: '입찰표' },
 ];
 
@@ -24614,7 +24804,7 @@ const Donor = {
   async check() {
     if (!this.on()) return this.ok; try { await Promise.race([Net.relayReady, sleep(3000)]); } catch (e) {}
     const u = this.base(); if (!u) return this.ok;
-    try { const j = await (await fetch(u + '/don/me?s=' + encodeURIComponent(this.secret()), { cache: 'no-store' })).json(); if (j && j.ok) { const was = this.ok; this.ok = !!j.donor; this.code = j.code || this.code; Store.set('donOk', this.ok ? 1 : 0); Store.set('donCode', this.code); if (this.ok && !was) this.thanks(); } } catch (e) {}
+    try { const j = await (await fetch(u + '/don/me?s=' + encodeURIComponent(this.secret()), { cache: 'no-store' })).json(); if (j && j.ok) { const was = this.ok; this.ok = !!j.donor || !!this.vip; /* v360 초대 이름(Access.VIP)은 늘 열림 */ this.code = j.code || this.code; Store.set('donOk', this.ok ? 1 : 0); Store.set('donCode', this.code); if (this.ok && !was) this.thanks(); } } catch (e) {}
     return this.ok;
   },
   thanks() { Sound.play('chime'); Toast.show('후원 고마워요! 이제 행인이랑 친구한테 용돈 주기를 할 수 있어요.', 4500); const b = $('donState'); if (b) b.innerHTML = this.stateHtml(); },
@@ -24870,6 +25060,7 @@ const CREDITS_SF = [["Classic Bicycle | LowPoly | Game ready", "by__Rx", "https:
   ["Bathtub", "3ddominator", "https://sketchfab.com/3d-models/3350f81025974c53808a2efd2b31d4fd"],
   ["Bathroom Sink Cabinet", "jimbogies", "https://sketchfab.com/3d-models/e5cf10304ffb4c11bc7841b584ccd706"],
   ["Washing Machine", "Zlat", "https://sketchfab.com/3d-models/a27aa928a6664473a0ebfbe2c7f72b23"],
+  ["Modern Sofa", "3dimentionalben", "https://sketchfab.com/3d-models/modern-sofa-ac92f6e97eaa43c4ad6cb8f7c65ac43f"],
   ["Modern Wooden Wardrobe", "M4nT1Core", "https://sketchfab.com/3d-models/aff452c30e724283ae2c4f17297e0ef7"],
   ["Rock Wall Scan", "CommonSpence", "https://sketchfab.com/3d-models/166ad4fc797c4289ae20e665e3b6a1d0"], // v352 광산 바위·석탄 벽 사진 (스캔을 정면으로 구워 이음매 없이)
   ["Goldfields mining pick", "City of Ballarat", "https://sketchfab.com/3d-models/8c3cbe5d2175463e8ce7ce3fb4a985c1"], // v352 광산 1인칭 곡괭이
@@ -24890,6 +25081,7 @@ Cm.credits = () => { const li = CREDITS_SF.map(([t, a, u]) => `<li><a href="${es
  * 이름만 보는 방식이라 누가 같은 이름을 치면 들어올 수 있다. 막는 걸 풀려면 ALLOW 를 비운다. */
 const Access = {
   ALLOW: ['에센티아', '부리코'],
+  VIP: ['에센티아', '부리코'], /* v360 사용자 '부리코,에센티아 한테는 절하는거 열어놔' → 용돈 주고 큰절 받기 (후원자 전용) 열기. 서버도 이 이름은 통과 (relay/src/index.js VIP_NAMES) */
   GIFT_CATS: ['clothes', 'hat', 'pet', 'petdeco', 'car'],
   ok(n) { return !this.ALLOW.length || this.ALLOW.includes(String(n || '').trim()); },
   init() {
@@ -24904,7 +25096,8 @@ const Access = {
     setTimeout(() => { try { $('accName').focus(); } catch (e) { } }, 300);
   },
   pass(n, quiet) {
-    Store.set('acc350', n); Store.set('mpName', n); const inp = $('mpName'); if (inp) { inp.value = n; inp.readOnly = true; }
+    Store.set('acc350', n); Store.set('mpName', n); if (this.VIP.includes(n) && typeof Donor !== 'undefined') { Donor.vip = 1; Donor.ok = true; } const inp = $('mpName'); if (inp) { inp.value = n; inp.readOnly = true; }
+    if (typeof Preload !== 'undefined') setTimeout(() => Preload.start(), 300); /* v360 이름이 통과되면 바로 미리 받기 */
     const got = this.gift(n); if (got && !quiet) setTimeout(() => { try { Toast.show(`환영해요, ${n} 님! 옷·모자·펫·탈것을 전부 선물로 드렸어요.`, 4200); Sound.play('chime'); } catch (e) { } }, 600);
   },
   gift(n) {
@@ -24923,6 +25116,71 @@ const Access = {
 #accGate .btn{width:100%}
 #accGate small{display:block;min-height:18px;margin-top:8px;color:#b3261e;font-size:13px}`; document.head.appendChild(s); }
 };
+
+/* ===================== 들어가기 전에 미리 받기 (v360) =====================
+ * 사용자 2026-10-23 '들어가서, 다운받고 이러면 중간중간에 끊기고, 튕기고 이러는데 차라리 들어가기전에 로딩중이라든지 다운받는중 이라는거 문구 뜨고, 들어가서는 렉안걸리는게 나을거같기도해'.
+ * 시작 화면이 뜨면 뒤에서 바로 받기 시작한다 (아래 띠 '다운받는 중 N%'). 시작을 눌렀는데 아직이면 '다운받는 중' 화면에서 기다렸다가 들어간다.
+ * ① 받기: CORE = 처음 거리에서 쓰는 파일 (KB 어림, 진행률용) ② 준비: 엔진·사람·펫·차·탈것 모델 풀기 ③ 들어가면 건물은 '동네 불러오는 중'(zone3d.js zStream)이 마저 짓는다.
+ * 다 끝나면 실내 바닥·가구(LATER)를 하나씩 천천히 더 받아 둔다. 파일은 서비스 워커(sw.js)가 3d/ 를 따로 저장해서 다음부터는 바로 열린다.
+ * 목록은 실제로 한 판 돌며 받은 파일 (/tmp/claude-0/focus/r4/reqs.js). 버전(?v=)이 바뀐 파일은 그냥 게임이 다시 받을 뿐 깨지진 않는다. */
+const Preload = {
+  CORE: [['three-gta.js?v=160b',735],['env/sky.bin?v=1',1024],['anims2.glb?v=1',1085],['Knight.glb?v=1',164],['Barbarian.glb?v=1',148],['Mage.glb?v=1',131],['Rogue_Hooded.glb?v=1',140],['anim1.glb?v=2',446],['anim2.glb?v=2',369],['heroF.glb?v=4',3326],['heroM.glb?v=4',3371],['ground/walk.jpg?v=1',97],['ground/road.jpg?v=1',68],['ground/dirt.jpg?v=1',124],['ground/grass.jpg?v=1',363],['ground/brick.jpg?v=1',185],['ground/marble.jpg?v=1',131],['real/trees.png?v=1',964],['bld/brickR_c.jpg?v=2',198],['bld/brickR_n.jpg?v=2',339],['bld/brickR_m.jpg?v=2',17],['bld/brickB_c.jpg?v=2',332],['bld/brickB_n.jpg?v=2',340],['bld/brickB_m.jpg?v=2',100],['bld/plaster_c.jpg?v=2',314],['bld/plaster_n.jpg?v=2',247],['bld/plaster_m.jpg?v=2',8],['bld/tile_c.jpg?v=2',176],['bld/tile_n.jpg?v=2',261],['bld/tile_m.jpg?v=2',17],['bld/conc_c.jpg?v=2',229],['bld/conc_n.jpg?v=2',233],['bld/conc_m.jpg?v=2',35],['bld/glass_c.jpg?v=2',105],['bld/glass_n.jpg?v=2',112],['bld/glass_m.jpg?v=2',34],['pets.glb?v=2',1062],['cars.glb?v=1',89],['rides.glb?v=3',566],['evo.glb?v=1',552],['real/metal_trash_can.glb?v=1',404],['real/water_manhole_cover.glb?v=1',172],['bld/kit.glb?v=1',285],['real/street_lamp_01.glb?v=1',157],['real/utility_box_01.glb?v=1',152],['real/painted_wooden_bench.glb?v=1',134],['real/modular_street_seating.glb?v=1',499],['real/fire_hydrant.glb?v=1',326]],
+  LATER: [['floor/wood_c.jpg?v=1',221],['floor/wood_n.jpg?v=1',83],['floor/wood_r.jpg?v=1',32],['floor/oak_c.jpg?v=1',215],['floor/oak_n.jpg?v=1',125],['floor/oak_r.jpg?v=1',33],['floor/marble_c.jpg?v=1',319],['floor/marble_n.jpg?v=1',17],['floor/marble_r.jpg?v=1',44],['floor/concrete_c.jpg?v=1',415],['floor/concrete_n.jpg?v=1',322],['floor/concrete_r.jpg?v=1',47],['floor/trav_n.jpg?v=1',17],['floor/trav_r.jpg?v=1',16],['floor/trav_c.jpg?v=1',181],['floor/parquet_c.jpg?v=1',189],['floor/parquet_n.jpg?v=1',97],['floor/parquet_r.jpg?v=1',41],['floor/checker_c.jpg?v=1',223],['floor/checker_n.jpg?v=1',25],['floor/checker_r.jpg?v=1',37],['floor/shop_c.jpg?v=1',211],['floor/shop_n.jpg?v=1',80],['floor/carpet_c.jpg?v=1',229],['floor/carpet_n.jpg?v=1',508],['floor/shop_r.jpg?v=1',36],['floor/pent_c.jpg?v=1',154],['floor/carpet_r.jpg?v=1',68],['floor/pent_n.jpg?v=1',50],['floor/pent_r.jpg?v=1',28],['floor/bath_c.jpg?v=1',77],['floor/bath_n.jpg?v=1',106],['floor/entry_c.jpg?v=1',208],['floor/bath_r.jpg?v=1',38],['floor/entry_n.jpg?v=1',147],['floor/deck_c.jpg?v=1',257],['floor/entry_r.jpg?v=1',50],['floor/deck_n.jpg?v=1',119],['floor/deck_r.jpg?v=1',37],['floor/grass_c.jpg?v=1',456],['floor/grass_n.jpg?v=1',606],['floor/grass_r.jpg?v=1',102],['floor/plaster_c.jpg?v=1',165],['floor/plaster_n.jpg?v=1',526],['floor/plaster_r.jpg?v=1',23],['room/desk_metal.glb?v=1',304],['room/bookcase.glb?v=1',478],['room/pcset.glb?v=1',458],['room/frame_b.glb?v=1',362],['room/clock_wall.glb?v=1',522],['room/chair_off.glb?v=1',174],['room/desk_old.glb?v=1',781],['room/laptop.glb?v=1',759],['real/sofa_02.glb?v=1',288],['real/potted_plant_01.glb?v=1',1851],['real/potted_plant_04.glb?v=1',514],['real/sofa_03.glb?v=1',577],['real/potted_plant_02.glb?v=1',1084]],
+  st: 0, got: 0, tot: 0, // st: 0 아직 · 1 받는 중 · 2 준비 중 · 3 끝
+  on() { return !window.PRELOAD_OFF && typeof Room3D !== 'undefined' && Room3D.on(); }, // PRELOAD_OFF = 시험 스크립트용
+  start() {
+    if (this.st) return; if (!this.on()) { this.st = 3; return; }
+    this.st = 1; this.tot = this.CORE.reduce((a, f) => a + f[1] * 1024, 0); this.css(); this.ui();
+    const q = this.CORE.slice(), run = async () => { while (q.length) { const [f, kb] = q.shift(); await this.get(f, kb * 1024); } };
+    Promise.all([run(), run(), run(), run()]).then(() => this.warm());
+  },
+  async get(f, n) {
+    let got = 0;
+    try { const r = await fetch(Arena3J.url(f)); if (r.ok && r.body && r.body.getReader) { const rd = r.body.getReader(); for (;;) { const { done, value } = await rd.read(); if (done) break; got += value.length; this.got += value.length; this.ui(); } } else if (r.ok) { got = (await r.arrayBuffer()).byteLength; this.got += got; } } catch (e) { }
+    if (got < n) this.got += n - got; this.ui(); // 못 받았거나 어림보다 작아도 칸은 채운다
+  },
+  myRide() { try { const id = Profile.get().car, it = (SHOP_ITEMS.car || []).find(i => i.id === id); return it && it.ride; } catch (e) { return null; } },
+  warm() {
+    this.st = 2; this.ui(); try { Arena3J.load(); } catch (e) { return this.done(); }
+    let n = 0, kicked = 0; const tick = () => {
+      if (window.T3 && !kicked) { kicked = 1; try { Room3D.init(); if (!Room3D.soft) { Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); if (typeof Car3D !== 'undefined') Car3D.load(); if (typeof Ride3D !== 'undefined') Ride3D.load(this.myRide()); } } catch (e) { return this.done(); } }
+      const R = typeof Ride3D !== 'undefined' ? this.myRide() : null, busy = x => x && x.st === 1;
+      const ok = kicked && (Room3D.soft || Room3D.bad || (Hero3D.ready() && !busy(typeof Pet3D !== 'undefined' && Pet3D) && !busy(typeof Car3D !== 'undefined' && Car3D) && !busy(typeof Ride3D !== 'undefined' && Ride3D) && !(R && RIDE3[R] && RIDE3[R].sf && Ride3D.sfs[R] === 1)));
+      if (ok || ++n > 300 || Hero3D.st === -1 || Arena3J.st === -1) return this.done(); /* 엔진을 못 받으면 기다리지 않고 (예전처럼 2D) */ setTimeout(tick, 100);
+    }; tick();
+  },
+  done() { this.st = 3; this.got = this.tot; this.ui(); setTimeout(() => { const b = $('plBar'); if (b) b.remove(); }, 900); const go = this.pend; this.pend = null; if (go) { this.gateOff(); go(); } setTimeout(() => this.later(), 4000); },
+  async later() { if (this.lt) return; this.lt = 1; for (const [f] of this.LATER) { if (document.hidden) await sleep(3000); try { await (await fetch(Arena3J.url(f))).arrayBuffer(); } catch (e) { } await sleep(150); } },
+  // 시작 버튼 → 아직이면 기다리는 화면
+  gate(go) {
+    if (this.st === 3 || !this.on()) return go(); if (!this.st) this.start(); this.pend = go;
+    let g = $('plGate'); if (!g) { g = document.createElement('div'); g.id = 'plGate'; g.innerHTML = '<div class="box"><b id="plHd">다운받는 중</b><i><s id="plFill"></s></i><span id="plTxt"></span><small>처음 한 번만 받아요. 다 받고 들어가면 끊기지 않아요.<br>다음부터는 바로 들어가요.</small><button class="btn" id="plSkip" hidden>기다리지 않고 들어가기</button></div>'; document.body.appendChild(g); }
+    $('plSkip').hidden = true; $('plSkip').onclick = () => { const f = this.pend; this.pend = null; this.gateOff(); if (f) f(); };
+    clearTimeout(this.skT); this.skT = setTimeout(() => { const b = $('plSkip'); if (b) b.hidden = false; }, 20000); this.ui();
+  },
+  gateOff() { clearTimeout(this.skT); const g = $('plGate'); if (g) g.remove(); },
+  ui() {
+    const now = performance.now(); if (this.st !== 3 && now - (this.ut || 0) < 120) return; this.ut = now;
+    const pct = this.st >= 2 ? (this.st === 3 ? 100 : 99) : Math.min(98, Math.floor(this.got / Math.max(1, this.tot) * 100)), mb = v => (v / 1048576).toFixed(1);
+    const txt = this.st === 1 ? `다운받는 중 ${pct}% · ${mb(Math.min(this.got, this.tot))} / ${mb(this.tot)}MB` : this.st === 2 ? '준비하는 중 (3D 모델 푸는 중)' : '다 받았어요';
+    let b = $('plBar'); if (!b && this.st < 3) { b = document.createElement('div'); b.id = 'plBar'; b.innerHTML = '<i><s></s></i><span></span>'; document.body.appendChild(b); }
+    if (b) { b.querySelector('s').style.width = pct + '%'; b.querySelector('span').textContent = txt; }
+    if ($('plGate')) { $('plFill').style.width = pct + '%'; $('plTxt').textContent = txt; $('plHd').textContent = this.st === 2 ? '준비하는 중' : '다운받는 중'; }
+  },
+  css() { if ($('plCss')) return; const s = document.createElement('style'); s.id = 'plCss'; s.textContent = `
+#plBar{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 10px);transform:translateX(-50%);z-index:70;width:min(320px,calc(100vw - 32px));background:rgba(14,18,26,.86);color:#efe6d2;border-radius:10px;padding:7px 12px 8px;font:600 12px/1.3 "IBM Plex Sans KR",sans-serif;text-align:center;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.35)}
+#plBar i,#plGate i{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;margin-bottom:5px}
+#plBar s,#plGate s{display:block;height:100%;width:0;background:#e8c34a;transition:width .2s}
+#title.out ~ #plBar{display:none}
+#plGate{position:fixed;inset:0;z-index:9000;background:rgba(12,16,24,.94);display:flex;align-items:center;justify-content:center;padding:16px}
+#plGate .box{width:min(340px,100%);color:#f2ead8;text-align:center;font-family:"IBM Plex Sans KR",sans-serif}
+#plGate b{display:block;font-size:22px;font-weight:900;letter-spacing:.06em;margin-bottom:14px}
+#plGate i{height:10px;border-radius:5px;margin-bottom:10px}
+#plGate span{display:block;font-size:15px;font-weight:700;margin-bottom:12px}
+#plGate small{display:block;font-size:13px;line-height:1.5;opacity:.72}
+#plGate .btn{margin-top:16px}`; document.head.appendChild(s); },
+};
+{ const sg = startGame; startGame = function () { const a = arguments, me = this; return Preload.gate(() => sg.apply(me, a)); }; } // 시작은 모두 여기로 (혼자·튜토리얼·연습·채널·친구 방)
 
 /* ---- 한 번에 한 창만 (사용자 2026-10-14: 컴퓨터에서 두 번 열면 창이 두 개 열린다) ----
  * 설치된 앱은 manifest launch_handler(focus-existing)로 기존 창이 올라오고, 그래도 두 창이 열리면 BroadcastChannel로 서로 알아채서
@@ -25082,6 +25340,7 @@ const Instance = {
   Tutorial.bind();
   // 친구와 같이 하기 (방 코드)
   $('mpName').value = Store.get('mpName', ''); if (typeof Access !== 'undefined') Access.init(); // v350 초대받은 이름만 (access.js)
+  if (typeof Preload !== 'undefined' && !$('accGate')) setTimeout(() => Preload.start(), 300); // v360 시작 화면 뒤에서 미리 받기 (preload.js)
   Net.onStatus = (st, text) => {
     const el = $(Net.mode === 'channel' ? 'chStatus' : 'mpStatus'); // 채널 소식은 채널 칸에, 방 소식은 친구 방 칸에
     if (st === 'error') { el.innerHTML = `<span style="color:#ff8a7a">${esc(text)}</span>`; return; }

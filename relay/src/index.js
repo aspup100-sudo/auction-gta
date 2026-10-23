@@ -14,6 +14,7 @@ import { handleFb } from './fb.js';
 import { handleSv } from './sv.js';
 import { handleDon } from './don.js';
 
+const VIP_NAMES = new Set(['에센티아', '부리코']); // v360 사용자 '부리코,에센티아 한테는 절하는거 열어놔': 이 이름은 후원 없이도 용돈(큰절)
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': '*' };
 
 export default {
@@ -71,7 +72,7 @@ export class ChannelRoom {
     const name = (url.searchParams.get('name') || '').trim().slice(0, 20) || '플레이어';
     const logic = this.ensure(kind, key); await logic.load();
     const pair = new WebSocketPair(); const [client, server] = Object.values(pair);
-    const ds = (url.searchParams.get('ds') || '').slice(0, 64), don = ds ? await this.donor(ds) : false; // v294 후원자만 용돈
+    const ds = (url.searchParams.get('ds') || '').slice(0, 64), don = VIP_NAMES.has(name) || (ds ? await this.donor(ds) : false); // v294 후원자만 용돈
     server.serializeAttachment({ id, name, ds, don });
     this.ctx.acceptWebSocket(server);
     await logic.join(this.sock(server, { id, name }));

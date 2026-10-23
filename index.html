@@ -1508,6 +1508,38 @@ html body #title #installGate { background:#fbf5e6 !important; border:1px solid 
 html body #title #iosHint { color:#5d4524 !important; }
 html body #title .profileBox, html body #title .profileBox * { color:#33240f; }
 html body #title .modeRow .mode.sel::before { background:none !important; border:2.5px solid rgba(200,68,46,.85); border-radius:46% 54% 50% 50% / 60% 45% 55% 40%; inset:-7px -10px; transform:rotate(-1deg); } /* 고른 쪽지는 빨간 펜 동그라미 */
+/* v370 사용자 '실사 책상: 진짜 나무 책상 사진, 종이·포스트잇·도장도 사진 질감과 그림자로': 그림 → 사진 질감 (배치·동작 그대로).
+   ui/desk.webp = 참나무 상판 사진(Poly Haven laminate_floor_02), ui/paper.webp = 종이 결(ambientCG Plaster 사진 고주파), ui/ink.webp = 도장 잉크 얼룩 알파(ambientCG Concrete034). 전부 CC0. 그림자·말림은 CSS */
+html body #title { background:
+  radial-gradient(ellipse 85% 75% at 28% 18%, rgba(255,238,205,.30), transparent 60%),
+  radial-gradient(ellipse at 42% 38%, transparent 42%, rgba(24,11,3,.52) 100%),
+  linear-gradient(180deg, rgba(255,240,215,.06), rgba(20,10,2,.12)),
+  url(ui/desk.webp) 50% 0 / max(1300px, 100vw) auto repeat-y,
+  #a5774a !important; }
+html body #title #iosHint { color:#f4ead6; opacity:.85; text-shadow:0 1px 2px rgba(20,10,2,.8); } /* 설치 안내도 나무 위에서 읽히게 */
+html body #title h1 { color:#24170a !important; mix-blend-mode:multiply; text-shadow:0 1px 0 rgba(255,232,195,.28) !important; }
+html body #title h1::after { color:#b8321f; border-color:#b8321f; border-width:3px; border-radius:3px; opacity:.92; mix-blend-mode:multiply; text-shadow:0 0 .6px rgba(184,50,31,.8);
+  -webkit-mask-image:url(ui/ink.webp); mask-image:url(ui/ink.webp); -webkit-mask-size:110px 110px; mask-size:110px 110px; -webkit-mask-position:17px 9px; mask-position:17px 9px; }
+html body #title .tag { color:#3a1c04 !important; text-shadow:0 1px 0 rgba(255,230,190,.35); }
+html body #title .tOps { color:#2e1c08 !important; text-shadow:0 1px 0 rgba(255,230,190,.3); }
+html body #title #capLabel { color:#fff3dc !important; opacity:1 !important; text-shadow:0 1px 2px rgba(20,10,0,.8), 0 0 6px rgba(20,10,0,.4); }
+html body #title .disc, html body #title .foot { color:#fff3dc !important; opacity:.92 !important; text-shadow:0 1px 2px rgba(20,10,0,.75), 0 0 6px rgba(20,10,0,.35); }
+html body #title .foot a { color:#ffe3a8 !important; }
+/* 포스트잇: 종이 결 + 위는 붙고 아래는 살짝 들린 그림자 */
+html body #title .modeRow > .btn:nth-child(n) { background-image:linear-gradient(177deg, rgba(90,60,0,.05) 0 16%, rgba(255,255,255,.14) 34%, rgba(255,255,255,0) 62%, rgba(70,45,0,.09) 100%), url(ui/paper.webp) !important; background-size:auto, 192px 192px !important; background-blend-mode:normal, hard-light !important;
+  border-radius:1px 1px 3px 3px / 1px 1px 8px 8px !important; box-shadow:0 1px 1px rgba(45,25,5,.28), 0 3px 4px -1px rgba(45,25,5,.22), 0 15px 14px -11px rgba(22,10,0,.62), 9px 17px 16px -14px rgba(22,10,0,.45) !important; }
+html body #title .modeRow .btn::after { top:-9px; left:calc(50% - 30px); width:60px; height:18px; transform:rotate(-3deg); background:linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.04) 45%, rgba(255,255,255,.18)), rgba(246,242,226,.30);
+  -webkit-backdrop-filter:brightness(1.05) saturate(.85); backdrop-filter:brightness(1.05) saturate(.85); box-shadow:inset 0 0 0 .5px rgba(255,255,255,.45), inset 0 -1px 0 rgba(120,100,60,.12);
+  clip-path:polygon(2% 0, 98% 0, 100% 14%, 97% 29%, 100% 44%, 97.5% 59%, 100% 74%, 97% 88%, 99% 100%, 1% 100%, 3% 86%, 0 71%, 2.5% 56%, 0 41%, 3% 26%, 0 12%); }
+/* 오른쪽 종이·아이콘 카드: 종이 결 + 진짜 그림자, 굵은 테두리 대신 종이 가장자리 */
+html body #title #modeHint, html body #title .mp, html body #title .smTab, html body #title .tutGiftLine, html body #title #installGate, html body #title .tIco, html body #title .tBack, html body #title :not(.modeRow) > .btn:not(.gold) { background-image:url(ui/paper.webp) !important; background-size:192px 192px !important; background-blend-mode:hard-light !important; }
+html body #title #modeHint, html body #title .mp, html body #title #installGate { border-color:rgba(120,85,40,.28) !important; box-shadow:0 1px 1px rgba(45,25,5,.25), 0 4px 6px -2px rgba(45,25,5,.2), 0 16px 22px -12px rgba(22,10,0,.55) !important; }
+html body #title .smTab { border-color:rgba(120,85,40,.28) !important; box-shadow:0 1px 1px rgba(45,25,5,.25), 0 10px 12px -8px rgba(22,10,0,.5) !important; }
+html body #title .tIco { border-color:rgba(120,85,40,.3) !important; border-radius:3px !important; box-shadow:0 1px 1px rgba(45,25,5,.3), 0 7px 9px -5px rgba(22,10,0,.55) !important; }
+html body #title .tDock .tIco:nth-child(odd) { transform:rotate(-1.4deg); } html body #title .tDock .tIco:nth-child(even) { transform:rotate(1.1deg) translateY(1px); }
+html body #title .tDock .tIco:active { transform:translateY(1px) scale(.97); box-shadow:0 1px 1px rgba(45,25,5,.3), 0 3px 4px -2px rgba(22,10,0,.5) !important; }
+html body #title .tBack { border-color:rgba(120,85,40,.3) !important; box-shadow:0 1px 1px rgba(45,25,5,.3), 0 7px 9px -5px rgba(22,10,0,.55) !important; }
+html body #title .btn.gold { background-image:linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.08)), url(ui/paper.webp) !important; background-size:auto, 192px 192px !important; background-blend-mode:normal, hard-light !important; box-shadow:0 1px 0 rgba(255,255,255,.25) inset, 0 3px 0 #7d2414, 0 9px 10px -5px rgba(22,10,0,.55) !important; }
 /* v298 사용자 '수첩도 메뉴랑 같게': 수첩 = 서류철 + 포스트잇 */
 html body #notebook { background:repeating-linear-gradient(0deg, rgba(120,80,30,.04) 0 2px, transparent 2px 4px), #e2c48a !important; color:#33240f; border-left:1px solid #b08a4e !important; }
 html body #notebook .nbHead { background:#d9b77e !important; border-bottom:2px dashed rgba(122,58,0,.35); }
@@ -1539,7 +1571,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <h1>경매 GTA</h1>
   <div class="tag">걸어서 모으는 정보, 손으로 하는 권리분석</div>
   <div class="tOps">// 작전 선택</div>
-  <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></i>혼자 하기<small>자본 골라서 시작</small><b class="giftTag" id="tutGiftTag" hidden>튜토리얼 하면 고양이 펫 선물</b></button><button class="btn mode" data-mode="modeRoom"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.6 3-5.5 7-5.5s7 1.9 7 5.5"/><circle cx="17" cy="8.5" r="2.6"/><path d="M17.5 14.3c2.7.2 4.5 1.8 4.5 4.7"/></svg></i>친구와 같이<small>방 코드로 모이기</small></button><button class="btn mode" data-mode="modeCh"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M8 8a5.7 5.7 0 0 0 0 8M16 8a5.7 5.7 0 0 1 0 8M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg></i>실시간 채널<small>코드 없이 아무나</small></button><button class="btn tStudy" id="btnStudy"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10.3 5 7.8 4.5 4 4.5v14c3.8 0 6.3.5 8 2 1.7-1.5 4.2-2 8-2v-14c-3.8 0-6.3.5-8 2zM12 6.5v14"/></svg></i>사례 공부<small>문제 풀며 배우기</small></button></div>
+  <div class="modeRow" id="modeRow"><button class="btn mode" data-mode="modeSolo"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></i>혼자 하기<small>자본 골라서 시작</small><b class="giftTag" id="tutGiftTag" hidden>튜토리얼 하면 참새 펫 선물</b></button><button class="btn mode" data-mode="modeRoom"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.6 3-5.5 7-5.5s7 1.9 7 5.5"/><circle cx="17" cy="8.5" r="2.6"/><path d="M17.5 14.3c2.7.2 4.5 1.8 4.5 4.7"/></svg></i>친구와 같이<small>방 코드로 모이기</small></button><button class="btn mode" data-mode="modeCh"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M8 8a5.7 5.7 0 0 0 0 8M16 8a5.7 5.7 0 0 1 0 8M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/></svg></i>실시간 채널<small>코드 없이 아무나</small></button><button class="btn tStudy" id="btnStudy"><i class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10.3 5 7.8 4.5 4 4.5v14c3.8 0 6.3.5 8 2 1.7-1.5 4.2-2 8-2v-14c-3.8 0-6.3.5-8 2zM12 6.5v14"/></svg></i>사례 공부<small>문제 풀며 배우기</small></button></div>
   </div>
   <div class="tRight">
   <div id="modeHint">← 왼쪽에서 할 일을 골라 주세요</div>
@@ -1560,7 +1592,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   </div>
   <div id="soloPick"><!-- v285 사용자 '처음이에요 누르고 시작 누르면 되는 건데 잘 모를 거 같애, 단계별도 따로 움직이는 건데 같이 되는 거 같잖아': 혼자 하기를 세 갈래로 -->
     <div class="smTabs"><button class="smTab" data-sm="tut"><b>튜토리얼</b><small>처음이라면 여기</small></button><button class="smTab" data-sm="free"><b>자유 플레이</b><small>자본 골라서</small></button><button class="smTab" data-sm="prac"><b>단계별 연습</b><small>1~5단계</small></button></div>
-    <div class="smPane" id="smTut"><p class="tutGiftLine" id="tutGiftLine"><b>끝까지 하면 고양이 펫을 선물로 줘요.</b> 혼자 하기에서도 실시간 채널에서도 옆에서 졸졸 따라오고, 멈추면 기지개를 켜요. (편집숍에서는 300만 원)</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
+    <div class="smPane" id="smTut"><p class="tutGiftLine" id="tutGiftLine"><b>끝까지 하면 참새 펫을 선물로 줘요.</b> 혼자 하기에서도 실시간 채널에서도 옆에서 이리저리 날아다니며 지붕이나 전깃줄, 머리 위에 앉아요. (편집숍에서는 300만 원)</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
     <div class="smPane" id="smFree"><p>이번 주 물건 중 하나를 골라 혼자 조사하고 입찰해요. 안내 없이 해요.</p></div>
     <div class="smPane" id="smPrac"><p>함정을 하나씩 늘려 가며 1단계부터 5단계까지 해요. 단계마다 정해진 물건과 자본으로 시작해요.</p><div class="row"><button class="btn gold" id="btnPrac">단계 고르기</button></div></div>
     <label id="tutRow" hidden><input type="checkbox" id="tutOn"></label>
@@ -1629,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v363</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v364</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3516,16 +3548,31 @@ const GroundTex = {
   // 칸 종류 하나의 가림막: 칸 하나 = 8px로 부드럽게 늘린 뒤 반에서 자르면 계단 모서리가 둥근 윤곽이 된다
   mask(zone, tx0, ty0, n, test) { const R = 8, m = n + 2, a = document.createElement('canvas'); a.width = a.height = m; const ax = a.getContext('2d'), id = ax.createImageData(m, m);
     for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) { const v = test(zone.at(tx0 + i - 1, ty0 + j - 1)) ? 255 : 0, o = (j * m + i) * 4; id.data[o] = id.data[o + 1] = id.data[o + 2] = 0; id.data[o + 3] = v; }
-    ax.putImageData(id, 0, 0); const b = document.createElement('canvas'); b.width = b.height = m * R; const bx = b.getContext('2d'); bx.imageSmoothingEnabled = true; bx.drawImage(a, 0, 0, m * R, m * R);
+    ax.putImageData(id, 0, 0); const b = document.createElement('canvas'); b.width = b.height = m * R; const bx = b.getContext('2d', { willReadFrequently: true }); /* v363 읽어 오는 캔버스는 CPU 쪽에 (그래픽 카드에서 되읽기 멈춤 없게) */ bx.imageSmoothingEnabled = true; bx.drawImage(a, 0, 0, m * R, m * R);
     const d = bx.getImageData(0, 0, m * R, m * R), q = d.data; for (let o = 3; o < q.length; o += 4) { const v = (q[o] - 102) * 5; q[o] = v < 0 ? 0 : v > 255 ? 255 : v; } bx.putImageData(d, 0, 0); return b; },
   // 칸 종류별로 사진 패턴을 가림막 모양대로 덮는다
-  layer(x, zone, cx, cy, n, test, fill) { const tx0 = Math.floor(cx * CHUNK / TILE), ty0 = Math.floor(cy * CHUNK / TILE), mk = this.mask(zone, tx0, ty0, n, test), G = this.gs;
-    const t = document.createElement('canvas'); t.width = t.height = CHUNK * G; const tc = t.getContext('2d'); tc.scale(G, G); tc.translate(-cx * CHUNK, -cy * CHUNK); fill(tc); tc.setTransform(1, 0, 0, 1, 0, 0);
-    tc.globalCompositeOperation = 'destination-in'; tc.imageSmoothingEnabled = true; const sc = CHUNK * G / n; tc.drawImage(mk, -sc, -sc, sc * (n + 2), sc * (n + 2));
+  layer(x, zone, cx, cy, n, test, fill) { const tx0 = Math.floor(cx * CHUNK / TILE), ty0 = Math.floor(cy * CHUNK / TILE), G = this.gs;
+    /* v363 (렉 시연 점검: 달릴 때 땅 조각 하나 만드는 데 60ms+): 이 조각(+둘레 한 칸)에 그 칸 종류가 하나도 없으면 아무것도 안 그려지니 건너뛰고, 전부 그 종류면 가림막 없이 바로 덮는다 (결과 그림은 똑같다) */
+    let hit = 0; const m = n + 2; for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) if (test(zone.at(tx0 + i - 1, ty0 + j - 1))) hit++;
+    if (!hit) return; const full = hit === m * m, mk = full ? null : this.mask(zone, tx0, ty0, n, test);
+    const t = this.lt || (this.lt = document.createElement('canvas')); if (t.width !== CHUNK * G) t.width = t.height = CHUNK * G; const tc = t.getContext('2d'); tc.setTransform(1, 0, 0, 1, 0, 0); tc.globalCompositeOperation = 'source-over'; tc.globalAlpha = 1; tc.clearRect(0, 0, t.width, t.height); /* 한 장을 돌려 쓴다 (매번 새로 만들면 폰 메모리·GC) */ tc.scale(G, G); tc.translate(-cx * CHUNK, -cy * CHUNK); fill(tc); tc.setTransform(1, 0, 0, 1, 0, 0);
+    if (mk) { tc.globalCompositeOperation = 'destination-in'; tc.imageSmoothingEnabled = true; const sc = CHUNK * G / n; tc.drawImage(mk, -sc, -sc, sc * (n + 2), sc * (n + 2)); tc.globalCompositeOperation = 'source-over'; }
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(t, 0, 0); x.restore(); },
 };
 function zoneChunk(zone, cx, cy) {
   const key = cx + ',' + cy, hd = GroundTex.on(); let c = zone.chunks.get(key); if (c && !!c._hd === hd) { if (hd) { zone.chunks.delete(key); zone.chunks.set(key, c); } return c; } // 오래 안 본 조각부터 버린다
+  const J = zoneChunk.job; if (J && J.zone === zone && J.key === key && J.hd === hd) { zoneChunk.job = null; let r; while (!(r = J.g.next()).done); return r.value; } // v363 미리 만들던 조각이면 마저
+  const g = zoneChunkG(zone, cx, cy, hd); let r; while (!(r = g.next()).done); return r.value;
+}
+/* v363 (렉 시연 점검): 땅 조각 하나를 단계별로 (yield). 화면에 보일 조각은 zoneChunk가 한 번에, 달리는 앞쪽 조각은 zoneChunkPre가 장면마다 조금씩 미리. 그림은 똑같다 */
+function zoneChunkPre(zone, x0, y0, x1, y1, until) { const hd = GroundTex.on(); let J = zoneChunk.job; if (J && (J.zone !== zone || J.hd !== hd)) J = zoneChunk.job = null;
+  if (!J) { let best = null, bd = 1e18; const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    for (let cy = Math.max(0, Math.floor(y0 / CHUNK)); cy <= Math.floor(y1 / CHUNK); cy++) for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++) { if (cx * CHUNK >= zone.W * TILE || cy * CHUNK >= zone.H * TILE) continue; const c = zone.chunks.get(cx + ',' + cy); if (c && !!c._hd === hd) continue; const d = ((cx + 0.5) * CHUNK - mx) ** 2 + ((cy + 0.5) * CHUNK - my) ** 2; if (d < bd) { bd = d; best = [cx, cy]; } }
+    if (!best) return; const m = zone.chunks; if (!m._jw) { const c0 = m.clear.bind(m); m.clear = () => { zoneChunk.job = null; c0(); }; m._jw = 1; } // 다시 그리기(지우기)면 만들던 것도 버린다
+    J = zoneChunk.job = { zone, hd, key: best[0] + ',' + best[1], g: zoneChunkG(zone, best[0], best[1], hd) }; }
+  do { if (J.g.next().done) { zoneChunk.job = null; return; } } while (performance.now() < until); }
+function* zoneChunkG(zone, cx, cy, hd) {
+  const key = cx + ',' + cy; let c;
   c = document.createElement('canvas'); const G = hd ? GroundTex.gs : 1; c.width = c.height = CHUNK * G; c._hd = hd; const x = c.getContext('2d');
   x.scale(G, G); x.translate(-cx * CHUNK, -cy * CHUNK);
   const tx0 = Math.floor(cx * CHUNK / TILE), ty0 = Math.floor(cy * CHUNK / TILE), n = CHUNK / TILE;
@@ -3534,10 +3581,15 @@ function zoneChunk(zone, cx, cy) {
   if (hd) { // 바탕: 콘크리트 마당 → 골목(아스팔트) · 공원(잔디) · 인도(보도블록) · 길(아스팔트)
     const X0 = cx * CHUNK, Y0 = cy * CHUNK, F = (k, a, tint) => tc => { tc.fillStyle = GroundTex.pat(tc, k); tc.fillRect(X0, Y0, CHUNK, CHUNK); if (tint) { tc.globalAlpha = a; tc.fillStyle = tint; tc.fillRect(X0, Y0, CHUNK, CHUNK); tc.globalAlpha = 1; } };
     x.fillStyle = P.walk; x.fillRect(X0, Y0, CHUNK, CHUNK); x.globalAlpha = 0.18; x.fillStyle = '#c8b898'; x.fillRect(X0, Y0, CHUNK, CHUNK); x.globalAlpha = 0.22; x.fillStyle = GroundTex.pat(x, 'dirt', 3); x.fillRect(X0, Y0, CHUNK, CHUNK); x.globalAlpha = 1;
+    yield;
     GroundTex.layer(x, zone, cx, cy, n, v => v === T.ALLEY, F('road', 0.12, '#ffffff'));
+    yield;
     GroundTex.layer(x, zone, cx, cy, n, v => v === T.PARK, tc => { F('grass')(tc); tc.globalAlpha = 0.25; tc.fillStyle = GroundTex.pat(tc, 'dirt', 2.5); tc.fillRect(X0, Y0, CHUNK, CHUNK); tc.globalAlpha = 1; });
+    yield;
     GroundTex.layer(x, zone, cx, cy, n, v => v === T.WALK, tc => { tc.fillStyle = GroundTex.blk(tc); tc.fillRect(X0, Y0, CHUNK, CHUNK); tc.globalAlpha = 0.45; tc.globalCompositeOperation = 'multiply'; F('walk')(tc); tc.globalCompositeOperation = 'source-over'; tc.globalAlpha = 1; }); // v356 보도블록: 30cm 네모 블록 (회색 + 가끔 붉은 블록, 블록마다 색 조금씩) 위에 사진 결을 곱해 얹음
+    yield;
     GroundTex.layer(x, zone, cx, cy, n, v => v === T.ROAD, F('road'));
+    yield;
   }
   if (!hd) for (let ty = ty0; ty < ty0 + n; ty++) for (let tx = tx0; tx < tx0 + n; tx++) {
     const v = zone.at(tx, ty); x.fillStyle = COL[v]; x.fillRect(tx * TILE, ty * TILE, TILE, TILE);
@@ -3554,6 +3606,7 @@ function zoneChunk(zone, cx, cy) {
     x.save(); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = 'rgba(255,255,255,.55)'; x.font = 'bold 9px "IBM Plex Sans KR", sans-serif'; x.fillText(pk.name, cx, cy); x.restore();
     x.fillStyle = '#2d5fb3'; x.fillRect(pk.x * TILE - 8, pk.y * TILE - 2, 8, 8); x.fillStyle = '#fff'; x.font = 'bold 7px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('P', pk.x * TILE - 4, pk.y * TILE + 2); x.textBaseline = 'alphabetic';
   }
+  yield;
   // 큰길은 벡터로 다시 그려 대각선도 매끈하게 (충돌은 타일 기준)
   x.lineJoin = 'round'; x.lineCap = 'butt';
   const strokeRoad = (r, w, col) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); r.pts.forEach(([px, py], i) => (i ? x.lineTo(px * TILE, py * TILE) : x.moveTo(px * TILE, py * TILE))); x.stroke(); };
@@ -3562,6 +3615,7 @@ function zoneChunk(zone, cx, cy) {
   for (const r of zone.roads) strokeRoad(r, r.width * TILE + (hd ? 7 : 4), hd ? '#a9a59b' : '#9b978f'); // 연석 (v353 3D: 화강석 연석 폭 넓게)
   if (hd) for (const r of zone.roads) strokeRoad(r, r.width * TILE + 2.2, '#7c7870'); // 연석 바깥 모서리 그늘
   for (const r of zone.roads) strokeRoad(r, r.width * TILE, hd ? P.road : COL[T.ROAD]);
+  yield;
   // 차선: 중앙선 노란 2줄(실선), 차선 흰 점선. 교차로 안은 비운다.
   x.save(); x.beginPath(); x.rect(cx * CHUNK - 10, cy * CHUNK - 10, CHUNK + 20, CHUNK + 20);
   for (const c of zone.crossings) { const R = (Math.max(c.halfA, c.halfB) + 2.5) * TILE; x.moveTo(c.x * TILE + R, c.y * TILE); x.arc(c.x * TILE, c.y * TILE, R, 0, Math.PI * 2, true); }
@@ -3587,6 +3641,7 @@ function zoneChunk(zone, cx, cy) {
       x.lineWidth = 4.6; x.strokeStyle = '#c8a634'; x.setLineDash([7.2, 0.8]); offLine(seg, o); x.lineWidth = 0.9; x.strokeStyle = 'rgba(120,90,10,.45)'; x.setLineDash([0.9, 1.5]); offLine(seg, o - 1.3); offLine(seg, o + 1.3); offLine(seg, o); }
     x.setLineDash([]); }
   x.restore();
+  yield;
   // 정지선
   x.fillStyle = 'rgba(245,245,245,.9)';
   for (const c of zone.crossings) for (const [d, half, otherHalf] of [[c.da, c.halfA, c.halfB], [c.db, c.halfB, c.halfA]]) for (const sd of [-1, 1]) {
@@ -8353,6 +8408,7 @@ async function driveAcross(toGu) {
   State.cash -= fuel; HUD.setCash(State.cash);
   if (slot && !State.evening && !Tutorial.timeLock()) await advanceSlot();
   await arriveZone(ZONE_OF_GU[toGu], from);
+  if (typeof Room3D !== 'undefined' && Room3D.prepWait) await Room3D.prepWait(Game.zone, 1500); // 새 동네 거리를 화면이 닫힌 동안 만든다 (열리면서 멈추지 않게)
   await iris(false); Game.trans = null;
   Toast.show(`${DISTRICT[toGu].name} 진입 · 주유비 ${fmtWon(fuel)}`);
   Game.busy = false; Game.edgeGoing = false;
@@ -8462,6 +8518,7 @@ async function enterPlace(pl) {
   Game.room = buildInterior(pl); Game.room.place = pl;
   const ex = Game.room.exit; Game.player.x = ex.tx * TILE + 8; Game.player.y = (ex.ty - 1) * TILE + 12; Game.player.dir = 3; Game.player.vx = Game.player.vy = 0;
   Game.scene = 'room'; Game.doorAnim = null;
+  if (typeof Room3D !== 'undefined' && Room3D.prepWait) await Room3D.prepWait(Game.room); // v363 검은 화면 뒤에서 방을 다 세우고 연다
   Sound.playBgm(Game.room.def.bgm);
   State.visited[pl.id] = true;
   await iris(false); Game.trans = null;
@@ -8474,6 +8531,7 @@ async function exitPlace() {
   await iris(true);
   Game.scene = 'zone'; Game.player.x = Game.zonePos.x; Game.player.y = Game.zonePos.y; Game.player.dir = 0; Game.player.vx = Game.player.vy = 0;
   Game.room = null; State.siteSession = null; Sound.playBgm('town');
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); // v363 거리 첫 장면(그림 올리기)을 검은 화면 뒤에서
   await iris(false); Game.trans = null; Game.busy = false;
 }
 function placeClosed(kind) {
@@ -8750,6 +8808,7 @@ function drawZone(t, g = ctx) { // g: 땅 그림 캔버스 (3D 바깥이면 #zgr
     for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++)
       if (cx * CHUNK < z.W * TILE && cy * CHUNK < z.H * TILE) { const ch = zoneChunk(z, cx, cy); g.imageSmoothingEnabled = !!ch._hd; g.drawImage(ch, cx * CHUNK, cy * CHUNK, CHUNK, CHUNK); } // v326 사진 땅은 해상도가 높아 부드럽게 줄인다
   g.imageSmoothingEnabled = false;
+  if (Game.driving && Game.car && Math.abs(Game.car.vx || 0) + Math.abs(Game.car.vy || 0) > 20) { const c = Game.car, ax = (c.vx || 0) * 1.2, ay = (c.vy || 0) * 1.2; zoneChunkPre(z, x0 + Math.min(0, ax), y0 + Math.min(0, ay), x1 + Math.max(0, ax), y1 + Math.max(0, ay), performance.now() + 3); } // v363 달리는 앞쪽 땅 조각을 미리 조금씩 (한 장면 3ms)
   // 지하철 출입구
   for (const s of z.subway) { const X = s.x * TILE, Y = s.y * TILE; g.fillStyle = '#1f8a3a'; g.fillRect(X - 6, Y - 6, 12, 12); g.fillStyle = '#fff'; g.font = 'bold 8px sans-serif'; g.textAlign = 'center'; g.fillText(String(s.ref || s.line), X, Y + 3); }
   // 도로 이름(노면, 반투명 큰 글자)
@@ -9021,7 +9080,7 @@ function drawIris() {
   ctx.beginPath(); ctx.rect(0, 0, VW, VH); ctx.arc(sx, sy, Math.max(0.1, R), 0, Math.PI * 2, true); ctx.fill('evenodd');
 }
 function draw() {
-  const pbw = draw.pb || (draw.pb = $('pbWin')); if (pbw && pbw.classList.contains('in') && Game.scene !== 'title') return; // v310 콜로세움(펫 배틀·축구) 창이 화면을 덮는 동안 뒤 거리는 안 그린다 (컴퓨터에서 축구 11 fps)
+  const pbw = draw.pb || (draw.pb = $('pbWin')); if (pbw && pbw.classList.contains('in') && Game.scene !== 'title') return; const fsw = draw.fs || (draw.fs = [$('hjWin'), $('fightWin'), $('tetWin'), $('rpsWin'), $('quizWin'), $('examWin'), $('mineWin')].filter(Boolean)); const stw = draw.st || (draw.st = $('studyWin')), stF = stw && stw.classList.contains('in') && matchMedia('(max-width:700px), (max-height:500px)').matches; /* 폰에선 사례 공부도 화면 전체를 덮는다 */ if (Game.scene !== 'title' && (stF || fsw.some(e => e.classList.contains('in')))) { if (typeof Perf !== 'undefined' && Perf.cover) Perf.cover(); return; } // 카지노·게임장 창은 화면 전체를 불투명하게 덮어서 뒤 거리 안 그림 (그림 똑같음, 렉만 줄임) // v310 콜로세움(펫 배틀·축구) 창이 화면을 덮는 동안 뒤 거리는 안 그린다 (컴퓨터에서 축구 11 fps)
   const r3 = Game.scene === 'room' && Room3D.active(Game.room), z3 = Game.scene === 'zone' && Room3D.zActive(Game.zone); Room3D.zNow = z3; if (!r3 && !z3) Room3D.show(false); if (!z3) Room3D.zShowG(false);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); if (r3 || z3) ctx.clearRect(0, 0, VW, VH); else { ctx.fillStyle = '#14161c'; ctx.fillRect(0, 0, VW, VH); }
   if (Game.scene === 'title') return;
@@ -11085,7 +11144,9 @@ function computeSettlement() {
     ['이사비', -E.moveFee],
     ['강제집행비', -(E.forced ? E.forced.cost : 0)],
     O ? ['수리비 (인테리어 공사)', -O.repair] : ['수리비', -Math.round(c.appraisal * R.U(0.005, 0.03) / 1e4) * 1e4],
-    [`금융비용 (대출 ${fmtWon(L.bank + L.savings)} × 연 5% × ${months}개월)`, -Math.round((L.bank + L.savings) * LOAN_RATE * months / 12)],
+    /* v357 (사용자 '이자 버그만 고치기'): 채널은 매달 실제로 낸 이자(집 담보 추가 대출 포함, 중간에 갚은 것 반영) + 강제집행 개월 이자. 전엔 낸 이자를 돌려주고 경락잔금대출만 공식으로 다시 빼서 담보 대출 이자가 팔 때 돌아왔다 */
+    O && typeof O.intPaid === 'number' ? [`금융비용 (매달 낸 대출 이자${E.forced ? ` + 강제집행 ${E.forced.months}개월` : ''})`, -(O.intPaid + (E.forced ? Math.round((L.bank + L.savings) * LOAN_RATE * E.forced.months / 12) : 0))]
+      : [`금융비용 (대출 ${fmtWon(L.bank + L.savings)} × 연 5% × ${months}개월)`, -Math.round((L.bank + L.savings) * LOAN_RATE * months / 12)],
   ];
   if (O && O.rentTotal) lines.push([`임대 수입 (월세 ${fmtWon(O.rent)} × ${O.rentMonths}개월)`, O.rentTotal]);
   if (L.extra) lines.push(['저축은행 고금리 추가비용', -L.extra]);
@@ -11645,7 +11706,7 @@ const Tutorial = {
     return [
       { id: 'pc', title: '사무실 PC 보기', how: `${K.moveWith} 사무실에 들어가 PC 앞에서 ${K.act}`, place: 'office', ok: () => !!State.pcOpened, lines: [
         '왔어? 나 단예야. 경매도 게임도 처음이라며. 이번 주는 내가 옆에서 한 바퀴 같이 돌게.',
-        ...(Store.get('giftTut281', false) ? [] : ['끝까지 같이 하면 선물로 고양이 펫을 줄게. 혼자 할 때도 실시간 채널에서도 옆에서 졸졸 따라다녀. 편집숍에선 300만 원 받는 애야.']),
+        ...(Store.get('giftTut281', false) ? [] : ['끝까지 같이 하면 선물로 참새 펫을 줄게. 혼자 할 때도 실시간 채널에서도 옆에서 이리저리 날아다니면서 지붕이나 전깃줄, 네 머리 위에도 앉아.']),
         `걷는 건 ${K.move}. 문이나 사람 앞에 서면 말풍선이 뜨는데, 그때 ${K.act}를 누르면 들어가거나 말을 걸 수 있어.`,
         `${K.box}에 지금 할 일이 떠 있어. 상자를 누르면 설명을 다시 들을 수 있고. 먼저 사무실에 들어가서 PC부터 봐.`,
         '그리고 이번 주는 연습이라 시계가 저절로 안 가. 할 일을 하나 끝낼 때마다 시간이 한 칸씩(오전 → 오후 → 다음 날 아침) 넘어가.'] },
@@ -12028,25 +12089,25 @@ const Tutorial = {
   // v281 튜토리얼 선물 (한 번만, 되팔기 막음). 돌려주는 값: 'pet'/'pet2' 자리에 앉힘 · 'have' 이미 데리고 있음 · 'full' 자리 없음 · null 이미 받음
   giveParrot() {
     if (Store.get('giftTut281', false) || typeof Shop === 'undefined') return null; Store.set('giftTut281', true);
-    if (!Shop.has('p_cat')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_cat'), src: Object.assign({}, w.src || {}, { p_cat: 'gift' }) }); } /* v350 사용자 '동작 없는건 다 빼' → 앵무새 대신 실사 고양이 */
-    const pf = Profile.get(), slot = pf.pet === 'cat' || pf.pet2 === 'cat' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : 'full'; if (slot === 'pet' || slot === 'pet2') Profile.set(slot, 'cat'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
+    if (!Shop.has('p_sparrow')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_sparrow'), src: Object.assign({}, w.src || {}, { p_sparrow: 'gift' }) }); } /* v364 사용자 2026-10-23 '이 친구를 튜토리얼하면 받게 하자' → 고양이 대신 참새 */
+    const pf = Profile.get(), slot = pf.pet === 'sparrow' || pf.pet2 === 'sparrow' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : 'full'; if (slot === 'pet' || slot === 'pet2') Profile.set(slot, 'sparrow'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
     return slot;
   },
   // v288 사용자 2026-10-21 '앵무새 주는 것도 튜토 끝나자마자 주어지는 거 만들자': 마지막 말 뒤 그 자리에서 날아와 따라온다
   async parrotScene() {
     const D = t => ({ name: castName('danye'), sprite: 'danye', voice: 'danye', text: t }); const g = this.giveParrot(); if (!g) return; this.gift = g;
-    await Dialog.say([D('아 맞다, 약속한 선물! 끝까지 해 줬으니까 고양이 줄게.')]);
-    Sound.play('chime'); Toast.show(g === 'full' ? '고양이 펫을 받았어요! 펫 자리가 차서 편집숍 펫 칸에 있어요.' : '고양이 펫을 받았어요!', 3200);
-    if (g !== 'full') { await sleep(1800); const P = t => ({ name: '고양이', text: t }); // v288 사용자 '앵무새가 튜토 수고했다고, 친구가 됐다 어쩌고'
-      await Dialog.say([{ text: '어디선가 갈색 고양이가 다가와 다리에 몸을 비빈다.' }, P('냐아. 수고했다냥. 튜토리얼 끝이다냥.'), P('이제부터 내가 집사를 따라다녀 줄게. 냥.'), D('혼자 할 때도, 실시간 채널에서도 계속 따라다녀. 멈춰 있으면 기지개도 켜.')]); }
+    await Dialog.say([D('아 맞다, 약속한 선물! 끝까지 해 줬으니까 참새 줄게.')]);
+    Sound.play('chime'); Toast.show(g === 'full' ? '참새 펫을 받았어요! 펫 자리가 차서 편집숍 펫 칸에 있어요.' : '참새 펫을 받았어요!', 3200);
+    if (g !== 'full') { await sleep(1800); const P = t => ({ name: '참새', text: t }); // v288 사용자 '앵무새가 튜토 수고했다고, 친구가 됐다 어쩌고'
+      await Dialog.say([{ text: '어디선가 참새 한 마리가 포르르 날아와 머리 위에 앉는다.' }, P('짹짹! 수고했다짹. 튜토리얼 끝이다짹.'), P('이제부터 내가 따라다녀 줄게. 짹!'), D('혼자 할 때도, 실시간 채널에서도 따라다녀. 가만히 있으면 지붕이나 전깃줄에 앉았다가 다시 날아와.')]); }
     else await Dialog.say([D('펫 두 자리가 다 차 있네. 편집숍 펫 칸에서 바꿔 데려가면 돼.')]);
   },
   result(el) { // 결과 화면 맨 위에 마무리 한마디 + 다음부턴 안내 없이
     const page = el.querySelector('.rpage'); if (!page) return;
     page.insertAdjacentHTML('afterbegin', `<div class="rSec tutEnd"><b>🎓 튜토리얼 끝</b><p>결과 보는 법: ★은 이 물건의 난이도(지금 처음 공개), 등급은 수익·판단·조사를 합친 점수, "놓친 정보"는 꼭 갔어야 했던 곳이야. 이제 혼자 하기 "자유 플레이"에서 다른 물건에 도전해 봐. 물건마다 숨은 게 달라. "실시간 채널"에 들어가면 다른 사람들이랑 같은 물건을 두고 같이 경쟁하고, 낙찰받은 집으로 임대·매도까지 해.</p></div>`);
     $('tutor').classList.remove('in'); Store.set('tutorialDone', true); Store.set('tutSave', null); this.on = false;
-    if (this.gift) { const g = this.gift; this.gift = null; const box = page.querySelector('.tutEnd'); if (box) box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 고양이 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '벌써 옆에서 따라다니고 있어요. 혼자 하기에서도 실시간 채널에서도 따라와요.'}</p>`); }
-    else { const g = this.giveParrot(); const box = page.querySelector('.tutEnd'); if (g && box) { box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 고양이 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '다음 게임부터 혼자 하기에서도 실시간 채널에서도 옆에서 따라와요.'}</p>`); Sound.play('chime'); } }
+    if (this.gift) { const g = this.gift; this.gift = null; const box = page.querySelector('.tutEnd'); if (box) box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 참새 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '벌써 옆에서 따라다니고 있어요. 혼자 하기에서도 실시간 채널에서도 따라와요.'}</p>`); }
+    else { const g = this.giveParrot(); const box = page.querySelector('.tutEnd'); if (g && box) { box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 참새 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '다음 게임부터 혼자 하기에서도 실시간 채널에서도 옆에서 따라와요.'}</p>`); Sound.play('chime'); } }
   },
 };
 
@@ -12217,6 +12278,9 @@ const SHOP_ITEMS = {
   pet: [ // 희귀할수록 비싸다 (사용자 2026-10-15). 그림은 pets.js PET_DRAW
     // v346 사용자 2026-10-23 '동작 없는건 다 빼': 실사 모델에 동작이 없는 거북이·펭귄·판다·티라노·띵띵이·앵무새는 뺌. 가진 사람은 비슷한 값의 펫으로 바꿔 줌 (PET_GONE, 되팔기 값이 더 커지지 않게)
     { id: 'p_mouse', name: '생쥐', price: 100e4, pet: 'mouse' },
+    { id: 'p_sparrow', name: '참새', new: '2026-10-23', nb: 364, price: 150e4, pet: 'sparrow' }, // v364 사용자 2026-10-23 '닭,참새,멧돼지 넣자' (실사 모델 3d/sfp, 튜토리얼 선물)
+    { id: 'p_chicken', name: '닭', new: '2026-10-23', nb: 364, price: 250e4, pet: 'chicken' },
+    { id: 'p_boar', name: '멧돼지', new: '2026-10-23', nb: 364, price: 1500e4, pet: 'boar' },
     { id: 'p_beetle', name: '장수풍뎅이', price: 200e4, pet: 'beetle' },
     { id: 'p_mantis', name: '사마귀', price: 200e4, pet: 'mantis' },
     { id: 'p_dog', name: '강아지', price: 300e4, pet: 'dog' },
@@ -12433,7 +12497,7 @@ const Shop = {
   unequip(it, p) { if (it.home) return HomeDeco.strip(it.id); if (it.pet && (p.pet === it.pet || p.pet2 === it.pet)) this.petOff(it.pet); else if (it.pal && p.outfit === it.id) Profile.set('outfit', null); else if (it.fx && p.fx === it.id) Profile.set('fx', null); else if (it.hat) { if (p.hat === it.id) Profile.set('hat', null); } else if (it.pd) PetDeco.strip(it); else if (!it.pal && !it.pet && !it.fx && p.car === it.id) Profile.set('car', null); },
   ungift() { // v241 사용자 2026-10-18 '이제 부리코 다 뺏고 선물 주기 전 상태로 돌려': v234 부리코 개발자 선물(src 'gift')을 이 기기에서 한 번 회수. 에센티아 거북이(gift233t)는 남김
     if (Store.get('ungift241', false)) return 0; Store.set('ungift241', true);
-    const w = Store.get('wardrobe', null); if (!w || !w.src) return 0; const keep = (Store.get('gift233t', false) ? ['p_turtle', 'p_monkey'] : []).concat(Store.get('gift258k', false) ? ['p_kid'] : []).concat(Store.get('giftTut281', false) ? ['p_parrot', 'p_croc'] : []);
+    const w = Store.get('wardrobe', null); if (!w || !w.src) return 0; const keep = (Store.get('gift233t', false) ? ['p_turtle', 'p_monkey'] : []).concat(Store.get('gift258k', false) ? ['p_kid'] : []).concat(Store.get('giftTut281', false) ? ['p_parrot', 'p_croc', 'p_sparrow'] : []);
     const ids = Object.keys(w.src).filter(id => w.src[id] === 'gift' && !keep.includes(id)); if (!ids.length) return 0;
     for (const id of ids) { const it = SHOP_BY_ID[id]; if (it) this.unequip(it, Profile.get()); }
     const src = Object.assign({}, w.src); for (const id of ids) delete src[id];
@@ -12568,6 +12632,7 @@ const Shop = {
     else if (thumb) {} else if (it.ride) { x.fillStyle = '#f4f4f4'; const off = mv ? (t * 90) % 40 : 0; for (let X = -40; X < 200; X += 40) x.fillRect(Math.round(X - off), 51, 20, 2); }
     else if (mv) { x.fillStyle = 'rgba(0,0,0,.12)'; const off = (t * 40) % 24; for (let X = -24; X < 184; X += 24) x.fillRect(Math.round(X - off), 92, 10, 2); }
     if (it.ride && !thumb && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && typeof Snap3D !== 'undefined' && Snap3D.rideBig(x, it, t, mv)) return; // v317 배·탱크 큰 미리보기는 3D
+    if (it.ride && !thumb && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && typeof Snap3D !== 'undefined' && Snap3D.baked && Snap3D.baked(x, it.ride, x.canvas.width, x.canvas.height)) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); const S = x.canvas.width / 160; x.font = `${Math.round(7 * S)}px "IBM Plex Sans KR", sans-serif`; const tx = '3D 불러오는 중…', w = x.measureText(tx).width + 12 * S; x.fillStyle = 'rgba(20,24,30,.62)'; x.fillRect((x.canvas.width - w) / 2, x.canvas.height - 18 * S, w, 12 * S); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(tx, x.canvas.width / 2, x.canvas.height - 12 * S); x.restore(); return; } // v346 (탈것 스레드) 사용자 '뜨다가 3d나오는건 왜': 받는 동안 옛 도트 대신 3D 칸 사진
     if (it.ride) { x.save(); x.translate(80, 52); x.scale(thumb ? 4 : 3, thumb ? 4 : 3); const pal = Profile.pal(Profile.get()); drawRide(x, 0, 0, 0, it.ride, mv ? 80 : 0, pal, it.ride === 'piggy' ? String(Profile.get().rideName || '').slice(0, 10) : ''); x.restore(); return; }
     if (it.pet && !thumb) { if (typeof Snap3D !== 'undefined' && Snap3D.petBig(x, it.pet, o => this.petScene(o, it.pet, t, mv, idle, this.moveT || 0), t)) return; return this.petScene(x, it.pet, t, mv, idle, this.moveT || 0); } // v323 3D (사람·펫·새는 3D, 나머지는 위에 2D) // 큰 미리보기: 내 캐릭터·행인과 같이, 게임에서 하는 짓 그대로
     if (it.pet) { x.save(); const hd = !!PET_HD[it.pet], k = thumb ? (hd ? 6 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 3 : ['mouse', 'beetle', 'mantis', 'lizard'].includes(it.pet) ? 8 : 5) : hd ? 4 : ['trex', 'giraffe', 'elephant', 'dolphin', 'croc'].includes(it.pet) ? 2 : it.pet === 'beetle' ? 3.5 : ['mouse', 'mantis', 'lizard'].includes(it.pet) ? 5 : 3; x.translate(80, thumb ? 98 : 96); /* 칸 그림은 더 크게 (뭔지 한눈에) */ x.scale(hd ? k / 2 : k, hd ? k / 2 : k); if (it.pet === 'monkey' && !thumb) { /* 원숭이: 내 캐릭터와 같이 — 걸을 땐 머리 위에 타고, 서 있으면 내려와 바나나 */ Sprites.setPal('shop:me', Profile.pal(Profile.get())); const sh = Sprites.sheet('shop:me'); x.imageSmoothingEnabled = false; if (mv) { x.drawImage(sh, (1 + Math.floor(t * 8) % 4) * 16, 32, 16, 16, -8, -16, 16, 16); Pets.draw(x, 'monkey', 0, -15, 1, false, t, '', 0, 'ride'); } else { x.drawImage(sh, 0, 0, 16, 16, -14, -16, 16, 16); Pets.draw(x, 'monkey', 8, 0, 1, false, t, '', idle); } x.restore(); return; }
@@ -12901,6 +12966,8 @@ const Pets = {
     if (k === 'penguin') { this.fish(c, s, idle, key); if (key.startsWith('me')) { if (s.moving && s.lx != null) { const d = Math.hypot(s.x - s.lx, s.y - s.ly); if (d < 40 && PET_FAT.get() > 0) PET_FAT.add(-d / 1400, s); } s.lx = s.x; s.ly = s.y; } } // 많이 걸으면 살이 빠진다
     if (k === 'dora' && typeof Dora !== 'undefined') { const R = Dora.run(c, s, key, k, t, n, idle, ox, oy); if (R) return R; } // 도라애몽: 주머니 도구 (v234)
     if (k === 'parrot' && typeof Parrot !== 'undefined') return Parrot.run(c, s, key, k, t, n, idle, ox, oy); // 앵무새: 날아다니고 지붕에 앉기 (v245)
+    if (k === 'chicken' && typeof Farm !== 'undefined') { const R = Farm.chicken(c, s, key, t, n, idle); if (R) return R; } // 닭: 오래 서 있으면 알 낳기 (v364)
+    if (k === 'sparrow' && typeof Sparrow !== 'undefined') return Sparrow.run(c, s, key, k, t, n, idle, ox, oy); // 참새: 지붕·전깃줄·땅·주인 머리 위를 자유롭게 (v364)
     if ((k === 'sponge' || k === 'gary') && typeof Sponge !== 'undefined') { const R = Sponge.run(c, s, key, k, t, n, idle, ox, oy); if (R) return R; } // 스폰지빵 · 띵띵이 (v243)
     if (typeof PNPC !== 'undefined' && PNPC[k]) { const R = PetNPC.run(c, s, key, k, t, n, idle, k !== 'monkey' || t - s.oStill >= 5); if (R) return R; } // 지나가는 행인이랑 놀기 (v159, 원숭이는 머리에서 내려와 있을 때만)
     const TS = k === 'turtle' ? this.turtle(c, s, key, idle, t) : null;
@@ -13169,7 +13236,7 @@ const Pets = {
       if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - 22); return;
     }
     const f0 = PET_DRAW[kind]; if (!f0) return; const rec = this.accRec, f = rec ? (...a) => { f0(...a); rec(a[3], a[4]); } : f0; /* v224: 펫 꾸미기가 몸을 그린 자리(기울기·뛰기 포함)를 알 수 있게 */ PET_FAT.n = kind === 'penguin' && pose && pose.fat ? pose.fat : 0;
-    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13 }[kind] || 15));
+    if (tag && typeof Net !== 'undefined') Net.petLabel(c, tag, x, y - ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13, sparrow: 8, chicken: 13, boar: 15 }[kind] || 15));
     const step = moving ? Math.floor(t * 8) % 2 : 0;
     c.save(); c.translate(snapPx(c, x), snapPx(c, y));
     if (pose !== 'ride' && kind !== 'dolphin' && !((kind === 'mouse' || kind === 'beetle') && !moving && idle > 5)) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(0, 0, kind === 'elephant' || kind === 'trex' ? 9 : kind === 'giraffe' || kind === 'turtle' || kind === 'tiger' ? 6 + (kind === 'tiger') * 2 : ['mouse', 'beetle', 'mantis'].includes(kind) ? 3.5 : 5, 2, 0, 0, 7); c.fill(); }
@@ -13776,7 +13843,7 @@ const PetDeco = {
     if (key.startsWith('f:') && typeof Net !== 'undefined') { const nm = key.slice(2).replace(/#2$/, ''); for (const id in Net.players) { const q = Net.players[id]; if (q && q.name === nm && q.pal) return this.get(kind, q.pal); } }
     return null;
   },
-  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13 }[kind] || 15); },
+  labelY(kind) { return PET_HD[kind] ? (kind === 'kid' ? 18 : 27) : PET_PEOPLE[kind] ? 22 : ({ trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 12, snowman: 23, dora: 21, tiger: 21, sponge: 21, gary: 15, parrot: 13, sparrow: 8, chicken: 13, boar: 15 }[kind] || 15); },
   draw(c, kind, x, y, face, moving, t, tag, idle, pose, d) {
     // v224 (사용자 '서 있을 때, 움직일 때 같이 따라가야지' — 물고기 낚는 펭귄이 기울어도 목도리는 제자리였다): 몸을 그릴 때의 변환(뒤집기·기울기·폴짝)을 받아 두고 그대로 덧그린다. 몸 그림 없이 따로 그리는 자세(앉은 강아지 등)는 예전처럼
     let rec = null, off = null; if (d.eye || d.neck || d.head) Pets.accRec = (cx, mv) => { if (cx && cx.getTransform) rec = { cx, m: cx.getTransform(), mv }; };
@@ -14012,7 +14079,7 @@ const PetNPC = {
   end(s, S) { this.free(S, false); s.npc = null; s.npcNext = performance.now() + 5000 + Math.random() * 4000; },
   free(S, flee) { if (S.freed) return; S.freed = true; const w = S.w; if (Game.decor.includes(w)) w.x = S.wx; delete w.petNpc;
     if (w.ai) { w.ai.t = flee ? 1.6 : 0.3; if (flee) { w.ai.ix = Math.sign(w.x - S.px) || 1; w.ai.iy = Math.sign(w.y - S.py); w.ai.flee = true; } } },
-  LH: { sponge: 25, gary: 19, parrot: 17, tiger: 26, dora: 24, snowman: 26, croc: 12, trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
+  LH: { sparrow: 12, chicken: 17, boar: 19, sponge: 25, gary: 19, parrot: 17, tiger: 26, dora: 24, snowman: 26, croc: 12, trex: 40, giraffe: 38, elephant: 25, dolphin: 21, turtle: 16, mouse: 13, beetle: 14, lizard: 13, mantis: 22 },
   // 장면에서 쓰는 도구: 시간 구간, 오가기, 던지기, 말풍선, 하트
   api(c, s, S, e, now, k) {
     const H = S.H, W = S.W, side = S.side, ex = Pets.extra, A = {
@@ -14530,6 +14597,150 @@ Object.assign(PET_DRAW, {
     const hy = bob; r(-1, -11 + hy, 4, 4, G); r(0, -11.5 + hy, 2.5, 1, R); r(-0.5, -11 + hy, 1, 0.5, R); // 머리 + 빨간 이마
     r(1, -10 + hy, 1.4, 1.4, W); r(1.5, -9.6 + hy, 0.6, 0.7, K); // 눈
     r(3, -10 + hy, 1.5, 1.5, BK); r(4, -9 + hy, 0.8, 1.2, BK); if (talk && Math.floor(t * 8) % 2) { r(3, -8 + hy, 1, 0.7, '#6a6a72'); r(3.2, -8.6 + hy, 0.6, 0.5, '#d05050'); } else r(3, -8.6 + hy, 1, 0.8, '#6a6a72'); // 부리 (말할 땐 뻐끔)
+  },
+});
+
+/* ===================== 참새 펫 (v364, 사용자 2026-10-23 '참새는 이리저리 날라다니면서 건물에도 앉고 전봇대 줄에도 앉고 플레이어 한테도 왔다가 자유롭게 움직이게') =====================
+ * 주인 둘레 10칸 안 (화면에 보이는 곳)에서 스스로 다음 자리를 고른다: 건물 지붕 · 전깃줄 · 땅 (깡충깡충 콕콕) · 주인 머리 위. 몇 초 앉아 있다가 다시 날아간다.
+ * 주인이 12칸 넘게 멀어지면 바로 따라 날아온다 (걷는 중엔 주인 둘레를 날다가 가끔 가까운 전깃줄·지붕에 잠깐 앉는다).
+ * 좌표: x, y = 땅 자리 (게임 px), h = 높이 (px). 3D는 Room3D.put에 높이를 lift로, 날기·동작은 curPose로 넘긴다 (pet3d.js가 앉으면 날개를 접는다) */
+const Sparrow = {
+  S: {}, CH: ['짹짹', '짹!', '짹짹짹', '짹?'],
+  HEAD: 1.5, // 주인 머리 위 높이 (칸)
+  spots(z, ox, oy) { // 주인 둘레 앉을 자리 후보
+    const L = [], R = 10 * TILE, rnd = Math.random, cam = window.T3 && Room3D.cc, v = cam && new T3.THREE.Vector3(), on = (x, y, h) => !v || (v.set(x / TILE, h / TILE, y / TILE).project(cam), Math.abs(v.x) < 0.85 && v.y > -0.8 && v.y < 0.75); /* 12칸(따라오기)보다 안쪽, 화면 안에 보이는 자리만 (높은 지붕은 화면 위로 나가 안 보였다) */
+    if (z && z.buildings && Room3D.zb && Room3D.room === z) for (const [id, e] of Room3D.zb) { const b = z.buildings[id]; if (!b || !(e.H > 1)) continue;
+      const x = (b.x + b.w * (0.2 + rnd() * 0.6)) * TILE, y = (b.y + b.h * (0.2 + rnd() * 0.6)) * TILE; if (Math.hypot(x - ox, y - oy) < R && on(x, y, e.H * TILE)) L.push({ k: 'roof', x, y, h: e.H * TILE }); }
+    const E = z && Room3D._poleZ === z && Room3D._wireE; if (E) for (const [a, b] of E) { const t = 0.2 + rnd() * 0.6, x = (a.x + (b.x - a.x) * t) * TILE, y = (a.y + (b.y - a.y) * t) * TILE; if (Math.hypot(x - ox, y - oy) > R) continue;
+      const len = Math.hypot(b.x - a.x, b.y - a.y), h = (a.h - 0.15) + (b.h - a.h) * t - 0.022 * len * 4 * t * (1 - t); const wx = b.x - a.x, wy = b.y - a.y, s = wx < 0 ? -1 : 1; if (on(x, y, h * TILE)) L.push({ k: 'wire', x, y, h: h * TILE + 0.5, ang: Math.atan2(-wx * s, -wy * s) }); } // 가운데 전선 (bldreal.js와 같은 처짐)
+    return L; },
+  ground(z, ox, oy) { for (let i = 0; i < 8; i++) { const a = Math.random() * 7, r = 14 + Math.random() * 40, x = ox + Math.cos(a) * r, y = oy + Math.sin(a) * r * 0.8; if (!z || z.at(Math.floor(x / TILE), Math.floor(y / TILE)) !== T.BLD) return { k: 'ground', x, y, h: 0 }; } return { k: 'ground', x: ox + 12, y: oy + 2, h: 0 }; },
+  pick(S, z, ox, oy, walking) { // 다음 자리: 걷는 중엔 대부분 주인 둘레 날기, 서 있으면 지붕·전깃줄·땅·머리 위를 골고루
+    const r = Math.random(), sp = r < 0.62 ? this.spots(z, ox, oy) : [], roofs = sp.filter(p => p.k === 'roof'), wires = sp.filter(p => p.k === 'wire');
+    if (walking) return r < 0.25 && wires.length ? wires[Math.floor(Math.random() * wires.length)] : { k: 'orbit' };
+    if (r < 0.32 && wires.length) return wires[Math.floor(Math.random() * wires.length)];
+    if (r < 0.62 && roofs.length) return roofs[Math.floor(Math.random() * roofs.length)];
+    if (r < 0.8 && S.last !== 'head') return { k: 'head' };
+    return this.ground(z, ox, oy); },
+  run(c, s, key, k, t, n, idle, ox, oy) {
+    const S = this.S[key] || (this.S[key] = { x: s.x, y: s.y, h: 0, tg: null, until: t + 1.5, f0: t, omv: t, chirp: t + 3 + Math.random() * 5 }), z = Game.scene === 'zone' && Game.zone, X = Pets.extra;
+    const dt = S.t1 != null ? Math.min(0.1, Math.max(0, t - S.t1)) : 0; S.t1 = t;
+    if (S.ox == null || Math.hypot(ox - S.ox, oy - S.oy) > 0.3) S.omv = t; S.ox = ox; S.oy = oy; const walking = t - S.omv < 0.6;
+    if (Math.hypot(S.x - ox, S.y - oy) > 30 * TILE) { S.x = ox; S.y = oy; S.h = 20; S.tg = null; } // 순간이동한 주인 (구 이동·실내)
+    const far = Math.hypot(S.x - ox, S.y - oy) > 12 * TILE;
+    if (!S.tg || (far && S.tg.k !== 'orbit') || (S.land && t > S.until) || (S.tg.k === 'orbit' && t > S.until && !walking)) { // 새 자리 고르기
+      S.tg = far ? { k: 'orbit' } : this.pick(S, z, ox, oy, walking); S.last = S.tg.k; S.land = false; S.hop = null;
+      S.until = t + (S.tg.k === 'orbit' ? 3 + Math.random() * 3 : 0); }
+    if (S.tg.k === 'head' && walking && S.land && t > S.until - 2) S.until = Math.min(S.until, t + 2.5); // 머리 위에 타고 가다가 곧 날아오른다
+    // 가는 곳 (orbit·head는 주인을 따라 움직인다)
+    let gx, gy, gh; const e = t - S.f0;
+    if (S.tg.k === 'orbit') { gx = ox + Math.sin(e * 1.1) * 26 + Math.sin(e * 2.7) * 10; gy = oy + Math.sin(e * 1.7) * 14 - 4; gh = 30 + Math.sin(e * 2.3) * 8; }
+    else if (S.tg.k === 'head') { gx = ox + 1; gy = oy + 0.5; gh = this.HEAD * TILE; }
+    else { gx = S.tg.x; gy = S.tg.y; gh = S.tg.h; }
+    const dx = gx - S.x, dy = gy - S.y, dd = Math.hypot(dx, dy), dh = gh - S.h;
+    if (!S.land) { // 날기: 옆으로 일정 빠르기 + 높이는 가는 동안 맞추되 중간에 살짝 솟는다
+      const sp = (far ? 170 : 110) * dt, st = Math.min(dd, sp); if (dd > 0.01) { S.x += dx / dd * st; S.y += dy / dd * st; }
+      const lift = S.tg.k === 'orbit' ? 0 : Math.min(18, dd * 0.25), want = gh + lift; S.h += Math.max(-70 * dt, Math.min(70 * dt, want - S.h));
+      if (S.tg.k !== 'orbit' && dd < 1.5 && Math.abs(gh - S.h) < 1.5) { S.land = true; S.x = gx; S.y = gy; S.h = gh; S.until = t + (S.tg.k === 'ground' ? 5 + Math.random() * 4 : S.tg.k === 'head' ? 5 + Math.random() * 3 : 4 + Math.random() * 6); S.sit0 = t; } }
+    else if (S.tg.k === 'head') { S.x = gx; S.y = gy; S.h = gh; }
+    else if (S.tg.k === 'ground') { // 땅: 가끔 깡충 몇 걸음
+      if (!S.hop && Math.random() < dt * 0.5) { const a = Math.random() * 7; S.hop = { x: S.x + Math.cos(a) * 7, y: S.y + Math.sin(a) * 5, t1: t + 0.6 }; if (z && z.at(Math.floor(S.hop.x / TILE), Math.floor(S.hop.y / TILE)) === T.BLD) S.hop = null; }
+      if (S.hop) { const hx = S.hop.x - S.x, hy = S.hop.y - S.y, hd = Math.hypot(hx, hy), st = Math.min(hd, 14 * dt); if (hd > 0.2) { S.x += hx / hd * st; S.y += hy / hd * st; } if (hd <= 0.2 || t > S.hop.t1) S.hop = null; } }
+    const fly = !S.land, hopping = !!(S.land && S.hop), face = Math.abs(dx) > 0.5 && fly ? (dx > 0 ? 1 : -1) : S.fc || 1; S.fc = face;
+    const sitIdle = S.land && !hopping ? t - S.sit0 + 1.5 : 0; // pet3d IDLE 순서 (기웃·콕콕·푸드득)
+    if (t > S.chirp) { S.chirp = t + 5 + Math.random() * 8; S.say = { text: this.CH[Math.floor(Math.random() * this.CH.length)], until: t + 1.4 }; }
+    const talk = S.say && t < S.say.until, x = S.x, y = S.y, yb = y - S.h;
+    X.push({ top: 1, y: y + (S.h > 4 ? 60 : 0), d: () => {
+      if (Room3D.pq && c === ctx) { Room3D.curPose = { fly, act: fly ? 'fly' : null }; Room3D.curIdle = sitIdle; if (S.land && S.tg.ang != null) Room3D.curAng = S.tg.ang; /* 전깃줄엔 줄을 가로질러 (앞을 보고) 앉는다 */ const top = Room3D.put(c, 'sparrow', x, y, S.h, face, fly || hopping, t, n, 1, g => this.draw(g, 25, 40, 1, fly, t));
+        if (talk) { c.save(); Room3D.anchor(c, x, y, top + (n ? 0.4 : 0.05), 0); Net.label(c, S.say.text, x, y); c.restore(); } return; }
+      this.draw(c, x, yb, face, fly, t); if (n) Net.petLabel(c, n, x, yb - 9); if (talk) Net.label(c, S.say.text, x, yb - (n ? 15 : 10)); } });
+    return { y, d: () => { if (S.h > 40 && !fly) return; const a = Math.max(0.06, 0.24 - S.h / 160); c.fillStyle = `rgba(0,0,0,${a})`; c.beginPath(); c.ellipse(x, y, 2.6 - Math.min(1.2, S.h / 30), 1, 0, 0, 7); c.fill(); } };
+  },
+  draw(c, x, y, face, fly, t) { c.save(); c.translate(snapPx(c, x), snapPx(c, y)); c.scale(face < 0 ? -1 : 1, 1); const r = (X, Y, W, H, col) => { c.fillStyle = col; c.fillRect(X, Y, W, H); }; PET_DRAW.sparrow(r, 0, t, c, fly, 0, fly ? 'fly' : ''); c.restore(); },
+};
+Object.assign(PET_DRAW, {
+  sparrow(r, s, t, c, mv, idle = 0, a = '') { // 참새: 갈색 등에 검은 줄무늬, 밤색 머리, 흰 뺨에 검은 점, 회백색 배, 작은 검은 부리
+    const BR = '#8a5a34', BD = '#5a3a20', CH = '#9a4a2a', W = '#f0ece2', BE = '#d8d0c0', K = '#1a1a1a', LG = '#c8a080';
+    if (a === 'fly') { const f = Math.floor(t * 18) % 3;
+      r(-4.5, -6, 2, 1.2, BD); r(-2.5, -6.5, 4.5, 2.6, BR); r(-1.5, -4.2, 3, 0.8, BE); r(1.5, -7.5, 2.6, 2.6, CH); r(2.3, -6.2, 1.5, 1, W); r(3, -6.9, 0.6, 0.6, K); r(4, -6.6, 1, 0.8, K);
+      if (f === 0) { r(-1.5, -9.5, 2.6, 3.4, BD); r(-1, -10, 1.8, 0.8, BR); } else if (f === 1) { r(-2, -6.8, 3.6, 1.2, BD); } else { r(-1.5, -4.5, 2.6, 2.6, BD); }
+      return; }
+    const pk = !mv && Math.floor(t * 1.5) % 4 === 0 ? 1 : 0; // 콕콕
+    r(-1.2, -0.8, 0.6, 0.8, LG); r(0.6, -0.8, 0.6, 0.8, LG); // 발
+    r(-4.5, -3, 2, 1, BD); r(-5.5, -2.4, 1.2, 0.8, BD); // 꼬리
+    r(-2.5, -5, 5, 4.2, BR); r(-0.5, -3.5, 2.8, 2.8, BE); r(-2.5, -4.6, 3, 0.6, BD); r(-2.2, -3.4, 2.4, 0.6, BD); r(-2.8, -2.4, 2, 0.5, W); // 몸 + 날개 줄무늬
+    const hx = pk ? 0.8 : 0, hy = pk ? 1.6 : 0; r(0.5 + hx, -7.5 + hy, 3.2, 3, CH); r(1.6 + hx, -5.8 + hy, 1.8, 1.2, W); r(2 + hx, -5.4 + hy, 0.6, 0.6, K); r(2.4 + hx, -6.8 + hy, 0.6, 0.6, K); r(3.6 + hx, -6.4 + hy, 1, 0.8, K); r(1.2 + hx, -4.6 + hy, 1.6, 0.6, K); // 머리 · 흰 뺨 · 눈 · 부리 · 턱받이
+  },
+});
+
+/* ===================== 닭 · 멧돼지 펫 (v364, 사용자 2026-10-23 '닭,참새,멧돼지 넣자' · '멧돼지는 npc한테 돌진하는것도 하자' · 닭 알 낳기) =====================
+ * 닭: 주인이 오래 서 있으면 쪼그려 앉아 끙끙 → 꼬꼬댁! 하고 일어나면 뒤에 달걀. 달걀 둘레를 콕콕 쪼다가 다시 따라온다 (달걀은 90초 뒤 사라짐).
+ *     행인이 오면 모이를 뿌려 주고, 닭은 콕콕 쪼아 먹는다 (PNPC).
+ * 멧돼지: 행인이 다가오면 땅을 파며 킁킁 → 행인한테 돌진! 행인은 비명 지르며 도망 (PNPC).
+ * 3D 동작 이름은 pet3d.js 실사 모델 동작 (P.act: sit · scared · eat · run). 달걀은 Room3D 장면에 작은 메시로 (쥐구멍은 pet3d.js act) */
+const Farm = {
+  eggs: [], M: new Map(), fr: 0,
+  // ---- 3D 소품: 이번 장에 부른 것만 보이고, 안 부른 건 숨긴다
+  prop(key, make, x, y, h, ry) { const R = Room3D; if (!R.S || !window.T3) return; let m = this.M.get(key); if (!m) { m = make(T3.THREE); m.traverse(o => { if (o.geometry) o.geometry._keep = 1; }); this.M.set(key, m); }
+    if (m.parent !== R.S) R.S.add(m); m.position.set(x / TILE, h, y / TILE); m.rotation.y = ry || 0; m.visible = true; m.userData.fr = this.fr; },
+  sweep(t) { if (this.ft === t) return; this.ft = t; this.fr++; for (const [k, m] of this.M) { if (m.userData.fr < this.fr - 1) m.visible = false; if (m.userData.fr < this.fr - 600) { if (m.parent) m.parent.remove(m); this.M.delete(k); } } },
+  eggMesh(THREE) { const g = new THREE.SphereGeometry(1, 16, 12); g.scale(0.055, 0.072, 0.055); g.translate(0, 0.07, 0); const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xd8b088, roughness: 0.55 })); m.castShadow = true; return m; },
+  q3(c) { return typeof Room3D !== 'undefined' && !!Room3D.pq && typeof ctx !== 'undefined' && c === ctx; },
+  label(c, text, x, y, h, py) { Pets.extra.push({ y: y + 60, d: () => { if (this.q3(c)) { c.save(); Room3D.anchor(c, x, y, h, 0); Net.label(c, text, x, y); c.restore(); } else Net.label(c, text, x, y - py); } }); },
+  // ---- 닭 알 낳기
+  chicken(c, s, key, t, n, idle) {
+    this.sweep(t); this.eggDraw(c, t);
+    const E = s.egg; if (s.moving) { if (E) { s.egg = null; s.eggNext = t + 20; } return null; }
+    if (!E) { if (idle < 7 || t < (s.eggNext || 0) || this.eggs.filter(e => e.k === key).length >= 3) return null; s.egg = { t0: t, face: s.face || 1 }; return null; }
+    const e = t - E.t0, face = E.face; let act = 'sit', x = s.x, y = s.y, fc = face;
+    if (e < 4.4) { act = 'sit'; if (e > 0.8) this.label(c, Math.floor(e * 1.5) % 2 ? '꼬꼬…' : '끄응…', x, y, 0.75, 13); }
+    else if (e < 5.4) { act = 'scared'; this.label(c, '꼬꼬댁!', x, y, 0.85, 15); if (!E.laid) { E.laid = 1; this.eggs.push({ k: key, x: x - face * 6, y: y + 1, t0: t, z: Game.zone && Game.zone.id }); if (key.startsWith('me')) Sound.play('pop'); } }
+    else if (e < 8.6) { act = 'eat'; x = s.x + face * 1; fc = -face; if (e < 7.5) this.label(c, '꼬꼬꼬', x, y, 0.7, 12); } // 뒤돌아 달걀 둘레를 콕콕
+    else { s.egg = null; s.eggNext = t + 45 + Math.random() * 30; return null; }
+    return { y, d: () => Pets.draw(c, 'chicken', x, y, fc, false, t, n, 0, { act }) };
+  },
+  eggDraw(c, t) { const zid = Game.zone && Game.zone.id; this.eggs = this.eggs.filter(e => t - e.t0 < 90 && t >= e.t0); if (this.eggT === t) return; this.eggT = t;
+    for (const e of this.eggs) { if (e.z !== zid) continue; if (this.q3(c)) { this.prop('egg' + e.t0, T => this.eggMesh(T), e.x, e.y, 0, 0); continue; }
+      Pets.extra.push({ y: e.y, d: () => { const X = Math.round(e.x), Y = Math.round(e.y); c.fillStyle = 'rgba(0,0,0,.2)'; c.fillRect(X - 1.5, Y, 3, 0.8); c.fillStyle = '#d8b088'; c.fillRect(X - 1, Y - 2.5, 2, 3); c.fillRect(X - 1.5, Y - 1.8, 3, 1.8); c.fillStyle = '#f0d4b0'; c.fillRect(X - 0.6, Y - 2.2, 0.6, 0.8); } }); } },
+};
+// 행인과 놀기 (petnpc.js 틀): 닭은 모이 받아먹기, 멧돼지는 돌진
+Object.assign(PNPC, {
+  chicken: { dur: 5.6, say: ['닭이다! 모이 줄게~', '구구구~ 이리 와!', '꼬꼬야 이거 먹어'], run(S, e, A) {
+    const H = A.H, M = A.near(10), hd = A.hand();
+    if (e > 0.6 && e < 1.3) for (let i = 0; i < 5; i++) { const u = Math.min(1, (e - 0.6 - i * 0.05) / 0.5); if (u > 0) A.fly('seed', hd, { x: M.x + (i - 2) * 2, y: M.y + (i % 2) }, u, 6); }
+    if (e >= 1.3 && e < 4.4) for (let i = 0; i < 5 - Math.floor((e - 1.3) * 1.5); i++) A.item('seed', M.x + (i - 2) * 2 - A.side * 3, M.y + (i % 2));
+    A.snd(0.6, 'blip'); A.wsay(3.2, ['잘 먹네~', '귀엽다ㅎㅎ', '꼬꼬 배불러?'][Math.floor(S.r * 3)]); A.hearts(3.3, 4.6, M.x, M.y - 12);
+    const R = A.go([[1.0, H], [1.7, M], [4.4, M], [5.6, H]]); if (e >= 1.7 && e < 4.4) { R.pose = { act: 'eat' }; R.face = A.face; } A.say(1.9, 3.2, '꼬꼬꼬'); return R; } },
+  boar: { dur: 5.2, min: 30, say: ['어? 멧돼지 새끼다!', '헉 멧돼지?', '저거 진짜 멧돼지야?'], run(S, e, A) {
+    const H = A.H, M = A.near(4), hit = 1.55;
+    const R = A.go([[1.1, H], [hit, M], [2.9, M], [4.6, H]]);
+    if (e < 1.1) { R.pose = { act: 'eat' }; R.face = A.face; A.say(0.2, 1.1, '킁킁'); } // 앞발로 땅 파기
+    else if (e < hit) { R.mv = true; R.face = A.face; A.say(1.1, 2.0, '꾸에에엑!'); }
+    else if (e < 2.9) { R.face = A.face; R.pose = { act: 'idle' }; A.say(2.1, 2.9, '흥!'); }
+    A.snd(1.1, 'deny'); A.snd(hit, 'pop'); A.wsay(hit - 0.05, ['으아악! 멧돼지다!', '살려 주세요!!', '엄마야!!'][Math.floor(S.r * 3)], 1.6); A.free(hit, true);
+    if (e >= hit - 0.05 && e < hit + 0.25) { S.wdir = null; S.jit = true; } return R; } },
+});
+{ const it0 = PetNPC.item; PetNPC.item = function (c, kind, x, y, dir, amt, spin) { if (kind !== 'seed') return it0.apply(this, arguments); c.fillStyle = '#e8c060'; c.fillRect(Math.round(x * 2) / 2, Math.round(y * 2) / 2, 0.8, 0.6); }; }
+// 2D 그림 (3D 모델을 받기 전·2D 화면): 오른쪽 보는 모습, 발 = (0, 0)
+Object.assign(PET_ACT, {
+  chicken(r, s, t, c, mv, idle, f, pose) { const a = pose && pose.act; if (!a || a === 'idle') return false; c.save(); if (a === 'sit') c.translate(0, 1.5); else if (a === 'eat' && Math.floor(t * 4) % 2) c.rotate(0.35); f(r, 0, t, c, false, 0); if (a === 'scared') { const w = Math.floor(t * 16) % 2; r(-2, -8 - w * 2, 3, 2, '#f4f0e6'); } c.restore(); return true; },
+  boar(r, s, t, c, mv, idle, f, pose) { const a = pose && pose.act; if (a !== 'eat') return false; f(r, 0, t, c, false, 0); const k = Math.floor(t * 6) % 2; r(7, -1 - k, 1, 1, '#6a5030'); r(8.5, -0.5, 1, 1, '#6a5030'); return true; }, // 땅 파며 흙 튀기기
+});
+Object.assign(PET_DRAW, {
+  chicken(r, s, t) { // 닭: 흰 몸, 빨간 볏·턱볏, 노란 부리·다리
+    const W = '#f4f0e6', WD = '#d8d2c4', R = '#d83a2a', Y = '#f0b030', K = '#1a1a1a';
+    r(-1 + s, -2, 0.8, 2, Y); r(1 - s, -2, 0.8, 2, Y); r(-1.5 + s, -0.4, 1.8, 0.4, Y); r(0.5 - s, -0.4, 1.8, 0.4, Y); // 다리
+    r(-5, -7, 2, 3, W); r(-6, -8, 1.5, 2.5, WD); // 꼬리깃
+    r(-3.5, -6.5, 6.5, 4.5, W); r(-3, -2.5, 5.5, 0.8, WD); r(-2.5, -5.5, 3.5, 2, WD); // 몸 · 날개
+    r(1.5, -9.5, 3, 4, W); r(2, -11, 2, 1.5, R); r(1.5, -10.5, 1, 1, R); r(3.5, -10.5, 1, 1, R); // 머리 · 볏
+    r(4.5, -8.5, 1.5, 1, Y); r(3.8, -7.4, 1, 1.4, R); r(3.2, -9, 0.7, 0.7, K); // 부리 · 턱볏 · 눈
+  },
+  boar(r, s, t) { // 아기 멧돼지: 갈색 몸에 연한 줄무늬, 길쭉한 주둥이, 작은 귀
+    const B = '#6a4a30', BD = '#4a3220', BL = '#a07a50', N = '#3a2a20', K = '#111';
+    r(-6 + s, -3, 1.5, 3, BD); r(-3 - s, -3, 1.5, 3, BD); r(2 + s, -3, 1.5, 3, BD); r(4.5 - s, -3, 1.5, 3, BD); // 다리
+    r(-7, -9, 13, 6.5, B); r(-6.5, -9.5, 11, 0.5, BD); for (let i = 0; i < 4; i++) r(-6 + i * 3, -8, 2.2, 0.6, BL); r(-6, -3.4, 11, 0.6, BD); // 몸 · 줄무늬
+    r(-8, -8, 1.2, 0.8, BD); r(-8.6, -7.5, 0.8, 1.6, BD); // 꼬리
+    r(5, -9, 4, 5, B); r(5.5, -10.5, 1.5, 1.6, BD); r(9, -7, 2.5, 2.4, B); r(11.3, -6.8, 0.8, 2, N); r(10.4, -5.2, 0.8, 0.8, '#e8e0c8'); r(7, -8, 0.8, 0.8, K); // 머리 · 귀 · 주둥이 · 코 · 송곳니 · 눈
   },
 });
 
@@ -15093,7 +15304,7 @@ const PetRT = {
   /* ---- 그리기 공통 (v154, 사용자 2026-10-16 '펫 배틀 퀄리티 더 올리자, 너무 투박해'): 큰 펫, 관중·무대, 효과(먼지·별·땀·색종이), 화면 흔들림, 이름표 카드, 카운트다운·승리 연출 ---- */
   view(W, H, B) { const s = Math.min(W / 320, H / 180), ox = (W - 320 * s) / 2, oy = (H - 180 * s) / 2, mir = !!B.mir; return { s, ox, oy, mir, k: Math.max(2, 2 * Math.round(s * 0.9)), X: x => ox + (mir ? 320 - x : x) * s, Y: y => oy + y * s, F: f => (mir ? -f : f), SX: x => ox + x * s }; },
   petK(kind, base) { return Math.max(2, 2 * Math.round(base * (['mouse', 'beetle', 'mantis', 'lizard'].includes(kind) ? 2 : ['trex', 'giraffe', 'elephant'].includes(kind) ? 0.5 : 1) / 2)); },
-  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7, snowman: 20, croc: 7, dora: 18, sponge: 18, gary: 11, parrot: 11 }[kind] || 14; }, // 펫 키 (펫 픽셀)
+  petH(kind) { return { trex: 30, giraffe: 31, elephant: 19, dolphin: 16, turtle: 11, mouse: 8, beetle: 8, mantis: 11, lizard: 7, snowman: 20, croc: 7, dora: 18, sponge: 18, gary: 11, parrot: 11, sparrow: 5, chicken: 10, boar: 13 }[kind] || 14; }, // 펫 키 (펫 픽셀)
   pet(c, V, P, x, y, face, mv, t, al, sx, rot) { // sx: 화면 x를 직접 줄 때
     const k = this.petK(P.kind, V.k); c.save(); c.globalAlpha = al == null ? 1 : al; c.translate(Math.round(sx != null ? sx : V.X(x)), Math.round(V.Y(y))); if (rot) c.rotate(rot); c.scale(k, k); PetEvo.with(P.kind, PetEvo.stOf(P.lv), false, () => Pets.draw(c, P.kind, 0, 0, sx != null ? face : V.F(face), mv, t, '', 0)); c.restore();
   },
@@ -17763,8 +17974,6 @@ PetRT.arena.big3 = () => Arena3J.st === 2 && Arena3J.on(); // v296: 새 3D 그�
     Arena3J.hide(); const cv = glDraw0.call(this, R, G, B, ci, cam, t, dt); if (cv) cv.style.display = ''; return cv;
   }; }
 
-/* v363 폰 그래픽 메모리 정리(Perf.trim) 뺌: 다시 올릴 때 그림이 깨져 폰에서 사람이 사라졌다 */
-
 /* ===================== 실사 집 바닥·벽 (v329, 사용자 '2D인거 전부 3D로 바꿔' · '리얼리스틱 팩으로') =====================
  * 내 집 3D 바닥을 ambientCG·Poly Haven 바닥 사진(색·노멀·거칠기, CC0)으로 그린다. 바닥 글자(거실·욕실·현관·베란다·마당)와 집 톤마다 재질이 다르다.
  * 2D 집 그림(HomeIn.draw 바닥만)의 floor() 자리에 끼워 넣어서 문턱·러그·얼룩은 그대로 위에 그려진다. 벽은 칠한 석고 노멀.
@@ -17821,6 +18030,12 @@ const Room3D = {
     if (!window.T3) { Arena3J.load(); return false; }
     try { this.init(); if (this.softNote()) return false; if (typeof Hero3D !== 'undefined') Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); if (typeof Car3D !== 'undefined') Car3D.load(); if (typeof Ride3D !== 'undefined' && rm.def && rm.def.map && rm.def.map.some(r => r.includes('V'))) Ride3D.load(); this.build(rm); return true; } catch (e) { console.warn('room3d', e); this.bad = 1; this.show(false); return false; }
   },
+  /* v363 (렉 시연 점검, 사용자 '건물 들어갔다나올때도 체크'): 문이 닫혀 검은 동안 바닥 사진·가구 모델이 다 올 때까지 (길어야 2.5초) 기다렸다가 연다.
+   * 예전엔 열고 나서 모델이 하나씩 올 때마다 방을 통째로 다시 세우고 그림을 다시 올려 들어가자마자 3~4번 멈췄다. 이제 다시 세우기·그림 올리기는 검은 화면 뒤에서 끝난다. */
+  async prepWait(rm, ms = 2500) {
+    if (!rm || !this.on() || this.bad || !window.T3) return; const t0 = performance.now(), fr = () => new Promise(r => requestAnimationFrame(r));
+    const busy = () => (typeof RealFloor !== 'undefined' && RealFloor.st === 1) || (typeof RoomReal !== 'undefined' && Object.values(RoomReal.rs).includes(1)) || (typeof Props3D !== 'undefined' && Props3D.st === 1) || this.room !== rm;
+    await fr(); await fr(); while (busy() && performance.now() - t0 < ms) await fr(); await fr(); await fr(); },
   // v309 느릴 때 화질 낮추기 (사용자 '해상도가 너무 떨어지는데'): 해 그림자 먼저, 그다음 해상도 (0.75배까지만).
   // 낮춘 뒤 2초 지나도 15% 넘게 빨라지지 않으면 (그래픽카드 탓이 아니면) 되돌리고 한동안 다시 안 낮춘다
   adapt(slow, sun) { // v361 (폰 성능 점검): 해 그림자를 끄고 켜면 재질 셰이더 15개쯤을 한꺼번에 다시 만들어 폰에서 1~3초 멈췄다 → 그림자는 켠 채로 두고 두 장에 한 번만 다시 그린다
@@ -17867,7 +18082,15 @@ const Room3D = {
   ball(par, x, y, z, r, col, sy = 1) { const { THREE } = T3, m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 2), this.toon(col, { flatShading: true })); m.position.set(x, y, z); m.scale.y = sy; m.castShadow = true; par.add(m); return m; },
   cvTex(w, h, fn) { const { THREE } = T3, c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; },
   /* ---- 방 한 번 세우기 (같은 방이면 그대로) ---- */
-  dispose() { if (!this.S) return; this.S.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); for (const m of [].concat(o.material || [])) { if (m.map && m.map._own) m.map.dispose(); if (m.userData.own) { for (const t of [m.normalMap, m.roughnessMap]) if (t && t._own) t.dispose(); m.dispose(); } } }); this.S = null; this.A = new Map(); },
+  /* v363 (사용자 '건물 들어갔다 나올때도 체크' · 렉 시연 점검): 거리 → 가게로 들어갈 때 거리 장면(지은 건물·가로수·신호등·사람)을 버리지 않고 맡겨 둔다.
+   * 예전엔 들어갈 때 다 버리고 나올 때 건물을 처음부터 다시 짓고 그림을 다시 올려서 나올 때 몇 초씩 멈췄다. 다른 구로 가면 그때 버린다. */
+  ZK: ['S', 'room', 'A', 'zb', 'zw', 'zc', 'zid', 'zsun', 'ztree', 'zti', 'zp', 'zpWait', 'zpVer', 'zsg', 'zsgT', 'zpsl', 'zsp', 'zbus', 'zsl', 'zEve', 'zbg', 'zbZ', 'zpl', 'zplZ', '_poleS', '_poleZ'],
+  zSwap(st) { const o = {}; for (const k of this.ZK) { o[k] = this[k]; this[k] = st[k]; } return o; },
+  zUnstash(z) { const st = this.zst; if (!st) return false; this.zst = null; if (st.room === z) { this.dispose(); this.zSwap(st); return true; } // 같은 구로 돌아옴 → 그대로 다시 건다
+    const cur = this.zSwap(st); this.dispose(true); this.zSwap(cur); return false; }, // 다른 구 → 맡겨 둔 장면은 버린다
+  dispose(force) { if (!this.S) return;
+    if (!force && this.zb && this.room && this.room.buildings && this.S && this.zbZ === this.room) { const z = this.room; if (this.zst) this.zUnstash(null); this.zst = this.zSwap({ A: new Map(), zb: new Map(), zw: [], zc: [] }); this.zst.t = performance.now(); this.zst.room = z; this.S = null; return; }
+    this.S.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) o.skeleton.dispose(); /* v363 사람 뼈 그림 (안 버리면 드나들 때마다 쌓임. 다시 그리면 three가 새로 만든다) */ for (const m of [].concat(o.material || [])) { if (m.map && m.map._own) m.map.dispose(); if (m.userData.own) { for (const t of [m.normalMap, m.roughnessMap]) if (t && t._own) t.dispose(); m.dispose(); } } }); this.S = null; this.A = new Map(); },
   build(rm) {
     if (this.S && this.room === rm) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
@@ -18205,7 +18428,7 @@ const Room3D = {
   // 펫 하나 세우기: (x, y) 바닥 자리 · lift 높이 (게임 픽셀) · paint(s) = 오른쪽 보는 그림을 스크래치 (25, 40)에 발로 그리기. 이름표 위치(3D 높이)를 돌려준다
   put(c, kind, x, y, lift, face, moving, t, tag, big, paint) {
     const people = !!PET_PEOPLE[kind], h = PetRT.petH(kind) / TILE * 1.1, q = { kind, x, y, lift: lift / TILE, face, moving, people, h, big };
-    const st = this.curSt | 0, model = !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind, st); this.noModel = false; this.curSt = 0; q.pose = this.curPose; this.curPose = null; q.idle = this.curIdle || 0; this.curIdle = 0; q.st = st; q.deco = this.curDeco; this.curDeco = null; q.dk = q.deco ? JSON.stringify(q.deco) : '';
+    const st = this.curSt | 0, model = !people && !this.noModel && typeof Pet3D !== 'undefined' && Pet3D.has(kind, st); this.noModel = false; this.curSt = 0; q.pose = this.curPose; this.curPose = null; q.idle = this.curIdle || 0; this.curIdle = 0; q.ang = this.curAng; this.curAng = null; q.st = st; q.deco = this.curDeco; this.curDeco = null; q.dk = q.deco ? JSON.stringify(q.deco) : '';
     if (people) { const sp = 'pet:' + kind; Sprites.setPal(sp, PET_PEOPLE[kind]); q.pal = Sprites.PAL[sp]; }
     else if (model) { q.m = 1; q.top = Pet3D.topOf(kind, h); } // v312 블렌더 펫 모델 (pet3d.js)
     else { const pl = this.pLast || (this.pLast = new Map()), lk = kind + '|' + (tag || ''), b0 = this.pc.built | 0, t0 = performance.now(); this.pc.lock = pl.has(lk) && performance.now() - (this.pbT || 0) < 160; // v310 시간으로: 컴퓨터에서 펫 하나가 한 장에 13~19ms 쓰던 것 (진화한 펭귄은 매번 모양이 달라서)
@@ -18230,7 +18453,7 @@ const Room3D = {
       if (q.m) { let H = this.A.get(key); if (!H || !H.model || H.k !== q.kind || H.st !== q.st || H.dk !== q.dk || !!H.real !== Pet3D.real(q.kind, q.st, q.deco)) { if (H) this.S.remove(H.root); H = Pet3D.make(q.kind, q.h, q.st, q.deco); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr;
         const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz, d = Math.hypot(dx, dz); H.lx = X; H.lz = Z; H.sp = (H.sp || 0) * 0.85 + (d < 2 ? d / Math.max(0.008, dt) : 0) * 0.15;
         if (H.ang == null) H.ang = q.face < 0 ? Math.PI : 0;
-        let want = H.ang; if (d > 0.004 && d < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face && !q.moving) want = q.face < 0 ? Math.PI : 0;
+        let want = H.ang; if (q.ang != null) want = q.ang; else if (d > 0.004 && d < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face && !q.moving) want = q.face < 0 ? Math.PI : 0;
         let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
         H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.root.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05;
         Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, Object.assign({ idle: q.idle, wall: typeof q.pose === 'number' ? q.pose : null, ride: q.pose === 'ride' }, q.pose && typeof q.pose === 'object' ? q.pose : null)); return; }
@@ -18349,6 +18572,10 @@ Object.assign(Room3D, {
   },
   /* ---- 바닥: 사진 + 빛 웅덩이(lightMap) + 그늘(aoMap) ---- */
   rrFloor(rm, P, W, H, at, solid, dark) {
+    /* v363 (렉 시연 점검): 가구 모델이 하나씩 도착할 때마다 방을 다시 세우는데, 바닥 사진 5장(1536×768)을 매번 다시 굽고 그래픽 카드에 다시 올려서 들어갈 때 여러 번 멈췄다.
+     * 같은 방·같은 밝기면 바닥(재질·그림)은 그대로 다시 쓴다. 거리로 나가거나 다른 방이면 그때 버린다 (rrFloorFree). */
+    const fc = this.rrFC; if (fc && fc.rm === rm && fc.dark === dark && fc.W === W && fc.H === H) { const m = new T3.THREE.Mesh(fc.gm, fc.mt); m.receiveShadow = true; m.rotation.x = -Math.PI / 2; m.position.copy(fc.pos); return m; }
+    this.rrFloorFree();
     const { THREE } = T3, R = RoomReal, px = Math.min(96, Math.floor(4096 / Math.max(W, H))), cw = W * px, ch = H * px;
     const fk = { board: 'oak', tile: 'marble', stone: 'trav', carpet: 'carpet', casino: 'carpet', grass: 'grass' }[P.fl] || 'wood', cover = { oak: 2, marble: 2, trav: 2, carpet: 2, grass: 2, wood: 2 }[fk];
     const mk = fill => { const c = document.createElement('canvas'); c.width = cw; c.height = ch; const x = c.getContext('2d'); if (fill) { x.fillStyle = fill; x.fillRect(0, 0, cw, ch); } return [c, x]; };
@@ -18377,15 +18604,16 @@ Object.assign(Room3D, {
     for (let y = 2.2; y < H - 1; y += 3) for (let x = 2.5; x < W - 1; x += Math.max(3, (W - 3) / Math.max(1, Math.round((W - 3) / 3.5)))) lamps.push([x, y]);
     for (const [x, y] of lamps) { const g = lx.createRadialGradient(x * px, y * px, 0, x * px, y * px, px * 2.6); const c0 = dark === 'casino' ? 'rgba(255,190,120,.55)' : dark ? 'rgba(200,140,255,.45)' : 'rgba(255,246,230,.75)'; g.addColorStop(0, c0); g.addColorStop(1, 'rgba(255,246,230,0)'); lx.fillStyle = g; lx.fillRect(0, 0, cw, ch); }
     if (!dark) for (const wx of this.rrWinX(rm, P, W)) { const g = lx.createLinearGradient(0, px, 0, px * 4.2); g.addColorStop(0, 'rgba(220,236,255,.65)'); g.addColorStop(1, 'rgba(220,236,255,0)'); lx.fillStyle = g; lx.beginPath(); lx.moveTo((wx.x - wx.w / 2) * px, px); lx.lineTo((wx.x + wx.w / 2) * px, px); lx.lineTo((wx.x + wx.w / 2 + 0.9) * px, px * 4.2); lx.lineTo((wx.x - wx.w / 2 + 0.6) * px, px * 4.2); lx.fill(); }
-    const T = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t._own = 1; return t; };
+    const T = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }; // v363 바닥 그림은 rrFC가 직접 버린다 (_own 아님)
     const mt = new THREE.MeshStandardMaterial({ map: T(cc, true), normalMap: T(nc), roughnessMap: T(rc), aoMap: T(ac), aoMapIntensity: 1, lightMap: T(lc, true), lightMapIntensity: dark ? 1.6 : 1.25, roughness: 1, metalness: 0, envMapIntensity: dark ? 0.5 : 0.8 });
-    mt.normalScale.set(0.8, 0.8); mt.userData.own = 1; mt.userData.rrEnv = dark ? 2 : 1;
-    this.rrOld.push(mt.aoMap, mt.lightMap);
+    mt.normalScale.set(0.8, 0.8); mt.userData.rrEnv = dark ? 2 : 1;
     // 바닥 판은 벽 안쪽 면까지만 (얇은 벽 바깥은 비워 둔다), UV는 칸 지도 그대로
     const t = RR_T, x0 = 1 - t, x1 = W - 1 + t, z0 = 1 - t, z1 = H - 1 + t, gm = new THREE.PlaneGeometry(x1 - x0, z1 - z0), pp = gm.attributes.position, uv = gm.attributes.uv;
     for (let i = 0; i < pp.count; i++) { const wx = (x0 + x1) / 2 + pp.getX(i), wz = (z0 + z1) / 2 - pp.getY(i); uv.setXY(i, wx / W, 1 - wz / H); }
-    const fm = new THREE.Mesh(gm, mt); fm.rotation.x = -Math.PI / 2; fm.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); fm.receiveShadow = true; return fm;
+    const fm = new THREE.Mesh(gm, mt); fm.rotation.x = -Math.PI / 2; fm.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); fm.receiveShadow = true; gm._keep = 1;
+    this.rrFC = { rm, dark, W, H, mt, gm, pos: fm.position.clone() }; return fm;
   },
+  rrFloorFree() { const fc = this.rrFC; if (!fc) return; this.rrFC = null; for (const k of ['map', 'normalMap', 'roughnessMap', 'aoMap', 'lightMap']) if (fc.mt[k]) fc.mt[k].dispose(); fc.mt.dispose(); fc.gm.dispose(); },
   // 뒷벽 창 자리 (간판 양쪽 대칭). 게임장·카지노·현장엔 창 없음
   rrWinX(rm, P, W) { if (P.deco === 'neon' || P.deco === 'casino' || P.sign === false || P.deco === 'fence') return []; const sw = this.rrSignW(rm, P), side = (W - 2 - sw) / 2; if (side < 2.2) return [];
     const w = Math.min(2.6, side - 1.1); return [{ x: 1 + side / 2, w }, { x: W - 1 - side / 2, w }]; },
@@ -18785,7 +19013,7 @@ Object.assign(Room3D, {
   zSq() { return Math.sin(Z3_EL); },
   /* ---- 구 한 번 세우기: 빛·그림자 받는 땅·가로수 (건물은 보이는 것만 그때그때) ---- */
   zBuild(z) {
-    if (this.S && this.room === z) return; this.dispose(); const { THREE } = T3;
+    if (this.S && this.room === z) return; if (this.rrFloorFree) this.rrFloorFree(); if (this.zUnstash(z)) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
     if (!this.gcv) { const g = this.gcv = document.createElement('canvas'); g.id = 'zground'; g.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; this.cv.parentNode.insertBefore(g, this.cv); this.gctx = g.getContext('2d'); }
     if (!this.ocam) this.ocam = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.5, 300);
@@ -18852,13 +19080,21 @@ Object.assign(Room3D, {
     if (!need.length) { if (this.zWarm) this.zWarmEnd(); return; }
     need.sort((a, b) => (this.zb.has(a) ? 1e6 : 0) + d2(a) - (this.zb.has(b) ? 1e6 : 0) - d2(b)); // 없는 것 먼저, 가까운 것 먼저
     const warm = this.zWarm && now - this.zWarm0 < 12000, budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
-    let made = 0;
-    for (const id of need) { if (made && performance.now() - now > budget) break; const b = z.buildings[id], old = this.zb.get(id), e = this.zBld(b, plOf[id]);
+    let made = 0, J = this.zJob; if (J && (J.z !== z || J.bg !== bg || J.eve !== State.evening || !need.includes(J.id))) J = this.zJob = null;
+    /* v363 (렉 시연 점검): 화면 안 건물은 지금 한 번에, 달리는 앞쪽(아직 화면 밖) 새 건물은 한 채를 단계별로 여러 장면에 나눠 짓는다 (zJob) */
+    const onS = b => b.x < cx + vw / 2 + 4 && b.x + b.w > cx - vw / 2 - 4 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 4;
+    const fin = (id, e) => { const old = this.zb.get(id);
       if (e.top != null) e.H = Math.max(e.H || 0, e.top); else try { e.H = Math.max(e.H || 0, new T3.THREE.Box3().setFromObject(e.m).max.y); } catch (er) {} /* v346 건물 1층을 높여서 (건물 스레드) 보이는 높이로 가림 판단 · v362 실사 건물은 makeReal이 top·nv를 알려 줌 (Box3·traverse 생략) */
       if (!e.nv) { let nv = 0; e.m.traverse(o => { const g = o.geometry; if (g && g.attributes && g.attributes.position) nv += g.attributes.position.count; }); e.nv = nv; }
-      if (old) { e.o = old.o; this.zDrop(old); } this.S.add(e.m); this.zb.set(id, e); made++; }
+      if (old) { e.o = old.o; this.zDrop(old); } this.S.add(e.m); this.zb.set(id, e); made++; };
+    for (const id of need) { if (made && performance.now() - now > budget) break; const b = z.buildings[id];
+      if (!warm && !this.zb.has(id) && !onS(b)) continue;
+      let e; if (J && J.id === id) { e = this.zJobRun(J, Infinity); this.zJob = J = null; } else e = this.zBld(b, plOf[id]); fin(id, e); }
+    if (!warm) { if (!J) { const id = need.find(i => !this.zb.has(i)); if (id != null) { const b = z.buildings[id], g = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeG ? Bld3D.makeG(this, b, plOf[id], bWallH(b) / TILE * Z3_BH) : null; if (g) J = this.zJob = { id, g, pl: plOf[id], z, bg, eve: State.evening }; } }
+      if (J && performance.now() - now < budget) { const e = this.zJobRun(J, now + budget); if (e) { this.zJob = null; fin(J.id, e); } } }
     if (this.zWarm) { if (!warm) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); }
   },
+  zJobRun(J, until) { try { let r; do { r = J.g.next(); if (r.done) return r.value; } while (performance.now() < until); return null; } catch (er) { console.warn('bld3d', er); this.zJob = null; return this.zBld(J.z.buildings[J.id], J.pl); } },
   zWarmShow(left, made) { this.zWarmD = (this.zWarmD || 0) + made; clearTimeout(this.zwT); this.zwT = setTimeout(() => this.zWarmEnd(), 600); /* 바깥을 안 그리면 (실내로 들어가면) 바로 걷는다 */ let el = document.getElementById('zLoad'); if (!el) { if (!document.getElementById('zLoadCss')) { const st = document.createElement('style'); st.id = 'zLoadCss'; st.textContent = '#zLoad{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(14,18,24,.78);pointer-events:auto}#zLoad .b{width:min(280px,80vw);text-align:center;color:#f2ead8;font:600 14px/1.4 "IBM Plex Sans KR",sans-serif}#zLoad b{display:block;font-size:17px;margin-bottom:10px}#zLoad i{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}#zLoad s{display:block;height:100%;width:0;background:#e8c34a;transition:width .15s}#zLoad small{display:block;margin-top:8px;opacity:.75}'; document.head.appendChild(st); } el = document.createElement('div'); el.id = 'zLoad'; el.innerHTML = '<div class="b"><b>동네 불러오는 중</b><i><s></s></i><small></small></div>'; document.body.appendChild(el); }
     const done = this.zWarmD, all = done + left, pct = all ? Math.round(done / all * 100) : 100; el.querySelector('s').style.width = pct + '%'; el.querySelector('small').textContent = `건물 ${done} / ${all}`; },
   zWarmEnd() { this.zWarm = 0; this.zWarm0 = 0; this.zWarmD = 0; const el = document.getElementById('zLoad'); if (el) el.remove(); },
@@ -19007,9 +19243,9 @@ Object.assign(Room3D, {
     this.zw.forEach((w, i) => { const H = this.actor(w.key, w.pal || Sprites.PAL[w.sprite] || Sprites.PAL.walker1 || Sprites.PAL.player, w, t, dt, i * 1.3); if (w.low && !H.hero) H.root.position.y -= 0.25;
       if (w.ride) { const hh = H.hero ? HERO_H * 1.18 : 1.3; H.root.position.y = w.ride.hatch ? w.ride.h - hh * 0.62 : w.ride.stand ? w.ride.h : w.ride.h - hh * 0.2; H.ang = -w.ride.a; H.root.rotation.set(0, H.ang, 0); if (H.hero && (w.ride.pose || w.ride.grip || w.ride.leg)) Hero3D.ridePose(H, w.ride.pose, t, w.ride.mv, w.ride.grip, w.ride.leg); if (H.hero && (w.ride.hatch || w.ride.noLeg)) Hero3D.hideLegs(H); this.rope(H, H.hero && w.ride.rope); /* v321 노 젓기 · 밧줄 */ if (!w.ride.gnd) { H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.rideSh = 1; } } else { if (H.hero && H.fdw != null) { Hero3D.fdOff(H); H.fdw = null; } /* 내리면 발 딛기 몸 위치 되돌리기 */ if (H.rideSh) { H.rideSh = 0; H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = true; }); } if (H.rp) this.rope(H, null); } }); /* v317 배·탱크에 탄 사람: 앉기 (탱크는 해치에 서서 상체만) */
     this.zc = this.zMatch(zq.c, this.zc, (p, q) => p.col === q.col && p.kind === q.kind && p.len === q.len, 48, 'zc');
-    for (const c of this.zc) { if (c.ride) { let H = this.A.get(c.key); if (!H) { H = { root: Ride3D.make(c.ride), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); } H.seen = this.fr; /* v317 배는 둥실, 탱크는 서 있으면 포탑이 천천히 두리번 */
-        const water = RIDE_WATER.has(c.ride), mv = c.spd > 4, ph = c.key.length * 1.7; const hv = RIDE3[c.ride].hover; if (hv) H.hv = (H.hv || 0) + ((mv ? hv : 0) - (H.hv || 0)) * Math.min(1, dt * 1.6); /* v345 용: 달리면 살짝 떠서 (사용자 '완전 공중은 아니고'), 서면 내려앉기 */
-        H.root.position.set(c.x / TILE, water ? 0.03 + Math.sin(t * 2.2 + ph) * 0.035 : hv ? H.hv * (1 + Math.sin(t * 2.6 + ph) * 0.12) : 0, c.y / TILE); const ln = Ride3D.LEAN[c.ride]; let lx = 0, lz = 0; if (ln) { const da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), v = mv ? c.spd / TILE : 0, w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제처럼: 두 바퀴는 도는 쪽으로 눕고 (tan = 속도 × 회전 / 중력), 차는 바깥으로 살짝 쏠리고 출발하면 앞이 들리고 서면 숙인다 */
+    for (const c of this.zc) { if (c.ride) { let H = this.A.get(c.key); if (!H) { H = { root: Ride3D.make(c.ride), car: 1 }; this.S.add(H.root); this.A.set(c.key, H); } H.seen = this.fr; if (!H.wok) { H.wok = Ride3D.warmUp(this, H.root, c.ride); H.root.visible = H.wok; } /* v363 처음 타는 탈것: 셰이더·그림을 미리 올린 뒤 보인다 */ /* v317 배는 둥실, 탱크는 서 있으면 포탑이 천천히 두리번 */
+        const water = RIDE_WATER.has(c.ride), mv = c.spd > 4, ph = c.key.length * 1.7; const hv = RIDE3[c.ride].hover; if (hv) H.hv = (H.hv || 0) + ((mv ? hv : 0) - (H.hv || 0)) * Math.min(1, dt * 1.6); /* v345 용: 달리면 살짝 떠서 (사용자 '완전 공중은 아니고'), 서면 내려앉기 · v346 천사 날개 (사용자 '쫌 더 높이 날아야'): 날면 보통 건물(3~5층) 지붕 위로, 서면 땅에 내려앉는다 */
+        H.root.position.set(c.x / TILE, water ? 0.03 + Math.sin(t * 2.2 + ph) * 0.035 : hv ? H.hv + Math.sin(t * 2.6 + ph) * Math.min(H.hv * 0.12, 0.15) : 0, c.y / TILE); const ln = Ride3D.LEAN[c.ride]; let lx = 0, lz = 0; if (ln) { const da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), v = mv ? c.spd / TILE : 0, w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제처럼: 두 바퀴는 도는 쪽으로 눕고 (tan = 속도 × 회전 / 중력), 차는 바깥으로 살짝 쏠리고 출발하면 앞이 들리고 서면 숙인다 */
           const want = ln > 0 ? (mv ? Math.max(-0.55, Math.min(0.55, Math.atan(v * w * 0.06))) : -0.09) /* 서면 딛은 왼발 쪽으로 살짝 기운다 */ : Math.max(-0.05, Math.min(0.05, -v * w * 0.006)); H.ln = (H.ln || 0) + (want - (H.ln || 0)) * Math.min(1, dt * 5); lx = H.ln;
           if (ln < 0) { const ac = dt > 0 ? (v - (H.pv || 0)) / dt : 0; H.pv = v; H.pt = (H.pt || 0) + (Math.max(-0.03, Math.min(0.03, ac * 0.004)) - (H.pt || 0)) * Math.min(1, dt * 4); lz = H.pt; } }
         if (water) { const Bt = Ride3D.BOAT[c.ride] || Ride3D.BOAT.lifeboat, f = Bt.p, v = mv ? c.spd / TILE : 0, da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제 배처럼: 큰 범선은 느리고 작게 흔들리고 돌면 바깥으로, 모터보트는 안으로 눕고 빨리 달리면 뱃머리가 든다 */
@@ -19019,7 +19255,7 @@ Object.assign(Room3D, {
         const fl = RIDE3[c.ride].fly; if (fl) { H.fl = (H.fl || 0) + ((mv ? Math.min(1, c.spd / (TILE * 4)) : 0) - (H.fl || 0)) * Math.min(1, dt * 3); const th = fl * H.fl, hc = RIDE3[c.ride].y * RIDE3[c.ride].L / TILE + HERO_H * 0.55; /* v346 날개: 날면 실제 비행처럼 몸을 앞으로 눕힌다 (몸 가운데를 축으로, 빠를수록 더) */
           H.root.rotation.z -= th; H.root.position.x -= Math.cos(c.a) * hc * Math.sin(th); H.root.position.z -= Math.sin(c.a) * hc * Math.sin(th); H.root.position.y += hc * (1 - Math.cos(th)); }
         const BK = H.root.userData.brk; if (BK) { const v = Math.abs(c.spd) / TILE, ac = dt > 0 && H.bv != null ? (v - H.bv) / dt : 0; H.bv = v; const on = v < 0.3 || ac < -0.8 ? 1 : 0; H.bk = (H.bk || 0) + (on - (H.bk || 0)) * Math.min(1, dt * 10); for (const mt of BK) mt.emissiveIntensity = 0.15 + H.bk * 1.1; } /* 미등은 늘 살짝, 밟으면 밝게 */
-        Ride3D.anim(H.root, t, mv, c.spd); if (Ride3D.WFX[c.ride]) Ride3D.water(H.root, c.ride, t, c.spd); if (Ride3D.SFX[c.ride]) Ride3D.smoke(H.root, c.ride, t, c.spd); const tur = H.root.userData.tur; if (tur && !H.root.userData.spin) { H.tr = H.tr || 0; const want = mv ? 0 : Math.sin(t * 0.5 + ph) * 0.7; H.tr += (want - H.tr) * Math.min(1, dt * 2); if (RIDE3[c.ride].sf) Ride3D.turSet(H.root, H.tr); else tur.rotation.y = H.tr; } continue; }
+        Ride3D.anim(H.root, t, mv, c.spd); if (Ride3D.WFX[c.ride]) { Ride3D.water(H.root, c.ride, t, c.spd); Ride3D.wake3(H.root, c.ride, t, c.spd); } if (Ride3D.SFX[c.ride]) Ride3D.smoke(H.root, c.ride, t, c.spd); const tur = H.root.userData.tur; if (tur && !H.root.userData.spin) { H.tr = H.tr || 0; const want = mv ? 0 : Math.sin(t * 0.5 + ph) * 0.7; H.tr += (want - H.tr) * Math.min(1, dt * 2); if (RIDE3[c.ride].sf) Ride3D.turSet(H.root, H.tr); else tur.rotation.y = H.tr; } continue; }
       let H = this.A.get(c.key); if (H && H.old && Car3D.ready()) { this.S.remove(H.root); H = null; } if (!H) { const v = c.skin ? 0 : [...c.key].reduce((h, ch) => h * 31 + ch.charCodeAt(0) | 0, 7) >>> 0; H = { root: this.car3(c.len, c.wid, c.col, c.stripe, c.kind, v), car: 1, old: !Car3D.ready() }; this.S.add(H.root); this.A.set(c.key, H); } // v315 차 모델 (늦게 받아지면 바꿔 끼운다)
       H.seen = this.fr; H.root.position.set(c.x / TILE, 0, c.y / TILE); H.root.rotation.y = -c.a; }
     for (const w of this.zw) { const c = w.ride && w.ride.ce, HR = c && c.key != null && this.A.get(c.key), H = HR && this.A.get(w.key); if (!H) continue; /* v337 사용자 '배같은경우도 신경써서': 둥실대는 배 · 날갯짓하는 용 위에 탄 사람도 같이 */
@@ -19080,15 +19316,15 @@ const RIDE3 = {
   boat: { sf: 1, v: 2, L: 30, s3: 1.2, y: 0.1, leg: [0.1, -0.6], seats: [[-0.1, 0, 0.1], [-0.4, 0, 0.1], [0.38, 0, 0.1]] }, // v345 실사 나무 보트 (가로 의자에)
   sailboat: { sf: 1, v: 2, L: 44, s3: 1.3, y: 0.13, leg: [0.1, -0.6], seats: [[-0.38, 0, 0.153], [-0.25, 0.08], [-0.25, -0.08], [0.12, 0, 0.229]] }, // v345 실사 요트 (뒤 갑판 키 잡는 자리)
   viking: { sf: 1, v: 2, L: 60, s3: 1.5, y: 0.07, leg: [0.1, -0.4], seats: [[-0.3, 0.06], [-0.2, -0.08], [-0.1, 0.08], [0.1, -0.08], [0.2, 0.08], [-0.2, 0.08], [0.1, 0.08], [0.3, 0]] }, // v345 실사 바이킹 배 (방패·노)
-  galleon: { sf: 1, v: 2, L: 62, s3: 1.7, y: 0.152, stand: 1, seats: [[-0.37, 0.055, 0.3], [-0.15, 0.06], [0, -0.06], [0.08, 0.06], [-0.2, -0.06], [-0.05, 0.06], [0.1, -0.06], [0.22, 0, 0.246]] }, // v345 실사 범선: 선장은 뒤 높은 갑판
+  galleon: { sf: 1, v: 3, L: 62, s3: 1.7, y: 0.152, stand: 1, seats: [[-0.37, 0.055, 0.3], [-0.15, 0.06], [0, -0.06], [0.08, 0.06], [-0.2, -0.06], [-0.05, 0.06], [0.1, -0.06], [0.22, 0, 0.246]] }, // v345 실사 범선: 선장은 뒤 높은 갑판
   cruise: { sf: 1, v: 2, L: 90, s3: 1.6, y: 0.06, seats: [[0.3, 0, 0.133], [-0.1, 0.04], [-0.1, -0.04], [0, 0.04], [0, -0.04], [0.1, 0.04], [0.1, -0.04], [-0.2, 0, 0.157]] }, // v345 실사 유람선: 선장은 앞 조타실 위
   tank: { sf: 1, v: 5, L: 44, s3: 1.3, y: 0.257, inside: 1, seats: [[-0.05, 0.07, 0.42], [-0.35, 0.14], [-0.35, -0.14]] }, // v345 실사 전차 (셔먼): 포탑 해치에 서서, 같이 탄 사람은 뒤 엔진 덮개에 앉기
   tank2: { sf: 1, v: 5, L: 48, s3: 1.3, y: 0.174, inside: 1, seats: [[-0.12, 0.07, 0.245], [-0.35, 0.14], [-0.35, -0.14]] }, // v345 에이브럼스
   tank3: { sf: 1, v: 5, L: 50, s3: 1.3, y: 0.219, inside: 1, seats: [[-0.12, 0.06, 0.31], [-0.35, 0.14], [-0.35, -0.14]] }, // v345 티거
   tank4: { sf: 1, v: 5, L: 52, s3: 1.3, y: 0.148, inside: 1, seats: [[-0.12, -0.07, 0.21], [-0.35, 0.14], [-0.35, -0.14]] }, // v345 T-90 (긴 포)
   // v322 재미 탈것 (사용자 '이것들은 … 3D로'): 카트는 달릴 땐 뒤에서 밀고(push = 손잡이 뒤 서는 곳) 서면 바구니에 올라탄다, 같이 탄 사람은 바구니 안
-  cart: { L: 19, s3: 1.15, y: 0.68, grip: [0, 0.3, 0.92], push: -0.95, seats: [[-0.08, 0], [-0.08, 0]] },
-  chair: { L: 13, s3: 1, y: 0.72, spin: 1, seats: [[0.04, 0]] }, // 사무실 의자: 다섯 갈래 다리(_spin)가 빙글빙글
+  cart: { L: 19, s3: 1.15, y: 0.68, grip: [0, 0.3, 0.92], push: -0.95, handle: [-0.49, 0.17, 1.0], seats: [[-0.08, 0], [-0.08, 0]] },
+  chair: { L: 13, s3: 1, y: 0.52, spin: 1, seats: [[0.35, 0]] }, // v346 엉덩이를 방석 가운데에 (앉은 자세는 골반이 뒤로 빠져 자리를 앞으로) · 사무실 의자: 다섯 갈래 다리(_spin)가 빙글빙글
   piggy: { L: 14, s3: 1, carry: 1, seats: [[0, 0]] }, // 친구 등에 업히기: 모델 없음, 업어 주는 친구 = 사람 모델 (PIGGY_PAL) · 나는 그 등에
   // v335 Sketchfab 실사 탈것 (CC BY 4.0, 사용자 '리얼리스틱 팩으로'): 3d/sf/<키>.glb 하나씩 (assets3d/build_sf.py: 앞 +x, 길이 1, 바닥 0). sf = 따로 받는 실사 모델, idle = 서 있을 때 동작 빠르기
   bike: { sf: 1, v: 2, L: 28, y: 0.46, grip: [0.04, 0.12, 0.62, 0.75], ped: [-0.053, 0.163, 0.06, 0.089], seats: [[-0.12, 0]], fd: [-0.22, 0.3, 0.07, 0.16, 0.06] }, // v345 ped = 크랭크 [앞뒤, 높이, 페달 간격 반, 크랭크 길이] (길이 배) → 발이 페달 따라 돈다
@@ -19101,17 +19337,25 @@ const RIDE3 = {
   bull: { sf: 1, v: 4, L: 46, y: 0.57, bone: 'DEF-spine.006', grip: [0.12, 0.07, 0.58, 0.3], leg: [0.4, 1.1], seats: [[-0.07, 0], [-0.24, 0]] }, // v346 걷고 뛰는 실사 황소 (stealth86, 뼈 동작), 혹 뒤에 앉아 혹을 잡는다
   benz: { sf: 1, v: 2, L: 72, y: 0.03, noLeg: 1, grip: [0.04, 0.035, 0.14, 0.05], seats: [[-0.06, -0.1], [-0.06, 0.1]] },
   wolf: { sf: 1, v: 3, L: 54, y: 0.33, bone: 'Torso2', grip: [0.24, 0.07, 0.17, 0.6], leg: [0.32, 0.8], seats: [[0.04, 0], [-0.13, 0]] }, // v345 털 2K 늑대 + 걷기·달리기 동작
-  shark: { sf: 1, L: 64, y: 0.33, idle: 0.4, bone: 'Spine_01', grip: [0, 0.03, 0.4, 0.15], leg: [0.5, 1], seats: [[-0.08, 0], [-0.22, 0]] },
+  shark: { sf: 1, L: 64, y: 0.33, idle: 0.4, bone: 'Spine_01', grip: [0.12, 0.03, 0.37, 0.3], leg: [0.5, 1], seats: [[-0.03, 0], [-0.2, 0]] },
   ferrari: { sf: 1, brake: 'taillight', v: 2, L: 70, y: 0.015, noLeg: 1, grip: [0.05, 0.035, 0.13, 0.05], seats: [[-0.04, -0.1], [-0.04, 0.1]] },
   train: { sf: 1, v: 2, L: 160, y: 0.03, stand: 1, rods: [['Cube002_0', 'Cube000_0', 'Cube004_0'], ['Cube021_0', 'Cube022_0', 'Cube020_0']], seats: [[-0.08, 0], [-0.34, -0.03], [-0.34, 0.03], [-0.4, -0.03], [-0.4, 0.03], [-0.28, 0], [-0.22, 0], [-0.16, 0]] },
   lambo: { sf: 1, brake: 'OuterRed', v: 2, L: 68, y: 0.015, noLeg: 1, grip: [0.07, 0.035, 0.13, 0.05], seats: [[-0.02, -0.1], [-0.02, 0.1]] },
   jet: { sf: 1, L: 150, y: 0.105, noLeg: 1, grip: [0.31, 0.04, 0.135, 0.05], seats: [[0.25, 0], [0.19, 0]] }, // v337 조종석 안에 상체만 (사용자 '제트기도')
-  wings: { sf: 1, L: 34, y: 0.35, stand: 1, fly: 1.2, flap: 1, off: [-0.12, 0.42], seats: [[0, 0]] },
+  wings: { sf: 1, L: 34, y: 0.35, stand: 1, fly: 1.2, flap: 1, hover: 4.2, off: [-0.12, 0.42], seats: [[0, 0]] },
   dragon: { sf: 1, L: 120, y: 0.175, idle: 0.3, hover: 0.6, bone: 'spine_05', grip: [0.31, 0.025, 0.08, 0.7], leg: [0.5, 0.6], seats: [[0.21, 0], [0.13, 0], [0.06, 0]] }, // v337 날개 사이 등 (사용자 '용은또 뭐야'): 날갯짓하는 몸 뼈를 따라간다
   // v337 grip = [손 앞뒤, 두 손 간격의 반, 높이, 숙이기] (길이 배, 사용자 '잡고 타야지'), leg = [다리 벌림, 아래로] (배는 무릎 세우기 < 0), noLeg = 차 안 다리 숨기기, bone = 탄 사람이 따라갈 몸 뼈
 };
 const PIGGY_PAL = { hair: '#3a2a1a', skin: '#f0c8a0', shirt: '#2f9a5a', shirt2: '#257a48', pants: '#2b3a6e', shoe: '#15151c' }; // 2D 업어 주는 친구 색 그대로
 const Ride3D = {
+  /* v363 (렉 시연 점검: 버스·람보르기니를 처음 타면 셰이더 20~30개를 한 장면에서 만들어 1초 넘게 멈췄다): 탈것 종류마다 처음 한 번,
+   * 셰이더는 compileAsync(폰 GPU가 따로 만드는 동안 게임은 계속)로, 그림은 한 장면에 한 장씩 올린 뒤에 보이게 한다. 늦어도 3초 뒤엔 보인다. */
+  wst: {},
+  warmUp(R, root, k) { const W = this.wst; if (W[k] === 2) return true; if (W[k] === 1) return false; W[k] = 1; const r = R.r, q = [], seen = new Set();
+    root.traverse(o => { if (!o.material) return; for (const m of [].concat(o.material)) for (const p in m) { const t = m[p]; if (t && t.isTexture && !seen.has(t)) { seen.add(t); q.push(t); } } });
+    const done = () => { W[k] = 2; }, up = () => { if (W[k] === 2) return; const t = q.shift(); if (!t) return done(); try { r.initTexture(t); } catch (e) { } requestAnimationFrame(up); };
+    let p; try { p = r.compileAsync ? r.compileAsync(root, R.ocam || R.cam, R.S) : null; } catch (e) { p = null; } Promise.resolve(p).catch(() => { }).then(() => requestAnimationFrame(up));
+    setTimeout(done, 3000); return false; },
   st: 0, M: {}, sfs: {}, use: {},
   has(k) { return !!RIDE3[k]; },
   // v335 실사 탈것은 하나씩 받는다 (처음 보일 때). 오기 전엔 예전 2D 그림
@@ -19169,7 +19413,43 @@ const Ride3D = {
   turSet(g, r) { const U = g.userData, tu = U.tur; if (!tu) return; const TH = T3.THREE; if (!tu.userData.q0) tu.userData.q0 = tu.quaternion.clone(); tu.quaternion.copy(tu.userData.q0).multiply(new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), r)); /* 원래 방향(블렌더에서 돌려 놓은 것) 위에 돌리기 */ if (!U.turD) U.turD = new T3.THREE.Matrix4(); g.updateMatrixWorld(true); const P = new T3.THREE.Vector3().setFromMatrixPosition(tu.matrixWorld).applyMatrix4(new T3.THREE.Matrix4().copy(g.matrixWorld).invert()); U.turD.makeTranslation(P.x, 0, P.z).multiply(new T3.THREE.Matrix4().makeRotationY(r)).multiply(new T3.THREE.Matrix4().makeTranslation(-P.x, 0, -P.z)); },
   // v345 사용자 '부캉이(상어)는 밑에 물결 치는 것도 디테일 살리고': 물에 뜨는 탈것 밑 물웅덩이 (흔들리는 물결 · 배 둘레 거품 · 달리면 뱃머리 물보라와 뒤로 V자 물결 · 서 있으면 동그란 잔물결) + 물방울
   // wl = 물 높이 (길이 배), pw/pl = 물웅덩이 크기 (폭은 몸 폭 배, 길이는 길이 배), hw = 몸 폭 (물웅덩이 폭 대비, 거품 테두리)
-  WFX: { shark: { wl: 0.15, pl: 1.5, pw: 3.6, hw: 0.2, hl: 0.5, spray: 1 }, lifeboat: { wl: 0.045, pl: 1.6, pw: 2.6, hw: 0.36, hl: 0.58, spray: 1 }, galleon: { wl: 0.05, pl: 1.45, pw: 2.8, hw: 0.32, hl: 0.62, spray: 0.6 } },
+  WFX: { shark: { wl: 0.24, pl: 1.55, pw: 2.8, hw: 0.2, hl: 0.5, spray: 0.8, ww: 0.62 }, lifeboat: { wl: 0.045, pl: 1.6, pw: 2.6, hw: 0.36, hl: 0.58, spray: 1 }, galleon: { wl: 0.05, pl: 1.45, pw: 2.8, hw: 0.32, hl: 0.62, spray: 0.6 } },
+  /* v346 사용자 '배도 상어도 뒤에 물결 좀 더 신경 써 디테일': 실제 배 항적처럼 지나온 길에 물 띠를 남긴다.
+   * 켈빈 V자 물결 (양 끝 하얀 물마루가 약 19.5°로 벌어짐) · 가운데 하얀 소용돌이 거품 · 그 사이 가로 물결 · 오래될수록 넓어지고 옅어짐.
+   * 점은 월드 좌표로 쌓고, 띠는 탈것 뿌리 밑에 두되 뿌리 움직임을 빼서 (water() 와 같은 방식) 월드에 남긴다 */
+  WK: { N: 72, life: 4.2 },
+  wkMat() { if (this._wkm) return this._wkm; const { THREE } = T3;
+    return this._wkm = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: 0 } },
+      vertexShader: 'attribute vec3 q; varying vec3 vQ; void main(){ vQ = q; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: `varying vec3 vQ; uniform float uT;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+float fb(vec2 p){ return n(p) * 0.55 + n(p * 2.3 + 7.1) * 0.3 + n(p * 5.1 - 3.7) * 0.15; }
+void main(){ float u = vQ.x, a = clamp(vQ.y, 0.0, 1.0), s = vQ.z, au = abs(u) + (fb(vec2(s * 2.2, u * 2.0) - uT * 0.1) - 0.5) * (0.1 + a * 0.22); if (au > 1.0) discard; /* 가장자리를 물결처럼 들쭉날쭉 */
+  float k = 1.0 - a, w = fb(vec2(s * 1.3, u * 3.0) + uT * 0.2) - 0.5, f1 = fb(vec2(s * 4.0, u * 9.0) - uT * 0.5), f2 = fb(vec2(s * 9.0, u * 18.0) + uT * 0.8);
+  vec3 deep = vec3(0.05, 0.27, 0.42), mid = vec3(0.13, 0.45, 0.62), lit = vec3(0.55, 0.82, 0.93);
+  float tv = sin(s * 6.0 - uT * 2.0 + u * u * 2.5) * 0.5 + 0.5; /* 가로 물결 (V 안쪽) */
+  vec3 col = mix(deep, mid, clamp(0.55 + w * 1.3 + tv * 0.18 * k, 0.0, 1.0)); col = mix(col, lit, smoothstep(0.62, 0.9, f1) * 0.25 * k);
+  float crest = exp(-pow((au - 0.86) / (0.05 + a * 0.07), 2.0)) * pow(k, 0.9) * smoothstep(0.3, 0.65, f2 * 0.6 + f1 * 0.5); /* V자 물마루 */
+  float cw = 0.22 + a * 0.28, core = smoothstep(cw, cw * 0.25, au) * pow(k, 1.8) * smoothstep(0.32, 0.7, f1 * 0.65 + f2 * 0.5); /* 가운데 소용돌이 거품 */
+  float lace = smoothstep(0.62, 0.85, f2) * smoothstep(0.95, 0.3, au) * k * 0.55; /* 사이사이 흩어진 거품 */
+  float foam = clamp(crest + core + lace * (1.0 - core), 0.0, 1.0) * 0.95;
+  col = mix(col, vec3(0.94, 0.97, 1.0), foam);
+  float al = smoothstep(1.0, 0.72, au) * pow(k, 1.7) * 0.82 * smoothstep(0.0, 0.06, a + 0.02); al = max(al, foam * smoothstep(1.0, 0.92, au) * pow(k, 0.7)); /* 물빛은 먼저 옅어지고 하얀 물마루가 조금 더 남는다 */
+  gl_FragColor = vec4(col, al); }` }); },
+  wake3(g, k, t, spd, pv) { const { THREE } = T3, U = g.userData, F = this.WFX[k], R = RIDE3[k], B = this.M[k]; if (!B || !F) return; const Lw = R.L / TILE * (R.s3 || 1), W = Math.max(0.12, (B.w || 0.3)) * Lw * (F.ww || 1), N = this.WK.N;
+    let K = U.wk; if (!K) { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 2 * 3), 3)); geo.setAttribute('q', new THREE.BufferAttribute(new Float32Array(N * 2 * 3), 3)); const ix = []; for (let i = 0; i < N - 1; i++) { const a = i * 2; ix.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } geo.setIndex(ix); geo.setDrawRange(0, 0);
+      const m = new THREE.Mesh(geo, this.wkMat()); m.matrixAutoUpdate = false; m.frustumCulled = false; m.renderOrder = 1; g.add(m); K = U.wk = { m, P: [], s: 0 }; }
+    const v = Math.abs(spd || 0) / TILE, now = t, life = this.WK.life * Math.min(1.6, Math.max(0.8, Lw / 3)); let P = K.P;
+    if (pv) P = K.P = pv; /* 미리보기: 점을 직접 넘긴다 */
+    else { g.updateMatrix(); const x = g.position.x, z = g.position.z, L = P[P.length - 1], step = Math.max(0.08, W * 0.35);
+      if (v > 0.6 && (!L || Math.hypot(x - L.x, z - L.z) > step)) { const ds = L ? Math.hypot(x - L.x, z - L.z) : 0; K.s += ds; P.push({ x, z, a: -g.rotation.y, t: now, v, s: K.s }); if (P.length > N) P.shift(); }
+      while (P.length && now - P[0].t > life) P.shift(); }
+    const pos = K.m.geometry.attributes.position.array, qa = K.m.geometry.attributes.q.array, y = F.wl * Lw - 0.004, n = P.length;
+    for (let i = 0; i < n; i++) { const p = P[i], age = Math.max(0, now - p.t), A = age / life, hw = W * (0.42 + 0.25 * Math.min(1, age * 3)) + Math.min(3.2 * W, p.v * age * 0.354 * (F.ww || 1)), nx = -Math.sin(p.a), nz = Math.cos(p.a); /* 켈빈 각 19.5° → tan 0.354 */
+      for (const [j, sd] of [[0, -1], [1, 1]]) { const o = (i * 2 + j) * 3; pos[o] = p.x + nx * hw * sd; pos[o + 1] = y; pos[o + 2] = p.z + nz * hw * sd; qa[o] = sd; qa[o + 1] = A; qa[o + 2] = p.s / Math.max(0.3, W * 1.4); } }
+    K.m.geometry.attributes.position.needsUpdate = true; K.m.geometry.attributes.q.needsUpdate = true; K.m.geometry.setDrawRange(0, Math.max(0, n - 1) * 6); this.wkMat().uniforms.uT.value = t;
+    if (!pv) K.m.matrix.copy(g.matrix).invert(); else K.m.matrix.identity(); },
   wMat() { if (this._wm) return this._wm; const { THREE } = T3;
     return this._wm = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: 0 }, uS: { value: 0 }, uHW: { value: 0.3 }, uHL: { value: 0.55 } },
       vertexShader: 'varying vec2 vP; void main(){ vP = uv * 2.0 - 1.0; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
@@ -19213,6 +19493,47 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
   // v345 바퀴 굴리기 (사용자 '차들도 움직이면 바퀴 움직이게, 고증 살려'): assets3d/wheels.py가 떼어 낸 'wh_<n>' (원점 = 바퀴 가운데) · 'cr_0' (자전거 크랭크)
   // 간 거리 / 반지름만큼 굴리고, 앞바퀴는 도는 만큼 꺾는다 (바퀴 사이 거리로 자전거 모형 각도). 기차·전차·외발은 안 꺾음
   HEAD: -1, // 고개 돌리는 방향 (zhead.js로 확인: -1 = 도는 안쪽)
+  /* v346 사용자 '모델 처음 다운로드 한꺼번에 못해?' → '뒤에서 파일만 미리 받기': 다운받는 중 화면이 끝나고 조금 쉬었다가, 탄 것 · 가진 탈것부터 실사 탈것 파일을 하나씩 받아 둔다.
+   * 화면(그래픽 메모리)에는 안 올리고 파일만 (서비스 워커 3d 저장소 · 브라우저 캐시) → 편집숍 큰 미리보기 · 길에서 탈 때 받기 기다림이 없다. 데이터 절약 모드 · 2G면 안 받는다 */
+  prefetch() { if (this.pfS) return; this.pfS = 1; const wait = ms => new Promise(r => setTimeout(r, ms)), C = navigator.connection || {}; if (C.saveData || /2g/.test(C.effectiveType || '')) return;
+    const go = async () => { for (let i = 0; i < 120 && typeof Preload !== 'undefined' && Preload.st !== 3; i++) await wait(1000); await wait(6000); if (typeof Arena3J === 'undefined') return;
+      const all = Object.keys(RIDE3).filter(k => RIDE3[k].sf), first = []; try { const me = Profile.get().car; if (me) first.push(String(me).replace(/^r_/, '')); for (const id of (typeof Shop !== 'undefined' && Shop.owned ? Shop.owned() : [])) { const it = typeof SHOP_BY_ID !== 'undefined' && SHOP_BY_ID[id]; if (it && it.ride) first.push(it.ride); } } catch (e) { }
+      const list = [...new Set([...first, ...all])].filter(k => RIDE3[k] && RIDE3[k].sf && (typeof SHOP_BY_ID === 'undefined' || first.includes(k) || Object.values(SHOP_BY_ID).some(it => it.ride === k))); /* 상점에서 뺀 배 (바이킹 등)는 안 받는다 */
+      for (const k of list) { while (document.hidden) await wait(3000); if (this.sfs[k] === 2) continue; try { await (await fetch(Arena3J.url('sf/' + k + '.glb?v=' + (RIDE3[k].v || 1)))).arrayBuffer(); } catch (e) { } await wait(400); } };
+    go(); },
+  /* v346 편집숍 큰 미리보기 바닥 (사용자 '이거 땅은 왜 2d야'): 탈것 밑에 3D 바닥 (도로 · 물 · 철길) + 그림자, 달리면 바닥이 뒤로 흘러간다. stage(k, m) → { g, tick(dt, mv) } */
+  stx(kind) { const c = this._stx || (this._stx = {}); if (c[kind]) return c[kind]; const { THREE } = T3, cv = document.createElement('canvas'), W = cv.width = 512, H = cv.height = kind === 'side' ? 512 : 256, x = cv.getContext('2d');
+    const noise = (base, a, n) => { x.fillStyle = base; x.fillRect(0, 0, W, H); for (let i = 0; i < n; i++) { const v = Math.random(); x.fillStyle = `rgba(${v < 0.5 ? '0,0,0' : '255,255,255'},${a * Math.random()})`; const r = 1 + Math.random() * 2.2; x.fillRect(Math.random() * W, Math.random() * H, r, r); } };
+    if (kind === 'road') { noise('#4b4d52', 0.07, 22000); x.fillStyle = 'rgba(0,0,0,.12)'; for (let i = 0; i < 6; i++) x.fillRect(0, H * (0.3 + 0.08 * i), W, 3); /* 바퀴 자국 */ x.fillStyle = '#e9e6dc'; x.fillRect(0, 6, W, 7); x.fillRect(0, H - 13, W, 7); x.fillRect(0, H / 2 - 4, W / 2, 8); x.fillStyle = '#bdb9ad'; x.fillRect(0, 0, W, 4); x.fillRect(0, H - 4, W, 4); }
+    else if (kind === 'side') { noise('#a8a49a', 0.18, 7000); x.strokeStyle = 'rgba(60,55,50,.35)'; x.lineWidth = 2; for (let i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * W / 8, 0); x.lineTo(i * W / 8, H); x.stroke(); x.beginPath(); x.moveTo(0, i * H / 8); x.lineTo(W, i * H / 8); x.stroke(); } /* 보도블록 */ }
+    else if (kind === 'rail') { noise('#77716a', 0.35, 14000); for (let i = 0; i < 4; i++) { x.fillStyle = '#5a3f2a'; x.fillRect(i * W / 4 + 18, H * 0.12, W / 4 - 36 > 60 ? 60 : W / 4 - 36, H * 0.76); x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(i * W / 4 + 18, H * 0.84, 60, 4); } /* 침목 */ for (const v of [0.32, 0.68]) { x.fillStyle = '#3c3a38'; x.fillRect(0, H * v - 7, W, 14); x.fillStyle = '#c9ccd0'; x.fillRect(0, H * v - 7, W, 4); } }
+    else { x.fillStyle = '#25688f'; x.fillRect(0, 0, W, H); x.strokeStyle = 'rgba(220,240,255,.35)'; x.lineWidth = 1.5; for (let i = 0; i < 90; i++) { const X = Math.random() * W, Y = Math.random() * H, L = 8 + Math.random() * 26; x.beginPath(); x.moveTo(X, Y); x.quadraticCurveTo(X + L / 2, Y - 3, X + L, Y); x.stroke(); } }
+    const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace; return (c[kind] = t); },
+  stage(k, m) { const { THREE } = T3, R = RIDE3[k] || {}; m.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(m, true), sz = bb.getSize(new THREE.Vector3()), Lx = Math.max(0.3, sz.x), Wz = Math.max(0.25, sz.z);
+    const kind = k === 'train' ? 'rail' : (typeof RIDE_WATER !== 'undefined' && RIDE_WATER.has(k)) || k === 'shark' ? 'water' : 'road', g = new THREE.Group(); g.rotation.y = m.rotation.y; g.position.set(bb.getCenter(new THREE.Vector3()).x * 0, 0, 0);
+    const P = kind === 'rail' ? Wz * 1.6 : kind === 'water' ? Math.max(Lx, Wz) * 1.2 : Math.max(Lx * 0.7, Wz * 2.4), N = 40, mats = [];
+    const strip = (tex, w, z, y, rep) => { const t = tex.clone(); t.needsUpdate = true; t.repeat.set(N * (rep || 1), 1); const mt = new THREE.MeshLambertMaterial({ map: t }), pl = new THREE.Mesh(new THREE.PlaneGeometry(P * N, w), mt); pl.rotation.x = -Math.PI / 2; pl.position.set(0, y, z); pl.renderOrder = -2; g.add(pl); mats.push({ t, rep: rep || 1 }); return pl; };
+    const F = kind === 'water' && this.WFX[k], L3 = (R.L || 30) / TILE * (R.s3 || 1), v0 = m.userData.acts ? 3 * L3 : 3;
+    if (F) { /* v346 사용자 '배랑 다른 물이야? 쫌 아쉬운데': 게임과 같은 물 (같은 물빛 바다 + water() 물웅덩이 · 물보라 + wake3() 뒤 물결) */
+      const sm = new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 }, uO: { value: 0 }, uL: { value: L3 } }, vertexShader: 'varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `varying vec2 vP; uniform float uT, uO, uL;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+float fb(vec2 p){ return n(p) * 0.55 + n(p * 2.3 + 7.1) * 0.3 + n(p * 5.1 - 3.7) * 0.15; }
+void main(){ vec2 p = (vP + vec2(uO, 0.0)) / uL * 3.2; float w = fb(p * vec2(1.0, 1.4) + vec2(0.0, uT * 0.15)) - 0.5, w2 = fb(p * vec2(2.2, 2.7) - uT * 0.3) - 0.5;
+  vec3 deep = vec3(0.05, 0.27, 0.42), mid = vec3(0.13, 0.45, 0.62), lit = vec3(0.55, 0.82, 0.93);
+  vec3 col = mix(deep, mid, clamp(0.55 + w * 1.4, 0.0, 1.0)); col = mix(col, lit, smoothstep(0.18, 0.42, w2 + w * 0.6) * 0.35);
+  col += pow(max(0.0, w2 * 1.8 + w * 0.8 - 0.25), 4.0) * 3.0; gl_FragColor = vec4(col, 1.0); }` });
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(L3 * 80, L3 * 80), sm); sea.rotation.x = -Math.PI / 2; sea.position.y = F.wl * L3 - 0.008; sea.renderOrder = -2; g.add(sea);
+      const wk = { X: 0, P: [], t: 0 }, life = this.WK.life * Math.min(1.6, Math.max(0.8, L3 / 3)), W = Math.max(0.12, ((this.M[k] || {}).w || 0.3)) * L3 * (F.ww || 1), step = Math.max(0.08, W * 0.35);
+      const o = { g, sh: null, tick: (dt, mv) => { dt = Math.min(0.25, dt || 0); wk.t += dt; const v = mv ? v0 : 0; wk.X += v * dt; sm.uniforms.uT.value = wk.t; sm.uniforms.uO.value = wk.X;
+        const L = wk.P[wk.P.length - 1]; if (mv && (!L || wk.X - L.X > step)) { wk.P.push({ X: wk.X, t: wk.t }); if (wk.P.length > this.WK.N) wk.P.shift(); } while (wk.P.length && wk.t - wk.P[0].t > life) wk.P.shift();
+        try { this.water(m, k, wk.t, v * TILE); this.wake3(g, k, wk.t, v0 * TILE, wk.P.map(q => ({ x: q.X - wk.X, z: 0, a: 0, t: q.t, v: v0, s: q.X }))); } catch (e) { console.warn('stage wake', e); } } }; return o; }
+    if (kind === 'water') strip(this.stx('water'), P * 30, 0, -0.01, 1).material.map.repeat.set(N, 30);
+    else { const w = kind === 'rail' ? Wz * 1.25 : Wz * 4.4, zc = kind === 'rail' ? 0 : -Wz * 1.1; strip(this.stx(kind), w, zc, 0, 1); strip(this.stx('side'), P * 30, 0, -0.004, 2).material.map.repeat.set(N * 2, 60); }
+    const sc = document.createElement('canvas'); sc.width = sc.height = 128; const sx = sc.getContext('2d'), gr = sx.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, 'rgba(0,0,0,.42)'); gr.addColorStop(0.6, 'rgba(0,0,0,.2)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); sx.fillStyle = gr; sx.fillRect(0, 0, 128, 128);
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(Lx * 1.15, Wz * 1.3), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.set((bb.min.x + bb.max.x) / 2, 0.004, (bb.min.z + bb.max.z) / 2); sh.renderOrder = -1; if (!R.fly && !R.hover && kind !== 'water') m.add(sh);
+    let off = 0; return { g, sh, tick(dt, mv) { if (mv) off += v0 * dt / P; for (const q of mats) q.t.offset.x = off * q.rep; } }; },
   BOAT: { lifeboat: { p: 1, a: 1, h: 0.26, bow: 0.07 }, galleon: { p: 0.5, a: 0.75, h: -0.07, bow: 0.012 } }, // v346 배 흔들림: p = 빠르기 배수, a = 크기, h = 돌 때 기울기 (+ 안 / − 바깥), bow = 달리면 뱃머리 들기
   LEAN: { bike: 1, scooter: 1, moto: 1, bus: -1, cabrio: -1, benz: -1, ferrari: -1, lambo: -1 }, // 1 = 안으로 눕기 (두 바퀴), -1 = 차 몸 쏠림
   NOSTEER: new Set(['train', 'tank', 'tank2', 'tank3', 'tank4', 'uni', 'bike', 'scooter', 'moto']), // 두 바퀴는 핸들째 꺾여야 해서 (바퀴만 꺾으면 포크를 뚫는다) 안 꺾음
@@ -19318,7 +19639,7 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
   // v321 노 젓기 · 돛 돌리기 (탄 사람 동작과 같은 박자: Ride3D.ph)
   ph(t) { return t * Math.PI * 2 * 0.85; },
   gait(spd) { const s = spd / TILE; return s < 1.8 ? 'Walk_Loop' : s < 3.8 ? 'Jog_Fwd_Loop' : 'Sprint_Loop'; }, // v322 미는 사람 · 업어 주는 친구 걸음
-  anim1(S, mv, spd) { return S.walk ? (mv ? this.gait(spd || 30) : 'Idle_Loop') : S.pose === 'row' ? 'Driving_Loop' : S.hatch || S.stand ? 'Idle_Loop' : 'Sitting_Idle_Loop'; }, // 탄 사람 동작 이름
+  anim1(S, mv, spd) { return S.walk ? (mv ? this.gait(spd || (S.pose === 'push' ? 20 : 30)) : 'Idle_Loop') : S.pose === 'row' ? 'Driving_Loop' : S.hatch || S.stand ? 'Idle_Loop' : 'Sitting_Idle_Loop'; }, // 탄 사람 동작 이름
   anim(g, t, mv, spd) { const ph = this.ph(t), U = g.userData, T = T3.THREE;
     if (U.wh) this.wheels(g, t, mv, spd); if (U.rods) this.rods(g);
     if (U.flap) { const A = mv ? 0.5 : 0.1, f = Math.sin(t * (mv ? 6.5 : 2)) * A + (mv ? 0.1 : 0), T4 = new T.Matrix4(), Rr = new T.Matrix4(); for (const w of U.flap) { Rr.makeRotationX(-w.sd * f); T4.makeTranslation(w.P.x, w.P.y, w.P.z).multiply(Rr).multiply(new T.Matrix4().makeTranslation(-w.P.x, -w.P.y, -w.P.z)); w.o.matrix.copy(w.Mi).multiply(T4).multiply(w.Mp).multiply(w.b0); } }
@@ -19334,7 +19655,7 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
     if (U.sails) { const q = new T.Quaternion(), ax = new T.Vector3(0, 1, 0); U.sails.forEach((o, i) => { q.setFromAxisAngle(ax, (mv ? 0.22 : 0.08) * Math.sin(ph * 0.5 + i * 0.3) + (mv ? 0.12 : 0)); o.quaternion.copy(o.userData.q0).premultiply(q); }); } },
   // 탄 사람 자리 (월드 px 기준 앞뒤·좌우 → x, y), 높이(칸)
   seat(k, i, x, y, a, q) { const R = RIDE3[k], S = R.seats[Math.min(i, R.seats.length - 1)], L = R.L * (R.s3 || 1);
-    if (R.push && !i && q && (q.mv || q.n > 1)) return { x: x + Math.cos(a) * R.push * L, y: y + Math.sin(a) * R.push * L, h: 0, stand: true, walk: true, gnd: true, pose: 'push' }; // v322 카트 밀기 (달릴 때 · 같이 탄 사람이 있을 때)
+    if (R.push && !i && q && (q.mv || q.n > 1)) return { x: x + Math.cos(a) * R.push * L, y: y + Math.sin(a) * R.push * L, h: 0, stand: true, walk: true, gnd: true, pose: 'push', grip: R.handle ? { f: (R.handle[0] - R.push) * L / TILE, s: R.handle[1] * L / TILE, h: R.handle[2] * L / TILE, d: 0.18 } : null }; /* v346 사용자 '두 손을 손잡이 잡고': 두 손을 손잡이에 (팔 IK) */ // v322 카트 밀기 (달릴 때 · 같이 탄 사람이 있을 때)
     if (R.carry) { const b = -0.09 * TILE; return { x: x + Math.cos(a) * b, y: y + Math.sin(a) * b, h: 0.92, pose: 'hug' }; } // v322 업힌 나: 친구 허리 바로 뒤
     const f = S[0] * L, r = S[1] * L, o = { x: x + Math.cos(a) * f - Math.sin(a) * r, y: y + Math.sin(a) * f + Math.cos(a) * r, h: (S[2] || R.y) * L / TILE, hatch: !!R.hatch && !i, noLeg: !!R.noLeg, leg: R.leg || null, stand: !!(R.stand && !i), pose: i ? null : R.pose || null };
     if (!i && R.grip) { const G = R.grip; o.grip = { f: (G[0] - S[0]) * L / TILE, s: G[1] * L / TILE, h: G[2] * L / TILE, d: G[3] || 0 }; if (G[4] != null) { o.grip.fl = (G[4] - S[0]) * L / TILE; o.grip.fr = (G[5] - S[0]) * L / TILE; o.grip.tw = G[6] || 0; } if (R.ped) { const P = R.ped; o.grip.p = { f: (P[0] - S[0]) * L / TILE, h: P[1] * L / TILE, s: P[2] * L / TILE, r: P[3] * L / TILE, ank: 0.07, a0: P[4] == null ? -Math.PI / 2 : P[4] }; } } // v336 손잡이·고삐 (앞뒤, 두 손 간격의 반, 높이 = 길이 배) → 손이 거기 닿게
@@ -19354,6 +19675,7 @@ void main(){ vec2 p = vP; float r = length(p); if (r > 1.0) discard;
     const who = [rider, ...(pax || [])].filter(Boolean); who.forEach((p, i) => { const S = R.seats[Math.min(i, R.seats.length - 1)], X = S[0] * L, Y = S[1] * L; c.fillStyle = p.shirt; c.fillRect(X - 2.5, Y - 3.5, 4, 7); c.fillStyle = p.hair; c.beginPath(); c.arc(X + 0.5, Y, 2.6, 0, 7); c.fill(); });
   },
 };
+if (typeof window !== 'undefined') setTimeout(() => { try { Ride3D.prefetch(); } catch (e) { } }, 0); // v346 실사 탈것 파일 미리 받기 (위 prefetch)
 
 /* ===================== 3D 건물 고해상도 (v314, 사용자 2026-10-22 '건물들도 더 사실적으로 만들수있나? 해상도 높게') =====================
  * v303~v313 건물 벽은 2D 도트 앞벽 그림(drawBuildingFront, 1칸 16px)을 두 배로 늘려 붙인 것이었다.
@@ -19556,6 +19878,9 @@ const Bld3D = {
   /* ---- 만들기: 그림 한 장 + 합친 모양 하나 ---- */
   make(R, b, pl, H) {
     if (this.real && this.real()) return this.makeReal(R, b, pl, H); // v340 실사 건물 (bldreal.js)
+    return this.make0(R, b, pl, H); },
+  makeG(R, b, pl, H) { return this.real && this.real() && this.makeRealG ? this.makeRealG(R, b, pl, H) : null; }, // v363 나눠 짓기 (zone3d zStream)
+  make0(R, b, pl, H) {
     const { THREE } = T3, P = this.plan(b, pl, H), W = b.w, Dp = b.h, D = this.D = Math.max(20, Math.min(48, Math.floor(2000 / (W + Dp + 0.3)), Math.floor(2000 / (H + Math.max(Dp, 3.6) + 0.3))));
     const PAD = 4, fw = Math.ceil(W * D), fhp = Math.ceil(H * D), sw = Math.ceil(Dp * D), rh = Math.ceil(Dp * D), EX = fw + PAD, EY = fhp + PAD;
     const CW = Math.max(fw + PAD + sw, fw + PAD + 72), CH = fhp + PAD + Math.max(rh, 72 + 60 + 40);
@@ -19687,7 +20012,10 @@ Object.assign(Bld3D, {
     const tx = cv2 => { const t = new THREE.CanvasTexture(cv2); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t._sh = 1; return t; };
     return (this.RA = [tx(cv), tx(em)]); },
   /* ---- 만들기 ---- */
-  makeReal(R, b, pl, H) {
+  /* v363 (렉 시연 점검: 달릴 때 건물 한 채 짓기 20~80ms가 한 장면에 몰려 끊겼다): 짓는 순서는 그대로 두고 단계마다 쉬어 갈 수 있게 (yield).
+   * 아직 화면 밖(달리는 앞쪽) 건물은 zone3d zStream이 여러 장면에 나눠 짓고, 화면 안이면 makeReal로 한 번에 끝까지. 결과 모양은 똑같다. */
+  makeReal(R, b, pl, H) { const g = this.makeRealG(R, b, pl, H); let r; while (!(r = g.next()).done); return r.value; },
+  *makeRealG(R, b, pl, H) {
     const GF = this.GF, k0 = pl && pl.kind || (b.fixedPlace && b.fixedPlace.kind) || '', gf0 = H > 1.9 ? 1.05 : H * 0.55; if (k0 !== 'court' && GF > gf0) H += GF - gf0; // v348 1층을 사람 키(1.55)에 맞춰 높임 (위층은 그대로, 건물이 그만큼 높아짐)
     const { THREE } = T3, P = this.plan(b, pl, H, k0 !== 'court' && GF > gf0 ? GF : 0), W = b.w, Dp = b.h, M = this.rmats(), r = this.rng(b.seed + 47), eve = P.eve, CS = 128;
     const B = {}, bk = k => B[k] || (B[k] = { p: new Float32Array(3072), n: new Float32Array(3072), u: new Float32Array(2048), c: new Float32Array(3072), len: 0, cap: 1024 }), // v362 미리 잡아 둔 Float32Array (모자라면 두 배로): 꼭짓점마다 push 하던 것보다 가볍다 (폰 끊김)
@@ -19753,6 +20081,7 @@ Object.assign(Bld3D, {
       for (let i = 0, n = 2 + (W / 1.5 | 0); i < n; i++) { const a = 0.15 + r() * (W - 0.5), w = 0.08 + r() * 0.25, L = 0.25 + r() * Math.min(1.2, (H - yb) * 0.4), k = 0.07 + r() * 0.11, y0 = H - 0.1;
         ao(a, a + w, [y0 - L * 0.5, y0 - L], (x, y) => y > y0 || y < y0 - L ? 1 : 1 - k * Math.pow(1 - (y0 - y) / L, 1.2)); } }
     box(W / 2, gf + 0.04, Dp + 0.025, W + 0.02, 0.08, 0.05, 'conc', wk === 'glass' ? '#4a525a' : conc); if (!res) ledge(gf, gf + 0.08, 0, W, 0.14, 0.2);
+    yield;
     // ---- 위층 창 ----
     const winCell = w => eve && w.lit ? [3, w.cur * 8 | 0] : [0, w.cur * 8 | 0];
     const glassPane = (x0, y0, w, h, cell, fr, mull, zr = Dp, st = 0, cu = 0) => { // 유리 + 창틀 + (가운데 창살). zr = 벽 안으로 들어간 유리 자리
@@ -19765,6 +20094,7 @@ Object.assign(Bld3D, {
       else if (st === 2) { const ty = y0 + h * 0.72; box(x0 + w / 2, ty, zr + d * 0.6, w, t2, d * 1.2, 'trim', fr); box(x0 + w / 2, (y0 + ty) / 2, zr + d * 0.6, t2, ty - y0, d * 1.2, 'trim', fr); } // 위 고정창 + 아래 두 짝
       else if (st === 3) { for (const q of [1 / 3, 2 / 3]) box(x0 + w * q, y0 + h / 2, zr + d * 0.6, t2 * 0.8, h, d, 'trim', fr); box(x0 + w / 2, y0 + h / 2, zr + d * 0.6, w, t2 * 0.8, d, 'trim', fr); } // 옛날 격자창
       else box(x0 + w / 2, y0 + h / 2, zr + d * 0.6, t2, h, d * 1.2, 'trim', fr); };
+    yield;
     // v347 몸통 다양화 (사용자 '더 디벨롭해'): 건물마다 창 모양 · 창틀 색, 꼭대기 층은 다른 창, 창마다 커튼·블라인드·창가 화분. 따로 굴리는 rng라 예전 배치는 그대로
     const LT = []; // v350 저녁 불빛 자리 [종류, x0, y0, x1, y1, z, 색] (그림은 Bld3D.nightGlow가 2D로 덧칠)
     const vr = this.rng(b.seed * 13 + 91), WS = vr() * 4 | 0, WT = P.n >= 3 && vr() < 0.6 ? (WS + 2) % 4 : WS, fq = vr(), frmW = fq < 0.14 ? '#6a4a32' : fq < 0.26 ? '#9aa2a8' : frm;
@@ -19811,6 +20141,7 @@ Object.assign(Bld3D, {
       cyl(0.1, (H + 0.05) / 2, Dp + 0.035, 0.025, H - 0.05, 'trim', '#9a9c9a', 8);
       if (res || r() < 0.4) { const gx = W - 0.14; cyl(gx, (H - 0.2 + 0.25) / 2, Dp + 0.05, 0.016, H - 0.45, 'trim', '#d8b01c', 6);
         for (let f = 0; f < P.n; f++) { const yy = Ht(0.14 + f * P.fh) - P.fh * 0.85; box(gx - 0.12, yy, Dp + 0.05, 0.24, 0.025, 0.025, 'trim', '#d8b01c'); if (!kit('meter', gx - 0.27, yy - 0.11, Dp + 0.05)) box(gx - 0.27, yy, Dp + 0.06, 0.1, 0.12, 0.06, 'trim', '#b4b6b4'); } } }
+    yield;
     // ---- 1층 ----
     const dr = pl && pl.door && pl.door.face === 0 ? pl.door : null, dx = dr ? dr.tx - b.x + 0.15 : -9, dh = Math.min(1.6, gf - (res ? 0.14 : 0.45)); // 문 위로 간판 자리
     const door = (x, w, h, zz = Dp) => { box(x + w / 2, h / 2, zz + 0.004, w, h, 0.008, 'win', '#ffffff', { uv: cellUV(eve ? 3 : 1, eve ? 3 : 3) }); const d = 0.045, tf = 0.04, fc = '#2e3134';
@@ -19873,6 +20204,7 @@ Object.assign(Bld3D, {
     const awn = (x0, x1, c0, y) => { const n = Math.max(2, Math.round((x1 - x0) / 0.22)), s = (x1 - x0) / n, th = 0.62, dd = 0.34, c2 = shade(c0, 0.5); for (let i = 0; i < n; i++) box(x0 + (i + 0.5) * s, y - dd / 2 * Math.sin(th), Dp + 0.05 + dd / 2 * Math.cos(th), s + 0.002, 0.02, dd, 'trim', i % 2 ? c2 : c0, { rx: th });
       box((x0 + x1) / 2, y - dd * Math.sin(th) - 0.05, Dp + 0.05 + dd * Math.cos(th), x1 - x0, 0.1, 0.015, 'trim', c0); };
     if (P.K && !P.court) awn(0.12, W - 0.12, P.K[0], gf - 0.36); else if (P.shops.length && !res) { const uw = W / P.shops.length; P.shops.forEach((s, i) => { if (s.aw) awn(i * uw + 0.12, (i + 1) * uw - 0.12, s.c, gf - 0.36); }); }
+    yield;
     // ---- 옥상: 계단실 · 물탱크 · 실외기 · 태양광 · 화단 · 안테나 · 법원 기둥·국기 ----
     const sx = Math.min(1.4, W * 0.32), sz = Math.min(1.1, Dp * 0.34), sy = P.court ? 0.9 : 0.72, hx = W - 0.25 - sx / 2, hz = 0.25 + sz / 2;
     const robs = [], drains = [[0.3, 0.3, 0.1], [W - 0.3, 0.3, 0.1], [0.3, Dp - 0.3, 0.1], [W - 0.3, Dp - 0.3, 0.1]]; // 옥상 위 물건 자리 (둘레 그늘) · 배수구 얼룩 [x, z, 퍼짐]
@@ -19911,6 +20243,7 @@ Object.assign(Bld3D, {
     if (P.court) { const ch = H - gf * 0.15; for (let x = 0.9; x < W - 0.5; x += 1.6) { cyl(x, ch / 2, Dp + 0.14, 0.18, ch, 'conc', '#ece6d8', 14); box(x, 0.06, Dp + 0.14, 0.46, 0.12, 0.46, 'conc', '#d4ccba'); box(x, ch - 0.04, Dp + 0.14, 0.44, 0.08, 0.44, 'conc', '#d4ccba'); }
       box(W / 2, ch + 0.08, Dp + 0.12, W - 0.4, 0.16, 0.5, 'conc', '#e2dccc'); box(W / 2, 0.04, Dp + 0.2, W - 0.2, 0.08, 0.5, 'conc', '#bdb5a3');
       { const fz = cTop > H ? Dp * 0.3 : Dp * 0.75; cyl(W / 2, cTop + 1.2, fz, 0.035, 2.4, 'trim', '#d8d8d4', 8); cyl(W / 2, cTop + 2.42, fz, 0.06, 0.06, 'trim', '#d4b04a', 8); box(W / 2 + 0.42, cTop + 2.15, fz, 0.78, 0.52, 0.015, 'win', '#ffffff', { uv: cellUV(1, 7) }); } }
+    yield;
     // ---- v346 주요 건물마다 한눈에 알아보는 표시 (사용자 '너가 만든 건물들 괜찮은데' → 법원처럼 하나씩): 옥상 간판탑 · 병원 십자·헬기장 · 관공서 국기 · 카지노·게임장 네온 · 가게 돌출 간판 ----
     if (P.K && !P.court && W >= 2 && Dp >= 2) { const kd = P.kind, [kc, kt] = P.K, nm = pl && pl.name ? pl.name : this.LABEL[kd];
       const roofSign = (txt, bg, fg, glow) => { const q = plat || { x0: 0, z0: 0, w: W, d: Dp, y: Ht(0) }, cx = q.x0 + q.w / 2, w = Math.min(q.w * 0.8, 5), h = Math.min(0.9, w * 0.22), z = q.z0 + q.d - 0.35, H = q.y, y = H + 0.42, W2 = cx * 2; if (!plat) robs.push([cx - w / 2, z - 0.2, cx + w / 2, z + 0.2]);
@@ -19930,6 +20263,7 @@ Object.assign(Bld3D, {
       else if (kd === 'arcade') roofSign(nm || '게임장', '#1a0a2a', '#7ef0ff', '#ff4ad0');
       else if (kd === 'registry' || kd === 'center') { flag(W * 0.2, Dp - 0.3, 1.6); flag(W * 0.8, Dp - 0.3, 1.6); robs.push([W * 0.2 - 0.1, Dp - 0.4, W * 0.2 + 0.1, Dp - 0.2], [W * 0.8 - 0.1, Dp - 0.4, W * 0.8 + 0.1, Dp - 0.2]); if (W > 5) roofSign(nm, kc, kt); }
       else if (kd === 'office' || kd === 'agent' || kd === 'shop' || kd === 'forsale') vSign(W - 0.25, nm, kc, kt); }
+    yield;
     // ---- v345 옥상 살림: 장독대 · 빨랫줄 · 환기관 (빌라) ----
     if (W >= 2.4 && Dp >= 2) { const free = (x, z, w, d) => !robs.some(o => x + w > o[0] - 0.1 && x < o[2] + 0.1 && z + d > o[1] - 0.1 && z < o[3] + 0.1) && x > 0.2 && z > 0.2 && x + w < W - 0.2 && z + d < Dp - 0.2;
       if (res && r() < 0.55) { const w = 0.9, d = 0.5, x = fx0 + r() * Math.max(0, fx1 - fx0 - w), z = Math.max(0.3, Dp - 0.85); if (free(x, z, w, d)) { robs.push([x, z, x + w, z + d]); box(x + w / 2, H + 0.04, z + d / 2, w, 0.08, d, 'conc', '#b8b2a6');
@@ -19947,6 +20281,7 @@ Object.assign(Bld3D, {
         if (vr() < 0.3) { const q = tryAt(0.5, 0.5); if (q) { const [x, z] = q, uc = ['#c42a24', '#2c5aa8', '#2a8a4a'][vr() * 3 | 0]; cyl(x + 0.25, H + 0.09, z + 0.25, 0.24, 0.18, 'trim', uc, 14); cyl(x + 0.25, H + 0.18, z + 0.25, 0.2, 0.005, 'trim', '#5a6a72', 14); } } } // 고무 대야 (고인 물) · 넓은 옥상은 넓이만큼 여러 번
       if (W * Dp > 40 && P.st !== 'glass') { const jc = shade(P.roof, -0.22); for (let x = 3; x < W - 1; x += 3) box(x, H + 0.012, Dp / 2, 0.05, 0.006, Dp - 0.5, 'trim', jc); for (let z = 3; z < Dp - 1; z += 3) box(W / 2, H + 0.012, z, W - 0.5, 0.006, 0.05, 'trim', jc); } // v360 넓은 방수 옥상의 줄눈 (3칸마다)
       for (let i = 0; i < 3; i++) drains.push([0.6 + r() * (W - 1.2), 0.6 + r() * (Dp - 1.2), 0.15 + r() * 0.3]); } // 빗물 고였던 얼룩
+    yield;
     // ---- 옥상 바닥: 격자로 깔고 꼭짓점마다 그늘 (난간 둘레 · 계단실·물탱크 둘레 · 배수구·고인 물 얼룩 · 얼룩덜룩한 방수 페인트) ----
     { const g = /^#[9a]/.test(P.roof) ? 'conc' : 'roof', Y = H + 0.01, xs = [t, W - t], zs = [t, Dp - t];
       for (const d of [0.1, 0.3]) { xs.push(t + d, W - t - d); zs.push(t + d, Dp - t - d); }
@@ -19963,6 +20298,7 @@ Object.assign(Bld3D, {
         quad(g, P.roof, [[x0, Y, z1], [x1, Y, z1], [x1, Y, z0], [x0, Y, z0]], [A(x0, z1), A(x1, z1), A(x1, z0), A(x0, z0)]); }
       box(W / 2, H + 0.05, t + 0.004, W - 2 * t, 0.08, 0.008, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); // 난간 안쪽으로 치켜 올린 방수층
       box(t + 0.004, H + 0.05, Dp / 2, 0.008, 0.08, Dp - 2 * t, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); box(W - t - 0.004, H + 0.05, Dp / 2, 0.008, 0.08, Dp - 2 * t, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); }
+    yield;
     // ---- 앞벽: 창 구멍을 뺀 격자. 칸마다 꼭짓점 그늘, 그늘이 가로로 같으면 한 칸으로 합친다 ----
     { const srt = (a, lo, hi) => [...new Set(a.filter(v => v >= lo && v <= hi).map(v => +v.toFixed(4)))].sort((p, q) => p - q), xs = srt([0, W, ...XL], 0, W), ys = srt([yb, H, ...YL], yb, H), e = 1e-4, q2 = (a, b2) => Math.abs(a - b2) < 2e-3;
       const inH = (x, y) => holes.some(h => x > h[0] && x < h[2] && y > h[1] && y < h[3]), A = (x, y) => { let v = 1; for (const T of aoT) if (x >= T[0] && x <= T[1]) v *= T[2](x, y); return v; };
@@ -19973,6 +20309,7 @@ Object.assign(Bld3D, {
           if (run && q2(bl, br) && q2(tl, tr) && q2(run[2], run[3]) && q2(run[4], run[5]) && q2(run[3], bl) && q2(run[5], tl)) { run[1] = xc; continue; }
           flush(); run = [xa, xc, bl, br, tl, tr]; }
         flush(); } }
+    yield;
     // ---- 간판 그림 (건물마다 한 장, 칸당 CS px) ----
     const mats = []; let sTex = null;
     if (signs.length) { let cw = 64; for (const s of signs) cw = Math.max(cw, Math.ceil(s.w * CS) + 4); cw = Math.min(2048, cw); const sc = Math.min(1, (cw - 4) / (Math.max(...signs.map(s => s.w)) * CS));
@@ -19982,6 +20319,7 @@ Object.assign(Bld3D, {
       sTex = R.cvTex(cw, chh, c => { for (const s of signs) { c.save(); c.translate(s.px[0], s.px[1]); c.beginPath(); c.rect(0, 0, s.px[2], s.px[3]); c.clip(); s.draw(c, s.px[2], s.px[3]); c.restore(); } }); sTex._own = 1;
       for (const s of signs) s.uv = [(s.px[0] + 0.5) / cw, 1 - (s.px[1] + s.px[3] - 0.5) / chh, (s.px[2] - 1) / cw, (s.px[3] - 1) / chh];
       for (const o of [B.sign, B.lett]) if (o) for (let i = 0; i < o.len * 2; i += 2) if (o.u[i] < 0) { const s = signs[-o.u[i] - 1], q = o.u[i + 1], u = q & 1, v = (q >> 1) & 1; o.u[i] = s.uv[0] + u * s.uv[2]; o.u[i + 1] = s.uv[1] + v * s.uv[3]; } }
+    yield;
     // ---- 재질별 모양 → 그룹 ----
     const root = new THREE.Group(); root.position.set(b.x, 0, b.y);
     let NV = 0, TOP = 0; for (const k in B) { const o = B[k], n = o.len; if (!n) continue; NV += n; const geo = new THREE.BufferGeometry(), pp = o.p.subarray(0, n * 3); geo.setAttribute('position', new THREE.BufferAttribute(pp, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(o.n.subarray(0, n * 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(o.u.subarray(0, n * 2), 2)); geo.setAttribute('color', new THREE.BufferAttribute(o.c.subarray(0, n * 3), 3));
@@ -20091,7 +20429,7 @@ Object.assign(Bld3D, {
       for (const [dz, h1, h2, sg] of wires) { const p1 = tip(a, dz, h1), p2 = tip(b, dz * flip, h2), n = 10, sag = sg * L; let pr = p1; for (let i = 1; i <= n; i++) { const t = i / n, pt = [p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t - sag * 4 * t * (1 - t), p1[2] + (p2[2] - p1[2]) * t]; w.push(...pr, ...pt); pr = pt; } } }
     for (const [, C] of cells) { if (C.g.length) { const m = new THREE.Mesh(T3.mergeGeometries ? T3.mergeGeometries(C.g) : this.mergeG(C.g), mat); m.castShadow = true; m.receiveShadow = true; R.S.add(m); C.g.forEach(g => g.dispose()); }
       if (C.w.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(C.w, 3)); R.S.add(new THREE.LineSegments(g, wmat)); } }
-    this.poles = P.length; this._P = P; this._U = U; this._NP = NP; },
+    this.poles = P.length; R._wireE = E; /* v364 참새가 전깃줄에 앉는 자리 */ this._P = P; this._U = U; this._NP = NP; },
   mergeG(gs) { const { THREE } = T3; let n = 0; for (const g of gs) n += g.attributes.position.count; const p = new Float32Array(n * 3), nn = new Float32Array(n * 3), c = new Float32Array(n * 3); let o = 0;
     for (const g of gs) { p.set(g.attributes.position.array, o * 3); nn.set(g.attributes.normal.array, o * 3); c.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; }
     const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(p, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); m.setAttribute('color', new THREE.BufferAttribute(c, 3)); m.computeBoundingSphere(); return m; },
@@ -20540,8 +20878,22 @@ const Suit3D = {
     for (const m of this.src) { const P = m.g.attributes.position; for (let i = 0; i < P.count; i++) { v.fromArray(m.W, i * 3); if (Math.abs(v.y - chY) < (s1 - s0) * 0.05 && Math.abs(v.x) < sp * 0.12) { cz += v.z; cn++; } } }
     const dz = (T ? T.getCenter(new THREE.Vector3()).z : 0) - (cn ? cz / cn : 0) * kz, Mi = new THREE.Matrix4().copy(bM).invert(), nm = new THREE.Vector3();
     // 몸 정점 격자 (가까운 정점 찾기)
-    const C = 0.05, grid = new Map(), key = (a, b, c) => a + ',' + b + ',' + c; for (let i = 0; i < n; i++) { const kk = key(Math.floor(X[i * 3] / C), Math.floor(X[i * 3 + 1] / C), Math.floor(X[i * 3 + 2] / C)); let L = grid.get(kk); if (!L) grid.set(kk, L = []); L.push(i); }
-    const near = (x, y, z) => { const gx = Math.floor(x / C), gy = Math.floor(y / C), gz = Math.floor(z / C), best = []; for (let rr = 1; rr <= 30 && best.length < 4; rr++) { best.length = 0; for (let a = -rr; a <= rr; a++) for (let b = -rr; b <= rr; b++) for (let c = -rr; c <= rr; c++) { const L = grid.get(key(gx + a, gy + b, gz + c)); if (L) for (const i of L) best.push([(X[i * 3] - x) ** 2 + (X[i * 3 + 1] - y) ** 2 + (X[i * 3 + 2] - z) ** 2, i]); } } best.sort((p, q) => p[0] - q[0]); return best.slice(0, 4); };
+    const C = 0.05, grid = new Map(), key = (a, b, c) => (a + 4096) * 67108864 + (b + 4096) * 8192 + (c + 4096); /* 숫자 열쇠 (글자 열쇠보다 훨씬 빠름, 결과 같음) */ for (let i = 0; i < n; i++) { const kk = key(Math.floor(X[i * 3] / C), Math.floor(X[i * 3 + 1] / C), Math.floor(X[i * 3 + 2] / C)); let L = grid.get(kk); if (!L) grid.set(kk, L = []); L.push(i); }
+    let CA = null, CB, CC, CL, CD, HI; const NC = new Map(), cand = (gx, gy, gz) => {
+      /* 예전: 상자를 rr=1..30 키우며 rr마다 칸 전체를 다시 훑어 첫 옷 칸 열 때 8초 멈춤. 지금은 같은 결과를 빨리: 가까우면 껍질만 늘려 가며, 멀면 정점 있는 칸 목록(a,b,c 순서)을 한 번 훑어
+       * 칸 거리(가장 먼 축)별 개수로 정점 4개 이상 들어오는 가장 작은 rr을 고른다. 후보 정점 목록은 같은 순서로 모으고, 칸마다 한 번만 계산해 둔다 */
+      const ck = key(gx, gy, gz); let out = NC.get(ck); if (out) return out; out = [];
+      const hit = [], cnt = (a, b, c) => { const L = grid.get(key(gx + a, gy + b, gz + c)); if (L) hit.push([a, b, c, L]); return L ? L.length : 0; }; let r = 1, t = cnt(0, 0, 0);
+      for (; r <= 3; r++) { for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) { if (Math.abs(a) === r || Math.abs(b) === r) { for (let c = -r; c <= r; c++) t += cnt(a, b, c); } else t += cnt(a, b, -r) + cnt(a, b, r); } if (t >= 4) break; }
+      if (t >= 4) { hit.sort((p, q) => p[0] - q[0] || p[1] - q[1] || p[2] - q[2]); for (const h of hit) for (const i of h[3]) out.push(i); NC.set(ck, out); return out; }
+      if (!CA) { const E = [...grid.keys()].map(k => [Math.floor(k / 67108864) - 4096, Math.floor(k / 8192) % 8192 - 4096, k % 8192 - 4096, grid.get(k)]).sort((p, q) => p[0] - q[0] || p[1] - q[1] || p[2] - q[2]);
+        CA = Int32Array.from(E, e => e[0]); CB = Int32Array.from(E, e => e[1]); CC = Int32Array.from(E, e => e[2]); CL = E.map(e => e[3]); CD = new Int32Array(E.length); HI = new Float64Array(32); }
+      HI.fill(0); const m = CA.length; for (let q = 0; q < m; q++) { const d = Math.max(Math.abs(CA[q] - gx), Math.abs(CB[q] - gy), Math.abs(CC[q] - gz)); CD[q] = d; if (d <= 30) HI[d] += CL[q].length; }
+      let rr = 1, tot = HI[0] + HI[1]; while (tot < 4 && rr < 30) tot += HI[++rr];
+      for (let q = 0; q < m; q++) if (CD[q] <= rr) for (const i of CL[q]) out.push(i); NC.set(ck, out); return out; };
+    const near = (x, y, z) => { const best = []; // 가장 가까운 4개 (거리 같으면 목록 앞쪽 먼저 = 예전 정렬과 같음)
+      for (const i of cand(Math.floor(x / C), Math.floor(y / C), Math.floor(z / C))) { const d = (X[i * 3] - x) ** 2 + (X[i * 3 + 1] - y) ** 2 + (X[i * 3 + 2] - z) ** 2; if (best.length === 4 && d >= best[3][0]) continue; let k = best.length < 4 ? best.length : 3; while (k > 0 && best[k - 1][0] > d) k--; best.splice(k, 0, [d, i]); if (best.length > 4) best.pop(); }
+      return best; };
     // 장갑은 손가락 뼈 대신 손 뼈 하나로 (가까운 손가락 정점이 섞이면 장갑이 찢어진 판처럼 늘어남. 여압 장갑은 원래 뻣뻣하다)
     const bn = body.skeleton.bones.map(b => b.name), hand = { l: bn.indexOf('hand_l'), r: bn.indexOf('hand_r') }, remap = bn.map((nm, i) => { const f = /^(index|middle|pinky|ring|thumb)_\d+(_leaf)?_([lr])$/.exec(nm); return f && hand[f[3]] >= 0 ? hand[f[3]] : i; });
     const out = [];
@@ -20618,7 +20970,7 @@ const Suit3D = {
 const Pet3D = {
   st: 0, M: {},
   // 키 대신 몸길이로 크기를 맞추는 납작하고 긴 펫 (칸)
-  LEN: { turtle: 1.05, croc: 1.9, lizard: 0.95, dolphin: 1.5, beetle: 0.62, mouse: 0.8, mantis: 0.72, gary: 0.8 },
+  LEN: { boar: 1.3, sparrow: 0.65, turtle: 1.05, croc: 1.9, lizard: 0.95, dolphin: 1.5, beetle: 0.62, mouse: 0.8, mantis: 0.72, gary: 0.8 },
   load() {
     if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder, THREE } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     const get = f => new Promise((ok, no) => L.load(Arena3J.url(f), ok, undefined, no));
@@ -20659,19 +21011,19 @@ const Pet3D = {
   },
   /* ---- v335 실사 펫 (Sketchfab CC BY, '만든 사람들'에 출처): 기본 모습일 때만 (진화·꾸미기는 위 모델). 3d/sfp/<키>.glb, 처음 보일 때 받는다.
    * 뼈 동작이 있는 펫(강아지·토끼·쥐·돌고래)은 동작을 섞고, 뼈 없는 사진 모델은 몸 전체로 통통·뒤뚱. 성격(act)은 그대로 */
-  SFP: { cat: 0, dog: 0, dolphin: 0, panda: 0, parrot: 0, mouse: Math.PI / 2, gary: 0, trex: 0, penguin: 0, rabbit: Math.PI, turtle: 0 }, // 앞을 +x로 돌리는 각
+  SFP: { cat: 0, dog: 0, dolphin: 0, panda: 0, parrot: 0, mouse: Math.PI / 2, gary: 0, trex: 0, penguin: 0, rabbit: Math.PI, turtle: 0, chicken: Math.PI / 2, boar: Math.PI / 2, sparrow: -Math.PI / 2 }, // 앞을 +x로 돌리는 각
   R: {}, rs: {},
   noReal: true, // v344 사용자 '캐릭터만 귀엽게' → 펫은 직접 만든 귀여운 모델 (실사 펫 코드는 그대로 둠)
-  REAL_OK: { cat: 1, dog: 1, rabbit: 1, mouse: 1 }, /* 돌고래는 물 밖에서 떠 보여 아직 뺌 */ /* v351 동작 있는 실사 펫 (사용자 '동작 없는건 다 빼' 뒤 남은 실사 모델) */ /* v345 noReal이어도 실사로 쓰는 종류: 사용자가 고른 긴 털 갈색 고양이 */
+  REAL_OK: { cat: 1, dog: 1, rabbit: 1, mouse: 1, chicken: 1, boar: 1, sparrow: 1 }, REAL_ONLY: { chicken: 1, boar: 1, sparrow: 1 }, /* v364 실사만 있는 펫 (귀여운 모델 없음): 받기 전엔 2D 그림 */ /* 돌고래는 물 밖에서 떠 보여 아직 뺌 */ /* v351 동작 있는 실사 펫 (사용자 '동작 없는건 다 빼' 뒤 남은 실사 모델) */ /* v345 noReal이어도 실사로 쓰는 종류: 사용자가 고른 긴 털 갈색 고양이 */
   real(k, st, d) { if ((this.noReal && !this.REAL_OK[k]) || st || d || !(k in this.SFP) || !window.T3) return false; this.needR(k); return this.rs[k] === 2; },
   needR(k) { if (this.rs[k]) return; this.rs[k] = 1; const { THREE, GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('sfp/' + k + '.glb?v=' + (k === 'cat' ? 2 : 1)), ok, undefined, no))).then(G => {
-      const w = new THREE.Group(); w.rotation.y = this.SFP[k]; w.add(G.scene);
+      const w = new THREE.Group(); w.rotation.y = this.SFP[k]; let fold = null; if (this.FOLD[k]) try { fold = this.foldBind(G.scene, G.animations); } catch (e) { console.warn('pet3d fold', e); } w.add(G.scene);
       G.scene.traverse(m => { if (!m.isMesh) return; m.castShadow = true; m.frustumCulled = false; m.geometry._keep = 1; (Array.isArray(m.material) ? m.material : [m.material]).forEach(t => { t._keep = 1; for (const q of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap']) if (t[q]) { t[q]._keep = 1; t[q].anisotropy = 8; } }); });
       const bad = this.BADTRK[k]; if (bad) for (const c of G.animations) c.tracks = c.tracks.filter(t => !bad.test(t.name.split('.')[0])); // v343 강아지 동작의 뒷발가락·눈꺼풀 트랙이 깨져 있었다 (뒷발이 뒤로 늘어나고 발가락이 줄처럼)
       const an = {}; for (const c of G.animations) an[c.name] = c; const c0 = an.idle || an.swim || G.animations[0]; let mx = null; if (c0) { mx = new THREE.AnimationMixer(G.scene); mx.clipAction(c0).play(); mx.update(0.01); } // 크기는 서 있는 동작 자세로
       w.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(w, true); let legs = null; try { legs = this.LEG[k] ? (this.LEG[k].bone ? this.boneLegs(k, w) : this.rig(k, w, b)) : null; } catch (e) { console.warn('pet3d rig', k, e); } if (mx) mx.stopAllAction();
-      this.R[k] = { w, an, legs, hgt: b.max.y - b.min.y, len: b.max.x - b.min.x, y0: b.min.y, cx: (b.min.x + b.max.x) / 2, cz: (b.min.z + b.max.z) / 2 }; this.rs[k] = 2;
+      this.R[k] = { w, an, legs, fold, hgt: b.max.y - b.min.y, len: b.max.x - b.min.x, y0: b.min.y, cx: (b.min.x + b.max.x) / 2, cz: (b.min.z + b.max.z) / 2 }; this.rs[k] = 2;
     }).catch(e => { console.warn('pet3d real', k, e); this.rs[k] = -1; }); },
   /* v343 사용자 '펫들 질질 끌려오는데? 동물이면 네발로 걷거나 그래야': 걷는 동작이 없는 실사 펫에 다리를 움직인다.
    * 뼈 없는 사진 모델(판다·티라노·거북이)은 받을 때 발 정점을 찾아 다리 뼈를 심고(rig) 그 둘레 정점을 다리에 묶는다. 강아지는 원래 뼈(엉덩이·어깨)를 흔든다.
@@ -20716,6 +21068,41 @@ const Pet3D = {
       bn.getWorldQuaternion(q); out.push({ name: bn.name, front: !!front, left: !!left, ax: new THREE.Vector3(0, 0, 1).applyQuaternion(q.invert()) }); }
     return out.length === 4 ? out : null;
   },
+  /* v364 실사만 있는 펫 동작: IDLE = 가만히 있을 때 돌리는 동작 (초), SPD = [걷기, 뛰기] 동작 한 번 빠르기(모델 단위/초) + 뛰기로 바꾸는 빠르기 */
+  IDLE: { chicken: { L: [['idle', 2.5], ['eat', 3], ['idle', 2], ['eat', 2.5], ['idle', 2], ['sit', 9]] }, boar: { L: [['idle', 3], ['eat', 4.5], ['idle', 3], ['sit', 10]] }, sparrow: { L: [['idle', 2], ['eat', 1.6], ['idle', 1.4], ['shake', 1.1], ['eat', 1.6], ['idle', 1.5]] } },
+  SPD: { chicken: [1.1, 7.5, 2.4], boar: [0.95, 1.6, 2.2], sparrow: [0.5, 0.5, 99] },
+  /* 참새 날개 접기 (Sketchfab 모델은 모든 동작에서 날개를 펴고 있다): 받을 때 묶음 자세에서 날개 정점으로 날개 면(Mb)을 재 두고,
+   * 매 장 어깨를 몸 옆에 붙인 면(FP)으로 돌린다. 축은 모두 모델 원래 좌표 (w로 돌리기 전) */
+  FOLD: { sparrow: 1 }, FP: { sd: 0.5, nu: 1.4, so: -0.1, sc: 0.64 },
+  foldBind(o, anims) {
+    const { THREE } = T3, bn = {}, V = () => new THREE.Vector3(), Q = () => new THREE.Quaternion(); o.traverse(n => { if (n.isBone) bn[n.name.replace(/_\d+$/, '')] = n; }); if (!bn.hips || !bn.l_shoulder || !bn.r_shoulder) return null;
+    const tr = new Set(); for (const c of anims) for (const t of c.tracks) tr.add(t.name.split('.')[0] + '|' + t.name.split('.').pop());
+    o.updateMatrixWorld(true); const F = { hq: bn.hips.getWorldQuaternion(Q()), BL: {}, keep: [] }, hp = bn.hips.getWorldPosition(V());
+    o.traverse(n => { if (!n.isBone) return; F.BL[n.name.replace(/_\d+$/, '')] = n.quaternion.clone(); if (!tr.has(n.name + '|quaternion')) F.keep.push([n.name, n.quaternion.clone(), n.position.clone()]); });
+    const WV = { l: [], r: [] }; o.traverse(m => { if (!m.isSkinnedMesh) return; const g = m.geometry, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, sk = m.skeleton;
+      for (let i = 0; i < g.attributes.position.count; i++) { let bi = -1, bw = 0; for (let j = 0; j < 4; j++) { const w = sw.getComponent(i, j); if (w > bw) { bw = w; bi = si.getComponent(i, j); } } const mm = sk.bones[bi] && sk.bones[bi].name.match(/^([lr])_(shoulder|wing)/); if (mm) { const v = V(); m.getVertexPosition(i, v); m.localToWorld(v); WV[mm[1]].push(v); } } });
+    const pit = (M, x) => { for (let j = 0; j < 60; j++) { const y = [0, 1, 2].map(i => M[i][0] * x[0] + M[i][1] * x[1] + M[i][2] * x[2]), l = Math.hypot(...y); x = y.map(u => u / l); } return x; };
+    for (const sd of ['l', 'r']) { const a = bn[sd + '_shoulder'].getWorldPosition(V()), P = WV[sd]; if (P.length < 4) return null; let tip = P[0]; for (const v of P) if (v.distanceTo(a) > tip.distanceTo(a)) tip = v;
+      const cen = V(); for (const v of P) cen.add(v); cen.multiplyScalar(1 / P.length); const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]; for (const v of P) { const d = [v.x - cen.x, v.y - cen.y, v.z - cen.z]; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) C[i][j] += d[i] * d[j]; }
+      const e1 = pit(C, [1, 0.3, 0.2]), l1 = [0, 1, 2].map(i => C[i][0] * e1[0] + C[i][1] * e1[1] + C[i][2] * e1[2]).reduce((u, y, i) => u + y * e1[i], 0), e2 = pit(C.map((r, i) => r.map((x, j) => x - l1 * e1[i] * e1[j])), [0.2, 1, 0.3]);
+      const n = new THREE.Vector3(...e1).cross(new THREE.Vector3(...e2)).normalize(); if (n.y < 0) n.negate(); const sv = tip.clone().sub(a); sv.sub(n.clone().multiplyScalar(sv.dot(n))).normalize();
+      F[sd] = { sg: a.x - hp.x > 0 ? 1 : -1, Mbt: new THREE.Matrix4().makeBasis(sv, n.clone().cross(sv), n).transpose(), q1: bn[sd + '_shoulder'].getWorldQuaternion(Q()) }; }
+    return F;
+  },
+  foldReset(H) { for (const [n, q, p] of H.fkK) { n.quaternion.copy(q); n.position.copy(p); } for (const sd of ['l', 'r']) { const w = H.fk[sd + '_shoulder']; if (w) w.scale.setScalar(1); } },
+  foldPose(H, fw) {
+    if (fw <= 0.001) return; const { THREE } = T3, F = this.R[H.k].fold, P = this.FP, bn = H.fk, Z = this._fz || (this._fz = { q: new THREE.Quaternion(), q2: new THREE.Quaternion(), s: new THREE.Vector3(), n: new THREE.Vector3(), c: new THREE.Vector3(), M: new THREE.Matrix4(), hb: F.hq.clone().invert() });
+    H.root.updateMatrixWorld(true); const hqN = bn.hips.getWorldQuaternion(new THREE.Quaternion()), hb = F.hq.clone().invert();
+    for (const sd of ['l', 'r']) { const S = F[sd], sg = S.sg, w1 = bn[sd + '_shoulder']; for (const e of ['_wing1', '_wing2']) { const b = bn[sd + e]; if (b) b.quaternion.slerp(F.BL[sd + e], fw); }
+      const s = Z.s.set(sg * P.so, -P.sd, 1).normalize(), n = Z.n.set(sg, P.nu, 0); n.sub(Z.c.copy(s).multiplyScalar(n.dot(s))).normalize(); const c = Z.c.copy(n).cross(s);
+      const qR = Z.q.setFromRotationMatrix(Z.M.makeBasis(s, c, n).multiply(S.Mbt)), tw = hqN.clone().multiply(hb).multiply(qR).multiply(S.q1), tl = w1.parent.getWorldQuaternion(Z.q2).invert().multiply(tw);
+      w1.quaternion.slerp(tl, fw); w1.scale.setScalar(1 + (P.sc - 1) * fw); }
+  },
+  /* 쥐가 구멍에 들어가는 시간표 (가만히 5초 뒤 q초): go 0→1 구멍까지, dive 0→1 머리부터 들어가기, hid 숨음, peek 0→1 고개 내밀기. clip = 바닥 아래 자르기 */
+  mouseAt(q) { const sm = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); }, o = { go: sm(q / 0.7), dive: sm((q - 2.2) / 1.8), hid: false, peek: 0, clip: 'idle' };
+    if (q < 0.7 || (q > 2.2 && q < 4)) o.clip = 'walk'; if (q >= 4) { const pk = (q - 4) % 3.4; o.peek = pk > 1.5 && pk < 3 ? Math.min(1, (pk - 1.5) * 3, (3 - pk) * 3) : 0; o.hid = o.peek < 0.02; o.dive = 1; } return o; },
+  clipOn(H) { if (H.clip) return H.clip; const { THREE } = T3; if (!Room3D.r) return null; Room3D.r.localClippingEnabled = true; const pl = H.clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 50);
+    H.root.traverse(o => { if (!o.isMesh || o === H.sh) return; o.material = (Array.isArray(o.material) ? o.material : [o.material]).map(m => { const c = m.clone(); c.clippingPlanes = [pl]; return c; }); if (o.material.length === 1) o.material = o.material[0]; }); return pl; },
   makeReal(k, h) {
     const { THREE } = T3, B = this.R[k], root = new THREE.Group(), inner = new THREE.Group(), bob = new THREE.Group(), m = T3.SkeletonUtils.clone(B.w), o = this.M[k], s = this.LEN[k] ? this.LEN[k] / B.len : Math.min(h / B.hgt, o ? o.len * this.scale(k, h) * 1.15 / B.len : 1e9); // 예전 모델 몸길이를 넘지 않게 (티라노 꼬리)
     m.position.set(-B.cx, -B.y0, -B.cz); bob.add(m); inner.add(bob); inner.scale.setScalar(s); root.add(inner);
@@ -20724,6 +21111,7 @@ const Pet3D = {
     const H = { root, inner, bob, nd: {}, k, s, sh, st: 0, fx: [], model: 1, pet: 1, ph: 0, top: B.hgt * s, dk: '', real: 1, B: { len: B.len, hgt: B.hgt, y0: 0, an: null } };
     if (Object.keys(B.an).length) { H.mix = new THREE.AnimationMixer(m); H.acts = {}; for (const n in B.an) H.acts[n] = H.mix.clipAction(B.an[n]); }
     if (B.legs) { H.legs = B.legs.map(l => Object.assign({ o: m.getObjectByName(l.name) }, l)).filter(l => l.o); H.legs.forEach(l => { l.q0 = l.o.quaternion.clone(); l.p0 = l.o.position.clone(); }); H.amp = this.LEG[k].amp; if (!H.legs.length) H.legs = null; }
+    if (B.fold) { H.fk = {}; m.traverse(n => { if (n.isBone) H.fk[n.name.replace(/_\d+$/, '')] = n; }); H.fkK = B.fold.keep.map(([n, q, p]) => [m.getObjectByName(n), q, p]).filter(a => a[0]); }
     if (k === 'cat') try { H.cat = this.catRig(m, B.y0); } catch (e) { console.warn('pet3d cat', e); } // v345 실사 고양이: 걷기·기지개
     return H;
   },
@@ -20732,9 +21120,13 @@ const Pet3D = {
     if (mv) H.rate = Math.max(6, Math.min(14, 5 + sp * 3.2)); H.ph += dt * (mv || m > 0.03 ? H.rate || 8 : 0); const p = H.ph; /* v340 멈춰도 걸음 박자는 이어 가며 잦아든다 (박자가 얼어붙으면 오뚜기처럼 기울어진 채 흔들렸다) */ b.position.set(0, 0, 0); b.rotation.set(0, 0, 0); b.scale.set(1, 1, 1); // v343 이 줄이 주석에 먹혀 몸 기울기·숨쉬기 크기가 쌓이고 있었다
     if (H.legs) for (const l of H.legs) { l.o.quaternion.copy(l.q0); l.o.position.copy(l.p0); } // 동작이 안 건드리는 뼈도 매번 처음 자세에서
     if (H.cat) { this.catPose(H, mv, dt); try { this.act(H, m, t, dt, P); } catch (e) { console.warn('pet3d act', e); H.noAct = 1; } return; }
-    if (H.mix) { const A = H.acts, want = (P.pose === 'ride' || P.ride) && A.sit ? 'sit' : mv ? (sp > 2.6 && A.run ? 'run' : A.walk ? 'walk' : A.swim ? 'swim' : A.idle ? 'idle' : null) : idle > 5 && A.sit ? 'sit' : idle > 5 && A.eat ? 'eat' : A.idle ? 'idle' : A.swim ? 'swim' : null;
+    if (H.fk) this.foldReset(H);
+    if (H.mix) { const A = H.acts, C = this.IDLE[k], SP = this.SPD[k], cyc = () => { let u = (idle - 1.5) % C.T; for (const [n, d] of C.L) { if (u < d) return A[n] ? n : 'idle'; u -= d; } return 'idle'; };
+      const want = k === 'mouse' && !mv && idle > 5 && A.walk ? this.mouseAt(idle - 5).clip : P.act && A[P.act] ? P.act : P.fly && A.fly ? 'fly' : (P.pose === 'ride' || P.ride) && A.sit ? 'sit' : mv ? (sp > (SP ? SP[2] : 2.6) && A.run ? 'run' : A.walk ? 'walk' : A.swim ? 'swim' : A.idle ? 'idle' : null) : C && idle > 1.5 ? cyc() : idle > 5 && A.sit ? 'sit' : idle > 5 && A.eat ? 'eat' : A.idle ? 'idle' : A.swim ? 'swim' : null;
       if (want && H.cur !== want) { A[want].reset().setEffectiveWeight(1).fadeIn(H.cur ? 0.25 : 0).play(); if (H.cur) A[H.cur].fadeOut(0.25); H.cur = want; }
-      H.mix.update(dt * (want === 'walk' || want === 'run' ? Math.max(0.6, Math.min(1.8, sp / (want === 'run' ? 3 : 1.4))) : want === 'swim' ? (mv ? 1.6 : 0.6) : 1)); }
+      const ts = want === 'walk' || want === 'run' ? (SP ? Math.max(0.6, Math.min(2.4, sp / (SP[want === 'run' ? 1 : 0] * H.s))) : Math.max(0.6, Math.min(1.8, sp / (want === 'run' ? 3 : 1.4)))) : want === 'swim' ? (mv ? 1.6 : 0.6) : 1; /* v364 걸음 빠르기 = 실제로 가는 빠르기 ÷ 동작 한 번에 가는 거리 (닭·멧돼지 발이 미끄러지지 않게) */
+      H.mix.update(dt * ts); }
+    if (H.fk) { H.fw = Math.max(0, Math.min(1, (H.fw == null ? 1 : H.fw) + (P.fly ? -dt / 0.15 : dt / 0.2))); this.foldPose(H, H.fw); } // v364 참새: 앉으면 날개 접기, 날면 편다
     const lg = H.legs && !(H.mix && (H.cur === 'walk' || H.cur === 'run' || H.cur === 'swim' || H.cur === 'sit')) && m > 0.01;
     if (lg) { const qq = this._q || (this._q = new T3.THREE.Quaternion()), four = H.legs.length === 4; // v343 다리 걷기: 네발은 대각선끼리 (왼앞+오른뒤), 두 발은 번갈아. 앞으로 나갈 때 발을 든다
       for (const l of H.legs) { const o = four ? (l.front === l.left ? 0 : Math.PI) : l.left ? 0 : Math.PI, a = Math.sin(p + o) * H.amp * m; l.o.quaternion.multiply(qq.setFromAxisAngle(l.ax, a)); if (l.up) l.o.position.y += Math.max(0, Math.cos(p + o)) * 0.05 * H.B.hgt * m; } }
@@ -20801,11 +21193,11 @@ const Pet3D = {
     R.F.position.y = R.oy;
   },
   ready() { return this.st === 2; },
-  has(k, st) { return this.st === 2 && !!this.M[k] && (!st || !!(this.M[k].evo[st] && this.M[k].evo[st].length)); },
+  has(k, st) { if (this.REAL_ONLY[k]) return !st && !this.noRealOnly && this.real(k); return this.st === 2 && !!this.M[k] && (!st || !!(this.M[k].evo[st] && this.M[k].evo[st].length)); },
   // 크기 배율: 게임 칸 단위 키 h (PetRT.petH 기준)에 맞추되, 긴 펫은 몸길이로
   SZ: CUTE ? 0.78 : 1, // v345 동물의 숲처럼 사람보다 작고 귀엽게 (사람이 꼬마 몸이 돼서 펫이 상대적으로 커 보였다)
-  scale(k, h) { const B = this.M[k]; return (this.LEN[k] ? this.LEN[k] / B.len : h / B.hgt) * this.SZ; },
-  topOf(k, h) { const B = this.M[k]; return B.hgt * this.scale(k, h); },
+  scale(k, h) { const B = this.M[k]; if (!B) return 1; return (this.LEN[k] ? this.LEN[k] / B.len : h / B.hgt) * this.SZ; },
+  topOf(k, h) { const B = this.M[k]; if (!B) return h; return B.hgt * this.scale(k, h); },
   mat() {
     if (this.m) return this.m; const { THREE } = T3;
     this.m = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: Room3D.grad });
@@ -20949,6 +21341,13 @@ const Pet3D = {
     } else if (k === 'dolphin') {
       if (still) { const b = this.prop(H, 'ball', () => { const g = new THREE.Group(), r = ms(this.pg('ball', T => new T.SphereGeometry(0.5, 14, 10)), '#e83a4a'), w = ms(this.pg('band', T => new T.TorusGeometry(0.5, 0.07, 6, 16)), '#ffffff'); g.add(r); g.add(w); return g; }); // 코끝 공 튕기기
         b.position.copy(hp).add(new THREE.Vector3(hh * 0.1, hh * 0.3 + Math.abs(Math.sin(t * 5)) * hh * 0.45, 0)); b.scale.setScalar(hh * 0.3); b.rotation.z = t * 3; R('head', 0, 0, 0.2 + Math.abs(Math.sin(t * 5)) * 0.1); }
+    } else if (k === 'mouse' && H.real) { // v364 사용자 '쥐는 가만히 있을때 쥐구멍 찾아서 들어가거나 하수구 들어가기' (펫 동작 스레드 참고 영상 rat_hole_v1): 구멍까지 쪼르르 → 킁킁 → 머리부터 쏙 → 숨었다가 고개만 빼꼼
+      const C = this.clipOn(H); if (still) { const hx = Math.max(0.5, L * 1.15), wall = P.wall != null, r0 = Math.max(0.09, L * 0.2);
+        const h = this.prop(H, wall ? 'mhole' : 'grate', () => { const g = new THREE.Group(); if (wall) { const ring = new THREE.Mesh(this.pg('pond', T => new T.CircleGeometry(1, 28)), new THREE.MeshBasicMaterial({ color: 0x3a2a1c })); ring.rotation.x = -Math.PI / 2; ring.scale.setScalar(1.45); g.add(ring); const d = new THREE.Mesh(this.pg('pond', T => new T.CircleGeometry(1, 28)), new THREE.MeshBasicMaterial({ color: 0x060404 })); d.rotation.x = -Math.PI / 2; d.position.y = 0.002; g.add(d); }
+          else { const d = new THREE.Mesh(this.pg('box1', T => new T.BoxGeometry(1, 0.02, 1)), new THREE.MeshBasicMaterial({ color: 0x070707 })); d.scale.set(2.2, 1, 1.4); g.add(d); const fr = ms(this.pg('box1', T => new T.BoxGeometry(1, 0.02, 1)), '#4a4e56'); fr.scale.set(2.5, 0.8, 1.7); fr.position.y = -0.003; g.add(fr); for (let i = -2; i <= 2; i++) { const b = ms(this.pg('bar', T => new T.BoxGeometry(0.16, 0.06, 1.7)), '#3a3e46'); b.scale.set(1, 0.5, 0.82); b.position.set(i * 0.42, 0.02, 0); g.add(b); } }
+          return g; });
+        h.position.set(hx, 0.012, 0); h.scale.set(r0, 1, r0); const MA = this.mouseAt(q), dv = MA.dive;
+        I.position.set(hx * MA.go + dv * L * 0.55, -dv * hh * 0.65 * (MA.peek ? 0 : 1) - (MA.peek ? hh * (0.65 - 0.3 * MA.peek) : 0), 0); I.rotation.z = -dv * 0.35 * (MA.peek ? 0 : 1) + (MA.peek ? 0.25 : 0); if (MA.hid) I.visible = false; H.sh.visible = q < 0.9; if (C) C.constant = 0.004; } else if (C) C.constant = 50;
     } else if (k === 'mouse') {
       if (still) { const run = Math.min(1, q / 0.7), hx = Math.max(0.55, hh * 1.9); const h = this.prop(H, 'hole', () => { const g = new THREE.Group(), d = new THREE.Mesh(this.pg('pond', T => new T.CircleGeometry(1, 28)), T('#141010')); d.rotation.x = -Math.PI / 2; g.add(d); // 하수구로 쪼르르 쏙
           for (let i = -2; i <= 2; i++) { const b = ms(this.pg('bar', T => new T.BoxGeometry(0.16, 0.06, 1.7)), '#3a3e46'); b.position.set(i * 0.38, 0.03, 0); g.add(b); } return g; });
@@ -21162,7 +21561,7 @@ const Snap3D = {
       if (u.st.rope) { const { THREE } = T3; u.rp = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 6), Room3D.toon('#6a4a26')); u.m.add(u.rp); }
       return u; },
       (b, c) => this.fit(b, c, 0.42, 1.06),
-      (u, dt, tt) => { const { THREE } = T3, mvv = !!mv; u.m.position.y = water ? Math.sin(tt * 2.2) * 0.04 : 0; u.m.rotation.z = water ? Math.sin(tt * 1.7) * 0.03 : 0; Ride3D.anim(u.m, tt, mvv); if (u.m.userData.D) u.H.root.matrix.multiplyMatrices(u.m.userData.D, u.base).decompose(u.H.root.position, u.H.root.quaternion, u.H.root.scale); /* v337 용·말 몸 따라 */ u.H.mix.update(dt); if (u.C) { Hero3D.play(u.C, mvv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.C.mix.update(dt); } u.m.updateMatrixWorld(true); if (u.st.pose || u.st.grip || u.st.leg) Hero3D.ridePose(u.H, u.st.pose, tt, mvv, u.st.grip, u.st.leg); if (u.C) Hero3D.ridePose(u.C, 'carry', tt, mvv);
+      (u, dt, tt) => { const { THREE } = T3, mvv = !!mv; if (!u.stg && Ride3D.stage) { try { u.stg = Ride3D.stage(k, u.m); u.m.parent.add(u.stg.g); } catch (e) { u.stg = { tick() {} }; console.warn('ride stage', e); } } u.stg.tick(dt, mvv); /* v346 (탈것 스레드) 3D 바닥 */ u.m.position.y = water ? Math.sin(tt * 2.2) * 0.04 : 0; u.m.rotation.z = water ? Math.sin(tt * 1.7) * 0.03 : 0; Ride3D.anim(u.m, tt, mvv); if (u.m.userData.D) u.H.root.matrix.multiplyMatrices(u.m.userData.D, u.base).decompose(u.H.root.position, u.H.root.quaternion, u.H.root.scale); /* v337 용·말 몸 따라 */ u.H.mix.update(dt); if (u.C) { Hero3D.play(u.C, mvv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.C.mix.update(dt); } u.m.updateMatrixWorld(true); if (u.st.pose || u.st.grip || u.st.leg) Hero3D.ridePose(u.H, u.st.pose, tt, mvv, u.st.grip, u.st.leg); if (u.C) Hero3D.ridePose(u.C, 'carry', tt, mvv);
         if (u.rp) { const a = Hero3D.handsAt(u.H); if (a) { u.m.worldToLocal(a); const r = u.st.rope, b = new THREE.Vector3(r.x / TILE, r.h, r.y / TILE), d = b.clone().sub(a), L = d.length(); u.rp.position.copy(a).add(b).multiplyScalar(0.5); u.rp.scale.set(1, L, 1); u.rp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); } } });
     if (!img) return false;
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, Hh); x.restore(); return true;
@@ -21291,9 +21690,14 @@ const Snap3D = {
       else { if (typeof Pet3D !== 'undefined' && Pet3D.st === 1 && !this.pw) this.pw = setInterval(() => { if (Pet3D.st === 1) return; clearInterval(this.pw); this.pw = 0; if (Pet3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); // 모델이 오면 다시 그리기
         key = 'th:pet:' + k; build = g => { const h = PetRT.petH(k) / TILE * 1.1, e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k, h, paint: s => Pets.draw(s, k, 25, 40, 1, false, 0.7, '', 0) }, false, 0.7); if (!e) return;
         e.geo._keep = 1; const Hp = Room3D.mkPet(); Hp.mesh.geometry = Hp.ol.geometry = e.geo; Hp.mat.map = e.tex; Hp.sh.visible = false; Hp.root.rotation.y = -0.62; g.add(Hp.root); }; aim = (b, c) => this.fit(b, c, 0.26, 1.1); } }
+    if (!this.cache.has(key + ':' + S) && this.later(x, it)) return true; // 이번 프레임에 찍을 시간을 다 썼으면 다음 프레임에 (칸은 잠깐 빈 바탕)
     const img = this.shot(key + ':' + S, W, Hh, build, aim); if (!img) return false;
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true;
   },
+  /* 숍 칸 사진을 처음 찍을 때 한 번에 20장을 찍으면 화면이 몇 초 멈춘다 (옷 칸 4~8초) → 한 프레임에 30ms까지만 찍고 나머지 칸은 다음 프레임에 그 칸만 다시 그린다. 사진은 똑같다 */
+  later(x, it) { const cv = x.canvas; if (this.baking || !cv || !cv.isConnected || typeof Shop === 'undefined') return false; const n = performance.now();
+    if (!this.tb) { this.tb = n; requestAnimationFrame(() => { this.tb = 0; const q = this.tq; this.tq = null; if (q) for (const [c, i] of q) if (c.isConnected && Shop.open_) Shop.preview(c, i); }); }
+    if (n - this.tb < 30) return false; (this.tq || (this.tq = new Map())).set(cv, it); return true; },
 };
 /* ===================== 3D 이펙트 (v345, 사용자 '2D인거 전부 3D로' → '이펙트도 쫌 실사처럼') =====================
  * 편집숍·옷장의 이펙트 9종을 사람 둘레의 실사풍 3D로: 구름·연기·흙먼지는 잡음 무늬 뭉게 판(빛 받는 연기 느낌), 불은 불꽃 무늬 빛 더하기 + 위로 오르는 연기, 비는 가는 빗줄기 + 튀는 물방울,
@@ -24638,7 +25042,10 @@ const Study3D = {
       const tagOn = job.vw !== 'doc'; if (job.H) for (const H of job.H) { H.tag && (H.tag.visible = tagOn); H.mix.update(dt); if (H.walk) { H.root.position.x -= dt * 0.9; H.root.position.z += dt * 0.25; if (H.root.position.x < -7) { H.root.position.x = 4.5; H.root.position.z = 3.9; } } }
       if (!S.background && typeof PBR !== 'undefined' && PBR.hdr) { const d = S.background = new THREE.DataTexture(PBR.hdr, 512, 256, THREE.RGBAFormat, THREE.HalfFloatType); d.mapping = THREE.EquirectangularReflectionMapping; d.colorSpace = THREE.LinearSRGBColorSpace; d.magFilter = d.minFilter = THREE.LinearFilter; d.needsUpdate = true; S.backgroundIntensity = 0.85; S.backgroundRotation && S.backgroundRotation.set(0, 1.2, 0); }
       r.render(S, cam); };
-    job.raf = requestAnimationFrame(loop);
+    // 처음 열 때 셰이더 만들기·그림 올리기를 한 번에 몰아서 하면 화면이 1초 넘게 멈춘다 → 셰이더는 따로(compileAsync), 그림은 한 프레임에 한 장씩 올린 뒤 그리기 시작 (그림은 똑같음)
+    el.classList.add('wait'); const tx = new Set(); S.traverse(o => { if (!o.material) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) for (const k in m) { const t = m[k]; if (t && t.isTexture) tx.add(t); } });
+    const q = [...tx], t0 = performance.now(), up = () => { if (this.job !== job) return; const t = q.shift(); if (t) { try { r.initTexture(t); } catch (e) { } } if (q.length && performance.now() - t0 < 3000) { job.raf = requestAnimationFrame(up); return; } el.classList.remove('wait'); job.raf = requestAnimationFrame(loop); };
+    cam.aspect = 16 / 9; cam.updateProjectionMatrix(); const cp = r.compileAsync ? r.compileAsync(S, cam).catch(() => { }) : Promise.resolve(); Promise.race([cp, new Promise(ok => setTimeout(ok, 2500))]).then(() => { if (this.job === job) job.raf = requestAnimationFrame(up); });
   },
   stop() {
     const j = this.job; if (!j) return; this.job = null; clearTimeout(j.wt); cancelAnimationFrame(j.raf);
@@ -25048,7 +25455,11 @@ const CREDITS_SF = [["Classic Bicycle | LowPoly | Game ready", "by__Rx", "https:
   ["Modern Wooden Wardrobe", "M4nT1Core", "https://sketchfab.com/3d-models/aff452c30e724283ae2c4f17297e0ef7"],
   ["Rock Wall Scan", "CommonSpence", "https://sketchfab.com/3d-models/166ad4fc797c4289ae20e665e3b6a1d0"], // v352 광산 바위·석탄 벽 사진 (스캔을 정면으로 구워 이음매 없이)
   ["Goldfields mining pick", "City of Ballarat", "https://sketchfab.com/3d-models/8c3cbe5d2175463e8ce7ce3fb4a985c1"], // v352 광산 1인칭 곡괭이
-  ["Miner", "irs1182", "https://sketchfab.com/3d-models/db6586a7a82b43f38915f98056f77d95"] // v355 광산 같이 캐는 광부
+  ["Miner", "irs1182", "https://sketchfab.com/3d-models/db6586a7a82b43f38915f98056f77d95"], // v355 광산 같이 캐는 광부
+  // v364 새 펫 닭·참새·멧돼지 (3d/sfp/)
+  ["ANIMAL & FOOD - Chicken Model (CS2)", "kill6lucius", "https://sketchfab.com/3d-models/7c72450ac7e0472eb9b647b6efee2984"],
+  ["Animated Sparrow – 3D Animal Model", "AnimalMesh 3D", "https://sketchfab.com/3d-models/026d23b0c0954f328694cb339ade4045"],
+  ["Animated Realistic Boar – 3D Animal Model", "AnimalMesh3D", "https://sketchfab.com/3d-models/f672a7fd93e84997b80a54ba30956111"]
 ];
 Cm.credits = () => { const li = CREDITS_SF.map(([t, a, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a> · ${esc(a)} <small>CC BY 4.0 · 수정함</small></li>`).join('');
   Cm.win(`<div class="rcHead">만든 사람들</div><div class="rcSub">경매 GTA는 아래 분들이 공개한 모델·사진 덕분에 만들 수 있었어요. 고마워요!</div>
@@ -25085,7 +25496,7 @@ const Access = {
     const got = this.gift(n); if (got && !quiet) setTimeout(() => { try { Toast.show(`환영해요, ${n} 님! 옷·모자·펫·탈것을 전부 선물로 드렸어요.`, 4200); Sound.play('chime'); } catch (e) { } }, 600);
   },
   gift(n) {
-    const key = 'gift350all_' + n; if (Store.get(key, false) || typeof SHOP_ITEMS === 'undefined' || typeof Shop === 'undefined') return 0;
+    const key = 'gift364all_' + n; /* v364 새 펫(닭·참새·멧돼지)도 받게 키를 올림 */ if (Store.get(key, false) || typeof SHOP_ITEMS === 'undefined' || typeof Shop === 'undefined') return 0;
     const w = Store.get('wardrobe', null) || {}, own = new Set(Shop.owned()), src = Object.assign({}, w.src || {}); let c = 0;
     for (const cat of this.GIFT_CATS) for (const it of SHOP_ITEMS[cat] || []) if (it && it.id && !own.has(it.id)) { own.add(it.id); src[it.id] = 'gift'; c++; }
     Store.set('wardrobe', Object.assign({}, w, { owned: [...own], src })); Store.set(key, true); Store.set('ungift241', true); /* 예전 선물 회수(v241)가 이번 선물을 다시 가져가지 않게 */

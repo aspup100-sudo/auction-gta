@@ -308,9 +308,10 @@ body.tutReview #docView.in { top:6px; transform:translate(-50%, 0); max-height:c
 #bidForm { left:50%; top:50%; width:min(560px, calc(100% - 24px)); transform:translate(-50%, -44%) rotate(-2deg); background:#fffdf6; color:#111; border-radius:6px; padding:16px 18px; box-shadow:0 14px 40px rgba(0,0,0,.6); }
 #bidForm.in { transform:translate(-50%, -50%); }
 #bidForm { max-height:calc(var(--vh, 100vh) - 12px); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; } #bidForm #bfBtns { position:sticky; bottom:-16px; z-index:1; background:#fffdf6; margin:6px 0 -16px; padding:8px 0 12px; box-shadow:0 -6px 8px -6px rgba(0,0,0,.18); } /* 폰 가로 화면에서 제출 버튼이 화면 밖으로 잘려서 못 냈다 (사용자 2026-10-17): 창 안에서 스크롤 + 버튼은 늘 아래에 */
-.short #bidForm { padding:8px 12px 16px; } .short #bidForm .docHead { margin-bottom:4px; padding-bottom:2px; } .short #bidForm h2 { font-size:15px; margin:2px 0 4px; } .short #bidForm th, .short #bidForm td { padding:2px 5px; } .short #bidForm input { font-size:15px; padding:3px 6px; } .short #bidForm .bfDep { padding:1px 0; } .short #bidForm .cap { font-size:10.5px; margin:4px 0; line-height:1.35; } .short #bidForm .bfConf { margin:4px 0; padding:5px 8px; line-height:1.4; }
+.short #bidForm { padding:8px 12px 16px; } .short #bidForm .docHead { margin-bottom:4px; padding-bottom:2px; } .short #bidForm h2 { font-size:15px; margin:2px 0 4px; } .short #bidForm th, .short #bidForm td { padding:2px 5px; } .short #bidForm input { font-size:16px; padding:3px 6px; } .short #bidForm .bfDep { padding:1px 0; } .short #bidForm .cap { font-size:10.5px; margin:4px 0; line-height:1.35; } .short #bidForm .bfConf { margin:4px 0; padding:5px 8px; line-height:1.4; }
 #bidForm input { font:700 18px var(--ui); width:100%; padding:6px 8px; border:1px solid #9aa3b2; border-radius:4px; -webkit-user-select:text; user-select:text; }
 #bidForm .prac { color:var(--seal); }
+#bidForm .bfRow { display:flex; gap:6px; align-items:stretch; } #bidForm .bfRow input { flex:1; min-width:0; } #bidForm #bfOkIn { flex:none; min-width:64px; padding:4px 12px; font-size:16px; } /* v374 금액 칸 옆 내기 버튼 (아이폰 키보드에 아래 버튼이 가려도) */
 #bidForm input[type=radio] { width:auto; flex:none; margin:3px 0 0; padding:0; accent-color:#1d3a6a; } /* 위 width:100%가 라디오에도 먹어서 글씨가 칸 밖으로 밀려났다 (사용자 2026-10-15) */
 #bidForm .bfDep { display:flex; align-items:flex-start; gap:8px; padding:3px 0; font-weight:700; cursor:pointer; } #bidForm .bfDep .small { font-weight:400; color:#555; } #bidForm td br { display:none; }
 #openBoard { left:50%; top:12px; width:min(460px, calc(100% - 24px)); max-height:calc(100% - 24px); overflow:auto; transform:translate(-50%, -20px); background:rgba(15,51,88,.97); border:2px solid var(--gold); border-radius:10px; padding:12px 14px; color:#fff; z-index:31; }
@@ -1661,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v373</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v374</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -8492,7 +8493,14 @@ async function asylum(victim, total, why, line) {
 }
 
 /* ---- 문 진입 · 아이리스 ---- */
+function irisDark() { const t = Game.trans; return !!(t && t.close && t.p >= 1); }
+/* v374 버벅임 1판: 화면이 열리기 직전 (아직 검을 때) 보일 땅 조각을 다 만들어 둔다. 전엔 열리는 첫 장면에서 만들어 열리자마자 멈칫했다. 그림은 똑같다 */
+function zoneWarm() { const z = Game.zone; if (Game.scene !== 'zone' || !z || !z.chunks) return;
+  const halfW = VW / 2 / Cam.zoom + CHUNK * 0.6, halfH = VH / 2 / Cam.zoom / zoneSq() + 60 + CHUNK * 0.6, x0 = Cam.x - halfW - 40, x1 = Cam.x + halfW + 40, y0 = Cam.y - halfH - 40, y1 = Cam.y + halfH + 40;
+  const cx0 = Math.max(0, Math.floor(x0 / CHUNK)), cx1 = Math.floor(x1 / CHUNK), cy0 = Math.max(0, Math.floor(y0 / CHUNK)), cy1 = Math.floor(y1 / CHUNK); if ((cx1 - cx0 + 1) * (cy1 - cy0 + 1) > 34) return;
+  for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) if (cx * CHUNK < z.W * TILE && cy * CHUNK < z.H * TILE) zoneChunk(z, cx, cy); }
 async function iris(close) {
+  if (!close && irisDark()) zoneWarm();
   const dur = FEEL.irisTime * 1000, t0 = performance.now();
   return new Promise(res => {
     const tr = Game.trans = { close, p: 0 }; /* v357: 다른 화면 전환이 Game.trans를 비워도 이 전환은 끝까지 (전엔 null 오류로 멈춰 Game.busy가 안 풀렸다) */
@@ -8805,7 +8813,7 @@ function drawZone(t, g = ctx) { // g: 땅 그림 캔버스 (3D 바깥이면 #zgr
   { /* v363 달리는 앞쪽 땅 조각을 미리 조금씩 (한 장면 3ms) · v371 끊김 (사용자 '계속 끊긴다 게임하는 중간중간에'): 걸을 때도, 화면 둘레 0.6조각까지 미리 (기억 한도 40조각 안에서만) */
     const c = Game.driving && Game.car ? Game.car : Game.player, ax = ((c && c.vx) || 0) * 1.2, ay = ((c && c.vy) || 0) * 1.2, M = CHUNK * 0.6;
     const X0 = x0 - M + Math.min(0, ax), Y0 = y0 - M + Math.min(0, ay), X1 = x1 + M + Math.max(0, ax), Y1 = y1 + M + Math.max(0, ay), n = (Math.floor(X1 / CHUNK) - Math.floor(X0 / CHUNK) + 1) * (Math.floor(Y1 / CHUNK) - Math.floor(Y0 / CHUNK) + 1);
-    if (n <= 34) zoneChunkPre(z, X0, Y0, X1, Y1, performance.now() + (Game.busy ? 30 : 3)); /* 문 전환으로 화면이 가려진 동안엔 넉넉히 */ else if (Game.driving && Math.abs(ax) + Math.abs(ay) > 24) zoneChunkPre(z, x0 + Math.min(0, ax), y0 + Math.min(0, ay), x1 + Math.max(0, ax), y1 + Math.max(0, ay), performance.now() + 3); }
+    if (n <= 34) zoneChunkPre(z, X0, Y0, X1, Y1, performance.now() + (irisDark() ? 30 : 3)); /* 문 전환으로 화면이 다 가려진 동안에만 넉넉히 (v374: 문 열리는 중·화면이 닫히는 중엔 3ms, 그때 30ms씩 써서 문 애니메이션이 끊겼다) */ else if (Game.driving && Math.abs(ax) + Math.abs(ay) > 24) zoneChunkPre(z, x0 + Math.min(0, ax), y0 + Math.min(0, ay), x1 + Math.max(0, ax), y1 + Math.max(0, ay), performance.now() + 3); }
   // 지하철 출입구
   for (const s of z.subway) { const X = s.x * TILE, Y = s.y * TILE; g.fillStyle = '#1f8a3a'; g.fillRect(X - 6, Y - 6, 12, 12); g.fillStyle = '#fff'; g.font = 'bold 8px sans-serif'; g.textAlign = 'center'; g.fillText(String(s.ref || s.line), X, Y + 3); }
   // 도로 이름(노면, 반투명 큰 글자)
@@ -10761,7 +10769,7 @@ function bidForm(c, practice, must = 0) { // must: 튜토리얼에서 단예가 
     el.innerHTML = `<div class="doc court"><div class="docHead">${courtOf(c).name}${practice ? ' · <b class="prac">입찰 연습</b>' : ''}</div><h2>기 일 입 찰 표</h2>
       <table class="kv"><tr><th>사건번호</th><td>${c.caseNo}</td><th>물건번호</th><td>1</td></tr>
       <tr><th>입찰자 성명</th><td colspan="3">본인</td></tr>
-      <tr><th>입찰가격</th><td colspan="3"><input id="bfBid" type="number" min="0" step="100000" placeholder="${must ? must.toLocaleString() : '원 단위로 적으세요'}"><div id="bfBidTxt" class="small"></div>${must ? `<div class="bfMust">단예 선배: <b>${fmtWon(must)}</b> (${must.toLocaleString()}원)으로 적어요</div>` : ''}</td></tr>
+      <tr><th>입찰가격</th><td colspan="3"><div class="bfRow"><input id="bfBid" type="number" inputmode="numeric" enterkeyhint="done" min="0" step="100000" placeholder="${must ? must.toLocaleString() : '원 단위로 적으세요'}"><button class="btn gold" id="bfOkIn">내기</button></div><div id="bfBidTxt" class="small"></div>${must ? `<div class="bfMust">단예 선배: <b>${fmtWon(must)}</b> (${must.toLocaleString()}원)으로 적어요</div>` : ''}</td></tr>
       <tr><th>보증금액</th><td colspan="3"><label class="bfDep"><input type="radio" name="bfDep" value="0.1" checked> ${fmtWon(d10)} <span class="small">(최저매각가격 ${fmtWon(c.minPrice)}의 10%)</span></label><br><label class="bfDep"><input type="radio" name="bfDep" value="0.2"> ${fmtWon(d20)} <span class="small">(20%, 특별매각조건이 있을 때)</span></label></td></tr></table>
       <div class="cap">※ 입찰가격은 최저매각가격 이상이어야 합니다. 한 번 제출한 입찰표는 바꿀 수 없고, 금액을 잘못 적어도(착오) 구제되지 않습니다. 보증금이 정해진 금액보다 적으면 입찰은 무효입니다.</div>
       <div id="bfConfirm"></div>
@@ -10771,9 +10779,14 @@ function bidForm(c, practice, must = 0) { // must: 튜토리얼에서 단예가 
     $('bfBid').oninput = e => ($('bfBidTxt').textContent = e.target.value ? `${fmtWon(+e.target.value)} · 금 ${CourtRules.hangul(+e.target.value)}원정` : '');
     if ($('bfBid').value) $('bfBid').oninput({ target: $('bfBid') });
     setTimeout(() => $('bfBid').focus(), 250);
-    const close = v => { if (document.activeElement) document.activeElement.blur(); el.classList.remove('in'); Game.formOpen = false; res(v); };
+    /* v374 사용자 2026-10-24 친구 아이폰에서 '내는 버튼이 안 보여서 낙찰 못 받음' (버튼이 잘렸다): 키보드가 올라오면 화면에서 보이는 부분(visualViewport)에 맞춰 창을 옮기고 줄인다.
+     * 금액 칸 바로 옆에도 '내기' 버튼, 키보드의 완료(Enter)로도 낸다. 낼 때 키보드를 내려 확인 칸과 버튼이 다 보이게 */
+    const vv = window.visualViewport, fit = () => { if (!vv || !el.classList.contains('in')) return; el.style.top = Math.round(vv.offsetTop + vv.height / 2) + 'px'; el.style.maxHeight = Math.max(150, Math.round(vv.height - 8)) + 'px'; showIn(); }, showIn = () => { const i = $('bfBid'); if (!i || document.activeElement !== i || el.scrollHeight <= el.clientHeight + 4) return; const row = i.closest('tr') || i; el.scrollTop += row.getBoundingClientRect().top - el.getBoundingClientRect().top - 6; }; /* 키보드가 덮어 창이 작으면 적는 칸(과 옆 내기 버튼)이 보이게 */
+    if (vv) { fit(); vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+    const close = v => { if (document.activeElement) document.activeElement.blur(); el.classList.remove('in'); Game.formOpen = false; if (vv) { vv.removeEventListener('resize', fit); vv.removeEventListener('scroll', fit); } el.style.top = el.style.maxHeight = ''; res(v); };
     $('bfNo').onclick = () => close(null);
     const submit = () => {
+      if (document.activeElement === $('bfBid')) $('bfBid').blur(); /* 키보드를 내려 버튼이 보이게 */
       const bid = Math.round(+$('bfBid').value);
       const rate = +(el.querySelector('input[name=bfDep]:checked') || { value: 0.1 }).value; const dep = CourtRules.deposit(c, rate);
       if (must && bid !== must) { Sound.play('deny'); Toast.show(`단예 선배가 말한 ${fmtWon(must)} (${must.toLocaleString()})으로 적어야 넘어가요.`, 3200); return; }
@@ -10793,7 +10806,9 @@ function bidForm(c, practice, must = 0) { // must: 튜토리얼에서 단예가 
     const unconfirm = () => { if (!$('bfYes')) return; $('bfConfirm').innerHTML = ''; $('bfBtns').innerHTML = `<button class="btn gold" id="bfOk2">${practice ? '연습 제출' : '입찰표 제출 · 보증금 납부'}</button><button class="btn" id="bfNo2">취소</button>`; $('bfOk2').onclick = submit; $('bfNo2').onclick = () => close(null); };
     el.querySelectorAll('input[name=bfDep]').forEach(r => (r.onchange = unconfirm));
     const typed = $('bfBid').oninput; $('bfBid').oninput = e => { typed(e); unconfirm(); };
-    $('bfOk').onclick = submit;
+    $('bfOk').onclick = submit; $('bfOkIn').onclick = submit;
+    $('bfBid').addEventListener('focus', () => setTimeout(showIn, 60));
+    $('bfBid').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } e.stopPropagation(); };
   });
 }
 
@@ -19190,11 +19205,12 @@ Object.assign(Room3D, {
       if (e.top != null) e.H = Math.max(e.H || 0, e.top); else try { e.H = Math.max(e.H || 0, new T3.THREE.Box3().setFromObject(e.m).max.y); } catch (er) {} /* v346 건물 1층을 높여서 (건물 스레드) 보이는 높이로 가림 판단 · v362 실사 건물은 makeReal이 top·nv를 알려 줌 (Box3·traverse 생략) */
       if (!e.nv) { let nv = 0; e.m.traverse(o => { const g = o.geometry; if (g && g.attributes && g.attributes.position) nv += g.attributes.position.count; }); e.nv = nv; }
       if (old) { e.o = old.o; this.zDrop(old); } this.S.add(e.m); this.zb.set(id, e); made++; };
+    const canG = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && !!Bld3D.makeRealG && !!(Bld3D.real && Bld3D.real());
     for (const id of need) { if (made && performance.now() - now > budget) break; const b = z.buildings[id];
-      if (!warm && !this.zb.has(id) && !onS(b)) continue;
+      if (!warm && (this.zb.has(id) ? canG : !onS(b))) continue; /* v374 버벅임 1판: 저녁이 되거나 벽 사진이 바뀌어 다시 지을 건물(이미 서 있음)도 나눠 짓기로. 전엔 화면 안 건물 30채쯤을 장면마다 한 채씩 통째로 지어 해 질 때 0.5초쯤 덜덜 떨렸다 (새 모습으로 바뀌는 건 똑같고 조금씩 차례로) */
       let e; if (J && J.id === id) { e = this.zJobRun(J, Infinity); this.zJob = J = null; } else e = this.zBld(b, plOf[id]); fin(id, e); }
     if (!warm) for (let k = 0; k < 4 && performance.now() - now < budget; k++) { /* v371 한 장에 시간이 남으면 다음 건물도 이어서 나눠 짓는다 (예전엔 한 장에 한 채만) */
-      if (!J) { const id = need.find(i => !this.zb.has(i)); if (id != null) { const b = z.buildings[id], g = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeG ? Bld3D.makeG(this, b, plOf[id], bWallH(b) / TILE * Z3_BH) : null; if (g) J = this.zJob = { id, g, pl: plOf[id], z, bg, eve: State.evening }; } }
+      if (!J) { const id = need.find(i => !this.zb.has(i)) ?? (canG ? need[0] : null); if (id != null) { const b = z.buildings[id], g = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeG ? Bld3D.makeG(this, b, plOf[id], bWallH(b) / TILE * Z3_BH) : null; if (g) J = this.zJob = { id, g, pl: plOf[id], z, bg, eve: State.evening }; } }
       if (!J) break; const jid = J.id, e = this.zJobRun(J, now + budget); if (!e) break; this.zJob = J = null; fin(jid, e); }
     if (this.zWarm) { if (!warm) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); }
   },
@@ -21913,6 +21929,7 @@ const Snap3D = {
     if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
     if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); if (this.baked(x, it.ride, 160 * S, 104 * S)) return true; return !(this.bk['ride/' + it.ride] && this.bk['ride/' + it.ride].bad); } /* v365 사진이 아직 오는 중이면 빈 칸으로 기다림 (예전엔 2D 그림으로 넘어가며 배·탱크 실사 모델을 칸마다 받아 폰이 튕겼다, 사용자 '스킨구경 e누르면 튕겼어') */ /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
     if (it.pet && typeof Pet3D !== 'undefined' && it.pet in Pet3D.SFP && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)), im = this.bk['pet/' + it.pet]; if (this.baked(x, it.pet, 160 * S, 104 * S, 'pet')) return true; if (!im || !im.bad) return true; } /* v366 실사 펫 칸도 미리 찍은 사진 (펫 칸을 열면 실사 펫 8마리 모델 18MB를 한꺼번에 받아 폰이 튕김, 사용자 '자꾸 숍 들어가서 보려고하면 튕긴다') */
+    if (!this.baking && ((it.col && !it.ride && !it.home && !it.fx && !it.pd) || (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && !RIDE3[it.ride].sf) || (it.pet && PET_PEOPLE[it.pet]))) { const S = Math.max(1, Math.round(x.getTransform().a)), im = this.bk['it/' + it.id]; if (this.baked(x, it.id, 160 * S, 104 * S, 'it')) return true; if (!im || !im.bad) return true; } /* v374 버벅임 1판: 차 색·카트·의자·업히기·사람 펫 칸도 미리 찍은 사진 (숍을 처음 열면 이 칸들을 3D로 찍느라 0.6초 멈췄다) */
     if ((it.hat || (it.pal && !it.ride && !it.pet)) && !this.baking) { const d = it.hat ? 'hat' : 'outfit', S = Math.max(1, Math.round(x.getTransform().a)), im = this.bk[d + '/' + it.id]; if (this.baked(x, it.id, 160 * S, 104 * S, d)) return true; if (!im || !im.bad) return true; } /* v373 사용자 '버벅거리고 튕기면 안 할까봐': 옷·모자 칸도 미리 찍은 사진 (칸마다 사람·모자 모델을 띄우던 것이 숍 메모리에서 제일 컸다). 사진이 없을 때만 3D로 */
     const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
@@ -25737,7 +25754,9 @@ Cm.credits = () => { const li = CREDITS_SF.map(([t, a, u]) => `<li><a href="${es
  * 숍의 옷·모자·펫·펫 꾸미기·탈것을 전부 선물로 준다 (src 'gift' = 되팔기 막음, 한 이름에 한 번).
  * 이름만 보는 방식이라 누가 같은 이름을 치면 들어올 수 있다. 막는 걸 풀려면 ALLOW 를 비운다. */
 const Access = {
-  ALLOW: ['에센티아', '부리코'],
+  ALLOW: ['에센티아', '부리코', '체'], /* v374 사용자 2026-10-24 '체 한테 참새 펫 넣어줘' → 체도 들어오게 (전부 선물은 처음 두 사람만, 체는 참새만) */
+  GIFT_ALL: ['에센티아', '부리코'],
+  GIFT_ONE: { '체': 'p_sparrow' },
   VIP: ['에센티아', '부리코'], /* v360 사용자 '부리코,에센티아 한테는 절하는거 열어놔' → 용돈 주고 큰절 받기 (후원자 전용) 열기. 서버도 이 이름은 통과 (relay/src/index.js VIP_NAMES) */
   GIFT_CATS: ['clothes', 'hat', 'pet', 'car'],
   ok(n) { return !this.ALLOW.length || this.ALLOW.includes(String(n || '').trim()); },
@@ -25755,7 +25774,7 @@ const Access = {
   pass(n, quiet) {
     Store.set('acc350', n); Store.set('mpName', n); if (this.VIP.includes(n) && typeof Donor !== 'undefined') { Donor.vip = 1; Donor.ok = true; } const inp = $('mpName'); if (inp) { inp.value = n; inp.readOnly = true; }
     if (typeof Preload !== 'undefined') setTimeout(() => Preload.start(), 300); /* v360 이름이 통과되면 바로 미리 받기 */
-    const got = this.gift(n); if (got && !quiet) setTimeout(() => { try { Toast.show(`환영해요, ${n} 님! 옷·모자·펫·탈것을 전부 선물로 드렸어요.`, 4200); Sound.play('chime'); } catch (e) { } }, 600);
+    this.giftOne(n); const got = this.GIFT_ALL.includes(n) ? this.gift(n) : 0; if (got && !quiet) setTimeout(() => { try { Toast.show(`환영해요, ${n} 님! 옷·모자·펫·탈것을 전부 선물로 드렸어요.`, 4200); Sound.play('chime'); } catch (e) { } }, 600);
   },
   gift(n) {
     const key = 'gift365all_' + n; /* v364 새 펫(닭·참새·멧돼지) · v365 벨로시랩터도 받게 키를 올림 */ if (Store.get(key, false) || typeof SHOP_ITEMS === 'undefined' || typeof Shop === 'undefined') return 0;
@@ -25764,6 +25783,11 @@ const Access = {
     Store.set('wardrobe', Object.assign({}, w, { owned: [...own], src })); Store.set(key, true); Store.set('ungift241', true); /* 예전 선물 회수(v241)가 이번 선물을 다시 가져가지 않게 */
     return c || 1;
   },
+  giftOne(n) { /* v374 한 사람에게 펫 하나 선물 (되팔기 막음, 한 번만), 빈 펫 자리가 있으면 바로 데리고 다님 */
+    const id = this.GIFT_ONE[n], key = 'gift374_' + n; if (!id || Store.get(key, false) || typeof SHOP_BY_ID === 'undefined' || typeof Shop === 'undefined' || !SHOP_BY_ID[id]) return;
+    Store.set(key, true); if (Shop.ungift) Shop.ungift(); /* 예전 선물 회수(한 번)를 먼저 끝내 이 선물을 가져가지 않게 */ if (!Shop.has(id)) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', Object.assign({}, w, { owned: Shop.owned().concat(id), src: Object.assign({}, w.src || {}, { [id]: 'gift' }) })); }
+    const pk = SHOP_BY_ID[id].pet, pf = Profile.get(), slot = pf.pet === pk || pf.pet2 === pk ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot === 'pet' || slot === 'pet2') Profile.set(slot, pk); if (typeof Pets !== 'undefined') Pets.mineT = -1;
+    setTimeout(() => { try { Toast.show(`${SHOP_BY_ID[id].name} 펫 선물이에요! ${slot ? '지금 옆에서 따라와요.' : '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.'}`, 4200); Sound.play('chime'); } catch (e) { } }, 900); },
   css() { const s = document.createElement('style'); s.textContent = `
 #accGate{position:fixed;inset:0;z-index:9999;background:rgba(12,16,24,.92);display:flex;align-items:center;justify-content:center;padding:16px}
 #accGate .box{width:min(340px,100%);background:#fbf5e6;color:#2a2418;border-radius:12px;padding:20px 18px 16px;text-align:center;font-family:"IBM Plex Sans KR",sans-serif;box-shadow:0 16px 50px rgba(0,0,0,.5)}

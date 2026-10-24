@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v371</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v372</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -12253,22 +12253,7 @@ const SHOP_ITEMS = {
     { id: 'h_wizard', name: '마법사 모자', new: '2026-10-22', nb: 319, price: 2000e4, hat: 'wizard' },
     { id: 'h_visor', name: '사이버 바이저', new: '2026-10-22', nb: 319, price: 2500e4, hat: 'visor' },
   ],
-  petdeco: [ // 펫 꾸미기 (사용자 2026-10-17 '안경, 목줄, 목도리, 펫 색깔 변경 황금색도'). 데리고 다니는 펫에 단다. 그림은 petdeco.js
-    { id: 'd_glasses', name: '동그란 안경', new: '2026-10-17', nb: 187, price: 200e4, pd: 'eye', v: 'glasses' },
-    { id: 'd_sun', name: '선글라스', new: '2026-10-17', nb: 187, price: 500e4, pd: 'eye', v: 'sun' },
-    { id: 'd_collar', name: '빨간 목줄', new: '2026-10-17', nb: 187, price: 200e4, pd: 'neck', v: 'collar' },
-    { id: 'd_scarf', name: '목도리', new: '2026-10-17', nb: 187, price: 300e4, pd: 'neck', v: 'scarf' },
-    { id: 'd_bow', name: '나비넥타이', new: '2026-10-17', nb: 187, price: 400e4, pd: 'neck', v: 'bowtie' },
-    { id: 'd_ribbon', name: '리본', new: '2026-10-17', nb: 187, price: 200e4, pd: 'head', v: 'ribbon' },
-    { id: 'd_party', name: '펫 생일 꼬깔', new: '2026-10-17', nb: 187, price: 300e4, pd: 'head', v: 'party' },
-    { id: 'd_crown', name: '펫 왕관', new: '2026-10-17', nb: 187, price: 3000e4, pd: 'head', v: 'crown' },
-    { id: 'd_pink', name: '분홍색 털', new: '2026-10-17', nb: 187, price: 500e4, pd: 'color', v: 'pink' },
-    { id: 'd_sky', name: '하늘색 털', new: '2026-10-17', nb: 187, price: 500e4, pd: 'color', v: 'sky' },
-    { id: 'd_purple', name: '보라색 털', new: '2026-10-17', nb: 187, price: 500e4, pd: 'color', v: 'purple' },
-    { id: 'd_black', name: '까만색 털', new: '2026-10-17', nb: 187, price: 800e4, pd: 'color', v: 'black' },
-    { id: 'd_rainbow', name: '무지개 털', new: '2026-10-17', nb: 187, price: 5000e4, pd: 'color', v: 'rainbow' },
-    { id: 'd_gold', name: '황금 털', new: '2026-10-17', nb: 187, price: 1e8, pd: 'color', v: 'gold' },
-  ],
+  petdeco: [], // v372 사용자 2026-10-24 '펫꾸미기 다 없애': 펫 꾸미기는 뺐다. 예전 물건은 PD_GONE (산 사람은 산 값 그대로 돌려줌)
   pet: [ // 희귀할수록 비싸다 (사용자 2026-10-15). 그림은 pets.js PET_DRAW
     // v346 사용자 2026-10-23 '동작 없는건 다 빼': 실사 모델에 동작이 없는 거북이·펭귄·판다·티라노·띵띵이·앵무새는 뺌. 가진 사람은 비슷한 값의 펫으로 바꿔 줌 (PET_GONE, 되팔기 값이 더 커지지 않게)
     // v370 사용자 2026-10-24 '여기 실사화된거 말고 다 빼': 실사 모델 펫(생쥐·참새·닭·강아지·고양이·토끼·멧돼지·벨로시랩터)과 사람 펫만 남김. 가진 사람은 같거나 싼 실사 펫으로 바꿔 줌 (PET_GONE)
@@ -12431,10 +12416,26 @@ const GENRE = { c_witch: 'hal', c_vamp: 'hal', c_ghost: 'hal', c_skel: 'hal', c_
   h_witch: 'hal', h_clown: 'hal', h_pumpkin: 'hal', h_skull: 'hal', h_zombie: 'hal', h_frank: 'hal', h_crown: 'fan', h_helm: 'fan', h_wizard: 'fan', h_space: 'sf', h_visor: 'sf' };
 function genreOf(it) { return it.genre || GENRE[it.id] || 'mod'; }
 function rideGroup(it) { return it.ride ? RIDE_GROUP[it.ride] || 'fun' : 'car'; }
+const PD_GONE = [
+    { id: 'd_glasses', name: '동그란 안경', new: '2026-10-17', nb: 187, price: 200e4, pd: 'eye', v: 'glasses' },
+    { id: 'd_sun', name: '선글라스', new: '2026-10-17', nb: 187, price: 500e4, pd: 'eye', v: 'sun' },
+    { id: 'd_collar', name: '빨간 목줄', new: '2026-10-17', nb: 187, price: 200e4, pd: 'neck', v: 'collar' },
+    { id: 'd_scarf', name: '목도리', new: '2026-10-17', nb: 187, price: 300e4, pd: 'neck', v: 'scarf' },
+    { id: 'd_bow', name: '나비넥타이', new: '2026-10-17', nb: 187, price: 400e4, pd: 'neck', v: 'bowtie' },
+    { id: 'd_ribbon', name: '리본', new: '2026-10-17', nb: 187, price: 200e4, pd: 'head', v: 'ribbon' },
+    { id: 'd_party', name: '펫 생일 꼬깔', new: '2026-10-17', nb: 187, price: 300e4, pd: 'head', v: 'party' },
+    { id: 'd_crown', name: '펫 왕관', new: '2026-10-17', nb: 187, price: 3000e4, pd: 'head', v: 'crown' },
+    { id: 'd_pink', name: '분홍색 털', new: '2026-10-17', nb: 187, price: 500e4, pd: 'color', v: 'pink' },
+    { id: 'd_sky', name: '하늘색 털', new: '2026-10-17', nb: 187, price: 500e4, pd: 'color', v: 'sky' },
+    { id: 'd_purple', name: '보라색 털', new: '2026-10-17', nb: 187, price: 500e4, pd: 'color', v: 'purple' },
+    { id: 'd_black', name: '까만색 털', new: '2026-10-17', nb: 187, price: 800e4, pd: 'color', v: 'black' },
+    { id: 'd_rainbow', name: '무지개 털', new: '2026-10-17', nb: 187, price: 5000e4, pd: 'color', v: 'rainbow' },
+    { id: 'd_gold', name: '황금 털', new: '2026-10-17', nb: 187, price: 1e8, pd: 'color', v: 'gold' },
+];
 const OUT_GONE = { c_tux: 'c_suit', c_navy: 'c_suit', c_vip: 'c_suit', r_boat: 'r_lifeboat', r_sailboat: 'r_galleon', r_viking: 'r_galleon', r_cruise: 'r_galleon', h_straw: 'h_party', p_turtle: 'p_boar', p_penguin: 'p_boar', p_panda: 'p_boar', p_gary: 'p_boar', p_parrot: 'p_boar', p_trex: 'p_raptor',
   p_beetle: 'p_sparrow', p_mantis: 'p_sparrow', p_lizard: 'p_cat', p_monkey: 'p_boar', p_croc: 'p_boar', p_kid: 'p_buddy', p_tiger: 'p_raptor', p_giraffe: 'p_raptor', p_elephant: 'p_raptor', p_dolphin: 'p_raptor', p_snowman: 'p_raptor', p_sponge: 'p_raptor', p_dora: 'p_raptor' }; /* v370 실사 아닌 펫 → 같거나 싼 실사 펫 */
 const PET_GONE = { turtle: 'boar', penguin: 'boar', panda: 'boar', gary: 'boar', parrot: 'boar', trex: 'raptor', beetle: 'sparrow', mantis: 'sparrow', lizard: 'cat', monkey: 'boar', croc: 'boar', kid: 'buddy', tiger: 'raptor', giraffe: 'raptor', elephant: 'raptor', dolphin: 'raptor', snowman: 'raptor', sponge: 'raptor', dora: 'raptor' }; // v346 동작 없는 펫 → 바꿔 준 펫 (데리고 다니던 것도) // v342 뺀 정장류는 검정 정장으로 (산 사람 몫 지킴) · v345 배는 고무보트·범선만 (사용자 '배는이거 빼고 다 빼'): 산 배는 그 둘로
-const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it); for (const k in OUT_GONE) SHOP_BY_ID[k] = SHOP_BY_ID[OUT_GONE[k]]; // 친구가 아직 예전 정장을 입고 있어도 정장으로
+const SHOP_BY_ID = {}; for (const it of PD_GONE) SHOP_BY_ID[it.id] = Object.assign({ tab: 'petdeco', gone: 1 }, it); for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it); for (const k in OUT_GONE) SHOP_BY_ID[k] = SHOP_BY_ID[OUT_GONE[k]]; // 친구가 아직 예전 정장을 입고 있어도 정장으로
 const Shop = {
   open_: false, tab: 'clothes',
   // 새로 들어온 물건: 열흘 동안 NEW 딱지 (사용자 2026-10-16)
@@ -12448,7 +12449,7 @@ const Shop = {
   newsText(N) { if (N.length <= 3) return N.map(it => it.name).join(', ');
     const ids = new Set(N.map(it => it.id)), G = []; for (const k in SHOP_ITEMS) { const L = SHOP_ITEMS[k].filter(it => ids.has(it.id)); if (!L.length) continue; const lab = { clothes: L.every(it => it.name.includes('할로윈')) ? '할로윈 옷' : '옷', hat: '모자', petdeco: '펫 꾸미기', pet: '펫', car: '탈것', fx: '이펙트', home: '가구' }[k] || k; G.push(`${lab} ${L.length}${k === 'clothes' ? '벌' : k === 'pet' ? '마리' : '개'}`); }
     return G.join(', '); },
-  owned() { const w = Store.get('wardrobe', null); if (w && w.owned && (!this.mig || w.owned.some(x => OUT_GONE[x]))) { this.mig = 1; const src = Object.assign({}, w.src || {}); for (const x of w.owned) { const y = OUT_GONE[x]; if (!y) continue; if (src[x] && !src[y]) src[y] = src[x]; delete src[x]; } /* 선물(gift)은 바꾼 펫도 선물 → 되팔기 안 됨 */
+  owned() { const w = Store.get('wardrobe', null); if (w && w.owned && w.owned.some(x => x.startsWith('d_'))) { const src = Object.assign({}, w.src || {}); let back = Store.get('pdBack372', 0) || 0; for (const x of w.owned) if (x.startsWith('d_')) { const it = PD_GONE.find(q => q.id === x); if (it && src[x] !== 'gift') back += it.price; delete src[x]; } Store.set('pdBack372', back); Store.set('wardrobe', Object.assign({}, w, { owned: w.owned.filter(x => !x.startsWith('d_')), src })); return this.owned(); } /* v372 펫 꾸미기 뺌 */ if (w && w.owned && (!this.mig || w.owned.some(x => OUT_GONE[x]))) { this.mig = 1; const src = Object.assign({}, w.src || {}); for (const x of w.owned) { const y = OUT_GONE[x]; if (!y) continue; if (src[x] && !src[y]) src[y] = src[x]; delete src[x]; } /* 선물(gift)은 바꾼 펫도 선물 → 되팔기 안 됨 */
       const o = [...new Set(w.owned.map(x => OUT_GONE[x] || x))]; if (o.join() !== w.owned.join()) Store.set('wardrobe', Object.assign({}, w, { owned: o, src })); this.petGone(); return o; } return (w && w.owned) || []; }, // v342 뺀 정장류 → 검정 정장 · v346 뺀 펫 → 비슷한 펫 (튜토리얼 선물처럼 나중에 들어와도 다시 바꿈)
   petGone() { if (typeof Profile === 'undefined') return; const p = Profile.get(), gone = []; for (const sl of ['pet', 'pet2']) { const k = p[sl], to = k && PET_GONE[k]; if (!to) continue; gone.push(k);
       const other = sl === 'pet' ? p.pet2 : p.pet; Profile.set(sl, other === to ? null : to); } if (!Profile.get().pet && Profile.get().pet2) { Profile.set('pet', Profile.get().pet2); Profile.set('petName', Profile.get().petName2 || ''); Profile.set('pet2', null); }
@@ -12464,6 +12465,8 @@ const Shop = {
   here() { return typeof Live !== 'undefined' && Live.on ? 'ch' + Live.ch : 'solo'; },
   hereKo(k) { return k === 'solo' ? '혼자 하기' : `채널 ${String(k).slice(2)}`; },
   srcOf(id) { const w = Store.get('wardrobe', null); return (w && w.src && w.src[id]) || null; },
+  pdBack() { const n = Store.get('pdBack372', 0) || 0; if (!n || typeof State === 'undefined') return; Store.set('pdBack372', 0); /* v372 산 펫 꾸미기 값을 그대로 돌려준다 */
+    if (typeof Money !== 'undefined') Money.why('펫 꾸미기 없앰 (산 값 돌려받기)'); State.cash += n; if (typeof Live !== 'undefined') { Live.addXtra(n); if (Live.on) Live.save(); } HUD.setCash(State.cash); setTimeout(() => Toast.show(`펫 꾸미기를 없애서 산 값 ${fmtWon(n)}을 돌려 드렸어요`, 4200), 400); },
   resell(it) { return Math.round(it.price * FEEL.shopResell / 1e4) * 1e4; },
   sell(it) {
     if (this.look) { Toast.show('되파는 것도 건대 편집숍에 직접 가야 해요'); return; }
@@ -12492,7 +12495,7 @@ const Shop = {
   carOf(id, fallback, pal) { const it = id && SHOP_BY_ID[id]; if (it && it.ride) return { ride: it.ride, rider: pal ? Profile.pal(pal) : null, tag: pal && it.ride === 'piggy' ? String(pal.rideName || '').slice(0, 10) : '' }; return it && it.col ? { col: it.col, stripe: it.stripe, bills: it.bills } : { col: fallback }; },
   myCar(riding) { return this.carOf(Profile.get().car, '#c8ccd2', riding ? Profile.get() : null); },
   open(tab, look) { // look: 가게 밖에서 구경만 (사는 건 편집숍 안에서만, 사용자 2026-10-16)
-    if (this.open_) return; this.open_ = true; this.look = !!look; this.tab = tab || this.tab; Game.formOpen = true; Sound.play('paper');
+    if (this.open_) return; this.open_ = true; this.look = !!look; this.tab = tab || this.tab; if (this.tab === 'petdeco') this.tab = 'pet'; this.owned(); this.pdBack(); Game.formOpen = true; Sound.play('paper');
     $('shop').classList.add('in'); this.render();
   },
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); this.free(); },
@@ -12513,7 +12516,7 @@ const Shop = {
       return `<div class="shItem${on ? ' on' : own ? ' own' : lock ? ' lock' : ''}">${this.isNew(it) ? '<i class="shNew">NEW</i>' : ''}<canvas data-prev="${it.id}" width="320" height="208" title="누르면 미리보기"></canvas><b>${esc(it.name)}</b><span>${on ? (isHm ? HomeDeco.onWord(it) : isC ? '입는 중' : isH ? '쓰는 중' : isD ? '달고 있어요' : isP ? '같이 다니는 중' : isF ? '켜는 중' : '내 차') : own ? (isP ? (home ? '집에 있어요' : '가게에 맡겨 둠') : '보유') : fmtWon(it.price)}</span>${btn}${sellBtn}</div>`;
     };
     $('shop').innerHTML = `<div class="rcpt"><div class="rcHead">건대 편집숍</div><div class="shRec shEarn">번 돈 <b>${fmtWon(sp)}</b> ${typeof Live !== 'undefined' && Live.on ? earnNote() : ` <small>(밑천 ${fmtWon(State.capital || 0)}은 못 써요)</small>`} · 이익 경매 <b>${rec}번</b>${nextNeed ? ` <small>(${nextNeed - rec}번 더 → 새 물건)</small>` : ''}</div>${this.look ? '<div class="shLook">👀 구경만 · 사려면 건대 편집숍에 직접 가요</div>' : ''}
-      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">차·탈것${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">모자·머리${nt('hat')}</button><button class="btn${isD ? ' sel' : ''}" data-tab="petdeco">펫 꾸미기${nt('petdeco')}</button><button class="btn${isHm ? ' sel' : ''}" data-tab="home">가구${nt('home')}</button></div>${this.tab === 'car' ? `<div class="shTabs shSub">${RIDE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS.car.some(it => rideGroup(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-rsub="${g}">${n}${SHOP_ITEMS.car.some(it => (g === 'all' || rideGroup(it) === g) && this.isNew(it)) && g !== 'all' ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}${gt && gens.length > 2 ? `<div class="shTabs shSub">${gens.map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-gsub="${g}">${n}${g !== 'all' && SHOP_ITEMS[this.tab].some(it => genreOf(it) === g && this.isNew(it)) ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}
+      <div class="shTabs"><button class="btn${isC ? ' sel' : ''}" data-tab="clothes">옷${nt('clothes')}</button><button class="btn${this.tab === 'car' ? ' sel' : ''}" data-tab="car">차·탈것${nt('car')}</button><button class="btn${isP ? ' sel' : ''}" data-tab="pet">펫${nt('pet')}</button><button class="btn${isF ? ' sel' : ''}" data-tab="fx">이펙트${nt('fx')}</button><button class="btn${isH ? ' sel' : ''}" data-tab="hat">모자·머리${nt('hat')}</button><button class="btn${isHm ? ' sel' : ''}" data-tab="home">가구${nt('home')}</button></div>${this.tab === 'car' ? `<div class="shTabs shSub">${RIDE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS.car.some(it => rideGroup(it) === g)).map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-rsub="${g}">${n}${SHOP_ITEMS.car.some(it => (g === 'all' || rideGroup(it) === g) && this.isNew(it)) && g !== 'all' ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}${gt && gens.length > 2 ? `<div class="shTabs shSub">${gens.map(([g, n]) => `<button class="btn${sub === g ? ' sel' : ''}" data-gsub="${g}">${n}${g !== 'all' && SHOP_ITEMS[this.tab].some(it => genreOf(it) === g && this.isNew(it)) ? '<i class="shNew">NEW</i>' : ''}</button>`).join('')}</div>` : ''}
       ${isD ? `<div class="shNote" style="margin:0 0 6px;text-align:center">${p.pet ? `데리고 다니는 ${esc((SHOP_ITEMS.pet.find(x => x.pet === PetDeco.target()) || {}).name || '펫')}에게 달아요 · 옷장에서 바꿀 수 있어요` : '펫을 데리고 다녀야 달 수 있어요'}</div>` : isH || isC ? '<div class="shNote" style="margin:0 0 6px;text-align:center">산 옷·모자는 화면의 옷장에서 언제든 갈아입어요</div>' : ''}
       ${isP ? `<div class="shNote" style="margin:0 0 6px;text-align:center">펫은 두 마리까지 같이 데리고 다닐 수 있어요${p.pet ? ` · 지금 ${[p.pet, p.pet2].filter(Boolean).map(k => esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)).join(', ')}` : ''}</div>` : ''}${isP && p.pet ? [['', p.pet, p.petName], ['2', p.pet2, p.petName2]].filter(r => r[1]).map(([n, k, v]) => `<div class="shTag">명찰 <small>${esc((SHOP_ITEMS.pet.find(x => x.pet === k) || {}).name || k)}</small> <input id="shTagIn${n}" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(v || '')}"><button class="btn gold" id="shTagOk${n}">달기</button></div>`).join('') : ''}${this.tab === 'car' && p.car === 'r_piggy' ? `<div class="shTag">업어 주는 친구 이름 <input id="shRideIn" maxlength="10" placeholder="이름 (비우면 안 달아요)" value="${esc(p.rideName || '')}"><button class="btn gold" id="shRideOk">달기</button></div>` : ''}${isHm ? '<div class="shNote" style="margin:0 0 6px;text-align:center">TV·소파·침대·식탁·러그·집 톤은 사면 바로 우리 집에 들어가요 · 화분·거울 같은 소품은 집 월패드 → 집 꾸미기에서 놓아요</div>' : ''}<div class="shGrid">${list.map(card).join('')}</div>
       <p class="shNote">그림을 누르면 움직이는 미리보기를 볼 수 있어요. ${isHm ? '가구는 산 내 집과 낙찰받아 사는 우리 집에 쓰여요. 친구가 놀러 오면 꾸민 그대로 보여요. 산 가구는 이 기기에서 계속 가져요.' : isF ? '이펙트는 걸어 다닐 때 내 몸 주변에 보이고, 친구 화면에도 보여요. 산 이펙트는 이 기기에서 계속 가져요.' : isP ? '데리고 다니는 펫은 걸어 다닐 때 뒤에서 따라오고, 친구 화면에도 보여요. 차를 타면 같이 타요. 산 펫은 이 기기에서 계속 가져요.' + (home ? '' : ' 아직 내 집이 없으면 안 데리고 다니는 펫은 편집숍이 맡아 줘요. 공인중개사에서 집을 사면 집에 둘 수 있어요.') : isC ? '옷은 머리·피부 색(메뉴의 내 캐릭터 꾸미기)과 같이 입어요. 산 옷은 이 기기에서 계속 가져요.' : '차 색은 주차장의 내 차와 친구 화면에도 그대로 보여요. 산 스킨은 이 기기에서 계속 가져요.'}</p>
@@ -13816,9 +13819,10 @@ const PET_ANCH = { // e: 눈 (e2: 앞을 보는 펫의 다른 눈), h: 머리 �
 // 움직일 때 몸 모양이 확 바뀌는 펫 (v197, 사용자 '이거 장착되어 있어야 하는데 이상해' — 배로 미끄러지는 펭귄 위에 안경이 떠 있었다): 펭귄은 미끄러지는 자세의 머리 자리, 판다(데굴데굴)·돌고래(헤엄)는 그동안 숨긴다
 const PET_ANCH_MV = { penguin: { e: [6, -4], h: [6, -6], n: [4, -3], s: 4 }, panda: null, dolphin: null };
 const PET_TINT = { gold: '#f0b820', pink: '#ff7ab0', sky: '#5ab8ff', purple: '#a070e0' };
+setTimeout(() => { try { if (typeof Profile !== 'undefined' && Profile.get().petDeco) Profile.set('petDeco', null); } catch (e) { /* 그대로 둬도 그리지 않는다 */ } }, 2500); /* v372 예전 버전 친구 화면에도 꾸민 게 안 보이게 */
 const PetDeco = {
   sel: 1, // 옷장에서 고른 펫 (두 마리면 1/2)
-  get(kind, prof) { const d = (prof || Profile.get()).petDeco; return (d && typeof d === 'object' && d[kind] && typeof d[kind] === 'object') ? d[kind] : {}; },
+  get() { return {}; }, /* v372 사용자 '펫꾸미기 다 없애': 내 펫·친구 펫 모두 꾸미기 없이 그린다 */
   set(kind, slot, v) { const p = Profile.get(), d = Object.assign({}, p.petDeco || {}); d[kind] = Object.assign({}, d[kind] || {}); if (v) d[kind][slot] = v; else delete d[kind][slot]; Profile.set('petDeco', d); Pets.mineT = -1; },
   target() { const p = Profile.get(); return this.sel === 2 && p.pet2 ? p.pet2 : p.pet || null; },
   on(it) { const k = this.target(); return !!k && this.get(k)[it.pd] === it.v; },
@@ -13914,7 +13918,7 @@ const Closet = {
     return `<button class="clChip${!cur ? ' on' : ''}" data-${key}="">${none}</button>` + own.map(it => `<button class="clChip${cur === (it.v || it.id) ? ' on' : ''}" data-${key}="${it.id}">${esc(it.name)}</button>`).join('') + (own.length ? '' : '<small class="clEmpty">아직 산 게 없어요</small>');
   },
   render() {
-    const p = Profile.get(), me = this.tab === 'me', el = $('closet'); let body;
+    this.tab = 'me'; /* v372 펫 꾸미기 뺌 → 옷장은 '나'만 */ const p = Profile.get(), me = true, el = $('closet'); let body;
     if (me) body = `<div class="clRow"><b>옷</b><div>${this.chips(SHOP_ITEMS.clothes, p.outfit, '기본 옷', 'out')}</div></div>
       <div class="clRow"><b>모자·머리</b><div>${this.chips(SHOP_ITEMS.hat, p.hat, '안 써요', 'hat')}</div></div>
       <div class="clRow"><b>이펙트</b><div>${this.chips(SHOP_ITEMS.fx, p.fx, '없음', 'fx')}</div></div>`;
@@ -13922,7 +13926,7 @@ const Closet = {
     else { const k = PetDeco.target(), d = PetDeco.get(k), row = (slot, t, none) => `<div class="clRow"><b>${t}</b><div>${this.chips(SHOP_ITEMS.petdeco.filter(it => it.pd === slot), d[slot], none, 'pd-' + slot)}</div></div>`;
       body = (p.pet2 ? `<div class="clPets">${[[1, p.pet, p.petName], [2, p.pet2, p.petName2]].map(([n, kk, nm]) => `<button class="clChip${(PetDeco.sel === 2 ? 2 : 1) === n ? ' on' : ''}" data-sel="${n}">${esc(nm || this.kindName(kk))}</button>`).join('')}</div>` : '')
         + row('eye', '👓 눈', '없음') + row('neck', '🧣 목', '없음') + row('head', '🎀 머리', '없음') + row('color', '🎨 털 색깔', '원래 색'); }
-    el.innerHTML = `<div class="rcpt"><div class="rcHead">옷장</div><div class="shTabs"><button class="btn${me ? ' sel' : ''}" data-tab="me">나</button><button class="btn${me ? '' : ' sel'}" data-tab="pet">${p.pet ? esc(this.kindName(PetDeco.target())) : '펫'}</button></div>
+    el.innerHTML = `<div class="rcpt"><div class="rcHead">옷장</div>
       <div class="clPrev"><canvas id="clCv"></canvas><button class="btn clMv" id="clMv">${this.mv ? '멈추기' : '걷기'}</button></div>
       <div class="clBody">${body}</div><p class="shNote">산 것만 나와요. 더 사려면 건대 편집숍에서 번 돈으로 사요. 바꾼 모습은 친구 화면에도 보여요.</p>
       <div class="pcBtns"><button class="btn" id="clShop">편집숍 구경하기</button><button class="btn gold" id="clClose">닫기</button></div></div>`;
@@ -13934,7 +13938,7 @@ const Closet = {
     el.querySelectorAll('[data-fx]').forEach(b => (b.onclick = () => pick(b.dataset.fx, it => Profile.set('fx', it ? it.id : null))));
     for (const slot of ['eye', 'neck', 'head', 'color']) el.querySelectorAll(`[data-pd-${slot}]`).forEach(b => (b.onclick = () => pick(b.getAttribute('data-pd-' + slot), it => PetDeco.set(PetDeco.target(), slot, it ? it.v : null))));
     $('clMv').onclick = () => { this.mv = !this.mv; this.render(); };
-    $('clShop').onclick = () => { const tab = me ? 'hat' : 'petdeco'; this.close(); Shop.open(tab, !Closet.atShop()); };
+    $('clShop').onclick = () => { const tab = 'hat'; this.close(); Shop.open(tab, !Closet.atShop()); };
     $('clClose').onclick = () => this.close();
   },
   atShop() { return !!(Game.room && Game.room.place && Game.room.place.kind === 'shop'); },
@@ -25701,7 +25705,7 @@ Cm.credits = () => { const li = CREDITS_SF.map(([t, a, u]) => `<li><a href="${es
 const Access = {
   ALLOW: ['에센티아', '부리코'],
   VIP: ['에센티아', '부리코'], /* v360 사용자 '부리코,에센티아 한테는 절하는거 열어놔' → 용돈 주고 큰절 받기 (후원자 전용) 열기. 서버도 이 이름은 통과 (relay/src/index.js VIP_NAMES) */
-  GIFT_CATS: ['clothes', 'hat', 'pet', 'petdeco', 'car'],
+  GIFT_CATS: ['clothes', 'hat', 'pet', 'car'],
   ok(n) { return !this.ALLOW.length || this.ALLOW.includes(String(n || '').trim()); },
   init() {
     if (!this.ALLOW.length) return;

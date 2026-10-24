@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v369</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v370</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -7152,11 +7152,11 @@ const Live = {
     if (sv && !Store.get('fix226i_' + this.ch, false)) { Store.set('fix226i_' + this.ch, true); let back = 0, paid = 0; // v226 한 번만: 위 버그로 한꺼번에 빠진 이자를 돌려주고, 그 때문에 받은 추가 대출부터 갚는다 (경락잔금대출 없이 추가 대출만 있는 집)
       for (const m of Object.values(this.mine)) { const a = m.asset, L = m.loanState || {}; if (!a || m.done || m.phase !== 'own' || (L.bank || 0) + (L.savings || 0) > 0 || !(a.intPaid > 0)) continue; const one = this.monthlyInterest(m), r = Math.max(0, a.intPaid - one); if (!r) continue; a.intPaid -= r; a.intHeld = a.held || 0; const rep = Math.min(m.extraLoan || 0, r); m.extraLoan = (m.extraLoan || 0) - rep; back += r; paid += rep; }
       if (back) { Money.why(`잘못 빠진 대출 이자 ${fmtWon(back)} 돌려받음${paid ? ` (추가 대출 ${fmtWon(paid)} 먼저 갚음)` : ''}`); State.cash += back - paid; setTimeout(() => { this.save(); HUD.page(`이자가 한꺼번에 빠지던 버그가 있었어요. 잘못 빠진 이자 ${fmtWon(back)}을 돌려드렸고${paid ? `, 그 때문에 받은 집 담보 추가 대출 ${fmtWon(paid)}은 그 돈으로 먼저 갚았어요` : ''}.`, '알림'); }, 6800); } }
-    if (Net.me === '에센티아' && !Store.get('gift233t', false)) { Store.set('gift233t', true); /* v233 사용자 2026-10-18 '나한테 거북이 줘': 거북이 펫 선물 (되팔기 막음) */
+    if (Net.me === '에센티아' && !Store.get('gift233t', false) && SHOP_ITEMS.pet.some(it => it.id === 'p_turtle')) { Store.set('gift233t', true); /* v233 사용자 2026-10-18 '나한테 거북이 줘': 거북이 펫 선물 (되팔기 막음) */
       if (!Shop.has('p_turtle')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_turtle'), src: Object.assign({}, w.src || {}, { p_turtle: 'gift' }) }); }
       const pf = Profile.get(), slot = pf.pet === 'turtle' || pf.pet2 === 'turtle' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'turtle'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
       setTimeout(() => HUD.page(slot ? '🐢 거북이 선물이에요! 지금 옆에서 따라와요.' : '🐢 거북이 선물이에요! 펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.', '선물'), 7600); }
-    if (Net.me === 'dd' && !Store.get('gift258k', false)) { Store.set('gift258k', true); /* v258 사용자 2026-10-19 'dd한테 짱구 펫 줘': 짱구머리 꼬마 선물 (되팔기 막음) */
+    if (Net.me === 'dd' && !Store.get('gift258k', false) && SHOP_ITEMS.pet.some(it => it.id === 'p_kid')) { Store.set('gift258k', true); /* v258 사용자 2026-10-19 'dd한테 짱구 펫 줘': 짱구머리 꼬마 선물 (되팔기 막음) */
       if (!Shop.has('p_kid')) { const w = Store.get('wardrobe', null) || {}; Store.set('wardrobe', { owned: Shop.owned().concat('p_kid'), src: Object.assign({}, w.src || {}, { p_kid: 'gift' }) }); }
       const pf = Profile.get(), slot = pf.pet === 'kid' || pf.pet2 === 'kid' ? 'have' : !pf.pet ? 'pet' : !pf.pet2 ? 'pet2' : null; if (slot && slot !== 'have') Profile.set(slot, 'kid'); if (typeof Pets !== 'undefined') Pets.mineT = -1;
       setTimeout(() => HUD.page(slot ? '🎁 짱구머리 꼬마 선물이에요! 지금 옆에서 따라와요.' : '🎁 짱구머리 꼬마 선물이에요! 펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.', '선물'), 7600); }
@@ -12264,31 +12264,19 @@ const SHOP_ITEMS = {
   ],
   pet: [ // 희귀할수록 비싸다 (사용자 2026-10-15). 그림은 pets.js PET_DRAW
     // v346 사용자 2026-10-23 '동작 없는건 다 빼': 실사 모델에 동작이 없는 거북이·펭귄·판다·티라노·띵띵이·앵무새는 뺌. 가진 사람은 비슷한 값의 펫으로 바꿔 줌 (PET_GONE, 되팔기 값이 더 커지지 않게)
+    // v370 사용자 2026-10-24 '여기 실사화된거 말고 다 빼': 실사 모델 펫(생쥐·참새·닭·강아지·고양이·토끼·멧돼지·벨로시랩터)과 사람 펫만 남김. 가진 사람은 같거나 싼 실사 펫으로 바꿔 줌 (PET_GONE)
     { id: 'p_mouse', name: '생쥐', price: 100e4, pet: 'mouse' },
     { id: 'p_sparrow', name: '참새', new: '2026-10-23', nb: 364, price: 150e4, pet: 'sparrow' }, // v364 사용자 2026-10-23 '닭,참새,멧돼지 넣자' (실사 모델 3d/sfp, 튜토리얼 선물)
     { id: 'p_chicken', name: '닭', new: '2026-10-23', nb: 364, price: 250e4, pet: 'chicken' },
     { id: 'p_boar', name: '멧돼지', new: '2026-10-23', nb: 364, price: 1500e4, pet: 'boar' },
     { id: 'p_raptor', name: '벨로시랩터', new: '2026-10-23', nb: 365, price: 8000e4, pet: 'raptor' }, // v365 사용자 2026-10-23 '이거 좋다' (펫 동작 스레드 후보, 실사 모델 3d/sfp/raptor.glb)
-    { id: 'p_beetle', name: '장수풍뎅이', price: 200e4, pet: 'beetle' },
-    { id: 'p_mantis', name: '사마귀', price: 200e4, pet: 'mantis' },
     { id: 'p_dog', name: '강아지', price: 300e4, pet: 'dog' },
     { id: 'p_cat', name: '고양이', price: 300e4, pet: 'cat' },
-    { id: 'p_lizard', name: '도마뱀', price: 400e4, pet: 'lizard' },
     { id: 'p_rabbit', name: '토끼', price: 500e4, pet: 'rabbit' },
-    { id: 'p_monkey', name: '원숭이', price: 2000e4, pet: 'monkey' },
-    { id: 'p_tiger', name: '호랑이', price: 1e8, pet: 'tiger' },
-    { id: 'p_giraffe', name: '기린', price: 1.2e8, pet: 'giraffe' },
-    { id: 'p_elephant', name: '코끼리', price: 1.5e8, pet: 'elephant' },
     { id: 'p_buddy', name: '친구 (명찰)', price: 5000e4, pet: 'buddy' },
-    { id: 'p_kid', name: '짱구머리 꼬마', price: 7000e4, pet: 'kid' },
     { id: 'p_gf', name: '여자친구 (명찰)', price: 1e8, pet: 'gf' },
     { id: 'p_bf', name: '남자친구 (명찰)', price: 1e8, pet: 'bf' },
-    { id: 'p_dolphin', name: '돌고래', price: 2e8, pet: 'dolphin' },
-    { id: 'p_croc', name: '악어', new: '2026-10-18', nb: 233, price: 6000e4, pet: 'croc' }, // v233 (사용자 2026-10-18 '펫으로 올라프도 만들어 악어도')
-    { id: 'p_snowman', name: '눈사람 올라푸', new: '2026-10-18', nb: 233, price: 1.2e8, pet: 'snowman' },
-    { id: 'p_sponge', name: '스폰지빵', new: '2026-10-18', nb: 243, price: 1.5e8, pet: 'sponge' }, // v243 (사용자 '스폰지밥, 핑핑이 만들자'): 이름은 패러디
     // v245 (사용자 '앵무새도 만들자'): 날아다니며 따라오고 말 따라 하고, 가만히 있으면 지붕에 앉는다
-    { id: 'p_dora', name: '도라애몽 (주머니 도구)', new: '2026-10-18', nb: 234, price: 3e8, pet: 'dora' }, // v234 (사용자 '도라에몽도 펫에 넣자'): 이름은 패러디, 도구는 dora.js
   ],
   car: [
     { id: 'k_white', name: '흰색', price: 300e4, col: '#f2f2f2' },
@@ -12436,8 +12424,9 @@ const GENRE = { c_witch: 'hal', c_vamp: 'hal', c_ghost: 'hal', c_skel: 'hal', c_
   h_witch: 'hal', h_clown: 'hal', h_pumpkin: 'hal', h_skull: 'hal', h_zombie: 'hal', h_frank: 'hal', h_crown: 'fan', h_helm: 'fan', h_wizard: 'fan', h_space: 'sf', h_visor: 'sf' };
 function genreOf(it) { return it.genre || GENRE[it.id] || 'mod'; }
 function rideGroup(it) { return it.ride ? RIDE_GROUP[it.ride] || 'fun' : 'car'; }
-const OUT_GONE = { c_tux: 'c_suit', c_navy: 'c_suit', c_vip: 'c_suit', r_boat: 'r_lifeboat', r_sailboat: 'r_galleon', r_viking: 'r_galleon', r_cruise: 'r_galleon', h_straw: 'h_party', p_turtle: 'p_monkey', p_penguin: 'p_monkey', p_panda: 'p_croc', p_gary: 'p_croc', p_parrot: 'p_croc', p_trex: 'p_dora' };
-const PET_GONE = { turtle: 'monkey', penguin: 'monkey', panda: 'croc', gary: 'croc', parrot: 'croc', trex: 'dora' }; // v346 동작 없는 펫 → 바꿔 준 펫 (데리고 다니던 것도) // v342 뺀 정장류는 검정 정장으로 (산 사람 몫 지킴) · v345 배는 고무보트·범선만 (사용자 '배는이거 빼고 다 빼'): 산 배는 그 둘로
+const OUT_GONE = { c_tux: 'c_suit', c_navy: 'c_suit', c_vip: 'c_suit', r_boat: 'r_lifeboat', r_sailboat: 'r_galleon', r_viking: 'r_galleon', r_cruise: 'r_galleon', h_straw: 'h_party', p_turtle: 'p_boar', p_penguin: 'p_boar', p_panda: 'p_boar', p_gary: 'p_boar', p_parrot: 'p_boar', p_trex: 'p_raptor',
+  p_beetle: 'p_sparrow', p_mantis: 'p_sparrow', p_lizard: 'p_cat', p_monkey: 'p_boar', p_croc: 'p_boar', p_kid: 'p_buddy', p_tiger: 'p_raptor', p_giraffe: 'p_raptor', p_elephant: 'p_raptor', p_dolphin: 'p_raptor', p_snowman: 'p_raptor', p_sponge: 'p_raptor', p_dora: 'p_raptor' }; /* v370 실사 아닌 펫 → 같거나 싼 실사 펫 */
+const PET_GONE = { turtle: 'boar', penguin: 'boar', panda: 'boar', gary: 'boar', parrot: 'boar', trex: 'raptor', beetle: 'sparrow', mantis: 'sparrow', lizard: 'cat', monkey: 'boar', croc: 'boar', kid: 'buddy', tiger: 'raptor', giraffe: 'raptor', elephant: 'raptor', dolphin: 'raptor', snowman: 'raptor', sponge: 'raptor', dora: 'raptor' }; // v346 동작 없는 펫 → 바꿔 준 펫 (데리고 다니던 것도) // v342 뺀 정장류는 검정 정장으로 (산 사람 몫 지킴) · v345 배는 고무보트·범선만 (사용자 '배는이거 빼고 다 빼'): 산 배는 그 둘로
 const SHOP_BY_ID = {}; for (const k in SHOP_ITEMS) for (const it of SHOP_ITEMS[k]) SHOP_BY_ID[it.id] = Object.assign({ tab: k }, it); for (const k in OUT_GONE) SHOP_BY_ID[k] = SHOP_BY_ID[OUT_GONE[k]]; // 친구가 아직 예전 정장을 입고 있어도 정장으로
 const Shop = {
   open_: false, tab: 'clothes',
@@ -12456,8 +12445,8 @@ const Shop = {
       const o = [...new Set(w.owned.map(x => OUT_GONE[x] || x))]; if (o.join() !== w.owned.join()) Store.set('wardrobe', Object.assign({}, w, { owned: o, src })); this.petGone(); return o; } return (w && w.owned) || []; }, // v342 뺀 정장류 → 검정 정장 · v346 뺀 펫 → 비슷한 펫 (튜토리얼 선물처럼 나중에 들어와도 다시 바꿈)
   petGone() { if (typeof Profile === 'undefined') return; const p = Profile.get(), gone = []; for (const sl of ['pet', 'pet2']) { const k = p[sl], to = k && PET_GONE[k]; if (!to) continue; gone.push(k);
       const other = sl === 'pet' ? p.pet2 : p.pet; Profile.set(sl, other === to ? null : to); } if (!Profile.get().pet && Profile.get().pet2) { Profile.set('pet', Profile.get().pet2); Profile.set('petName', Profile.get().petName2 || ''); Profile.set('pet2', null); }
-    if (!gone.length) return; if (typeof Pets !== 'undefined') Pets.mineT = -1; const nm = { turtle: '거북이', penguin: '펭귄', panda: '판다', gary: '달팽이 띵띵이', parrot: '앵무새', trex: '티라노', monkey: '원숭이', croc: '악어', dora: '도라애몽' };
-    setTimeout(() => { if (typeof Toast !== 'undefined') Toast.show(gone.map(k => `${nm[k]} → ${nm[PET_GONE[k]]}`).join(', ') + ' (움직이지 않는 펫은 빠져서 비슷한 펫으로 바꿔 드렸어요)', 5200); }, 2500); },
+    if (!gone.length) return; if (typeof Pets !== 'undefined') Pets.mineT = -1; const nm = { turtle: '거북이', penguin: '펭귄', panda: '판다', gary: '달팽이 띵띵이', parrot: '앵무새', trex: '티라노', monkey: '원숭이', croc: '악어', dora: '도라애몽', beetle: '장수풍뎅이', mantis: '사마귀', lizard: '도마뱀', kid: '짱구머리 꼬마', tiger: '호랑이', giraffe: '기린', elephant: '코끼리', dolphin: '돌고래', snowman: '눈사람 올라푸', sponge: '스폰지빵', boar: '멧돼지', raptor: '벨로시랩터', sparrow: '참새', cat: '고양이', buddy: '친구' };
+    setTimeout(() => { if (typeof Toast !== 'undefined') Toast.show(gone.map(k => `${nm[k]} → ${nm[PET_GONE[k]]}`).join(', ') + ' (실사 펫만 남겨서 비슷한 실사 펫으로 바꿔 드렸어요)', 5200); }, 2500); },
   /* 번 돈으로만 사기 + 되팔기 (사용자 2026-10-16 '펫 사고 막 사면 경매할 자금이 없어지지 않나' → '되팔기도 가능하고 번 돈으로만 사기')
    * 쓸 수 있는 돈 = 지금 현금 − 시작 자금(State.capital). 경매 밑천은 상점에서 못 쓴다.
    * 되팔기: 산 값의 FEEL.shopResell(절반). 산 곳(혼자 하기 / 채널 N)에서만 되판다 (채널끼리 돈 옮기기 막기). */
@@ -14948,7 +14937,7 @@ const PetBattle = {
   /* ---- 동네 펫 트레이너 (spawnDecor 끝에서) ---- */
   spawn() {
     if (this.off) return;
-    const D = Game.decor || [], kinds = Object.keys(PB_DEX), zid = [...String(Game.zone ? Game.zone.id : '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7); let n = 0;
+    const D = Game.decor || [], kinds = Object.keys(PB_DEX).filter(k => typeof SHOP_ITEMS === 'undefined' || SHOP_ITEMS.pet.some(it => it.pet === k)), /* v370 행인 펫도 편집숍에 남은 실사 펫만 */ zid = [...String(Game.zone ? Game.zone.id : '')].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7); let n = 0;
     for (let i = 0; i < D.length && n < 3; i++) { const w = D[i]; if (i % 5 !== 2 || w.vip || w.promo || w.trainer) continue; const R = makeRng((zid * 131 + i * 977 + (State.day || 0) * 31) >>> 0); const key = 'tr' + zid + ':' + i; w.trainer = { n, z: zid % 6, kind: kinds[Math.floor(R.next() * R.next() * kinds.length)], off: Math.floor(R.next() * 3) - 1, key, next: 0, done: this.beat().includes(key) }; n++; }
   },
   // 트레이너 이름 (사용자 2026-10-16 '트레이너라고 하지 말고, 그냥 사람 이름으로 넣어'): 정해 준 6명 중에서. 동네마다 다른 사람이 나온다 (한 동네에선 안 겹친다)
@@ -18139,7 +18128,7 @@ const Room3D = {
     if (this.S && this.room === rm) return; this.dispose(); const { THREE } = T3;
     Object.values(this.eg).forEach(g => { g.g._keep = 1; if (g.e) g.e._keep = 1; });
     if (rm.home) { this.room = rm; this.A = new Map(); this.dispT = null; return this.buildHome(rm); } // 내 집 (homein.js 평면도)
-    if (typeof RoomReal !== 'undefined' && RoomReal.on()) { RealFloor.load(); if (RealFloor.ready()) return this.buildReal(rm); this.rrPend = 1; } // 실사 가게 실내 (roomreal.js), 바닥 사진이 오면 다시 세운다
+    this.rrOn = 0; if (typeof RoomReal !== 'undefined' && RoomReal.on()) { RealFloor.load(); if (RealFloor.ready()) return this.buildReal(rm); this.rrPend = 1; } // 실사 가게 실내 (roomreal.js), 바닥 사진이 오면 다시 세운다
     this.room = rm; this.A = new Map(); this.doorG = null; this.turn = []; this.vOld = 0; const S = this.S = new THREE.Scene(), P = RoomTilt.pal(rm), W = rm.W, H = rm.H, m = rm.def.map, dark = P.key === 'arcade' || P.key === 'casino';
     S.background = new THREE.Color(dark ? 0x0a0812 : 0x1c1814);
     S.add(new THREE.HemisphereLight(dark ? 0x9a8ad0 : 0xfff2e2, dark ? 0x2a1a30 : 0x7a6a58, dark ? 0.9 : 1.35));
@@ -18374,7 +18363,7 @@ const Room3D = {
     if (ch === 'G') { for (const a of [-0.36, 0.36]) this.box(S, X + a, Z, 0.07, 0.07, 1.3, '#5a3a24', 0, { line: false }); this.box(S, X, Z, 0.9, 0.06, 0.62, '#c49a6a', 0.6); for (let i = 0; i < 4; i++) this.box(S, X - 0.28 + i * 0.19, Z + 0.035, 0.14, 0.01, 0.18, ['#fffaf0', '#fff1a0', '#ffc9d2', '#cfe0ff'][i], 0.78 + (i % 2) * 0.16, { line: false }); return; }
     if (ch === 'R') { // 현관문: 뒷벽에 붙인 문틀 + 경첩으로 열리는 문짝 (v311 사용자 '벽에 붙어 있든가 해야지' · '문 열리고 세입자 나오는 거까지')
       const { THREE } = T3, Z0 = y + 0.005; this.box(S, X - 0.43, Z0 + 0.03, 0.08, 0.06, 1.8, P.trim || '#6a4a30'); this.box(S, X + 0.43, Z0 + 0.03, 0.08, 0.06, 1.8, P.trim || '#6a4a30'); this.box(S, X, Z0 + 0.03, 0.94, 0.06, 0.08, P.trim || '#6a4a30', 1.72);
-      const hole = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.72), new THREE.MeshBasicMaterial({ color: 0x120c08 })); hole.position.set(X, 0.86, Z0 + 0.004); S.add(hole);
+      if (!this.rrOn) { const hole = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.72), new THREE.MeshBasicMaterial({ color: 0x120c08 })); hole.position.set(X, 0.86, Z0 + 0.004); S.add(hole); } /* v370 실사 방은 뒷벽을 뚫고 복도를 지어 둠 (roomreal.js rrWalls) */
       const dg = new THREE.Group(); dg.position.set(X - 0.39, 0, Z0 + 0.04); S.add(dg); this.doorG = dg; this.doorV = 0; this.doorT = 0;
       this.box(dg, 0.39, 0, 0.76, 0.05, 1.7, '#7a5a3a'); this.box(dg, 0.39, 0.03, 0.6, 0.02, 0.55, '#86664a', 0.98, { line: false }); this.box(dg, 0.39, 0.03, 0.6, 0.02, 0.55, '#86664a', 0.25, { line: false }); this.box(dg, 0.67, 0.04, 0.06, 0.04, 0.06, '#e8c860', 0.85, { line: false });
       this.box(S, X + 0.58, Z0 + 0.02, 0.1, 0.03, 0.14, '#f2f2f2', 1.1); return; }
@@ -18594,7 +18583,7 @@ Object.assign(Room3D, {
   /* ---- 실사 방 세우기 (room3d.js build()에서 rm.home이 아니고 RoomReal.on()이면) ---- */
   buildReal(rm) {
     const { THREE } = T3, R = RoomReal, S = this.S = new THREE.Scene(), P = RoomTilt.pal(rm), W = rm.W, H = rm.H, m = rm.def.map, key = P.key, dark = key === 'arcade' ? 'arcade' : key === 'casino' ? 'casino' : '';
-    this.room = rm; this.A = new Map(); this.doorG = null; this.turn = []; this.vOld = 0; this.rrWait = 0; this.dispT = null; (this.rrOld || []).forEach(t => t.dispose()); this.rrOld = []; R.pre(m);
+    this.room = rm; this.rrOn = 1; this.A = new Map(); this.doorG = null; this.turn = []; this.vOld = 0; this.rrWait = 0; this.dispT = null; (this.rrOld || []).forEach(t => t.dispose()); this.rrOld = []; R.pre(m);
     const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? '#' : m[y][x]);
     S.background = new THREE.Color(dark ? 0x07060c : 0x16120e); S.environment = R.env(this.r, dark);
     // 빛: 약한 하늘빛 + 천장 쪽에서 내리는 주 조명 하나 (그림자) — 밝은 웅덩이·창 빛·그늘은 바닥 lightMap/aoMap에 굽는다
@@ -18680,12 +18669,18 @@ Object.assign(Room3D, {
     // 벽 한 면: 칸 (x0..x1) 또는 (z0..z1), 안쪽 면 위치 fz/fx, 방향 (0 북벽 · 2 서벽 · 3 동벽), 구멍 [{a, w, y0, h}] (a = 가운데)
     const wall = (dir, a0, a1, f, holes = []) => { const L = a1 - a0, g = new THREE.Group(); S.add(g); if (dir === 0) { g.position.set(a0, 0, f); } else if (dir === 2) { g.position.set(f, 0, a1); g.rotation.y = Math.PI / 2; } else { g.position.set(f, 0, a0); g.rotation.y = -Math.PI / 2; }
       // 로컬: x = 0..L 벽 따라, z = 0 안쪽 면, -t = 바깥
-      const hs = holes.slice().sort((p, q) => p.a - q.a); let x = 0;
+      const hs = holes.slice().sort((p, q) => p.a - q.a);
       const seg = (x0, x1, y0, y1) => { if (x1 - x0 < 0.001 || y1 - y0 < 0.001) return; R.bx(g, (x0 + x1) / 2, -t / 2, x1 - x0, t, y1 - y0, plaster, y0, 1.6); };
-      for (const h of hs) { seg(x, h.a - h.w / 2, 0, Hw); seg(h.a - h.w / 2, h.a + h.w / 2, 0, h.y0); seg(h.a - h.w / 2, h.a + h.w / 2, h.y0 + h.h, Hw); x = h.a + h.w / 2; } seg(x, L, 0, Hw);
+      if (!hs.length) seg(0, L, 0, Hw); else { /* v370 구멍 난 벽은 한 덩어리로 (조각 이음매에 빛 새는 줄이 보였다): 바닥까지 닿는 문은 테두리를 파고, 창은 구멍 */
+        const sh = new THREE.Shape(); sh.moveTo(0, 0); for (const h of hs) if (h.y0 <= 0) { sh.lineTo(h.a - h.w / 2, 0); sh.lineTo(h.a - h.w / 2, h.h); sh.lineTo(h.a + h.w / 2, h.h); sh.lineTo(h.a + h.w / 2, 0); } sh.lineTo(L, 0); sh.lineTo(L, Hw); sh.lineTo(0, Hw); sh.lineTo(0, 0);
+        for (const h of hs) if (h.y0 > 0) { const q = new THREE.Path(); q.moveTo(h.a - h.w / 2, h.y0); q.lineTo(h.a - h.w / 2, h.y0 + h.h); q.lineTo(h.a + h.w / 2, h.y0 + h.h); q.lineTo(h.a + h.w / 2, h.y0); q.lineTo(h.a - h.w / 2, h.y0); sh.holes.push(q); }
+        const eg = new THREE.ExtrudeGeometry(sh, { depth: t, bevelEnabled: false }), uv = eg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 1.6, uv.getY(i) / 1.6);
+        const em = new THREE.Mesh(eg, plaster); em.position.z = -t; em.castShadow = em.receiveShadow = true; g.add(em); }
       R.bx(g, L / 2, -t / 2, L + (dir === 0 ? t * 2 : 0), t + 0.02, 0.05, cap, Hw, 1, { cast: false }); // 윗단
       // 판벽 (창 밑까지), 몰딩, 걸레받이
-      R.bx(g, L / 2, 0.018, L, 0.036, LOH, lo, 0, loK === 'marble' ? 1.2 : 1.6); R.bx(g, L / 2, 0.045, L, 0.05, 0.05, trim, LOH, 1); R.bx(g, L / 2, 0.03, L, 0.06, 0.1, base, 0, 1, { cast: false });
+      /* v370 문 구멍(바닥까지)이 있으면 판벽·몰딩·걸레받이를 문 양옆에서 끊는다 */
+      const lows = hs.filter(h => h.y0 < LOH), strip = fn => { let a = 0; for (const h of lows) { if (h.a - h.w / 2 - 0.06 > a) fn(a, h.a - h.w / 2 - 0.06); a = h.a + h.w / 2 + 0.06; } if (L > a) fn(a, L); };
+      strip((a, b) => { const c = (a + b) / 2, n = b - a; R.bx(g, c, 0.018, n, 0.036, LOH, lo, 0, loK === 'marble' ? 1.2 : 1.6); R.bx(g, c, 0.045, n, 0.05, 0.05, trim, LOH, 1); R.bx(g, c, 0.03, n, 0.06, 0.1, base, 0, 1, { cast: false }); });
       if (key !== 'arcade') R.bx(g, L / 2, 0.025, L, 0.05, 0.07, trim, Hw - 0.12, 1, { cast: false }); // 천장 몰딩
       return g; };
     // 창 (구멍 안): 금속/나무 틀 + 십자 + 창턱 + 바깥 풍경 유리 (빛남)
@@ -18698,7 +18693,18 @@ Object.assign(Room3D, {
       // 블라인드 반쯤 (사무실·관공서)
       if (key !== 'shop') { const bl = R.flat('#efece6', 0.7); for (let i = 0; i < 6; i++) R.bx(g, a, -0.02, w - 0.1, 0.02, 0.025, bl, y0 + h - 0.08 - i * 0.07, 1, { cast: false }); } };
     const wx = this.rrWinX(rm, P, W), wy0 = LOH + 0.12, wh = Math.min(1.05, Hw - wy0 - 0.25);
-    const back = wall(0, 1 - t, W - 1 + t, 1, wx.map(o => ({ a: o.x - (1 - t), w: o.w, y0: wy0, h: wh }))); wx.forEach(o => win(back, o.x - (1 - t), o.w, wy0, wh));
+    /* v370 사용자 '문뒤에 검은색으로 하든지 내부 보이게 하든지': 현장 현관문(R) 자리 뒷벽을 뚫고 문 너머에 빌라 공용 복도를 짓는다 */
+    const doors = []; for (let x = 1; x < W - 1; x++) if (at(x, 1) === 'R' && at(x, 0) === '#') doors.push(x + 0.5);
+    const back = wall(0, 1 - t, W - 1 + t, 1, wx.map(o => ({ a: o.x - (1 - t), w: o.w, y0: wy0, h: wh })).concat(doors.map(X => ({ a: X - (1 - t), w: 0.8, y0: 0, h: 1.74 })))); wx.forEach(o => win(back, o.x - (1 - t), o.w, wy0, wh));
+    if (doors.length) { const zb = 1 - t, D = 1.2, cw = 1.6, Hc = Hw - 0.02, fl = R.flat('#8e877c', 0.85), wl = R.mat('plaster', '#dcd6ca', { noMap: true, ns: 0.5, p: { roughness: 0.95 } }), lw = R.flat('#7f907c', 0.8), lid = new THREE.MeshBasicMaterial({ color: S.background, toneMapped: false }); lid.userData.own = 1;
+      for (const X of doors) { const zc = zb - D / 2;
+        R.bx(S, X, zc + t / 2, cw, D + t, 0.02, fl, 0, 1, { cast: false }); R.bx(S, X, zb + t / 2, 0.8, t, 0.025, R.flat('#8a8278', 0.4, 0.5), 0, 1, { cast: false }); /* 복도 바닥 + 문지방 */
+        for (const s of [-1, 1]) { R.bx(S, X + s * (cw / 2 + 0.05), zc, 0.1, D, Hc, wl, 0, 1.6); R.bx(S, X + s * (cw / 2 - 0.004), zc, 0.012, D, 1.0, lw, 0, 1, { cast: false }); } /* 옆벽 + 아래 반 칠 (빌라 계단실처럼) */
+        R.bx(S, X, zb - D - 0.05, cw + 0.2, 0.1, Hc, wl, 0, 1.6); R.bx(S, X, zb - D + 0.004, cw, 0.012, 1.0, lw, 0, 1, { cast: false });
+        R.bx(S, X, zc, cw + 0.2, D + 0.1, 0.06, lid, Hc); /* 뚜껑: 위에서 보면 배경색, 복도는 그늘 */
+        const nd = R.flat('#5a4a40', 0.5, 0.4); R.bx(S, X + 0.15, zb - D + 0.03, 0.82, 0.04, 1.8, nd, 0, 1); R.bx(S, X + 0.48, zb - D + 0.07, 0.08, 0.04, 0.03, R.flat('#c8c4bc', 0.3, 0.9), 0.95, 1, { cast: false }); /* 맞은편 옆집 현관문 */
+        R.bx(S, X + 0.15, zb - D + 0.35, 0.6, 0.4, 0.012, R.flat('#3a2e28', 0.95), 0, 1, { cast: false }); /* 옆집 발판 */
+        for (const [a, c] of [[-0.12, '#2a3a5a'], [0.02, '#2a3a5a'], [0.3, '#c84a3a']]) R.bx(S, X - 0.45 + a, zb - D + 0.5 + (a > 0.1 ? 0.12 : 0), 0.1, 0.26, 0.05, R.flat(c, 0.7), 0, 1); } } /* 신발 몇 켤레 */
     const west = wall(2, 1, H - 1, 1), east = wall(3, 1, H - 1, W - 1);
     // 바깥쪽 덮개: 벽 뒤가 비어 보이지 않게 위에서 보이는 얇은 윗면만 (어두운 색)
     // 앞벽 (낮게, 문 자리 비움)

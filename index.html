@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v370</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v371</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3570,7 +3570,7 @@ function zoneChunkPre(zone, x0, y0, x1, y1, until) { const hd = GroundTex.on(); 
     for (let cy = Math.max(0, Math.floor(y0 / CHUNK)); cy <= Math.floor(y1 / CHUNK); cy++) for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++) { if (cx * CHUNK >= zone.W * TILE || cy * CHUNK >= zone.H * TILE) continue; const c = zone.chunks.get(cx + ',' + cy); if (c && !!c._hd === hd) continue; const d = ((cx + 0.5) * CHUNK - mx) ** 2 + ((cy + 0.5) * CHUNK - my) ** 2; if (d < bd) { bd = d; best = [cx, cy]; } }
     if (!best) return; const m = zone.chunks; if (!m._jw) { const c0 = m.clear.bind(m); m.clear = () => { zoneChunk.job = null; c0(); }; m._jw = 1; } // 다시 그리기(지우기)면 만들던 것도 버린다
     J = zoneChunk.job = { zone, hd, key: best[0] + ',' + best[1], g: zoneChunkG(zone, best[0], best[1], hd) }; }
-  do { if (J.g.next().done) { zoneChunk.job = null; return; } } while (performance.now() < until); }
+  do { if (J.g.next().done) { zoneChunk.job = null; return performance.now() < until - 1 ? zoneChunkPre(zone, x0, y0, x1, y1, until) : undefined; } } while (performance.now() < until); } /* v371 시간이 남으면 다음 조각도 */
 function* zoneChunkG(zone, cx, cy, hd) {
   const key = cx + ',' + cy; let c;
   c = document.createElement('canvas'); const G = hd ? GroundTex.gs : 1; c.width = c.height = CHUNK * G; c._hd = hd; const x = c.getContext('2d');
@@ -5717,9 +5717,12 @@ Object.assign(HomeIn, {
     if (ra.startsWith('k:r_')) { const img = Props3D.thumb(ra.slice(2)); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } }
     if (it.home === 'place' && it.art.startsWith('k:')) { const S = Math.max(1, Math.round(x.getTransform().a)), img = typeof Snap3D !== 'undefined' && Snap3D.prop(it.art.slice(2), 104 * S); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } } // v325 장르 가구: 방 위에 3D 사진
     if (it.home === 'place' && typeof Snap3D !== 'undefined' && Snap3D.ok()) { const S = Math.max(1, Math.round(x.getTransform().a)), img = Snap3D.deco(it.art, 104 * S); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } } // v345 남은 도트 소품도 3D 사진
-    if (it.home === 'place') return art(it.art, 56, 52, 3);
+    /* v371 사용자 2026-10-24 '2d빼라했을텐데': 실사 사진이 올 때까지 도트 그림 대신 '불러오는 중' (3D를 아예 못 쓰는 기기만 도트) */
+    const no3 = typeof Snap3D === 'undefined' || !Snap3D.ok(), wait = () => (no3 ? false : (Shop.loading3d(x), true));
+    if (it.home === 'place') return wait() || art(it.art, 56, 52, 3);
     if (it.home === 'tone') { const a = Props3D.thumb('r_h_tv1'), b = Props3D.thumb('r_sofa_02'), c = Props3D.thumb('r_potted_plant_02'); if (a && b && c) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(a, 36, -8, 88, 88); x.drawImage(c, 0, 34, 70, 70); x.drawImage(b, 44, 34, 80, 80); x.restore(); return; } /* v328 톤 미리보기: 실사 TV·소파·화분을 그 톤 방에 */
-      room('vv', 48, 26, 2); room('ss', 48, 70, 2); art('mon', 8, 66, 2); art('lamp', 120, 66, 2); return; }
+      if (wait()) return; room('vv', 48, 26, 2); room('ss', 48, 70, 2); art('mon', 8, 66, 2); art('lamp', 120, 66, 2); return; }
+    if (ra.startsWith('k:r_')) return Shop.loading3d(x); /* 사진(png)은 어느 기기든 온다 */
     if (it.home === 'tv') room('vv', 32, 50, 3);
     else if (it.home === 'sofa') room('sss', 32, 60, 2);
     else if (it.home === 'bed') room('bb/bb', 48, 34, 2);
@@ -8518,6 +8521,7 @@ async function exitPlace() {
   await iris(true);
   Game.scene = 'zone'; Game.player.x = Game.zonePos.x; Game.player.y = Game.zonePos.y; Game.player.dir = 0; Game.player.vx = Game.player.vy = 0;
   Game.room = null; State.siteSession = null; Sound.playBgm('town');
+  Cam.x = Game.player.x; Cam.y = Game.player.y; /* v371 끊김: 실내 카메라 자리에서 문까지 미끄러지며 지나가는 땅 조각을 다 그리던 것 → 바로 문 앞에서 */
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); // v363 거리 첫 장면(그림 올리기)을 검은 화면 뒤에서
   await iris(false); Game.trans = null; Game.busy = false;
 }
@@ -8795,7 +8799,10 @@ function drawZone(t, g = ctx) { // g: 땅 그림 캔버스 (3D 바깥이면 #zgr
     for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++)
       if (cx * CHUNK < z.W * TILE && cy * CHUNK < z.H * TILE) { const ch = zoneChunk(z, cx, cy); g.imageSmoothingEnabled = !!ch._hd; g.drawImage(ch, cx * CHUNK, cy * CHUNK, CHUNK, CHUNK); } // v326 사진 땅은 해상도가 높아 부드럽게 줄인다
   g.imageSmoothingEnabled = false;
-  if (Game.driving && Game.car && Math.abs(Game.car.vx || 0) + Math.abs(Game.car.vy || 0) > 20) { const c = Game.car, ax = (c.vx || 0) * 1.2, ay = (c.vy || 0) * 1.2; zoneChunkPre(z, x0 + Math.min(0, ax), y0 + Math.min(0, ay), x1 + Math.max(0, ax), y1 + Math.max(0, ay), performance.now() + 3); } // v363 달리는 앞쪽 땅 조각을 미리 조금씩 (한 장면 3ms)
+  { /* v363 달리는 앞쪽 땅 조각을 미리 조금씩 (한 장면 3ms) · v371 끊김 (사용자 '계속 끊긴다 게임하는 중간중간에'): 걸을 때도, 화면 둘레 0.6조각까지 미리 (기억 한도 40조각 안에서만) */
+    const c = Game.driving && Game.car ? Game.car : Game.player, ax = ((c && c.vx) || 0) * 1.2, ay = ((c && c.vy) || 0) * 1.2, M = CHUNK * 0.6;
+    const X0 = x0 - M + Math.min(0, ax), Y0 = y0 - M + Math.min(0, ay), X1 = x1 + M + Math.max(0, ax), Y1 = y1 + M + Math.max(0, ay), n = (Math.floor(X1 / CHUNK) - Math.floor(X0 / CHUNK) + 1) * (Math.floor(Y1 / CHUNK) - Math.floor(Y0 / CHUNK) + 1);
+    if (n <= 34) zoneChunkPre(z, X0, Y0, X1, Y1, performance.now() + (Game.busy ? 30 : 3)); /* 문 전환으로 화면이 가려진 동안엔 넉넉히 */ else if (Game.driving && Math.abs(ax) + Math.abs(ay) > 24) zoneChunkPre(z, x0 + Math.min(0, ax), y0 + Math.min(0, ay), x1 + Math.max(0, ax), y1 + Math.max(0, ay), performance.now() + 3); }
   // 지하철 출입구
   for (const s of z.subway) { const X = s.x * TILE, Y = s.y * TILE; g.fillStyle = '#1f8a3a'; g.fillRect(X - 6, Y - 6, 12, 12); g.fillStyle = '#fff'; g.font = 'bold 8px sans-serif'; g.textAlign = 'center'; g.fillText(String(s.ref || s.line), X, Y + 3); }
   // 도로 이름(노면, 반투명 큰 글자)
@@ -12490,6 +12497,8 @@ const Shop = {
   },
   close() { if (!this.open_) return; if ($('shBig')) { $('shBig').classList.remove('in'); this.bigIt = null; } this.open_ = false; Game.formOpen = false; $('shop').classList.remove('in'); Sound.play('flip'); this.free(); },
   free() { if (typeof Snap3D !== 'undefined' && Snap3D.release) Snap3D.release(); if (typeof Pet3D !== 'undefined' && Pet3D.drop) { const p = Profile.get(); Pet3D.drop([p.pet, p.pet2].filter(Boolean)); } }, /* v367 미리보기에 쓴 그래픽 메모리 놓기 (사용자 '미리보기 눌렀을때 튕기거나 렉걸리거나') */
+  /* v371 끊김: 사진·3D 모델이 하나 올 때마다 숍 전체를 다시 그리면(한 번 0.1초) 둘러볼 때 계속 멈췄다 → 0.12초 안에 온 것은 한 번에 */
+  soon() { if (this.soonT) return; this.soonT = setTimeout(() => { this.soonT = 0; if (this.open_) this.render(); }, 120); },
   render() {
     const p = Profile.get(); const gt = ['clothes', 'hat', 'home'].includes(this.tab), gens = GENRE_TABS.filter(([g]) => g === 'all' || SHOP_ITEMS[this.tab].some(it => genreOf(it) === g)), sub = this.tab === 'car' ? this.rsub || 'all' : gt && gens.some(([g]) => g === (this.gsub || {})[this.tab]) ? this.gsub[this.tab] : 'all', /* v342 옷이 '현대' 하나만 남으면 장르 줄은 숨김 */ list = SHOP_ITEMS[this.tab].filter(it => (!it.giftOnly || this.has(it.id)) && (sub === 'all' || (gt ? genreOf(it) === sub : rideGroup(it) === sub))); const isC = this.tab === 'clothes', isP = this.tab === 'pet', isF = this.tab === 'fx', isH = this.tab === 'hat', isD = this.tab === 'petdeco', isHm = this.tab === 'home';
     const wearing = isC ? p.outfit : isP ? null : isF ? p.fx : isH ? p.hat : isD ? null : p.car; const petOn = it => isP && !!it.pet && (it.pet === p.pet || it.pet === p.pet2); // 펫은 두 마리까지 (v114)
@@ -13782,9 +13791,9 @@ const Fx = {
   actors(c, vis, t) {
     const out = [], P = Game.player, me = Pets.mineF;
     // v304 3D 화면(실내·바깥)에선 3D 사람 머리 높이에 맞춰 그린다 (사용자 '이펙트 구름도 위치 바꿔야'): 2D 발밑에서 15픽셀 위 = 3D 1.32칸 높이, 위아래로 눌리지 않게
-    const dr = (f, x, y, lift) => () => { if (!(typeof Room3D !== 'undefined' && Room3D.pq)) return this.draw(c, f, x, y, t, lift); c.save(); try { Room3D.anchor(c, x, y, Room3D.headH() + 0.1, 15, false); this.draw(c, f, x, y, t, lift); } finally { c.restore(); } };
-    if (me && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push({ y: P.y + 0.3, d: dr(me, P.x, P.y, this.liftMe()) });
-    for (const { p } of vis) { const f = p.pal && p.pal.fx; if (!f || p.rd || (p.dr && p.s === 'zone')) continue; out.push({ y: p.y + 0.3, d: dr(f, p.x, p.y, this.liftOf(p)) }); }
+    const dr = (f, x, y, lift, key) => () => { if (FxW3D.on(c)) return FxW3D.want(key, f, x, y); /* v371 3D 화면은 실사 Fx3D (fxw3d.js) */ if (!(typeof Room3D !== 'undefined' && Room3D.pq)) return this.draw(c, f, x, y, t, lift); c.save(); try { Room3D.anchor(c, x, y, Room3D.headH() + 0.1, 15, false); this.draw(c, f, x, y, t, lift); } finally { c.restore(); } };
+    if (me && P && !(Game.scene === 'zone' && Game.driving) && !(typeof Ride !== 'undefined' && Ride.with)) out.push({ y: P.y + 0.3, d: dr(me, P.x, P.y, this.liftMe(), 'me') });
+    for (const { p } of vis) { const f = p.pal && p.pal.fx; if (!f || p.rd || (p.dr && p.s === 'zone')) continue; out.push({ y: p.y + 0.3, d: dr(f, p.x, p.y, this.liftOf(p), 'f:' + p.name) }); }
     return out;
   },
 };
@@ -18108,7 +18117,7 @@ const Room3D = {
    * 예전엔 들어갈 때 다 버리고 나올 때 건물을 처음부터 다시 짓고 그림을 다시 올려서 나올 때 몇 초씩 멈췄다. 다른 구로 가면 그때 버린다. */
   ZK: ['S', 'room', 'A', 'zb', 'zw', 'zc', 'zid', 'zsun', 'ztree', 'zti', 'zp', 'zpWait', 'zpVer', 'zsg', 'zsgT', 'zpsl', 'zsp', 'zbus', 'zsl', 'zEve', 'zbg', 'zbZ', 'zpl', 'zplZ', '_poleS', '_poleZ'],
   zSwap(st) { const o = {}; for (const k of this.ZK) { o[k] = this[k]; this[k] = st[k]; } return o; },
-  zUnstash(z) { const st = this.zst; if (!st) return false; this.zst = null; if (st.room === z) { this.dispose(); this.zSwap(st); return true; } // 같은 구로 돌아옴 → 그대로 다시 건다
+  zUnstash(z) { const st = this.zst; if (!st) return false; this.zst = null; if (st.room === z) { this.dispose(); this.zSwap(st); this.rrWait = 0; return true; } // 같은 구로 돌아옴 → 그대로 다시 건다
     const cur = this.zSwap(st); this.dispose(true); this.zSwap(cur); return false; }, // 다른 구 → 맡겨 둔 장면은 버린다
   /* v368 폰 튕김 (사용자 '숍 들어가서 한번씩 튕긴다'): 장면을 바꿔도 앞 장면 그림(텍스처)이 그래픽 메모리에 남아 들를 때마다 쌓였다 (거리 230MB + 숍 260MB + …).
    * 버리는 장면의 그림을 적어 두고, 새 장면이 몇 번 그려진 뒤 새 장면이 안 쓰는 것만 그래픽 메모리에서 내린다. 그림 자체(사진)는 그대로 있어서 다시 쓰면 three가 다시 올린다 (화질 그대로).
@@ -18500,6 +18509,7 @@ const Room3D = {
       H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.inner.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05; H.sh.scale.setScalar(Math.max(0.6, Math.min(2.2, q.h * 1.4))); });
     if (typeof Bird3D !== 'undefined') Bird3D.flush(this, now / 1000); // v323 날아오는 새
     if (typeof Hit3D !== 'undefined') Hit3D.flush(this, now / 1000); // v367 때리기 실사 효과
+    if (typeof FxW3D !== 'undefined') FxW3D.flush(this, now / 1000); // v371 몸 둘레 이펙트 실사
     for (const [k, H] of this.A) if (H.seen !== this.fr) { this.drop(H); this.A.delete(k); }
     this.r.render(this.S, this.cc || this.cam); this.gpuSweep();
   },
@@ -18530,7 +18540,7 @@ const RoomReal = {
       G.scene.updateMatrixWorld(true); const parts = []; G.scene.traverse(m => { if (!m.isMesh) return; m.geometry._keep = 1; const mt = m.material; mt._keep = 1; if (mt.map) mt.map.anisotropy = 8; parts.push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: mt }); });
       this.M[k] = parts; this.rs[k] = 2; this.ver++; this.done(); }).catch(e => { console.warn('roomreal', k, e); this.rs[k] = -1; this.done(); }); },
   // 받던 게 다 오면 방을 한 번만 다시 세운다
-  done() { if (Object.values(this.rs).includes(1) || (typeof RealFloor !== 'undefined' && RealFloor.kpend)) return; if (typeof Room3D !== 'undefined' && Room3D.room && Room3D.rrWait) { Room3D.rrWait = 0; Room3D.room = null; } }, // 집도 (빈집은 다른 다시 세우기 계기가 없다)
+  done() { if (Object.values(this.rs).includes(1) || (typeof RealFloor !== 'undefined' && RealFloor.kpend)) return; if (typeof Room3D !== 'undefined' && Room3D.room && !Room3D.room.buildings && Room3D.rrWait) { /* v371 끊김: 바닥 그림이 다 오기 전에 나가면 맡겨 둔 거리를 통째로 다시 짓던 것 (거리일 땐 안 건드린다) */ Room3D.rrWait = 0; Room3D.room = null; } }, // 집도 (빈집은 다른 다시 세우기 계기가 없다)
   // 방 지도 글자마다 쓰는 모델: 들어가자마자 한꺼번에 받기 시작
   USE: { K: ['water'], C: ['monitor', 'register'], S: ['wait2', 'stool'], P: ['desk_metal', 'pcset', 'chair_off'], T: ['desk_old', 'laptop'], B: ['bookcase'], A: ['arcade1', 'arcade2'], t: ['arcade1'], q: ['arcade2'], d: ['claw'], O: ['holjjak'], Z: ['blackjack'], E: ['roulette'], I: ['poker'], Y: ['slot'], J: ['shirt'], n: ['mannequin'] },
   HOME: { s: 'sofa', f: 'fridge', g: 'stove', k: 'ksink', o: 'toilet', l: 'vanity', u: 'bathtub', m: 'washer', c: 'wardrobe', h: 'cabinet', z: 'desk_metal', n: 'desk_old', e: 'bookcase', P: '*', T: '*', a: '*' },
@@ -19118,8 +19128,9 @@ Object.assign(Room3D, {
     if (this.zEve !== State.evening || this.zbg !== bg) { for (const [, e] of this.zb) e.stale = 1; this.zEve = State.evening; this.zbg = bg; }
     const plOf = this.zpl && this.zplZ === z ? this.zpl : (this.zplZ = z, this.zpl = {}); if (!Object.keys(plOf).length) for (const pl of z.places) plOf[pl.building] = pl;
     const me = Game.driving ? Game.car : Game.player, cot = 1 / Math.tan(Z3_EL), F = [[me.x / TILE, me.y / TILE]]; // 가려지면 안 되는 사람: 나 · 편집숍 사장님 · 친구
-    const vx = Game.driving && Game.car ? (Game.car.vx || 0) / TILE : 0, vy = Game.driving && Game.car ? (Game.car.vy || 0) / TILE : 0, la = Math.min(1.4, 26 / Math.max(1, Math.hypot(vx, vy))); // 앞을 1.4초어치 (멀어야 26칸)
-    const ax = vx * la, ay = vy * la, x0 = cx - vw / 2 - 6 + Math.min(0, ax), x1 = cx + vw / 2 + 6 + Math.max(0, ax), z0 = cz - vd / 2 - 6 + Math.min(0, ay), z1 = cz + vd / 2 + 10 + Math.max(0, ay);
+    const vx = (me && me.vx || 0) / TILE, vy = (me && me.vy || 0) / TILE, la = Math.min(1.4, 26 / Math.max(1, Math.hypot(vx, vy))); // 앞을 1.4초어치 (멀어야 26칸) · v371 걸을 때도
+    /* v371 끊김 (사용자 '계속 끊긴다 게임하는 중간중간에'): 미리 짓는 테두리를 6칸 → 12칸 (아래 16칸)으로. 화면에 들어오기 전에 나눠 짓기(zJob)가 끝나게 */
+    const ax = vx * la, ay = vy * la, x0 = cx - vw / 2 - 12 + Math.min(0, ax), x1 = cx + vw / 2 + 12 + Math.max(0, ax), z0 = cz - vd / 2 - 12 + Math.min(0, ay), z1 = cz + vd / 2 + 16 + Math.max(0, ay);
     const sp = typeof ShopPromo !== 'undefined' && ShopPromo.w; if (sp && Game.decor.includes(sp)) F.push([sp.x / TILE, sp.y / TILE]); if (typeof Net !== 'undefined' && Net.on) for (const { p } of Net.visible('zone')) if (p && Number.isFinite(p.x)) F.push([p.x / TILE, p.y / TILE]);
     const need = [], far = []; let vt = 0;
     for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
@@ -19137,7 +19148,7 @@ Object.assign(Room3D, {
     const warm = this.zWarm && now - this.zWarm0 < 12000, budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
     let made = 0, J = this.zJob; if (J && (J.z !== z || J.bg !== bg || J.eve !== State.evening || !need.includes(J.id))) J = this.zJob = null;
     /* v363 (렉 시연 점검): 화면 안 건물은 지금 한 번에, 달리는 앞쪽(아직 화면 밖) 새 건물은 한 채를 단계별로 여러 장면에 나눠 짓는다 (zJob) */
-    const onS = b => b.x < cx + vw / 2 + 4 && b.x + b.w > cx - vw / 2 - 4 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 4;
+    const onS = b => b.x < cx + vw / 2 + 1 && b.x + b.w > cx - vw / 2 - 1 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 1; /* v371 화면 밖 1칸부터는 나눠 짓기로 (예전 4칸: 아직 안 보이는 건물을 한 번에 지어 걸을 때 끊김). 아래쪽 8칸은 높은 건물이 위로 보여서 그대로 */
     const fin = (id, e) => { const old = this.zb.get(id);
       if (e.top != null) e.H = Math.max(e.H || 0, e.top); else try { e.H = Math.max(e.H || 0, new T3.THREE.Box3().setFromObject(e.m).max.y); } catch (er) {} /* v346 건물 1층을 높여서 (건물 스레드) 보이는 높이로 가림 판단 · v362 실사 건물은 makeReal이 top·nv를 알려 줌 (Box3·traverse 생략) */
       if (!e.nv) { let nv = 0; e.m.traverse(o => { const g = o.geometry; if (g && g.attributes && g.attributes.position) nv += g.attributes.position.count; }); e.nv = nv; }
@@ -19145,8 +19156,9 @@ Object.assign(Room3D, {
     for (const id of need) { if (made && performance.now() - now > budget) break; const b = z.buildings[id];
       if (!warm && !this.zb.has(id) && !onS(b)) continue;
       let e; if (J && J.id === id) { e = this.zJobRun(J, Infinity); this.zJob = J = null; } else e = this.zBld(b, plOf[id]); fin(id, e); }
-    if (!warm) { if (!J) { const id = need.find(i => !this.zb.has(i)); if (id != null) { const b = z.buildings[id], g = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeG ? Bld3D.makeG(this, b, plOf[id], bWallH(b) / TILE * Z3_BH) : null; if (g) J = this.zJob = { id, g, pl: plOf[id], z, bg, eve: State.evening }; } }
-      if (J && performance.now() - now < budget) { const e = this.zJobRun(J, now + budget); if (e) { this.zJob = null; fin(J.id, e); } } }
+    if (!warm) for (let k = 0; k < 4 && performance.now() - now < budget; k++) { /* v371 한 장에 시간이 남으면 다음 건물도 이어서 나눠 짓는다 (예전엔 한 장에 한 채만) */
+      if (!J) { const id = need.find(i => !this.zb.has(i)); if (id != null) { const b = z.buildings[id], g = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeG ? Bld3D.makeG(this, b, plOf[id], bWallH(b) / TILE * Z3_BH) : null; if (g) J = this.zJob = { id, g, pl: plOf[id], z, bg, eve: State.evening }; } }
+      if (!J) break; const jid = J.id, e = this.zJobRun(J, now + budget); if (!e) break; this.zJob = J = null; fin(jid, e); }
     if (this.zWarm) { if (!warm) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); }
   },
   zJobRun(J, until) { try { let r; do { r = J.g.next(); if (r.done) return r.value; } while (performance.now() < until); return null; } catch (er) { console.warn('bld3d', er); this.zJob = null; return this.zBld(J.z.buildings[J.id], J.pl); } },
@@ -19277,6 +19289,9 @@ Object.assign(Room3D, {
         if (!this.zsg) this.zSignals(z); this.zSigTick(t); this.zBusSign(performance.now() / 1000);
         if (PBR.done && !this.zti) this.zTrees(z); if (PBR.done && (!this.zp && (!this.zpWait || Props3D.ver !== this.zpVer))) this.zProps(z); // v331 거리 소품 (받으면 한 번에 세운다)
         if (PBR.done && typeof Bld3D !== 'undefined' && Bld3D.zPoles) Bld3D.zPoles(this, z); // v349 전봇대·전선 (bldreal.js, 구역마다 한 번)
+        if (Car3D.ready() && Car3D.real && !this.carWarm && this.r) { this.carWarm = 1; try { /* v371 끊김: 실사 길거리 차(아이오닉·타이어…) 재질을 처음 보일 때 만들면 멈춘다 → 받자마자 미리 (탈것 warmUp과 같은 방법) */
+          const g = new T3.THREE.Group(); for (const k in Car3D.M) for (const t in Car3D.M[k]) { const L = Car3D.M[k][t]; if (!Array.isArray(L)) continue; for (const q of L) if (q.mat) { const m = new T3.THREE.Mesh(q.geo, q.mat); m.frustumCulled = false; g.add(m); } }
+          g.add(new T3.THREE.Mesh(new T3.THREE.BoxGeometry(0.1, 0.1, 0.1), Car3D.fixM())); Ride3D.warmUp(this, g, 'car3d'); /* 장면엔 안 넣고 셰이더·그림만 (compileAsync 대상 장면 = 거리) */ } catch (e) { console.warn('car warm', e); } }
     this.zStream(z, cx, cz, vw, vh / this.zSq(), dt);
     this.zq = { w: [], c: [] }; this.pq = [];
   },
@@ -20170,7 +20185,7 @@ Object.assign(Bld3D, {
       for (let i = 0, n = 2 + (W / 1.5 | 0); i < n; i++) { const a = 0.15 + r() * (W - 0.5), w = 0.08 + r() * 0.25, L = 0.25 + r() * Math.min(1.2, (H - yb) * 0.4), k = 0.07 + r() * 0.11, y0 = H - 0.1;
         ao(a, a + w, [y0 - L * 0.5, y0 - L], (x, y) => y > y0 || y < y0 - L ? 1 : 1 - k * Math.pow(1 - (y0 - y) / L, 1.2)); } }
     box(W / 2, gf + 0.04, Dp + 0.025, W + 0.02, 0.08, 0.05, 'conc', wk === 'glass' ? '#4a525a' : conc); if (!res) ledge(gf, gf + 0.08, 0, W, 0.14, 0.2);
-    yield;
+    yield 1;
     // ---- 위층 창 ----
     const winCell = w => eve && w.lit ? [3, w.cur * 8 | 0] : [0, w.cur * 8 | 0];
     const glassPane = (x0, y0, w, h, cell, fr, mull, zr = Dp, st = 0, cu = 0) => { // 유리 + 창틀 + (가운데 창살). zr = 벽 안으로 들어간 유리 자리
@@ -20183,7 +20198,7 @@ Object.assign(Bld3D, {
       else if (st === 2) { const ty = y0 + h * 0.72; box(x0 + w / 2, ty, zr + d * 0.6, w, t2, d * 1.2, 'trim', fr); box(x0 + w / 2, (y0 + ty) / 2, zr + d * 0.6, t2, ty - y0, d * 1.2, 'trim', fr); } // 위 고정창 + 아래 두 짝
       else if (st === 3) { for (const q of [1 / 3, 2 / 3]) box(x0 + w * q, y0 + h / 2, zr + d * 0.6, t2 * 0.8, h, d, 'trim', fr); box(x0 + w / 2, y0 + h / 2, zr + d * 0.6, w, t2 * 0.8, d, 'trim', fr); } // 옛날 격자창
       else box(x0 + w / 2, y0 + h / 2, zr + d * 0.6, t2, h, d * 1.2, 'trim', fr); };
-    yield;
+    yield 2;
     // v347 몸통 다양화 (사용자 '더 디벨롭해'): 건물마다 창 모양 · 창틀 색, 꼭대기 층은 다른 창, 창마다 커튼·블라인드·창가 화분. 따로 굴리는 rng라 예전 배치는 그대로
     const LT = []; // v350 저녁 불빛 자리 [종류, x0, y0, x1, y1, z, 색] (그림은 Bld3D.nightGlow가 2D로 덧칠)
     const vr = this.rng(b.seed * 13 + 91), WS = vr() * 4 | 0, WT = P.n >= 3 && vr() < 0.6 ? (WS + 2) % 4 : WS, fq = vr(), frmW = fq < 0.14 ? '#6a4a32' : fq < 0.26 ? '#9aa2a8' : frm;
@@ -20230,7 +20245,7 @@ Object.assign(Bld3D, {
       cyl(0.1, (H + 0.05) / 2, Dp + 0.035, 0.025, H - 0.05, 'trim', '#9a9c9a', 8);
       if (res || r() < 0.4) { const gx = W - 0.14; cyl(gx, (H - 0.2 + 0.25) / 2, Dp + 0.05, 0.016, H - 0.45, 'trim', '#d8b01c', 6);
         for (let f = 0; f < P.n; f++) { const yy = Ht(0.14 + f * P.fh) - P.fh * 0.85; box(gx - 0.12, yy, Dp + 0.05, 0.24, 0.025, 0.025, 'trim', '#d8b01c'); if (!kit('meter', gx - 0.27, yy - 0.11, Dp + 0.05)) box(gx - 0.27, yy, Dp + 0.06, 0.1, 0.12, 0.06, 'trim', '#b4b6b4'); } } }
-    yield;
+    yield 3;
     // ---- 1층 ----
     const dr = pl && pl.door && pl.door.face === 0 ? pl.door : null, dx = dr ? dr.tx - b.x + 0.15 : -9, dh = Math.min(1.6, gf - (res ? 0.14 : 0.45)); // 문 위로 간판 자리
     const door = (x, w, h, zz = Dp) => { box(x + w / 2, h / 2, zz + 0.004, w, h, 0.008, 'win', '#ffffff', { uv: cellUV(eve ? 3 : 1, eve ? 3 : 3) }); const d = 0.045, tf = 0.04, fc = '#2e3134';
@@ -20293,7 +20308,7 @@ Object.assign(Bld3D, {
     const awn = (x0, x1, c0, y) => { const n = Math.max(2, Math.round((x1 - x0) / 0.22)), s = (x1 - x0) / n, th = 0.62, dd = 0.34, c2 = shade(c0, 0.5); for (let i = 0; i < n; i++) box(x0 + (i + 0.5) * s, y - dd / 2 * Math.sin(th), Dp + 0.05 + dd / 2 * Math.cos(th), s + 0.002, 0.02, dd, 'trim', i % 2 ? c2 : c0, { rx: th });
       box((x0 + x1) / 2, y - dd * Math.sin(th) - 0.05, Dp + 0.05 + dd * Math.cos(th), x1 - x0, 0.1, 0.015, 'trim', c0); };
     if (P.K && !P.court) awn(0.12, W - 0.12, P.K[0], gf - 0.36); else if (P.shops.length && !res) { const uw = W / P.shops.length; P.shops.forEach((s, i) => { if (s.aw) awn(i * uw + 0.12, (i + 1) * uw - 0.12, s.c, gf - 0.36); }); }
-    yield;
+    yield 4;
     // ---- 옥상: 계단실 · 물탱크 · 실외기 · 태양광 · 화단 · 안테나 · 법원 기둥·국기 ----
     const sx = Math.min(1.4, W * 0.32), sz = Math.min(1.1, Dp * 0.34), sy = P.court ? 0.9 : 0.72, hx = W - 0.25 - sx / 2, hz = 0.25 + sz / 2;
     const robs = [], drains = [[0.3, 0.3, 0.1], [W - 0.3, 0.3, 0.1], [0.3, Dp - 0.3, 0.1], [W - 0.3, Dp - 0.3, 0.1]]; // 옥상 위 물건 자리 (둘레 그늘) · 배수구 얼룩 [x, z, 퍼짐]
@@ -20332,7 +20347,7 @@ Object.assign(Bld3D, {
     if (P.court) { const ch = H - gf * 0.15; for (let x = 0.9; x < W - 0.5; x += 1.6) { cyl(x, ch / 2, Dp + 0.14, 0.18, ch, 'conc', '#ece6d8', 14); box(x, 0.06, Dp + 0.14, 0.46, 0.12, 0.46, 'conc', '#d4ccba'); box(x, ch - 0.04, Dp + 0.14, 0.44, 0.08, 0.44, 'conc', '#d4ccba'); }
       box(W / 2, ch + 0.08, Dp + 0.12, W - 0.4, 0.16, 0.5, 'conc', '#e2dccc'); box(W / 2, 0.04, Dp + 0.2, W - 0.2, 0.08, 0.5, 'conc', '#bdb5a3');
       { const fz = cTop > H ? Dp * 0.3 : Dp * 0.75; cyl(W / 2, cTop + 1.2, fz, 0.035, 2.4, 'trim', '#d8d8d4', 8); cyl(W / 2, cTop + 2.42, fz, 0.06, 0.06, 'trim', '#d4b04a', 8); box(W / 2 + 0.42, cTop + 2.15, fz, 0.78, 0.52, 0.015, 'win', '#ffffff', { uv: cellUV(1, 7) }); } }
-    yield;
+    yield 5;
     // ---- v346 주요 건물마다 한눈에 알아보는 표시 (사용자 '너가 만든 건물들 괜찮은데' → 법원처럼 하나씩): 옥상 간판탑 · 병원 십자·헬기장 · 관공서 국기 · 카지노·게임장 네온 · 가게 돌출 간판 ----
     if (P.K && !P.court && W >= 2 && Dp >= 2) { const kd = P.kind, [kc, kt] = P.K, nm = pl && pl.name ? pl.name : this.LABEL[kd];
       const roofSign = (txt, bg, fg, glow) => { const q = plat || { x0: 0, z0: 0, w: W, d: Dp, y: Ht(0) }, cx = q.x0 + q.w / 2, w = Math.min(q.w * 0.8, 5), h = Math.min(0.9, w * 0.22), z = q.z0 + q.d - 0.35, H = q.y, y = H + 0.42, W2 = cx * 2; if (!plat) robs.push([cx - w / 2, z - 0.2, cx + w / 2, z + 0.2]);
@@ -20352,7 +20367,7 @@ Object.assign(Bld3D, {
       else if (kd === 'arcade') roofSign(nm || '게임장', '#1a0a2a', '#7ef0ff', '#ff4ad0');
       else if (kd === 'registry' || kd === 'center') { flag(W * 0.2, Dp - 0.3, 1.6); flag(W * 0.8, Dp - 0.3, 1.6); robs.push([W * 0.2 - 0.1, Dp - 0.4, W * 0.2 + 0.1, Dp - 0.2], [W * 0.8 - 0.1, Dp - 0.4, W * 0.8 + 0.1, Dp - 0.2]); if (W > 5) roofSign(nm, kc, kt); }
       else if (kd === 'office' || kd === 'agent' || kd === 'shop' || kd === 'forsale') vSign(W - 0.25, nm, kc, kt); }
-    yield;
+    yield 6;
     // ---- v345 옥상 살림: 장독대 · 빨랫줄 · 환기관 (빌라) ----
     if (W >= 2.4 && Dp >= 2) { const free = (x, z, w, d) => !robs.some(o => x + w > o[0] - 0.1 && x < o[2] + 0.1 && z + d > o[1] - 0.1 && z < o[3] + 0.1) && x > 0.2 && z > 0.2 && x + w < W - 0.2 && z + d < Dp - 0.2;
       if (res && r() < 0.55) { const w = 0.9, d = 0.5, x = fx0 + r() * Math.max(0, fx1 - fx0 - w), z = Math.max(0.3, Dp - 0.85); if (free(x, z, w, d)) { robs.push([x, z, x + w, z + d]); box(x + w / 2, H + 0.04, z + d / 2, w, 0.08, d, 'conc', '#b8b2a6');
@@ -20370,7 +20385,7 @@ Object.assign(Bld3D, {
         if (vr() < 0.3) { const q = tryAt(0.5, 0.5); if (q) { const [x, z] = q, uc = ['#c42a24', '#2c5aa8', '#2a8a4a'][vr() * 3 | 0]; cyl(x + 0.25, H + 0.09, z + 0.25, 0.24, 0.18, 'trim', uc, 14); cyl(x + 0.25, H + 0.18, z + 0.25, 0.2, 0.005, 'trim', '#5a6a72', 14); } } } // 고무 대야 (고인 물) · 넓은 옥상은 넓이만큼 여러 번
       if (W * Dp > 40 && P.st !== 'glass') { const jc = shade(P.roof, -0.22); for (let x = 3; x < W - 1; x += 3) box(x, H + 0.012, Dp / 2, 0.05, 0.006, Dp - 0.5, 'trim', jc); for (let z = 3; z < Dp - 1; z += 3) box(W / 2, H + 0.012, z, W - 0.5, 0.006, 0.05, 'trim', jc); } // v360 넓은 방수 옥상의 줄눈 (3칸마다)
       for (let i = 0; i < 3; i++) drains.push([0.6 + r() * (W - 1.2), 0.6 + r() * (Dp - 1.2), 0.15 + r() * 0.3]); } // 빗물 고였던 얼룩
-    yield;
+    yield 7;
     // ---- 옥상 바닥: 격자로 깔고 꼭짓점마다 그늘 (난간 둘레 · 계단실·물탱크 둘레 · 배수구·고인 물 얼룩 · 얼룩덜룩한 방수 페인트) ----
     { const g = /^#[9a]/.test(P.roof) ? 'conc' : 'roof', Y = H + 0.01, xs = [t, W - t], zs = [t, Dp - t];
       for (const d of [0.1, 0.3]) { xs.push(t + d, W - t - d); zs.push(t + d, Dp - t - d); }
@@ -20383,22 +20398,22 @@ Object.assign(Bld3D, {
         for (const o of robs) { const d = Math.hypot(Math.max(o[0] - x, 0, x - o[2]), Math.max(o[1] - z, 0, z - o[3])); v *= 1 - 0.45 * Math.exp(-d / 0.13); }
         for (const [cx, cz, s] of drains) v *= 1 - 0.25 * Math.exp(-((x - cx) ** 2 + (z - cz) ** 2) / (s * s)); return v * (1 + noise(x, z)); };
       const inO = (x, z) => robs.some(o => x > o[0] && x < o[2] && z > o[1] && z < o[3]);
-      for (let j = 0; j + 1 < Z.length; j++) for (let i = 0; i + 1 < X.length; i++) { const x0 = X[i], x1 = X[i + 1], z0 = Z[j], z1 = Z[j + 1]; if (inO((x0 + x1) / 2, (z0 + z1) / 2)) continue;
+      let qn = 0; for (let j = 0; j + 1 < Z.length; j++) for (let i = 0; i + 1 < X.length; i++) { if (++qn % 150 === 0) yield; /* v371 옥상 격자가 큰 건물은 칸 150개마다 쉰다 (한 장 45~70ms 끊김) */ const x0 = X[i], x1 = X[i + 1], z0 = Z[j], z1 = Z[j + 1]; if (inO((x0 + x1) / 2, (z0 + z1) / 2)) continue;
         quad(g, P.roof, [[x0, Y, z1], [x1, Y, z1], [x1, Y, z0], [x0, Y, z0]], [A(x0, z1), A(x1, z1), A(x1, z0), A(x0, z0)]); }
       box(W / 2, H + 0.05, t + 0.004, W - 2 * t, 0.08, 0.008, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); // 난간 안쪽으로 치켜 올린 방수층
       box(t + 0.004, H + 0.05, Dp / 2, 0.008, 0.08, Dp - 2 * t, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); box(W - t - 0.004, H + 0.05, Dp / 2, 0.008, 0.08, Dp - 2 * t, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); }
-    yield;
+    yield 8;
     // ---- 앞벽: 창 구멍을 뺀 격자. 칸마다 꼭짓점 그늘, 그늘이 가로로 같으면 한 칸으로 합친다 ----
     { const srt = (a, lo, hi) => [...new Set(a.filter(v => v >= lo && v <= hi).map(v => +v.toFixed(4)))].sort((p, q) => p - q), xs = srt([0, W, ...XL], 0, W), ys = srt([yb, H, ...YL], yb, H), e = 1e-4, q2 = (a, b2) => Math.abs(a - b2) < 2e-3;
       const inH = (x, y) => holes.some(h => x > h[0] && x < h[2] && y > h[1] && y < h[3]), A = (x, y) => { let v = 1; for (const T of aoT) if (x >= T[0] && x <= T[1]) v *= T[2](x, y); return v; };
-      for (let j = 0; j + 1 < ys.length; j++) { const ya = ys[j], yc = ys[j + 1]; let run = null; if (yc - ya < 1e-4) continue;
+      let qn2 = 0; for (let j = 0; j + 1 < ys.length; j++) { const ya = ys[j], yc = ys[j + 1]; let run = null; if (yc - ya < 1e-4) continue;
         const flush = () => { if (run) quad(wk, wcol, [[run[0], ya, Dp], [run[1], ya, Dp], [run[1], yc, Dp], [run[0], yc, Dp]], [run[2], run[3], run[5], run[4]]); run = null; };
-        for (let i = 0; i + 1 < xs.length; i++) { const xa = xs[i], xc = xs[i + 1]; if (xc - xa < 1e-4) continue; if (inH((xa + xc) / 2, (ya + yc) / 2)) { flush(); continue; }
+        for (let i = 0; i + 1 < xs.length; i++) { if (++qn2 % 200 === 0) yield; /* v371 창 많은 긴 건물 앞벽도 칸 200개마다 쉰다 */ const xa = xs[i], xc = xs[i + 1]; if (xc - xa < 1e-4) continue; if (inH((xa + xc) / 2, (ya + yc) / 2)) { flush(); continue; }
           const bl = A(xa + e, ya + e), br = A(xc - e, ya + e), tl = A(xa + e, yc - e), tr = A(xc - e, yc - e);
           if (run && q2(bl, br) && q2(tl, tr) && q2(run[2], run[3]) && q2(run[4], run[5]) && q2(run[3], bl) && q2(run[5], tl)) { run[1] = xc; continue; }
           flush(); run = [xa, xc, bl, br, tl, tr]; }
         flush(); } }
-    yield;
+    yield 9;
     // ---- 간판 그림 (건물마다 한 장, 칸당 CS px) ----
     const mats = []; let sTex = null;
     if (signs.length) { let cw = 64; for (const s of signs) cw = Math.max(cw, Math.ceil(s.w * CS) + 4); cw = Math.min(2048, cw); const sc = Math.min(1, (cw - 4) / (Math.max(...signs.map(s => s.w)) * CS));
@@ -20408,7 +20423,7 @@ Object.assign(Bld3D, {
       sTex = R.cvTex(cw, chh, c => { for (const s of signs) { c.save(); c.translate(s.px[0], s.px[1]); c.beginPath(); c.rect(0, 0, s.px[2], s.px[3]); c.clip(); s.draw(c, s.px[2], s.px[3]); c.restore(); } }); sTex._own = 1;
       for (const s of signs) s.uv = [(s.px[0] + 0.5) / cw, 1 - (s.px[1] + s.px[3] - 0.5) / chh, (s.px[2] - 1) / cw, (s.px[3] - 1) / chh];
       for (const o of [B.sign, B.lett]) if (o) for (let i = 0; i < o.len * 2; i += 2) if (o.u[i] < 0) { const s = signs[-o.u[i] - 1], q = o.u[i + 1], u = q & 1, v = (q >> 1) & 1; o.u[i] = s.uv[0] + u * s.uv[2]; o.u[i + 1] = s.uv[1] + v * s.uv[3]; } }
-    yield;
+    yield 10;
     // ---- 재질별 모양 → 그룹 ----
     const root = new THREE.Group(); root.position.set(b.x, 0, b.y);
     let NV = 0, TOP = 0; for (const k in B) { const o = B[k], n = o.len; if (!n) continue; NV += n; const geo = new THREE.BufferGeometry(), pp = o.p.subarray(0, n * 3); geo.setAttribute('position', new THREE.BufferAttribute(pp, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(o.n.subarray(0, n * 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(o.u.subarray(0, n * 2), 2)); geo.setAttribute('color', new THREE.BufferAttribute(o.c.subarray(0, n * 3), 3));
@@ -20440,19 +20455,24 @@ Object.assign(Bld3D, {
     if (wall) { box(x, y - 0.012, z - 0.02, w + 0.04, 0.02, d + 0.06, 'trim', '#6a6c70'); for (const sx of [-1, 1]) box(x + sx * w * 0.4, y - 0.08, z - d / 2 + 0.02, 0.02, 0.14, 0.02, 'trim', '#6a6c70'); } },
   /* ---- v349 전봇대·전선 (사용자 '좋다 계속 디벨롭해'): 좁은 길·골목 가장자리에 콘크리트 전봇대 (밑동 노랑·검정 띠, 완금·애자, 변압기, 통신선 뭉치) + 처진 전선.
    * 32칸 묶음마다 메시 하나 + 전선 LineSegments 하나. 1칸 ≈ 1.13 m (사람 1.55칸 = 1.75 m) → 기둥 7칸 ≈ 8 m */
-  zPoles(R, z) { if (!R.S || (R._poleS === R.S && R._poleZ === z)) return; R._poleS = R.S; R._poleZ = z; const { THREE } = T3, at = (x, y) => z.at(Math.floor(x), Math.floor(y));
+  /* v371 끊김 (사용자 '계속 끊긴다 게임하는 중간중간에'): 구역 전체 전봇대·전선·골목 소품을 한 프레임에 지어서 0.3~0.7초 멈췄다.
+   * 같은 순서로 짓되 프레임마다 6ms씩 나눠 짓고(zPolesG = 생성기), 다 지으면 한 번에 장면에 넣는다 (반쯤 지은 게 보이거나, 들어갔다 나올 때 겹치지 않게). */
+  zPoles(R, z) { if (!R.S || (R._poleS === R.S && R._poleZ === z)) return; let J = this.poleJ; if (!J || J.S !== R.S || J.z !== z) { J = this.poleJ = { S: R.S, z, add: [] }; J.it = this.zPolesG(R, z, o => J.add.push(o)); }
+    const t0 = performance.now(), B = (typeof Game !== 'undefined' && Game.busy) || document.getElementById('zLoad') ? 40 : 6; /* 화면이 가려진 전환·'동네 불러오는 중'엔 더 많이 */ while (performance.now() - t0 < B) if (J.it.next().done) { J.add.forEach(o => J.S.add(o)); R._poleS = J.S; R._poleZ = z; this.poleJ = null; return; } },
+  *zPolesG(R, z, ADD) { const { THREE } = T3, at = (x, y) => z.at(Math.floor(x), Math.floor(y));
     const nearDoor = (x, y) => z.places.some(p => p.door && Math.hypot(x - p.door.tx - 0.5, y - p.door.ty - 0.5) < 2.2), nearX = (x, y) => (z.crossings || []).some(c => Math.hypot(x - c.x, y - c.y) < Math.max(c.halfA, c.halfB) + 2);
     const LP = R.zPropSpots ? R.zPropSpots(z).lamp : [], clear = (x, y) => !LP.some(l => (l[0] - x) ** 2 + (l[1] - y) ** 2 < 2.3) && !z.trees.some(t => (t.x / TILE - x) ** 2 + (t.y / TILE - y) ** 2 < 4.8); // 가로등·가로수와 겹치지 않게 (나무 그늘 폭)
     const inPk = (x, y) => (z.parking || []).some(p => x > p.x - 1.5 && x < p.x + p.w + 1.5 && y > p.y - 1.5 && y < p.y + p.h + 1.5); /* v360 공용 주차장 안·둘레엔 안 세움 */ const ok = (x, y) => { const v = at(x, y); return (v === T.WALK || v === T.ALLEY) && !inPk(x, y) && !nearDoor(x, y) && !nearX(x, y) && clear(x, y); }, P = [], E = [], far = (x, y, d) => !P.some(q => (q.x - x) ** 2 + (q.y - y) ** 2 < d * d);
-    for (const r of z.roads || []) { if (r.width > 7) continue; let prev = null; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1], L = Math.hypot(bx - ax, by - ay); if (L < 3) continue; const ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux;
+    for (const r of z.roads || []) { yield; if (r.width > 7) continue; let prev = null; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx, by] = r.pts[i + 1], L = Math.hypot(bx - ax, by - ay); if (L < 3) continue; const ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux;
       for (let sv = 4; sv < L - 1; sv += 10) { const cx = ax + ux * sv, cy = ay + uy * sv; let d = 0.5; while (d < r.width / 2 + 5 && at(cx + nx * d, cy + ny * d) === T.ROAD) d += 0.25; const x = cx + nx * (d + 0.3), y = cy + ny * (d + 0.3);
         if (!ok(x, y) || !far(x, y, 5) || [1.5, 3, 4.5, 6, 8].some(k => at(x + nx * k, y + ny * k) === T.ROAD)) /* 중앙 분리대·겹친 길 사이엔 안 세움 */ { prev = null; continue; } const q = { x, y }; P.push(q); if (prev && Math.hypot(prev.x - x, prev.y - y) < 15) E.push([prev, q]); prev = q; } } }
     const W = z.w || z.W || (z.grid && z.grid[0] && z.grid[0].length) || 300, Hh = z.h || z.H || (z.grid && z.grid.length) || 204, edge = (x, y) => at(x, y) === T.ALLEY && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => { const v = at(x + dx, y + dy); return v === T.BLD; });
-    for (let gy = 2; gy < Hh - 2; gy += 9) for (let gx = 2; gx < W - 2; gx += 9) { let f = null; for (let k = 0; k < 40 && !f; k++) { const x = gx + (k * 7 % 9) + 0.5, y = gy + (k * 4 % 9) + 0.5; if (edge(x, y) && ok(x, y) && far(x, y, 6)) f = { x, y, al: 1 }; } if (f) P.push(f); }
+    for (let gy = 2; gy < Hh - 2; gy += 9) for (let gx = (yield, 2); gx < W - 2; gx += 9) { let f = null; for (let k = 0; k < 40 && !f; k++) { const x = gx + (k * 7 % 9) + 0.5, y = gy + (k * 4 % 9) + 0.5; if (edge(x, y) && ok(x, y) && far(x, y, 6)) f = { x, y, al: 1 }; } if (f) P.push(f); }
     const lineOK = (a, b) => { const L = Math.hypot(b.x - a.x, b.y - a.y), n = Math.ceil(L / 0.7); let bad = 0; for (let i = 1; i < n; i++) { const v = at(a.x + (b.x - a.x) * i / n, a.y + (b.y - a.y) * i / n); if (v === T.BLD) bad++; } return bad <= n * 0.08; }; // 전선은 길을 따라 (건물 위로 크게 건너지 않게)
-    for (const a of P) if (a.al) { const ns = P.filter(b => b !== a && b.al && Math.hypot(b.x - a.x, b.y - a.y) < 12).sort((b, c) => Math.hypot(b.x - a.x, b.y - a.y) - Math.hypot(c.x - a.x, c.y - a.y)); let m = 0; for (const b of ns) { if (m >= 2) break; if (E.some(([p, q]) => p === a && q === b || p === b && q === a) || !lineOK(a, b)) continue; E.push([a, b]); m++; } }
+    for (const a of P) if ((yield, a.al)) { const ns = P.filter(b => b !== a && b.al && Math.hypot(b.x - a.x, b.y - a.y) < 12).sort((b, c) => Math.hypot(b.x - a.x, b.y - a.y) - Math.hypot(c.x - a.x, c.y - a.y)); let m = 0; for (const b of ns) { if (m >= 2) break; if (E.some(([p, q]) => p === a && q === b || p === b && q === a) || !lineOK(a, b)) continue; E.push([a, b]); m++; } }
     for (let i = P.length - 1; i >= 0; i--) if (!E.some(e => e[0] === P[i] || e[1] === P[i])) P.splice(i, 1); // 전선 없는 외톨이 기둥은 빼기
     for (const q of P) { const es = E.filter(e => e[0] === q || e[1] === q); let dx = 0, dy = 0; for (const [a, b] of es) { const o = a === q ? b : a, l = Math.hypot(o.x - q.x, o.y - q.y) || 1, sx = (o.x - q.x) / l, sy = (o.y - q.y) / l; if (dx * sx + dy * sy < 0) { dx -= sx; dy -= sy; } else { dx += sx; dy += sy; } } q.a = es.length ? Math.atan2(dy, dx) : 0; q.h = 6.4 + ((q.x * 7 + q.y * 13) % 5) * 0.1; q.tr = ((q.x * 3 + q.y * 5) | 0) % 4 === 0; }
+    yield;
     // 기둥 한 개 모양 (원점 바닥, +x = 전선 방향) → 묶음마다 합친다
     const parts = [], cyl = (x, y, z0, r0, r1, h, col, seg = 8, rot) => { const g = new THREE.CylinderGeometry(r1, r0, h, seg, 1, false); if (rot) g.rotateZ(Math.PI / 2); g.translate(x, y, z0); parts.push([g, col]); }, bx = (x, y, z0, w, h, d, col) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z0); parts.push([g, col]); };
     const shape = (H, tr) => { parts.length = 0; cyl(0, H / 2, 0, 0.17, 0.11, H, '#a4a29a', 10); for (let i = 0; i < 6; i++) cyl(0, 0.35 + i * 0.16 + 0.08, 0, 0.176, 0.174, 0.16, i % 2 ? '#1e1e1c' : '#e8c21a', 10); // 밑동 노랑·검정 띠
@@ -20463,12 +20483,12 @@ Object.assign(Bld3D, {
       const gs = parts.map(([g, c]) => { const n = g.attributes.position.count, cc = new Float32Array(n * 3), C = new THREE.Color(c); for (let i = 0; i < n; i++) { const y = g.attributes.position.getY(i), k = Math.min(1, 0.8 + y * 0.06); cc[i * 3] = C.r * k; cc[i * 3 + 1] = C.g * k; cc[i * 3 + 2] = C.b * k; } g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); return g.index ? g.toNonIndexed() : g; }); return gs; };
     const mat = this.poleMat || (this.poleMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0.05 })), wmat = this.wireMat || (this.wireMat = new THREE.LineBasicMaterial({ color: 0x141414 }));
     const cells = new Map(), cellOf = (x, y) => Math.floor(x / 32) + ',' + Math.floor(y / 32), M4 = new THREE.Matrix4(), Qn = new THREE.Quaternion(), V = new THREE.Vector3(), S1 = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
-    for (const q of P) { const c = cellOf(q.x, q.y); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); M4.compose(V.set(q.x, 0, q.y), Qn.setFromAxisAngle(up, -q.a), S1); for (const g of shape(q.h, q.tr)) { g.applyMatrix4(M4); cells.get(c).g.push(g); }
+    for (const q of P) { yield; const c = cellOf(q.x, q.y); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); M4.compose(V.set(q.x, 0, q.y), Qn.setFromAxisAngle(up, -q.a), S1); for (const g of shape(q.h, q.tr)) { g.applyMatrix4(M4); cells.get(c).g.push(g); }
       const hs = ((q.x * 13.7 + q.y * 7.3) | 0) % 10; if (hs < 4) { parts.length = 0; const n = 3 + hs, BC = ['#d8d2b8', '#d4cca0', '#dcd8c8', '#8eb0cc', '#cfc690']; // v351 종량제 봉투 더미 (전봇대 밑에 내놓는 서울 골목 그대로)
         for (let i = 0; i < n; i++) { const r0 = 0.15 + ((i * 37 + hs * 11) % 7) * 0.012, ang = i * 2.1 + hs, rr = i === 0 ? 0 : 0.18 + (i % 3) * 0.07, g = new THREE.IcosahedronGeometry(1, 1), ps = g.attributes.position; for (let v = 0; v < ps.count; v++) { const X = ps.getX(v), Y = ps.getY(v), Z = ps.getZ(v), nz = 1 + 0.16 * Math.sin(X * 5.1 + i * 2 + Y * 3.7) * Math.cos(Z * 4.3 + hs); ps.setXYZ(v, X * nz, (Y < 0 ? Y * 0.5 : Y * (1 + 0.25 * (X * X < 0.08 && Z * Z < 0.08 ? 1 : 0))) * nz, Z * nz); } g.computeVertexNormals(); g.scale(r0 * 1.15, r0 * (i > 4 ? 0.7 : 0.78), r0 * 1.05); /* 구겨지고 바닥에 퍼진 봉투 */ g.translate(Math.cos(ang) * rr, r0 * 0.82 + (i > 4 ? 0.2 : 0), 0.32 + Math.sin(ang) * rr); parts.push([g, BC[(i + hs) % 5]]);
           for (const sx of [-1, 1]) { const kn = new THREE.ConeGeometry(0.035, 0.1, 4); kn.rotateZ(sx * 0.5); kn.translate(Math.cos(ang) * rr + sx * 0.03, r0 * 1.42 + (i > 4 ? 0.2 : 0), 0.32 + Math.sin(ang) * rr); parts.push([kn, BC[(i + hs) % 5]]); } } // 묶은 손잡이 두 귀
         for (const [g, col] of parts) { const nn = g.attributes.position.count, cc = new Float32Array(nn * 3), C = new THREE.Color(col); for (let i = 0; i < nn; i++) { const y = g.attributes.position.getY(i), k = 0.72 + Math.min(0.28, y * 0.9); cc[i * 3] = C.r * k; cc[i * 3 + 1] = C.g * k; cc[i * 3 + 2] = C.b * k; } g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); const g2 = g.index ? g.toNonIndexed() : g; g2.applyMatrix4(M4); cells.get(c).g.push(g2); } } }
-    for (const cr of z.crossings || []) for (const [d, half, oh] of [[cr.da, cr.halfA, cr.halfB], [cr.db, cr.halfB, cr.halfA]]) for (const sd of [-1, 1]) for (const e of [-1, 1]) { // v354 횡단보도 끝 볼라드 (차 막는 말뚝) 3개
+    for (const cr of z.crossings || []) for (const [d, half, oh] of (yield, [[cr.da, cr.halfA, cr.halfB], [cr.db, cr.halfB, cr.halfA]])) for (const sd of [-1, 1]) for (const e of [-1, 1]) { // v354 횡단보도 끝 볼라드 (차 막는 말뚝) 3개
       const nx = -d[1], ny = d[0], ox = cr.x + d[0] * (oh + 1.5) * sd, oy = cr.y + d[1] * (oh + 1.5) * sd, px = ox + nx * (half + 0.55) * e, py = oy + ny * (half + 0.55) * e; if (at(px, py) === T.ROAD || at(px, py) === T.BLD) continue;
       const c = cellOf(px, py); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); const st = ((cr.x * 3 + cr.y) | 0) % 2;
       for (const k of [-1.2, 0, 1.2]) { const bx = px + d[0] * k, by = py + d[1] * k; if (at(bx, by) === T.ROAD) continue; parts.length = 0;
@@ -20477,31 +20497,31 @@ Object.assign(Bld3D, {
     // v358 골목 생활감: 모퉁이 볼록 거울 · 주차금지 (고깔·폐타이어·의자·대야) · 전봇대 전단지. 모두 같은 묶음 메시에 합침
     const put = (x, y, yaw, sh = 1) => { const c = cellOf(x, y); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); M4.compose(V.set(x, 0, y), Qn.setFromAxisAngle(up, yaw), S1); for (const [g, col] of parts) { const nn = g.attributes.position.count, cc = new Float32Array(nn * 3), C = new THREE.Color(col); for (let i = 0; i < nn; i++) { const k = sh ? 0.78 + Math.min(0.22, g.attributes.position.getY(i) * 0.2) : 1; cc[i * 3] = C.r * k; cc[i * 3 + 1] = C.g * k; cc[i * 3 + 2] = C.b * k; } g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); const g2 = g.index ? g.toNonIndexed() : g; if (g2 !== g) g.dispose(); g2.applyMatrix4(M4); cells.get(c).g.push(g2); } parts.length = 0; };
     const hh = (x, y) => (Math.imul((x * 92.1 | 0) ^ (y * 47.3 | 0) * 2654435761, 1597334677) >>> 0) / 4294967296, A4 = [[1, 0], [-1, 0], [0, 1], [0, -1]], NP = [], open = v => v === T.ALLEY || v === T.ROAD || v === T.WALK, U = [];
-    for (let gy = 3; gy < Hh - 3; gy += 7) for (let gx = 3; gx < W - 3; gx += 7) for (let k = 0; k < 49; k++) { const cx = gx + (k % 7) + 0.5, cy = gy + (k / 7 | 0) + 0.5; if (at(cx, cy) !== T.ALLEY) continue; const ds = A4.filter(([dx, dy]) => open(at(cx + dx * 1.6, cy + dy * 1.6)) && open(at(cx + dx * 2.6, cy + dy * 2.6))); if (ds.length < 3) continue; // 골목 갈림길 → 모퉁이에 거울
+    for (let gy = 3; gy < Hh - 3; gy += 7) for (let gx = (yield, 3); gx < W - 3; gx += 7) for (let k = 0; k < 49; k++) { const cx = gx + (k % 7) + 0.5, cy = gy + (k / 7 | 0) + 0.5; if (at(cx, cy) !== T.ALLEY) continue; const ds = A4.filter(([dx, dy]) => open(at(cx + dx * 1.6, cy + dy * 1.6)) && open(at(cx + dx * 2.6, cy + dy * 2.6))); if (ds.length < 3) continue; // 골목 갈림길 → 모퉁이에 거울
       let best = null; for (const [ex, ey] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { const x = cx + ex * 1.2, y = cy + ey * 1.2; if (at(x, y) !== T.ALLEY && at(x, y) !== T.WALK) continue; if (!A4.some(([dx, dy]) => at(x + dx * 0.9, y + dy * 0.9) === T.BLD)) continue; if (nearDoor(x, y) || inPk(x, y) || !far(x, y, 1.5) || U.some(u => Math.hypot(u.x - x, u.y - y) < 9)) continue; if (!best || ey < best.ey) best = { x, y, ex, ey }; } // 뒤(북쪽) 모퉁이 우선: 남쪽을 보고 서서 카메라에 거울 얼굴이 보이게
       if (best) { U.push(best); parts.length = 0; cyl(0, 1.35, 0, 0.045, 0.04, 2.7, '#e0661a', 8); { const rg = new THREE.CylinderGeometry(0.36, 0.36, 0.07, 20); rg.rotateX(Math.PI / 2); rg.translate(0, 2.7, 0); parts.push([rg, '#e0661a']); } const mg = new THREE.CircleGeometry(0.31, 20); mg.translate(0, 2.7, 0.04); parts.push([mg, '#cfdce4']); const bk = new THREE.CircleGeometry(0.3, 16); bk.rotateY(Math.PI); bk.translate(0, 2.7, -0.03); parts.push([bk, '#3a3c40']); bx(0, 2.24, 0.03, 0.34, 0.11, 0.02, '#f2f2ee'); bx(0, 2.24, 0.042, 0.28, 0.035, 0.005, '#c82820'); put(best.x, best.y, Math.atan2(-best.ex, -best.ey), 0); break; } }
-    for (let gy = 2; gy < Hh - 2; gy += 6) for (let gx = 2; gx < W - 2; gx += 6) { if (hh(gx, gy) > 0.42) continue; let f = null; for (let k = 0; k < 36 && !f; k++) { const x = gx + (k * 5 % 6) + 0.5, y = gy + (k * 7 % 6) + 0.5; if (at(x, y) === T.ALLEY && at(x, y - 0.9) === T.BLD && z.buildings.some(b => x > b.x + 0.4 && x < b.x + b.w - 0.4 && Math.abs(b.y + b.h - y) < 1.1) && at(x, y + 1.5) !== T.BLD && at(x, y + 3) !== T.BLD && !inPk(x, y) && !nearDoor(x, y) && far(x, y, 1.6) && !U.some(u => Math.hypot(u.x - x, u.y - y) < 2)) f = { x, y: y - 0.25 }; } if (!f) continue; NP.push(f); // 남쪽 벽 앞 (집 앞 내 자리)
+    for (let gy = 2; gy < Hh - 2; gy += 6) for (let gx = (yield, 2); gx < W - 2; gx += 6) { if (hh(gx, gy) > 0.42) continue; let f = null; for (let k = 0; k < 36 && !f; k++) { const x = gx + (k * 5 % 6) + 0.5, y = gy + (k * 7 % 6) + 0.5; if (at(x, y) === T.ALLEY && at(x, y - 0.9) === T.BLD && z.buildings.some(b => x > b.x + 0.4 && x < b.x + b.w - 0.4 && Math.abs(b.y + b.h - y) < 1.1) && at(x, y + 1.5) !== T.BLD && at(x, y + 3) !== T.BLD && !inPk(x, y) && !nearDoor(x, y) && far(x, y, 1.6) && !U.some(u => Math.hypot(u.x - x, u.y - y) < 2)) f = { x, y: y - 0.25 }; } if (!f) continue; NP.push(f); // 남쪽 벽 앞 (집 앞 내 자리)
       const t = hh(f.x * 3, f.y * 5), n = 1 + (t * 3 | 0); for (let i = 0; i < n; i++) { const x = f.x + (i - (n - 1) / 2) * 0.55, kind = (t * 7 + i * 3 | 0) % 4; parts.length = 0;
         if (kind === 0) { cyl(0, 0.3, 0, 0.17, 0.035, 0.58, '#ec6a1c', 12); cyl(0, 0.33, 0, 0.115, 0.095, 0.08, '#f4f4f0', 12); cyl(0, 0.2, 0, 0.14, 0.125, 0.06, '#f4f4f0', 12); bx(0, 0.015, 0, 0.38, 0.03, 0.38, '#2a2a2a'); } // 고깔
         else if (kind === 1) { for (let j = 0; j < 2 + (t * 10 | 0) % 2; j++) { const g = new THREE.TorusGeometry(0.2, 0.085, 6, 14); g.rotateX(Math.PI / 2); g.translate(0, 0.085 + j * 0.16, 0); parts.push([g, '#26272a']); } bx(0, 0.75, 0, 0.04, 0.6, 0.04, '#8a8a86'); bx(0, 0.92, 0.025, 0.36, 0.24, 0.02, '#f4f2ea'); bx(0, 0.92, 0.037, 0.3, 0.07, 0.005, '#d0281e'); } // 폐타이어 + 주차금지 판
         else if (kind === 2) { const col = ['#2a6ec0', '#d23a2a', '#e8e4da'][(t * 5 | 0) % 3]; bx(0, 0.4, 0, 0.4, 0.04, 0.4, col); bx(0, 0.62, -0.18, 0.4, 0.42, 0.04, col); for (const [lx, lz] of [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]]) bx(lx, 0.2, lz, 0.035, 0.4, 0.035, col); } // 플라스틱 의자
         else { cyl(0, 0.16, 0, 0.3, 0.26, 0.32, ['#2c5aa8', '#c42a24', '#2a8a4a'][(t * 9 | 0) % 3], 14); bx(0, 0.5, 0, 0.32, 0.22, 0.02, '#f4f2ea'); bx(0, 0.5, 0.012, 0.26, 0.06, 0.005, '#d0281e'); bx(0, 0.36, 0, 0.03, 0.12, 0.03, '#8a8a86'); } // 고무 대야 + 판
         put(x, f.y, (hh(x, i) - 0.5) * 0.6); } }
-    for (const q of P) { const k = hh(q.x, q.y); if (k > 0.55) continue; const n = 1 + (k * 7 | 0) % 3; for (let i = 0; i < n; i++) { const col = ['#f4f2ea', '#f2e28a', '#f2b8c8', '#bfe0f2', '#f4f2ea'][(k * 13 + i * 3 | 0) % 5], y0 = 1.3 + i * 0.42 + (k * 0.2), w = 0.28 + (i % 2) * 0.06; bx(0, y0, 0.185, w, 0.36, 0.006, col); for (let j = 0; j < 3; j++) bx(0, y0 + 0.07 - j * 0.06, 0.19, w * 0.75, 0.018, 0.004, j ? '#6a6a6a' : '#c8281e'); bx(0, y0 + 0.125, 0.19, 0.03, 0.02, 0.006, '#dadada'); } put(q.x, q.y, 0, 0); } // 전단지 (남쪽 면: 카메라 쪽)
+    for (const q of P) { yield; const k = hh(q.x, q.y); if (k > 0.55) continue; const n = 1 + (k * 7 | 0) % 3; for (let i = 0; i < n; i++) { const col = ['#f4f2ea', '#f2e28a', '#f2b8c8', '#bfe0f2', '#f4f2ea'][(k * 13 + i * 3 | 0) % 5], y0 = 1.3 + i * 0.42 + (k * 0.2), w = 0.28 + (i % 2) * 0.06; bx(0, y0, 0.185, w, 0.36, 0.006, col); for (let j = 0; j < 3; j++) bx(0, y0 + 0.07 - j * 0.06, 0.19, w * 0.75, 0.018, 0.004, j ? '#6a6a6a' : '#c8281e'); bx(0, y0 + 0.125, 0.19, 0.03, 0.02, 0.006, '#dadada'); } put(q.x, q.y, 0, 0); } // 전단지 (남쪽 면: 카메라 쪽)
     { // v361 큰길 이정표 (서울 파란 도로 안내판): 남북으로 뻗은 큰길 동쪽 인도에 기둥 + 길 위로 뻗은 팔 + 남쪽을 보는 파란 판 (카메라에 글씨가 보이게) + 속도 제한 원판
       const PL = ['건대입구', '성수', '구의', '광나루', '군자', '어린이대공원', '잠실', '강변', '뚝섬', '중곡', '화양', '자양'], SG = [];
-      for (const r of z.roads || []) { if (!(r.width >= 5.5 || (r.oneway && r.width >= 3))) continue; let acc = 0; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx2, by2] = r.pts[i + 1], L = Math.hypot(bx2 - ax, by2 - ay); if (L < 6) { acc += L; continue; } const ux = (bx2 - ax) / L, uy = (by2 - ay) / L;
+      for (const r of z.roads || []) { yield; if (!(r.width >= 5.5 || (r.oneway && r.width >= 3))) continue; let acc = 0; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx2, by2] = r.pts[i + 1], L = Math.hypot(bx2 - ax, by2 - ay); if (L < 6) { acc += L; continue; } const ux = (bx2 - ax) / L, uy = (by2 - ay) / L;
         if (Math.abs(uy) > 0.75) for (let sv = 8; sv < L - 4; sv += 40) { const cx = ax + ux * sv, cy = ay + uy * sv, sx = uy > 0 ? -1 : 1; let d = 0.5; while (d < r.width / 2 + 6 && at(cx + d, cy) === T.ROAD) d += 0.25; const x = cx + d + 0.6, y = cy; // 동쪽 연석 밖
           if (at(x, y) !== T.WALK && at(x, y) !== T.ALLEY || nearX(x, y) || nearDoor(x, y) || !clear(x, y) || !far(x, y, 2) || SG.some(q => Math.hypot(q.x - x, q.y - y) < 25) || inPk(x, y)) continue; SG.push({ x, y, arm: Math.min(4.2, d - 0.3), k: (x * 7 + y * 3 | 0) }); void sx; }
         acc += L; } }
-      for (const q of SG) { parts.length = 0; const ph = 5.2, aL = q.arm; cyl(0, ph / 2, 0, 0.16, 0.12, ph, '#9aa0a4', 12); cyl(0, 0.25, 0, 0.26, 0.24, 0.5, '#8a9094', 12); { const g = new THREE.CylinderGeometry(0.08, 0.1, aL + 0.2, 8); g.rotateZ(Math.PI / 2); g.translate(-(aL + 0.2) / 2, ph - 0.25, 0); parts.push([g, '#9aa0a4']); } bx(-aL * 0.55, ph - 0.25 - 0.55, -0.05, 0.05, 1.1, 0.05, '#8a9094'); bx(-aL * 0.95, ph - 0.25 - 0.55, -0.05, 0.05, 1.1, 0.05, '#8a9094');
+      for (const q of SG) { yield; parts.length = 0; const ph = 5.2, aL = q.arm; cyl(0, ph / 2, 0, 0.16, 0.12, ph, '#9aa0a4', 12); cyl(0, 0.25, 0, 0.26, 0.24, 0.5, '#8a9094', 12); { const g = new THREE.CylinderGeometry(0.08, 0.1, aL + 0.2, 8); g.rotateZ(Math.PI / 2); g.translate(-(aL + 0.2) / 2, ph - 0.25, 0); parts.push([g, '#9aa0a4']); } bx(-aL * 0.55, ph - 0.25 - 0.55, -0.05, 0.05, 1.1, 0.05, '#8a9094'); bx(-aL * 0.95, ph - 0.25 - 0.55, -0.05, 0.05, 1.1, 0.05, '#8a9094');
         bx(0, 2.5, 0.12, 0.05, 0.05, 0.1, '#8a9094'); put(q.x, q.y, 0, 0);
         const pw = Math.min(3.2, aL * 0.9 + 0.8), phh = 1.25, a = PL[q.k % PL.length], b = PL[(q.k + 1 + q.k % 4) % PL.length], c2 = PL[(q.k + 6 + q.k % 5) % PL.length], tex = R.cvTex(512, 200, (c, w, h) => { c.fillStyle = '#1a4fa0'; c.fillRect(0, 0, w, h); c.strokeStyle = '#f4f4f4'; c.lineWidth = 6; c.strokeRect(7, 7, w - 14, h - 14); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 46px "IBM Plex Sans KR", sans-serif'; c.fillText(a, w * 0.5, h * 0.3); c.font = 'bold 38px "IBM Plex Sans KR", sans-serif'; c.fillText('← ' + b, w * 0.24, h * 0.72); c.fillText(c2 + ' →', w * 0.76, h * 0.72); c.fillRect(w * 0.5 - 4, h * 0.5, 8, h * 0.4); c.beginPath(); c.moveTo(w * 0.5 - 14, h * 0.52); c.lineTo(w * 0.5 + 14, h * 0.52); c.lineTo(w * 0.5, h * 0.44); c.fill(); }); // 위: 곧장 / 아래: 좌·우
-        const sm = new THREE.Mesh(new THREE.PlaneGeometry(pw, phh), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5, metalness: 0.1 })); sm.position.set(q.x - aL + pw / 2 - 0.25, ph - 0.25 - 0.62, q.y + 0.02); sm.castShadow = true; R.S.add(sm);
-        const bk = new THREE.Mesh(new THREE.BoxGeometry(pw, phh, 0.04), new THREE.MeshStandardMaterial({ color: 0x8a9094, roughness: 0.6 })); bk.position.set(sm.position.x, sm.position.y, q.y - 0.02); bk.castShadow = true; R.S.add(bk);
+        const sm = new THREE.Mesh(new THREE.PlaneGeometry(pw, phh), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5, metalness: 0.1 })); sm.position.set(q.x - aL + pw / 2 - 0.25, ph - 0.25 - 0.62, q.y + 0.02); sm.castShadow = true; ADD(sm);
+        const bk = new THREE.Mesh(new THREE.BoxGeometry(pw, phh, 0.04), new THREE.MeshStandardMaterial({ color: 0x8a9094, roughness: 0.6 })); bk.position.set(sm.position.x, sm.position.y, q.y - 0.02); bk.castShadow = true; ADD(bk);
         const lt = R.cvTex(128, 128, (c, w, h) => { c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); c.strokeStyle = '#d0201a'; c.lineWidth = 14; c.beginPath(); c.arc(64, 64, 54, 0, 7); c.stroke(); c.fillStyle = '#111'; c.font = 'bold 52px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(q.k % 3 ? '50' : '30', 64, 68); });
-        const lm = new THREE.Mesh(new THREE.CircleGeometry(0.34, 24), new THREE.MeshStandardMaterial({ map: lt, roughness: 0.5 })); lm.position.set(q.x, 2.5, q.y + 0.18); R.S.add(lm); }
-      const BS = []; for (const r of z.roads || []) { if (!(r.width >= 5.5 || (r.oneway && r.width >= 3))) continue; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx2, by2] = r.pts[i + 1], L = Math.hypot(bx2 - ax, by2 - ay); if (L < 10) continue; const sg = bx2 >= ax ? 1 : -1, ux = sg * (bx2 - ax) / L, uy = sg * (by2 - ay) / L, nx = uy, ny = -ux; if (ux < 0.7) continue; // v361 버스 정류장 쉼터 (n = 길의 북쪽): 동서로 뻗은 큰길 북쪽 인도, 남쪽(차도·카메라)으로 열림
+        const lm = new THREE.Mesh(new THREE.CircleGeometry(0.34, 24), new THREE.MeshStandardMaterial({ map: lt, roughness: 0.5 })); lm.position.set(q.x, 2.5, q.y + 0.18); ADD(lm); }
+      const BS = []; for (const r of z.roads || []) { yield; if (!(r.width >= 5.5 || (r.oneway && r.width >= 3))) continue; for (let i = 0; i < r.pts.length - 1; i++) { const [ax, ay] = r.pts[i], [bx2, by2] = r.pts[i + 1], L = Math.hypot(bx2 - ax, by2 - ay); if (L < 10) continue; const sg = bx2 >= ax ? 1 : -1, ux = sg * (bx2 - ax) / L, uy = sg * (by2 - ay) / L, nx = uy, ny = -ux; if (ux < 0.7) continue; // v361 버스 정류장 쉼터 (n = 길의 북쪽): 동서로 뻗은 큰길 북쪽 인도, 남쪽(차도·카메라)으로 열림
         for (let sv = 10; sv < L - 6; sv += 23) { const t0 = sg > 0 ? sv : L - sv, cx = ax + (bx2 - ax) / L * t0, cy = ay + (by2 - ay) / L * t0; let d = 0.5; while (d < r.width / 2 + 6 && at(cx + nx * d, cy + ny * d) === T.ROAD) d += 0.25; const x = cx + nx * (d + 1.0), y = cy + ny * (d + 1.0); const okAll = [-1.6, 0, 1.6].every(o => { const v = at(x + ux * o, y + uy * o), v2 = at(x + ux * o + nx * 0.6, y + uy * o + ny * 0.6); return (v === T.WALK || v === T.ALLEY) && v2 !== T.ROAD && v2 !== T.BLD; });
           if (!okAll || nearX(x, y) || nearDoor(x, y) || inPk(x, y) || BS.some(q => Math.hypot(q.x - x, q.y - y) < 30) || P.some(q => Math.hypot(q.x - x, q.y - y) < 2.2) || LP.some(l => Math.hypot(l[0] - x, l[1] - y) < 2)) continue; BS.push({ x, y });
           parts.length = 0; const w = 3.2, hgt = 2.5; for (const sx of [-1, 1]) { bx(sx * w / 2, hgt / 2, -0.35, 0.08, hgt, 0.08, '#5a6068'); bx(sx * w / 2, hgt / 2, 0.45, 0.08, hgt, 0.08, '#5a6068'); bx(sx * w / 2, hgt * 0.55, 0.05, 0.02, hgt * 0.75, 0.75, '#a8c0cc'); } // 기둥 · 옆 유리
@@ -20513,12 +20533,15 @@ Object.assign(Bld3D, {
       this._BS = BS;
       this._SG = SG; }
     const tip = (q, dz, hh) => { const s = Math.sin(q.a), c = Math.cos(q.a); return [q.x - s * dz, hh, q.y + c * dz]; }; // 기둥 위 점 (완금은 전선과 직각)
-    for (const [a, b] of E) { const c = cellOf((a.x + b.x) / 2, (a.y + b.y) / 2); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); const L = Math.hypot(b.x - a.x, b.y - a.y), w = cells.get(c).w;
+    for (const [a, b] of E) { yield; const c = cellOf((a.x + b.x) / 2, (a.y + b.y) / 2); if (!cells.has(c)) cells.set(c, { g: [], w: [] }); const L = Math.hypot(b.x - a.x, b.y - a.y), w = cells.get(c).w;
       const flip = Math.cos(a.a - b.a) < 0 ? -1 : 1, wires = [[1.0, a.h - 0.15, b.h - 0.15, 0.022], [0, a.h - 0.15, b.h - 0.15, 0.022], [-1.0, a.h - 0.15, b.h - 0.15, 0.022], [0, 4.35, 4.35, 0.06]];
       for (const [dz, h1, h2, sg] of wires) { const p1 = tip(a, dz, h1), p2 = tip(b, dz * flip, h2), n = 10, sag = sg * L; let pr = p1; for (let i = 1; i <= n; i++) { const t = i / n, pt = [p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t - sag * 4 * t * (1 - t), p1[2] + (p2[2] - p1[2]) * t]; w.push(...pr, ...pt); pr = pt; } } }
-    for (const [, C] of cells) { if (C.g.length) { const m = new THREE.Mesh(T3.mergeGeometries ? T3.mergeGeometries(C.g) : this.mergeG(C.g), mat); m.castShadow = true; m.receiveShadow = true; R.S.add(m); C.g.forEach(g => g.dispose()); }
-      if (C.w.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(C.w, 3)); R.S.add(new THREE.LineSegments(g, wmat)); } }
+    for (const [, C] of cells) { yield; if (C.g.length) { const m = new THREE.Mesh(yield* this.mergeGI(C.g), mat); m.castShadow = true; m.receiveShadow = true; ADD(m); C.g.forEach(g => g.dispose()); }
+      if (C.w.length) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(C.w, 3)); ADD(new THREE.LineSegments(g, wmat)); } }
     this.poles = P.length; R._wireE = E; /* v364 참새가 전깃줄에 앉는 자리 */ this._P = P; this._U = U; this._NP = NP; },
+  *mergeGI(gs) { const { THREE } = T3; let n = 0; for (const g of gs) n += g.attributes.position.count; const p = new Float32Array(n * 3), nn = new Float32Array(n * 3), c = new Float32Array(n * 3); let o = 0, k = 0; /* v371 끊김: 한 칸 합치기가 100ms 넘던 것 → 300개마다 쉬어 가며 */
+    for (const g of gs) { p.set(g.attributes.position.array, o * 3); nn.set(g.attributes.normal.array, o * 3); c.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; if (++k % 300 === 0) yield; }
+    yield; const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(p, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); m.setAttribute('color', new THREE.BufferAttribute(c, 3)); m.computeBoundingSphere(); return m; },
   mergeG(gs) { const { THREE } = T3; let n = 0; for (const g of gs) n += g.attributes.position.count; const p = new Float32Array(n * 3), nn = new Float32Array(n * 3), c = new Float32Array(n * 3); let o = 0;
     for (const g of gs) { p.set(g.attributes.position.array, o * 3); nn.set(g.attributes.normal.array, o * 3); c.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; }
     const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(p, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); m.setAttribute('color', new THREE.BufferAttribute(c, 3)); m.computeBoundingSphere(); return m; },
@@ -20880,7 +20903,7 @@ const Hat3D = {
         m.geometry.setAttribute('color', new THREE.BufferAttribute(C, 3)); for (const t of [].concat(m.material)) { t.vertexColors = true; t.needsUpdate = true; } });
       let apex = null; if (s.pom) { const v = new THREE.Vector3(); w.traverse(m => { if (!m.isMesh || !m.visible) return; const P = m.geometry.attributes.position; for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(m.matrixWorld); if (!apex || v.y > apex.y) apex = v.clone(); } }); } // 꼬깔 꼭대기 (방울 달 자리)
       this.G[h] = { w, f: new THREE.Box3().setFromObject(w), b: bb, br, apex }; this.st[h] = 2;
-      if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); // 숍 그림은 key가 바뀌어서 새로 찍힌다
+      if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); // 숍 그림은 key가 바뀌어서 새로 찍힌다
     }, undefined, () => { this.st[h] = 3; }));
   },
   // 금속(왕관·투구)은 비칠 게 없으면 까맣다 → 재질마다 실사 하늘 HDRI (pbr.js PBR.hdr)를 직접. 렌더러마다 three가 알아서 바꿔 쓴다 (숍 사진 렌더러도)
@@ -20954,7 +20977,7 @@ const Suit3D = {
         const sk = (i, w) => { if (o.isSkinnedMesh) o.applyBoneTransform(i, w); return w.applyMatrix4(o.matrixWorld); };
         for (let i = 0; i < P.count; i++) { sk(i, v.fromBufferAttribute(P, i)); W[i * 3] = v.x; W[i * 3 + 1] = v.y; W[i * 3 + 2] = v.z; if (N) { u.fromBufferAttribute(P, i).addScaledVector(new T3.THREE.Vector3().fromBufferAttribute(N, i), 0.01); if (o.isSkinnedMesh) o.applyBoneTransform(i, u); u.applyMatrix4(o.matrixWorld).sub(v).normalize(); WN[i * 3] = u.x; WN[i * 3 + 1] = u.y; WN[i * 3 + 2] = u.z; } }
         src.push({ g: o.geometry, W, WN, mat: o.material }); });
-      this.src = src; this.st = 2; if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, undefined, () => { this.st = 3; })); },
+      this.src = src; this.st = 2; if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }, undefined, () => { this.st = 3; })); },
   on(P) { if (!P || !P.space) return false; this.need(); return this.st === 2; },
   // 사람 종류(M/F)마다 한 번: 우리 몸 공간으로 옮기고 뼈 가중치 받기
   fit(H3, k) { if (this.G[k]) return this.G[k]; const { THREE } = T3, B = H3.B[k], sc = B.g.scene; let body = null; sc.traverse(o => { if (o.isMesh && /^Super/i.test(o.userData.part || '')) body = o; }); if (!body) return null;
@@ -21613,7 +21636,7 @@ const Props3D = {
       G.scene.updateMatrixWorld(true); const parts = []; G.scene.traverse(m => { if (!m.isMesh) return; m.geometry._keep = 1; const mt = m.material; if (mt.map) mt.map.anisotropy = 8; mt._keep = 1; parts.push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: typeof PBR !== 'undefined' && PBR.done ? mt : this.toon(mt, !!m.geometry.attributes.color) }); });
       this.M[k] = parts; this.rs[k] = 2; this.ver++; }).catch(e => { console.warn('real3d', k, e); this.rs[k] = -1; }); },
   // 목록 칸 사진 (미리 찍은 것)
-  thumb(k) { let im = this.th[k]; if (im) return im.complete && im.naturalWidth ? im : null; im = this.th[k] = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }; im.src = Arena3J.url('real/th/' + k.slice(2) + '.png?v=1'); return null; },
+  thumb(k) { let im = this.th[k]; if (im) return im.complete && im.naturalWidth ? im : null; im = this.th[k] = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }; im.onerror = () => setTimeout(() => { if (this.th[k] === im) delete this.th[k]; }, 3000); /* v371 못 받으면 3초 뒤 다시 (도트 그림으로 안 돌아가게) */ im.src = Arena3J.url('real/th/' + k.slice(2) + '.png?v=1'); return null; },
   load() { if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('props.glb?v=1'), ok, undefined, no))).then(G => {
       G.scene.updateMatrixWorld(true);
@@ -21742,7 +21765,7 @@ const Snap3D = {
   },
   // v325 장르 가구 사진 (정사각형 N px, 비스듬히 위에서). 모델이 아직이면 받기 시작하고 null (오면 상점 다시 그리기)
   prop(k, N) {
-    if (typeof Props3D === 'undefined' || !this.ok()) { this.warm(); return null; } if (!Props3D.ready()) { Props3D.load(); if (Props3D.st === 1 && !this.kw) this.kw = setInterval(() => { if (Props3D.st === 1) return; clearInterval(this.kw); this.kw = 0; if (Props3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); return null; }
+    if (typeof Props3D === 'undefined' || !this.ok()) { this.warm(); return null; } if (!Props3D.ready()) { Props3D.load(); if (Props3D.st === 1 && !this.kw) this.kw = setInterval(() => { if (Props3D.st === 1) return; clearInterval(this.kw); this.kw = 0; if (Props3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }, 400); return null; }
     return this.shot('prop:' + k + ':' + N, N, N, g => { const m = Props3D.make(k); m.rotation.y = -0.55; g.add(m); }, (b, c) => this.fit(b, c, 0.45, 1.08));
   },
   // v322 탈것 + 탄 나 (+ 업어 주는 친구) 한 묶음: 편집숍 큰 미리보기 · 칸 그림
@@ -21846,24 +21869,24 @@ const Snap3D = {
   },
   // v360 실사 탈것 칸 사진: 3d/th/ride/<키>.webp (assets: Snap3D.thumb 로 찍어 둔 것, 320×208). 오면 상점 다시 그리기
   bk: {},
-  baked(x, k, W, H, dir) { const id = (dir || 'ride') + '/' + k; let im = this.bk[id]; if (!im) { im = this.bk[id] = new Image(); im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }; im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/' + id + '.webp?v=1'); }
+  baked(x, k, W, H, dir) { const id = (dir || 'ride') + '/' + k; let im = this.bk[id]; if (!im) { im = this.bk[id] = new Image(); im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }; im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/' + id + '.webp?v=1'); }
     if (!im.complete || im.bad || !im.naturalWidth) return false; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, W, H); x.restore(); return true; },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {
     if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
     if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); if (this.baked(x, it.ride, 160 * S, 104 * S)) return true; return !(this.bk['ride/' + it.ride] && this.bk['ride/' + it.ride].bad); } /* v365 사진이 아직 오는 중이면 빈 칸으로 기다림 (예전엔 2D 그림으로 넘어가며 배·탱크 실사 모델을 칸마다 받아 폰이 튕겼다, 사용자 '스킨구경 e누르면 튕겼어') */ /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
     if (it.pet && typeof Pet3D !== 'undefined' && it.pet in Pet3D.SFP && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)), im = this.bk['pet/' + it.pet]; if (this.baked(x, it.pet, 160 * S, 104 * S, 'pet')) return true; if (!im || !im.bad) return true; } /* v366 실사 펫 칸도 미리 찍은 사진 (펫 칸을 열면 실사 펫 8마리 모델 18MB를 한꺼번에 받아 폰이 튕김, 사용자 '자꾸 숍 들어가서 보려고하면 튕긴다') */
-    const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; }
+    const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);
-    if (kind === 'outfit' && it.pal.fant) { Hero3D.loadFant(); if (Hero3D.fst === 1 && !this.fw) this.fw = setInterval(() => { if (Hero3D.fst === 1) return; clearInterval(this.fw); this.fw = 0; if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); } /* v319 판타지 옷 모델이 오면 다시 */
+    if (kind === 'outfit' && it.pal.fant) { Hero3D.loadFant(); if (Hero3D.fst === 1 && !this.fw) this.fw = setInterval(() => { if (Hero3D.fst === 1) return; clearInterval(this.fw); this.fw = 0; if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }, 400); } /* v319 판타지 옷 모델이 오면 다시 */
     if (kind === 'outfit' || kind === 'hat') { const P = Profile.pal(Object.assign({}, me, kind === 'hat' ? { hat: it.id } : { outfit: it.id })); key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = kind === 'hat' ? (b, c) => { const t = b.clone(); t.min.y = b.max.y - (b.max.y - b.min.y) * 0.34; return this.fit(t, c, 0.1, 1.12); } /* v346 모자 칸은 머리·어깨만 크게 (온몸이면 모자가 콩알만 해서) */ : (b, c) => this.fit(b, c, 0.16, 1.06); }
-    else if (kind === 'car') { if (typeof Car3D !== 'undefined') { Car3D.load(); if (Car3D.st === 1 && !this.cw) this.cw = setInterval(() => { if (Car3D.st === 1) return; clearInterval(this.cw); this.cw = 0; if (Car3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); } key = 'th:car' + (Car3D.ready() ? '3:' : ':') + it.col + ':' + (it.stripe || ''); /* v315 차 모델이 오면 다시 그리기 */ build = g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); m.rotation.y = -0.55; g.add(m); }; aim = (b, c) => this.fit(b, c, 0.42, 1.02); }
-    else if (kind === 'ride3') { const rk = it.ride; Ride3D.load(rk); if (!Ride3D.ready(rk)) { if (!Ride3D.failed(rk) && !this.rw) this.rw = setInterval(() => { if (!Ride3D.ready(rk) && !Ride3D.failed(rk)) return; clearInterval(this.rw); this.rw = 0; if (Ride3D.ready(rk) && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); return false; } /* v317 배·탱크 칸 그림 */
+    else if (kind === 'car') { if (typeof Car3D !== 'undefined') { Car3D.load(); if (Car3D.st === 1 && !this.cw) this.cw = setInterval(() => { if (Car3D.st === 1) return; clearInterval(this.cw); this.cw = 0; if (Car3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }, 400); } key = 'th:car' + (Car3D.ready() ? '3:' : ':') + it.col + ':' + (it.stripe || ''); /* v315 차 모델이 오면 다시 그리기 */ build = g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); m.rotation.y = -0.55; g.add(m); }; aim = (b, c) => this.fit(b, c, 0.42, 1.02); }
+    else if (kind === 'ride3') { const rk = it.ride; Ride3D.load(rk); if (!Ride3D.ready(rk)) { if (!Ride3D.failed(rk) && !this.rw) this.rw = setInterval(() => { if (!Ride3D.ready(rk) && !Ride3D.failed(rk)) return; clearInterval(this.rw); this.rw = 0; if (Ride3D.ready(rk) && typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }, 400); return false; } /* v317 배·탱크 칸 그림 */
       key = 'th:ride3:' + it.ride + (RIDE3[it.ride].carry ? ':' + Hero3D.key(Profile.pal(me)) : ''); build = g => { const m = RIDE3[it.ride].carry ? this.rideCast(it.ride, Profile.pal(me), false).m : Ride3D.make(it.ride); m.rotation.y = -0.55; g.add(m); }; /* 업히기는 모델이 없어 친구 + 나 */ aim = (b, c) => this.fit(b, c, 0.42, 1.04); }
     else { const k = it.pet; if (PET_PEOPLE[k]) { const sp = 'pet:' + k; Sprites.setPal(sp, PET_PEOPLE[k]); const P = Sprites.PAL[sp]; key = 'th:' + Hero3D.key(P); build = g => this.person(g, P); aim = (b, c) => this.fit(b, c, 0.16, 1.06); }
       else if (typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(k))) { key = 'th:pet3:' + k + (Pet3D.real(k) ? ':r' : ''); build = g => { const H = Pet3D.make(k, PetRT.petH(k) / TILE * 1.1); H.sh.visible = false; H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }; aim = (b, c) => this.fit(b, c, 0.26, 1.1); } // v312 펫 모델
-      else { if (typeof Pet3D !== 'undefined' && Pet3D.st === 1 && !this.pw) this.pw = setInterval(() => { if (Pet3D.st === 1) return; clearInterval(this.pw); this.pw = 0; if (Pet3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }, 400); // 모델이 오면 다시 그리기
+      else { if (typeof Pet3D !== 'undefined' && Pet3D.st === 1 && !this.pw) this.pw = setInterval(() => { if (Pet3D.st === 1) return; clearInterval(this.pw); this.pw = 0; if (Pet3D.st === 2 && typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }, 400); // 모델이 오면 다시 그리기
         key = 'th:pet:' + k; build = g => { const h = PetRT.petH(k) / TILE * 1.1, e = Arena3J.petEnt.call({ pc: this.pc, geo: Arena3J.geo, smoothN: Arena3J.smoothN }, PetRT.arena, { k, h, paint: s => Pets.draw(s, k, 25, 40, 1, false, 0.7, '', 0) }, false, 0.7); if (!e) return;
         e.geo._keep = 1; const Hp = Room3D.mkPet(); Hp.mesh.geometry = Hp.ol.geometry = e.geo; Hp.mat.map = e.tex; Hp.sh.visible = false; Hp.root.rotation.y = -0.62; g.add(Hp.root); }; aim = (b, c) => this.fit(b, c, 0.26, 1.1); } }
     if (!this.cache.has(key + ':' + S) && this.later(x, it)) return true; // 이번 프레임에 찍을 시간을 다 썼으면 다음 프레임에 (칸은 잠깐 빈 바탕)
@@ -21966,11 +21989,30 @@ const Fx3D = {
 Object.assign(Snap3D, {
   // 이펙트 한 장면: 3D 나 + 3D 이펙트 (발 = 0). 2D 그림에서 이펙트가 사람 키의 두 배쯤 차지하니 카메라가 다 담는다
   fxBuild(g, P, fx, t0) { const H = this.person(g, P, 0.3); g.updateMatrixWorld(true); const b = new T3.THREE.Box3().setFromObject(H.root, true), F = Fx3D.make(fx, Math.max(0.5, b.max.y - b.min.y)); g.add(F.g); F.tick(t0); return { H, F }; },
-  fxThumb(x, it) { if (!this.ok()) { this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.render(); }); return false; } const P = Profile.pal(Profile.get()), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:fx:' + it.fx + ':' + Hero3D.key(P) + ':' + S, 160 * S, 104 * S, g => this.fxBuild(g, P, it.fx, 1.1), (b, c) => this.fit(b, c, 0.16, 1.04)); if (!img) return false;
+  fxThumb(x, it) { if (!this.ok()) { this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }); return false; } const P = Profile.pal(Profile.get()), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:fx:' + it.fx + ':' + Hero3D.key(P) + ':' + S, 160 * S, 104 * S, g => this.fxBuild(g, P, it.fx, 1.1), (b, c) => this.fit(b, c, 0.16, 1.04)); if (!img) return false;
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; },
   fxBig(x, P, fx, mv) { return this.liveBig(x, 'big:fx:' + fx + ':' + Hero3D.key(P), g => { const u = this.fxBuild(g, P, fx, 1.1); u.t0 = performance.now() / 1000 - 1.1; return u; }, (b, c) => this.fit(b, c, 0.14, 1.04),
     (u, dt, tt) => { Hero3D.play(u.H, mv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.H.mix.update(dt); u.H.root.rotation.y = -Math.PI / 2 + 0.3 + (mv ? 0 : Math.sin(tt * 0.5) * 0.5); u.F.tick(tt - u.t0); }); },
 });
+
+/* v371 사용자 2026-10-24 '이펙트 실사화 그리고 2d빼라했을텐데': 걸어 다닐 때 몸 둘레 이펙트(불꽃·눈·하트…)를 3D 화면(실내·거리)에서도 실사 Fx3D로.
+ * Fx.actors가 3D일 때 2D 네모 그림 대신 want()로 줄을 세우고, Room3D.render0이 flush()로 사람 발밑에 Fx3D 묶음을 세운다.
+ * 불꽃 묶음의 PointLight는 뺀다: 장면 빛 개수가 바뀌면 모든 재질 셰이더를 다시 만들어서 멈춘다. */
+const FxW3D = {
+  q: [], A: new Map(), MAX: 6,
+  on(c) { return typeof Room3D !== 'undefined' && !!Room3D.pq && typeof ctx !== 'undefined' && c === ctx && !!window.T3 && typeof Fx3D !== 'undefined'; },
+  want(key, id, x, y) { const it = id && SHOP_BY_ID[id]; if (it && it.fx) this.q.push({ key, kind: it.fx, x, y }); },
+  drop(E) { if (E.g.parent) E.g.parent.remove(E.g); E.g.traverse(o => { if (o.geometry && !o.isSprite && !o.geometry._keep) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }, // 그림(Fx3D.tex)·같이 쓰는 모양(_keep)은 그대로 둔다
+  flush(R, t) { try { this.flush0(R, t); } catch (er) { console.warn('fxw3d', er); this.q = []; } }, // 이펙트가 틀려도 게임은 안 멈춘다
+  flush0(R, t) {
+    const q = this.q; this.q = []; const P = Game.player, near = P ? q.sort((a, b) => Math.hypot(a.x - P.x, a.y - P.y) - Math.hypot(b.x - P.x, b.y - P.y)).slice(0, this.MAX) : q.slice(0, this.MAX), seen = new Set();
+    const h = (typeof HERO_H !== 'undefined' ? HERO_H : 1.55) * (R.zNow ? 1.18 : 1);
+    for (const w of near) { seen.add(w.key); let E = this.A.get(w.key);
+      if (!E || E.kind !== w.kind || E.h !== h) { if (E) this.drop(E); const F = Fx3D.make(w.kind, h), dead = []; F.g.traverse(o => { if (o.isLight) dead.push(o); }); dead.forEach(o => o.parent.remove(o)); F.g.renderOrder = 5; F.g.traverse(o => { o.frustumCulled = false; if (o.isMesh || o.isSprite) o.castShadow = false; }); E = { g: F.g, tick: F.tick, kind: w.kind, h }; this.A.set(w.key, E); }
+      if (E.g.parent !== R.S) R.S.add(E.g); E.g.position.set(w.x / TILE, 0, w.y / TILE); E.tick(t); }
+    for (const [k, E] of this.A) if (!seen.has(k)) { this.drop(E); this.A.delete(k); }
+  },
+};
 
 /* ===================== 펫 진화 모습 (v263, 사용자 2026-10-20 '볏 말고 뭔가 다른 게 없을까' · '형태가 바뀌어도 돼') =====================
  * 머리 볏·흰 날개 대신 펫마다 몸 모양이 바뀐다: 1단계(Lv15)는 한 군데, 최종(Lv30)은 크게 여러 군데 (꼬리·갈기·등·날개·뿔…).

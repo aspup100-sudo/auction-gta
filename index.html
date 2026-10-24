@@ -1161,7 +1161,7 @@ html, body { height:var(--vh, 100%); } /* v276 가로로 켤 때 아래가 비�
 #title .smPane p { margin:0; color:#c9cfb5; font-size:13px; line-height:1.55; } #title .smPane .row { justify-content:flex-start; gap:8px; margin:0; }
 #title #btnTutNew, #title #btnPrac { min-width:150px; }
 .short #title .smTab { padding:5px 10px; } .short #title .smTab b { font-size:14px; } .short #title .smPane p { font-size:12px; line-height:1.45; }
-#title #btnTutGo { font-size:15px; letter-spacing:1px; padding:7px 14px; } #title #btnTutGo[hidden] { display:none; } #title #btnTutGo small { font-family:var(--ui); letter-spacing:0; font-size:11.5px; color:var(--hudTx); opacity:.75; margin-left:4px; font-weight:700; }
+#title #btnTutGo, #title #btnFreeGo { font-size:15px; letter-spacing:1px; padding:7px 14px; } #title #btnTutGo[hidden], #title #btnFreeGo[hidden] { display:none; } #title #btnTutGo small, #title #btnFreeGo small { font-family:var(--ui); letter-spacing:0; font-size:11.5px; color:var(--hudTx); opacity:.75; margin-left:4px; font-weight:700; }
 #bidForm .bfMust { margin-top:6px; padding:5px 8px; border:2px dashed #c0392b; color:#a5281b; font-weight:800; font-size:14px; background:rgba(192,57,43,.06); }
 #title #btnStart:disabled { background:#3a4029; color:#c3c9b3; box-shadow:none; }
 #title #tutRow { border-radius:0; border-color:var(--hudLine); background:rgba(20,24,16,.7); } #title #btnPrac { border-color:var(--hud); color:var(--hud); }
@@ -1593,7 +1593,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="soloPick"><!-- v285 사용자 '처음이에요 누르고 시작 누르면 되는 건데 잘 모를 거 같애, 단계별도 따로 움직이는 건데 같이 되는 거 같잖아': 혼자 하기를 세 갈래로 -->
     <div class="smTabs"><button class="smTab" data-sm="tut"><b>튜토리얼</b><small>처음이라면 여기</small></button><button class="smTab" data-sm="free"><b>자유 플레이</b><small>자본 골라서</small></button><button class="smTab" data-sm="prac"><b>단계별 연습</b><small>1~5단계</small></button></div>
     <div class="smPane" id="smTut"><p class="tutGiftLine" id="tutGiftLine"><b>끝까지 하면 참새 펫을 선물로 줘요.</b> 혼자 하기에서도 실시간 채널에서도 옆에서 이리저리 날아다니며 지붕이나 전깃줄, 머리 위에 앉아요. (편집숍에서는 300만 원)</p><div class="row"><button class="btn gold" id="btnTutNew">튜토리얼 시작</button><button class="btn gold" id="btnTutGo" hidden>이어서 하기 <small id="tutGoTxt"></small></button></div></div>
-    <div class="smPane" id="smFree"><p>이번 주 물건 중 하나를 골라 혼자 조사하고 입찰해요. 안내 없이 해요.</p></div>
+    <div class="smPane" id="smFree"><p>이번 주 물건 중 하나를 골라 혼자 조사하고 입찰해요. 안내 없이 해요.</p><div class="row"><button class="btn gold" id="btnFreeGo" hidden>이어서 하기 <small id="freeGoTxt"></small></button></div></div>
     <div class="smPane" id="smPrac"><p>함정을 하나씩 늘려 가며 1단계부터 5단계까지 해요. 단계마다 정해진 물건과 자본으로 시작해요.</p><div class="row"><button class="btn gold" id="btnPrac">단계 고르기</button></div></div>
     <label id="tutRow" hidden><input type="checkbox" id="tutOn"></label>
   </div>
@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v372</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v373</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -5714,7 +5714,8 @@ Object.assign(HomeIn, {
     const room = (map, X0, Y0, sc) => { const M = map.split('/'), f = (a, b) => (M[b] && M[b][a]) || ' '; x.save(); x.translate(X0, Y0); x.scale(sc, sc); for (let b = 0; b < M.length; b++) for (let a = 0; a < M[b].length; a++) if (M[b][a] !== ' ') this.piece(x, M[b][a], a, b, f, H, t, 'good'); x.restore(); };
     const art = (a, X0, Y0, sc) => { x.save(); x.translate(X0, Y0); x.scale(sc, sc); this.art(x, a, 0, 0, t); x.restore(); };
     const ra = it.home === 'place' ? realArt(it.art) : it.home === 'sofa' && REAL_SOFA[it.lv] ? 'k:r_' + REAL_SOFA[it.lv] : REAL_HOME[it.home] ? 'k:' + realHome(it.home, it.lv) : ''; // v327 실사 사진 (v328 TV·침대·식탁·러그도)
-    if (ra.startsWith('k:r_')) { const img = Props3D.thumb(ra.slice(2)); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } }
+    if (thumb && it.home === 'place' && !String(realArt(it.art) || '').startsWith('k:r_') && typeof Snap3D !== 'undefined' && Snap3D.baked && !Snap3D.baking) { const S = Math.max(1, Math.round(x.getTransform().a)), im = Snap3D.bk['home/' + it.id]; if (Snap3D.baked(x, it.id, 160 * S, 104 * S, 'home')) return; if (!im || !im.bad) return void Shop.loading3d(x); } /* v373 사용자 '버벅거리고 튕기면': 가구 칸 소품도 미리 찍은 사진 (칸마다 판타지·SF 가구 모델을 띄우던 것). 사진이 없을 때만 3D로 */
+    if (ra.startsWith('k:r_')) { const img = Props3D.thumb(ra.slice(2)); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } if (thumb) return void Shop.loading3d(x); } /* v373 사진(png)이 오는 동안 칸마다 실사 가구 모델을 받던 것 → 사진만 기다린다 */
     if (it.home === 'place' && it.art.startsWith('k:')) { const S = Math.max(1, Math.round(x.getTransform().a)), img = typeof Snap3D !== 'undefined' && Snap3D.prop(it.art.slice(2), 104 * S); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } } // v325 장르 가구: 방 위에 3D 사진
     if (it.home === 'place' && typeof Snap3D !== 'undefined' && Snap3D.ok()) { const S = Math.max(1, Math.round(x.getTransform().a)), img = Snap3D.deco(it.art, 104 * S); if (img) { x.save(); x.imageSmoothingEnabled = true; x.drawImage(img, 28, 0, 104, 104); x.restore(); return; } } // v345 남은 도트 소품도 3D 사진
     /* v371 사용자 2026-10-24 '2d빼라했을텐데': 실사 사진이 올 때까지 도트 그림 대신 '불러오는 중' (3D를 아예 못 쓰는 기기만 도트) */
@@ -8050,13 +8051,14 @@ function startGame(capital, opts = {}) {
   State.seed = opts.tutorial ? TUT_SEED : PR ? PR.seed : (opts.seed || (Date.now() & 0x7fffffff)); // 같이 하기: 방장과 같은 시드 → 같은 물건·경쟁자. 튜토리얼: 늘 같은 연습 물건
   State.indoOrder = false; State.saleOverride = null; State.pickedPlace = null; /* v287 튜토리얼 인도명령·임대 정산 (다음 판에 남지 않게) */
   State.vipLock = 0; /* 이혁진 룰렛 딴 돈 잠금 (혼자 하기는 판마다 새로) */
-  if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed, traps: PR ? PR.traps : !opts.tutorial }); /* 연습 물건엔 등기 함정을 씌우지 않는다 */ // 채널: 실제 시간으로 돌아가는 세계
+  if (Net.on && Net.mode === 'channel') Live.start(); else State.week = Generator.generateWeek({ capital, seed: State.seed, traps: PR ? PR.traps : !opts.tutorial }); /* 연습 물건엔 등기 함정을 씌우지 않는다 */ /* 채널: 실제 시간으로 돌아가는 세계 */
+  if (opts.solo && !Net.on) SoloSave.restore(opts.solo); /* v373 혼자 하기 이어서 하기: 저장한 물건 목록·진행 */
   $('btnEndDay').hidden = Live.on;
   if (Net.on) { $('mpInfo').hidden = false; document.body.classList.add('netOn'); $('chatLines').innerHTML = Net.hist().slice(-5).map(l => Net.logRow(l, false, true)).join(''); } // 채팅 버튼 대신 왼쪽 입력줄 (v80)
   $('rankBox').hidden = !Live.on; // 채널: 순위판을 왼쪽에 항상 (사용자 요청 2026-10-14)
   Game.zones = {};
-  Game.zone = getZone('gwangjin');
-  const office = Game.zone.places.find(p => p.id === 'office');
+  Game.zone = getZone((opts.solo && !Net.on && opts.solo.zone) || 'gwangjin');
+  const office = Game.zone.places.find(p => p.id === 'office') || Game.zone.places[0]; /* 이어서 하기는 사무실이 없는 구역일 수도 */
   Profile.apply(); // 내가 꾸민 캐릭터 색
   Game.player = makeWalker('player', office.door.tx * TILE + 8, office.door.ty * TILE + 8); // 문 타일 정중앙(건물과 겹치지 않게)
   Game.player.dir = 0;
@@ -8067,6 +8069,7 @@ function startGame(capital, opts = {}) {
   if (Net.on && bays.length) { State.carHint = 8; setTimeout(() => Toast.show('내 차는 사무실 뒤 공용 주차장에 있어요. 사람마다 한 칸씩이에요.', 3600), 2600); }
   Game.traffic = spawnTraffic(Game.zone);
   State.targetPlace = 'office';
+  SoloSave.on = !Net.on && !opts.tutorial && !PR; if (opts.solo && SoloSave.on) SoloSave.place(opts.solo); else if (SoloSave.on) SoloSave.clear(); /* v373 새로 시작하면 예전 저장은 지운다 */
   Practice.on = false; if (PR && !Net.on) Practice.start(opts.practice);
   Tutorial.on = false; if (opts.tutorial && !Net.on) { Tutorial.start(); if (opts.resume) Tutorial.restore(opts.resume); } // 혼자 하기 '처음이에요': 단예 선배가 한 바퀴 안내 (2026-10-15)
   $('title').classList.add('out'); setTimeout(() => $('title').style.display = 'none', 400);
@@ -8076,7 +8079,7 @@ function startGame(capital, opts = {}) {
   (async () => {
     await Banner.day(dLabel(), halfLabel(), false);
     Banner.area(...Game.zone.spec.dongLabel);
-    if (!Live.on) setTimeout(() => HUD.page(opts.resume ? `이어서 하자. 지금 할 일: ${(Tutorial.list[Tutorial.step] || {}).title || opts.resume.title || '안내 상자 보기'}` : '이번 주 물건 떴다. 사무실 PC부터 봐.'), 1200);
+    if (!Live.on) setTimeout(() => HUD.page(opts.resume ? `이어서 하자. 지금 할 일: ${(Tutorial.list[Tutorial.step] || {}).title || opts.resume.title || '안내 상자 보기'}` : opts.solo ? '이어서 하자. 아까 있던 자리야.' : '이번 주 물건 떴다. 사무실 PC부터 봐.'), 1200);
   })();
 }
 
@@ -8603,7 +8606,7 @@ function update(dt) {
   Game.t += dt;
   HUD.tick(dt);
   if (Game.scene === 'title') return;
-  Net.tick(dt); CarSwap.tick(dt); Punch.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); CourtRules.tick();
+  Net.tick(dt); CarSwap.tick(dt); Punch.tick(dt); Live.tick(dt); Pvp.tick(dt); Tutorial.tick(dt); SoloSave.tick(dt); CourtRules.tick();
   if (Layout.editing) return;
   const chat = ChatBar.open_; /* 채팅 치는 동안에도 세상(차·행인·이혁진·내 차 관성)은 계속 돈다. 나만 손을 뗀 상태 (사용자 2026-10-15 '채팅 칠라면 멈추는데 다른사람이랑 달라?') */
   let enterK = false, netEnter = false, interact = false;
@@ -11477,7 +11480,7 @@ function danyeLine(S, c, G, missed) {
 
 /* ---------- 결과 화면 ---------- */
 async function finishGame() {
-  if (State.finished) return; State.finished = true;
+  if (State.finished) return; State.finished = true; if (SoloSave.on) SoloSave.clear(); /* v373 끝난 판은 이어서 하기에서 뺀다 */
   Game.busy = true; if (Notebook.open) Notebook.toggle(false);
   const br = State.bidResult; const S = State.settlement = settleLabels(computeSettlement(), br ? caseById(br.caseId) : null);
   const c = br ? caseById(br.caseId) : (State.target ? caseById(State.target) : null);
@@ -12103,6 +12106,36 @@ const Tutorial = {
     if (this.gift) { const g = this.gift; this.gift = null; const box = page.querySelector('.tutEnd'); if (box) box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 참새 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '벌써 옆에서 따라다니고 있어요. 혼자 하기에서도 실시간 채널에서도 따라와요.'}</p>`); }
     else { const g = this.giveParrot(); const box = page.querySelector('.tutEnd'); if (g && box) { box.insertAdjacentHTML('beforeend', `<p class="tutGift"><b>튜토리얼 선물: 참새 펫</b> ${g === 'full' ? '펫 두 자리가 차 있어서, 편집숍 펫 칸에서 데려가면 돼요.' : '다음 게임부터 혼자 하기에서도 실시간 채널에서도 옆에서 따라와요.'}</p>`); Sound.play('chime'); } }
   },
+};
+
+/* v373 사용자 2026-10-24 '경매 낙찰하러 갔는데 튕겨서 다시 시작해야하면 개빡칠거같거든': 혼자 하기(자유 플레이)도 진행을 4초마다 저장해 두고,
+ * 튕기거나 꺼져도 제목 화면 자유 플레이 칸 '이어서 하기'로 마지막 자리(구역·위치·단계)에서 다시 한다.
+ * 걸어 다니는 단계(조사·매각기일·낙찰 뒤 대출·잔금·저축은행·명도)만 저장한다. 대화 중·문 전환 중엔 저장하지 않는다 (그 앞 저장으로 돌아간다).
+ * 튜토리얼은 tutorial.js 저장을 따로 쓰고, 단계별 연습·같이 하기·채널은 저장하지 않는다 (채널은 live.js가 따로 저장). */
+const SoloSave = {
+  KEY: 'soloSave', on: false, t: 0,
+  PH: ['investigate', 'dday', 'won', 'pay', 'savings', 'evict'],
+  saved() { const s = Store.get(this.KEY, null); return s && s.v === 1 && s.st && s.st.week ? s : null; },
+  clear() { Store.set(this.KEY, null); },
+  can() { return this.on && !Net.on && !Live.on && !Tutorial.on && !(typeof Practice !== 'undefined' && Practice.on) && !State.finished && this.PH.includes(State.phase || 'investigate'); },
+  tick() { if (!this.on) return; const now = performance.now(); if (now < this.t) return; this.t = now + 4000; /* 시계 기준 4초 (장면이 느려도) */ if (Game.busy || (typeof Dialog !== 'undefined' && Dialog.open) || !Game.zone || !Game.player) return; if (Game.scene !== 'zone' && Game.scene !== 'room') return; this.save(); },
+  save() {
+    if (!this.can()) return; const inRoom = Game.scene === 'room' && Game.zonePos, P = inRoom ? Game.zonePos : Game.player;
+    const st = {}; for (const k in State) { const v = State[k]; if (typeof v !== 'function') st[k] = v; }
+    const c = State.target && State.week && State.week.cases.find(x => x.id === State.target);
+    try { Store.set(this.KEY, { v: 1, at: Date.now(), zone: Game.zone.id, x: P.x, y: P.y, key: Game.keyIcon || 0, st, title: c ? c.name.split(' ').slice(0, 2).join(' ') : '' }); } catch (e) { /* 저장이 안 돼도 게임은 계속 */ }
+  },
+  /* startGame 안에서 물건 목록을 만든 바로 뒤 (구역을 짓기 전): 저장한 State를 그대로 되돌린다 */
+  restore(s) { const st = JSON.parse(JSON.stringify(s.st)); for (const k in st) State[k] = st[k]; State.finished = false; HUD.setCash(State.cash, false); },
+  /* 구역·사람을 세운 뒤: 저장한 자리로 옮기고 단계에 맞는 표시를 다시 */
+  place(s) {
+    const z = Game.zone, p = Game.player; if (s.x > 0 && s.y > 0 && s.x < z.W * TILE && s.y < z.H * TILE) { p.x = s.x; p.y = s.y; }
+    Game.car = placeCarNear(z, Math.floor(p.x / TILE), Math.floor(p.y / TILE)); Game.driving = false; Game.keyIcon = s.key || 0;
+    if (State.phase === 'savings') addSavingsBank();
+    if (['won', 'pay', 'savings'].includes(State.phase) && State.bidResult) { const r = State.bidResult; $('balanceDue').textContent = `잔금 ${fmtWon(r.bid - r.deposit)} · 기한 ${State.balanceDue || 30}일`; $('balanceDue').classList.add('in'); }
+    const tp = State.targetPlace; State.targetPlace = courtPlaceHere() ? 'court' : (tp && z.places.some(q => q.id === tp) ? tp : State.target && z.places.some(q => q.id === 'case:' + State.target) ? 'case:' + State.target : null);
+  },
+  label(s) { return `${s.st.day >= 7 ? 'D-day' : 'D-' + (7 - s.st.day)} · ${s.title || '물건 고르기 전'}`; },
 };
 
 /* ===================== 수첩: 수집한 서류 · 메모 · 내 판단 · 놓친 장소 ===================== */
@@ -21880,6 +21913,7 @@ const Snap3D = {
     if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
     if (it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] && RIDE3[it.ride].sf && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)); if (this.baked(x, it.ride, 160 * S, 104 * S)) return true; return !(this.bk['ride/' + it.ride] && this.bk['ride/' + it.ride].bad); } /* v365 사진이 아직 오는 중이면 빈 칸으로 기다림 (예전엔 2D 그림으로 넘어가며 배·탱크 실사 모델을 칸마다 받아 폰이 튕겼다, 사용자 '스킨구경 e누르면 튕겼어') */ /* v360 실사 탈것 칸은 미리 찍은 사진 (칸마다 모델을 받으면 폰이 튕김) */
     if (it.pet && typeof Pet3D !== 'undefined' && it.pet in Pet3D.SFP && !this.baking) { const S = Math.max(1, Math.round(x.getTransform().a)), im = this.bk['pet/' + it.pet]; if (this.baked(x, it.pet, 160 * S, 104 * S, 'pet')) return true; if (!im || !im.bad) return true; } /* v366 실사 펫 칸도 미리 찍은 사진 (펫 칸을 열면 실사 펫 8마리 모델 18MB를 한꺼번에 받아 폰이 튕김, 사용자 '자꾸 숍 들어가서 보려고하면 튕긴다') */
+    if ((it.hat || (it.pal && !it.ride && !it.pet)) && !this.baking) { const d = it.hat ? 'hat' : 'outfit', S = Math.max(1, Math.round(x.getTransform().a)), im = this.bk[d + '/' + it.id]; if (this.baked(x, it.id, 160 * S, 104 * S, d)) return true; if (!im || !im.bad) return true; } /* v373 사용자 '버벅거리고 튕기면 안 할까봐': 옷·모자 칸도 미리 찍은 사진 (칸마다 사람·모자 모델을 띄우던 것이 숍 메모리에서 제일 컸다). 사진이 없을 때만 3D로 */
     const kind = it.pet ? 'pet' : it.hat ? 'hat' : it.pal && !it.ride ? 'outfit' : it.col && !it.ride && !it.home && !it.fx && !it.pd ? 'car' : it.ride && typeof RIDE3 !== 'undefined' && RIDE3[it.ride] ? 'ride3' : null; if (!kind || !this.ok()) { if (kind) this.warm(() => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }); return false; }
     const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, me = Profile.get();
     let key, build, aim = (b, c) => this.fit(b, c, 0.2, 1.12);
@@ -25952,7 +25986,7 @@ const Instance = {
   // v285 혼자 하기 세 갈래: 튜토리얼(처음엔 기본) / 자유 플레이(한 번 끝낸 뒤 기본) / 단계별 연습
   const soloMode = m => { const t = $('title'); t.classList.remove('smTut', 'smFree', 'smPrac'); t.classList.add({ tut: 'smTut', free: 'smFree', prac: 'smPrac' }[m]); document.querySelectorAll('#soloPick .smTab').forEach(b => b.classList.toggle('sel', b.dataset.sm === m)); $('tutOn').checked = false; };
   document.querySelectorAll('#soloPick .smTab').forEach(b => b.onclick = () => { Sound.init(); Sound.play('click'); soloMode(b.dataset.sm); });
-  soloMode(Store.get('tutorialDone', false) ? 'free' : 'tut');
+  soloMode(Store.get('tutorialDone', false) || SoloSave.saved() ? 'free' : 'tut'); /* v373 이어서 할 판이 있으면 자유 플레이 칸부터 */
   { const g = !Store.get('giftTut281', false); $('tutGiftTag').hidden = !g; $('tutGiftLine').hidden = !g; } // v287 아직 앵무새를 안 받은 사람에게만 선물 안내
   $('btnTutNew').onclick = () => { Sound.init(); Sound.play('stamp'); tryLandscape(); PushSub.auto(); startGame(2e8, { tutorial: true }); };
   Practice.go = (n) => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(PRACTICE[n - 1].cap, { practice: n }); }; // v285 단계별 연습은 튜토리얼과 따로
@@ -25960,6 +25994,8 @@ const Instance = {
   { const g = Store.get('practiceGo', 0); if (g) { Store.set('practiceGo', 0); $('title').classList.add('modeSolo'); const sb = document.querySelector('#title .modeRow .mode[data-mode="modeSolo"]'); if (sb) sb.classList.add('sel'); soloMode('prac'); setTimeout(() => Practice.pick(), 300); } } // 결과 화면 '다음 단계 하러 가기'
   { const sv = Tutorial.saved(); if (sv) { $('btnTutGo').hidden = false; $('tutGoTxt').textContent = `${sv.day >= 7 ? 'D-day' : 'D-' + (7 - sv.day)} · ${sv.title || ''}`; $('btnTutNew').textContent = '처음부터'; // v284 튜토리얼 이어서 하기
     $('btnTutGo').onclick = () => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(sv.capital, { tutorial: true, resume: sv }); }; } }
+  { const sv = SoloSave.saved(); if (sv) { $('btnFreeGo').hidden = false; $('freeGoTxt').textContent = SoloSave.label(sv); /* v373 혼자 하기(자유) 이어서 하기 */
+    $('btnFreeGo').onclick = () => { Sound.init(); Sound.play('stamp'); tryLandscape(); startGame(sv.st.capital, { solo: sv }); }; } }
   Tutorial.bind();
   // 친구와 같이 하기 (방 코드)
   $('mpName').value = Store.get('mpName', ''); if (typeof Access !== 'undefined') Access.init(); // v350 초대받은 이름만 (access.js)

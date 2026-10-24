@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v368</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v369</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -8128,24 +8128,27 @@ function clearEntry(c) {
   }
 }
 /* ---- 이혁진 도망: 돈을 FEEL.vipEscapeEvery(5)번 받아 갈 때마다 다른 탈것으로 다른 곳에 가서 내린다 (사용자 2026-10-15: 뛰기 → 자전거 → 차, 그다음은 헬기·우주선 등 창의적으로 돌아가며) ---- */
-const VIP_ESC = [
+const VIP_ESC = [ /* v369 실사 탈것을 타고 간다 (사용자 2026-10-24 '이혁진 도망갈때 실사화 된 탈것들 타고가'): ride = RIDE3 키, 3D가 없으면 그 탈것 2D 그림 */
   { mode: 'run', sp: 150, how: '뛰어서', say: '아, 오늘은 여기까지! 저 바빠요!', land: '헉헉… 여기까진 못 따라오겠지.' },
-  { mode: 'bike', sp: 240, how: '자전거 타고', say: '또 오셨어요? 이번엔 자전거로 갑니다!', land: '휴, 다리 아프다.' },
-  { mode: 'car', sp: 360, how: '차 타고', say: '이제 진짜 안 돼요. 기사님, 출발해 주세요!', land: '여기서 내릴게요. 감사합니다!', road: true },
-  { mode: 'kick', sp: 280, how: '전동킥보드 타고', say: '공유 킥보드 찍고 갑니다! 헬멧은 썼어요!', land: '반납 완료. 주차 구역 맞죠?' },
-  { mode: 'heli', sp: 420, how: '헬기 타고', say: '헬기 불렀어요. 옥상으로 안 가도 돼요, 여기서 탑니다!', land: '착륙! 바람 때문에 머리가 다 망가졌네.', fly: 34 },
-  { mode: 'balloon', sp: 120, how: '풍선 다발 잡고', say: '풍선 백 개면 사람도 뜬대요. 실험해 볼게요!', land: '어, 내려왔다. 풍선 값이 천 원보다 비싸요.', fly: 26 },
+  { mode: 'bike', ride: 'bike', sp: 240, how: '자전거 타고', say: '또 오셨어요? 이번엔 자전거로 갑니다!', land: '휴, 다리 아프다.' },
+  { mode: 'car', ride: 'benz', sp: 360, how: '벤츠 타고', say: '이제 진짜 안 돼요. 제 차로 갑니다!', land: '여기 세울게요. 주차비는 제가 냅니다!', road: true },
+  { mode: 'scooter', ride: 'scooter', sp: 280, how: '스쿠터 타고', say: '스쿠터 시동 걸었어요! 헬멧은 썼어요!', land: '주차 완료. 여기 세워도 되죠?' },
+  { mode: 'dragon', ride: 'dragon', sp: 420, how: '용 타고', say: '용 불렀어요. 꽉 잡고 갑니다!', land: '착륙! 비늘에 양복이 다 긁혔네.', fly: 34 },
+  { mode: 'horse', ride: 'horse', sp: 300, how: '말 타고', say: '한강 승마장에서 빌린 말이에요. 이랴!', land: '워워. 말 돌려주러 가야겠다.' },
   { mode: 'tunnel', sp: 200, how: '땅굴 파서', say: '이 밑에 미리 파 둔 길이 있어요. 안녕히!', land: '흙 털고… 짠! 여기서 나왔습니다.', dig: true },
-  { mode: 'ufo', sp: 520, how: '우주선 타고', say: '고향 별에서 데리러 왔어요. 천 원은 지구 기념품으로 드릴게요!', land: '지구 공기 좋네요. 다시 왔습니다.', fly: 44 },
-  { mode: 'horse', sp: 300, how: '말 타고', say: '한강 승마장에서 빌린 말이에요. 이랴!', land: '워워. 말 돌려주러 가야겠다.' },
-  { mode: 'rocket', sp: 600, how: '로켓 배낭 메고', say: '로켓 배낭 시험 비행! 3, 2, 1!', land: '착지 성공. 연료비가 천 원의 십만 배예요.', fly: 38 },
+  { mode: 'lambo', ride: 'lambo', sp: 520, how: '람보르기니 타고', say: '천 원 모아서 산 차예요. 농담이고요, 갑니다!', land: '도착. 기름값이 천 원의 만 배예요.', road: true },
+  { mode: 'bull', ride: 'bull', sp: 300, how: '황소 타고', say: '이 소는 저 말만 들어요. 음머!', land: '워워… 소야, 여기서 내려 줘.' },
+  { mode: 'wings', ride: 'wings', sp: 380, how: '날개 달고', say: '천사 날개 시험 비행! 3, 2, 1!', land: '착지 성공. 깃털이 좀 빠졌네요.', fly: 38 },
+  { mode: 'moto', ride: 'moto', sp: 460, how: '오토바이 타고', say: '오토바이 키 꽂아 뒀죠. 부릉!', land: '헬멧 벗고… 여기까진 못 오시겠죠?', road: true },
+  { mode: 'wolf', ride: 'wolf', sp: 340, how: '늑대 타고', say: '제 늑대 친구가 데리러 왔어요. 아우우!', land: '고마워, 이제 숲으로 가.' },
+  { mode: 'ferrari', ride: 'ferrari', sp: 540, how: '페라리 타고', say: '빨간 차는 빨리 가요. 안녕히 계세요!', land: '도착! 속도 위반 딱지는 천 원으로 내 주세요.', road: true },
 ];
 function vipEscape(w, n, dest) { // dest: 다른 사람이 일으킨 도망 (같은 목적지로, 채팅 알림은 그 사람이 보낸다)
   const z = Game.zone; const K = VIP_ESC[n % VIP_ESC.length]; let best = dest ? { x: dest.tx, y: dest.ty } : null; if (dest) { w.x = dest.x0; w.y = dest.y0; w.stun = 0; }
   if (!dest) for (let i = 0; i < 400; i++) { const x = Math.floor(Math.random() * z.W), y = Math.floor(Math.random() * z.H); if (z.at(x, y) !== (K.road ? T.ROAD : T.WALK)) continue; const d = Math.hypot(x * TILE - w.x, y * TILE - w.y); const pt = { x: x * TILE + 8, y: y * TILE + 8 }; if (d > 50 * TILE && d < 110 * TILE) { best = pt; break; } if (!best) best = pt; }
   if (!best) return;
-  w.bubble = { text: K.say, t: 2.5 }; w.esc = { K, mode: K.mode, x0: w.x, y0: w.y, tx: best.x, ty: best.y, total: Math.hypot(best.x - w.x, best.y - w.y), sp: K.sp, t: 0, prep: K.mode === 'ufo' || K.dig ? 1.2 : 0.4 };
-  Toast.show(`${castName('vip')}: ${K.say}`, 2800); Sound.play(K.mode === 'car' ? 'horn' : 'pop');
+  w.bubble = { text: K.say, t: 2.5 }; w.esc = { K, mode: K.mode, x0: w.x, y0: w.y, tx: best.x, ty: best.y, total: Math.hypot(best.x - w.x, best.y - w.y), sp: K.sp, t: 0, prep: K.dig ? 1.2 : K.ride && typeof Room3D !== 'undefined' && Room3D.zNow ? 3.5 : 0.4 }; if (K.ride && typeof Ride3D !== 'undefined') Ride3D.load(K.ride); /* v369 실사 탈것이 오고 그림이 올라갈 때까지 서서 기다린다 (늦어도 3.5초) */
+  Toast.show(`${castName('vip')}: ${K.say}`, 2800); Sound.play(K.road ? 'horn' : 'pop');
   if (Net.on && !dest) { Net.news(`${castName('vip')}이(가) ${K.how} 도망감`); Net.send({ t: 'vip', k: 'esc', z: z.id, n, x0: Math.round(w.esc.x0), y0: Math.round(w.esc.y0), tx: best.x, ty: best.y }); }
 }
 /* ---- 이혁진은 채널(같이 하기)에서 모두에게 같은 자리에 보인다 (사용자 2026-10-15 '사람마다 이혁진 보이는 위치가 달라? 같게해야지')
@@ -8203,45 +8206,24 @@ const VipNet = {
 function stepEscape(w, dt) {
   const e = w.esc; e.t += dt; w.moving = false;
   if (e.out !== undefined) { e.out -= dt; if (e.out <= 0) { w.esc = null; w.ai.t = 0.5; } return; }
-  if (e.prep > 0) { e.prep -= dt; if (e.K.dig && Math.random() < dt * 12) puff(w.x, w.y); return; } // 땅 파기 · 광선 빨려 올라가기
+  if (e.prep > 0) { if (e.K.ride && !e.rdy && typeof Ride3D !== 'undefined' && Ride3D.ready(e.K.ride) && Ride3D.wst[e.K.ride] === 2) { e.rdy = 1; e.prep = Math.min(e.prep, 0.5); } e.prep -= dt; if (e.K.dig && Math.random() < dt * 12) puff(w.x, w.y); return; } // 땅 파기 · 광선 빨려 올라가기
   const dx = e.tx - w.x, dy = e.ty - w.y, d = Math.hypot(dx, dy); const step = e.sp * dt;
   if (d <= step || e.t > 14) { w.x = e.tx; w.y = e.ty; e.out = 1.6; w.bubble = { text: e.K.land, t: 2.2 }; Sound.play(e.K.dig ? 'step' : 'carDoor'); if (e.K.dig) for (let i = 0; i < 6; i++) puff(w.x + (Math.random() - 0.5) * 10, w.y); return; }
   w.x += dx / d * step; w.y += dy / d * step; w.moving = true; w.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0);
   w.ft = (w.ft || 0) + dt; if (w.ft > 0.08) { w.ft = 0; w.frame = w.frame % 4 + 1; }
-  if ((e.mode === 'run' || e.mode === 'horse') && Math.random() < dt * 8) puff(w.x, w.y);
+  if ((e.mode === 'run' || e.mode === 'horse' || e.mode === 'bull' || e.mode === 'wolf') && Math.random() < dt * 8) puff(w.x, w.y);
   if (e.K.dig && Math.random() < dt * 6) puff(w.x, w.y);
 }
 function drawEscape(c, w, t) {
   const e = w.esc, K = e.K, a = Math.atan2(e.ty - e.y0, e.tx - e.x0);
-  const prog = e.total ? Math.min(1, Math.max(0, 1 - Math.hypot(e.tx - w.x, e.ty - w.y) / e.total)) : 1;
-  const lift = K.fly ? K.fly * Math.min(1, prog * 5, (1 - prog) * 5) : 0;
   const label = (y) => { c.save(); c.font = 'bold 7px "IBM Plex Sans KR", sans-serif'; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(0,0,0,.7)'; c.strokeText(castName('vip'), w.x, y); c.fillStyle = '#ffd86b'; c.fillText(castName('vip'), w.x, y); c.restore(); };
   if (e.out !== undefined) return drawWalker(c, w, t);
-  if (K.mode === 'car') { drawCarSprite(c, w.x, w.y, a, '#151515', 24, 12, 'car', e.sp); return label(w.y - 14); }
+  if (K.ride && !(typeof Room3D !== 'undefined' && Room3D.zNow && typeof Ride3D !== 'undefined' && !Ride3D.ready(K.ride))) { drawCarSprite(c, w.x, w.y, a, { ride: K.ride, rider: Sprites.PAL.vip, spd: e.prep > 0 ? 0 : e.sp }, 24, 12, 'car', e.prep > 0 ? 0 : e.sp); return label(w.y - 16); } /* v369 실사 탈것 (zone3d가 3D로, 아니면 2D 탈것 그림). 3D 모델이 아직 안 왔으면 뛰어간다 */
   if (K.dig) { // 땅굴: 파는 동안 가라앉고, 가는 동안은 흙 둔덕만 움직인다
     c.fillStyle = '#6b5236'; c.beginPath(); c.ellipse(w.x, w.y, 7, 3.5, 0, 0, 7); c.fill();
     if (e.prep > 0) { c.save(); c.beginPath(); c.rect(w.x - 12, w.y - 40, 24, 40); c.clip(); const sink = (1 - e.prep / 1.2) * 16; const ow = w.y; w.y += sink; drawWalker(c, w, t); w.y = ow; c.restore(); }
     return label(w.y - 10);
   }
-  if (K.fly) { c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(w.x, w.y, 9, 3.5, 0, 0, 7); c.fill(); }
-  const Y = w.y - lift;
-  if (K.mode === 'heli') {
-    c.save(); c.translate(w.x, Y - 6); c.fillStyle = '#1d2a44'; c.beginPath(); c.ellipse(0, 0, 11, 6, 0, 0, 7); c.fill(); c.fillRect(-20, -1.5, 12, 3); c.fillStyle = '#9fd3ff'; c.beginPath(); c.ellipse(5, -1, 4, 3, 0, 0, 7); c.fill();
-    c.strokeStyle = 'rgba(220,230,240,.8)'; c.lineWidth = 1.5; c.rotate(t * 30); c.beginPath(); c.moveTo(-16, 0); c.lineTo(16, 0); c.moveTo(0, -16); c.lineTo(0, 16); c.stroke(); c.restore(); return label(Y - 22);
-  }
-  if (K.mode === 'ufo') {
-    if (e.prep > 0) { const k = 1 - e.prep / 1.2; c.fillStyle = 'rgba(160,255,200,.25)'; c.beginPath(); c.moveTo(w.x - 4, w.y - 50); c.lineTo(w.x + 4, w.y - 50); c.lineTo(w.x + 12, w.y); c.lineTo(w.x - 12, w.y); c.fill(); const ow = w.y; w.y -= k * 30; drawWalker(c, w, t); w.y = ow; }
-    const uy = e.prep > 0 ? w.y - 52 : Y - 10; c.save(); c.translate(w.x, uy); c.fillStyle = '#8f9bb0'; c.beginPath(); c.ellipse(0, 0, 14, 5, 0, 0, 7); c.fill(); c.fillStyle = '#b8f5d0'; c.beginPath(); c.ellipse(0, -3, 6, 4, 0, Math.PI, 0); c.fill();
-    for (let i = 0; i < 4; i++) { c.fillStyle = (Math.floor(t * 6) + i) % 2 ? '#ffd86b' : '#ff6b6b'; c.fillRect(-10 + i * 6, 1, 2, 2); } c.restore(); return label(uy - 10);
-  }
-  if (K.mode === 'balloon') { const ow = w.y; w.y = Y; drawWalker(c, w, t); w.y = ow; const cols = ['#ff6b6b', '#ffd86b', '#7fe08a', '#6bb8ff', '#d98bff']; for (let i = 0; i < 9; i++) { const bx = w.x + Math.cos(i * 0.7) * 7 + Math.sin(t * 2 + i) * 1.5, by = Y - 30 - (i % 3) * 5; c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 0.5; c.beginPath(); c.moveTo(w.x, Y - 14); c.lineTo(bx, by); c.stroke(); c.fillStyle = cols[i % 5]; c.beginPath(); c.ellipse(bx, by, 3, 3.6, 0, 0, 7); c.fill(); } return; }
-  if (K.mode === 'rocket') { const ow = w.y; w.y = Y; drawWalker(c, w, t); w.y = ow; c.fillStyle = Math.floor(t * 20) % 2 ? '#ffb347' : '#ff6b3d'; c.beginPath(); c.moveTo(w.x - 3, Y - 2); c.lineTo(w.x + 3, Y - 2); c.lineTo(w.x, Y + 8 + Math.random() * 4); c.fill(); if (Math.random() < 0.5) puff(w.x, w.y); return; }
-  if (K.mode === 'horse') { c.save(); c.translate(w.x, w.y); c.rotate(a); c.fillStyle = '#7a4b2a'; c.fillRect(-10, -3.5, 20, 7); c.fillRect(8, -2.5, 7, 5); c.fillStyle = '#3a2414'; c.fillRect(-12, -1, 3, 2); c.restore(); const ow = w.y; w.y -= 5; drawWalker(c, w, t); w.y = ow; return; }
-  // 자전거 · 킥보드
-  c.save(); c.translate(w.x, w.y); c.rotate(a); c.strokeStyle = K.mode === 'kick' ? '#7fe08a' : '#d8dde6'; c.lineWidth = 1.5; c.beginPath();
-  if (K.mode === 'kick') { c.moveTo(-6, 0); c.lineTo(6, 0); c.lineTo(7, -6); c.stroke(); c.beginPath(); c.arc(-6, 0.5, 1.8, 0, 7); c.arc(6, 0.5, 1.8, 0, 7); }
-  else { c.arc(-6, 0, 3.5, 0, 7); c.moveTo(9.5, 0); c.arc(6, 0, 3.5, 0, 7); c.moveTo(-6, 0); c.lineTo(0, -2); c.lineTo(6, 0); }
-  c.stroke(); c.restore();
   drawWalker(c, w, t);
 }
 function spawnDecor() {
@@ -17717,11 +17699,29 @@ const Arena3J = {
   url(f) { return (window.A3J_BASE || (/\.github\.io$/.test(location.hostname) ? new URL('3d/', location.href).href : 'https://aspup100-sudo.github.io/auction-gta/3d/')) + f; },
   load() {
     if (this.st || !this.on()) return; this.st = 1;
-    const go = () => { if (typeof PBR !== 'undefined') PBR.patch(); return this.boot().catch(e => this.fail(e)); }; // v326 엔진이 들어오면 먼저 PBR로
+    const go = () => { this.noTrans(); this.k2Init(); if (typeof PBR !== 'undefined') PBR.patch(); return this.boot().catch(e => this.fail(e)); }; // v326 엔진이 들어오면 먼저 PBR로
     if (window.T3) return go();
     const sc = document.createElement('script'); sc.src = this.url('three-gta.js?v=160b'); sc.async = true; sc.onerror = () => this.fail('script'); sc.onload = go; document.head.appendChild(sc);
   },
   fail(e) { console.warn('arena3j', e); this.st = -1; this.hide(); },
+  /* v369 폰 튕김 (사용자 '숍 들어가서 둘러보는중에 튕겼다', 15 Pro): 유리(시계 유리·물병·차 유리·돌고래)의 '굴절 유리(transmission)' 하나만 화면에 있어도
+   * three가 화면 크기 굴절용 그림판(HalfFloat·MSAA 4배 ≈ 75MB)을 카메라마다 만들어 계속 들고 있었다. 이 유리들은 원래 반투명(BLEND, 알파 0.25)이라 굴절만 빼면 거의 같은 모습. */
+  noTrans() { const P = window.T3 && T3.GLTFLoader && T3.GLTFLoader.prototype; if (!P || P._nt) return; P._nt = 1; const parse = P.parse;
+    /* v369 그래픽 메모리에 올라간 그림 목록 (three는 올릴 때 dispose 리스너를 단다): Room3D.gpuSweep이 장면을 바꿀 때 안 쓰는 걸 내린다 */
+    const TP = T3.THREE.Texture.prototype, UP = this.up = new Set(), ael = TP.addEventListener, dsp = TP.dispose;
+    TP.addEventListener = function (type, fn) { if (type === 'dispose' && !this.isRenderTargetTexture) UP.add(this); return ael.call(this, type, fn); };
+    TP.dispose = function () { UP.delete(this); return dsp.call(this); };
+    const fix = s => s && s.traverse(o => { for (const m of [].concat(o.material || [])) if (m && m.transmission > 0) { m.transmission = 0; m.transmissionMap = null; m.transparent = true; if (m.opacity > 0.99) m.opacity = 0.45; m.depthWrite = false; m.needsUpdate = true; } });
+    P.parse = function (data, path, onLoad, onError) { const run = () => { if (!this.ktx2Loader && Arena3J.k2) this.ktx2Loader = Arena3J.k2; return parse.call(this, data, path, g => { try { (g.scenes && g.scenes.length ? g.scenes : [g.scene]).forEach(fix); } catch (e) { } onLoad(g); }, onError); };
+      if (!Arena3J.k2 && Arena3J.k2p) Arena3J.k2p.then(run); else run(); }; },
+  /* v369 폰 그래픽 메모리 줄이기: 3D 모델 그림을 GPU 압축 그림(KTX2 → 아이폰은 ASTC)으로 받는다. 같은 그림이 그래픽 메모리를 1/4~1/8만 쓴다.
+   * 3d/k2/k2.js = three r160 KTX2Loader (이 엔진에 맞춰 묶은 것) + basis 변환기. 못 받으면 압축 안 된 모델만 보인다. */
+  k2Init() { if (this.k2p) return this.k2p; return (this.k2p = new Promise(res => { if (window.T3K2) return res(); const sc = document.createElement('script'); sc.src = this.url('k2/k2.js?v=1'); sc.async = true; sc.onload = res; sc.onerror = res; document.head.appendChild(sc); }).then(() => {
+      if (!window.T3K2) return; try { const L = new T3K2(); L.setTranscoderPath(this.url('k2/')); L.setWorkerLimit(4); const c = document.createElement('canvas'), gl = c.getContext('webgl2');
+        L.detectSupport({ extensions: { has: e => !!(gl && gl.getExtension(e)) }, capabilities: { isWebGL2: true } }); const lc = gl && gl.getExtension('WEBGL_lose_context'); if (lc) lc.loseContext(); this.k2 = L; } catch (e) { console.warn('k2', e); } })); },
+  /* v369 사진 한 장을 KTX2(3d/…/같은 이름.ktx2)로 받는다: 폰 그래픽 메모리 1/4~1/8, 사진 사본도 안 남는다. 없거나 못 풀면 원래 jpg/png. cb(texture 또는 null) */
+  tex(p, cb) { const jpg = () => { const t = new T3.THREE.TextureLoader().load(this.url(p), () => cb(t), undefined, () => cb(null)); };
+    this.k2Init().then(() => { if (!this.k2) return jpg(); this.k2.load(this.url(p.replace(/\.(jpg|png)(\?|$)/, '.ktx2$2')), t => cb(t), undefined, jpg); }); },
   async boot() {
     const { GLTFLoader, MeshoptDecoder } = window.T3; await MeshoptDecoder.ready;
     const L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
@@ -17872,7 +17872,7 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
   },
   // 팀 a(파랑)는 모델 그림의 빨간 부분(망토 등)을 파랗게 바꾼 그림을 쓴다
   teamTex(name, tex, tm) {
-    if (tm !== 'a' || !tex || !tex.image) return tex; const k = name + tm; this.tt = this.tt || {}; if (this.tt[k]) return this.tt[k];
+    if (tm !== 'a' || !tex || !tex.image || tex.isCompressedTexture) return tex; const k = name + tm; this.tt = this.tt || {}; if (this.tt[k]) return this.tt[k];
     const im = tex.image, c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0); const D = x.getImageData(0, 0, c.width, c.height), d = D.data;
     for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2]; if (r > 70 && r > g * 1.45 && r > b * 1.3) { const l = (r + g + b) / 3, s = r - Math.min(g, b); d[i] = Math.max(0, l - s * 0.55); d[i + 1] = Math.max(0, l - s * 0.15); d[i + 2] = Math.min(255, l + s * 0.75); } }
     x.putImageData(D, 0, 0); const t = tex.clone(); t.image = c; t.source = new T3.THREE.Source(c); t.needsUpdate = true; return (this.tt[k] = t);
@@ -18013,6 +18013,11 @@ const RealFloor = {
   TINT: { pink: 'rgba(255,196,206,.32)', mint: 'rgba(196,240,222,.18)', white: 'rgba(255,255,255,.28)' },
   COVER: { wood: 2, oak: 2, marble: 3, concrete: 3, trav: 2, parquet: 1.5, checker: 2, shop: 2, carpet: 2, pent: 2, bath: 1.5, entry: 2, deck: 2, grass: 2, plaster: 1 }, // 사진 한 장이 덮는 칸 수
   GROUT: { marble: 1, concrete: 1.5, trav: 1 }, // 큰 판석: 칸마다 줄눈
+  kt: {}, kq: {}, kpend: 0, /* v369 3D 재질용 KTX2 사진 (RoomReal.tex): 쓰는 것만 받는다. 캔버스에 그리는 바닥은 jpg 그대로 */
+  // 0 = 받는 중 (그동안 jpg), null = 없음·못 씀 (jpg), 그림 = KTX2
+  ktx(key) { if (key in this.kt) return this.kt[key]; if (typeof Arena3J === 'undefined' || !Arena3J.tex) return (this.kt[key] = null);
+    if (!this.kq[key]) { this.kq[key] = 1; this.kpend++; Arena3J.tex('floor/' + key.slice(0, -1) + '_' + key.slice(-1) + '.ktx2?v=1', t => { this.kt[key] = t && t.isCompressedTexture ? t : null; if (t && !t.isCompressedTexture) t.dispose(); this.kpend--; if (!this.kpend && typeof RoomReal !== 'undefined') RoomReal.done(1); }); }
+    return 0; },
   ready() { return this.st === 2; },
   load() { if (this.st) return; this.st = 1; let n = 0; const need = this.K.length * 3;
     for (const k of this.K) for (const s of ['c', 'n', 'r']) { const im = new Image(); im.crossOrigin = 'anonymous';
@@ -18123,7 +18128,8 @@ const Room3D = {
     S.traverse(o => { for (const m of [].concat(o.material || [])) { for (const k in m) { const v = m[k]; if (v && v.isTexture) set.add(v); } if (m.uniforms) for (const k in m.uniforms) add(m.uniforms[k] && m.uniforms[k].value); } }); return set; },
   gpuOld(S) { if (!S) return; this.gOld = this.gpuTex(S, this.gOld || new Set()); this.gFr = 0; const L = this.gLit = this.gLit || new Set(); S.traverse(o => { if (o.isLight && o.shadow) L.add(o); }); }, /* 그림자 판(2048² 그림+깊이 ≈ 32MB)도 들를 때마다 하나씩 남았다 */
   gpuSweep() { if (!this.gOld || !this.S || ++this.gFr < 4) return; const now = this.gpuTex(this.S, new Set()); let n = 0; /* 맡겨 둔 거리(zst)의 그림도 내린다: 돌아오면 검은 화면 뒤에서 다시 올린다 */
-    for (const t of this.gOld) { if (now.has(t) || t.isRenderTargetTexture || t.userData.pbrEnv || t.userData.keepGpu) continue; const im = t.image; if (!im || (Array.isArray(im) ? !im.length : !(im.width > 0 || im.data))) continue; t.dispose(); n++; }
+    const all = typeof Arena3J !== 'undefined' && Arena3J.up ? new Set([...this.gOld, ...Arena3J.up]) : this.gOld; /* v369 앞 장면만이 아니라 올라간 그림 전부 (미리 올려 둔 옷·차, 미리보기에 쓴 것) 중 지금 장면이 안 쓰는 것 */
+    for (const t of all) { if (now.has(t) || t.isRenderTargetTexture || t.userData.pbrEnv || t.userData.keepGpu) continue; const im = t.image; if (!im || (Array.isArray(im) ? !im.length : !(im.width > 0 || im.data))) continue; t.dispose(); n++; }
     let ns = 0; if (this.gLit) { const live = new Set(); this.S.traverse(o => { if (o.isLight) live.add(o); }); for (const l of this.gLit) if (!live.has(l) && l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; ns++; } this.gLit = null; }
     this.gOld = null; if (window.__gpuLog) console.log('gpuSweep', n, 'shadow', ns); },
   dispose(force) { if (!this.S) return; this.gpuOld(this.S);
@@ -18535,7 +18541,7 @@ const RoomReal = {
       G.scene.updateMatrixWorld(true); const parts = []; G.scene.traverse(m => { if (!m.isMesh) return; m.geometry._keep = 1; const mt = m.material; mt._keep = 1; if (mt.map) mt.map.anisotropy = 8; parts.push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: mt }); });
       this.M[k] = parts; this.rs[k] = 2; this.ver++; this.done(); }).catch(e => { console.warn('roomreal', k, e); this.rs[k] = -1; this.done(); }); },
   // 받던 게 다 오면 방을 한 번만 다시 세운다
-  done() { if (Object.values(this.rs).includes(1)) return; if (typeof Room3D !== 'undefined' && Room3D.room && Room3D.rrWait) { Room3D.rrWait = 0; Room3D.room = null; } }, // 집도 (빈집은 다른 다시 세우기 계기가 없다)
+  done() { if (Object.values(this.rs).includes(1) || (typeof RealFloor !== 'undefined' && RealFloor.kpend)) return; if (typeof Room3D !== 'undefined' && Room3D.room && Room3D.rrWait) { Room3D.rrWait = 0; Room3D.room = null; } }, // 집도 (빈집은 다른 다시 세우기 계기가 없다)
   // 방 지도 글자마다 쓰는 모델: 들어가자마자 한꺼번에 받기 시작
   USE: { K: ['water'], C: ['monitor', 'register'], S: ['wait2', 'stool'], P: ['desk_metal', 'pcset', 'chair_off'], T: ['desk_old', 'laptop'], B: ['bookcase'], A: ['arcade1', 'arcade2'], t: ['arcade1'], q: ['arcade2'], d: ['claw'], O: ['holjjak'], Z: ['blackjack'], E: ['roulette'], I: ['poker'], Y: ['slot'], J: ['shirt'], n: ['mannequin'] },
   HOME: { s: 'sofa', f: 'fridge', g: 'stove', k: 'ksink', o: 'toilet', l: 'vanity', u: 'bathtub', m: 'washer', c: 'wardrobe', h: 'cabinet', z: 'desk_metal', n: 'desk_old', e: 'bookcase', P: '*', T: '*', a: '*' },
@@ -18549,12 +18555,15 @@ const RoomReal = {
   dim(k) { if (this.dims[k]) return this.dims[k]; const { THREE } = T3, b = new THREE.Box3().setFromObject(this.make(k)); return (this.dims[k] = { w: b.max.x - b.min.x, d: b.max.z - b.min.z, h: b.max.y - b.min.y, cx: (b.min.x + b.max.x) / 2, cz: (b.min.z + b.max.z) / 2 }); },
   /* ---- 실사 재질 (RealFloor 사진 그대로: 색·노멀·거칠기) ---- */
   tx: {},
-  tex(k, s, srgb) { const key = k + s; if (this.tx[key]) return this.tx[key]; const { THREE } = T3, t = new THREE.Texture(RealFloor.im[key]); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; t._keep = 1; return (this.tx[key] = t); },
+  tmp: {}, tmpT: 0,
+  tex(k, s, srgb) { const key = k + s; if (this.tx[key]) return this.tx[key]; const { THREE } = T3, kt = RealFloor.ktx(key), set = t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; return t; };
+    if (kt === 0) { this.tmpT = 1; if (typeof Room3D !== 'undefined') Room3D.rrWait = 1; return this.tmp[key] || (this.tmp[key] = set(new THREE.Texture(RealFloor.im[key]))); } /* v369 KTX2 받는 중: 잠깐 jpg, 오면 방을 다시 세운다 (done) */
+    if (this.tmp[key]) { this.tmp[key].dispose(); delete this.tmp[key]; } const t = set(kt || new THREE.Texture(RealFloor.im[key])); t._keep = 1; return (this.tx[key] = t); },
   mt: {},
   // k = 사진 이름 (wood·oak·marble·concrete·trav·carpet·plaster …), col = 곱할 색, o = 거칠기·금속 등. 상자 UV는 실제 길이(칸)라서 사진 한 장 = sz칸
   mat(k, col = '#ffffff', o = {}) { const key = k + col + JSON.stringify(o); if (this.mt[key]) return this.mt[key]; const { THREE } = T3;
-    const m = new THREE.MeshStandardMaterial(Object.assign({ map: o.noMap ? null : this.tex(k, 'c', true), normalMap: this.tex(k, 'n'), roughnessMap: this.tex(k, 'r'), color: new THREE.Color(col), roughness: 1, metalness: 0 }, o.p || {}));
-    m.normalScale.set(o.ns || 0.8, o.ns || 0.8); m._keep = 1; return (this.mt[key] = m); },
+    this.tmpT = 0; const m = new THREE.MeshStandardMaterial(Object.assign({ map: o.noMap ? null : this.tex(k, 'c', true), normalMap: this.tex(k, 'n'), roughnessMap: this.tex(k, 'r'), color: new THREE.Color(col), roughness: 1, metalness: 0 }, o.p || {}));
+    m.normalScale.set(o.ns || 0.8, o.ns || 0.8); if (this.tmpT) { this.tmpT = 0; return m; } /* 잠깐 jpg 재질은 기억 안 함 */ m._keep = 1; return (this.mt[key] = m); },
   flat(col, rough = 0.6, metal = 0, o = {}) { const key = 'f' + col + rough + metal + JSON.stringify(o); if (this.mt[key]) return this.mt[key]; const { THREE } = T3;
     const m = new THREE.MeshStandardMaterial(Object.assign({ color: new THREE.Color(col), roughness: rough, metalness: metal }, o)); m._keep = 1; return (this.mt[key] = m); },
   glass(op = 0.16) { return this.flat('#dceef4', 0.04, 0, { transparent: true, opacity: op, depthWrite: false, envMapIntensity: 2.2 }); },
@@ -19194,7 +19203,7 @@ Object.assign(Room3D, {
    * 카메라가 돌지 않는 직교 카메라라 카메라를 보는 판 한 장이 3D 나무와 똑같이 보인다. 나무 하나에 삼각형 둘 (원본 스캔은 나무 하나에 150만 개). */
   TIMP: { w: [7.51, 8.73, 8.73, 5.66, 6.78, 6.78], u: [0.496, 0.519, 0.485, 0.491, 0.387, 0.621], v: [0.233, 0.288, 0.292, 0.381, 0.262, 0.271] },
   zTrees(z) { if (this.zti || !z.trees.length) return; const { THREE } = T3;
-    if (!this.ztTex) { this.ztTex = new THREE.TextureLoader().load(Arena3J.url('real/trees.png?v=1'), () => { this.ztOK = 1; }, undefined, () => { this.ztTex = null; this.ztOK = -1; }); this.ztTex.colorSpace = THREE.SRGBColorSpace; this.ztTex.anisotropy = 4; this.ztTex._keep = 1; }
+    if (!this.ztTex) { this.ztTex = 1; Arena3J.tex('real/trees.png?v=1', t => { if (!t) { this.ztTex = -1; this.ztOK = -1; return; } t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t._keep = 1; this.ztTex = t; this.ztOK = 1; }); } /* v369 KTX2 먼저 */
     if (this.ztOK !== 1) return; this.zti = 1;
     const mat = new THREE.MeshBasicMaterial({ map: this.ztTex, alphaTest: 0.42, side: THREE.DoubleSide, toneMapped: false }), T = this.TIMP, F = 0.8 / 1.13, M = new THREE.Matrix4(), V = new THREE.Vector3(), Q = new THREE.Quaternion(), Sc = new THREE.Vector3(), cells = new Map();
     z.trees.forEach((t, i) => { const v = (i % 2) * 3 + Math.floor(((t.phase / 6.283) * 3 + 3) % 3), c = v + ':' + Math.floor(t.x / TILE / 32) + ',' + Math.floor(t.y / TILE / 32); if (!cells.has(c)) cells.set(c, []); cells.get(c).push([t.x / TILE, t.y / TILE, 0.85 + ((i * 37) % 10) / 30]); });
@@ -19439,7 +19448,7 @@ const Ride3D = {
   sqRun() { if (this.sqB || !this.sq || !this.sq.length) return; this.sqB = 1; this.sfGo(this.sq.pop()); },
   sqDone(k) { this.sqB = 0; this.use[k] = performance.now(); if (this.sfs[k] === 2) { try { this.shrink(this.M[k].sf); this.evict(k); } catch (e) { console.warn('ride3d shrink', e); } } setTimeout(() => this.sqRun(), 40); },
   mob() { return !!(window.matchMedia && matchMedia('(pointer: coarse)').matches); },
-  shrink(sc) { const set = new Set(); sc.traverse(o => { if (!o.isMesh) return; for (const t of [].concat(o.material)) for (const q in t) { const v = t[q]; if (v && v.isTexture && v.image && v.image.width) set.add(v); } });
+  shrink(sc) { const set = new Set(); sc.traverse(o => { if (!o.isMesh) return; for (const t of [].concat(o.material)) for (const q in t) { const v = t[q]; if (v && v.isTexture && !v.isCompressedTexture && v.image && v.image.width) set.add(v); } }); /* v369 압축 그림(KTX2)은 이미 작다 */
     let px = 0; for (const t of set) px += t.image.width * t.image.height; const f = Math.sqrt((this.mob() ? 3e6 : 1.2e7) / Math.max(1, px)); if (f >= 1) return; const done = new Map();
     for (const t of set) { const im = t.image, p2 = v => Math.max(64, 1 << Math.floor(Math.log2(Math.max(1, v * f)))), w = Math.min(im.width, p2(im.width)), h = Math.min(im.height, p2(im.height)); if (w >= im.width && h >= im.height) continue;
       let c = done.get(im); if (!c) { c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h); done.set(im, c); } t.image = c; t.needsUpdate = true; }
@@ -20031,9 +20040,9 @@ Object.assign(Bld3D, {
   REP: { brickR: 0.42, brickB: 0.42, plaster: 1.4, tile: 1.5, conc: 1.2, glass: 1.6, roof: 1.2 }, // 사진 한 장이 덮는 칸
   rst: 0, rgen: 0, RT: {},
   real() { if (typeof PBR === 'undefined' || !PBR.done || !this.on()) return false; if (!this.rst) this.rload(); return this.rst === 2; },
-  rload() { this.rst = 1; const { THREE } = T3, L = new THREE.TextureLoader(); let n = 0; const need = this.RK.length * 3;
-    for (const k of this.RK) for (const s of ['c', 'n', 'm']) { const t = L.load(Arena3J.url('bld/' + k + '_' + s + '.jpg?v=2'), () => { if (++n === need) { this.rst = 2; this.rgen++; } }, undefined, () => { this.rst = -1; });
-      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (s === 'c') t.colorSpace = THREE.SRGBColorSpace; t._sh = 1; this.RT[k + s] = t; }
+  rload() { this.rst = 1; const { THREE } = T3; let n = 0; const need = this.RK.length * 3;
+    for (const k of this.RK) for (const s of ['c', 'n', 'm']) Arena3J.tex('bld/' + k + '_' + s + '.jpg?v=2', t => { if (!t) { this.rst = -1; return; } /* v369 KTX2 먼저 */
+      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (s === 'c') t.colorSpace = THREE.SRGBColorSpace; t._sh = 1; this.RT[k + s] = t; if (++n === need && this.rst === 1) { this.rst = 2; this.rgen++; } });
     this.kload(); },
   /* ---- v346 블렌더 부품 (assets3d/bldkit/kit.py → 3d/bld/kit.glb): 모서리 깎은 물탱크·실외기·장독·위성 접시·환기관·계량기·CCTV·옥상 문·태양광·난간.
    * AO·때는 정점 색에 구워져 있어 trim 재질 하나로 건물에 합친다. 못 받으면 예전 상자 모양 그대로 ---- */

@@ -1661,7 +1661,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v367</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v368</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3923,6 +3923,11 @@ function collideTraffic(c, z) {
 
 // 천사 날개 (v235 사용자 '천사는 날 수 있으니까 안 박는 걸로'): 건물·차·사람 위로 날아간다 (부딪힘·수리비·합의금·신호 과태료 없음, 지붕 위에 그린다)
 function carFlying() { return Game.driving && typeof Shop !== 'undefined' && !(typeof CarSwap !== 'undefined' && CarSwap.stolen()) && (Shop.myCar(true).ride === 'wings' || Shop.myCar(true).ride === 'dragon'); } /* v366 용도 건물 위로 날아 지붕에 앉는다 (사용자 '건물 위에 앉아있을수있게') */
+/* 지붕에 앉혀 둔 날개·용은 땅에서도 탄다 (사용자 '이거 다시 어떻게타'): 건물 칸 위면 가장 가까운 길까지 거리만큼 손이 닿는 거리를 늘린다 */
+function carEnterReach() { const c = Game.car, z = Game.zone, d0 = FEEL.carEnterDist; if (!z || typeof Shop === 'undefined') return d0; const rd = Shop.myCar(true).ride; if (rd !== 'wings' && rd !== 'dragon') return d0;
+  const k = Math.round(c.x) + ',' + Math.round(c.y) + ',' + rd; if (carEnterReach.k === k) return carEnterReach.v; const tx = Math.floor(c.x / TILE), ty = Math.floor(c.y / TILE); let v = d0;
+  if (z.at(tx, ty) === T.BLD) { let best = 1e9; for (let dy = -14; dy <= 14; dy++) for (let dx = -14; dx <= 14; dx++) { if (z.at(tx + dx, ty + dy) === T.BLD) continue; const ex = Math.max((tx + dx) * TILE - c.x, 0, c.x - (tx + dx + 1) * TILE), ey = Math.max((ty + dy) * TILE - c.y, 0, c.y - (ty + dy + 1) * TILE), e = Math.hypot(ex, ey); if (e < best) best = e; } if (best < 1e9) v = d0 + best + TILE; } /* 내리면 길 칸 가운데에 서니 한 칸 더 */
+  carEnterReach.k = k; carEnterReach.v = v; return v; }
 function updateMyCar(dt, z, input) {
   const c = Game.car, fly = carFlying(), carBlocked = fly ? () => false : window.carBlocked;
   const fx = Math.cos(c.a), fy = Math.sin(c.a);
@@ -8680,7 +8685,7 @@ function update(dt) {
       Nav.update(dt);
       stepWalker(p, dt, ix, iy, run, solid, 'asphalt');
       if (!frozen) checkEdgeWalk(dt, z, p, ix, iy);
-      const nearCar = !CarSwap.lent && Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < FEEL.carEnterDist;
+      const nearCar = !CarSwap.lent && Math.hypot(Game.car.x - p.x, Game.car.y - p.y) < carEnterReach(); /* 지붕 위 날개·용도 (v368) */
       const tg = frozen ? null : (zoneInteractTarget() || (nearCar ? { kind: 'car' } : null)); Game.promptFor(tg);
       if (interact && tg && tg.kind !== 'car') { if (tg.kind === 'home') homeDoor(tg); else if (tg.kind === 'forsale') MyHome.visit(tg); else if (tg.kind === 'walker') talkWalker(tg.w); else if (tg.kind === 'buddy') Pets.tipBuddy(tg); else if (tg.kind === 'friend') greetFriend(tg.p); else enterPlace(tg); }
       const ride = !frozen && Net.on ? Ride.near() : null; // 친구가 운전 중인 차 옆이면 F로 같이 타기 (운전자 포함 최대 5명, 사용자 2026-10-15)
@@ -18111,7 +18116,17 @@ const Room3D = {
   zSwap(st) { const o = {}; for (const k of this.ZK) { o[k] = this[k]; this[k] = st[k]; } return o; },
   zUnstash(z) { const st = this.zst; if (!st) return false; this.zst = null; if (st.room === z) { this.dispose(); this.zSwap(st); return true; } // 같은 구로 돌아옴 → 그대로 다시 건다
     const cur = this.zSwap(st); this.dispose(true); this.zSwap(cur); return false; }, // 다른 구 → 맡겨 둔 장면은 버린다
-  dispose(force) { if (!this.S) return;
+  /* v368 폰 튕김 (사용자 '숍 들어가서 한번씩 튕긴다'): 장면을 바꿔도 앞 장면 그림(텍스처)이 그래픽 메모리에 남아 들를 때마다 쌓였다 (거리 230MB + 숍 260MB + …).
+   * 버리는 장면의 그림을 적어 두고, 새 장면이 몇 번 그려진 뒤 새 장면이 안 쓰는 것만 그래픽 메모리에서 내린다. 그림 자체(사진)는 그대로 있어서 다시 쓰면 three가 다시 올린다 (화질 그대로).
+   * 환경광(PMREM)·렌더 타깃처럼 사진이 없는 건 안 내린다 (perf.js 때 어두워진 원인). */
+  gpuTex(S, set) { const add = t => { if (t && t.isTexture) set.add(t); }; add(S.environment); add(S.background);
+    S.traverse(o => { for (const m of [].concat(o.material || [])) { for (const k in m) { const v = m[k]; if (v && v.isTexture) set.add(v); } if (m.uniforms) for (const k in m.uniforms) add(m.uniforms[k] && m.uniforms[k].value); } }); return set; },
+  gpuOld(S) { if (!S) return; this.gOld = this.gpuTex(S, this.gOld || new Set()); this.gFr = 0; const L = this.gLit = this.gLit || new Set(); S.traverse(o => { if (o.isLight && o.shadow) L.add(o); }); }, /* 그림자 판(2048² 그림+깊이 ≈ 32MB)도 들를 때마다 하나씩 남았다 */
+  gpuSweep() { if (!this.gOld || !this.S || ++this.gFr < 4) return; const now = this.gpuTex(this.S, new Set()); let n = 0; /* 맡겨 둔 거리(zst)의 그림도 내린다: 돌아오면 검은 화면 뒤에서 다시 올린다 */
+    for (const t of this.gOld) { if (now.has(t) || t.isRenderTargetTexture || t.userData.pbrEnv || t.userData.keepGpu) continue; const im = t.image; if (!im || (Array.isArray(im) ? !im.length : !(im.width > 0 || im.data))) continue; t.dispose(); n++; }
+    let ns = 0; if (this.gLit) { const live = new Set(); this.S.traverse(o => { if (o.isLight) live.add(o); }); for (const l of this.gLit) if (!live.has(l) && l.shadow.map) { l.shadow.map.dispose(); l.shadow.map = null; ns++; } this.gLit = null; }
+    this.gOld = null; if (window.__gpuLog) console.log('gpuSweep', n, 'shadow', ns); },
+  dispose(force) { if (!this.S) return; this.gpuOld(this.S);
     if (!force && this.zb && this.room && this.room.buildings && this.S && this.zbZ === this.room) { const z = this.room; if (this.zst) this.zUnstash(null); this.zst = this.zSwap({ A: new Map(), zb: new Map(), zw: [], zc: [] }); this.zst.t = performance.now(); this.zst.room = z; this.S = null; return; }
     this.S.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) o.skeleton.dispose(); /* v363 사람 뼈 그림 (안 버리면 드나들 때마다 쌓임. 다시 그리면 three가 새로 만든다) */ for (const m of [].concat(o.material || [])) { if (m.map && m.map._own) m.map.dispose(); if (m.userData.own) { for (const t of [m.normalMap, m.roughnessMap]) if (t && t._own) t.dispose(); m.dispose(); } } }); this.S = null; this.A = new Map(); },
   build(rm) {
@@ -18491,7 +18506,7 @@ const Room3D = {
     if (typeof Bird3D !== 'undefined') Bird3D.flush(this, now / 1000); // v323 날아오는 새
     if (typeof Hit3D !== 'undefined') Hit3D.flush(this, now / 1000); // v367 때리기 실사 효과
     for (const [k, H] of this.A) if (H.seen !== this.fr) { this.drop(H); this.A.delete(k); }
-    this.r.render(this.S, this.cc || this.cam);
+    this.r.render(this.S, this.cc || this.cam); this.gpuSweep();
   },
   // 게임 좌표(픽셀) + 높이(칸) → 화면 CSS 픽셀
   proj(x, y, h = 0) { const v = this.v3 || (this.v3 = new T3.THREE.Vector3()); v.set(x / TILE, h, y / TILE).project(this.cc || this.cam); return { x: (v.x + 1) / 2 * VW, y: (1 - v.y) / 2 * VH }; },
@@ -21531,9 +21546,13 @@ const Hit3D = {
     g.frustumCulled = false; R.S.add(g); return (this.P = { g, s: [slot(), slot()] });
   },
   // Room3D.render0에서 (새 다음): 걸린 효과들 그리기
-  flush(R, t) {
-    const now = performance.now() / 1000; this.ev = this.ev.filter(e => now - e.t0 < 0.9); if (!this.ev.length && !this.P) return; if (!window.T3 || !R.zNow) { if (this.P) this.P.g.visible = false; return; }
-    const P = this.pool(R); P.g.visible = true; const el = typeof Z3_EL !== 'undefined' ? Z3_EL : 0.72; P.g.position.set(0, Math.sin(el) * 0.7, Math.cos(el) * 0.7); // 직교 카메라 쪽으로 당겨 둔다: 화면 자리는 그대로, 가게 앞벽·사람 몸에 안 묻힌다 const H = (typeof HERO_H !== 'undefined' ? HERO_H : 1.55) * 1.18, cam = R.cc || R.cam;
+  flush(R, t) { try { this.flush0(R, t); } catch (er) { console.warn('hit3d', er); this.ev = []; if (this.P) this.P.g.visible = false; } }, // 효과가 틀려도 게임은 안 멈춘다 (v367 멈춤 사고)
+  // 거리에 들어오면 미리 판·그림을 만들고 셰이더를 올려 둔다 (첫 주먹에 멈칫 안 하게)
+  warm(R) { if (this.wok || !window.T3 || !R.zNow || !R.r) return; this.wok = 1; try { const P = this.pool(R), all = []; P.g.traverse(o => { if (o.isSprite) { all.push(o); o.visible = true; } }); P.g.visible = true; R.r.compile(P.g, R.cc || R.cam); all.forEach(o => o.visible = false); P.g.visible = false; } catch (er) { console.warn('hit3d warm', er); } },
+  flush0(R, t) {
+    this.warm(R); const now = performance.now() / 1000; this.ev = this.ev.filter(e => now - e.t0 < 0.9); if (!this.ev.length && !this.P) return; if (!window.T3 || !R.zNow) { if (this.P) this.P.g.visible = false; return; }
+    const P = this.pool(R); P.g.visible = true; const el = typeof Z3_EL !== 'undefined' ? Z3_EL : 0.72; P.g.position.set(0, Math.sin(el) * 0.7, Math.cos(el) * 0.7); // 직교 카메라 쪽으로 당겨 둔다: 화면 자리는 그대로, 가게 앞벽·사람 몸에 안 묻힌다
+    const H = (typeof HERO_H !== 'undefined' ? HERO_H : 1.55) * 1.18, cam = R.cc || R.cam;
     P.s.forEach((S, si) => { const e = this.ev[si]; const all = [S.flash, S.glare, S.ring, S.rim, ...S.st, ...S.dr, ...S.du]; if (!e) { all.forEach(s => s.visible = false); return; }
       const a = now - e.t0, r = e.r, X0 = e.x / TILE, Z0 = e.y / TILE, dx = e.dx, dz = e.dy;
       // 맞는 자리: 때린 사람 앞, 얼굴 높이 (맞은 사람 쪽이 있으면 둘 사이 70%)
@@ -21541,7 +21560,7 @@ const Hit3D = {
       // 화면에서 주먹이 나가는 방향 (스프라이트 돌리기)
       const v1 = (this.v1 || (this.v1 = new T3.THREE.Vector3())).set(hx, hy, hz).project(cam), v2 = (this.v2 || (this.v2 = new T3.THREE.Vector3())).set(hx + dx, hy, hz + dz).project(cam), sa = Math.atan2((v2.y - v1.y) * VH, (v2.x - v1.x) * VW);
       // 바람 줄: 주먹 지나간 길을 따라 가늘게 (맞든 안 맞든), 0~0.14초
-      S.st.forEach((s, i) => { const u = a / 0.14, on = u < 1; s.visible = on; if (!on) return; const off = (i - 1) * 0.07 * H, f = (0.2 + u * 0.3) * H; s.position.set(X0 + dx * f - dz * off * 0.3, hy - 0.04 * H + off * 0.5, Z0 + dz * f + dx * off * 0.3); s.scale.set((0.95 - i * 0.18) * H * (0.7 + u * 0.4), (0.09 - i * 0.015) * H, 1); s.material.rotation = sa; s.material.opacity = (e.hit ? 0.35 : 0.6) * Math.sin(Math.min(1, u) * Math.PI) * (1 - i * 0.2); });
+      S.st.forEach((s, i) => { const u = a / 0.14, on = u < 1; s.visible = on; if (!on) return; const off = (i - 1) * 0.07 * H, f = (0.2 + u * 0.3) * H; s.position.set(X0 + dx * f - dz * off * 0.3, hy - 0.04 * H + off * 0.5, Z0 + dz * f + dx * off * 0.3); s.scale.set((0.95 - i * 0.18) * H * (0.7 + u * 0.4), (0.16 - i * 0.03) * H, 1); s.material.rotation = sa; s.material.opacity = (e.hit ? 0.4 : 0.7) * Math.sin(Math.min(1, u) * Math.PI) * (1 - i * 0.2); });
       const hit = e.hit && a > 0.05; [S.flash, S.glare, S.ring, S.rim, ...S.dr, ...S.du].forEach(s => s.visible = hit); if (!hit) return; const b = a - 0.05; // 주먹이 닿는 때 (Punch_Jab 1.6배 빠르기)
       // 맞닿는 빛: 0.1초 안에 번쩍 (작게)
       const fo = Math.max(0, 1 - b / 0.12); S.flash.visible = b < 0.12; S.flash.position.set(hx, hy, hz); S.flash.scale.setScalar(H * (0.22 + Math.min(1, b / 0.03) * 0.26)); S.flash.material.opacity = fo;

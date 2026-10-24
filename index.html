@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v374</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v375</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -18482,7 +18482,7 @@ const Room3D = {
     if (!H || H.pk !== pk) { if (H) this.drop(H); H = hero ? Hero3D.make(P) : this.person(P); H.pk = pk; H.amp = 0; H.ph = 0; H.ang = [-Math.PI / 2, Math.PI, 0, Math.PI / 2][w.dir | 0] || 0; this.S.add(H.root); this.A.set(key, H); }
     H.seen = this.fr; if (H.hero) Hero3D.pose(H, w, t, dt, seed); else { this.pose(H, w, t, dt, seed); H.root.visible = typeof Hero3D === 'undefined' || Hero3D.st === -1; } /* v343 새 몸을 받는 동안 예전 꼬마는 숨김 (못 받았을 때만 꼬마) */ return H; },
   // 안 보이게 된 것 치우기 (새 몸에 붙인 옷 도형은 사람마다 따로라 같이 버린다)
-  drop(H) { this.S.remove(H.root); if (H.rp) this.S.remove(H.rp); if (H.hero) { H.mix.stopAllAction(); H.root.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); } },
+  drop(H) { this.S.remove(H.root); if (H.rp) this.S.remove(H.rp); if (H.hero) { H.mix.stopAllAction(); H.root.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); } H.root.traverse(o => { if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) o.skeleton.dispose(); }); }, /* v374 뼈 그림(사람·펫마다 하나)이 그래픽 메모리에 계속 쌓였다 (지나간 행인·친구 300개 넘게). 다시 쓰면 three가 다시 만든다 */
   /* ---- 매 프레임 ---- */
   draw(rm, t) {
     const { THREE } = T3, r = this.r, now = performance.now(), dt = Math.min(0.05, this.lt ? (now - this.lt) / 1000 : 0.016); this.lt = now; this.fr = (this.fr | 0) + 1; this.show(true);
@@ -18543,18 +18543,22 @@ const Room3D = {
     const t0 = PerfHud.on ? performance.now() : 0; try { this.render0(); } finally { if (t0) PerfHud.add('gl', performance.now() - t0); } },
   render0() {
     const pq = this.pq || []; this.pq = null; const now = performance.now(), dt = Math.min(0.05, this.lpt ? (now - this.lpt) / 1000 : 0.016); this.lpt = now;
-    pq.forEach((q, i) => { const key = 'p' + i;
-      if (q.people) { const H = this.actor(key + 'h', q.pal || Sprites.PAL.player, { x: q.x, y: q.y, dir: q.face < 0 ? 1 : 2, moving: q.moving }, now / 1000, dt, i * 3.1 + 9); H.root.position.y += q.lift; return; }
-      if (q.m) { let H = this.A.get(key); if (!H || !H.model || H.k !== q.kind || H.st !== q.st || H.dk !== q.dk || !!H.real !== Pet3D.real(q.kind, q.st, q.deco)) { if (H) this.S.remove(H.root); H = Pet3D.make(q.kind, q.h, q.st, q.deco); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr;
-        const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz, d = Math.hypot(dx, dz); H.lx = X; H.lz = Z; H.sp = (H.sp || 0) * 0.85 + (d < 2 ? d / Math.max(0.008, dt) : 0) * 0.15;
+    /* v374 같이 할 때 렉 (사용자 2026-10-24 '사람들이랑 같이할때 렉걸린대'): 예전엔 앞뒤(y) 순서 번호로 모델을 붙여서, 친구·펫이 움직여 순서가 바뀔 때마다
+     * 그 자리의 펫·사람 모델을 통째로 새로 만들었다 (친구 5명이면 장면마다 계속, 셰이더·그림도 새로). 이제 같은 종류 중 지난번 자리에서 가장 가까운 모델을 그대로 쓴다. 그림은 똑같다 */
+    const used = new Set(), slot = (sig, q) => { const X = q.x / TILE, Z = q.y / TILE; let best = null, bd = Infinity; for (const [k, H] of this.A) { if (H._sig !== sig || used.has(k)) continue; const d = (H._x - X) ** 2 + (H._z - Z) ** 2; if (d < bd) { bd = d; best = k; } } if (!best) best = 'pk' + (this.pkN = (this.pkN || 0) + 1); used.add(best); return best; };
+    const mark = (H, sig, q) => { H._sig = sig; H._x = q.x / TILE; H._z = q.y / TILE; return H; };
+    pq.forEach(q => {
+      if (q.people) { const P = q.pal || Sprites.PAL.player, sig = 'h' + (typeof Hero3D !== 'undefined' && Hero3D.ready() ? Hero3D.key(P) : ''), key = slot(sig, q), n = +key.slice(2); const H = this.actor(key, P, { x: q.x, y: q.y, dir: q.face < 0 ? 1 : 2, moving: q.moving }, now / 1000, dt, n * 3.1 + 9); mark(H, sig, q); H.root.position.y += q.lift; return; }
+      if (q.m) { const sig = 'm' + q.kind + '|' + q.st + '|' + (q.dk || '') + '|' + !!Pet3D.real(q.kind, q.st, q.deco), key = slot(sig, q); let H = this.A.get(key); if (!H || !H.model || H.k !== q.kind || H.st !== q.st || H.dk !== q.dk || !!H.real !== Pet3D.real(q.kind, q.st, q.deco)) { if (H) this.S.remove(H.root); H = Pet3D.make(q.kind, q.h, q.st, q.deco); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr; H._sig = sig;
+        const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz, d = Math.hypot(dx, dz); H.lx = H._x = X; H.lz = H._z = Z; H.sp = (H.sp || 0) * 0.85 + (d < 2 ? d / Math.max(0.008, dt) : 0) * 0.15;
         if (H.ang == null) H.ang = q.face < 0 ? Math.PI : 0;
         let want = H.ang; if (q.ang != null) want = q.ang; else if (d > 0.004 && d < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face && !q.moving) want = q.face < 0 ? Math.PI : 0;
         let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
         H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.root.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05;
         Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, Object.assign({ idle: q.idle, wall: typeof q.pose === 'number' ? q.pose : null, ride: q.pose === 'ride' }, q.pose && typeof q.pose === 'object' ? q.pose : null)); return; }
-      if (!q.e) return; let H = this.A.get(key); if (!H || !H.pet || H.model) { if (H) this.S.remove(H.root); H = this.mkPet(); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr;
+      if (!q.e) return; const key = slot('e', q); let H = this.A.get(key); if (!H || !H.pet || H.model) { if (H) this.S.remove(H.root); H = this.mkPet(); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr; H._sig = 'e';
       H.mesh.geometry = H.ol.geometry = q.e.geo; if (H.mat.map !== q.e.tex) { const first = !H.mat.map; H.mat.map = q.e.tex; if (first) H.mat.needsUpdate = true; }
-      const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz; H.lx = X; H.lz = Z;
+      const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz; H.lx = H._x = X; H.lz = H._z = Z;
       if (H.ang == null) H.ang = q.face < 0 ? Math.PI : 0;
       let want = H.ang; if (Math.hypot(dx, dz) > 0.004 && Math.hypot(dx, dz) < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face) want = q.face < 0 ? Math.PI : 0; // 걷는 쪽을 본다 (서 있으면 2D 그림의 왼쪽·오른쪽)
       let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
@@ -21329,22 +21333,24 @@ const Pet3D = {
     R.OK = R.SM.map(sm => { const si = sm.geometry.attributes.skinIndex, sw = sm.geometry.attributes.skinWeight, ok = new Uint8Array(si.count); for (let i = 0; i < si.count; i++) { let bi = 0, bw = -1; for (let j = 0; j < 4; j++) { const w = sw.getComponent(i, j); if (w > bw) { bw = w; bi = si.getComponent(i, j); } } ok[i] = /^tail/.test(sm.skeleton.bones[bi].name) ? 0 : 1; } return ok; }); // 꼬리는 바닥 맞추기에서 뺀다
     return R;
   },
-  cRel(R, n) { const M = new T3.THREE.Matrix4(); for (let x = n; x && x !== R.F; x = x.parent) { x.updateMatrix(); M.premultiply(x.matrix); } return M; }, // F 기준 행렬
-  cQ(R, n) { const q = new T3.THREE.Quaternion(); for (let x = n; x && x !== R.F; x = x.parent) q.premultiply(x.quaternion); return q; },
-  cRot(R, bn, ax, ang) { if (!bn || !ang) return; const al = ax.clone().applyQuaternion(this.cQ(R, bn.parent).invert()); bn.quaternion.premultiply(R.q.setFromAxisAngle(al, ang)); }, // F 축으로 돌리기 (부모 기준으로 바꿔서)
-  cEnd(R, l, out) { return out.setFromMatrixPosition(this.cRel(R, l.end).multiply(l.M)); },
-  cPlace(R) { for (const l of R.L) { const W = this.cRel(R, l.end).multiply(l.M); this.cRel(R, l.ctl.parent).invert().multiply(W).decompose(l.ctl.position, l.ctl.quaternion, R.s3); } }, // 발 IK 조종 뼈를 다리 끝에
+  cRel(R, n, M = new T3.THREE.Matrix4()) { M.identity(); const S = R.stop; let x = n; for (; x && x !== R.F && x !== S; x = x.parent) { x.updateMatrix(); M.premultiply(x.matrix); } if (S && x === S) M.premultiply(R.stopM); return M; }, // F 기준 행렬
+  cQ(R, n, q = new T3.THREE.Quaternion()) { q.identity(); const S = R.stop; let x = n; for (; x && x !== R.F && x !== S; x = x.parent) q.premultiply(x.quaternion); if (S && x === S) q.premultiply(R.stopQ); return q; },
+  /* v374 다리 하나를 맞추는 동안 다리 위쪽 뼈(몸통)는 안 움직이니 그 행렬을 한 번만 계산해 둔다 (고양이 한 마리 장면마다 0.6ms → 줄임, 결과 같음) */
+  cStop(R, top) { if (!top) { R.stop = null; return; } R.stop = null; R.stopM = this.cRel(R, top, R.stopM || new T3.THREE.Matrix4()); R.stopQ = this.cQ(R, top, R.stopQ || new T3.THREE.Quaternion()); R.stop = top; },
+  cRot(R, bn, ax, ang) { if (!bn || !ang) return; const al = (R.al || (R.al = new T3.THREE.Vector3())).copy(ax).applyQuaternion(this.cQ(R, bn.parent, R.qP || (R.qP = new T3.THREE.Quaternion())).invert()); /* v374 같은 계산, 장면마다 새 행렬·벡터를 수백 개 만들던 것만 재사용 (친구 펫이 많으면 무거웠다) */ bn.quaternion.premultiply(R.q.setFromAxisAngle(al, ang)); }, // F 축으로 돌리기 (부모 기준으로 바꿔서)
+  cEnd(R, l, out) { return out.setFromMatrixPosition(this.cRel(R, l.end, R.mE || (R.mE = new T3.THREE.Matrix4())).multiply(l.M)); },
+  cPlace(R) { for (const l of R.L) { const W = this.cRel(R, l.end, R.mW || (R.mW = new T3.THREE.Matrix4())).multiply(l.M); this.cRel(R, l.ctl.parent, R.mP || (R.mP = new T3.THREE.Matrix4())).invert().multiply(W).decompose(l.ctl.position, l.ctl.quaternion, R.s3); } }, // 발 IK 조종 뼈를 다리 끝에
   cMinY(R) { R.F.updateMatrixWorld(true); let mn = Infinity; const v = R.v; R.SM.forEach((sm, mi) => { const pa = sm.geometry.attributes.position, ok = R.OK[mi], M = this.cRel(R, sm); for (let i = 0; i < pa.count; i += 5) { if (!ok[i]) continue; v.fromBufferAttribute(pa, i); sm.applyBoneTransform(i, v); v.applyMatrix4(M); if (v.y < mn) mn = v.y; } }); return mn; },
   /* v350 고양이 v12 발 붙는 걸음 (고양이 스레드 walk_v12 GAITC): 발마다 바닥 디딤(β .62 동안 뒤로 밀기) → 들어 올려 앞으로. 목표 = 쉴 때 발 자리 + 걸음 오프셋, 다리 마디를 CCD로 맞춘다 */
   CATG: { S: 1.0, H: 0.15, beta: 0.62 },
   cGait(R, w, am) { const { THREE } = T3, G = this.CATG, Z = this._Z, jv = R.jv || (R.jv = new THREE.Vector3()), ev = R.ev || (R.ev = new THREE.Vector3()), T = R.tv || (R.tv = new THREE.Vector3());
     for (const l of R.L) { const u = ((w + l.ph) % 1 + 1) % 1; let dx, dy = 0; if (u < G.beta) dx = G.S / 2 - G.S * (u / G.beta); else { const q = (u - G.beta) / (1 - G.beta), sq = q * q * (3 - 2 * q); dx = -G.S / 2 + G.S * sq; dy = G.H * Math.sin(Math.PI * q); }
-      T.copy(l.rest); T.x += dx * am; T.y += dy * am; const ch = l.c ? [l.c, l.b, l.a] : [l.b, l.a];
-      for (let it = 0; it < 12; it++) for (const bn of ch) { jv.setFromMatrixPosition(this.cRel(R, bn)); this.cEnd(R, l, ev); T.z = ev.z; let da = Math.atan2(T.y - jv.y, T.x - jv.x) - Math.atan2(ev.y - jv.y, ev.x - jv.x); da = Math.atan2(Math.sin(da), Math.cos(da)); this.cRot(R, bn, Z, da * (bn === l.a ? 0.3 : 0.5)); } } },
+      T.copy(l.rest); T.x += dx * am; T.y += dy * am; const ch = l.c ? [l.c, l.b, l.a] : [l.b, l.a]; this.cStop(R, l.a.parent);
+      for (let it = 0; it < 12; it++) for (const bn of ch) { jv.setFromMatrixPosition(this.cRel(R, bn, R.mJ || (R.mJ = new T3.THREE.Matrix4()))); this.cEnd(R, l, ev); T.z = ev.z; let da = Math.atan2(T.y - jv.y, T.x - jv.x) - Math.atan2(ev.y - jv.y, ev.x - jv.x); da = Math.atan2(Math.sin(da), Math.cos(da)); this.cRot(R, bn, Z, da * (bn === l.a ? 0.3 : 0.5)); } } this.cStop(R, null); },
   cPlant(R, wt) { if (wt <= 0.001) return; const { THREE } = T3, Z = this._Z || (this._Z = new THREE.Vector3(0, 0, 1)), jv = new THREE.Vector3(), ev = new THREE.Vector3(), T = new THREE.Vector3();
-    for (const l of R.L) { if (!l.hind) continue; this.cEnd(R, l, ev); T.set(l.rest.x, l.rest.y - R.oy, ev.z).lerp(ev, 1 - wt);
-      for (let it = 0; it < 20; it++) for (const bn of [l.c, l.b, l.a]) { jv.setFromMatrixPosition(this.cRel(R, bn)); this.cEnd(R, l, ev); let da = Math.atan2(T.y - jv.y, T.x - jv.x) - Math.atan2(ev.y - jv.y, ev.x - jv.x); da = Math.atan2(Math.sin(da), Math.cos(da)); this.cRot(R, bn, Z, da * 0.5); } }
-    this.cPlace(R); },
+    for (const l of R.L) { if (!l.hind) continue; this.cEnd(R, l, ev); T.set(l.rest.x, l.rest.y - R.oy, ev.z).lerp(ev, 1 - wt); this.cStop(R, l.a.parent);
+      for (let it = 0; it < 20; it++) for (const bn of [l.c, l.b, l.a]) { jv.setFromMatrixPosition(this.cRel(R, bn, R.mJ || (R.mJ = new T3.THREE.Matrix4()))); this.cEnd(R, l, ev); let da = Math.atan2(T.y - jv.y, T.x - jv.x) - Math.atan2(ev.y - jv.y, ev.x - jv.x); da = Math.atan2(Math.sin(da), Math.cos(da)); this.cRot(R, bn, Z, da * 0.5); } }
+    this.cStop(R, null); this.cPlace(R); },
   catPose(H, mv, dt) {
     const R = H.cat, K = this.CATK, B = R.B, TP = Math.PI * 2, { THREE } = T3, Z = this._Z || (this._Z = new THREE.Vector3(0, 0, 1)), Y = this._Y || (this._Y = new THREE.Vector3(0, 1, 0)), sm = x => x * x * (3 - 2 * x);
     R.amp = mv ? Math.min(1, R.amp + dt / 0.25) : Math.max(0, R.amp - dt / 0.7);
@@ -25754,14 +25760,14 @@ Cm.credits = () => { const li = CREDITS_SF.map(([t, a, u]) => `<li><a href="${es
  * 숍의 옷·모자·펫·펫 꾸미기·탈것을 전부 선물로 준다 (src 'gift' = 되팔기 막음, 한 이름에 한 번).
  * 이름만 보는 방식이라 누가 같은 이름을 치면 들어올 수 있다. 막는 걸 풀려면 ALLOW 를 비운다. */
 const Access = {
-  ALLOW: ['에센티아', '부리코', '체'], /* v374 사용자 2026-10-24 '체 한테 참새 펫 넣어줘' → 체도 들어오게 (전부 선물은 처음 두 사람만, 체는 참새만) */
+  ALLOW: [], /* v374 사용자 2026-10-24 '이제 사람들 같이할수있게 막은건 풀어': 이름 확인 창 없앰 (예전 명단 '에센티아', '부리코', '체'). 선물·VIP는 이름을 적으면 그대로 */ /* v374 사용자 2026-10-24 '체 한테 참새 펫 넣어줘' → 체도 들어오게 (전부 선물은 처음 두 사람만, 체는 참새만) */
   GIFT_ALL: ['에센티아', '부리코'],
   GIFT_ONE: { '체': 'p_sparrow' },
   VIP: ['에센티아', '부리코'], /* v360 사용자 '부리코,에센티아 한테는 절하는거 열어놔' → 용돈 주고 큰절 받기 (후원자 전용) 열기. 서버도 이 이름은 통과 (relay/src/index.js VIP_NAMES) */
   GIFT_CATS: ['clothes', 'hat', 'pet', 'car'],
   ok(n) { return !this.ALLOW.length || this.ALLOW.includes(String(n || '').trim()); },
   init() {
-    if (!this.ALLOW.length) return;
+    if (!this.ALLOW.length) { const n = Store.get('mpName', '') || Store.get('acc350', ''); if (n) { const inp = $('mpName'); if (inp && !inp.value) inp.value = n; this.perks(n, true); } return; }
     const saved = Store.get('acc350', '');
     if (this.ok(saved) && saved) return this.pass(saved, true);
     this.css(); const el = document.createElement('div'); el.id = 'accGate';
@@ -25772,8 +25778,11 @@ const Access = {
     setTimeout(() => { try { $('accName').focus(); } catch (e) { } }, 300);
   },
   pass(n, quiet) {
-    Store.set('acc350', n); Store.set('mpName', n); if (this.VIP.includes(n) && typeof Donor !== 'undefined') { Donor.vip = 1; Donor.ok = true; } const inp = $('mpName'); if (inp) { inp.value = n; inp.readOnly = true; }
+    Store.set('acc350', n); Store.set('mpName', n); const inp = $('mpName'); if (inp) { inp.value = n; inp.readOnly = true; }
     if (typeof Preload !== 'undefined') setTimeout(() => Preload.start(), 300); /* v360 이름이 통과되면 바로 미리 받기 */
+    this.perks(n, quiet); },
+  /* v374 이름에 붙은 것 (VIP·선물): 확인 창이 없어도 같이 하기·채널에 이름을 적으면 (boot.js) */
+  perks(n, quiet) { n = String(n || '').trim(); if (!n) return; if (this.VIP.includes(n) && typeof Donor !== 'undefined') { Donor.vip = 1; Donor.ok = true; }
     this.giftOne(n); const got = this.GIFT_ALL.includes(n) ? this.gift(n) : 0; if (got && !quiet) setTimeout(() => { try { Toast.show(`환영해요, ${n} 님! 옷·모자·펫·탈것을 전부 선물로 드렸어요.`, 4200); Sound.play('chime'); } catch (e) { } }, 600);
   },
   gift(n) {
@@ -26054,7 +26063,7 @@ const Instance = {
     const savedName = Live.savedName(Number(b.dataset.ch)); // 한 번 했던 채널이면 이름을 다시 적지 않는다
     const name = savedName || $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
     lockName(savedName);
-    Store.set('mpName', name); chButtons().forEach(x => x.disabled = x !== b); b.classList.add('sel'); $('chStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
+    Store.set('mpName', name); if (typeof Access !== 'undefined') Access.perks(name); chButtons().forEach(x => x.disabled = x !== b); b.classList.add('sel'); $('chStatus').textContent = `채널 ${b.dataset.ch}에 들어가는 중…`;
     $('title').classList.add('chOn'); $('btnStart').textContent = savedName ? `채널 ${b.dataset.ch} 이어서 시작하기 (${savedName})` : `채널 ${b.dataset.ch} 시작하기 (자본 ${fmtWon(Live.capOf(Number(b.dataset.ch)))})`; // 채널은 자본이 정해져 있어 자본 선택을 숨긴다
     const ok = await Net.channel(Number(b.dataset.ch), name); if (!ok) { chReset(b); }
     else if (Net.on && !$('liveReset')) { $('chStatus').insertAdjacentHTML('beforeend', Live.titleHint(Number(b.dataset.ch))); }
@@ -26063,13 +26072,13 @@ const Instance = {
   try { const q = new URLSearchParams(location.search); if (q.get('poke')) { const f = q.get('poke'), c = q.get('ch'); history.replaceState(null, '', location.pathname + location.hash); setTimeout(() => PushSub.arrived(f, c), 300); } } catch (e) {}
   $('mpCreate').onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
-    Store.set('mpName', name); $('mpStatus').textContent = '방을 만드는 중…'; $('mpCreate').disabled = true; $('mpJoin').disabled = true;
+    Store.set('mpName', name); if (typeof Access !== 'undefined') Access.perks(name); $('mpStatus').textContent = '방을 만드는 중…'; $('mpCreate').disabled = true; $('mpJoin').disabled = true;
     const code = await Net.create(name); if (!code) { $('mpCreate').disabled = false; $('mpJoin').disabled = false; }
   };
   $('mpJoin').onclick = async () => {
     Sound.init(); if (Net.on) return; const name = $('mpName').value.trim(); if (!name) { Toast.show('내 이름을 먼저 적어 주세요.'); $('mpName').focus(); return; }
     const code = $('mpCode').value.trim().toUpperCase(); if (code.length !== 6) { Toast.show('방 코드 6자리를 넣어 주세요.'); $('mpCode').focus(); return; }
-    Store.set('mpName', name); $('mpCreate').disabled = true; $('mpJoin').disabled = true;
+    Store.set('mpName', name); if (typeof Access !== 'undefined') Access.perks(name); $('mpCreate').disabled = true; $('mpJoin').disabled = true;
     const ok = await Net.join(code, name); if (!ok) { $('mpCreate').disabled = false; $('mpJoin').disabled = false; }
   };
   // 처음으로: 고른 모드를 접고, 들어가 있던 친구 방·채널에서도 나온다 (사용자 2026-10-21 '여기선 어떻게 뒤로가')

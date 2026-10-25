@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v376</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v377</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -25133,7 +25133,7 @@ const Study = {
     if (this.open_) return; this.open_ = true; Sound.init && Sound.init(); Sound.play('paper');
     this.paper(); $('studyWin').classList.add('in'); this.list(); this.show(this.cur || STUDY_LESSONS[0].id);
   },
-  close() { if (!this.open_) return; this.open_ = false; Study3D.stop(); $('studyWin').classList.remove('in'); Sound.play('flip'); },
+  close() { if (!this.open_) return; this.open_ = false; Study3D.release(); $('studyWin').classList.remove('in'); Sound.play('flip'); },
   list() {
     const d = this.done(), groups = {};
     for (const L of STUDY_LESSONS) (groups[L.g] = groups[L.g] || []).push({ id: L.id, title: L.title, mark: d[L.id] ? (d[L.id] >= 3 ? '✓' : `${d[L.id]}/3`) : '' });
@@ -25283,8 +25283,12 @@ const Study3D = {
   renderer() {
     if (this.r) return this.r; const { THREE } = T3, r = this.r = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
     r.setPixelRatio(2); /* v335 보통 모니터(1배)에서도 두 배로 그려 또렷하게 */ r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.outputColorSpace = THREE.SRGBColorSpace;
-    r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); this.stop(); this.r = null; }); return r;
+    r.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); if (this.r !== r) return; this.stop(); this.r = null; }); return r;
   },
+  /* v377 아이폰 튕김 예방: 사례 공부를 닫아도 이 화면의 그래픽 메모리(빌라 그림·그림자 지도, 64~105MB)가 끝까지 남아 있었다 → 닫을 때 놓는다.
+   * 모델·그림 원본은 그대로 두고 다시 열 때 올린다 (여는 동안은 지금처럼 '불러오는 중') */
+  release() { this.stop(); const r = this.r; if (!r) return; this.r = null; const sh = this.lt && this.lt.sun.shadow; if (sh && sh.map) { sh.map.dispose(); sh.map = null; }
+    try { r.dispose(); r.forceContextLoss(); } catch (e) { } r.domElement.remove(); },
   // 글씨 판 (캔버스 → 텍스처)
   canvasTex(w, h, draw) { const { THREE } = T3, c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; },
   font: '"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif',
@@ -25351,9 +25355,9 @@ const Study3D = {
   },
   build(job) {
     const { THREE } = T3, el = job.el, v = job.o.seed & 1; let r; try { r = this.renderer(); } catch (e) { el.hidden = true; return; }
-    const S = job.S = new THREE.Scene(); S.add(new THREE.HemisphereLight(0xfff4e6, 0x6a5a48, 1.1));
-    const sun = new THREE.DirectionalLight(0xfff0d8, 2.3); sun.position.set(-10, 22, 16); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 70 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03; S.add(sun);
+    /* v376 사례를 바꿀 때마다 해·그림자 지도(2048²)를 새로 만들고 예전 것은 그래픽 메모리에 남겼다 → 빛은 한 번 만들어 계속 쓴다 (밝기·그림자 같음) */
+    const S = job.S = new THREE.Scene(), Lt = this.lt || (this.lt = (() => { const hemi = new THREE.HemisphereLight(0xfff4e6, 0x6a5a48, 1.1), sun = new THREE.DirectionalLight(0xfff0d8, 2.3); sun.position.set(-10, 22, 16); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+      Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 70 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03; return { hemi, sun }; })()); S.add(Lt.hemi); S.add(Lt.sun);
     S.add(this.G[v]); // 같은 모델을 그대로 쓴다 (사진 칸은 한 번에 하나)
     const nm = this.NAMES[(job.o.seed >>> 1) % this.NAMES.length], plate = this.canvasTex(1024, 128, (x) => { x.fillStyle = '#f4f1ea'; x.fillRect(0, 0, 1024, 128); x.fillStyle = v ? '#2a2420' : '#1d3a6a'; x.font = `900 84px ${this.serif}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(nm, 512, 68); });
     const pm = new THREE.MeshStandardMaterial({ map: plate, roughness: 0.5 }); pm.userData.own = 1; const pl = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.42), pm); pl.position.set(0, 2.78, 2.09); S.add(pl);
@@ -25377,7 +25381,7 @@ const Study3D = {
       const t = (now - job.t0) / 1000, idle = !job.drag && !job.goal && now - job.man > 2500 && (job.vw || 'all') === 'all', az = job.az + (idle ? Math.sin(t * 0.22) * 0.1 : 0);
       cam.position.set(job.tgt.x + Math.sin(az) * Math.cos(job.el) * job.dist, job.tgt.y + Math.sin(job.el) * job.dist, job.tgt.z + Math.cos(az) * Math.cos(job.el) * job.dist); cam.lookAt(job.tgt);
       const tagOn = job.vw !== 'doc'; if (job.H) for (const H of job.H) { H.tag && (H.tag.visible = tagOn); H.mix.update(dt); if (H.walk) { H.root.position.x -= dt * 0.9; H.root.position.z += dt * 0.25; if (H.root.position.x < -7) { H.root.position.x = 4.5; H.root.position.z = 3.9; } } }
-      if (!S.background && typeof PBR !== 'undefined' && PBR.hdr) { const d = S.background = new THREE.DataTexture(PBR.hdr, 512, 256, THREE.RGBAFormat, THREE.HalfFloatType); d.mapping = THREE.EquirectangularReflectionMapping; d.colorSpace = THREE.LinearSRGBColorSpace; d.magFilter = d.minFilter = THREE.LinearFilter; d.needsUpdate = true; S.backgroundIntensity = 0.85; S.backgroundRotation && S.backgroundRotation.set(0, 1.2, 0); }
+      if (!S.background && typeof PBR !== 'undefined' && PBR.hdr) { /* v376 하늘 그림도 한 번 만들어 계속 쓴다 (사례마다 새로 만들면 큐브 변환 셰이더·그림을 다시 만들었다) */ const d = S.background = this.bg && this.bg.image.data === PBR.hdr ? this.bg : (this.bg = new THREE.DataTexture(PBR.hdr, 512, 256, THREE.RGBAFormat, THREE.HalfFloatType)); if (!d.version) { d.mapping = THREE.EquirectangularReflectionMapping; d.colorSpace = THREE.LinearSRGBColorSpace; d.magFilter = d.minFilter = THREE.LinearFilter; d.needsUpdate = true; } S.backgroundIntensity = 0.85; S.backgroundRotation && S.backgroundRotation.set(0, 1.2, 0); }
       r.render(S, cam); };
     // 처음 열 때 셰이더 만들기·그림 올리기를 한 번에 몰아서 하면 화면이 1초 넘게 멈춘다 → 셰이더는 따로(compileAsync), 그림은 한 프레임에 한 장씩 올린 뒤 그리기 시작 (그림은 똑같음)
     el.classList.add('wait'); const tx = new Set(); S.traverse(o => { if (!o.material) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) for (const k in m) { const t = m[k]; if (t && t.isTexture) tx.add(t); } });
@@ -25386,10 +25390,12 @@ const Study3D = {
   },
   stop() {
     const j = this.job; if (!j) return; this.job = null; clearTimeout(j.wt); cancelAnimationFrame(j.raf);
-    if (j.S) { j.S.traverse(o => { if (o.userData && o.userData.own && o.material) { o.material.map && o.material.map.dispose(); o.material.dispose(); }
-        if (o.isMesh && o.material && o.material.userData && o.material.userData.own) { o.material.map && o.material.map.dispose(); o.material.dispose(); o.geometry.dispose(); } });
-      if (j.H) for (const H of j.H) { H.mix.stopAllAction(); j.S.remove(H.root); }
-      for (const v in this.G) j.S.remove(this.G[v]); if (j.S.background) j.S.background.dispose(); }
+    /* v376 사례 바꿀 때 렉·그래픽 메모리 쌓임: 글씨판 그림·모양만 버리고 재질은 버리지 않는다 (재질을 버리면 같은 셰이더를 다음 사례에서 또 만든다).
+     * 사람은 거리에서처럼 뼈 그림·이 사람만의 모양까지 버린다 (전엔 사례마다 남았다) */
+    if (j.S) { j.S.traverse(o => { if (o.userData && o.userData.own && o.material) { o.material.map && o.material.map.dispose(); }
+        if (o.isMesh && o.material && o.material.userData && o.material.userData.own) { o.material.map && o.material.map.dispose(); o.geometry.dispose(); } });
+      if (j.H) for (const H of j.H) { H.mix.stopAllAction(); j.S.remove(H.root); H.root.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) o.skeleton.dispose(); }); }
+      for (const v in this.G) j.S.remove(this.G[v]); if (j.S.background && j.S.background !== this.bg) j.S.background.dispose(); }
   },
 };
 

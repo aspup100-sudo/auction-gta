@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v375</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v376</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -4137,11 +4137,12 @@ function updateTraffic(dt, z) {
     // 앞차 / 내 차
     let waiting = false, stuckAhead = false;
     if (lead && lead.gap < car.len + 30) { target = Math.min(target, Math.max(0, (lead.gap - car.len - 8) * 3)); if (lead.o.v < 5) stuckAhead = true; }
+    const cA = Math.cos(me.a), sA = Math.sin(me.a); /* v376 차마다 다른 차 전부와 견줄 때 내 방향 cos·sin을 한 번만 (값 같음) */
     Game.traffic.forEach((o, oi) => {
       if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane)) return;
       // 다른 도로·차선의 차가 바로 앞에 있으면(교차로) 멈춰서 양보. 서로 마주 서서 영영 막히면 잠시 뒤 천천히 지나가되, 코앞의 차 위로는 올라타지 않는다
       const q = P[oi]; const dx = q.x - me.x, dy = q.y - me.y; if (Math.abs(dx) + Math.abs(dy) > 90) return;
-      const fwd = dx * Math.cos(me.a) + dy * Math.sin(me.a), side = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a));
+      const fwd = dx * cA + dy * sA, side = Math.abs(-dx * sA + dy * cA);
       // 상대 차가 비스듬히(교차로) 있으면 길이가 옆으로 삐져나오므로, 상대의 앞·옆 폭을 내 축으로 투영해서 본다
       const ca = Math.abs(Math.cos(q.a - me.a)), sa = Math.abs(Math.sin(q.a - me.a)); const oAhead = ca * o.len / 2 + sa * o.wid / 2, oSide = ca * o.wid / 2 + sa * o.len / 2;
       if (fwd > 0 && fwd < car.len / 2 + oAhead + 3 && side < car.wid / 2 + oSide + 1) { target = 0; waiting = true; return; } // 코앞: 무조건 정지
@@ -5934,7 +5935,7 @@ const HUD = {
       this._tickT = (this._tickT || 0) - dt; if (this._tickT <= 0) { this._tickT = FEEL.cashTickEvery; Sound.play('tick'); }
       $('hudCash').classList.toggle('down', d < 0);
     } else $('hudCash').classList.remove('down');
-    $('hudCash').textContent = '₩ ' + fmtNum(this._shown);
+    { const t = '₩ ' + fmtNum(this._shown), el = $('hudCash'); if (el.textContent !== t) el.textContent = t; } /* v376 끊김: 같은 글자를 매 프레임 다시 넣으면 화면 배치를 매번 다시 계산한다 → 바뀔 때만 */
     const sk = Live.on || Net.on || State.day >= 7 || !!State.finished || Game.scene === 'title'; if ($('btnSkip').hidden !== sk) $('btnSkip').hidden = sk;
   },
   pagerLines: [],
@@ -5946,7 +5947,7 @@ const HUD = {
   },
   roadSign(name, en) {
     const el = $('roadSign');
-    if (!name) { el.classList.remove('in'); el.dataset.n = ''; return; }
+    if (!name) { el.classList.remove('in'); if (el.dataset.n !== '') el.dataset.n = ''; return; }
     if (el.dataset.n === name) return; el.dataset.n = name;
     el.innerHTML = `<b>${name}</b><small>${en || ''}</small>`; el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
   },
@@ -6680,8 +6681,12 @@ const Net = {
   bubble(c, text, x, y) { // v334 큰 글씨로 그려서 줄이기 (아이폰에서 안 뭉개지게) · v338 사용자 '말풍선 어색한데 이질감들어': 띄어쓰기에서만 줄 바꾸고 줄 길이를 고르게, 굵은 검은 테두리 대신 흰 풍선 + 은은한 그림자
     const Q = 4, SM = document.body.classList.contains('touchOn') ? 0.8 : 1; c.save(); c.translate(x, y); c.scale(SM / Q, SM / Q); /* v342 폰에선 80% (사용자 '폰에서는 말풍선 조금 작게') */ c.font = `${7.5 * Q}px "IBM Plex Sans KR", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
     const W = t => c.measureText(t).width, wrap = mw => { const out = []; let cur = ''; for (const wd of String(text).split(/\s+/).filter(Boolean)) { const nx = cur ? cur + ' ' + wd : wd; if (W(nx) <= mw) { cur = nx; continue; } if (cur) out.push(cur); cur = ''; for (const ch of wd) { if (W(cur + ch) > mw && cur) { out.push(cur); cur = ch; } else cur += ch; } } if (cur) out.push(cur); return out; };
-    let lines = wrap(88 * Q); if (lines.length > 1) { let lo = 30 * Q, hi = 88 * Q; for (let k = 0; k < 8; k++) { const m = (lo + hi) / 2; if (wrap(m).length <= lines.length) hi = m; else lo = m; } lines = wrap(hi); } // 마지막 줄만 짧게 남지 않게 폭을 줄여 본다
-    const LH = 10 * Q, w = Math.max(...lines.map(W)) + 13 * Q, h = lines.length * LH + 7 * Q, X = -w / 2, Y = -h - 3 * Q, r = Math.min(6 * Q, h / 2);
+    /* v376 같이 할 때 렉: 줄 나누기(글자마다 너비 재기 × 폭 8번 줄여 보기)를 장면마다 말풍선마다 다시 하던 것 → 같은 말·같은 글꼴 상태면 지난번 결과를 쓴다 (그림 같음) */
+    if (!this.bC) { this.bC = new Map(); try { document.fonts.addEventListener('loadingdone', () => this.bC.clear()); } catch (e) { } } /* 글꼴이 새로 들어오면 너비가 바뀌니 다시 잰다 */
+    const BC = this.bC, fk = String(text); let bc = BC.get(fk);
+    if (!bc) { let lines = wrap(88 * Q); if (lines.length > 1) { let lo = 30 * Q, hi = 88 * Q; for (let k = 0; k < 8; k++) { const m = (lo + hi) / 2; if (wrap(m).length <= lines.length) hi = m; else lo = m; } lines = wrap(hi); } /* 마지막 줄만 짧게 남지 않게 폭을 줄여 본다 */
+      if (BC.size > 60) BC.clear(); BC.set(fk, bc = { lines, mw: Math.max(...lines.map(W)) }); }
+    const lines = bc.lines, LH = 10 * Q, w = bc.mw + 13 * Q, h = lines.length * LH + 7 * Q, X = -w / 2, Y = -h - 3 * Q, r = Math.min(6 * Q, h / 2);
     const shape = () => { c.beginPath(); c.moveTo(X + r, Y); c.arcTo(X + w, Y, X + w, Y + h, r); c.arcTo(X + w, Y + h, X, Y + h, r); c.lineTo(3 * Q, Y + h); c.lineTo(0, Y + h + 3.5 * Q); c.lineTo(-3 * Q, Y + h); c.arcTo(X, Y + h, X, Y, r); c.arcTo(X, Y, X + w, Y, r); c.closePath(); };
     c.shadowColor = 'rgba(0,0,0,.35)'; c.shadowBlur = 5 * Q; c.shadowOffsetY = 1.5 * Q; c.fillStyle = 'rgba(255,255,255,.96)'; shape(); c.fill();
     c.shadowColor = 'transparent'; c.lineWidth = 0.5 * Q; c.strokeStyle = 'rgba(20,24,32,.18)'; c.stroke();
@@ -7923,7 +7928,7 @@ const cv = document.getElementById('game'); const ctx = cv.getContext('2d');
 let VW = 0, VH = 0, DPR = 1, IW0 = 0, IH0 = 0;
 // iOS 홈 화면 앱: 키보드가 내려간 뒤에도 레이아웃 높이(innerHeight)가 줄어든 채 남아 아래가 검게 비던 문제(사용자 2026-10-14, v57 흔들기로도 안 잡힘).
 // 그래서 '진짜 높이'를 따로 잰다: 보이는 영역(visualViewport)이 더 크면 그 값, 아이폰 앱 가로면 폰 짧은 변. 글자 입력 중(키보드 올라옴)엔 그대로 둔다.
-let IOS_APP = null, VDIAG = '';
+let IOS_APP = null; /* v376 VDIAG(화면 크기 진단 글)는 v290에 표시를 없앤 뒤로 안 쓰여서 매 프레임 만들던 걸 뺐다 */
 function iosStandalone() { if (!IOS_APP) IOS_APP = (/iphone|ipad|ipod/i.test(navigator.userAgent) || (/macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1)) && ((window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) || !!navigator.standalone); return IOS_APP; } // v276: 못 알아봤으면 다음에 다시 잰다 (켜자마자 한 번 잘못 재면 끝까지 틀렸다)
 function realVH() {
   const h = innerHeight;
@@ -7931,7 +7936,6 @@ function realVH() {
   const vv = window.visualViewport; let best = h;
   if (vv && vv.offsetTop < 1 && Math.round(vv.height) > h + 1 && Math.round(vv.height) - h < 200) best = Math.round(vv.height);
   if (iosStandalone() && innerWidth > innerHeight) { const s = Math.min(screen.width, screen.height); if (s > best && s - h < 200) best = s; }
-  VDIAG = `${innerWidth}×${h} · 보임 ${vv ? Math.round(vv.width) + '×' + Math.round(vv.height) : '-'} · 폰 ${screen.width}×${screen.height} · 앱 ${iosStandalone() ? 'O' : 'X'} · 맞춤 ${best}`; // v276 가로로 켤 때 아래가 비는 원인 찾기 (사용자 2026-10-21)
   return best;
 }
 // 폰을 세로로 들고 있어도 가로로 논다: body를 90도 눕히고(body.rot) 가로·세로를 바꿔 쓴다. 터치 좌표는 localPt/localRect로 되돌린다.
@@ -9108,8 +9112,8 @@ function draw() {
     const cv = Game.scene === 'zone' && (Game.driving || !!rid || !!Game.fOK); if (tc.hidden === cv) tc.hidden = !cv; // 아무것도 안 탔고 옆에 탈 것도 없으면 숨긴다 (사용자 2026-10-16 '겹친다 없애자')
     const th = $('tHit'), hit = Game.scene === 'zone' && !Game.driving && !(typeof Ride !== 'undefined' && Ride.with) && !Game.busy && !Dialog.open; if (th.hidden === hit) th.hidden = !hit;
   }
-  $('hudSpeed').textContent = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '';
-  $('hudTime').textContent = Live.on ? Live.hudText() : `${mdText(dateOfDay(State.day), true)} ${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`;
+  { const t = Game.scene === 'zone' && Game.driving ? `${Math.round(Game.car.speed / FEEL.carMaxSpeed * FEEL.carShownMaxKmh)} km/h` : '', el = $('hudSpeed'); if (el.textContent !== t) el.textContent = t; }
+  { const t = Live.on ? Live.hudText() : `${mdText(dateOfDay(State.day), true)} ${dLabel()} · ${halfLabel()} ${clockText()}${isWeekend() ? ' (주말)' : ''}`, el = $('hudTime'); if (el.textContent !== t) el.textContent = t; } /* v376 바뀔 때만 (매 프레임 화면 배치 다시 계산) */
   drawHudExtras();
 }
 
@@ -9140,10 +9144,14 @@ const Radar = {
     x.fillStyle = '#1c2a22'; x.fillRect(0, 0, S, S);
     const scale = 1.4; // 레이더 1px = 1/scale 타일
     const ptx = p.x / TILE, pty = p.y / TILE;
-    for (let yy = 0; yy < S; yy += 2) for (let xx = 0; xx < S; xx += 2) {
-      const v = z.at(Math.floor(ptx + (xx - S / 2) / scale), Math.floor(pty + (yy - S / 2) / scale));
-      if (v === T.ROAD) { x.fillStyle = '#7d8b84'; x.fillRect(xx, yy, 2, 2); } else if (v === T.ALLEY) { x.fillStyle = '#4c5d55'; x.fillRect(xx, yy, 2, 2); } else if (v === T.BLD) { x.fillStyle = '#26352d'; x.fillRect(xx, yy, 2, 2); }
-    }
+    /* v376 끊김: 길 칸을 매 프레임 2×2 네모 4천 번씩 따로 칠했다. 이제 칸 번호(가로·세로 줄)가 바뀔 때만 한 장에 점으로 찍어 두고 그 한 장을 그린다 (점 하나까지 똑같음) */
+    const R = this.rc || (this.rc = {}), n = (S + 1) >> 1; let same = R.z === z && R.S === S && !!R.cv;
+    if (!R.cx || R.cx.length !== n) { R.cx = new Int32Array(n); R.cy = new Int32Array(n); same = false; }
+    for (let i = 0; i < n; i++) { const a = Math.floor(ptx + (i * 2 - S / 2) / scale), b = Math.floor(pty + (i * 2 - S / 2) / scale); if (R.cx[i] !== a || R.cy[i] !== b) same = false; R.cx[i] = a; R.cy[i] = b; }
+    if (!same) { const cv = R.cv || (R.cv = document.createElement('canvas')); if (cv.width !== S || cv.height !== S) { cv.width = cv.height = S; R.id = null; } const g = cv.getContext('2d'), id = R.id || (R.id = g.createImageData(S, S)), d = new Uint32Array(id.data.buffer);
+      d.fill(0); for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const v = z.at(R.cx[i], R.cy[j]), col = v === T.ROAD ? 0xff848b7d : v === T.ALLEY ? 0xff555d4c : v === T.BLD ? 0xff2d3526 : 0; if (!col) continue; const X = i * 2, Y = j * 2; for (let dy = 0; dy < 2 && Y + dy < S; dy++) for (let dx = 0; dx < 2 && X + dx < S; dx++) d[(Y + dy) * S + X + dx] = col; }
+      g.putImageData(id, 0, 0); R.z = z; R.S = S; R.pat = x.createPattern(cv, 'no-repeat'); }
+    x.fillStyle = R.pat; x.fillRect(0, 0, S, S); /* 무늬 채우기로 그려야 둥근 가장자리까지 예전 네모 칠하기와 같은 점이 된다 */
     const ICON = { forsale: '#5ad0a0', court: '#ffffff', bank: '#2ad06a', savings: '#c8a060', center: '#5aa0ff', agent: '#f0a040', registry: '#9ab0ff', office: '#cdae70', site: '#ff5a4a', shop: '#ff7ac0', home: '#f0c070', arcade: '#c070ff', hospital: '#ff6070', casino: '#ff4060' };
     for (const pl of z.places) {
       let dx = (pl.door.tx - ptx) * scale, dy = (pl.door.ty - pty) * scale; const d = Math.hypot(dx, dy), R = S / 2 - 7;
@@ -18136,7 +18144,7 @@ const Room3D = {
   init() {
     if (this.r) return; const { THREE } = T3, cv = this.cv = document.createElement('canvas'); cv.id = 'room3d';
     cv.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; const g = $('game'); g.parentNode.insertBefore(cv, g);
-    const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' }); r.setClearColor(0x000000, 0);
+    const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: 'high-performance' }); r.setClearColor(0x000000, 0); r._raw = r.render; /* v376 Snap3D 사진은 그림자 건너뛰기 셈(shHook)을 안 건드리게 원래 render로 */
     // v306 그래픽 가속이 꺼진 컴퓨터(소프트웨어로 그림)는 3D가 아주 느리다 → 예전 그림으로
     try { const gl = r.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'), nm = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ''); this.gpu = nm; if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(nm) && !window.A3J_BASE) this.soft = 1; } catch (e) { }
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; /* v304: 부드러운 그림자는 화면 전체가 무거워서 */ r.toneMapping = THREE.NoToneMapping;
@@ -18480,8 +18488,16 @@ const Room3D = {
   },
   actor(key, P, w, t, dt, seed) { let H = this.A.get(key); const hero = typeof Hero3D !== 'undefined' && Hero3D.ready(), pk = hero ? 'H' + Hero3D.key(P) : PetRT.arena.hkey(P, 'kick'); // v308 새 몸이 준비되면 그걸로 (hero3d.js)
     if (!H || H.pk !== pk) { if (H) this.drop(H); H = hero ? Hero3D.make(P) : this.person(P); H.pk = pk; H.amp = 0; H.ph = 0; H.ang = [-Math.PI / 2, Math.PI, 0, Math.PI / 2][w.dir | 0] || 0; this.S.add(H.root); this.A.set(key, H); }
-    H.seen = this.fr; if (H.hero) Hero3D.pose(H, w, t, dt, seed); else { this.pose(H, w, t, dt, seed); H.root.visible = typeof Hero3D === 'undefined' || Hero3D.st === -1; } /* v343 새 몸을 받는 동안 예전 꼬마는 숨김 (못 받았을 때만 꼬마) */ return H; },
+    H.seen = this.fr; if (H.hero) { Hero3D.pose(H, w, t, dt, seed); if (!H.wok && key !== 'me') { H.wok = this.warmA(H, H.pk); H.root.visible = H.wok; } } else { this.pose(H, w, t, dt, seed); H.root.visible = typeof Hero3D === 'undefined' || Hero3D.st === -1; } /* v343 새 몸을 받는 동안 예전 꼬마는 숨김 (못 받았을 때만 꼬마) */ return H; },
   // 안 보이게 된 것 치우기 (새 몸에 붙인 옷 도형은 사람마다 따로라 같이 버린다)
+  /* v376 같이 할 때 끊김: 친구·행인·펫이 처음 보이면 그 몸의 셰이더(옷·펫마다 2~4개)를 그 프레임에 만들어 멈췄다 (친구 5명이 오면 15개).
+   * 처음 보는 모습만 셰이더는 compileAsync로 따로, 아직 안 올린 그림은 한 프레임에 한 장씩 올린 뒤 보이게 한다. 이미 만든 셰이더·그림이면 바로 보인다. 모습은 똑같다 (내 캐릭터는 안 숨김) */
+  warmA(H, k) { const W = this.aw || (this.aw = {}); if (W[k] === 2) return true; if (W[k] === 1) return false; const r = this.r, q = [], seen = new Set(); let ms;
+    try { H.root.traverse(o => { if (!o.material) return; for (const m of [].concat(o.material)) for (const p in m) { const t = m[p]; if (t && t.isTexture && !seen.has(t)) { seen.add(t); if (!r.properties.get(t).__webglTexture) q.push(t); } } }); ms = r.compile(H.root, this.cc || this.cam, this.S); } catch (e) { W[k] = 2; return true; }
+    const ready = () => { for (const m of ms) { const g = r.properties.get(m).currentProgram; if (g && g.isReady && !g.isReady()) return false; } return true; };
+    if ((!q.length && ready()) || (typeof irisDark === 'function' && irisDark())) { for (const t of q) try { r.initTexture(t); } catch (e) { } W[k] = 2; return true; } /* 화면이 까만 동안(장면 바뀔 때)은 기다리지 않고 바로 올린다 */
+    W[k] = 1; const done = () => { W[k] = 2; }, up = () => { if (W[k] === 2) return; const t = q.shift(); if (!t) return done(); try { r.initTexture(t); } catch (e) { } requestAnimationFrame(up); };
+    const wait = () => { if (W[k] === 2) return; if (ready()) requestAnimationFrame(up); else setTimeout(wait, 10); }; wait(); setTimeout(done, 3000); return false; },
   drop(H) { this.S.remove(H.root); if (H.rp) this.S.remove(H.rp); if (H.hero) { H.mix.stopAllAction(); H.root.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); } H.root.traverse(o => { if (o.isSkinnedMesh && o.skeleton && o.skeleton.boneTexture) o.skeleton.dispose(); }); }, /* v374 뼈 그림(사람·펫마다 하나)이 그래픽 메모리에 계속 쌓였다 (지나간 행인·친구 300개 넘게). 다시 쓰면 three가 다시 만든다 */
   /* ---- 매 프레임 ---- */
   draw(rm, t) {
@@ -18555,7 +18571,7 @@ const Room3D = {
         let want = H.ang; if (q.ang != null) want = q.ang; else if (d > 0.004 && d < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face && !q.moving) want = q.face < 0 ? Math.PI : 0;
         let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
         H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.root.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05;
-        Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, Object.assign({ idle: q.idle, wall: typeof q.pose === 'number' ? q.pose : null, ride: q.pose === 'ride' }, q.pose && typeof q.pose === 'object' ? q.pose : null)); return; }
+        Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, Object.assign({ idle: q.idle, wall: typeof q.pose === 'number' ? q.pose : null, ride: q.pose === 'ride' }, q.pose && typeof q.pose === 'object' ? q.pose : null)); if (!H.wok) { H.wok = this.warmA(H, sig); H.root.visible = H.wok; } /* 자세 뒤에: 쥐는 첫 자세에서 자르기 재질로 바뀐다 */ return; }
       if (!q.e) return; const key = slot('e', q); let H = this.A.get(key); if (!H || !H.pet || H.model) { if (H) this.S.remove(H.root); H = this.mkPet(); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr; H._sig = 'e';
       H.mesh.geometry = H.ol.geometry = q.e.geo; if (H.mat.map !== q.e.tex) { const first = !H.mat.map; H.mat.map = q.e.tex; if (first) H.mat.needsUpdate = true; }
       const X = q.x / TILE, Z = q.y / TILE, dx = H.lx == null ? 0 : X - H.lx, dz = H.lx == null ? 0 : Z - H.lz; H.lx = H._x = X; H.lz = H._z = Z;
@@ -19194,6 +19210,7 @@ Object.assign(Room3D, {
       else if (inV) need.push(id);
       if (!e) continue;
       const hide = F.some(([fx, fz]) => fx > b.x - 0.4 && fx < b.x + b.w + 0.4 && fz < b.y + 0.3 && fz > b.y - e.H * cot - 0.6), tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
+      if (!e.tw) { e.tw = 1; this.zTw(e); }
       const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
     // 지나간 건물: 한도(폰 120만 · PC 300만 꼭짓점)를 넘으면 먼 것부터 치운다
@@ -19201,7 +19218,7 @@ Object.assign(Room3D, {
     if (vt > cap && far.length) { far.sort((a, b) => d2(b) - d2(a)); for (const id of far) { if (vt <= cap) break; const e = this.zb.get(id); vt -= e.nv || 0; this.zDrop(e); this.zb.delete(id); } }
     if (!need.length) { if (this.zWarm) this.zWarmEnd(); return; }
     need.sort((a, b) => (this.zb.has(a) ? 1e6 : 0) + d2(a) - (this.zb.has(b) ? 1e6 : 0) - d2(b)); // 없는 것 먼저, 가까운 것 먼저
-    const warm = this.zWarm && now - this.zWarm0 < 12000, budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
+    const warm = (this.zWarm && now - this.zWarm0 < 12000) || (typeof irisDark === 'function' && irisDark()), budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
     let made = 0, J = this.zJob; if (J && (J.z !== z || J.bg !== bg || J.eve !== State.evening || !need.includes(J.id))) J = this.zJob = null;
     /* v363 (렉 시연 점검): 화면 안 건물은 지금 한 번에, 달리는 앞쪽(아직 화면 밖) 새 건물은 한 채를 단계별로 여러 장면에 나눠 짓는다 (zJob) */
     const onS = b => b.x < cx + vw / 2 + 1 && b.x + b.w > cx - vw / 2 - 1 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 1; /* v371 화면 밖 1칸부터는 나눠 짓기로 (예전 4칸: 아직 안 보이는 건물을 한 번에 지어 걸을 때 끊김). 아래쪽 8칸은 높은 건물이 위로 보여서 그대로 */
@@ -19216,12 +19233,16 @@ Object.assign(Room3D, {
     if (!warm) for (let k = 0; k < 4 && performance.now() - now < budget; k++) { /* v371 한 장에 시간이 남으면 다음 건물도 이어서 나눠 짓는다 (예전엔 한 장에 한 채만) */
       if (!J) { const id = need.find(i => !this.zb.has(i)) ?? (canG ? need[0] : null); if (id != null) { const b = z.buildings[id], g = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeG ? Bld3D.makeG(this, b, plOf[id], bWallH(b) / TILE * Z3_BH) : null; if (g) J = this.zJob = { id, g, pl: plOf[id], z, bg, eve: State.evening }; } }
       if (!J) break; const jid = J.id, e = this.zJobRun(J, now + budget); if (!e) break; this.zJob = J = null; fin(jid, e); }
-    if (this.zWarm) { if (!warm) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); }
+    if (this.zWarm) { if (!(now - this.zWarm0 < 12000)) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); } /* v376 warm은 화면이 가려졌을 때도 켜지니 '불러오는 중' 판단은 시간으로만 */
   },
   zJobRun(J, until) { try { let r; do { r = J.g.next(); if (r.done) return r.value; } while (performance.now() < until); return null; } catch (er) { console.warn('bld3d', er); this.zJob = null; return this.zBld(J.z.buildings[J.id], J.pl); } },
   zWarmShow(left, made) { this.zWarmD = (this.zWarmD || 0) + made; clearTimeout(this.zwT); this.zwT = setTimeout(() => this.zWarmEnd(), 600); /* 바깥을 안 그리면 (실내로 들어가면) 바로 걷는다 */ let el = document.getElementById('zLoad'); if (!el) { if (!document.getElementById('zLoadCss')) { const st = document.createElement('style'); st.id = 'zLoadCss'; st.textContent = '#zLoad{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(14,18,24,.78);pointer-events:auto}#zLoad .b{width:min(280px,80vw);text-align:center;color:#f2ead8;font:600 14px/1.4 "IBM Plex Sans KR",sans-serif}#zLoad b{display:block;font-size:17px;margin-bottom:10px}#zLoad i{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}#zLoad s{display:block;height:100%;width:0;background:#e8c34a;transition:width .15s}#zLoad small{display:block;margin-top:8px;opacity:.75}'; document.head.appendChild(st); } el = document.createElement('div'); el.id = 'zLoad'; el.innerHTML = '<div class="b"><b>동네 불러오는 중</b><i><s></s></i><small></small></div>'; document.body.appendChild(el); }
     const done = this.zWarmD, all = done + left, pct = all ? Math.round(done / all * 100) : 100; el.querySelector('s').style.width = pct + '%'; el.querySelector('small').textContent = `건물 ${done} / ${all}`; },
   zWarmEnd() { this.zWarm = 0; this.zWarm0 = 0; this.zWarmD = 0; const el = document.getElementById('zLoad'); if (el) el.remove(); },
+  /* v376 끊김: 나·친구가 건물 뒤로 가면 건물이 반투명이 되는데, 처음 그럴 때 반투명용 셰이더(재질 종류마다 하나, 처음 5개쯤)를 그 프레임에 만들었다.
+   * 건물이 생길 때 반투명 짝 셰이더도 미리 만들어 둔다 (이미 있으면 찾기만). 모습은 똑같다 */
+  zTw(e) { const ms = e.mats.filter(m => !m.transparent); if (!ms.length || !this.r) return; for (const m of ms) m.transparent = true;
+    try { this.r.compile(e.m, this.cc || this.cam, this.S); } catch (er) { } for (const m of ms) { m.transparent = false; m.needsUpdate = true; } },
   zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.map && !mt.map._sh) mt.map.dispose(); mt.dispose(); } e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
   /* ---- 차 (앞 = +x): 몸통 · 유리 지붕 · 바퀴 · 불빛 ---- */
   car3(len, wid, col, stripe, kind, v) { if (typeof Car3D !== 'undefined' && Car3D.ready()) try { return Car3D.make(len, wid, col, stripe, kind, v); } catch (e) { console.warn('car3d', e); Car3D.st = -1; } return this.car3b(len, wid, col, stripe, kind); },
@@ -20515,7 +20536,7 @@ Object.assign(Bld3D, {
   /* v371 끊김 (사용자 '계속 끊긴다 게임하는 중간중간에'): 구역 전체 전봇대·전선·골목 소품을 한 프레임에 지어서 0.3~0.7초 멈췄다.
    * 같은 순서로 짓되 프레임마다 6ms씩 나눠 짓고(zPolesG = 생성기), 다 지으면 한 번에 장면에 넣는다 (반쯤 지은 게 보이거나, 들어갔다 나올 때 겹치지 않게). */
   zPoles(R, z) { if (!R.S || (R._poleS === R.S && R._poleZ === z)) return; let J = this.poleJ; if (!J || J.S !== R.S || J.z !== z) { J = this.poleJ = { S: R.S, z, add: [] }; J.it = this.zPolesG(R, z, o => J.add.push(o)); }
-    const t0 = performance.now(), B = (typeof Game !== 'undefined' && Game.busy) || document.getElementById('zLoad') ? 40 : 6; /* 화면이 가려진 전환·'동네 불러오는 중'엔 더 많이 */ while (performance.now() - t0 < B) if (J.it.next().done) { J.add.forEach(o => J.S.add(o)); R._poleS = J.S; R._poleZ = z; this.poleJ = null; return; } },
+    const t0 = performance.now(), B = (typeof irisDark === 'function' && irisDark()) || document.getElementById('zLoad') ? 40 : 6; /* 화면이 가려진 전환·'동네 불러오는 중'엔 더 많이 (v376: 화면이 열리는 중에도 40ms씩 써서 구 넘어간 뒤 덜컥였다 → 다 가려졌을 때만) */ while (performance.now() - t0 < B) if (J.it.next().done) { J.add.forEach(o => J.S.add(o)); R._poleS = J.S; R._poleZ = z; this.poleJ = null; return; } },
   *zPolesG(R, z, ADD) { const { THREE } = T3, at = (x, y) => z.at(Math.floor(x), Math.floor(y));
     const nearDoor = (x, y) => z.places.some(p => p.door && Math.hypot(x - p.door.tx - 0.5, y - p.door.ty - 0.5) < 2.2), nearX = (x, y) => (z.crossings || []).some(c => Math.hypot(x - c.x, y - c.y) < Math.max(c.halfA, c.halfB) + 2);
     const LP = R.zPropSpots ? R.zPropSpots(z).lamp : [], clear = (x, y) => !LP.some(l => (l[0] - x) ** 2 + (l[1] - y) ** 2 < 2.3) && !z.trees.some(t => (t.x / TILE - x) ** 2 + (t.y / TILE - y) ** 2 < 4.8); // 가로등·가로수와 겹치지 않게 (나무 그늘 폭)
@@ -20604,7 +20625,9 @@ Object.assign(Bld3D, {
     const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(p, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nn, 3)); m.setAttribute('color', new THREE.BufferAttribute(c, 3)); m.computeBoundingSphere(); return m; },
   /* ---- v350 저녁 불빛: 저녁엔 화면 전체에 남색을 덮어서 (drawTimeTint) 3D 불빛도 같이 어두워진다 → 덮은 뒤에 불 켜진 창·가게 유리·간판을 'lighter'로 다시 밝히고,
    * 가게 앞 보도·가로등 밑에 빛 웅덩이. 좌표는 건물마다 root.userData.L (건물 안 좌표) → Room3D.proj로 화면에 */
-  nightGlow(c, R, z) { const P = (x, y, h) => R.proj(x * TILE, y * TILE, h), poly = (q, a, b, d, e) => { c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(d.x, d.y); c.closePath(); c.fill(); };
+  /* v376 저녁 불빛 (매 프레임 0.9ms): 점마다 3D 투영(행렬 두 번 + 새 객체)을 했다. 거리 카메라는 직교라 화면 위치가 x·y·높이에 대해 1차식 → 프레임마다 기준점 4개만 투영하고 나머지는 더하기 곱하기로 (위치 똑같음) */
+  nightGlow(c, R, z) { const cm = R.cc || R.cam, O = R.proj(0, 0, 0), X1 = R.proj(TILE, 0, 0), Y1 = R.proj(0, TILE, 0), H1 = R.proj(0, 0, 1), axx = X1.x - O.x, axy = X1.y - O.y, ayx = Y1.x - O.x, ayy = Y1.y - O.y, ahx = H1.x - O.x, ahy = H1.y - O.y;
+    const P = cm && cm.isOrthographicCamera ? (x, y, h) => ({ x: O.x + x * axx + y * ayx + h * ahx, y: O.y + x * axy + y * ayy + h * ahy }) : (x, y, h) => R.proj(x * TILE, y * TILE, h), poly = (q, a, b, d, e) => { c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(a.x, a.y); c.lineTo(b.x, b.y); c.lineTo(d.x, d.y); c.closePath(); c.fill(); };
     const pool = (x, y, r, col) => { const o = P(x, y, 0), e = P(x + r, y, 0), rr = Math.max(4, Math.abs(e.x - o.x)); if (o.x < -rr || o.y < -rr || o.x > VW + rr || o.y > VH + rr) return; const g = c.createRadialGradient(o.x, o.y, 0, o.x, o.y, rr); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.save(); c.translate(o.x, o.y); c.scale(1, 0.72); c.translate(-o.x, -o.y); c.fillRect(o.x - rr, o.y - rr, rr * 2, rr * 2); c.restore(); };
     c.globalCompositeOperation = 'lighter';
     const OC = []; for (const [, e] of R.zb || []) { const u = e.m.userData && e.m.userData.bx; if (!u || e.o < 0.5) continue; const x = e.m.position.x, zz = e.m.position.z, a = P(x, zz + u[1], 0), b = P(x + u[0], zz + u[1], 0), t = P(x, zz, u[2]); OC.push({ fz: zz + u[1], x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: t.y, y1: a.y }); } // 화면에서 건물 덩어리 (직교·정남 카메라라 상자는 화면에서도 반듯한 네모)
@@ -21340,16 +21363,32 @@ const Pet3D = {
   cRot(R, bn, ax, ang) { if (!bn || !ang) return; const al = (R.al || (R.al = new T3.THREE.Vector3())).copy(ax).applyQuaternion(this.cQ(R, bn.parent, R.qP || (R.qP = new T3.THREE.Quaternion())).invert()); /* v374 같은 계산, 장면마다 새 행렬·벡터를 수백 개 만들던 것만 재사용 (친구 펫이 많으면 무거웠다) */ bn.quaternion.premultiply(R.q.setFromAxisAngle(al, ang)); }, // F 축으로 돌리기 (부모 기준으로 바꿔서)
   cEnd(R, l, out) { return out.setFromMatrixPosition(this.cRel(R, l.end, R.mE || (R.mE = new T3.THREE.Matrix4())).multiply(l.M)); },
   cPlace(R) { for (const l of R.L) { const W = this.cRel(R, l.end, R.mW || (R.mW = new T3.THREE.Matrix4())).multiply(l.M); this.cRel(R, l.ctl.parent, R.mP || (R.mP = new T3.THREE.Matrix4())).invert().multiply(W).decompose(l.ctl.position, l.ctl.quaternion, R.s3); } }, // 발 IK 조종 뼈를 다리 끝에
-  cMinY(R) { R.F.updateMatrixWorld(true); let mn = Infinity; const v = R.v; R.SM.forEach((sm, mi) => { const pa = sm.geometry.attributes.position, ok = R.OK[mi], M = this.cRel(R, sm); for (let i = 0; i < pa.count; i += 5) { if (!ok[i]) continue; v.fromBufferAttribute(pa, i); sm.applyBoneTransform(i, v); v.applyMatrix4(M); if (v.y < mn) mn = v.y; } }); return mn; },
+  /* v376 = sm.applyBoneTransform(i, v) 그대로 (같은 곱, 같은 순서), 다만 뼈 행렬(뼈 × 뼈 역행렬)을 꼭짓점마다 다시 곱하지 않고 바닥 재기 한 번에 뼈마다 한 번만 (R.bs 도장) */
+  cBT(R, sm, i, v) { const sk = sm.skeleton, g = sm.geometry.attributes, Q = sm._bq || (sm._bq = { m: sk.bones.map(() => new T3.THREE.Matrix4()), s: new Int32Array(sk.bones.length) }), si = R.si || (R.si = new T3.THREE.Vector4()), sw = R.sw || (R.sw = new T3.THREE.Vector4()), b = R.vb || (R.vb = new T3.THREE.Vector3()), t = R.vt || (R.vt = new T3.THREE.Vector3());
+    si.fromBufferAttribute(g.skinIndex, i); sw.fromBufferAttribute(g.skinWeight, i); b.copy(v).applyMatrix4(sm.bindMatrix); v.set(0, 0, 0);
+    for (let k = 0; k < 4; k++) { const w = sw.getComponent(k); if (w !== 0) { const j = si.getComponent(k); if (Q.s[j] !== R.bs) { Q.m[j].multiplyMatrices(sk.bones[j].matrixWorld, sk.boneInverses[j]); Q.s[j] = R.bs; } v.addScaledVector(t.copy(b).applyMatrix4(Q.m[j]), w); } }
+    return v.applyMatrix4(sm.bindMatrixInverse); },
+  cMinY(R) { if (this.cMinFull || !R.cand || --R.candN <= 0) return this.cMinAll(R); R.F.updateMatrixWorld(true); R.bs = (R.bs | 0) + 1; let mn = Infinity; const v = R.v; R.SM.forEach((sm, mi) => { const pa = sm.geometry.attributes.position, C = R.cand[mi], M = this.cRel(R, sm, R.mY || (R.mY = new T3.THREE.Matrix4())); for (let j = 0; j < C.length; j++) { const i = C[j]; v.fromBufferAttribute(pa, i); this.cBT(R, sm, i, v); v.applyMatrix4(M); if (v.y < mn) mn = v.y; } }); return mn; },
+  /* v376 같이 할 때 렉: 바닥 맞추기에 몸 꼭짓점 전부(5개에 하나)를 장면마다 2~3번 뼈로 옮겨 보던 것 → 12장면마다 전부 보고, 그 사이엔 바닥 가까운 꼭짓점(아래쪽 35%)만. 가장 낮은 점은 늘 발·배 쪽이라 결과 같음 */
+  cMinAll(R) { R.F.updateMatrixWorld(true); R.bs = (R.bs | 0) + 1; let mn = Infinity, mx = -Infinity; const v = R.v, Y = []; R.SM.forEach((sm, mi) => { const pa = sm.geometry.attributes.position, ok = R.OK[mi], M = this.cRel(R, sm), ys = Y[mi] = []; for (let i = 0; i < pa.count; i += 5) { if (!ok[i]) continue; v.fromBufferAttribute(pa, i); this.cBT(R, sm, i, v); v.applyMatrix4(M); ys.push(i, v.y); if (v.y < mn) mn = v.y; if (v.y > mx) mx = v.y; } });
+    const lim = mn + (mx - mn) * 0.35; R.cand = Y.map(ys => { const c = []; for (let k = 0; k < ys.length; k += 2) if (ys[k + 1] <= lim) c.push(ys[k]); return c; }); R.candN = 12; return mn; },
   /* v350 고양이 v12 발 붙는 걸음 (고양이 스레드 walk_v12 GAITC): 발마다 바닥 디딤(β .62 동안 뒤로 밀기) → 들어 올려 앞으로. 목표 = 쉴 때 발 자리 + 걸음 오프셋, 다리 마디를 CCD로 맞춘다 */
   CATG: { S: 1.0, H: 0.15, beta: 0.62 },
   cGait(R, w, am) { const { THREE } = T3, G = this.CATG, Z = this._Z, jv = R.jv || (R.jv = new THREE.Vector3()), ev = R.ev || (R.ev = new THREE.Vector3()), T = R.tv || (R.tv = new THREE.Vector3());
     for (const l of R.L) { const u = ((w + l.ph) % 1 + 1) % 1; let dx, dy = 0; if (u < G.beta) dx = G.S / 2 - G.S * (u / G.beta); else { const q = (u - G.beta) / (1 - G.beta), sq = q * q * (3 - 2 * q); dx = -G.S / 2 + G.S * sq; dy = G.H * Math.sin(Math.PI * q); }
       T.copy(l.rest); T.x += dx * am; T.y += dy * am; const ch = l.c ? [l.c, l.b, l.a] : [l.b, l.a]; this.cStop(R, l.a.parent);
-      for (let it = 0; it < 12; it++) for (const bn of ch) { jv.setFromMatrixPosition(this.cRel(R, bn, R.mJ || (R.mJ = new T3.THREE.Matrix4()))); this.cEnd(R, l, ev); T.z = ev.z; let da = Math.atan2(T.y - jv.y, T.x - jv.x) - Math.atan2(ev.y - jv.y, ev.x - jv.x); da = Math.atan2(Math.sin(da), Math.cos(da)); this.cRot(R, bn, Z, da * (bn === l.a ? 0.3 : 0.5)); } } this.cStop(R, null); },
+      this.cCCD(R, l, ch, T, 12, ch.length - 1, 0.3); } this.cStop(R, null); },
+  /* v376 같이 할 때 렉 (고양이 걸음이 펫 중 제일 무거움): 다리 마디는 모두 F의 같은 Z축으로만 도니, 관절·발끝 자리를 한 번만 구하고
+   * 평면에서 돌려 가며 각도만 모은 뒤 뼈마다 한 번씩 돌린다 (같은 축 회전은 더해도 같다, 예전처럼 매번 뼈 행렬을 다시 곱하지 않음. 자세 같음) */
+  cCCD(R, l, ch, T, n, ia, ka) { const N = ch.length, P = R.cP || (R.cP = new Float64Array(8)), A = R.cA || (R.cA = new Float64Array(4)), m = R.mJ || (R.mJ = new T3.THREE.Matrix4()), ev = R.ev2 || (R.ev2 = new T3.THREE.Vector3());
+    for (let i = 0; i < N; i++) { const e = this.cRel(R, ch[i], m).elements; P[2 * i] = e[12]; P[2 * i + 1] = e[13]; A[i] = 0; }
+    this.cEnd(R, l, ev); let ex = ev.x, ey = ev.y;
+    for (let it = 0; it < n; it++) for (let i = 0; i < N; i++) { const jx = P[2 * i], jy = P[2 * i + 1]; let da = Math.atan2(T.y - jy, T.x - jx) - Math.atan2(ey - jy, ex - jx); da = Math.atan2(Math.sin(da), Math.cos(da)); const a = da * (i === ia ? ka : 0.5); if (!a) continue; A[i] += a;
+      const c = Math.cos(a), s = Math.sin(a); let dx = ex - jx, dy = ey - jy; ex = jx + dx * c - dy * s; ey = jy + dx * s + dy * c; for (let k = 0; k < i; k++) { dx = P[2 * k] - jx; dy = P[2 * k + 1] - jy; P[2 * k] = jx + dx * c - dy * s; P[2 * k + 1] = jy + dx * s + dy * c; } }
+    for (let i = 0; i < N; i++) this.cRot(R, ch[i], this._Z, A[i]); },
   cPlant(R, wt) { if (wt <= 0.001) return; const { THREE } = T3, Z = this._Z || (this._Z = new THREE.Vector3(0, 0, 1)), jv = new THREE.Vector3(), ev = new THREE.Vector3(), T = new THREE.Vector3();
     for (const l of R.L) { if (!l.hind) continue; this.cEnd(R, l, ev); T.set(l.rest.x, l.rest.y - R.oy, ev.z).lerp(ev, 1 - wt); this.cStop(R, l.a.parent);
-      for (let it = 0; it < 20; it++) for (const bn of [l.c, l.b, l.a]) { jv.setFromMatrixPosition(this.cRel(R, bn, R.mJ || (R.mJ = new T3.THREE.Matrix4()))); this.cEnd(R, l, ev); let da = Math.atan2(T.y - jv.y, T.x - jv.x) - Math.atan2(ev.y - jv.y, ev.x - jv.x); da = Math.atan2(Math.sin(da), Math.cos(da)); this.cRot(R, bn, Z, da * 0.5); } }
+      this.cCCD(R, l, [l.c, l.b, l.a], T, 20, -1, 0.5); }
     this.cStop(R, null); this.cPlace(R); },
   catPose(H, mv, dt) {
     const R = H.cat, K = this.CATK, B = R.B, TP = Math.PI * 2, { THREE } = T3, Z = this._Z || (this._Z = new THREE.Vector3(0, 0, 1)), Y = this._Y || (this._Y = new THREE.Vector3(0, 1, 0)), sm = x => x * x * (3 - 2 * x);
@@ -21695,7 +21734,8 @@ const Props3D = {
       G.scene.updateMatrixWorld(true); const parts = []; G.scene.traverse(m => { if (!m.isMesh) return; m.geometry._keep = 1; const mt = m.material; if (mt.map) mt.map.anisotropy = 8; mt._keep = 1; parts.push({ geo: m.geometry, M: m.matrixWorld.clone(), mat: typeof PBR !== 'undefined' && PBR.done ? mt : this.toon(mt, !!m.geometry.attributes.color) }); });
       this.M[k] = parts; this.rs[k] = 2; this.ver++; }).catch(e => { console.warn('real3d', k, e); this.rs[k] = -1; }); },
   // 목록 칸 사진 (미리 찍은 것)
-  thumb(k) { let im = this.th[k]; if (im) return im.complete && im.naturalWidth ? im : null; im = this.th[k] = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }; im.onerror = () => setTimeout(() => { if (this.th[k] === im) delete this.th[k]; }, 3000); /* v371 못 받으면 3초 뒤 다시 (도트 그림으로 안 돌아가게) */ im.src = Arena3J.url('real/th/' + k.slice(2) + '.png?v=1'); return null; },
+  thFree() { for (const k in this.th) { const im = this.th[k]; if (im.bm && im.bm !== im && im.bm.close) im.bm.close(); im.bm = null; } },
+  thumb(k) { let im = this.th[k]; if (im) { if (!im.complete || !im.naturalWidth) return null; if (!im.bm) { Snap3D.bmk(im); return null; } return im.bm; } im = this.th[k] = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => Snap3D.bmk(im); /* v376 미리 풀어 둔 그림으로 (snap3d baked와 같이). Snap3D.bk에 없으니 닫을 때 따로 내린다 (Props3D.thFree) */ im.onerror = () => setTimeout(() => { if (this.th[k] === im) delete this.th[k]; }, 3000); /* v371 못 받으면 3초 뒤 다시 (도트 그림으로 안 돌아가게) */ im.src = Arena3J.url('real/th/' + k.slice(2) + '.png?v=1'); return null; },
   load() { if (this.st || !window.T3) return; this.st = 1; const { GLTFLoader, MeshoptDecoder } = T3, L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     MeshoptDecoder.ready.then(() => new Promise((ok, no) => L.load(Arena3J.url('props.glb?v=1'), ok, undefined, no))).then(G => {
       G.scene.updateMatrixWorld(true);
@@ -21725,14 +21765,26 @@ const Snap3D = {
     tick();
   },
   init() {
-    if (this.r) return; const { THREE } = T3, cv = document.createElement('canvas');
+    this.initS(); if (this.r) return; const { THREE } = T3, cv = document.createElement('canvas');
     const r = this.r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setClearColor(0x000000, 0); r.toneMapping = THREE.NoToneMapping; r.setPixelRatio(1);
-    const S = this.S = new THREE.Scene(); S.add(new THREE.HemisphereLight(0xfff4e6, 0x7a6a58, 1.45));
+  },
+  initS() {
+    if (this.S) return; const { THREE } = T3; const S = this.S = new THREE.Scene(); S.add(new THREE.HemisphereLight(0xfff4e6, 0x7a6a58, 1.45));
     const sun = new THREE.DirectionalLight(0xfff0d8, 1.7); sun.position.set(-2.5, 5, 6); S.add(sun);
     this.cam = new THREE.PerspectiveCamera(24, 1, 0.05, 60); this.pc = new Map();
   },
+  /* v376 끊김 (대화창 얼굴·카지노 딜러를 처음 띄울 때 0.4~0.8초 멈춤): 사진 전용 렌더러는 미리보기를 닫을 때마다 버려서(v367 메모리), 다음 사진 한 장에
+   * 렌더러를 새로 만들고 셰이더·그림을 전부 다시 올렸다. 이제 한 장 사진은 게임 화면 렌더러로 찍는다 (그림·셰이더를 같이 쓴다).
+   * 화면용과 똑같이 셰이더에서 sRGB로 바꾸고 8비트 판에 그려서(isXRRenderTarget 표시) 사진 점 하나하나가 예전 렌더러와 똑같다 (184칸 얼굴 6명 비교 차이 0) */
+  viaMain(c, W, H, cam) { const R = Room3D.r; if (!R || this.noMain) return false; const { THREE } = T3;
+    try { let rt = this.mrt; if (!rt || rt.width !== W || rt.height !== H) { if (rt) rt.dispose(); rt = this.mrt = new THREE.WebGLRenderTarget(W, H, { samples: 4 }); rt.texture.colorSpace = THREE.SRGBColorSpace; rt.texture.internalFormat = 'RGBA8'; rt.isXRRenderTarget = true; }
+      const prev = R.getRenderTarget(), cc = R.getClearColor(this.cc0 || (this.cc0 = new THREE.Color())), ca = R.getClearAlpha(), tm = R.toneMapping, buf = new Uint8Array(W * H * 4);
+      R.setRenderTarget(rt); R.setClearColor(0x000000, 0); R.toneMapping = THREE.NoToneMapping;
+      try { (R._raw || R.render).call(R, this.S, cam); R.readRenderTargetPixels(rt, 0, 0, W, H, buf); } finally { R.setRenderTarget(prev); R.setClearColor(cc, ca); R.toneMapping = tm; }
+      const id = new ImageData(W, H), D = id.data; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const s = ((H - 1 - y) * W + x) * 4, d = (y * W + x) * 4, a = buf[s + 3]; D[d + 3] = a; if (a) for (let k = 0; k < 3; k++) D[d + k] = Math.min(255, Math.round(buf[s + k] * 255 / a)); }
+      c.getContext('2d').putImageData(id, 0, 0); return true; } catch (e) { console.warn('snap3d main', e); this.noMain = 1; return false; } },
   /* v367 미리보기를 닫으면 사진 전용 렌더러를 통째로 놓는다 (사용자 '미리보기 눌렀을때 튕기거나 렉걸리거나'): 큰 미리보기에 올린 모델 그림이 그래픽 메모리에 쌓여 폰이 튕겼다. 칸 사진(2D)은 그대로, 다음에 찍을 때 렌더러를 새로 만든다 */
-  release() { if (!this.r) return; const dz = g => g && g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); if (this.lv) dz(this.lv.g); this.lv = null; if (this.pv) for (const a of this.pv.A.values()) if (a.H && a.H.mix) a.H.mix.stopAllAction(); this.pv = null; this.fv = null; this.ev = null; try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { } this.r = null; },
+  release() { this.bmFree(); if (typeof Props3D !== 'undefined' && Props3D.thFree) Props3D.thFree(); if (!this.r) return; const dz = g => g && g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); if (this.lv) dz(this.lv.g); this.lv = null; if (this.pv) for (const a of this.pv.A.values()) if (a.H && a.H.mix) a.H.mix.stopAllAction(); this.pv = null; this.fv = null; this.ev = null; try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { } this.r = null; this.S = null; },
   /* v367 펫 진화 장면 3D (사용자 '2d안나오게'): 진화 전·후 모습을 3D 모델로 (진화 조각이 있으면 붙이고, 하얗게 번쩍일 땐 흰 실루엣). W×H 캔버스를 돌려준다, 못 그리면 null */
   evo(k, st, d, white, W, H) {
     if (!this.ok() || typeof Pet3D === 'undefined') { this.warm(); return null; } Pet3D.load();
@@ -21751,10 +21803,10 @@ const Snap3D = {
   shot(key, W, H, build, aim) {
     const hit = this.cache.get(key); if (hit) return hit; if (!this.ok()) return null;
     try {
-      this.init(); const { THREE } = T3, g = new THREE.Group(); this.S.add(g); build(g); g.updateMatrixWorld(true);
+      this.initS(); const { THREE } = T3, g = new THREE.Group(); this.S.add(g); build(g); g.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(g, true), cam = this.cam; cam.aspect = W / H; aim(box, cam); cam.updateProjectionMatrix();
-      this.r.setSize(W, H, false); this.r.render(this.S, cam);
-      const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(this.r.domElement, 0, 0);
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      if (!this.viaMain(c, W, H, cam)) { this.init(); this.r.setSize(W, H, false); this.r.render(this.S, cam); c.getContext('2d').drawImage(this.r.domElement, 0, 0); }
       this.S.remove(g); g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); });
       if (this.cache.size > 120) this.cache.delete(this.cache.keys().next().value);
       this.cache.set(key, c); return c;
@@ -21928,8 +21980,10 @@ const Snap3D = {
   },
   // v360 실사 탈것 칸 사진: 3d/th/ride/<키>.webp (assets: Snap3D.thumb 로 찍어 둔 것, 320×208). 오면 상점 다시 그리기
   bk: {},
-  baked(x, k, W, H, dir) { const id = (dir || 'ride') + '/' + k; let im = this.bk[id]; if (!im) { im = this.bk[id] = new Image(); im.onload = () => { if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }; im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/' + id + '.webp?v=1'); }
-    if (!im.complete || im.bad || !im.naturalWidth) return false; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, W, H); x.restore(); return true; },
+  baked(x, k, W, H, dir) { const id = (dir || 'ride') + '/' + k; let im = this.bk[id]; if (!im) { im = this.bk[id] = new Image(); im.onload = () => this.bmk(im); /* v376 버벅임: 사진을 칸에 그릴 때마다 그 자리에서 풀던 것(숍 칸 바꿀 때 0.1~0.2초 멈춤)을 미리 따로 풀어 둔 그림(ImageBitmap)으로. 숍을 닫으면 내린다 (release) */ im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/' + id + '.webp?v=1'); }
+    if (!im.complete || im.bad || !im.naturalWidth) return false; if (!im.bm) { this.bmk(im); return false; } x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(im.bm, 0, 0, W, H); x.restore(); return true; },
+  bmk(im) { if (im.pend || im.bm || !im.complete || !im.naturalWidth) return; im.pend = 1; const go = bm => { im.pend = 0; im.bm = bm || im; if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }; if (window.createImageBitmap && window.fetch) fetch(im.src).then(r => r.blob()).then(b => createImageBitmap(b)).then(go, () => go(null)); else go(null); }, /* 파일(blob)에서 만들어야 그림 풀기가 따로 돈다 (img에서 만들면 화면 쪽에서 풀었다) */
+  bmFree() { for (const k in this.bk) { const im = this.bk[k]; if (im.bm && im.bm !== im && im.bm.close) im.bm.close(); im.bm = null; } },
   // 편집숍 칸 그림 (160×104 논리 좌표, x는 이미 S배). 옷·모자·펫·차만. 그렸으면 true
   thumb(x, it) {
     if (it.pd && this.ok() && typeof Pet3D !== 'undefined' && (Pet3D.load(), Pet3D.has(PetDeco.target() || 'dog'))) { const k = PetDeco.target() || 'dog', d = Object.assign({}, PetDeco.get(k), { [it.pd]: it.v }), S = Math.max(1, Math.round(x.getTransform().a)), img = this.shot('th:pd:' + k + ':' + JSON.stringify(d) + ':' + S, 160 * S, 104 * S, g => { const H = this.pdModel(k, d); H.root.rotation.y = -0.62; Pet3D.pose(H, false, 0, 0.3, 0.016, null); g.add(H.root); }, (b, c) => this.fit(b, c, 0.26, 1.1)); if (img) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0); x.restore(); return true; } } // v343 펫 꾸미기 칸도 3D
@@ -23292,7 +23346,10 @@ const Titles = {
     if (before === after) { if (before) Toast.show(`이익 보고 팔았다. ${this.TEXT[before]} 칭호까지 ${before === 'bk2' ? n - 5 : n - 2}번 더 팔면 벗어요.`, 3500); return; }
     Toast.show(after ? `명예 회복! ${this.TEXT[before]} → ${this.TEXT[after]}` : `명예 회복! ${this.TEXT[before]} 칭호를 벗었어요.`, 4000); Sound.play('chime'); if (Net.on) Net.news(after ? `명예 회복 · 칭호 ${this.TEXT[after]}로 내려감` : `명예 회복 · ${this.TEXT[before]} 칭호 벗음`);
   },
-  king(name) { if (!Live.on) return false; const rows = Live.rankRows(); return rows.length >= 2 && rows[0].name === name && (rows[0].earn || 0) > 0 && (rows[0].earn || 0) > (rows[1] && rows[1].earn !== undefined ? rows[1].earn : -1e15); },
+  /* v376 같이 할 때 렉: 이름표마다 순위표 전체(만난 사람 모두)를 장면마다 다시 정렬하던 것 → 한 장면에 한 번만 (경매왕이 누군지만 기억) */
+  king(name) { if (!Live.on) return false; const f = typeof Room3D !== 'undefined' ? Room3D.fr | 0 : 0, now = performance.now(); let K = this.kC;
+    if (!K || K.f !== f || now - K.t > 100) { const rows = Live.rankRows(); K = this.kC = { f, t: now, n: rows.length >= 2 && (rows[0].earn || 0) > 0 && (rows[0].earn || 0) > (rows[1] && rows[1].earn !== undefined ? rows[1].earn : -1e15) ? rows[0].name : null }; }
+    return K.n !== null && K.n === name; },
   TEXT: { king: '👑 경매왕', bk2: '💸 파산왕', bk1: '🥴 오뚝이' },
   COLOR: { king: '#ffd84a', bk2: '#ff8a7a', bk1: '#c8b8ff' },
   of(name, tt) { return this.king(name) ? 'king' : this.TEXT[tt] ? tt : ''; },

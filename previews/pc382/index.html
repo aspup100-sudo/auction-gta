@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v382 시험 5</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v382 시험 6</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -4177,6 +4177,11 @@ function hitPlayer(car, q) {
 function updateTraffic(dt, z) {
   const p0 = Game.player; if (p0) { p0.hurtCd = Math.max(0, (p0.hurtCd || 0) - dt); p0.hurt = Math.max(0, (p0.hurt || 0) - dt); }
   const P = Game.traffic.map(trafficCarPos);
+  /* v382 사용자 '이건 왜 지랄이야' (교차로 한가운데서 버스·차가 서로 막고 영영 서 있음): 교차로 안에 다른 길 차가 있으면 정지선에서 기다리고 (꼬리물기 금지),
+   * 이미 교차로 안에서 서로 막혀 한참이면 옆길 차는 무시하고 빠져나간다. 막힌 차를 다른 자리로 돌리는 건 '화면 밖'으로 판단 (컴퓨터는 화면이 넓어 420px 안 차도 화면 밖일 수 있고, 그 반대도) */
+  const box = new Map(), inBox = (cr, q) => Math.hypot(q.x / TILE - cr.x, q.y / TILE - cr.y) < Math.max(cr.halfA, cr.halfB) + 1;
+  Game.traffic.forEach((o, oi) => { for (const st of o.road.stops) if (inBox(st.c, P[oi])) { let a = box.get(st.c); if (!a) box.set(st.c, a = []); a.push(o); } });
+  const ccx = camSnapX(), ccy = camSnapY(), hw = VW / Cam.zoom / 2 + 120, hh = VH / Cam.zoom / 2 + 160, offS = q => Math.abs(q.x - ccx) > hw || Math.abs(q.y - ccy) > hh;
   Game.traffic.forEach((car, ci) => {
     const r = car.road; let target = car.vmax;
     // 밀린 만큼 제자리로
@@ -4190,15 +4195,17 @@ function updateTraffic(dt, z) {
       if (ahead > 0 && ahead < 70) {
         const red = signalState(st.c, r, Game.t) !== 'g';
         const boxed = lead && lead.o.v < 8 && lead.gap > ahead && lead.gap < ahead + st.half * 2 + lead.o.len + 10; // 앞차가 교차로 안이나 바로 건너편에 서 있다
-        if (red || boxed) target = Math.min(target, Math.max(0, (ahead - 6) * 2));
+        const cross = (box.get(st.c) || []).some(o => o.road !== r); /* v382 옆길 차가 교차로 안에 있으면 들어가지 않는다 */
+        if (red || boxed || cross) target = Math.min(target, Math.max(0, (ahead - 6) * 2));
       }
     }
     // 앞차 / 내 차
     let waiting = false, stuckAhead = false;
     if (lead && lead.gap < car.len + 30) { target = Math.min(target, Math.max(0, (lead.gap - car.len - 8) * 3)); if (lead.o.v < 5) stuckAhead = true; }
+    if ((car.waitT || 0) > FEEL.npcYieldWait && r.stops.some(st => inBox(st.c, me))) car.uj = 2.5; car.uj = Math.max(0, (car.uj || 0) - dt); const unjam = car.uj > 0; /* v382 교차로 안에서 서로 막혀 4초 넘으면 옆길 차는 무시하고 빠져나감 */
     const cA = Math.cos(me.a), sA = Math.sin(me.a); /* v376 차마다 다른 차 전부와 견줄 때 내 방향 cos·sin을 한 번만 (값 같음) */
     Game.traffic.forEach((o, oi) => {
-      if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane)) return;
+      if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane) || (unjam && o.road !== r)) return;
       // 다른 도로·차선의 차가 바로 앞에 있으면(교차로) 멈춰서 양보. 서로 마주 서서 영영 막히면 잠시 뒤 천천히 지나가되, 코앞의 차 위로는 올라타지 않는다
       const q = P[oi]; const dx = q.x - me.x, dy = q.y - me.y; if (Math.abs(dx) + Math.abs(dy) > 90) return;
       const fwd = dx * cA + dy * sA, side = Math.abs(-dx * sA + dy * cA);
@@ -4219,7 +4226,7 @@ function updateTraffic(dt, z) {
       const lanes = r.oneway ? r.lanes : r.lanes / 2;
       if (lanes > 1) { const other = car.lane === 1 ? 2 : car.lane - 1; const clear = !Game.traffic.some(o => o !== car && o.road === r && o.dirn === car.dirn && o.lane === other && Math.abs(o.s - car.s) < car.len + 24); if (clear) { car.lane = other; car.laneCd = 3; car.jamT = 0; } }
     }
-    if (car.jamT > FEEL.npcJamReset) { const pl = Game.player; if (Math.hypot(me.x - pl.x, me.y - pl.y) > 420) { car.s = Math.random() * r.len; car.v = 0; car.jamT = 0; car.waitT = 0; } }
+    if (car.jamT > FEEL.npcJamReset) { const pl = Game.player; if (Math.hypot(me.x - pl.x, me.y - pl.y) > 420 && offS(me)) { car.s = Math.random() * r.len; car.v = 0; car.jamT = 0; car.waitT = 0; } }
     if (!Game.driving) { const p = Game.player; const dx = p.x - me.x, dy = p.y - me.y; const fwd = dx * Math.cos(me.a) + dy * Math.sin(me.a), side = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a)); if (fwd > 0 && fwd < 40 && side < 10) target = 0; }
     if (car.halt > 0) { car.halt -= dt; target = 0; } if (car.flee > 0) { car.flee -= dt; target = Math.max(target, car.vmax * 1.4); } // 펫이 화나서 운전자를 혼내는 동안 서 있다가 부리나케 도망 (v156 PetRage)
     car.v += Math.max(-300 * dt, Math.min(120 * dt, target - car.v));
@@ -8787,7 +8794,12 @@ function update(dt) {
   const k = 1 - Math.exp(-FEEL.camLerp * dt);
   if (Game.scene === 'zone') {
     const lead = Game.driving ? 0.35 : 0; const tx = p.x + (Game.driving ? Game.car.vx * lead : 0), ty = p.y + (Game.driving ? Game.car.vy * lead : 0) - (typeof zFlyCam === 'function' ? zFlyCam() : 0); /* v366 나는 탈것 높이만큼 */
-    Cam.x += (tx - Cam.x) * k; Cam.y += (ty - Cam.y) * k;
+    /* v382 사용자 '상어가 덜덜 거린다': 탈 때 카메라를 장면마다 k만큼 당겨 오면 장면 시간(dt)이 들쭉날쭉할 때 차와 카메라 사이가 매번 달라져 (한 장 길면 몇 픽셀 뒤처짐) 탈것이 화면에서 떨렸다.
+     * 같은 따라가기를 시간에 대해 그대로 풀어서 (목표가 이 장면 동안 고르게 움직였다고 보고) dt가 어떻든 같은 거리만큼 뒤따른다. 순간이동처럼 크게 뛰면 예전 방식 */
+    const E = Math.exp(-FEEL.camLerp * dt), L = FEEL.camLerp, jx = tx - (Cam.ptx ?? tx), jy = ty - (Cam.pty ?? ty);
+    if (Game.driving && dt > 0 && Cam.ptx != null && Math.abs(jx) + Math.abs(jy) < 120) { const vx = jx / dt, vy = jy / dt; Cam.x = tx + (Cam.x - Cam.ptx + vx / L) * E - vx / L; Cam.y = ty + (Cam.y - Cam.pty + vy / L) * E - vy / L; }
+    else { Cam.x += (tx - Cam.x) * k; Cam.y += (ty - Cam.y) * k; }
+    Cam.ptx = tx; Cam.pty = ty;
     const zt = FEEL.zoom * (Game.driving && !REDUCED_MOTION ? 1 - (1 - FEEL.camZoomAtMax) * Math.min(1, Game.car.speed / FEEL.carMaxSpeed) : 1);
     Cam.zoom += (zt - Cam.zoom) * Math.min(1, dt * 3);
     const hw = VW / 2 / Cam.zoom, hh = VH / 2 / Cam.zoom / zoneSq(), ZW = Game.zone.W * TILE, ZH = Game.zone.H * TILE;
@@ -10178,13 +10190,21 @@ const Mine = {
   },
   // v352 실사 1인칭: 스캔 곡괭이 (3d/mine/fp_pick.png, assets3d/mine_compose_pick.py). 화면 오른쪽 아래 밖(어깨 자리)을 축으로 휘두른다
   drawPickReal(c, now, walk, im) {
-    const W = this.W, H = this.H, t = now / 1000, A = MINE_FP; let a = -0.42 + Math.sin(t * 1.3) * 0.03, lift = Math.sin(t * 2.0) * 1.5 + walk * 3, sc = 1, imp = 0, push = 0;
+    /* v382 사용자 '곡괭이가 앞으로 가게 해서 해야지 옆으로 때리잖아': 예전엔 어깨를 축으로 화면 위에서 옆으로 쓸듯 돌렸다 (와이퍼처럼).
+     * 이제 어깨 위로 들어 올렸다가 (머리가 오른쪽 위로, 가까워져 커짐) 앞의 벽 가운데로 내리찍는다 (멀어져 작아지며 날 끝이 화면 가운데에 닿음) → 원래 자리로 */
+    const W = this.W, H = this.H, t = now / 1000, A = MINE_FP; let imp = 0, push = 0;
+    const rest = { rot: -0.35 + Math.sin(t * 1.3) * 0.025, sc: 1, px: W * 1.02, py: H * 0.98 - (Math.sin(t * 2.0) * 1.5 + walk * 3) };
+    const up = { rot: 0.12, sc: 1.14, px: W * 1.0, py: H * 0.98 - H * 0.2 };
+    const hit = (() => { const rot = -0.52, sc = 0.94, k = H * 0.95 * sc / A.h, dx = (A.tip[0] + 6 - A.pv[0]) * k, dy = (A.tip[1] + 6 - A.pv[1]) * k, cs = Math.cos(rot), sn = Math.sin(rot); /* 날 끝이 벽 가운데 (W/2, 0.52H)에 오도록 어깨 자리를 거꾸로 구한다 */
+      return { rot, sc, px: W * 0.5 - (dx * cs - dy * sn), py: H * 0.52 - (dx * sn + dy * cs) }; })();
+    const mix = (P, Q, e) => ({ rot: P.rot + (Q.rot - P.rot) * e, sc: P.sc + (Q.sc - P.sc) * e, px: P.px + (Q.px - P.px) * e, py: P.py + (Q.py - P.py) * e });
+    let Pz = rest;
     if (this.sw) { const k = (now - this.sw.t0) / 1000 / MINE_SW;
-      if (k < 0.42) { const e = 1 - Math.pow(1 - k / 0.42, 3); a = -0.42 + e * 0.75; lift -= e * 10; }
-      else if (k < 0.52) { const e = Math.pow((k - 0.42) / 0.1, 2); a = 0.33 - e * 1.25; lift = -10 + e * 16; sc = 1 - e * 0.1; push = e; }
-      else { const e = (k - 0.52) / 0.48, s = e < 0.5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2; a = -0.92 + s * 0.5; lift = 6 - s * 6; sc = 0.9 + s * 0.1; imp = Math.max(0, 1 - e * 4); push = 1 - s; }
-    } else if (this.tired && now < this.tired) { lift += 9 + Math.sin(t * 9) * 1.5; a = -0.3; }
-    const k = H * 0.95 * sc / A.h, rot = (a + 0.42) * 0.85 - 0.35, px = W * 1.02 + push * W * 0.01, py = H * 0.98 - lift + push * H * 0.04; // 어깨(팔이 나가는 오른쪽 끝)를 축으로
+      if (k < 0.4) { const e = 1 - Math.pow(1 - k / 0.4, 3); Pz = mix(rest, up, e); } /* 들어 올리기 */
+      else if (k < 0.52) { const e = Math.pow((k - 0.4) / 0.12, 2); Pz = mix(up, hit, e); push = e; } /* 앞으로 내리찍기 (점점 빨라짐) */
+      else { const e = (k - 0.52) / 0.48, s = e < 0.5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2, sh = Math.max(0, 1 - e * 5) * Math.sin(e * 60) * H * 0.004; Pz = mix(hit, rest, s); Pz.py += sh; imp = Math.max(0, 1 - e * 4); push = 1 - s; } /* 박히고 살짝 떨린 뒤 돌아오기 */
+    } else if (this.tired && now < this.tired) Pz = { rot: -0.248, sc: 1, px: W * 1.02, py: H * 0.98 - 9 - Math.sin(t * 9) * 1.5 };
+    const k = H * 0.95 * Pz.sc / A.h, rot = Pz.rot, px = Pz.px, py = Pz.py;
     const cs = Math.cos(rot), sn = Math.sin(rot), at = (x, y) => { const dx = (x - A.pv[0]) * k, dy = (y - A.pv[1]) * k; return { x: px + dx * cs - dy * sn, y: py + dx * sn + dy * cs }; };
     const tip = at(A.tip[0] + 6, A.tip[1] + 6), hd = at(A.head[0], A.head[1]); if (this.sw && !this.sw.hit) this.tip = tip; else if (!this.sw) this.tip = null;
     const hl = Math.max(0.35, Math.min(1, 1.2 - Math.hypot(hd.x - W / 2, hd.y - H / 2) / (H * 0.9)));
@@ -18767,7 +18787,7 @@ Object.assign(Room3D, {
     const pat = (x, s) => { const im = RealFloor.im[fk + s], k = cover * px / im.width, p = x.createPattern(im, 'repeat'); p.setTransform(new DOMMatrix([k, 0, 0, k, 0, 0])); return p; };
     const floorAt = (x, y) => at(x, y) !== '#';
     const [cc, cx] = mk('#000'), [nc, nx] = mk('#8080ff'), [rc, rx] = mk('#c0c0c0');
-    /* v382 시험 5 (사용자 '숍 들어갈 때 화면 전환이 느린데'): 칸마다 무늬를 새로 만들고 칸마다 따로 칠해서 굽는 데 오래 걸렸다 → 무늬는 한 번, 바닥 칸은 한 번에 칠한다 (무늬 기준점이 같아 그림은 똑같다) */
+    /* v382 시험 6 (사용자 '숍 들어갈 때 화면 전환이 느린데'): 칸마다 무늬를 새로 만들고 칸마다 따로 칠해서 굽는 데 오래 걸렸다 → 무늬는 한 번, 바닥 칸은 한 번에 칠한다 (무늬 기준점이 같아 그림은 똑같다) */
     const fp = new Path2D(); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (floorAt(x, y)) fp.rect(x * px, y * px, px, px);
     for (const [c, s] of [[cx, 'c'], [nx, 'n'], [rx, 'r']]) { c.fillStyle = pat(c, s); c.fill(fp); }
     // 방마다 바닥 색·무늬
@@ -18784,14 +18804,14 @@ Object.assign(Room3D, {
     if (P.rug) rug(5 * px, 3 * px - px * 0.2, 4 * px, 2 * px + px * 0.4, '#a8543c', 'rgba(242,216,168,.9)');
     for (let x = 0; x < W; x++) if (at(x, H - 1) === 'D') rug(x * px + px * 0.08, (H - 2) * px + px * 0.35, px * 0.84, px * 0.65 + px, dark ? '#1a1418' : '#4a4038', 'rgba(0,0,0,.25)');
     // 그늘 (aoMap): 벽 밑·가구 밑 어둡게 (흐리게)
-    /* v382 시험 5: 흐리게(blur)를 네모마다 따로 걸면 네모 수만큼 큰 그림을 흐리게 해서 제일 오래 걸렸다 → 네모를 다른 판에 다 그리고 한 번만 흐리게 얹는다 (같은 흐림) */
+    /* v382 시험 6: 흐리게(blur)를 네모마다 따로 걸면 네모 수만큼 큰 그림을 흐리게 해서 제일 오래 걸렸다 → 네모를 다른 판에 다 그리고 한 번만 흐리게 얹는다 (같은 흐림) */
     const [ac, ax] = mk('#ffffff'), [bc, bx] = mk(); bx.fillStyle = '#6a6a6a';
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = at(x, y); if (c === '#') bx.fillRect(x * px - px * 0.08, y * px - px * 0.08, px * 1.16, px * 1.16); else if (solid(x, y)) { bx.fillStyle = '#9a9a9a'; bx.fillRect(x * px + px * 0.1, y * px + px * 0.1, px * 0.8, px * 0.8); bx.fillStyle = '#6a6a6a'; } }
     ax.filter = `blur(${px * 0.28}px)`; ax.drawImage(bc, 0, 0); ax.filter = 'none'; bc.width = bc.height = 1;
     // 빛 (lightMap): 천장 등 줄 + 뒷벽 창 빛
     const [lc, lx] = mk(dark ? '#141218' : '#3a3632'), lamps = [];
     for (let y = 2.2; y < H - 1; y += 3) for (let x = 2.5; x < W - 1; x += Math.max(3, (W - 3) / Math.max(1, Math.round((W - 3) / 3.5)))) lamps.push([x, y]);
-    for (const [x, y] of lamps) { const g = lx.createRadialGradient(x * px, y * px, 0, x * px, y * px, px * 2.6); const c0 = dark === 'casino' ? 'rgba(255,190,120,.55)' : dark ? 'rgba(200,140,255,.45)' : 'rgba(255,246,230,.75)'; g.addColorStop(0, c0); g.addColorStop(1, 'rgba(255,246,230,0)'); lx.fillStyle = g; const r = px * 2.6; lx.fillRect(x * px - r, y * px - r, r * 2, r * 2); } /* v382 시험 5 등 빛 밖은 투명이라 등 둘레만 칠한다 (같은 그림) */
+    for (const [x, y] of lamps) { const g = lx.createRadialGradient(x * px, y * px, 0, x * px, y * px, px * 2.6); const c0 = dark === 'casino' ? 'rgba(255,190,120,.55)' : dark ? 'rgba(200,140,255,.45)' : 'rgba(255,246,230,.75)'; g.addColorStop(0, c0); g.addColorStop(1, 'rgba(255,246,230,0)'); lx.fillStyle = g; const r = px * 2.6; lx.fillRect(x * px - r, y * px - r, r * 2, r * 2); } /* v382 시험 6 등 빛 밖은 투명이라 등 둘레만 칠한다 (같은 그림) */
     if (!dark) for (const wx of this.rrWinX(rm, P, W)) { const g = lx.createLinearGradient(0, px, 0, px * 4.2); g.addColorStop(0, 'rgba(220,236,255,.65)'); g.addColorStop(1, 'rgba(220,236,255,0)'); lx.fillStyle = g; lx.beginPath(); lx.moveTo((wx.x - wx.w / 2) * px, px); lx.lineTo((wx.x + wx.w / 2) * px, px); lx.lineTo((wx.x + wx.w / 2 + 0.9) * px, px * 4.2); lx.lineTo((wx.x - wx.w / 2 + 0.6) * px, px * 4.2); lx.fill(); }
     const T = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }; // v363 바닥 그림은 rrFC가 직접 버린다 (_own 아님)
     const mt = new THREE.MeshStandardMaterial({ map: T(cc, true), normalMap: T(nc), roughnessMap: T(rc), aoMap: T(ac), aoMapIntensity: 1, lightMap: T(lc, true), lightMapIntensity: dark ? 1.6 : 1.25, roughness: 1, metalness: 0, envMapIntensity: dark ? 0.5 : 0.8 });
@@ -19287,12 +19307,13 @@ Object.assign(Room3D, {
     // 지나간 건물: 한도(폰 120만 · PC 300만 꼭짓점)를 넘으면 먼 것부터 치운다
     const cap = Ride3D.mob() ? 1.2e6 : 3e6, d2 = id => { const b = z.buildings[id], dx = b.x + b.w / 2 - cx - ax * 0.5, dz = b.y + b.h / 2 - cz - ay * 0.5; return dx * dx + dz * dz; };
     if (vt > cap && far.length) { far.sort((a, b) => d2(b) - d2(a)); for (const id of far) { if (vt <= cap) break; const e = this.zb.get(id); vt -= e.nv || 0; this.zDrop(e); this.zb.delete(id); } }
+    this.zSpd = Math.hypot(vx, vy); this.zPend = 0; for (const id of need) if (!this.zb.has(id)) this.zPend++; /* v382 zMerge가 보고 비킨다 */
     if (!need.length) { if (this.zWarm) this.zWarmEnd(); return; }
-    /* v382 시험 5 사용자 '처음 시작할때, 사무실 나갔다 왔을때 … 한번에 건물이 있는게 아니라 점점 그려지던데': 실사 벽 사진·옥상 부품이 오기 전에 예전 모습으로 먼저 짓고, 다 받으면 전부 다시 지어서 (하나씩 바꿔 끼우며) 점점 그려졌다.
+    /* v382 시험 6 사용자 '처음 시작할때, 사무실 나갔다 왔을때 … 한번에 건물이 있는게 아니라 점점 그려지던데': 실사 벽 사진·옥상 부품이 오기 전에 예전 모습으로 먼저 짓고, 다 받으면 전부 다시 지어서 (하나씩 바꿔 끼우며) 점점 그려졌다.
      * 동네를 처음 지을 때는 사진·부품이 올 때까지 (길어야 10초) '동네 불러오는 중'으로 가려 두고, 받은 뒤 한 번에 짓는다 */
     if (this.zWarm && typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeRealG && Bld3D.rst !== -1 && !(Bld3D.real() && Bld3D.KIT) && now - (this.zRw || (this.zRw = now)) < 10000) { this.zWarm0 = 0; this.zWarmShow(need.length, 0); return; }
     need.sort((a, b) => (this.zb.has(a) ? 1e6 : 0) + d2(a) - (this.zb.has(b) ? 1e6 : 0) - d2(b)); // 없는 것 먼저, 가까운 것 먼저
-    const warm = (this.zWarm && now - this.zWarm0 < 12000) || (typeof irisDark === 'function' && irisDark()), budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
+    const warm = (this.zWarm && now - this.zWarm0 < 12000) || (typeof irisDark === 'function' && irisDark()), budget = warm ? 60 : this.fe > 22 ? (this.zSpd > 5 && this.zPend && !Ride3D.mob() ? 5 : 3) : 6; /* v382 컴퓨터로 빨리 달릴 때 (상어 80km/h 끊김 14번): 3ms로는 못 따라가 화면 안 건물을 한 번에 지어(14ms) 끊겼다 → 앞쪽 새 건물이 밀려 있으면 5ms */ if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
     let made = 0, J = this.zJob; if (J && (J.z !== z || J.bg !== bg || J.eve !== State.evening || !need.includes(J.id))) J = this.zJob = null;
     /* v363 (렉 시연 점검): 화면 안 건물은 지금 한 번에, 달리는 앞쪽(아직 화면 밖) 새 건물은 한 채를 단계별로 여러 장면에 나눠 짓는다 (zJob) */
     const onS = b => b.x < cx + vw / 2 + 1 && b.x + b.w > cx - vw / 2 - 1 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 1; /* v371 화면 밖 1칸부터는 나눠 짓기로 (예전 4칸: 아직 안 보이는 건물을 한 번에 지어 걸을 때 끊김). 아래쪽 8칸은 높은 건물이 위로 보여서 그대로 */
@@ -19318,7 +19339,7 @@ Object.assign(Room3D, {
   zmDrop(cs) { if (cs.on) this.zmShow(cs, false); if (cs.mesh) { this.S.remove(cs.mesh); cs.mesh.children.forEach(o => o.geometry.dispose()); cs.mesh = null; } cs.job = null; },
   zmClear() { if (this.zm) for (const [, cs] of this.zm) this.zmDrop(cs); this.zm = new Map(); },
   zMerge(z) { if (!this.zmOn() || typeof Bld3D === 'undefined') { if (this.zm && this.zm.size) this.zmClear(); return; }
-    if (this.zmZ !== z || !this.zm) { this.zmClear(); this.zmZ = z; } const cells = this.zmCell(z), seen = new Set(), t0 = performance.now(); let spent = 0;
+    if (this.zmZ !== z || !this.zm) { this.zmClear(); this.zmZ = z; } const cells = this.zmCell(z), seen = new Set(), t0 = performance.now(), hold = this.zPend > 0 || this.zSpd > 5; let spent = 0; /* v382 새 건물을 지어야 하거나 빨리 달리는 중이면 묶기는 쉰다 (곧 지나갈 칸을 묶느라 짓기가 밀려 끊겼다) */
     for (const [, e] of this.zb) { const b = z.buildings[e.id != null ? e.id : -1]; if (b) seen.add(b._ck); }
     for (const [k, cs] of this.zm) if (!seen.has(k)) { this.zmDrop(cs); this.zm.delete(k); }
     for (const k of seen) { const ids = cells.get(k); if (!ids) continue; let cs = this.zm.get(k); if (!cs) this.zm.set(k, cs = { sig: [], mesh: null, on: false, since: t0, job: null });
@@ -19327,7 +19348,7 @@ Object.assign(Room3D, {
       if (!same) { this.zmDrop(cs); cs.sig = ok ? sig : []; cs.since = t0; continue; }
       if (fade || sig.length < 2) { if (cs.on) this.zmShow(cs, false); cs.since = t0; continue; }
       if (cs.mesh) { if (!cs.on) this.zmShow(cs, true); continue; }
-      if (t0 - cs.since < 400 || spent > (this.zmBud || 2)) continue; /* 칸이 0.4초 그대로일 때만, 한 장에 묶는 일 2ms 안에서 */
+      if (hold || t0 - cs.since < 400 || spent > (this.zmBud || 2)) continue; /* 칸이 0.4초 그대로일 때만, 한 장에 묶는 일 2ms 안에서 */
       const t1 = performance.now(); if (!cs.job) cs.job = this.zmBuild(cs); for (;;) { const r = cs.job.next(); if (r.done) { cs.job = null; cs.mesh = r.value; this.S.add(cs.mesh); this.zmShow(cs, true); break; } if (performance.now() - t1 + spent > (this.zmBud || 2)) break; } spent += performance.now() - t1; }
   },
   *zmBuild(cs) { const { THREE } = T3, G = new Map();
@@ -19757,7 +19778,7 @@ const Ride3D = {
   /* v346 사용자 '배도 상어도 뒤에 물결 좀 더 신경 써 디테일': 실제 배 항적처럼 지나온 길에 물 띠를 남긴다.
    * 켈빈 V자 물결 (양 끝 하얀 물마루가 약 19.5°로 벌어짐) · 가운데 하얀 소용돌이 거품 · 그 사이 가로 물결 · 오래될수록 넓어지고 옅어짐.
    * 점은 월드 좌표로 쌓고, 띠는 탈것 뿌리 밑에 두되 뿌리 움직임을 빼서 (water() 와 같은 방식) 월드에 남긴다 */
-  WK: { N: 72, life: 3.5 }, /* v382 시험 5 사용자 '물줄기 조금만 진짜 조금만 짧게': 4.2 → 3.5초 */
+  WK: { N: 72, life: 3.5 }, /* v382 시험 6 사용자 '물줄기 조금만 진짜 조금만 짧게': 4.2 → 3.5초 */
   wkMat() { if (this._wkm) return this._wkm; const { THREE } = T3;
     return this._wkm = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: 0 } },
       vertexShader: 'attribute vec3 q; varying vec3 vQ; void main(){ vQ = q; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',

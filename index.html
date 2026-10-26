@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v381</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v382</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3168,6 +3168,7 @@ const Sprites = (() => {
  */
 const T = { GROUND: 0, ROAD: 1, WALK: 2, BLD: 3, ALLEY: 4, PARK: 5 };
 const TILE = 16;
+const CUT_PCT = 50; /* v382 안쪽 빌라 비우는 몫 (%) */
 
 const ZONE_SPECS = {
   // 2단계 1차: 큰길만 손으로 잡은 좌표(대략), 골목은 절차 생성. OSM 파일이 오면 교체.
@@ -3446,7 +3447,7 @@ function buildZone(spec, cases = []) {
   function claim(near, filter = () => true) {
     let best = null, bd = 1e9;
     for (const b of buildings) {
-      if (usedB.has(b.id) || !filter(b)) continue;
+      if (usedB.has(b.id) || b.cut || !filter(b)) continue;
       const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]);
       const door = doorOf(b); if (!door) continue;
       if (d < bd) { bd = d; best = { b, door }; }
@@ -3470,6 +3471,17 @@ function buildZone(spec, cases = []) {
     if (c) { c.b.place = 'case:' + cs.id; c.b.caseId = cs.id; if (cs.type === '아파트') c.b.floors = Math.max(c.b.floors, 12); places.push({ id: 'case:' + cs.id, kind: 'site', name: cs.name, caseId: cs.id, building: c.b.id, door: c.door }); }
   });
   for (const p of late) { const c = claim(p.near, b => b.w >= 4 && b.h >= 4); if (c) { c.b.place = p.id; places.push({ ...p, building: c.b.id, door: c.door }); } }
+  /* v382 사용자 '빌라 숫자도 쫌 줄여도 될거같은데' → '조금 더 줄이고 간격을 넓게' · '전체 지도의 빌라 많은곳 다' (컴퓨터 렉: 화면에 건물 225채):
+   * 모든 구에서 큰길·인도에 안 닿는 안쪽 작은 건물의 절반쯤을 비워 마당으로 둔다. 다른 건물과 한 칸 안으로 붙어 있는 것부터 빼서 남은 건물 사이가 넓어진다.
+   * 장소·경매 물건 건물은 그대로. 번호(id)는 그대로 두고 b.cut만 표시 (내 집·친구 집 저장이 번호로 가리켜서). 칸 해시 순서로 고르니 누구 화면이든 같다. 저장된 집이 빠진 건물이면 uncut으로 되살린다 */
+  { const hs = b => (Math.imul(b.x * 73856093 ^ b.y * 19349663, 2654435761) >>> 0), road = (x, y) => { const v = at(x, y); return v === T.ROAD || v === T.WALK; };
+    const cand = buildings.filter(b => { if (b.place || b.fixedPlace || usedB.has(b.id) || b.w * b.h > 120) return false;
+      for (let x = b.x - 1; x <= b.x + b.w; x++) if (road(x, b.y - 1) || road(x, b.y + b.h)) return false; for (let y = b.y; y < b.y + b.h; y++) if (road(b.x - 1, y) || road(b.x + b.w, y)) return false; return true; }).sort((a, b) => hs(a) - hs(b));
+    const max = Math.round(cand.length * CUT_PCT / 100), near = (a, o) => a !== o && !o.cut && a.x - 1 < o.x + o.w && o.x - 1 < a.x + a.w && a.y - 1 < o.y + o.h && o.y - 1 < a.y + a.h; let n = 0;
+    for (const b of cand) { if (n >= max) break; if (buildings.some(o => near(b, o))) { b.cut = 1; n++; } } /* 붙어 있는 것부터 */
+    for (const b of cand) { if (n >= max) break; if (!b.cut) { b.cut = 1; n++; } }
+    for (const b of cand) if (b.cut) for (let yy = b.y; yy < b.y + b.h; yy++) for (let xx = b.x; xx < b.x + b.w; xx++) set(xx, yy, T.GROUND); }
+  function uncut(b) { if (!b || !b.cut) return; b.cut = 0; for (let yy = b.y; yy < b.y + b.h; yy++) for (let xx = b.x; xx < b.x + b.w; xx++) set(xx, yy, T.BLD); if (zone.chunks) zone.chunks.clear(); zone._zmC = null; }
   // 가로수: 큰길 보도 가장자리
   const trees = [];
   for (const r of spec.roads) for (let i = 0; i < r.pts.length - 1; i++) {
@@ -3514,7 +3526,7 @@ function buildZone(spec, cases = []) {
       else j.halfB = Math.max(j.halfB, Math.abs(dx * pB[0] + dy * pB[1]) + road.width / 2);
     }
   }
-  const zone = { claim, doorOf, stableDoor, spec, gu: spec.gu, parking: spec.parking || [], id: spec.id, name: spec.name, W, H, g, at, buildings, places, trees, parks, crossings, roads: spec.roads, subway: spec.subway || [], chunks: new Map() };
+  const zone = { claim, doorOf, stableDoor, uncut, spec, gu: spec.gu, parking: spec.parking || [], id: spec.id, name: spec.name, W, H, g, at, buildings, places, trees, parks, crossings, roads: spec.roads, subway: spec.subway || [], chunks: new Map() };
   return zone;
 }
 function dirOf(a, b) { const L = Math.hypot(b[0] - a[0], b[1] - a[1]); return [(b[0] - a[0]) / L, (b[1] - a[1]) / L]; }
@@ -3530,7 +3542,7 @@ const CHUNK = 256;
 /* v326 리얼리스틱 땅 (사용자 '리얼리스틱 PBR 우리 이수준으로 해야해'): 3D 바깥에서는 Downtown City MegaKit 텍스처(아스팔트·콘크리트·흙)에
  * 해 빛·노멀·AO를 구운 사진 패턴(assets3d/ground_bake.py → 3d/ground/*.jpg)으로 땅을 칠하고, 칸 경계는 둥글게 다듬는다. 조각 캔버스는 GS배 해상도. */
 const GroundTex = {
-  st: 0, img: {}, K: ['road', 'walk', 'dirt', 'grass', 'brick', 'marble'], W: { road: 112, walk: 80, dirt: 160, grass: 72 }, // 사진 한 장이 땅 몇 px를 덮는지
+  cpu: false, st: 0, img: {}, K: ['road', 'walk', 'dirt', 'grass', 'brick', 'marble'], W: { road: 112, walk: 80, dirt: 160, grass: 72 }, // 사진 한 장이 땅 몇 px를 덮는지
   gs: (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) ? 2 : 3,
   load() { if (this.st || typeof Arena3J === 'undefined') return; this.st = 1; let n = 0;
     for (const k of this.K) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { if (++n === this.K.length) { this.st = 2; if (Game.zone && Game.zone.chunks) Game.zone.chunks.clear(); const R = typeof Room3D !== 'undefined' ? Room3D : null; if (R && R.zb) { for (const [, e] of R.zb) R.zDrop(e); R.zb.clear(); } /* 건물 벽도 사진 재질로 다시 */ } }; im.onerror = () => { this.st = -1; }; im.src = Arena3J.url('ground/' + k + '.jpg?v=1'); this.img[k] = im; } },
@@ -3547,7 +3559,7 @@ const GroundTex = {
     const p = x.createPattern(this._blk, 'repeat'), s = 1 / this.gs; if (p.setTransform) p.setTransform(new DOMMatrix([s, 0, 0, s, 0, 0])); return p; },
   pat(x, k, mul = 1) { const p = x.createPattern(this.img[k], 'repeat'), s = this.W[k] * mul / this.img[k].width; if (p.setTransform) p.setTransform(new DOMMatrix([s, 0, 0, s, 0, 0])); return p; },
   // 칸 종류 하나의 가림막: 칸 하나 = 8px로 부드럽게 늘린 뒤 반에서 자르면 계단 모서리가 둥근 윤곽이 된다
-  mask(zone, tx0, ty0, n, test) { const R = 8, m = n + 2, a = document.createElement('canvas'); a.width = a.height = m; const ax = a.getContext('2d'), id = ax.createImageData(m, m);
+  mask(zone, tx0, ty0, n, test) { const R = 8, m = n + 2, a = document.createElement('canvas'); a.width = a.height = m; const ax = a.getContext('2d', { willReadFrequently: true }), id = ax.createImageData(m, m); /* v382 작은 가림막도 CPU 쪽에 (그래픽 카드 되읽기 멈춤 없게) */
     for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) { const v = test(zone.at(tx0 + i - 1, ty0 + j - 1)) ? 255 : 0, o = (j * m + i) * 4; id.data[o] = id.data[o + 1] = id.data[o + 2] = 0; id.data[o + 3] = v; }
     ax.putImageData(id, 0, 0); const b = document.createElement('canvas'); b.width = b.height = m * R; const bx = b.getContext('2d', { willReadFrequently: true }); /* v363 읽어 오는 캔버스는 CPU 쪽에 (그래픽 카드에서 되읽기 멈춤 없게) */ bx.imageSmoothingEnabled = true; bx.drawImage(a, 0, 0, m * R, m * R);
     const d = bx.getImageData(0, 0, m * R, m * R), q = d.data; for (let o = 3; o < q.length; o += 4) { const v = (q[o] - 102) * 5; q[o] = v < 0 ? 0 : v > 255 ? 255 : v; } bx.putImageData(d, 0, 0); return b; },
@@ -3556,25 +3568,30 @@ const GroundTex = {
     /* v363 (렉 시연 점검: 달릴 때 땅 조각 하나 만드는 데 60ms+): 이 조각(+둘레 한 칸)에 그 칸 종류가 하나도 없으면 아무것도 안 그려지니 건너뛰고, 전부 그 종류면 가림막 없이 바로 덮는다 (결과 그림은 똑같다) */
     let hit = 0; const m = n + 2; for (let j = 0; j < m; j++) for (let i = 0; i < m; i++) if (test(zone.at(tx0 + i - 1, ty0 + j - 1))) hit++;
     if (!hit) return; const full = hit === m * m, mk = full ? null : this.mask(zone, tx0, ty0, n, test);
-    const t = this.lt || (this.lt = document.createElement('canvas')); if (t.width !== CHUNK * G) t.width = t.height = CHUNK * G; const tc = t.getContext('2d'); tc.setTransform(1, 0, 0, 1, 0, 0); tc.globalCompositeOperation = 'source-over'; tc.globalAlpha = 1; tc.clearRect(0, 0, t.width, t.height); /* 한 장을 돌려 쓴다 (매번 새로 만들면 폰 메모리·GC) */ tc.scale(G, G); tc.translate(-cx * CHUNK, -cy * CHUNK); fill(tc); tc.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.lt && this.lt._cpu !== !!this.cpu) this.lt = null; const t = this.lt || (this.lt = document.createElement('canvas')); t._cpu = !!this.cpu; if (t.width !== CHUNK * G) t.width = t.height = CHUNK * G; const tc = t.getContext('2d', this.cpu ? { willReadFrequently: true } : undefined); tc.setTransform(1, 0, 0, 1, 0, 0); tc.globalCompositeOperation = 'source-over'; tc.globalAlpha = 1; tc.clearRect(0, 0, t.width, t.height); /* 한 장을 돌려 쓴다 (매번 새로 만들면 폰 메모리·GC) */ tc.scale(G, G); tc.translate(-cx * CHUNK, -cy * CHUNK); fill(tc); tc.setTransform(1, 0, 0, 1, 0, 0);
     if (mk) { tc.globalCompositeOperation = 'destination-in'; tc.imageSmoothingEnabled = true; const sc = CHUNK * G / n; tc.drawImage(mk, -sc, -sc, sc * (n + 2), sc * (n + 2)); tc.globalCompositeOperation = 'source-over'; }
     x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(t, 0, 0); x.restore(); },
 };
 function zoneChunk(zone, cx, cy) {
   const key = cx + ',' + cy, hd = GroundTex.on(); let c = zone.chunks.get(key); if (c && !!c._hd === hd) { if (hd) { zone.chunks.delete(key); zone.chunks.set(key, c); } return c; } // 오래 안 본 조각부터 버린다
+  const t0 = typeof PerfHud !== 'undefined' && PerfHud.on ? performance.now() : 0; try { /* v382 /fps: 땅 만들기 시간 */
   const J = zoneChunk.job; if (J && J.zone === zone && J.key === key && J.hd === hd) { zoneChunk.job = null; let r; while (!(r = J.g.next()).done); return r.value; } // v363 미리 만들던 조각이면 마저
   const g = zoneChunkG(zone, cx, cy, hd); let r; while (!(r = g.next()).done); return r.value;
+  } finally { if (t0) PerfHud.add('gch', performance.now() - t0); }
 }
 /* v363 (렉 시연 점검): 땅 조각 하나를 단계별로 (yield). 화면에 보일 조각은 zoneChunk가 한 번에, 달리는 앞쪽 조각은 zoneChunkPre가 장면마다 조금씩 미리. 그림은 똑같다 */
-function zoneChunkPre(zone, x0, y0, x1, y1, until) { const hd = GroundTex.on(); let J = zoneChunk.job; if (J && (J.zone !== zone || J.hd !== hd)) J = zoneChunk.job = null;
+function zoneChunkPre(zone, x0, y0, x1, y1, until) { const t0 = typeof PerfHud !== 'undefined' && PerfHud.on ? performance.now() : 0; try { return zoneChunkPre0(zone, x0, y0, x1, y1, until); } finally { if (t0) PerfHud.add('gch', performance.now() - t0); } }
+function zoneChunkPre0(zone, x0, y0, x1, y1, until) { const hd = GroundTex.on(); let J = zoneChunk.job; if (J && (J.zone !== zone || J.hd !== hd)) J = zoneChunk.job = null;
   if (!J) { let best = null, bd = 1e18; const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
-    for (let cy = Math.max(0, Math.floor(y0 / CHUNK)); cy <= Math.floor(y1 / CHUNK); cy++) for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++) { if (cx * CHUNK >= zone.W * TILE || cy * CHUNK >= zone.H * TILE) continue; const c = zone.chunks.get(cx + ',' + cy); if (c && !!c._hd === hd) continue; const d = ((cx + 0.5) * CHUNK - mx) ** 2 + ((cy + 0.5) * CHUNK - my) ** 2; if (d < bd) { bd = d; best = [cx, cy]; } }
+    const W = hd && GroundWk.ok(zone), Q = W ? [] : null; /* v382 컴퓨터: 따로 도는 일꾼이 만들 수 있는 조각은 일꾼에게 (이 화면에선 안 만든다) */
+    for (let cy = Math.max(0, Math.floor(y0 / CHUNK)); cy <= Math.floor(y1 / CHUNK); cy++) for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++) { if (cx * CHUNK >= zone.W * TILE || cy * CHUNK >= zone.H * TILE) continue; const c = zone.chunks.get(cx + ',' + cy); if (c && !!c._hd === hd) continue; const d = ((cx + 0.5) * CHUNK - mx) ** 2 + ((cy + 0.5) * CHUNK - my) ** 2; if (W && !GroundWk.main(zone, cx, cy)) { Q.push([d, cx, cy]); continue; } if (d < bd) { bd = d; best = [cx, cy]; } }
+    if (W) GroundWk.ask(zone, Q);
     if (!best) return; const m = zone.chunks; if (!m._jw) { const c0 = m.clear.bind(m); m.clear = () => { zoneChunk.job = null; c0(); }; m._jw = 1; } // 다시 그리기(지우기)면 만들던 것도 버린다
     J = zoneChunk.job = { zone, hd, key: best[0] + ',' + best[1], g: zoneChunkG(zone, best[0], best[1], hd) }; }
-  do { if (J.g.next().done) { zoneChunk.job = null; return performance.now() < until - 1 ? zoneChunkPre(zone, x0, y0, x1, y1, until) : undefined; } } while (performance.now() < until); } /* v371 시간이 남으면 다음 조각도 */
+  do { if (J.g.next().done) { zoneChunk.job = null; return performance.now() < until - 1 ? zoneChunkPre0(zone, x0, y0, x1, y1, until) : undefined; } } while (performance.now() < until); } /* v371 시간이 남으면 다음 조각도 */
 function* zoneChunkG(zone, cx, cy, hd) {
   const key = cx + ',' + cy; let c;
-  c = document.createElement('canvas'); const G = hd ? GroundTex.gs : 1; c.width = c.height = CHUNK * G; c._hd = hd; const x = c.getContext('2d');
+  c = document.createElement('canvas'); const G = hd ? GroundTex.gs : 1; c.width = c.height = CHUNK * G; c._hd = hd; const x = c.getContext('2d', GroundTex.cpu ? { willReadFrequently: true } : undefined); /* v382 렉 점검: cpu면 땅 조각을 그래픽카드 대신 CPU로 그린다 (/땅2) */
   x.scale(G, G); x.translate(-cx * CHUNK, -cy * CHUNK);
   const tx0 = Math.floor(cx * CHUNK / TILE), ty0 = Math.floor(cy * CHUNK / TILE), n = CHUNK / TILE;
   const COL = { [T.GROUND]: '#b9b4a8', [T.ROAD]: '#3b3d42', [T.WALK]: '#c9c6bf', [T.BLD]: '#b9b4a8', [T.ALLEY]: '#6d6c6a', [T.PARK]: '#5c8a4c' };
@@ -3609,20 +3626,22 @@ function* zoneChunkG(zone, cx, cy, hd) {
   }
   yield;
   // 큰길은 벡터로 다시 그려 대각선도 매끈하게 (충돌은 타일 기준)
+  /* v382 컴퓨터 렉: 이 조각에 닿는 길만 (예전엔 조각마다 구 전체 길을 다섯 번씩 칠했다. 조각 밖은 원래 안 보이니 그림은 똑같다) */
+  const RD = zone.roads.filter(r => { let b = r._bb; if (!b) { b = r._bb = [Infinity, Infinity, -Infinity, -Infinity]; for (const [px, py] of r.pts) { b[0] = Math.min(b[0], px * TILE); b[1] = Math.min(b[1], py * TILE); b[2] = Math.max(b[2], px * TILE); b[3] = Math.max(b[3], py * TILE); } } const m = (r.width / 2 + 6) * TILE + 30; return b[2] + m > cx * CHUNK && b[0] - m < (cx + 1) * CHUNK && b[3] + m > cy * CHUNK && b[1] - m < (cy + 1) * CHUNK; });
   x.lineJoin = 'round'; x.lineCap = 'butt';
   const strokeRoad = (r, w, col) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); r.pts.forEach(([px, py], i) => (i ? x.lineTo(px * TILE, py * TILE) : x.moveTo(px * TILE, py * TILE))); x.stroke(); };
-  if (hd) { const bp = GroundTex.blk(x); for (const r of zone.roads) strokeRoad(r, (r.width + 5) * TILE, bp); x.globalAlpha = 0.45; x.globalCompositeOperation = 'multiply'; for (const r of zone.roads) strokeRoad(r, (r.width + 5) * TILE, P.walk); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; } // v356 길가 인도도 보도블록
-  else for (const r of zone.roads) strokeRoad(r, (r.width + 5) * TILE, COL[T.WALK]);
-  for (const r of zone.roads) strokeRoad(r, r.width * TILE + (hd ? 7 : 4), hd ? '#a9a59b' : '#9b978f'); // 연석 (v353 3D: 화강석 연석 폭 넓게)
-  if (hd) for (const r of zone.roads) strokeRoad(r, r.width * TILE + 2.2, '#7c7870'); // 연석 바깥 모서리 그늘
-  for (const r of zone.roads) strokeRoad(r, r.width * TILE, hd ? P.road : COL[T.ROAD]);
+  if (hd) { const bp = GroundTex.blk(x); for (const r of RD) strokeRoad(r, (r.width + 5) * TILE, bp); x.globalAlpha = 0.45; x.globalCompositeOperation = 'multiply'; for (const r of RD) strokeRoad(r, (r.width + 5) * TILE, P.walk); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; } // v356 길가 인도도 보도블록
+  else for (const r of RD) strokeRoad(r, (r.width + 5) * TILE, COL[T.WALK]);
+  for (const r of RD) strokeRoad(r, r.width * TILE + (hd ? 7 : 4), hd ? '#a9a59b' : '#9b978f'); // 연석 (v353 3D: 화강석 연석 폭 넓게)
+  if (hd) for (const r of RD) strokeRoad(r, r.width * TILE + 2.2, '#7c7870'); // 연석 바깥 모서리 그늘
+  for (const r of RD) strokeRoad(r, r.width * TILE, hd ? P.road : COL[T.ROAD]);
   yield;
   // 차선: 중앙선 노란 2줄(실선), 차선 흰 점선. 교차로 안은 비운다.
   x.save(); x.beginPath(); x.rect(cx * CHUNK - 10, cy * CHUNK - 10, CHUNK + 20, CHUNK + 20);
   for (const c of zone.crossings) { const R = (Math.max(c.halfA, c.halfB) + 2.5) * TILE; x.moveTo(c.x * TILE + R, c.y * TILE); x.arc(c.x * TILE, c.y * TILE, R, 0, Math.PI * 2, true); }
   x.clip('evenodd');
   const offLine = (pts, off) => { x.beginPath(); pts.forEach((pt, i) => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)]; const L = Math.hypot(b[0] - a[0], b[1] - a[1]); const nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L; const X = pt[0] * TILE + nx * off, Y = pt[1] * TILE + ny * off; i ? x.lineTo(X, Y) : x.moveTo(X, Y); }); x.stroke(); };
-  for (const r of zone.roads) {
+  for (const r of RD) {
     const laneW = r.width * TILE / r.lanes;
     if (r.oneway) { // 일방통행: 중앙선 없이 차선만
       x.lineWidth = 1.5; x.strokeStyle = 'rgba(240,240,240,.85)'; x.setLineDash([12, 12]);
@@ -3635,8 +3654,8 @@ function* zoneChunkG(zone, cx, cy, hd) {
     x.setLineDash([]);
   }
   if (hd) { // v353 실제 서울 보도처럼: 차도 가장자리 빗물 받이 그늘 + 큰길 보도 가운데 노란 점자블록 줄 (교차로 원 안은 위 clip으로 비움)
-    x.lineWidth = 1.4; x.strokeStyle = 'rgba(0,0,0,.28)'; for (const r of zone.roads) { offLine(r.pts, r.width * TILE / 2 - 1); offLine(r.pts, -r.width * TILE / 2 + 1); }
-    for (const r of zone.roads) if (r.width >= 4.5 || (r.oneway && r.width >= 3)) for (const sd of [-1, 1]) for (let i = 0; i < r.pts.length - 1; i++) { const A = r.pts[i], B = r.pts[i + 1], L = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1, nx = -(B[1] - A[1]) / L * sd, ny = (B[0] - A[0]) / L * sd, ow = r.width / 2 + 1.25;
+    x.lineWidth = 1.4; x.strokeStyle = 'rgba(0,0,0,.28)'; for (const r of RD) { offLine(r.pts, r.width * TILE / 2 - 1); offLine(r.pts, -r.width * TILE / 2 + 1); }
+    for (const r of RD) if (r.width >= 4.5 || (r.oneway && r.width >= 3)) for (const sd of [-1, 1]) for (let i = 0; i < r.pts.length - 1; i++) { const A = r.pts[i], B = r.pts[i + 1], L = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1, nx = -(B[1] - A[1]) / L * sd, ny = (B[0] - A[0]) / L * sd, ow = r.width / 2 + 1.25;
       let ok = 0; for (const t of [0.25, 0.5, 0.75]) { const mx = A[0] + (B[0] - A[0]) * t, my = A[1] + (B[1] - A[1]) * t; if (zone.at(Math.floor(mx + nx * ow), Math.floor(my + ny * ow)) !== T.ROAD && ![2.5, 4.5].some(k => zone.at(Math.floor(mx + nx * (ow + k)), Math.floor(my + ny * (ow + k))) === T.ROAD)) ok++; }
       if (ok < 2) continue; const seg = [A, B], o = sd * ow * TILE; /* 중앙 분리대 쪽은 빼고 바깥 보도에만 (구간마다 확인) */
       x.lineWidth = 4.6; x.strokeStyle = '#c8a634'; x.setLineDash([7.2, 0.8]); offLine(seg, o); x.lineWidth = 0.9; x.strokeStyle = 'rgba(120,90,10,.45)'; x.setLineDash([0.9, 1.5]); offLine(seg, o - 1.3); offLine(seg, o + 1.3); offLine(seg, o); }
@@ -3664,15 +3683,55 @@ function* zoneChunkG(zone, cx, cy, hd) {
   if (hd) { const X0 = cx * CHUNK - 24, Y0 = cy * CHUNK - 24, X1 = X0 + CHUNK + 48, Y1 = Y0 + CHUNK + 48, inC = (px, py) => px > X0 && px < X1 && py > Y0 && py < Y1; // v356 땅 위 쇠붙이: 가로수 보호판 · 맨홀 · 빗물받이 · 인도 통신 덮개
     for (const t of zone.trees) { if (!inC(t.x, t.y)) continue; x.save(); x.translate(t.x, t.y + 1); x.fillStyle = '#6e6a62'; x.fillRect(-10, -10, 20, 20); x.fillStyle = '#2e2c2a'; x.fillRect(-9, -9, 18, 18); x.strokeStyle = '#4a4744'; x.lineWidth = 1.1; for (let rr = 3.5; rr < 9; rr += 2.2) { x.beginPath(); x.arc(0, 0, rr, 0, 7); x.stroke(); } for (let a = 0; a < 8; a++) { x.beginPath(); x.moveTo(Math.cos(a * 0.785) * 3, Math.sin(a * 0.785) * 3); x.lineTo(Math.cos(a * 0.785) * 9, Math.sin(a * 0.785) * 9); x.stroke(); } x.fillStyle = '#4a3a2a'; x.beginPath(); x.arc(0, 0, 3.2, 0, 7); x.fill(); x.restore(); } // 가로수 둘레 주철 보호판
     const cover = (px, py, ang, sq) => { x.save(); x.translate(px, py); x.rotate(ang); if (sq) { x.fillStyle = '#5a5854'; x.fillRect(-6, -6, 12, 12); x.fillStyle = '#7a7670'; x.fillRect(-5, -5, 10, 10); x.strokeStyle = 'rgba(40,38,34,.55)'; x.lineWidth = 0.6; for (let i = -4; i <= 4; i += 1.6) { x.beginPath(); x.moveTo(i, -5); x.lineTo(i, 5); x.stroke(); } } else { x.scale(0.65, 0.65); x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.arc(0.4, 0.6, 9, 0, 7); x.fill(); x.fillStyle = '#4c4a46'; x.beginPath(); x.arc(0, 0, 8.5, 0, 7); x.fill(); x.fillStyle = '#5e5b56'; x.beginPath(); x.arc(0, 0, 7.4, 0, 7); x.fill(); x.strokeStyle = 'rgba(30,28,26,.6)'; x.lineWidth = 0.7; for (let rr = 2; rr < 7.2; rr += 1.8) { x.beginPath(); x.arc(0, 0, rr, 0, 7); x.stroke(); } for (let a = 0; a < 6; a++) { x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(a * 1.047) * 7.2, Math.sin(a * 1.047) * 7.2); x.stroke(); } } x.restore(); };
-    for (const r of zone.roads) { if (r.width < 3) continue; const pts = r.pts; let acc = 0; for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i], L = Math.hypot(bx - ax, by - ay); if (!L) continue; const dx = (bx - ax) / L, dy = (by - ay) / L, nx = -dy, ny = dx, ang = Math.atan2(dy, dx);
+    for (const r of RD) { if (r.width < 3) continue; const pts = r.pts; let acc = 0; for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i], L = Math.hypot(bx - ax, by - ay); if (!L) continue; const dx = (bx - ax) / L, dy = (by - ay) / L, nx = -dy, ny = dx, ang = Math.atan2(dy, dx);
       for (let s = (17 - acc % 17) % 17; s < L; s += 17) { const k = ((ax * 7 + ay * 13 + s * 3) | 0) & 7, lat = (k & 1 ? 1 : -1) * Math.min(r.width / 4, 1.2), mx = (ax + dx * s + nx * lat) * TILE, my = (ay + dy * s + ny * lat) * TILE;
         if (inC(mx, my) && zone.at(Math.floor(mx / TILE), Math.floor(my / TILE)) === T.ROAD && !zone.crossings.some(c => Math.hypot(c.x * TILE - mx, c.y * TILE - my) < (c.halfA + c.halfB + 3.5) * TILE)) cover(mx, my, ang, false); // 차도 맨홀
         for (const e of [-1, 1]) { const q = (r.width / 2 - 0.3) * e, gx = (ax + dx * (s + 8) + nx * q) * TILE, gy = (ay + dy * (s + 8) + ny * q) * TILE; const ox = (ax + dx * (s + 8) + nx * (q + 0.9 * e)) * TILE, oy = (ay + dy * (s + 8) + ny * (q + 0.9 * e)) * TILE; if (!inC(gx, gy) || zone.at(Math.floor(gx / TILE), Math.floor(gy / TILE)) !== T.ROAD || zone.at(Math.floor(ox / TILE), Math.floor(oy / TILE)) === T.ROAD) continue; /* 바로 바깥이 연석일 때만 */ x.save(); x.translate(gx, gy); x.rotate(ang); x.fillStyle = '#3a3936'; x.fillRect(-7, -2.6, 14, 5.2); x.fillStyle = '#16171a'; for (let i = -6; i < 6; i += 1.7) x.fillRect(i, -1.9, 0.9, 3.8); x.restore(); } // 길가 빗물받이
         const w2 = (r.width / 2 + 1.8) * (k & 2 ? 1 : -1), ux = (ax + dx * (s + 4) + nx * w2) * TILE, uy = (ay + dy * (s + 4) + ny * w2) * TILE; if (k < 3 && inC(ux, uy) && zone.at(Math.floor(ux / TILE), Math.floor(uy / TILE)) === T.WALK) cover(ux, uy, ang, true); } // 인도 네모 덮개 (통신·한전)
       acc += L; } } }
-  if (zone.chunks.size > (hd ? 40 : 80)) zone.chunks.delete(zone.chunks.keys().next().value);
-  zone.chunks.set(key, c); return c;
+  zoneChunkPut(zone, key, c, hd); return c;
 }
+function zoneChunkPut(zone, key, c, hd) { if (zone.chunks.size > (hd ? 40 : 80)) { const k = zone.chunks.keys().next().value, o = zone.chunks.get(k); zone.chunks.delete(k); if (o && o.close) o.close(); /* 일꾼이 보낸 그림은 바로 놓아 준다 */ }
+  zone.chunks.set(key, c); }
+/* v382 컴퓨터 렉 (사용자 '렉 계속 잡아', 상어 타고 달릴 때 /fps 땅 만들기 15~21ms): 달리는 앞쪽 땅 조각을 게임 화면과 따로 도는 일꾼(Worker + OffscreenCanvas)이
+ * 같은 그리기 코드(zoneChunkG·GroundTex를 그대로 옮김)로 만들어 그림만 보내 준다. 그래서 그림은 점 하나까지 같다. 이름 글씨가 있는 주차장 조각은 글꼴 때문에 예전처럼 여기서.
+ * 아직 안 온 조각이 화면에 들어오면 예전처럼 바로 만든다 (빈 땅이 보이는 일은 없다). 문제가 생기면 일꾼을 끄고 예전대로 */
+const GroundWk = {
+  st: 0, w: null, id: 0, pend: new Map(), N: 6,
+  on() { if (this._on === undefined) this._on = !!Store.get('gwk', 1) && !(typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches); return this._on; },
+  ok(zone) { if (!this.on() || this.st < 0) return false; if (this.st === 0) this.start(); if (this.st !== 2) return false; if (zone._wid === undefined) this.send(zone); return true; },
+  start() { if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined' || typeof createImageBitmap !== 'function' || GroundTex.st !== 2) return; this.st = 1;
+    try { const src = `'use strict';const T=${JSON.stringify(T)},TILE=${TILE},CHUNK=${CHUNK};self.document={createElement:()=>new OffscreenCanvas(1,1)};
+const GroundTex={cpu:false,gs:${GroundTex.gs},W:${JSON.stringify(GroundTex.W)},img:{},${GroundTex.blk},pat(x,k,mul=1){const V=this.img[k],t=this.W[k]*mul*this.gs;let L=V.w;while(L/2>=t&&V[L/2])L/=2;const im=V[L],p=x.createPattern(im,'repeat'),s=this.W[k]*mul/im.width;p.setTransform(new DOMMatrix([s,0,0,s,0,0]));return p;},${GroundTex.mask},${GroundTex.layer}};
+${zoneChunkG}
+function zoneChunkPut(){}
+const Z=new Map(),D={size:0,get(){},set(){},delete(){},keys(){return [][Symbol.iterator]();}};
+onmessage=e=>{const d=e.data;if(d.t==='img'){GroundTex.img=d.img;return;}
+if(d.t==='zone'){const g=d.g,W=d.W,H=d.H;Z.clear();Z.set(d.id,{W,H,g,at:(x,y)=>(x<0||y<0||x>=W||y>=H?T.BLD:g[y*W+x]),roads:d.roads,crossings:d.crossings,parking:d.parking,trees:d.trees,chunks:D});return;}
+const z=Z.get(d.id);if(!z){postMessage({id:d.id,k:d.k,no:1});return;}
+try{const it=zoneChunkG(z,d.cx,d.cy,true),tm=[];let r,t0=performance.now();while(!(r=it.next()).done){const t1=performance.now();tm.push(+(t1-t0).toFixed(1));t0=t1;}self.TM=tm;const b=r.value.transferToImageBitmap();postMessage({id:d.id,k:d.k,b,tm:self.TM},[b]);}catch(er){postMessage({id:d.id,k:d.k,err:String(er)});}};`;
+      /* 사진을 크게 줄여 칠할 때 브라우저는 미리 반·반의 반으로 줄인 사진을 쓴다 (<img> 패턴). 일꾼에선 그 줄인 사진을 여기서 똑같이 만들어(drawImage) 넘겨서 같은 그림이 되게 한다 */
+      const K = ['road', 'walk', 'dirt', 'grass'], jobs = []; for (const k of K) { const im = GroundTex.img[k], W0 = im.naturalWidth; if (W0 !== im.naturalHeight || W0 & (W0 - 1)) throw 0;
+        for (let L = W0; L >= 64; L /= 2) jobs.push([k, L, L === W0 ? createImageBitmap(im) : (() => { const c = document.createElement('canvas'); c.width = c.height = L; c.getContext('2d').drawImage(im, 0, 0, L, L); return createImageBitmap(c); })()]); }
+      const w = this.w = new Worker(URL.createObjectURL(new Blob([this.src = src], { type: 'text/javascript' })));
+      w.onmessage = e => this.got(e.data); w.onerror = () => this.off();
+      Promise.all(jobs.map(j => j[2])).then(bs => { const img = {}; jobs.forEach(([k, L], i) => { const V = img[k] || (img[k] = { w: L }); V[L] = bs[i]; }); w.postMessage({ t: 'img', img }, bs); this.st = 2; }, () => this.off());
+    } catch (e) { this.off(); } },
+  off() { this.st = -1; this.pend.clear(); if (this.w) { try { this.w.terminate(); } catch (e) {} this.w = null; } },
+  /* 구(동네)를 보낸다. 다시 그리기(chunks.clear)면 새 번호로 다시 보내고, 예전 번호로 오는 그림은 버린다 */
+  send(zone) { const m = zone.chunks; if (!m._ww) { const c0 = m.clear; m.clear = function () { zone._wid = undefined; return c0.apply(this, arguments); }; m._ww = 1; }
+    zone._wid = ++this.id; this.pend.clear(); zone._wm = new Set();
+    for (const pk of zone.parking) if (pk.name) { const X = pk.x * TILE, Y = pk.y * TILE, X1 = (pk.x + pk.w) * TILE, Y1 = (pk.y + pk.h) * TILE, mx = (X + X1) / 2, my = (Y + Y1) / 2; /* 이름 글씨(가운데 ±160) · P 표지 자리 */
+      for (const [a, b, c, d] of [[mx - 160, my - 12, mx + 160, my + 12], [X - 10, Y - 4, X + 2, Y + 8]]) for (let cy = Math.floor(b / CHUNK); cy <= Math.floor(d / CHUNK); cy++) for (let cx = Math.floor(a / CHUNK); cx <= Math.floor(c / CHUNK); cx++) zone._wm.add(cx + ',' + cy); }
+    this.w.postMessage({ t: 'zone', id: zone._wid, W: zone.W, H: zone.H, g: zone.g, roads: zone.roads.map(r => ({ pts: r.pts, width: r.width, lanes: r.lanes, oneway: r.oneway })), crossings: zone.crossings.map(c => ({ x: c.x, y: c.y, halfA: c.halfA, halfB: c.halfB, da: c.da, db: c.db })), parking: zone.parking.map(p => ({ x: p.x, y: p.y, w: p.w, h: p.h, name: p.name })), trees: zone.trees.map(t => ({ x: t.x, y: t.y })) }); },
+  main(zone, cx, cy) { return zone._wm.has(cx + ',' + cy); },
+  ask(zone, Q) { const now = performance.now(); for (const [k, t] of this.pend) if (now - t > 3000) this.pend.delete(k); /* 3초 넘게 안 오면 잊는다 */
+    Q.sort((a, b) => a[0] - b[0]); for (const [, cx, cy] of Q) { if (this.pend.size >= this.N) break; const k = cx + ',' + cy; if (this.pend.has(k)) continue; this.pend.set(k, now); this.w.postMessage({ id: zone._wid, k, cx, cy }); } },
+  got(d) { this.pend.delete(d.k); const z = typeof Game !== 'undefined' && Game.zone;
+    if (d.err) { if (z && z._wid === d.id) z._wm.add(d.k); return; } if (!d.b) return;
+    if (!z || z._wid !== d.id || !GroundTex.on()) { d.b.close(); return; } const c = z.chunks.get(d.k); if (c && c._hd) { d.b.close(); return; } /* 그새 여기서 만들었으면 버린다 */
+    d.b._hd = true; zoneChunkPut(z, d.k, d.b, true); },
+};
 /* v289 눕힌 탑다운 (사용자 2026-10-21 '탑다운으로 가자', 견본에서 고른 '눕힌 탑다운'): 길·충돌은 그대로 두고 건물만 세운다.
  * 바닥 칸(b.x..b.x+w, b.y..b.y+h)은 그대로 땅 위 자리. 앞벽은 남쪽 끝(base)에서 wallH만큼 위로 서고, 지붕은 그만큼 위로 올라가 그려진다.
  * 그래서 건물 북쪽(뒤) wallH 안쪽은 지붕에 가려진다 → game.js가 사람·차·나무와 함께 base 기준 y 정렬로 그리고, 가려진 내 캐릭터는 반투명으로 한 번 더 그린다. */
@@ -4118,6 +4177,11 @@ function hitPlayer(car, q) {
 function updateTraffic(dt, z) {
   const p0 = Game.player; if (p0) { p0.hurtCd = Math.max(0, (p0.hurtCd || 0) - dt); p0.hurt = Math.max(0, (p0.hurt || 0) - dt); }
   const P = Game.traffic.map(trafficCarPos);
+  /* v382 사용자 '이건 왜 지랄이야' (교차로 한가운데서 버스·차가 서로 막고 영영 서 있음): 교차로 안에 다른 길 차가 있으면 정지선에서 기다리고 (꼬리물기 금지),
+   * 이미 교차로 안에서 서로 막혀 한참이면 옆길 차는 무시하고 빠져나간다. 막힌 차를 다른 자리로 돌리는 건 '화면 밖'으로 판단 (컴퓨터는 화면이 넓어 420px 안 차도 화면 밖일 수 있고, 그 반대도) */
+  const box = new Map(), inBox = (cr, q) => Math.hypot(q.x / TILE - cr.x, q.y / TILE - cr.y) < Math.max(cr.halfA, cr.halfB) + 1;
+  Game.traffic.forEach((o, oi) => { for (const st of o.road.stops) if (inBox(st.c, P[oi])) { let a = box.get(st.c); if (!a) box.set(st.c, a = []); a.push(o); } });
+  const ccx = camSnapX(), ccy = camSnapY(), hw = VW / Cam.zoom / 2 + 120, hh = VH / Cam.zoom / 2 + 160, offS = q => Math.abs(q.x - ccx) > hw || Math.abs(q.y - ccy) > hh;
   Game.traffic.forEach((car, ci) => {
     const r = car.road; let target = car.vmax;
     // 밀린 만큼 제자리로
@@ -4131,15 +4195,17 @@ function updateTraffic(dt, z) {
       if (ahead > 0 && ahead < 70) {
         const red = signalState(st.c, r, Game.t) !== 'g';
         const boxed = lead && lead.o.v < 8 && lead.gap > ahead && lead.gap < ahead + st.half * 2 + lead.o.len + 10; // 앞차가 교차로 안이나 바로 건너편에 서 있다
-        if (red || boxed) target = Math.min(target, Math.max(0, (ahead - 6) * 2));
+        const cross = (box.get(st.c) || []).some(o => o.road !== r); /* v382 옆길 차가 교차로 안에 있으면 들어가지 않는다 */
+        if (red || boxed || cross) target = Math.min(target, Math.max(0, (ahead - 6) * 2));
       }
     }
     // 앞차 / 내 차
     let waiting = false, stuckAhead = false;
     if (lead && lead.gap < car.len + 30) { target = Math.min(target, Math.max(0, (lead.gap - car.len - 8) * 3)); if (lead.o.v < 5) stuckAhead = true; }
+    if ((car.waitT || 0) > FEEL.npcYieldWait && r.stops.some(st => inBox(st.c, me))) car.uj = 2.5; car.uj = Math.max(0, (car.uj || 0) - dt); const unjam = car.uj > 0; /* v382 교차로 안에서 서로 막혀 4초 넘으면 옆길 차는 무시하고 빠져나감 */
     const cA = Math.cos(me.a), sA = Math.sin(me.a); /* v376 차마다 다른 차 전부와 견줄 때 내 방향 cos·sin을 한 번만 (값 같음) */
     Game.traffic.forEach((o, oi) => {
-      if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane)) return;
+      if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane) || (unjam && o.road !== r)) return;
       // 다른 도로·차선의 차가 바로 앞에 있으면(교차로) 멈춰서 양보. 서로 마주 서서 영영 막히면 잠시 뒤 천천히 지나가되, 코앞의 차 위로는 올라타지 않는다
       const q = P[oi]; const dx = q.x - me.x, dy = q.y - me.y; if (Math.abs(dx) + Math.abs(dy) > 90) return;
       const fwd = dx * cA + dy * sA, side = Math.abs(-dx * sA + dy * cA);
@@ -4160,7 +4226,7 @@ function updateTraffic(dt, z) {
       const lanes = r.oneway ? r.lanes : r.lanes / 2;
       if (lanes > 1) { const other = car.lane === 1 ? 2 : car.lane - 1; const clear = !Game.traffic.some(o => o !== car && o.road === r && o.dirn === car.dirn && o.lane === other && Math.abs(o.s - car.s) < car.len + 24); if (clear) { car.lane = other; car.laneCd = 3; car.jamT = 0; } }
     }
-    if (car.jamT > FEEL.npcJamReset) { const pl = Game.player; if (Math.hypot(me.x - pl.x, me.y - pl.y) > 420) { car.s = Math.random() * r.len; car.v = 0; car.jamT = 0; car.waitT = 0; } }
+    if (car.jamT > FEEL.npcJamReset) { const pl = Game.player; if (Math.hypot(me.x - pl.x, me.y - pl.y) > 420 && offS(me)) { car.s = Math.random() * r.len; car.v = 0; car.jamT = 0; car.waitT = 0; } }
     if (!Game.driving) { const p = Game.player; const dx = p.x - me.x, dy = p.y - me.y; const fwd = dx * Math.cos(me.a) + dy * Math.sin(me.a), side = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a)); if (fwd > 0 && fwd < 40 && side < 10) target = 0; }
     if (car.halt > 0) { car.halt -= dt; target = 0; } if (car.flee > 0) { car.flee -= dt; target = Math.max(target, car.vmax * 1.4); } // 펫이 화나서 운전자를 혼내는 동안 서 있다가 부리나케 도망 (v156 PetRage)
     car.v += Math.max(-300 * dt, Math.min(120 * dt, target - car.v));
@@ -6778,7 +6844,7 @@ const ChatBar = {
   close() { this.open_ = false; $('chatBar').classList.remove('in'); document.body.classList.remove('chatOpen'); if (document.activeElement) document.activeElement.blur(); $('chatBar').style.top = ''; this.fit(); scrollTo(0, 0); },
   // 모바일 키보드가 열리면 보이는 영역(visualViewport)이 줄어든다 → 입력줄을 그 영역의 맨 위에 붙인다
   fit() { if (!document.body.classList.contains('touchOn')) return; const vv = window.visualViewport; const el = $('chatBar'); if (!vv || !this.open_) { el.style.top = ''; return; } el.style.top = `${Math.round(vv.offsetTop) + 8}px`; },
-  send() { const v = $('chatInput').value; if (v.trim() === '/fps') { PerfHud.toggle(); $('chatInput').value = ''; return this.close(); } if (v.trim()) Net.chat(v); $('chatInput').value = ''; this.close(); },
+  send() { const v = $('chatInput').value; if (v.trim() === '/fps') { PerfHud.toggle(); $('chatInput').value = ''; return this.close(); } if (v.trim() === '/땅' && typeof GroundCache !== 'undefined') { GroundCache.on(); GroundCache._on = !GroundCache._on; $('chatInput').value = ''; return this.close(); } /* v382 렉 점검: 땅 한 장 모으기 켜고 끄기 (/fps에 보임) */ if (v.trim() === '/3d' || v.trim() === '/3D') { PerfHud.probe(); $('chatInput').value = ''; return this.close(); } /* v382 3D 시간 어디서 나오는지 재기 */ if (v.trim() === '/묶기') { Room3D.zmOn(); Room3D._zmOn = !Room3D._zmOn; $('chatInput').value = ''; return this.close(); } /* v382 건물 칸마다 묶어 그리기 켜고 끄기 */ if (v.trim() === '/그림자판') { Room3D.shFit(); Room3D._shFit = !Room3D._shFit; $('chatInput').value = ''; return this.close(); } /* v382 그림자 판을 보이는 곳에 맞추기 켜고 끄기 */ if (v.trim() === '/땅3') { GroundWk.on(); GroundWk._on = !GroundWk._on; $('chatInput').value = ''; return this.close(); } /* v382 땅 조각을 따로 도는 일꾼이 만들기 켜고 끄기 */ if (v.trim() === '/땅2') { GroundTex.cpu = !GroundTex.cpu; if (Game.zone && Game.zone.chunks) Game.zone.chunks.clear(); $('chatInput').value = ''; return this.close(); } /* 땅 조각을 CPU로 그리기 켜고 끄기 */ if (v.trim()) Net.chat(v); $('chatInput').value = ''; this.close(); },
   bind() {
     const inp = $('chatInput');
     inp.onkeydown = e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); this.send(); } else if (e.key === 'Escape') { e.preventDefault(); inp.value = ''; this.close(); } };
@@ -8728,7 +8794,12 @@ function update(dt) {
   const k = 1 - Math.exp(-FEEL.camLerp * dt);
   if (Game.scene === 'zone') {
     const lead = Game.driving ? 0.35 : 0; const tx = p.x + (Game.driving ? Game.car.vx * lead : 0), ty = p.y + (Game.driving ? Game.car.vy * lead : 0) - (typeof zFlyCam === 'function' ? zFlyCam() : 0); /* v366 나는 탈것 높이만큼 */
-    Cam.x += (tx - Cam.x) * k; Cam.y += (ty - Cam.y) * k;
+    /* v382 사용자 '상어가 덜덜 거린다': 탈 때 카메라를 장면마다 k만큼 당겨 오면 장면 시간(dt)이 들쭉날쭉할 때 차와 카메라 사이가 매번 달라져 (한 장 길면 몇 픽셀 뒤처짐) 탈것이 화면에서 떨렸다.
+     * 같은 따라가기를 시간에 대해 그대로 풀어서 (목표가 이 장면 동안 고르게 움직였다고 보고) dt가 어떻든 같은 거리만큼 뒤따른다. 순간이동처럼 크게 뛰면 예전 방식 */
+    const E = Math.exp(-FEEL.camLerp * dt), L = FEEL.camLerp, jx = tx - (Cam.ptx ?? tx), jy = ty - (Cam.pty ?? ty);
+    if (Game.driving && dt > 0 && Cam.ptx != null && Math.abs(jx) + Math.abs(jy) < 120) { const vx = jx / dt, vy = jy / dt; Cam.x = tx + (Cam.x - Cam.ptx + vx / L) * E - vx / L; Cam.y = ty + (Cam.y - Cam.pty + vy / L) * E - vy / L; }
+    else { Cam.x += (tx - Cam.x) * k; Cam.y += (ty - Cam.y) * k; }
+    Cam.ptx = tx; Cam.pty = ty;
     const zt = FEEL.zoom * (Game.driving && !REDUCED_MOTION ? 1 - (1 - FEEL.camZoomAtMax) * Math.min(1, Game.car.speed / FEEL.carMaxSpeed) : 1);
     Cam.zoom += (zt - Cam.zoom) * Math.min(1, dt * 3);
     const hw = VW / 2 / Cam.zoom, hh = VH / 2 / Cam.zoom / zoneSq(), ZW = Game.zone.W * TILE, ZH = Game.zone.H * TILE;
@@ -8811,10 +8882,12 @@ function drawZone(t, g = ctx) { // g: 땅 그림 캔버스 (3D 바깥이면 #zgr
   const halfW = VW / 2 / Cam.zoom, halfH = VH / 2 / Cam.zoom / zoneSq() + (Z3 ? 60 : 0);
   const x0 = Cam.x - halfW - 40, x1 = Cam.x + halfW + 40, y0 = Cam.y - halfH - 40, y1 = Cam.y + halfH + 40;
   g.imageSmoothingEnabled = false;
+  const gT = Z3 && PerfHud.on ? [performance.now(), PerfHud.ms.gch || 0] : null; /* v382 /fps: 땅 그리기 시간 (땅 만들기 빼고) */
+  if (!(Z3 && typeof GroundCache !== 'undefined' && GroundCache.draw(g, z, x0, y0, x1, y1))) /* v382 컴퓨터: 땅 조각은 한 장에 모아 둔 그림으로 (zone3d.js) */
   for (let cy = Math.max(0, Math.floor(y0 / CHUNK)); cy <= Math.floor(y1 / CHUNK); cy++)
     for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++)
       if (cx * CHUNK < z.W * TILE && cy * CHUNK < z.H * TILE) { const ch = zoneChunk(z, cx, cy); g.imageSmoothingEnabled = !!ch._hd; g.drawImage(ch, cx * CHUNK, cy * CHUNK, CHUNK, CHUNK); } // v326 사진 땅은 해상도가 높아 부드럽게 줄인다
-  g.imageSmoothingEnabled = false;
+  g.imageSmoothingEnabled = false; if (gT) PerfHud.add('gnd', performance.now() - gT[0] - ((PerfHud.ms.gch || 0) - gT[1]));
   { /* v363 달리는 앞쪽 땅 조각을 미리 조금씩 (한 장면 3ms) · v371 끊김 (사용자 '계속 끊긴다 게임하는 중간중간에'): 걸을 때도, 화면 둘레 0.6조각까지 미리 (기억 한도 40조각 안에서만) */
     const c = Game.driving && Game.car ? Game.car : Game.player, ax = ((c && c.vx) || 0) * 1.2, ay = ((c && c.vy) || 0) * 1.2, M = CHUNK * 0.6;
     const X0 = x0 - M + Math.min(0, ax), Y0 = y0 - M + Math.min(0, ay), X1 = x1 + M + Math.max(0, ax), Y1 = y1 + M + Math.max(0, ay), n = (Math.floor(X1 / CHUNK) - Math.floor(X0 / CHUNK) + 1) * (Math.floor(Y1 / CHUNK) - Math.floor(Y0 / CHUNK) + 1);
@@ -8848,7 +8921,7 @@ function drawZone(t, g = ctx) { // g: 땅 그림 캔버스 (3D 바깥이면 #zgr
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 건물 그림자는 땅에 먼저
   const blds = [], plOf = {}; for (const pl of z.places) plOf[pl.building] = pl;
-  for (const b of z.buildings) { const X = b.x * TILE, Y = b.y * TILE, wh = bWallH(b), base = (b.y + b.h) * TILE; if (X > x1 + 30 || Y - wh > y1 || X + b.w * TILE + 30 < x0 || base + 30 < y0) continue; blds.push(b); if (!Z3) drawBuildingShadow(ctx, b); }
+  for (const b of z.buildings) { if (b.cut) continue; const X = b.x * TILE, Y = b.y * TILE, wh = bWallH(b), base = (b.y + b.h) * TILE; if (X > x1 + 30 || Y - wh > y1 || X + b.w * TILE + 30 < x0 || base + 30 < y0) continue; blds.push(b); if (!Z3) drawBuildingShadow(ctx, b); }
   // 문 앞 매트 (땅)
   for (const pl of z.places) { const dx = pl.door.tx * TILE, dy = pl.door.ty * TILE; if (dx < x0 - 20 || dx > x1 || dy < y0 - 20 || dy > y1) continue; g.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.6)' : 'rgba(205,174,112,.7)'; g.fillRect(dx + 3, dy + 3, 10, 10); }
   if (!Z3) for (const b of blds) near.push({ y: (b.y + b.h) * TILE, d: () => drawBuildingRoof(ctx, b, t, plOf[b.id]) }); // 3D면 건물·나무는 3D
@@ -10117,13 +10190,21 @@ const Mine = {
   },
   // v352 실사 1인칭: 스캔 곡괭이 (3d/mine/fp_pick.png, assets3d/mine_compose_pick.py). 화면 오른쪽 아래 밖(어깨 자리)을 축으로 휘두른다
   drawPickReal(c, now, walk, im) {
-    const W = this.W, H = this.H, t = now / 1000, A = MINE_FP; let a = -0.42 + Math.sin(t * 1.3) * 0.03, lift = Math.sin(t * 2.0) * 1.5 + walk * 3, sc = 1, imp = 0, push = 0;
+    /* v382 사용자 '곡괭이가 앞으로 가게 해서 해야지 옆으로 때리잖아': 예전엔 어깨를 축으로 화면 위에서 옆으로 쓸듯 돌렸다 (와이퍼처럼).
+     * 이제 어깨 위로 들어 올렸다가 (머리가 오른쪽 위로, 가까워져 커짐) 앞의 벽 가운데로 내리찍는다 (멀어져 작아지며 날 끝이 화면 가운데에 닿음) → 원래 자리로 */
+    const W = this.W, H = this.H, t = now / 1000, A = MINE_FP; let imp = 0, push = 0;
+    const rest = { rot: -0.35 + Math.sin(t * 1.3) * 0.025, sc: 1, px: W * 1.02, py: H * 0.98 - (Math.sin(t * 2.0) * 1.5 + walk * 3) };
+    const up = { rot: 0.12, sc: 1.14, px: W * 1.0, py: H * 0.98 - H * 0.2 };
+    const hit = (() => { const rot = -0.52, sc = 0.94, k = H * 0.95 * sc / A.h, dx = (A.tip[0] + 6 - A.pv[0]) * k, dy = (A.tip[1] + 6 - A.pv[1]) * k, cs = Math.cos(rot), sn = Math.sin(rot); /* 날 끝이 벽 가운데 (W/2, 0.52H)에 오도록 어깨 자리를 거꾸로 구한다 */
+      return { rot, sc, px: W * 0.5 - (dx * cs - dy * sn), py: H * 0.52 - (dx * sn + dy * cs) }; })();
+    const mix = (P, Q, e) => ({ rot: P.rot + (Q.rot - P.rot) * e, sc: P.sc + (Q.sc - P.sc) * e, px: P.px + (Q.px - P.px) * e, py: P.py + (Q.py - P.py) * e });
+    let Pz = rest;
     if (this.sw) { const k = (now - this.sw.t0) / 1000 / MINE_SW;
-      if (k < 0.42) { const e = 1 - Math.pow(1 - k / 0.42, 3); a = -0.42 + e * 0.75; lift -= e * 10; }
-      else if (k < 0.52) { const e = Math.pow((k - 0.42) / 0.1, 2); a = 0.33 - e * 1.25; lift = -10 + e * 16; sc = 1 - e * 0.1; push = e; }
-      else { const e = (k - 0.52) / 0.48, s = e < 0.5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2; a = -0.92 + s * 0.5; lift = 6 - s * 6; sc = 0.9 + s * 0.1; imp = Math.max(0, 1 - e * 4); push = 1 - s; }
-    } else if (this.tired && now < this.tired) { lift += 9 + Math.sin(t * 9) * 1.5; a = -0.3; }
-    const k = H * 0.95 * sc / A.h, rot = (a + 0.42) * 0.85 - 0.35, px = W * 1.02 + push * W * 0.01, py = H * 0.98 - lift + push * H * 0.04; // 어깨(팔이 나가는 오른쪽 끝)를 축으로
+      if (k < 0.4) { const e = 1 - Math.pow(1 - k / 0.4, 3); Pz = mix(rest, up, e); } /* 들어 올리기 */
+      else if (k < 0.52) { const e = Math.pow((k - 0.4) / 0.12, 2); Pz = mix(up, hit, e); push = e; } /* 앞으로 내리찍기 (점점 빨라짐) */
+      else { const e = (k - 0.52) / 0.48, s = e < 0.5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2, sh = Math.max(0, 1 - e * 5) * Math.sin(e * 60) * H * 0.004; Pz = mix(hit, rest, s); Pz.py += sh; imp = Math.max(0, 1 - e * 4); push = 1 - s; } /* 박히고 살짝 떨린 뒤 돌아오기 */
+    } else if (this.tired && now < this.tired) Pz = { rot: -0.248, sc: 1, px: W * 1.02, py: H * 0.98 - 9 - Math.sin(t * 9) * 1.5 };
+    const k = H * 0.95 * Pz.sc / A.h, rot = Pz.rot, px = Pz.px, py = Pz.py;
     const cs = Math.cos(rot), sn = Math.sin(rot), at = (x, y) => { const dx = (x - A.pv[0]) * k, dy = (y - A.pv[1]) * k; return { x: px + dx * cs - dy * sn, y: py + dx * sn + dy * cs }; };
     const tip = at(A.tip[0] + 6, A.tip[1] + 6), hd = at(A.head[0], A.head[1]); if (this.sw && !this.sw.hit) this.tip = tip; else if (!this.sw) this.tip = null;
     const hl = Math.max(0.35, Math.min(1, 1.2 - Math.hypot(hd.x - W / 2, hd.y - H / 2) / (H * 0.9)));
@@ -12791,16 +12872,16 @@ const MyHome = {
     if (z._home0 === undefined) z._home0 = z.places.find(p => p.id === 'home') || null;
     for (let i = z.places.length - 1; i >= 0; i--) if (z.places[i].id === 'home' || z.places[i].id === 'myhome') z.places.splice(i, 1);
     if (!Live.on) { if (z._home0) z.places.push(z._home0); return; }
-    if (!h || h.z !== z.id) return; const b = z.buildings[h.b], door = b && z.stableDoor(b); if (!door) return;
+    if (!h || h.z !== z.id) return; const b = z.buildings[h.b]; if (b && b.cut) z.uncut(b); /* v382 비운 안쪽 빌라였으면 내 집은 되살린다 */ const door = b && z.stableDoor(b); if (!door) return;
     const clash = z.places.find(p => p.building === b.id && (p.kind === 'arcade' || p.kind === 'casino')); // 구마다 새로 생긴 게임장·카지노가 산 집 건물에 들어갔으면 옆 건물로 옮긴다 (v212)
-    if (clash) { let best = null, bd = 1e9; const used = new Set(z.places.map(p => p.building)); for (const o of z.buildings) { if (o === b || o.place || used.has(o.id) || o.w < 4 || o.h < 4) continue; const d = Math.hypot(o.x - b.x, o.y - b.y), dr = d < bd && z.doorOf(o); if (dr) { bd = d; best = o; } } if (best) { best.place = clash.id; clash.building = best.id; clash.door = z.doorOf(best); } }
+    if (clash) { let best = null, bd = 1e9; const used = new Set(z.places.map(p => p.building)); for (const o of z.buildings) { if (o === b || o.place || o.cut || used.has(o.id) || o.w < 4 || o.h < 4) continue; const d = Math.hypot(o.x - b.x, o.y - b.y), dr = d < bd && z.doorOf(o); if (dr) { bd = d; best = o; } } if (best) { best.place = clash.id; clash.building = best.id; clash.door = z.doorOf(best); } }
     b.place = 'myhome'; z.places.push({ id: 'myhome', kind: 'home', name: `내 집 · ${this.type(h).name}`, building: b.id, door });
   },
   // 이 구역 매물: 집 종류마다 하나씩 (구역·종류로 정해서 다시 와도 같은 건물)
   listings() {
     const z = Game.zone; if (!z) return []; const used = new Set(z.places.filter(p => p.id !== 'forsale').map(p => p.building)), hz = [...String(z.id)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
     return HOME_TYPES.map((T, i) => { const R = makeRng((hz + i * 977 + (Live.ch || 0) * 31) >>> 0), near = [R.next() * z.W * 0.8 + z.W * 0.1, R.next() * z.H * 0.8 + z.H * 0.1];
-      let best = null, bd = 1e9; for (const b of z.buildings) { const A = b.w * b.h; if (used.has(b.id) || b.place || A < T.minA || A > T.maxA) continue; const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]); if (d < bd && z.doorOf(b)) { bd = d; best = b; } }
+      let best = null, bd = 1e9; for (const b of z.buildings) { const A = b.w * b.h; if (used.has(b.id) || b.place || b.cut || A < T.minA || A > T.maxA) continue; const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]); if (d < bd && z.doorOf(b)) { bd = d; best = b; } }
       if (!best) return null; used.add(best.id); const n = (R.next() * 1000) | 0, unit = T.unit(n); return { T, b: best.id, name: `${T.names[n % T.names.length]}${unit ? ' ' + unit : ''}`, price: T.price }; }).filter(Boolean);
   },
   spendable() { return typeof Shop !== 'undefined' && Shop.spendable ? Shop.spendable() : Math.max(0, State.cash - (State.capital || 0)); },
@@ -12882,7 +12963,7 @@ const MyHome = {
   fdoor: {},
   friendDoors() {
     const z = Game.zone, out = []; if (!Net.on || !Live.on || !z) return out;
-    for (const id in Net.players) { const f = Net.players[id], hm = f && !f.gone && Array.isArray(f.hm) ? f.hm : null; if (!hm || hm[0] !== z.id || !f.name) continue; const b = z.buildings[+hm[1]]; if (!b) continue; const k = `${z.id}:${hm[1]}:${hm[2]}:${f.name}`; let pl = this.fdoor[id];
+    for (const id in Net.players) { const f = Net.players[id], hm = f && !f.gone && Array.isArray(f.hm) ? f.hm : null; if (!hm || hm[0] !== z.id || !f.name) continue; const b = z.buildings[+hm[1]]; if (!b) continue; if (b.cut) z.uncut(b); /* v382 친구 집도 */ const k = `${z.id}:${hm[1]}:${hm[2]}:${f.name}`; let pl = this.fdoor[id];
       if (!pl || pl.k !== k) { const door = z.stableDoor(b); if (!door) continue; const T = HOME_TYPES.find(t => t.id === hm[2]); pl = this.fdoor[id] = { k, kind: 'fhome', id: 'fhome:' + f.name, host: id, hostName: f.name, tid: T ? T.id : 'apt', name: `${f.name}네 ${T ? T.name : '집'}`, building: b.id, door }; }
       pl.hd = f.hd || ''; out.push(pl); }
     return out;
@@ -18477,6 +18558,8 @@ const Room3D = {
     const sh = new THREE.Mesh(this.shGeo || (this.shGeo = new THREE.CircleGeometry(0.3, 20)), this.shMat || (this.shMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })));
     this.shGeo._keep = 1; sh.rotation.x = -Math.PI / 2; sh.position.y = 0.01; root.add(sh); return H; },
   // 게임 걷는 사람 → 3D 자리·방향·걸음
+  inCam(X, Z) { const c = this.cc; if (!c) return true; if (this.fcF !== this.fr) { this.fcF = this.fr; const { THREE } = T3; c.updateMatrixWorld(); (this.fcU || (this.fcU = new THREE.Frustum())).setFromProjectionMatrix((this.fcM || (this.fcM = new THREE.Matrix4())).multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse)); this.fcS = this.fcS || new THREE.Sphere(); }
+    this.fcS.center.set(X, 1, Z); this.fcS.radius = 3.5; return this.fcU.intersectsSphere(this.fcS); },
   pose(H, w, t, dt, seed) {
     const X = w.x / TILE, Z = w.y / TILE, moved = H.lx == null ? 0 : Math.hypot(X - H.lx, Z - H.lz); H.lx = X; H.lz = Z;
     const mv = !!w.moving || moved > 0.004; H.amp += ((mv ? (w.run ? 1.25 : 1) : 0) - H.amp) * Math.min(1, dt * 10); H.ph += moved * 7.5;
@@ -18489,7 +18572,8 @@ const Room3D = {
   },
   actor(key, P, w, t, dt, seed) { let H = this.A.get(key); const hero = typeof Hero3D !== 'undefined' && Hero3D.ready(), pk = hero ? 'H' + Hero3D.key(P) : PetRT.arena.hkey(P, 'kick'); // v308 새 몸이 준비되면 그걸로 (hero3d.js)
     if (!H || H.pk !== pk) { if (H) this.drop(H); H = hero ? Hero3D.make(P) : this.person(P); H.pk = pk; H.amp = 0; H.ph = 0; H.ang = [-Math.PI / 2, Math.PI, 0, Math.PI / 2][w.dir | 0] || 0; this.S.add(H.root); this.A.set(key, H); }
-    H.seen = this.fr; if (H.hero) { Hero3D.pose(H, w, t, dt, seed); if (!H.wok && key !== 'me') { H.wok = this.warmA(H, H.pk); H.root.visible = H.wok; } } else { this.pose(H, w, t, dt, seed); H.root.visible = typeof Hero3D === 'undefined' || Hero3D.st === -1; } /* v343 새 몸을 받는 동안 예전 꼬마는 숨김 (못 받았을 때만 꼬마) */ return H; },
+    H.seen = this.fr; if (H.hero) { /* v382 컴퓨터 렉: 새 몸 조각은 frustumCulled=false라 화면 밖 행인(19명 중 16명)도 조각 7개씩 그렸다. 바깥에서 화면 밖이면 몸을 안 그리고 동작 계산도 미뤄 둔다 (돌아오면 밀린 시간만큼 한 번에 → 같은 자세) */
+      H.off = this.zNow && key !== 'me' && !this.inCam(w.x / TILE, w.y / TILE); if (H.inner.visible === H.off) H.inner.visible = !H.off; Hero3D.pose(H, w, t, dt, seed); if (!H.wok && key !== 'me') { H.wok = this.warmA(H, H.pk); H.root.visible = H.wok; } } else { this.pose(H, w, t, dt, seed); H.root.visible = typeof Hero3D === 'undefined' || Hero3D.st === -1; } /* v343 새 몸을 받는 동안 예전 꼬마는 숨김 (못 받았을 때만 꼬마) */ return H; },
   // 안 보이게 된 것 치우기 (새 몸에 붙인 옷 도형은 사람마다 따로라 같이 버린다)
   /* v376 같이 할 때 끊김: 친구·행인·펫이 처음 보이면 그 몸의 셰이더(옷·펫마다 2~4개)를 그 프레임에 만들어 멈췄다 (친구 5명이 오면 15개).
    * 처음 보는 모습만 셰이더는 compileAsync로 따로, 아직 안 올린 그림은 한 프레임에 한 장씩 올린 뒤 보이게 한다. 이미 만든 셰이더·그림이면 바로 보인다. 모습은 똑같다 (내 캐릭터는 안 숨김) */
@@ -18557,7 +18641,7 @@ const Room3D = {
     const sh = new THREE.Mesh(this.shGeo || (this.shGeo = new THREE.CircleGeometry(0.3, 20)), this.shMat || (this.shMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false }))); this.shGeo._keep = 1; sh.rotation.x = -Math.PI / 2; sh.position.y = 0.01; root.add(sh);
     return { root, inner, mesh, mat, ol, sh, pet: 1 }; },
   render() {
-    const t0 = PerfHud.on ? performance.now() : 0; try { this.render0(); } finally { if (t0) PerfHud.add('gl', performance.now() - t0); } },
+    const t0 = PerfHud.on ? performance.now() : 0, P = PerfHud.P && PerfHud.pre(this); try { this.render0(); } finally { if (t0) PerfHud.add('gl', performance.now() - t0); if (P) PerfHud.post(this, performance.now() - t0); } },
   render0() {
     const pq = this.pq || []; this.pq = null; const now = performance.now(), dt = Math.min(0.05, this.lpt ? (now - this.lpt) / 1000 : 0.016); this.lpt = now;
     /* v374 같이 할 때 렉 (사용자 2026-10-24 '사람들이랑 같이할때 렉걸린대'): 예전엔 앞뒤(y) 순서 번호로 모델을 붙여서, 친구·펫이 움직여 순서가 바뀔 때마다
@@ -19210,30 +19294,33 @@ Object.assign(Room3D, {
     const ax = vx * la, ay = vy * la, x0 = cx - vw / 2 - 12 + Math.min(0, ax), x1 = cx + vw / 2 + 12 + Math.max(0, ax), z0 = cz - vd / 2 - 12 + Math.min(0, ay), z1 = cz + vd / 2 + 16 + Math.max(0, ay);
     const sp = typeof ShopPromo !== 'undefined' && ShopPromo.w; if (sp && Game.decor.includes(sp)) F.push([sp.x / TILE, sp.y / TILE]); if (typeof Net !== 'undefined' && Net.on) for (const { p } of Net.visible('zone')) if (p && Number.isFinite(p.x)) F.push([p.x / TILE, p.y / TILE]);
     const need = [], far = []; let vt = 0;
-    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
+    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e = this.zb.get(id), inV = !b.cut && b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
       if (e) { vt += e.nv || 0; e.m.visible = inV || b.x < cx + vw / 2 + 4 && b.x + b.w > cx - vw / 2 - 4 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 4; if (!inV) { far.push(id); continue; } if (e.stale) need.push(id); }
       else if (inV) need.push(id);
       if (!e) continue;
       const hide = F.some(([fx, fz]) => fx > b.x - 0.4 && fx < b.x + b.w + 0.4 && fz < b.y + 0.3 && fz > b.y - e.H * cot - 0.6), tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
       if (!e.tw) { e.tw = 1; this.zTw(e); }
-      const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
+      const tr = e.o < 0.98; if (e.sm) { if (tr && !e.fc) e.fc = e.sm.map(([m, s]) => (m.material = s.clone())); else if (!tr && e.fc) { e.sm.forEach(([m, s]) => { m.material = s; }); e.fc.forEach(c => c.dispose()); e.fc = null; } } /* v382 같이 쓰는 재질은 반투명일 때만 이 건물 것으로 복사 */
+      for (const mt of e.mats) { if (mt.userData.sh) continue; if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
+      if (e.fc) for (const mt of e.fc) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
     // 지나간 건물: 한도(폰 120만 · PC 300만 꼭짓점)를 넘으면 먼 것부터 치운다
     const cap = Ride3D.mob() ? 1.2e6 : 3e6, d2 = id => { const b = z.buildings[id], dx = b.x + b.w / 2 - cx - ax * 0.5, dz = b.y + b.h / 2 - cz - ay * 0.5; return dx * dx + dz * dz; };
     if (vt > cap && far.length) { far.sort((a, b) => d2(b) - d2(a)); for (const id of far) { if (vt <= cap) break; const e = this.zb.get(id); vt -= e.nv || 0; this.zDrop(e); this.zb.delete(id); } }
+    this.zSpd = Math.hypot(vx, vy); this.zPend = 0; for (const id of need) if (!this.zb.has(id)) this.zPend++; /* v382 zMerge가 보고 비킨다 */
     if (!need.length) { if (this.zWarm) this.zWarmEnd(); return; }
     /* v381 사용자 '처음 시작할때, 사무실 나갔다 왔을때 … 한번에 건물이 있는게 아니라 점점 그려지던데': 실사 벽 사진·옥상 부품이 오기 전에 예전 모습으로 먼저 짓고, 다 받으면 전부 다시 지어서 (하나씩 바꿔 끼우며) 점점 그려졌다.
      * 동네를 처음 지을 때는 사진·부품이 올 때까지 (길어야 10초) '동네 불러오는 중'으로 가려 두고, 받은 뒤 한 번에 짓는다 */
     if (this.zWarm && typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeRealG && Bld3D.rst !== -1 && !(Bld3D.real() && Bld3D.KIT) && now - (this.zRw || (this.zRw = now)) < 10000) { this.zWarm0 = 0; this.zWarmShow(need.length, 0); return; }
     need.sort((a, b) => (this.zb.has(a) ? 1e6 : 0) + d2(a) - (this.zb.has(b) ? 1e6 : 0) - d2(b)); // 없는 것 먼저, 가까운 것 먼저
-    const warm = (this.zWarm && now - this.zWarm0 < 12000) || (typeof irisDark === 'function' && irisDark()), budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
+    const warm = (this.zWarm && now - this.zWarm0 < 12000) || (typeof irisDark === 'function' && irisDark()), budget = warm ? 60 : this.fe > 22 ? (this.zSpd > 5 && this.zPend && !Ride3D.mob() ? 5 : 3) : 6; /* v382 컴퓨터로 빨리 달릴 때 (상어 80km/h 끊김 14번): 3ms로는 못 따라가 화면 안 건물을 한 번에 지어(14ms) 끊겼다 → 앞쪽 새 건물이 밀려 있으면 5ms */ if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
     let made = 0, J = this.zJob; if (J && (J.z !== z || J.bg !== bg || J.eve !== State.evening || !need.includes(J.id))) J = this.zJob = null;
     /* v363 (렉 시연 점검): 화면 안 건물은 지금 한 번에, 달리는 앞쪽(아직 화면 밖) 새 건물은 한 채를 단계별로 여러 장면에 나눠 짓는다 (zJob) */
     const onS = b => b.x < cx + vw / 2 + 1 && b.x + b.w > cx - vw / 2 - 1 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 1; /* v371 화면 밖 1칸부터는 나눠 짓기로 (예전 4칸: 아직 안 보이는 건물을 한 번에 지어 걸을 때 끊김). 아래쪽 8칸은 높은 건물이 위로 보여서 그대로 */
     const fin = (id, e) => { const old = this.zb.get(id);
       if (e.top != null) e.H = Math.max(e.H || 0, e.top); else try { e.H = Math.max(e.H || 0, new T3.THREE.Box3().setFromObject(e.m).max.y); } catch (er) {} /* v346 건물 1층을 높여서 (건물 스레드) 보이는 높이로 가림 판단 · v362 실사 건물은 makeReal이 top·nv를 알려 줌 (Box3·traverse 생략) */
       if (!e.nv) { let nv = 0; e.m.traverse(o => { const g = o.geometry; if (g && g.attributes && g.attributes.position) nv += g.attributes.position.count; }); e.nv = nv; }
-      if (old) { e.o = old.o; this.zDrop(old); } this.S.add(e.m); this.zb.set(id, e); made++; };
+      if (old) { e.o = old.o; this.zDrop(old); } this.S.add(e.m); e.id = id; this.zb.set(id, e); made++; };
     const canG = typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && !!Bld3D.makeRealG && !!(Bld3D.real && Bld3D.real());
     for (const id of need) { if (made && performance.now() - now > budget) break; const b = z.buildings[id];
       if (!warm && (this.zb.has(id) ? canG : !onS(b))) continue; /* v374 버벅임 1판: 저녁이 되거나 벽 사진이 바뀌어 다시 지을 건물(이미 서 있음)도 나눠 짓기로. 전엔 화면 안 건물 30채쯤을 장면마다 한 채씩 통째로 지어 해 질 때 0.5초쯤 덜덜 떨렸다 (새 모습으로 바뀌는 건 똑같고 조금씩 차례로) */
@@ -19243,15 +19330,61 @@ Object.assign(Room3D, {
       if (!J) break; const jid = J.id, e = this.zJobRun(J, now + budget); if (!e) break; this.zJob = J = null; fin(jid, e); }
     if (this.zWarm) { if (!(now - this.zWarm0 < 12000)) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); } /* v376 warm은 화면이 가려졌을 때도 켜지니 '불러오는 중' 판단은 시간으로만 */
   },
+  /* v382 컴퓨터 렉 (사용자 /3d: 3D 20ms 중 건물 9ms, 그리기 횟수가 문제 · '지도대로 두기'): 건물마다 벽·창·지붕·땅 그늘을 따로 그려서 건물 하나에 그리기 6~8번이었다.
+   * 이제 16칸 네모(칸) 안 지어진 건물들이 잠깐 그대로면, 같은 재질끼리 모양을 한 덩어리로 합쳐 칸마다 재질당 한 번만 그린다 (꼭짓점 그대로 옮겨 붙여서 모습은 똑같다).
+   * 칸 안 건물이 반투명이 되거나(내가 뒤로 감) 바뀌면 그 칸은 바로 예전처럼 건물마다 그리고, 다시 잠잠해지면 묶는다. 간판·글자는 건물마다 그림이 달라 그대로. 컴퓨터만 (/묶기로 끄고 켬) */
+  /* v382 컴퓨터 렉 (사용자 /3d: 그림자 없이 −6.5ms): 그림자 판을 화면 가로 기준 큰 정사각형(보이는 땅의 약 3배)으로 잡아서, 화면에 그림자를 안 드리우는 건물까지 그림자 판에 그렸다.
+   * 해에서 보면 물체와 그 그림자는 같은 자리에 겹치므로, 화면에 보이는 공간(땅 ~ 가장 높은 건물 높이)을 해 쪽에서 본 네모만 잡으면 보이는 그림자는 다 들어간다. 판이 작아져 그림자 글씨가 조금 더 또렷해진다. 컴퓨터만 (/그림자판) */
+  shFit() { if (this._shFit === undefined) this._shFit = !!Store.get('shfit', 1) && !Ride3D.mob(); return this._shFit; },
+  zShFit(oc, sun, sc) { const { THREE } = T3, V = this.sfV || (this.sfV = Array.from({ length: 8 }, () => new THREE.Vector3())), O = this.sfO || (this.sfO = new THREE.Object3D()), a = this.sfA || (this.sfA = new THREE.Vector3()), d = this.sfD || (this.sfD = new THREE.Vector3());
+    let hm = 6; for (const [, e] of this.zb) if (e.m.visible && e.H > hm) hm = e.H; hm = Math.min(hm + 1, 40);
+    oc.getWorldDirection(d); let i = 0;
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) { a.set(sx, sy, -1).unproject(oc); for (const h of [0, hm]) { const t = (h - a.y) / d.y; V[i++].copy(a).addScaledVector(d, t); } } /* 화면 네 귀퉁이에서 땅(0)과 가장 높은 지붕 높이까지 */
+    O.position.copy(sun.position); O.lookAt(sun.target.position); O.updateMatrixWorld(); const inv = this.sfM || (this.sfM = new THREE.Matrix4()); inv.copy(O.matrixWorld).invert();
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; for (const v of V) { v.applyMatrix4(inv); if (v.x < x0) x0 = v.x; if (v.x > x1) x1 = v.x; if (v.y < y0) y0 = v.y; if (v.y > y1) y1 = v.y; }
+    const m = 1.5, q = 0.5, L = Math.floor((x0 - m) / q) * q, R = Math.ceil((x1 + m) / q) * q, B = Math.floor((y0 - m) / q) * q, T = Math.ceil((y1 + m) / q) * q; /* 0.5칸 단위로 끊어 판 크기가 조금씩 흔들리지 않게 */
+    if (sc.left !== L || sc.right !== R || sc.top !== T || sc.bottom !== B) { sc.left = L; sc.right = R; sc.top = T; sc.bottom = B; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); } },
+  zmOn() { if (this._zmOn === undefined) this._zmOn = !!Store.get('bmerge', 1) && !Ride3D.mob(); return this._zmOn; },
+  zmCell(z) { if (z._zmC) return z._zmC; const C = 16, m = new Map(); z.buildings.forEach((b, id) => { if (b.cut) return; const k = Math.floor((b.x + b.w / 2) / C) + ',' + Math.floor((b.y + b.h / 2) / C); b._ck = k; let a = m.get(k); if (!a) m.set(k, a = []); a.push(id); }); return (z._zmC = m); },
+  zmShow(cs, on) { for (const e of cs.sig) { for (const [m] of e.sm) m.visible = !on; const g = e.m.userData.gao; if (g) g.visible = !on; } if (cs.mesh) cs.mesh.visible = on; cs.on = on; },
+  zmDrop(cs) { if (cs.on) this.zmShow(cs, false); if (cs.mesh) { this.S.remove(cs.mesh); cs.mesh.children.forEach(o => o.geometry.dispose()); cs.mesh = null; } cs.job = null; },
+  zmClear() { if (this.zm) for (const [, cs] of this.zm) this.zmDrop(cs); this.zm = new Map(); },
+  zMerge(z) { if (!this.zmOn() || typeof Bld3D === 'undefined') { if (this.zm && this.zm.size) this.zmClear(); return; }
+    if (this.zmZ !== z || !this.zm) { this.zmClear(); this.zmZ = z; } const cells = this.zmCell(z), seen = new Set(), t0 = performance.now(), hold = this.zPend > 0 || this.zSpd > 5; let spent = 0; /* v382 새 건물을 지어야 하거나 빨리 달리는 중이면 묶기는 쉰다 (곧 지나갈 칸을 묶느라 짓기가 밀려 끊겼다) */
+    for (const [, e] of this.zb) { const b = z.buildings[e.id != null ? e.id : -1]; if (b) seen.add(b._ck); }
+    for (const [k, cs] of this.zm) if (!seen.has(k)) { this.zmDrop(cs); this.zm.delete(k); }
+    for (const k of seen) { const ids = cells.get(k); if (!ids) continue; let cs = this.zm.get(k); if (!cs) this.zm.set(k, cs = { sig: [], mesh: null, on: false, since: t0, job: null });
+      let ok = true, fade = false; const sig = []; for (const id of ids) { const e = this.zb.get(id); if (!e) continue; if (e.stale) { ok = false; break; } /* 아직 안 지은 건 빼고 묶는다 (지어지면 다시 묶음) */ if (!e.sm || !e.m.userData.gao) continue; if (e.o < 0.999 || e.fc) fade = true; sig.push(e); }
+      const same = ok && sig.length === cs.sig.length && sig.every((e, i) => e === cs.sig[i]);
+      if (!same) { this.zmDrop(cs); cs.sig = ok ? sig : []; cs.since = t0; continue; }
+      if (fade || sig.length < 2) { if (cs.on) this.zmShow(cs, false); cs.since = t0; continue; }
+      if (cs.mesh) { if (!cs.on) this.zmShow(cs, true); continue; }
+      if (hold || t0 - cs.since < 400 || spent > (this.zmBud || 2)) continue; /* 칸이 0.4초 그대로일 때만, 한 장에 묶는 일 2ms 안에서 */
+      const t1 = performance.now(); if (!cs.job) cs.job = this.zmBuild(cs); for (;;) { const r = cs.job.next(); if (r.done) { cs.job = null; cs.mesh = r.value; this.S.add(cs.mesh); this.zmShow(cs, true); break; } if (performance.now() - t1 + spent > (this.zmBud || 2)) break; } spent += performance.now() - t1; }
+  },
+  *zmBuild(cs) { const { THREE } = T3, G = new Map();
+    for (const e of cs.sig) { const p = e.m.position, L = [...e.sm.map(([m, s]) => [m, s]), [e.m.userData.gao, e.m.userData.gao.material]];
+      for (const [m, s] of L) { const k = s.uuid + '|' + (m.castShadow ? 1 : 0) + '|' + m.renderOrder + '|' + (m.geometry.index ? 1 : 0); let g = G.get(k); if (!g) G.set(k, g = { s, cast: m.castShadow, ro: m.renderOrder, ix: !!m.geometry.index, L: [] }); g.L.push([m.geometry, p.x + m.position.x, p.y + m.position.y, p.z + m.position.z]); } }
+    const root = new THREE.Group(); root.userData.zm = 1;
+    for (const [, g] of G) { let n = 0, ni = 0; const A = g.L[0][0].attributes, keys = Object.keys(A).filter(a => g.L.every(([q]) => q.attributes[a] && q.attributes[a].itemSize === A[a].itemSize)); for (const [q] of g.L) { n += q.attributes.position.count; if (g.ix) ni += q.index.count; }
+      const out = {}; for (const a of keys) out[a] = new Float32Array(n * A[a].itemSize); const idx = g.ix ? new Uint32Array(ni) : null; let o = 0, oi = 0;
+      for (const [q, x, y, z] of g.L) { const c = q.attributes.position.count; for (const a of keys) { const src = q.attributes[a].array, w = A[a].itemSize; out[a].set(src.length === c * w ? src : src.subarray(0, c * w), o * w); }
+        const P = out.position; for (let i = o * 3, e = (o + c) * 3; i < e; i += 3) { P[i] += x; P[i + 1] += y; P[i + 2] += z; } if (idx) { const s = q.index.array; for (let i = 0; i < q.index.count; i++) idx[oi + i] = s[i] + o; oi += q.index.count; } o += c; yield; }
+      const geo = new THREE.BufferGeometry(); for (const a of keys) geo.setAttribute(a, new THREE.BufferAttribute(out[a], A[a].itemSize)); if (idx) geo.setIndex(new THREE.BufferAttribute(idx, 1)); geo.computeBoundingSphere();
+      const ms = new THREE.Mesh(geo, g.s); ms.castShadow = g.cast; ms.receiveShadow = true; ms.renderOrder = g.ro; root.add(ms); }
+    root.visible = false; return root; },
   zJobRun(J, until) { try { let r; do { r = J.g.next(); if (r.done) return r.value; } while (performance.now() < until); return null; } catch (er) { console.warn('bld3d', er); this.zJob = null; return this.zBld(J.z.buildings[J.id], J.pl); } },
   zWarmShow(left, made) { this.zWarmD = (this.zWarmD || 0) + made; clearTimeout(this.zwT); this.zwT = setTimeout(() => this.zWarmEnd(), 600); /* 바깥을 안 그리면 (실내로 들어가면) 바로 걷는다 */ let el = document.getElementById('zLoad'); if (!el) { if (!document.getElementById('zLoadCss')) { const st = document.createElement('style'); st.id = 'zLoadCss'; st.textContent = '#zLoad{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#0e1218;pointer-events:auto}#zLoad .b{width:min(280px,80vw);text-align:center;color:#f2ead8;font:600 14px/1.4 "IBM Plex Sans KR",sans-serif}#zLoad b{display:block;font-size:17px;margin-bottom:10px}#zLoad i{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}#zLoad s{display:block;height:100%;width:0;background:#e8c34a;transition:width .15s}#zLoad small{display:block;margin-top:8px;opacity:.75}'; document.head.appendChild(st); } el = document.createElement('div'); el.id = 'zLoad'; el.innerHTML = '<div class="b"><b>동네 불러오는 중</b><i><s></s></i><small></small></div>'; document.body.appendChild(el); }
     const done = this.zWarmD, all = done + left, pct = all ? Math.round(done / all * 100) : 100; el.querySelector('s').style.width = pct + '%'; el.querySelector('small').textContent = `건물 ${done} / ${all}`; },
   zWarmEnd() { this.zWarm = 0; this.zWarm0 = 0; this.zWarmD = 0; const el = document.getElementById('zLoad'); if (el) el.remove(); },
   /* v376 끊김: 나·친구가 건물 뒤로 가면 건물이 반투명이 되는데, 처음 그럴 때 반투명용 셰이더(재질 종류마다 하나, 처음 5개쯤)를 그 프레임에 만들었다.
    * 건물이 생길 때 반투명 짝 셰이더도 미리 만들어 둔다 (이미 있으면 찾기만). 모습은 똑같다 */
-  zTw(e) { const ms = e.mats.filter(m => !m.transparent); if (!ms.length || !this.r) return; for (const m of ms) m.transparent = true;
+  zTw(e) { const ms = e.mats.filter(m => !m.transparent && !(m.userData.sh && m.userData.tw)); if (!ms.length || !this.r) return;
+    /* v382 컴퓨터 렉: 간판·글자 재질은 건물마다 새로 만들지만 셰이더 모양은 같다. 같은 모양(재질 종류·그림 유무·저녁)을 이미 반투명으로 만들어 봤으면 건너뛴다 (만들 때마다 장면 전체를 훑었다) */
+    const key = ms.map(m => m.userData.sh ? m.uuid : m.type + (m.map ? 'm' : '') + (m.emissiveMap ? 'e' : '') + (m.alphaTest > 0 ? 'a' : '') + (m.vertexColors ? 'v' : '') + m.side).sort().join() + '|' + State.evening + '|' + (typeof Bld3D !== 'undefined' ? Bld3D.rgen : 0), tk = this.zTk || (this.zTk = new Set());
+    if (tk.has(key)) return; tk.add(key); for (const m of ms) { m.transparent = true; if (m.userData.sh) m.userData.tw = 1; } /* v382 같이 쓰는 재질은 처음 한 번만 */
     try { this.r.compile(e.m, this.cc || this.cam, this.S); } catch (er) { } for (const m of ms) { m.transparent = false; m.needsUpdate = true; } },
-  zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.map && !mt.map._sh) mt.map.dispose(); mt.dispose(); } e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
+  zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.userData.sh) continue; if (mt.map && !mt.map._sh) mt.map.dispose(); mt.dispose(); } if (e.fc) { e.fc.forEach(c => c.dispose()); e.fc = null; } /* v382 같이 쓰는 재질은 버리지 않는다 */ e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
   /* ---- 차 (앞 = +x): 몸통 · 유리 지붕 · 바퀴 · 불빛 ---- */
   car3(len, wid, col, stripe, kind, v) { if (typeof Car3D !== 'undefined' && Car3D.ready()) try { return Car3D.make(len, wid, col, stripe, kind, v); } catch (e) { console.warn('car3d', e); Car3D.st = -1; } return this.car3b(len, wid, col, stripe, kind); },
   car3b(len, wid, col, stripe, kind) {
@@ -19371,14 +19504,14 @@ Object.assign(Room3D, {
     oc.left = -vw / 2; oc.right = vw / 2; oc.top = vh / 2; oc.bottom = -vh / 2; oc.updateProjectionMatrix();
     oc.position.set(cx, Math.sin(Z3_EL) * D, cz + Math.cos(Z3_EL) * D); oc.lookAt(cx, 0, cz); oc.updateMatrixWorld(); this.cc = oc;
     const sun = this.zsun, R2 = Math.max(vw, vh / this.zSq()) * 0.62 + 6; sun.position.set(cx - 9, 22, cz + 14); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
-    const sc = sun.shadow.camera; if (sc.right !== R2) { sc.left = -R2; sc.right = R2; sc.top = R2; sc.bottom = -R2; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
+    const sc = sun.shadow.camera; if (this.shFit()) this.zShFit(oc, sun, sc); else if (sc.right !== R2 || sc.left !== -R2 || sc.top !== R2) { sc.left = -R2; sc.right = R2; sc.top = R2; sc.bottom = -R2; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
         if (!this.zsg) this.zSignals(z); this.zSigTick(t); this.zBusSign(performance.now() / 1000);
         if (PBR.done && !this.zti) this.zTrees(z); if (PBR.done && (!this.zp && (!this.zpWait || Props3D.ver !== this.zpVer))) this.zProps(z); // v331 거리 소품 (받으면 한 번에 세운다)
         if (PBR.done && typeof Bld3D !== 'undefined' && Bld3D.zPoles) Bld3D.zPoles(this, z); // v349 전봇대·전선 (bldreal.js, 구역마다 한 번)
         if (Car3D.ready() && Car3D.real && !this.carWarm && this.r) { this.carWarm = 1; try { /* v371 끊김: 실사 길거리 차(아이오닉·타이어…) 재질을 처음 보일 때 만들면 멈춘다 → 받자마자 미리 (탈것 warmUp과 같은 방법) */
           const g = new T3.THREE.Group(); for (const k in Car3D.M) for (const t in Car3D.M[k]) { const L = Car3D.M[k][t]; if (!Array.isArray(L)) continue; for (const q of L) if (q.mat) { const m = new T3.THREE.Mesh(q.geo, q.mat); m.frustumCulled = false; g.add(m); } }
           g.add(new T3.THREE.Mesh(new T3.THREE.BoxGeometry(0.1, 0.1, 0.1), Car3D.fixM())); Ride3D.warmUp(this, g, 'car3d'); /* 장면엔 안 넣고 셰이더·그림만 (compileAsync 대상 장면 = 거리) */ } catch (e) { console.warn('car warm', e); } }
-    this.zStream(z, cx, cz, vw, vh / this.zSq(), dt);
+    { const t0 = PerfHud.on ? performance.now() : 0; this.zStream(z, cx, cz, vw, vh / this.zSq(), dt); this.zMerge(z); if (t0) PerfHud.add('bld', performance.now() - t0); } /* v382 /fps: 건물 짓기 시간 (묶기 포함) */
     this.zq = { w: [], c: [] }; this.pq = [];
   },
   // 같은 사람·차를 프레임마다 이어 주기: 같은 종류 + 가장 가까운 지난 자리
@@ -19391,7 +19524,7 @@ Object.assign(Room3D, {
   // v321 밧줄: 두 손 가운데 → 돛 모서리 (r = {x, y, h} 월드 px · 칸, 없으면 숨김)
   /* v366 나는 탈것 밑 지붕 (칸): [x, y 둘레 r px 안에 걸친 지붕 중 가장 높은 것, 가운데가 지붕 위면 그 지붕 높이] */
   zRoof(x, y, r) { const z = this.room, tx = x / TILE, ty = y / TILE, rt = r / TILE; let nr = 0, on = 0; if (!z || !z.buildings) return [0, 0];
-    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], dx = Math.max(b.x - tx, 0, tx - b.x - b.w), dy = Math.max(b.y - ty, 0, ty - b.y - b.h); if (dx > rt || dy > rt) continue; const d = Math.hypot(dx, dy); if (d > rt) continue;
+    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id]; if (b.cut) continue; const dx = Math.max(b.x - tx, 0, tx - b.x - b.w), dy = Math.max(b.y - ty, 0, ty - b.y - b.h); if (dx > rt || dy > rt) continue; const d = Math.hypot(dx, dy); if (d > rt) continue;
       const e = this.zb.get(id), h = e && e.H > 0 ? e.H : bWallH(b) / TILE * Z3_BH; if (h > nr) nr = h; if (d < rt * 0.3 && h > on) on = h; } return [nr, on]; },
   rope(H, r) { const { THREE } = T3; if (!r) { if (H.rp) H.rp.visible = false; return; }
     if (!H.rp) { H.rp = new THREE.Mesh(this.ropeG || (this.ropeG = new THREE.CylinderGeometry(0.022, 0.022, 1, 6)), Room3D.toon('#6a4a26')); this.ropeG._keep = 1; this.S.add(H.rp); H.rp.userData.own = H; }
@@ -19429,6 +19562,43 @@ Object.assign(Room3D, {
 function zFlyCam() { const R = typeof Room3D !== 'undefined' && Room3D, f = R && R.zNow && Game.driving && Game.scene === 'zone' && R.myFly; return f && R.fr - f.fr < 3 ? f.h * TILE / Math.tan(Z3_EL) * 0.85 : 0; }
 function zoneSq() { return Game.scene === 'zone' && Room3D.zNow ? Room3D.zSq() : 1; }
 // 3D 바깥: 땅은 #zground에 2D 그대로, 나머지는 3D (drawZone 안에서 g = 땅 캔버스)
+/* v382 컴퓨터 렉 (사용자 '너 렉잡는거 폰만 잡았구나'): 컴퓨터 화면은 한 화면에 보이는 동네가 폰보다 6배쯤 넓어서, 땅 조각(768×768 사진 땅) 20~30장을
+ * 매 장면 줄여서 다시 그렸다 (한 장면 11ms+). 이제 땅 조각을 화면보다 조금 큰 그림 한 장(GroundCache)에 한 번 그려 두고 매 장면은 그걸 그대로 옮겨 붙인다.
+ * 카메라는 늘 기기 픽셀 단위로 움직이니(worldToScreen 반올림) 옮겨 붙인 그림은 바로 그린 것과 점 하나까지 같다. 화면 밖으로 밀려나면 새로 보이는 띠만 그린다.
+ * 조각이 새로 만들어지거나 바뀌면(사진 땅 도착 등) 그 조각 자리만 다시 그린다. 폰은 메모리를 아끼려고 예전대로. */
+const GroundCache = {
+  M: 128, c: null, x: null, P: null, D: 'dirty',
+  on() { if (this._on === undefined) this._on = !!Store.get('gcache', 1) && !(typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches); return this._on; },
+  free() { if (this.c) { this.c.width = this.c.height = 1; } this.c = this.x = this.P = this.z = null; },
+  ready(z, cx, cy) { const c = z.chunks.get(cx + ',' + cy); return c && !!c._hd === GroundTex.on() ? c : null; },
+  kb(cx, cy) { const o = this.E + this.M, p = this.F + this.M; return [Math.floor(this.a * cx * CHUNK + o), Math.floor(this.d * cy * CHUNK + p), Math.ceil(this.a * (cx + 1) * CHUNK + o), Math.ceil(this.d * (cy + 1) * CHUNK + p)]; },
+  // 그림(버퍼) 안 네모 하나를 바탕색 + 그 자리에 걸치는 땅 조각들로 (예전 그리기와 같은 순서로) 다시 칠한다
+  paint(z, bx0, by0, bx1, by1, whole) { const x = this.x, a = this.a, d = this.d, o = this.E + this.M, p = this.F + this.M; bx0 = Math.max(0, bx0); by0 = Math.max(0, by0); bx1 = Math.min(this.c.width, bx1); by1 = Math.min(this.c.height, by1); if (bx1 <= bx0 || by1 <= by0) return;
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.beginPath(); x.rect(bx0, by0, bx1 - bx0, by1 - by0); x.clip(); x.fillStyle = '#14161c'; x.fillRect(bx0, by0, bx1 - bx0, by1 - by0); x.setTransform(a, 0, 0, d, o, p);
+    const X0 = (bx0 - o) / a, X1 = (bx1 - o) / a, Y0 = (by0 - p) / d, Y1 = (by1 - p) / d;
+    for (let cy = Math.max(0, Math.floor(Y0 / CHUNK)); cy <= Math.floor(Y1 / CHUNK); cy++) for (let cx = Math.max(0, Math.floor(X0 / CHUNK)); cx <= Math.floor(X1 / CHUNK); cx++) {
+      if (cx * CHUNK >= z.W * TILE || cy * CHUNK >= z.H * TILE) continue; const k = cx + ',' + cy, ch = this.ready(z, cx, cy), pv = this.P.get(k);
+      if (ch) { x.imageSmoothingEnabled = !!ch._hd; x.drawImage(ch, cx * CHUNK, cy * CHUNK, CHUNK, CHUNK); }
+      this.P.set(k, whole === k ? ch : ch && (pv === undefined || pv === ch) ? ch : this.D); }
+    x.restore(); },
+  scroll(z, dx, dy) { const W = this.c.width, H = this.c.height; if (Math.abs(dx) >= W || Math.abs(dy) >= H) return false;
+    const x = this.x; x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'copy'; x.imageSmoothingEnabled = false; x.drawImage(this.c, dx, dy); x.restore();
+    this.E += dx; this.F += dy; const ox0 = Math.max(0, dx), oy0 = Math.max(0, dy), ox1 = Math.min(W, W + dx), oy1 = Math.min(H, H + dy);
+    for (const k of [...this.P.keys()]) { const [cx, cy] = k.split(',').map(Number), b = this.kb(cx, cy); if (b[2] <= ox0 || b[0] >= ox1 || b[3] <= oy0 || b[1] >= oy1 || b[2] <= 0 || b[3] <= 0 || b[0] >= W || b[1] >= H) this.P.delete(k); } // 남은 자리가 없는 조각은 잊는다
+    if (dx > 0) this.paint(z, 0, 0, dx, H); else if (dx < 0) this.paint(z, W + dx, 0, W, H);
+    if (dy > 0) this.paint(z, ox0, 0, ox1, dy); else if (dy < 0) this.paint(z, ox0, H + dy, ox1, H);
+    return true; },
+  // drawZone(3D)의 땅 조각 그리기 대신. 못 쓰는 경우면 false (예전 그대로 그린다)
+  draw(g, z, x0, y0, x1, y1) { if (!this.on()) return false; const T = g.getTransform(), a = T.a, d = T.d, e = T.e, f = T.f, cv = g.canvas, M = this.M, W = cv.width + 2 * M, H = cv.height + 2 * M;
+    if (T.b || T.c || e !== Math.round(e) || f !== Math.round(f)) return false;
+    if (!this.c) { this.c = document.createElement('canvas'); this.x = this.c.getContext('2d'); }
+    if (this.z !== z || this.a !== a || this.d !== d || this.c.width !== W || this.c.height !== H) { if (this.c.width !== W || this.c.height !== H) { this.c.width = W; this.c.height = H; } this.z = z; this.a = a; this.d = d; this.E = e; this.F = f; this.P = new Map(); this.paint(z, 0, 0, W, H); }
+    else if ((Math.abs(e - this.E) > M || Math.abs(f - this.F) > M) && !this.scroll(z, e - this.E, f - this.F)) { this.E = e; this.F = f; this.P = new Map(); this.paint(z, 0, 0, W, H); }
+    for (let cy = Math.max(0, Math.floor(y0 / CHUNK)); cy <= Math.floor(y1 / CHUNK); cy++) for (let cx = Math.max(0, Math.floor(x0 / CHUNK)); cx <= Math.floor(x1 / CHUNK); cx++)
+      if (cx * CHUNK < z.W * TILE && cy * CHUNK < z.H * TILE) { const ch = zoneChunk(z, cx, cy), k = cx + ',' + cy; if (this.P.get(k) !== ch) { const b = this.kb(cx, cy); this.paint(z, b[0], b[1], b[2], b[3], k); } } /* 보이는 조각은 예전처럼 만들고(오래 안 본 순서도 그대로), 그림에 아직 없으면 그 자리만 */
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(this.c, e - this.E - M, f - this.F - M); g.restore(); return true; },
+};
+
 function drawZone3D(t) {
   Room3D.zFrame(Game.zone, t);
   const g = Room3D.gctx; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#14161c'; g.fillRect(0, 0, g.canvas.width, g.canvas.height); g.setTransform(ctx.getTransform()); g.imageSmoothingEnabled = false;
@@ -19439,12 +19609,24 @@ function drawZone3D(t) {
 const PerfHud = {
   on: false, el: null, n: 0, t0: 0, long: [], last: 0, ms: {}, // ms: 이번 0.5초 동안 부분별 시간 합 (게임 계산 · 그리기 · 3D · 펫)
   add(k, v) { this.ms[k] = (this.ms[k] || 0) + v; },
+  /* v382 컴퓨터 렉 /3d: 3D 그리기 시간이 어디서 나오는지 사용자 컴퓨터에서 재 본다. 몇 초 동안 하나씩 잠깐 빼고 그려서 (건물 · 해 그림자 · 해상도 반 · 사람·차) 3D 시간을 비교한다. 다 재면 원래대로 */
+  ST: [['보통', 0], ['건물 없이', 'b'], ['그림자 없이', 's'], ['해상도 반', 'r'], ['사람·차 없이', 'p'], ['보통', 0]],
+  probe() { if (!this.on) this.toggle(); this.P = { i: 0, f: 0, ms: 0, n: 0, c: 0, out: [], hid: [] }; this.pres = '3D 재는 중… 잠깐 건물·그림자가 사라졌다 돌아와요'; },
+  pre(R) { const P = this.P, k = this.ST[P.i][1]; if (!R.zNow || Game.scene !== 'zone') return null;
+    if (P.f === 0) { if (k === 'r') R.r.setPixelRatio(R.pr * 0.5); if (k === 's') { R.shHook(); P.ev = R.shEv; R.shEv = 1e9; } }
+    if (k === 'b') { for (const [, e] of R.zb) if (e.m.visible) { e.m.visible = false; P.hid.push(e.m); } if (R.zm) for (const [, cs] of R.zm) if (cs.mesh && cs.mesh.visible) { cs.mesh.visible = false; P.hid.push(cs.mesh); } }
+    if (k === 'p') for (const [, H] of R.A) if (H.root && H.root.visible) { H.root.visible = false; P.hid.push(H.root); }
+    return P; },
+  post(R, ms) { const P = this.P; for (const o of P.hid) o.visible = true; P.hid.length = 0; P.f++;
+    if (P.f > 20) { P.ms += ms; P.n++; P.c += R.r.info.render.calls; }
+    if (P.f >= 80) { const k = this.ST[P.i][1]; if (k === 'r') R.r.setPixelRatio(R.pr); if (k === 's') R.shEv = P.ev; P.out.push(`${this.ST[P.i][0]} ${(P.ms / Math.max(1, P.n)).toFixed(1)}ms (${Math.round(P.c / Math.max(1, P.n))}번)`); P.i++; P.f = P.ms = P.n = P.c = 0;
+      if (P.i >= this.ST.length) { this.P = null; this.pres = '3D 잰 것: ' + P.out.join(' · '); } else this.pres = '3D 재는 중… ' + P.out.join(' · '); } },
   toggle() { this.on = !this.on; if (!this.el) { const d = this.el = document.createElement('div'); d.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 46px);transform:translateX(-50%);z-index:99;background:rgba(10,14,20,.82);color:#e8f0e0;font:600 12px/1.45 "IBM Plex Sans KR",sans-serif;padding:6px 10px;border-radius:8px;pointer-events:none;white-space:pre;text-align:center'; document.body.appendChild(d); }
     this.el.style.display = this.on ? 'block' : 'none'; if (this.on) { this.t0 = performance.now(); this.n = 0; this.long = []; this.last = 0; requestAnimationFrame(t => this.tick(t)); } },
   tick(t) { if (!this.on) return; if (this.last && t - this.last > 50) this.long.push(t); this.last = t; this.n++;
     if (t - this.t0 >= 500) { const fps = this.n * 1000 / (t - this.t0), nf = Math.max(1, this.n), M = this.ms, f1 = k => ((M[k] || 0) / nf).toFixed(1); this.n = 0; this.t0 = t; while (this.long.length && t - this.long[0] > 5000) this.long.shift();
       const R = typeof Room3D !== 'undefined' ? Room3D : {}, info = R.r && R.r.info && R.r.info.render, mode = Game.scene === 'zone' ? (R.zNow ? '바깥 3D' : '바깥 2D') : Game.scene === 'room' ? (R.room && R.room === Game.room ? '실내 3D' : '실내 2D') : Game.scene;
-      this.el.textContent = `${Math.round(fps)} fps · 5초 동안 끊김 ${this.long.length}번 · ${mode}\n3D 해상도 ${(R.pr || 0).toFixed(2)}배 · 그리기 ${info ? info.calls : '-'}번 · 건물 ${R.zb ? R.zb.size : 0} · 사람·차 ${R.A ? R.A.size : 0}\n한 장에 계산 ${f1('up')}ms · 그리기 ${f1('dr')}ms (3D ${f1('gl')} · 펫 ${f1('pet')} · 새 모양 ${M.pbn | 0}번 ${(M.pb || 0).toFixed(0)}ms)\n화면 ${VW}×${VH} · 배율 ${DPR} · ${String(R.gpu || '그래픽카드 모름').slice(0, 60)}`; this.ms = {}; }
+      this.el.textContent = `${Math.round(fps)} fps · 5초 동안 끊김 ${this.long.length}번 · ${mode}\n3D 해상도 ${(R.pr || 0).toFixed(2)}배 · 그리기 ${info ? info.calls : '-'}번 · 건물 ${R.zb ? R.zb.size : 0} · 사람·차 ${R.A ? R.A.size : 0}\n한 장에 계산 ${f1('up')}ms · 그리기 ${f1('dr')}ms (3D ${f1('gl')} · 펫 ${f1('pet')} · 새 모양 ${M.pbn | 0}번 ${(M.pb || 0).toFixed(0)}ms)\n땅 만들기 ${f1('gch')}ms · 땅 그리기 ${f1('gnd')}ms (한 장 모으기 ${typeof GroundCache !== 'undefined' && GroundCache._on ? '켜짐' : '꺼짐'} · 땅 ${GroundTex.cpu ? 'CPU' : '그래픽카드'} · 따로 만들기 ${typeof GroundWk === 'undefined' || !GroundWk.on() ? '꺼짐' : GroundWk.st === 2 ? '켜짐' : GroundWk.st < 0 ? '안 됨' : '준비'}) · 건물 짓기 ${f1('bld')}ms · 묶은 칸 ${R.zmOn && R.zmOn() && R.zm ? [...R.zm.values()].filter(c => c.on).length : '꺼짐'}\n화면 ${VW}×${VH} · 배율 ${DPR} · ${String(R.gpu || '그래픽카드 모름').slice(0, 60)}${this.pres ? '\n' + this.pres : ''}`; this.ms = {}; }
     requestAnimationFrame(tt => this.tick(tt)); },
 };
 
@@ -19554,7 +19736,7 @@ const Ride3D = {
   needSf(k) { if (this.sfs[k] || !window.T3) return; this.sfs[k] = 1; (this.sq || (this.sq = [])).push(k); this.sqRun(); },
   sqRun() { if (this.sqB || !this.sq || !this.sq.length) return; this.sqB = 1; this.sfGo(this.sq.pop()); },
   sqDone(k) { this.sqB = 0; this.use[k] = performance.now(); if (this.sfs[k] === 2) { try { this.shrink(this.M[k].sf); this.evict(k); } catch (e) { console.warn('ride3d shrink', e); } } setTimeout(() => this.sqRun(), 40); },
-  mob() { return !!(window.matchMedia && matchMedia('(pointer: coarse)').matches); },
+  mob() { return this._mob ?? (this._mob = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches)); }, /* v382 한 번만 물어본다 (장면마다 수십 번 불렸다) */
   shrink(sc) { const set = new Set(); sc.traverse(o => { if (!o.isMesh) return; for (const t of [].concat(o.material)) for (const q in t) { const v = t[q]; if (v && v.isTexture && !v.isCompressedTexture && v.image && v.image.width) set.add(v); } }); /* v369 압축 그림(KTX2)은 이미 작다 */
     let px = 0; for (const t of set) px += t.image.width * t.image.height; const f = Math.sqrt((this.mob() ? 3e6 : 1.2e7) / Math.max(1, px)); if (f >= 1) return; const done = new Map();
     for (const t of set) { const im = t.image, p2 = v => Math.max(64, 1 << Math.floor(Math.log2(Math.max(1, v * f)))), w = Math.min(im.width, p2(im.width)), h = Math.min(im.height, p2(im.height)); if (w >= im.width && h >= im.height) continue;
@@ -20485,18 +20667,20 @@ Object.assign(Bld3D, {
         for (const o of robs) { const d = Math.hypot(Math.max(o[0] - x, 0, x - o[2]), Math.max(o[1] - z, 0, z - o[3])); v *= 1 - 0.45 * Math.exp(-d / 0.13); }
         for (const [cx, cz, s] of drains) v *= 1 - 0.25 * Math.exp(-((x - cx) ** 2 + (z - cz) ** 2) / (s * s)); return v * (1 + noise(x, z)); };
       const inO = (x, z) => robs.some(o => x > o[0] && x < o[2] && z > o[1] && z < o[3]);
+      const nXv = X.length, AG = new Float64Array(nXv * Z.length).fill(NaN), Ag = (i, j) => { const q = j * nXv + i; let v = AG[q]; if (v !== v) v = AG[q] = A(X[i], Z[j]); return v; }; /* v382 컴퓨터 렉: 격자 꼭짓점 그늘은 옆 칸들과 같은 점이라 한 번만 계산 (값은 똑같다) */
       let qn = 0; for (let j = 0; j + 1 < Z.length; j++) for (let i = 0; i + 1 < X.length; i++) { if (++qn % 150 === 0) yield; /* v371 옥상 격자가 큰 건물은 칸 150개마다 쉰다 (한 장 45~70ms 끊김) */ const x0 = X[i], x1 = X[i + 1], z0 = Z[j], z1 = Z[j + 1]; if (inO((x0 + x1) / 2, (z0 + z1) / 2)) continue;
-        quad(g, P.roof, [[x0, Y, z1], [x1, Y, z1], [x1, Y, z0], [x0, Y, z0]], [A(x0, z1), A(x1, z1), A(x1, z0), A(x0, z0)]); }
+        quad(g, P.roof, [[x0, Y, z1], [x1, Y, z1], [x1, Y, z0], [x0, Y, z0]], [Ag(i, j + 1), Ag(i + 1, j + 1), Ag(i + 1, j), Ag(i, j)]); }
       box(W / 2, H + 0.05, t + 0.004, W - 2 * t, 0.08, 0.008, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); // 난간 안쪽으로 치켜 올린 방수층
       box(t + 0.004, H + 0.05, Dp / 2, 0.008, 0.08, Dp - 2 * t, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); box(W - t - 0.004, H + 0.05, Dp / 2, 0.008, 0.08, Dp - 2 * t, g, P.roof, { ao: (x, y) => 0.7 + 0.3 * cl01((y - H) / 0.09) }); }
     yield 8;
     // ---- 앞벽: 창 구멍을 뺀 격자. 칸마다 꼭짓점 그늘, 그늘이 가로로 같으면 한 칸으로 합친다 ----
     { const srt = (a, lo, hi) => [...new Set(a.filter(v => v >= lo && v <= hi).map(v => +v.toFixed(4)))].sort((p, q) => p - q), xs = srt([0, W, ...XL], 0, W), ys = srt([yb, H, ...YL], yb, H), e = 1e-4, q2 = (a, b2) => Math.abs(a - b2) < 2e-3;
-      const inH = (x, y) => holes.some(h => x > h[0] && x < h[2] && y > h[1] && y < h[3]), A = (x, y) => { let v = 1; for (const T of aoT) if (x >= T[0] && x <= T[1]) v *= T[2](x, y); return v; };
+      const inH = (x, y) => holes.some(h => x > h[0] && x < h[2] && y > h[1] && y < h[3]), A = (x, y, L) => { let v = 1; for (const T of L) if (x >= T[0] && x <= T[1]) v *= T[2](x, y); return v; };
+      const LA = [], LB = []; for (let i = 0; i + 1 < xs.length; i++) { const xa = xs[i] + e, xc = xs[i + 1] - e; LA.push(aoT.filter(T => xa >= T[0] && xa <= T[1])); LB.push(aoT.filter(T => xc >= T[0] && xc <= T[1])); } /* v382 칸 세로줄마다 닿는 그늘만 미리 골라 둔다 (순서·값 그대로) */
       let qn2 = 0; for (let j = 0; j + 1 < ys.length; j++) { const ya = ys[j], yc = ys[j + 1]; let run = null; if (yc - ya < 1e-4) continue;
         const flush = () => { if (run) quad(wk, wcol, [[run[0], ya, Dp], [run[1], ya, Dp], [run[1], yc, Dp], [run[0], yc, Dp]], [run[2], run[3], run[5], run[4]]); run = null; };
         for (let i = 0; i + 1 < xs.length; i++) { if (++qn2 % 200 === 0) yield; /* v371 창 많은 긴 건물 앞벽도 칸 200개마다 쉰다 */ const xa = xs[i], xc = xs[i + 1]; if (xc - xa < 1e-4) continue; if (inH((xa + xc) / 2, (ya + yc) / 2)) { flush(); continue; }
-          const bl = A(xa + e, ya + e), br = A(xc - e, ya + e), tl = A(xa + e, yc - e), tr = A(xc - e, yc - e);
+          const bl = A(xa + e, ya + e, LA[i]), br = A(xc - e, ya + e, LB[i]), tl = A(xa + e, yc - e, LA[i]), tr = A(xc - e, yc - e, LB[i]);
           if (run && q2(bl, br) && q2(tl, tr) && q2(run[2], run[3]) && q2(run[4], run[5]) && q2(run[3], bl) && q2(run[5], tl)) { run[1] = xc; continue; }
           flush(); run = [xa, xc, bl, br, tl, tr]; }
         flush(); } }
@@ -20513,16 +20697,19 @@ Object.assign(Bld3D, {
     yield 10;
     // ---- 재질별 모양 → 그룹 ----
     const root = new THREE.Group(); root.position.set(b.x, 0, b.y);
-    let NV = 0, TOP = 0; for (const k in B) { const o = B[k], n = o.len; if (!n) continue; NV += n; const geo = new THREE.BufferGeometry(), pp = o.p.subarray(0, n * 3); geo.setAttribute('position', new THREE.BufferAttribute(pp, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(o.n.subarray(0, n * 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(o.u.subarray(0, n * 2), 2)); geo.setAttribute('color', new THREE.BufferAttribute(o.c.subarray(0, n * 3), 3));
+    let NV = 0, TOP = 0, SM = null; for (const k in B) { const o = B[k], n = o.len; if (!n) continue; NV += n; const geo = new THREE.BufferGeometry(), cut = (a, m) => a.subarray(0, n * m), pp = cut(o.p, 3); geo.setAttribute('position', new THREE.BufferAttribute(pp, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(cut(o.n, 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(cut(o.u, 2), 2)); geo.setAttribute('color', new THREE.BufferAttribute(cut(o.c, 3), 3));
       { let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity; for (let i = 0; i < n * 3; i += 3) { const x = pp[i], y = pp[i + 1], z = pp[i + 2]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z; } geo.boundingBox = new THREE.Box3(new THREE.Vector3(x0, y0, z0), new THREE.Vector3(x1, y1, z1)); geo.boundingSphere = geo.boundingBox.getBoundingSphere(new THREE.Sphere()); if (y1 > TOP) TOP = y1; } // v362 경계는 한 번 훑어 직접 (three가 두 번 훑지 않게) · 꼭대기 높이는 zone3d에 넘김
       let mt; if (k === 'lett') mt = new THREE.MeshStandardMaterial({ map: sTex, alphaTest: 0.5, roughness: 0.35, metalness: 0.15 }); // 투명 바탕 금속 글자
       else if (k === 'sign') { mt = new THREE.MeshStandardMaterial({ map: sTex, emissiveMap: sTex, emissive: 0xffffff, emissiveIntensity: eve ? 0.85 : 0.08, roughness: 0.4, metalness: 0 }); mt.shadowSide = THREE.DoubleSide; }
-      else { mt = M[k].clone(); if (k === 'win') mt.emissiveIntensity = eve ? 1.15 : 0; }
-      mats.push(mt); const m = new THREE.Mesh(geo, mt); m.castShadow = k !== 'win' && k !== 'sign' && k !== 'lett'; m.receiveShadow = true; root.add(m); }
-    root.add(this.gAO(W, Dp)); // v345 땅 접지 그늘
+      else if (this.shareOff) { mt = M[k].clone(); if (k === 'win') mt.emissiveIntensity = eve ? 1.15 : 0; } /* 비교 시험용 (예전처럼 건물마다 복사) */
+      else { /* v382 컴퓨터 렉 (인텔 내장 그래픽 3D 16~20ms): 건물마다 재질을 복사해서 건물 100채면 재질 500개를 장면마다 바꿔 끼웠다. 이제 벽·창·지붕 재질은 모든 건물이 같이 쓴다 (값이 같아 모습도 같다).
+        * 내가 건물 뒤로 가서 반투명이 될 때만 그 건물 것을 잠깐 복사해 쓴다 (zone3d.js) */
+        mt = k === 'win' && eve ? (M.winE || (M.winE = Object.assign(M.win.clone(), { emissiveIntensity: 1.15 }))) : M[k]; if (k === 'win' && !eve) mt.emissiveIntensity = 0; mt.userData.sh = 1; }
+      mats.push(mt); const m = new THREE.Mesh(geo, mt); if (mt.userData.sh) (SM || (SM = [])).push([m, mt]); m.castShadow = k !== 'win' && k !== 'sign' && k !== 'lett'; m.receiveShadow = true; root.add(m); }
+    root.add(root.userData.gao = this.gAO(W, Dp)); // v345 땅 접지 그늘 (v382 zMerge가 칸마다 묶을 때 찾는다)
     root.userData.L = LT; root.userData.bx = [W, Dp, cTop];
     root.geometry = { dispose() { } }; // zDrop 호환 (모양은 자식들이 갖고 있다)
-    return { m: root, mats, H: cTop, o: 1, nv: NV, top: TOP }; // v362 nv · top: zone3d가 Box3·traverse로 다시 재지 않게
+    return { m: root, mats, sm: SM, H: cTop, o: 1, nv: NV, top: TOP }; // v382 sm: 같이 쓰는 재질 [모양, 재질] · v362 nv · top: zone3d가 Box3·traverse로 다시 재지 않게
   },
   // v345 땅 접지 그늘: 건물 둘레 땅에 깔리는 반투명 검은 띠 (앞과 양옆, 멀어질수록 옅게). 재질은 모든 건물이 같이 쓴다
   gAO(W, D) { const { THREE } = T3, m = this.gAOm || (this.gAOm = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 1; const g = c.getContext('2d'); for (let i = 0; i < 256; i++) { g.fillStyle = `rgba(0,0,0,${i / 255})`; g.fillRect(i, 0, 1, 1); } // 꼭짓점 알파가 이 렌더러에선 안 먹어서 진하기를 u 좌표로 (가로 띠 그림에서 찾기)
@@ -20782,6 +20969,10 @@ const Hero3D = {
       if (/^(Super|Hair)/.test(part) && !B.tex[part]) { const l = new THREE.SkinnedMesh(o.geometry, M.ol); l.bind(o.skeleton, o.bindMatrix); l.frustumCulled = false; o.parent.add(l); } });
     model.updateMatrixWorld(true); this.wear(model, bones, B.box, P, k);
     if (P.fant) { this.loadFant(); if (this.fst === 2 && body && this.fantOn(model, bones, P, k, body)) { const hg = new Set(); model.traverse(o => { if (o.isMesh && /^Hair/.test(o.userData.part || '')) hg.add(o.geometry); }); model.traverse(o => { if (o.isMesh && hg.has(o.geometry)) o.visible = false; }); } }
+    /* v382 컴퓨터 렉: 한 사람의 옷·머리·몸·외곽선 조각이 뼈대(Skeleton)를 하나씩 따로 가져서, 장면마다 같은 뼈 행렬을 조각 수(7개쯤)만큼 다시 계산하고 그래픽카드에 따로 올렸다 (20명이면 140번).
+     * 같은 뼈·같은 바인드 행렬이면 뼈대 하나를 같이 쓴다. 뼈 움직임은 똑같아서 모습도 똑같다 */
+    { const reps = [], same = (a, b) => { if (a.bones.length !== b.bones.length) return false; for (let i = 0; i < a.bones.length; i++) { if (a.bones[i] !== b.bones[i]) return false; const x = a.boneInverses[i].elements, y = b.boneInverses[i].elements; for (let j = 0; j < 16; j++) if (x[j] !== y[j]) return false; } return true; };
+      model.traverse(o => { if (!o.isSkinnedMesh || !o.skeleton) return; const f = reps.find(s => s === o.skeleton || same(s, o.skeleton)); if (f) o.skeleton = f; else reps.push(o.skeleton); }); }
     const sh = new THREE.Mesh(Room3D.shGeo || (Room3D.shGeo = new THREE.CircleGeometry(0.3, 20)), Room3D.shMat || (Room3D.shMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })));
     Room3D.shGeo._keep = 1; sh.rotation.x = -Math.PI / 2; sh.position.y = 0.01; root.add(sh);
     const mix = new THREE.AnimationMixer(model), H = { root, inner, model, mix, B, hero: 1, acts: {}, cur: null, spd: 0, amp: 0, ph: 0, ghost: !!P.ghost };
@@ -20810,7 +21001,8 @@ const Hero3D = {
       else if (w.still) this.play(H, 'Idle_Loop', 0.3); // v317 탱크 해치에 서 있기 (탈것이 움직여도 걷지 않는다)
       else if (mv) { const s = H.spd; if (H.ghost) this.play(H, 'Idle_Loop', 0.3); else if (!CUTE) { if (s < 1.8) this.play(H, 'Walk_Loop', 0.2, Math.max(0.6, Math.min(1.5, s / 1.1))); else if (s < 3.8) this.play(H, 'Jog_Fwd_Loop', 0.2, Math.max(0.7, Math.min(1.5, s / 2.5))); else this.play(H, 'Sprint_Loop', 0.2, Math.max(0.7, Math.min(1.6, s / 4.6))); } else if (s < 1.8) this.play(H, 'Walk_Loop', 0.25, Math.max(0.8, Math.min(2.0, s / 0.8))); else if (s < 3.8) this.play(H, 'Jog_Fwd_Loop', 0.25, Math.max(0.9, Math.min(1.9, s / 1.8))); else this.play(H, 'Sprint_Loop', 0.25, Math.max(0.9, Math.min(1.8, s / 3.4))); /* v345 다리가 짧아 종종걸음 (동물의 숲처럼 빠른 발) */ }
       else this.play(H, w.talk ? 'Idle_Talking_Loop' : 'Idle_Loop', 0.3); }
-    H.mix.update(dt); if (CUTE) { this.gait(H, dt); this.bounce(H, dt, t); }
+    if (H.off) { H.mdt = Math.min(30, (H.mdt || 0) + dt); return; } /* v382 화면 밖이면 동작은 돌아올 때 밀린 시간만큼 (room3d.js actor) */
+    H.mix.update(dt + (H.mdt || 0)); H.mdt = 0; if (CUTE) { this.gait(H, dt); this.bounce(H, dt, t); }
   },
   /* v345 동물의 숲 느낌 (사용자 '동물의숲 느낌의 캐릭터와 펫 움직임도 비슷하게'): 걸음마다 통통 튀고 (두 발이 모일 때 위로), 고개가 따라 끄덕, 몸이 좌우로 살랑. 서 있으면 숨쉬듯 아주 조금 */
   /* v345 꼬마 몸 걸음·뜀 (사용자 '뛰는게 부자연스러워'): 사람 동작 파일의 전력 질주는 짧은 팔다리에선 팔이 가슴에 붙고 보폭이 작아 미끄러졌다.
@@ -21794,20 +21986,39 @@ const Snap3D = {
       try { (R._raw || R.render).call(R, this.S, cam); R.readRenderTargetPixels(rt, 0, 0, W, H, buf); } finally { R.setRenderTarget(prev); R.setClearColor(cc, ca); R.toneMapping = tm; }
       const id = new ImageData(W, H), D = id.data; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const s = ((H - 1 - y) * W + x) * 4, d = (y * W + x) * 4, a = buf[s + 3]; D[d + 3] = a; if (a) for (let k = 0; k < 3; k++) D[d + k] = Math.min(255, Math.round(buf[s + k] * 255 / a)); }
       c.getContext('2d').putImageData(id, 0, 0); return true; } catch (e) { console.warn('snap3d main', e); this.noMain = 1; return false; } },
+  /* v383 숍 미리보기 튕김 (사용자 2026-10-26 '휴대폰 숍에 미리보기 계속 눌러보다 보면 튕긴다'): 큰 미리보기는 사진 전용 렌더러로 그려서, 열 때마다 그래픽 판(WebGL)을 새로 만들고
+   * 사람·펫 그림을 전부 다시 올렸다 (8번 열면 판 10개, 그림 326→814MB → 아이폰이 판·메모리 한도에서 튕김). 이제 움직이는 미리보기도 게임 화면 렌더러로 그리고 (그림을 같이 쓴다) 점을 읽어 온다.
+   * 읽는 점 수는 60만 개까지 (넘으면 작게 그려 늘린다, 칸에 그릴 때 W×H로 맞추니 자리는 그대로). 못 쓰면 예전처럼 전용 렌더러 */
+  rd(W, H, cam) { const R = Room3D.r, M = 6e5;
+    if (R && !this.noMain) { const { THREE } = T3, f = Math.min(1, Math.sqrt(M / (W * H))), w = Math.max(1, Math.round(W * f)), h = Math.max(1, Math.round(H * f));
+      try { let rt = this.lrt; if (!rt || rt.width !== w || rt.height !== h) { if (rt) rt.dispose(); rt = this.lrt = new THREE.WebGLRenderTarget(w, h, { samples: 4 }); rt.texture.colorSpace = THREE.SRGBColorSpace; rt.texture.internalFormat = 'RGBA8'; rt.isXRRenderTarget = true; }
+        let L = this.lc; if (!L || L.width !== w || L.height !== h) { L = this.lc = document.createElement('canvas'); L.width = w; L.height = h; this.lb = new Uint8Array(w * h * 4); this.lid = new ImageData(w, h); }
+        const buf = this.lb, id = this.lid, prev = R.getRenderTarget(), cc = R.getClearColor(this.cc0 || (this.cc0 = new THREE.Color())), ca = R.getClearAlpha(), tm = R.toneMapping;
+        R.setRenderTarget(rt); R.setClearColor(0x000000, 0); R.toneMapping = THREE.NoToneMapping;
+        try { (R._raw || R.render).call(R, this.S, cam); R.readRenderTargetPixels(rt, 0, 0, w, h, buf); } finally { R.setRenderTarget(prev); R.setClearColor(cc, ca); R.toneMapping = tm; }
+        const D = id.data; let glow = 0; for (let y = 0; y < h; y++) { let s = (h - 1 - y) * w * 4, d = y * w * 4; for (let x = 0; x < w; x++, s += 4, d += 4) { const r = buf[s], g = buf[s + 1], b = buf[s + 2], a = Math.max(buf[s + 3], r, g, b); if (a !== buf[s + 3]) glow = 1; D[d + 3] = a; if (a === 255) { D[d] = r; D[d + 1] = g; D[d + 2] = b; } else if (a) { const m = 255 / a; D[d] = Math.min(255, Math.round(buf[s] * m)); D[d + 1] = Math.min(255, Math.round(buf[s + 1] * m)); D[d + 2] = Math.min(255, Math.round(buf[s + 2] * m)); } else D[d] = D[d + 1] = D[d + 2] = 0; } }
+        L.getContext('2d').putImageData(id, 0, 0); this.mu = 1; L.glow = glow ? this.glowOf(buf, w, h) : null; return L; } catch (e) { console.warn('snap3d rd', e); this.noMain = 1; } }
+    this.init(); this.r.setSize(W, H, false); this.r.render(this.S, cam); return this.r.domElement; },
+  /* 빛나는(더하기) 효과: 투명한 자리에 색만 남는다. 예전 렌더러 캔버스를 얹을 때처럼 바탕을 알파만큼 지우고(cut) 색을 더한다(add) */
+  glowOf(buf, w, h) { let G = this.lg; if (!G || G.w !== w || G.h !== h) { const mk = () => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }; G = this.lg = { w, h, cut: mk(), add: mk(), ci: new ImageData(w, h), ai: new ImageData(w, h) }; }
+    const C = G.ci.data, A = G.ai.data; for (let y = 0; y < h; y++) { let s = (h - 1 - y) * w * 4, d = y * w * 4; for (let x = 0; x < w; x++, s += 4, d += 4) { C[d + 3] = buf[s + 3]; const r = buf[s], g = buf[s + 1], b = buf[s + 2]; A[d] = r; A[d + 1] = g; A[d + 2] = b; A[d + 3] = r || g || b || buf[s + 3] ? 255 : 0; } }
+    G.cut.getContext('2d').putImageData(G.ci, 0, 0); G.add.getContext('2d').putImageData(G.ai, 0, 0); return G; },
+  put(x, img, dx, dy, w, h) { const G = img.glow; if (!G) { x.drawImage(img, dx, dy, w, h); return; } const o = x.globalCompositeOperation;
+    x.globalCompositeOperation = 'destination-out'; x.drawImage(G.cut, dx, dy, w, h); x.globalCompositeOperation = 'lighter'; x.drawImage(G.add, dx, dy, w, h); x.globalCompositeOperation = o; },
   /* v367 미리보기를 닫으면 사진 전용 렌더러를 통째로 놓는다 (사용자 '미리보기 눌렀을때 튕기거나 렉걸리거나'): 큰 미리보기에 올린 모델 그림이 그래픽 메모리에 쌓여 폰이 튕겼다. 칸 사진(2D)은 그대로, 다음에 찍을 때 렌더러를 새로 만든다 */
-  release() { this.bmFree(); if (typeof Props3D !== 'undefined' && Props3D.thFree) Props3D.thFree(); if (!this.r) return; const dz = g => g && g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); if (this.lv) dz(this.lv.g); this.lv = null; if (this.pv) for (const a of this.pv.A.values()) if (a.H && a.H.mix) a.H.mix.stopAllAction(); this.pv = null; this.fv = null; this.ev = null; try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { } this.r = null; this.S = null; },
+  release() { this.bmFree(); if (typeof Props3D !== 'undefined' && Props3D.thFree) Props3D.thFree(); if (this.lrt) { this.lrt.dispose(); this.lrt = null; } this.lc = this.lb = this.lid = this.lg = null; if (this.mu && typeof Room3D !== 'undefined' && Room3D.S) { this.mu = 0; Room3D.gOld = Room3D.gOld || new Set(); Room3D.gFr = 0; } /* v383 미리보기로 게임 렌더러에 올린 탈것·펫 그림은 닫고 몇 장면 뒤 지금 장면이 안 쓰는 것만 내린다 (Room3D.gpuSweep) */ const dz = g => g && g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); if (this.lv) dz(this.lv.g); this.lv = null; if (this.pv) for (const a of this.pv.A.values()) if (a.H && a.H.mix) a.H.mix.stopAllAction(); this.pv = null; this.fv = null; this.ev = null; if (this.r) { try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { } this.r = null; } this.S = null; },
   /* v367 펫 진화 장면 3D (사용자 '2d안나오게'): 진화 전·후 모습을 3D 모델로 (진화 조각이 있으면 붙이고, 하얗게 번쩍일 땐 흰 실루엣). W×H 캔버스를 돌려준다, 못 그리면 null */
   evo(k, st, d, white, W, H) {
     if (!this.ok() || typeof Pet3D === 'undefined') { this.warm(); return null; } Pet3D.load();
     try {
-      this.init(); const { THREE } = T3, ppl = PET_PEOPLE[k], s0 = st && !ppl && Pet3D.has(k, st) ? st : 0, dd = d && PetDeco.any && PetDeco.any(d) ? d : null, key = k + ':' + s0 + ':' + (dd ? JSON.stringify(dd) : '');
+      this.initS(); const { THREE } = T3, ppl = PET_PEOPLE[k], s0 = st && !ppl && Pet3D.has(k, st) ? st : 0, dd = d && PetDeco.any && PetDeco.any(d) ? d : null, key = k + ':' + s0 + ':' + (dd ? JSON.stringify(dd) : '');
       if (!ppl && !Pet3D.has(k, s0)) return null;
       let E = this.ev; if (!E || E.key !== key) { if (E) this.S.remove(E.g); const g = new THREE.Group(); let Hm = null;
         if (ppl) { const sp = 'pet:' + k; Sprites.setPal(sp, ppl); this.person(g, Sprites.PAL[sp], 0.5); } else { Hm = Pet3D.make(k, PetRT.petH(k) / TILE * 1.1, s0, dd); Hm.sh.visible = false; Hm.root.rotation.y = -0.62; Pet3D.pose(Hm, false, 0, 0.3, 0.016, null); g.add(Hm.root); }
         g.updateMatrixWorld(true); E = this.ev = { key, g, H: Hm, box: new THREE.Box3().setFromObject(g, true), lt: performance.now() }; }
       const now = performance.now(), dt = Math.min(0.05, (now - E.lt) / 1000); E.lt = now; if (E.H) Pet3D.pose(E.H, false, 0, now / 1000, dt, { idle: 1 });
       const cam = this.cam; cam.aspect = W / H; this.fit(E.box, cam, 0.16, 1.04); cam.updateProjectionMatrix();
-      this.S.add(E.g); if (white) this.S.overrideMaterial = this.whM || (this.whM = new THREE.MeshBasicMaterial({ color: 0xffffff })); this.r.setSize(W, H, false); try { this.r.render(this.S, cam); } finally { this.S.overrideMaterial = null; this.S.remove(E.g); } return this.r.domElement;
+      this.S.add(E.g); if (white) this.S.overrideMaterial = this.whM || (this.whM = new THREE.MeshBasicMaterial({ color: 0xffffff })); try { return this.rd(W, H, cam); } finally { this.S.overrideMaterial = null; this.S.remove(E.g); }
     } catch (e) { console.warn('snap3d evo', e); return null; }
   },
   // 한 장 찍기: build(g) 가 g에 모델을 넣고, aim(box, cam) 이 카메라를 맞춘다. 결과는 2D 캔버스 (기억해 둠)
@@ -21851,7 +22062,7 @@ const Snap3D = {
   },
   /* ---- v343 편집숍에 남은 도트 그림을 3D로 (사용자 '숍에 2D로 보이는거 왜이렇게많어'): 옷·모자 큰 미리보기(사람) · 차 큰 미리보기 · 펫 꾸미기 · 이펙트의 사람. 그렸으면 true */
   liveBig(x, key, build, aim, tick) { const S = Math.max(1, Math.round(x.getTransform().a)), W = 160 * S, Hh = 104 * S, img = this.live(key + ':' + S, W, Hh, build, aim, tick); if (!img) { this.warm(); return false; }
-    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, Hh); x.restore(); return true; },
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; this.put(x, img, 0, 0, W, Hh); x.restore(); return true; },
   wearBig(x, P, mv) { return this.liveBig(x, 'big:wear:' + Hero3D.key(P), g => ({ H: this.person(g, P, 0.38) }), (b, c) => this.fit(b, c, 0.12, 1.14),
     (u, dt, tt) => { Hero3D.play(u.H, mv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.H.mix.update(dt); u.H.root.rotation.y = -Math.PI / 2 + 0.38 + (mv ? 0 : Math.sin(tt * 0.5) * 0.9); }); }, // 서 있으면 천천히 돌아 옷 옆·뒤도 보이게
   carBig(x, it, mv) { if (typeof Car3D !== 'undefined') Car3D.load(); return this.liveBig(x, 'big:car' + (typeof Car3D !== 'undefined' && Car3D.ready() ? '3:' : ':') + it.col + ':' + (it.stripe || ''), g => { const m = Room3D.car3(24, 12, it.col, it.stripe, 'car'); g.add(m); return { m }; }, (b, c) => this.fit(b, c, 0.42, 1.25),
@@ -21867,10 +22078,10 @@ const Snap3D = {
   live(key, W, H, build, aim, tick) {
     if (!this.ok()) return null;
     try {
-      this.init(); const { THREE } = T3, L = this.lv;
+      this.initS(); const { THREE } = T3, L = this.lv;
       if (!L || L.key !== key) { if (L) L.g.traverse(o => { if (o.geometry && !o.geometry._keep) o.geometry.dispose(); }); const g = new THREE.Group(); const u = build(g) || {}; g.updateMatrixWorld(true); const box = new THREE.Box3().setFromObject(g, true); this.lv = { key, g, u, box, lt: performance.now() }; }
       const V = this.lv, now = performance.now(), dt = Math.min(0.05, (now - V.lt) / 1000); V.lt = now; tick && tick(V.u, dt, now / 1000);
-      const cam = this.cam; cam.aspect = W / H; aim(V.box, cam); cam.updateProjectionMatrix(); this.S.add(V.g); this.r.setSize(W, H, false); this.r.render(this.S, cam); this.S.remove(V.g); return this.r.domElement;
+      const cam = this.cam; cam.aspect = W / H; aim(V.box, cam); cam.updateProjectionMatrix(); this.S.add(V.g); try { return this.rd(W, H, cam); } finally { this.S.remove(V.g); }
     } catch (e) { console.warn('snap3d live', e); this.bad = 1; return null; }
   },
   rideBig(x, it, t, mv) {
@@ -21883,7 +22094,7 @@ const Snap3D = {
       (u, dt, tt) => { const { THREE } = T3, mvv = !!mv; if (!u.stg && Ride3D.stage) { try { u.stg = Ride3D.stage(k, u.m); u.m.parent.add(u.stg.g); } catch (e) { u.stg = { tick() {} }; console.warn('ride stage', e); } } u.stg.tick(dt, mvv); /* v346 (탈것 스레드) 3D 바닥 */ u.m.position.y = water ? Math.sin(tt * 2.2) * 0.04 : 0; u.m.rotation.z = water ? Math.sin(tt * 1.7) * 0.03 : 0; Ride3D.anim(u.m, tt, mvv); if (u.m.userData.D) u.H.root.matrix.multiplyMatrices(u.m.userData.D, u.base).decompose(u.H.root.position, u.H.root.quaternion, u.H.root.scale); /* v337 용·말 몸 따라 */ u.H.mix.update(dt); if (u.C) { Hero3D.play(u.C, mvv ? 'Walk_Loop' : 'Idle_Loop', 0.25); u.C.mix.update(dt); } u.m.updateMatrixWorld(true); if (u.st.pose || u.st.grip || u.st.leg) Hero3D.ridePose(u.H, u.st.pose, tt, mvv, u.st.grip, u.st.leg); if (u.C) Hero3D.ridePose(u.C, 'carry', tt, mvv);
         if (u.rp) { const a = Hero3D.handsAt(u.H); if (a) { u.m.worldToLocal(a); const r = u.st.rope, b = new THREE.Vector3(r.x / TILE, r.h, r.y / TILE), d = b.clone().sub(a), L = d.length(); u.rp.position.copy(a).add(b).multiplyScalar(0.5); u.rp.scale.set(1, L, 1); u.rp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); } } });
     if (!img) return false;
-    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, Hh); x.restore(); return true;
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; this.put(x, img, 0, 0, W, Hh); x.restore(); return true;
   },
   // v325 장르 가구 사진 (정사각형 N px, 비스듬히 위에서). 모델이 아직이면 받기 시작하고 null (오면 상점 다시 그리기)
   prop(k, N) {
@@ -21910,11 +22121,11 @@ const Snap3D = {
     const ox = O.getContext('2d'); ox.setTransform(1, 0, 0, 1, 0, 0); ox.clearRect(0, 0, W, H); ox.setTransform(x.getTransform()); ox.imageSmoothingEnabled = false;
     this.capHook(); const C = this.cap = { c: ox, people: [], pets: [], birds: [] }; try { run(ox); } finally { this.cap = null; }
     const img = this.pvRender(C, W, H, t); if (!img) return false;
-    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(img, 0, 0, W, H); x.drawImage(O, 0, 0); x.restore(); return true;
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; this.put(x, img, 0, 0, W, H); x.drawImage(O, 0, 0); x.restore(); return true;
   },
   pvRender(C, W, H, t) {
     try {
-      this.init(); const { THREE } = T3, k = (typeof Shop !== 'undefined' && Shop.pvK) || 3, U = 12.8; // 1칸 = 펫 단위 12.8 (3D 사람이 칸 안에 들어오게 2D보다 조금 작게)
+      this.initS(); const { THREE } = T3, k = (typeof Shop !== 'undefined' && Shop.pvK) || 3, U = 12.8; // 1칸 = 펫 단위 12.8 (3D 사람이 칸 안에 들어오게 2D보다 조금 작게)
       const V = this.pv || (this.pv = { g: new THREE.Group(), A: new Map(), lt: performance.now(), fr: 0 }), now = performance.now(), dt = Math.min(0.05, (now - V.lt) / 1000); V.lt = now; V.fr++;
       const get = (key, mk) => { let a = V.A.get(key); if (!a) { a = mk(); if (!a) return null; V.g.add(a.root); V.A.set(key, a); } a.fr = V.fr; return a; };
       const blob = (par, r) => { const m = new THREE.Mesh(this.blobG || (this.blobG = Object.assign(new THREE.CircleGeometry(1, 20), { _keep: 1 })), this.blobM || (this.blobM = new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: 0.2, depthWrite: false }))); m.rotation.x = -Math.PI / 2; m.position.y = 0.004; m.scale.setScalar(r); par.add(m); return m; };
@@ -21936,7 +22147,7 @@ const Snap3D = {
       V.g.updateMatrixWorld(true);
       const oc = this.oc || (this.oc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.05, 60)), el = 0.2; // 2D 단위 → 칸: 1/U. 화면 160×104 = 펫 단위 (160/k)×(104/k)
       oc.left = -80 / k / U; oc.right = 80 / k / U; oc.top = 96 / k / U; oc.bottom = -8 / k / U; oc.position.set(0, Math.sin(el) * 20, Math.cos(el) * 20); oc.lookAt(0, 0, 0); oc.updateProjectionMatrix();
-      this.S.add(V.g); this.r.setSize(W, H, false); this.r.render(this.S, oc); this.S.remove(V.g); return this.r.domElement;
+      this.S.add(V.g); try { return this.rd(W, H, oc); } finally { this.S.remove(V.g); }
     } catch (e) { console.warn('snap3d pet', e); this.bad = 1; return null; }
   },
   // v345 집 소품 사진 (사용자 '2D인거 전부 3D로'): 거울·조명·공기청정기·어항·피아노·안마의자는 방에 세우는 도형(Room3D.deco3) 그대로, 화분은 방처럼 부풀린 그림. 정사각 N px, 없으면 null

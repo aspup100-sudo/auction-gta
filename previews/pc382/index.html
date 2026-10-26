@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"><base href="../../"><script>window.A3J_BASE="https://aspup100-sudo.github.io/auction-gta/3d/";</script>
+<meta charset="utf-8"><base href="../../"><script>window.A3J_BASE="https://aspup100-sudo.github.io/auction-gta/3d/";(function(){var g=Storage.prototype.getItem;Storage.prototype.getItem=function(k){return k==="auctionGTA.webOk"?"1":g.call(this,k);};})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#121418">
 <meta name="mobile-web-app-capable" content="yes">
@@ -19223,7 +19223,9 @@ Object.assign(Room3D, {
       if (!e) continue;
       const hide = F.some(([fx, fz]) => fx > b.x - 0.4 && fx < b.x + b.w + 0.4 && fz < b.y + 0.3 && fz > b.y - e.H * cot - 0.6), tg = hide ? 0.35 : 1; e.o += (tg - e.o) * Math.min(1, dt * 10);
       if (!e.tw) { e.tw = 1; this.zTw(e); }
-      const tr = e.o < 0.98; for (const mt of e.mats) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
+      const tr = e.o < 0.98; if (e.sm) { if (tr && !e.fc) e.fc = e.sm.map(([m, s]) => (m.material = s.clone())); else if (!tr && e.fc) { e.sm.forEach(([m, s]) => { m.material = s; }); e.fc.forEach(c => c.dispose()); e.fc = null; } } /* v382 같이 쓰는 재질은 반투명일 때만 이 건물 것으로 복사 */
+      for (const mt of e.mats) { if (mt.userData.sh) continue; if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
+      if (e.fc) for (const mt of e.fc) { if (mt.transparent !== tr) { mt.transparent = tr; mt.depthWrite = !tr; mt.needsUpdate = true; } mt.opacity = e.o; }
     }
     // 지나간 건물: 한도(폰 120만 · PC 300만 꼭짓점)를 넘으면 먼 것부터 치운다
     const cap = Ride3D.mob() ? 1.2e6 : 3e6, d2 = id => { const b = z.buildings[id], dx = b.x + b.w / 2 - cx - ax * 0.5, dz = b.y + b.h / 2 - cz - ay * 0.5; return dx * dx + dz * dz; };
@@ -19256,9 +19258,9 @@ Object.assign(Room3D, {
   zWarmEnd() { this.zWarm = 0; this.zWarm0 = 0; this.zWarmD = 0; const el = document.getElementById('zLoad'); if (el) el.remove(); },
   /* v376 끊김: 나·친구가 건물 뒤로 가면 건물이 반투명이 되는데, 처음 그럴 때 반투명용 셰이더(재질 종류마다 하나, 처음 5개쯤)를 그 프레임에 만들었다.
    * 건물이 생길 때 반투명 짝 셰이더도 미리 만들어 둔다 (이미 있으면 찾기만). 모습은 똑같다 */
-  zTw(e) { const ms = e.mats.filter(m => !m.transparent); if (!ms.length || !this.r) return; for (const m of ms) m.transparent = true;
+  zTw(e) { const ms = e.mats.filter(m => !m.transparent && !(m.userData.sh && m.userData.tw)); if (!ms.length || !this.r) return; for (const m of ms) { m.transparent = true; if (m.userData.sh) m.userData.tw = 1; } /* v382 같이 쓰는 재질은 처음 한 번만 */
     try { this.r.compile(e.m, this.cc || this.cam, this.S); } catch (er) { } for (const m of ms) { m.transparent = false; m.needsUpdate = true; } },
-  zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.map && !mt.map._sh) mt.map.dispose(); mt.dispose(); } e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
+  zDrop(e) { this.S.remove(e.m); e.m.geometry.dispose(); for (const mt of e.mats) { if (mt.userData.sh) continue; if (mt.map && !mt.map._sh) mt.map.dispose(); mt.dispose(); } if (e.fc) { e.fc.forEach(c => c.dispose()); e.fc = null; } /* v382 같이 쓰는 재질은 버리지 않는다 */ e.m.children.forEach(c => c.geometry && c.geometry.dispose()); },
   /* ---- 차 (앞 = +x): 몸통 · 유리 지붕 · 바퀴 · 불빛 ---- */
   car3(len, wid, col, stripe, kind, v) { if (typeof Car3D !== 'undefined' && Car3D.ready()) try { return Car3D.make(len, wid, col, stripe, kind, v); } catch (e) { console.warn('car3d', e); Car3D.st = -1; } return this.car3b(len, wid, col, stripe, kind); },
   car3b(len, wid, col, stripe, kind) {
@@ -20557,16 +20559,19 @@ Object.assign(Bld3D, {
     yield 10;
     // ---- 재질별 모양 → 그룹 ----
     const root = new THREE.Group(); root.position.set(b.x, 0, b.y);
-    let NV = 0, TOP = 0; for (const k in B) { const o = B[k], n = o.len; if (!n) continue; NV += n; const geo = new THREE.BufferGeometry(), pp = o.p.subarray(0, n * 3); geo.setAttribute('position', new THREE.BufferAttribute(pp, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(o.n.subarray(0, n * 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(o.u.subarray(0, n * 2), 2)); geo.setAttribute('color', new THREE.BufferAttribute(o.c.subarray(0, n * 3), 3));
+    let NV = 0, TOP = 0, SM = null; for (const k in B) { const o = B[k], n = o.len; if (!n) continue; NV += n; const geo = new THREE.BufferGeometry(), pp = o.p.subarray(0, n * 3); geo.setAttribute('position', new THREE.BufferAttribute(pp, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(o.n.subarray(0, n * 3), 3)); geo.setAttribute('uv', new THREE.BufferAttribute(o.u.subarray(0, n * 2), 2)); geo.setAttribute('color', new THREE.BufferAttribute(o.c.subarray(0, n * 3), 3));
       { let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity; for (let i = 0; i < n * 3; i += 3) { const x = pp[i], y = pp[i + 1], z = pp[i + 2]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z; } geo.boundingBox = new THREE.Box3(new THREE.Vector3(x0, y0, z0), new THREE.Vector3(x1, y1, z1)); geo.boundingSphere = geo.boundingBox.getBoundingSphere(new THREE.Sphere()); if (y1 > TOP) TOP = y1; } // v362 경계는 한 번 훑어 직접 (three가 두 번 훑지 않게) · 꼭대기 높이는 zone3d에 넘김
       let mt; if (k === 'lett') mt = new THREE.MeshStandardMaterial({ map: sTex, alphaTest: 0.5, roughness: 0.35, metalness: 0.15 }); // 투명 바탕 금속 글자
       else if (k === 'sign') { mt = new THREE.MeshStandardMaterial({ map: sTex, emissiveMap: sTex, emissive: 0xffffff, emissiveIntensity: eve ? 0.85 : 0.08, roughness: 0.4, metalness: 0 }); mt.shadowSide = THREE.DoubleSide; }
-      else { mt = M[k].clone(); if (k === 'win') mt.emissiveIntensity = eve ? 1.15 : 0; }
-      mats.push(mt); const m = new THREE.Mesh(geo, mt); m.castShadow = k !== 'win' && k !== 'sign' && k !== 'lett'; m.receiveShadow = true; root.add(m); }
+      else if (this.shareOff) { mt = M[k].clone(); if (k === 'win') mt.emissiveIntensity = eve ? 1.15 : 0; } /* 비교 시험용 (예전처럼 건물마다 복사) */
+      else { /* v382 컴퓨터 렉 (인텔 내장 그래픽 3D 16~20ms): 건물마다 재질을 복사해서 건물 100채면 재질 500개를 장면마다 바꿔 끼웠다. 이제 벽·창·지붕 재질은 모든 건물이 같이 쓴다 (값이 같아 모습도 같다).
+        * 내가 건물 뒤로 가서 반투명이 될 때만 그 건물 것을 잠깐 복사해 쓴다 (zone3d.js) */
+        mt = k === 'win' && eve ? (M.winE || (M.winE = Object.assign(M.win.clone(), { emissiveIntensity: 1.15 }))) : M[k]; if (k === 'win' && !eve) mt.emissiveIntensity = 0; mt.userData.sh = 1; }
+      mats.push(mt); const m = new THREE.Mesh(geo, mt); if (mt.userData.sh) (SM || (SM = [])).push([m, mt]); m.castShadow = k !== 'win' && k !== 'sign' && k !== 'lett'; m.receiveShadow = true; root.add(m); }
     root.add(this.gAO(W, Dp)); // v345 땅 접지 그늘
     root.userData.L = LT; root.userData.bx = [W, Dp, cTop];
     root.geometry = { dispose() { } }; // zDrop 호환 (모양은 자식들이 갖고 있다)
-    return { m: root, mats, H: cTop, o: 1, nv: NV, top: TOP }; // v362 nv · top: zone3d가 Box3·traverse로 다시 재지 않게
+    return { m: root, mats, sm: SM, H: cTop, o: 1, nv: NV, top: TOP }; // v382 sm: 같이 쓰는 재질 [모양, 재질] · v362 nv · top: zone3d가 Box3·traverse로 다시 재지 않게
   },
   // v345 땅 접지 그늘: 건물 둘레 땅에 깔리는 반투명 검은 띠 (앞과 양옆, 멀어질수록 옅게). 재질은 모든 건물이 같이 쓴다
   gAO(W, D) { const { THREE } = T3, m = this.gAOm || (this.gAOm = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 1; const g = c.getContext('2d'); for (let i = 0; i < 256; i++) { g.fillStyle = `rgba(0,0,0,${i / 255})`; g.fillRect(i, 0, 1, 1); } // 꼭짓점 알파가 이 렌더러에선 안 먹어서 진하기를 u 좌표로 (가로 띠 그림에서 찾기)

@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v382 시험 3</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v382 시험 4</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3168,6 +3168,7 @@ const Sprites = (() => {
  */
 const T = { GROUND: 0, ROAD: 1, WALK: 2, BLD: 3, ALLEY: 4, PARK: 5 };
 const TILE = 16;
+const CUT_PCT = 30; /* v382 안쪽 빌라 비우는 몫 (%) */
 
 const ZONE_SPECS = {
   // 2단계 1차: 큰길만 손으로 잡은 좌표(대략), 골목은 절차 생성. OSM 파일이 오면 교체.
@@ -3446,7 +3447,7 @@ function buildZone(spec, cases = []) {
   function claim(near, filter = () => true) {
     let best = null, bd = 1e9;
     for (const b of buildings) {
-      if (usedB.has(b.id) || !filter(b)) continue;
+      if (usedB.has(b.id) || b.cut || !filter(b)) continue;
       const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]);
       const door = doorOf(b); if (!door) continue;
       if (d < bd) { bd = d; best = { b, door }; }
@@ -3470,6 +3471,14 @@ function buildZone(spec, cases = []) {
     if (c) { c.b.place = 'case:' + cs.id; c.b.caseId = cs.id; if (cs.type === '아파트') c.b.floors = Math.max(c.b.floors, 12); places.push({ id: 'case:' + cs.id, kind: 'site', name: cs.name, caseId: cs.id, building: c.b.id, door: c.door }); }
   });
   for (const p of late) { const c = claim(p.near, b => b.w >= 4 && b.h >= 4); if (c) { c.b.place = p.id; places.push({ ...p, building: c.b.id, door: c.door }); } }
+  /* v382 사용자 '빌라 숫자도 쫌 줄여도 될거같은데' (컴퓨터 렉: 화면에 건물 225채): 실제 지도(OSM) 동네에서 큰길·인도에 안 닿는 안쪽 작은 건물 셋 중 하나쯤을 비워 마당으로 둔다.
+   * 장소·경매 물건 건물은 그대로. 번호(id)는 그대로 두고 b.cut만 표시 (내 집·친구 집 저장이 번호로 가리켜서). 칸 해시로 고르니 누구 화면이든 같다. 저장된 집이 빠진 건물이면 uncut으로 되살린다 */
+  if (spec.osm) for (const b of buildings) { if (b.place || b.fixedPlace || usedB.has(b.id) || b.w * b.h > 120) continue;
+    let edge = false; for (let x = b.x - 1; x <= b.x + b.w && !edge; x++) for (const y of [b.y - 1, b.y + b.h]) { const v = at(x, y); if (v === T.ROAD || v === T.WALK) edge = true; }
+    for (let y = b.y; y < b.y + b.h && !edge; y++) for (const x of [b.x - 1, b.x + b.w]) { const v = at(x, y); if (v === T.ROAD || v === T.WALK) edge = true; }
+    if (edge || ((Math.imul(b.x * 73856093 ^ b.y * 19349663, 2654435761) >>> 0) % 100) >= CUT_PCT) continue;
+    b.cut = 1; for (let yy = b.y; yy < b.y + b.h; yy++) for (let xx = b.x; xx < b.x + b.w; xx++) set(xx, yy, T.GROUND); }
+  function uncut(b) { if (!b || !b.cut) return; b.cut = 0; for (let yy = b.y; yy < b.y + b.h; yy++) for (let xx = b.x; xx < b.x + b.w; xx++) set(xx, yy, T.BLD); if (zone.chunks) zone.chunks.clear(); }
   // 가로수: 큰길 보도 가장자리
   const trees = [];
   for (const r of spec.roads) for (let i = 0; i < r.pts.length - 1; i++) {
@@ -3514,7 +3523,7 @@ function buildZone(spec, cases = []) {
       else j.halfB = Math.max(j.halfB, Math.abs(dx * pB[0] + dy * pB[1]) + road.width / 2);
     }
   }
-  const zone = { claim, doorOf, stableDoor, spec, gu: spec.gu, parking: spec.parking || [], id: spec.id, name: spec.name, W, H, g, at, buildings, places, trees, parks, crossings, roads: spec.roads, subway: spec.subway || [], chunks: new Map() };
+  const zone = { claim, doorOf, stableDoor, uncut, spec, gu: spec.gu, parking: spec.parking || [], id: spec.id, name: spec.name, W, H, g, at, buildings, places, trees, parks, crossings, roads: spec.roads, subway: spec.subway || [], chunks: new Map() };
   return zone;
 }
 function dirOf(a, b) { const L = Math.hypot(b[0] - a[0], b[1] - a[1]); return [(b[0] - a[0]) / L, (b[1] - a[1]) / L]; }
@@ -8897,7 +8906,7 @@ function drawZone(t, g = ctx) { // g: 땅 그림 캔버스 (3D 바깥이면 #zgr
   if (Game.doorAnim) { const d = Game.doorAnim; d.t += 1 / 60; ctx.fillStyle = '#1a1a1a'; const open = Math.min(1, d.t / FEEL.doorOpenTime); ctx.fillRect(d.tx * TILE + 3, d.ty * TILE - 2, 10 * open, 4); }
   // 건물 그림자는 땅에 먼저
   const blds = [], plOf = {}; for (const pl of z.places) plOf[pl.building] = pl;
-  for (const b of z.buildings) { const X = b.x * TILE, Y = b.y * TILE, wh = bWallH(b), base = (b.y + b.h) * TILE; if (X > x1 + 30 || Y - wh > y1 || X + b.w * TILE + 30 < x0 || base + 30 < y0) continue; blds.push(b); if (!Z3) drawBuildingShadow(ctx, b); }
+  for (const b of z.buildings) { if (b.cut) continue; const X = b.x * TILE, Y = b.y * TILE, wh = bWallH(b), base = (b.y + b.h) * TILE; if (X > x1 + 30 || Y - wh > y1 || X + b.w * TILE + 30 < x0 || base + 30 < y0) continue; blds.push(b); if (!Z3) drawBuildingShadow(ctx, b); }
   // 문 앞 매트 (땅)
   for (const pl of z.places) { const dx = pl.door.tx * TILE, dy = pl.door.ty * TILE; if (dx < x0 - 20 || dx > x1 || dy < y0 - 20 || dy > y1) continue; g.fillStyle = pl.kind === 'site' ? 'rgba(179,57,42,.6)' : 'rgba(205,174,112,.7)'; g.fillRect(dx + 3, dy + 3, 10, 10); }
   if (!Z3) for (const b of blds) near.push({ y: (b.y + b.h) * TILE, d: () => drawBuildingRoof(ctx, b, t, plOf[b.id]) }); // 3D면 건물·나무는 3D
@@ -12840,16 +12849,16 @@ const MyHome = {
     if (z._home0 === undefined) z._home0 = z.places.find(p => p.id === 'home') || null;
     for (let i = z.places.length - 1; i >= 0; i--) if (z.places[i].id === 'home' || z.places[i].id === 'myhome') z.places.splice(i, 1);
     if (!Live.on) { if (z._home0) z.places.push(z._home0); return; }
-    if (!h || h.z !== z.id) return; const b = z.buildings[h.b], door = b && z.stableDoor(b); if (!door) return;
+    if (!h || h.z !== z.id) return; const b = z.buildings[h.b]; if (b && b.cut) z.uncut(b); /* v382 비운 안쪽 빌라였으면 내 집은 되살린다 */ const door = b && z.stableDoor(b); if (!door) return;
     const clash = z.places.find(p => p.building === b.id && (p.kind === 'arcade' || p.kind === 'casino')); // 구마다 새로 생긴 게임장·카지노가 산 집 건물에 들어갔으면 옆 건물로 옮긴다 (v212)
-    if (clash) { let best = null, bd = 1e9; const used = new Set(z.places.map(p => p.building)); for (const o of z.buildings) { if (o === b || o.place || used.has(o.id) || o.w < 4 || o.h < 4) continue; const d = Math.hypot(o.x - b.x, o.y - b.y), dr = d < bd && z.doorOf(o); if (dr) { bd = d; best = o; } } if (best) { best.place = clash.id; clash.building = best.id; clash.door = z.doorOf(best); } }
+    if (clash) { let best = null, bd = 1e9; const used = new Set(z.places.map(p => p.building)); for (const o of z.buildings) { if (o === b || o.place || o.cut || used.has(o.id) || o.w < 4 || o.h < 4) continue; const d = Math.hypot(o.x - b.x, o.y - b.y), dr = d < bd && z.doorOf(o); if (dr) { bd = d; best = o; } } if (best) { best.place = clash.id; clash.building = best.id; clash.door = z.doorOf(best); } }
     b.place = 'myhome'; z.places.push({ id: 'myhome', kind: 'home', name: `내 집 · ${this.type(h).name}`, building: b.id, door });
   },
   // 이 구역 매물: 집 종류마다 하나씩 (구역·종류로 정해서 다시 와도 같은 건물)
   listings() {
     const z = Game.zone; if (!z) return []; const used = new Set(z.places.filter(p => p.id !== 'forsale').map(p => p.building)), hz = [...String(z.id)].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
     return HOME_TYPES.map((T, i) => { const R = makeRng((hz + i * 977 + (Live.ch || 0) * 31) >>> 0), near = [R.next() * z.W * 0.8 + z.W * 0.1, R.next() * z.H * 0.8 + z.H * 0.1];
-      let best = null, bd = 1e9; for (const b of z.buildings) { const A = b.w * b.h; if (used.has(b.id) || b.place || A < T.minA || A > T.maxA) continue; const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]); if (d < bd && z.doorOf(b)) { bd = d; best = b; } }
+      let best = null, bd = 1e9; for (const b of z.buildings) { const A = b.w * b.h; if (used.has(b.id) || b.place || b.cut || A < T.minA || A > T.maxA) continue; const d = Math.hypot(b.x + b.w / 2 - near[0], b.y + b.h / 2 - near[1]); if (d < bd && z.doorOf(b)) { bd = d; best = b; } }
       if (!best) return null; used.add(best.id); const n = (R.next() * 1000) | 0, unit = T.unit(n); return { T, b: best.id, name: `${T.names[n % T.names.length]}${unit ? ' ' + unit : ''}`, price: T.price }; }).filter(Boolean);
   },
   spendable() { return typeof Shop !== 'undefined' && Shop.spendable ? Shop.spendable() : Math.max(0, State.cash - (State.capital || 0)); },
@@ -12931,7 +12940,7 @@ const MyHome = {
   fdoor: {},
   friendDoors() {
     const z = Game.zone, out = []; if (!Net.on || !Live.on || !z) return out;
-    for (const id in Net.players) { const f = Net.players[id], hm = f && !f.gone && Array.isArray(f.hm) ? f.hm : null; if (!hm || hm[0] !== z.id || !f.name) continue; const b = z.buildings[+hm[1]]; if (!b) continue; const k = `${z.id}:${hm[1]}:${hm[2]}:${f.name}`; let pl = this.fdoor[id];
+    for (const id in Net.players) { const f = Net.players[id], hm = f && !f.gone && Array.isArray(f.hm) ? f.hm : null; if (!hm || hm[0] !== z.id || !f.name) continue; const b = z.buildings[+hm[1]]; if (!b) continue; if (b.cut) z.uncut(b); /* v382 친구 집도 */ const k = `${z.id}:${hm[1]}:${hm[2]}:${f.name}`; let pl = this.fdoor[id];
       if (!pl || pl.k !== k) { const door = z.stableDoor(b); if (!door) continue; const T = HOME_TYPES.find(t => t.id === hm[2]); pl = this.fdoor[id] = { k, kind: 'fhome', id: 'fhome:' + f.name, host: id, hostName: f.name, tid: T ? T.id : 'apt', name: `${f.name}네 ${T ? T.name : '집'}`, building: b.id, door }; }
       pl.hd = f.hd || ''; out.push(pl); }
     return out;
@@ -19259,7 +19268,7 @@ Object.assign(Room3D, {
     const ax = vx * la, ay = vy * la, x0 = cx - vw / 2 - 12 + Math.min(0, ax), x1 = cx + vw / 2 + 12 + Math.max(0, ax), z0 = cz - vd / 2 - 12 + Math.min(0, ay), z1 = cz + vd / 2 + 16 + Math.max(0, ay);
     const sp = typeof ShopPromo !== 'undefined' && ShopPromo.w; if (sp && Game.decor.includes(sp)) F.push([sp.x / TILE, sp.y / TILE]); if (typeof Net !== 'undefined' && Net.on) for (const { p } of Net.visible('zone')) if (p && Number.isFinite(p.x)) F.push([p.x / TILE, p.y / TILE]);
     const need = [], far = []; let vt = 0;
-    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e = this.zb.get(id), inV = b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
+    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], e = this.zb.get(id), inV = !b.cut && b.x < x1 && b.x + b.w > x0 && b.y < z1 && b.y + b.h > z0;
       if (e) { vt += e.nv || 0; e.m.visible = inV || b.x < cx + vw / 2 + 4 && b.x + b.w > cx - vw / 2 - 4 && b.y < cz + vd / 2 + 8 && b.y + b.h > cz - vd / 2 - 4; if (!inV) { far.push(id); continue; } if (e.stale) need.push(id); }
       else if (inV) need.push(id);
       if (!e) continue;
@@ -19445,7 +19454,7 @@ Object.assign(Room3D, {
   // v321 밧줄: 두 손 가운데 → 돛 모서리 (r = {x, y, h} 월드 px · 칸, 없으면 숨김)
   /* v366 나는 탈것 밑 지붕 (칸): [x, y 둘레 r px 안에 걸친 지붕 중 가장 높은 것, 가운데가 지붕 위면 그 지붕 높이] */
   zRoof(x, y, r) { const z = this.room, tx = x / TILE, ty = y / TILE, rt = r / TILE; let nr = 0, on = 0; if (!z || !z.buildings) return [0, 0];
-    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id], dx = Math.max(b.x - tx, 0, tx - b.x - b.w), dy = Math.max(b.y - ty, 0, ty - b.y - b.h); if (dx > rt || dy > rt) continue; const d = Math.hypot(dx, dy); if (d > rt) continue;
+    for (let id = 0; id < z.buildings.length; id++) { const b = z.buildings[id]; if (b.cut) continue; const dx = Math.max(b.x - tx, 0, tx - b.x - b.w), dy = Math.max(b.y - ty, 0, ty - b.y - b.h); if (dx > rt || dy > rt) continue; const d = Math.hypot(dx, dy); if (d > rt) continue;
       const e = this.zb.get(id), h = e && e.H > 0 ? e.H : bWallH(b) / TILE * Z3_BH; if (h > nr) nr = h; if (d < rt * 0.3 && h > on) on = h; } return [nr, on]; },
   rope(H, r) { const { THREE } = T3; if (!r) { if (H.rp) H.rp.visible = false; return; }
     if (!H.rp) { H.rp = new THREE.Mesh(this.ropeG || (this.ropeG = new THREE.CylinderGeometry(0.022, 0.022, 1, 6)), Room3D.toon('#6a4a26')); this.ropeG._keep = 1; this.S.add(H.rp); H.rp.userData.own = H; }

@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v380</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v381</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -18703,7 +18703,9 @@ Object.assign(Room3D, {
     const pat = (x, s) => { const im = RealFloor.im[fk + s], k = cover * px / im.width, p = x.createPattern(im, 'repeat'); p.setTransform(new DOMMatrix([k, 0, 0, k, 0, 0])); return p; };
     const floorAt = (x, y) => at(x, y) !== '#';
     const [cc, cx] = mk('#000'), [nc, nx] = mk('#8080ff'), [rc, rx] = mk('#c0c0c0');
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { if (!floorAt(x, y)) continue; for (const [c, s] of [[cx, 'c'], [nx, 'n'], [rx, 'r']]) { c.fillStyle = pat(c, s); c.fillRect(x * px, y * px, px, px); } }
+    /* v381 (사용자 '숍 들어갈 때 화면 전환이 느린데'): 칸마다 무늬를 새로 만들고 칸마다 따로 칠해서 굽는 데 오래 걸렸다 → 무늬는 한 번, 바닥 칸은 한 번에 칠한다 (무늬 기준점이 같아 그림은 똑같다) */
+    const fp = new Path2D(); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (floorAt(x, y)) fp.rect(x * px, y * px, px, px);
+    for (const [c, s] of [[cx, 'c'], [nx, 'n'], [rx, 'r']]) { c.fillStyle = pat(c, s); c.fill(fp); }
     // 방마다 바닥 색·무늬
     if (fk === 'marble') { cx.fillStyle = 'rgba(40,36,30,.18)'; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (floorAt(x, y)) { cx.fillRect(x * px, y * px, 1.5, px); cx.fillRect(x * px, y * px, px, 1.5); } rx.fillStyle = 'rgba(0,0,0,.35)'; rx.fillRect(0, 0, cw, ch); }
     if (P.fl === 'tile' && P.key === 'court') { cx.fillStyle = 'rgba(120,90,50,.18)'; cx.fillRect(0, 0, cw, ch); }
@@ -18718,12 +18720,14 @@ Object.assign(Room3D, {
     if (P.rug) rug(5 * px, 3 * px - px * 0.2, 4 * px, 2 * px + px * 0.4, '#a8543c', 'rgba(242,216,168,.9)');
     for (let x = 0; x < W; x++) if (at(x, H - 1) === 'D') rug(x * px + px * 0.08, (H - 2) * px + px * 0.35, px * 0.84, px * 0.65 + px, dark ? '#1a1418' : '#4a4038', 'rgba(0,0,0,.25)');
     // 그늘 (aoMap): 벽 밑·가구 밑 어둡게 (흐리게)
-    const [ac, ax] = mk('#ffffff'); ax.filter = `blur(${px * 0.28}px)`; ax.fillStyle = '#6a6a6a';
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = at(x, y); if (c === '#') ax.fillRect(x * px - px * 0.08, y * px - px * 0.08, px * 1.16, px * 1.16); else if (solid(x, y)) { ax.fillStyle = '#9a9a9a'; ax.fillRect(x * px + px * 0.1, y * px + px * 0.1, px * 0.8, px * 0.8); ax.fillStyle = '#6a6a6a'; } }
+    /* v381: 흐리게(blur)를 네모마다 따로 걸면 네모 수만큼 큰 그림을 흐리게 해서 제일 오래 걸렸다 → 네모를 다른 판에 다 그리고 한 번만 흐리게 얹는다 (같은 흐림) */
+    const [ac, ax] = mk('#ffffff'), [bc, bx] = mk(); bx.fillStyle = '#6a6a6a';
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = at(x, y); if (c === '#') bx.fillRect(x * px - px * 0.08, y * px - px * 0.08, px * 1.16, px * 1.16); else if (solid(x, y)) { bx.fillStyle = '#9a9a9a'; bx.fillRect(x * px + px * 0.1, y * px + px * 0.1, px * 0.8, px * 0.8); bx.fillStyle = '#6a6a6a'; } }
+    ax.filter = `blur(${px * 0.28}px)`; ax.drawImage(bc, 0, 0); ax.filter = 'none'; bc.width = bc.height = 1;
     // 빛 (lightMap): 천장 등 줄 + 뒷벽 창 빛
     const [lc, lx] = mk(dark ? '#141218' : '#3a3632'), lamps = [];
     for (let y = 2.2; y < H - 1; y += 3) for (let x = 2.5; x < W - 1; x += Math.max(3, (W - 3) / Math.max(1, Math.round((W - 3) / 3.5)))) lamps.push([x, y]);
-    for (const [x, y] of lamps) { const g = lx.createRadialGradient(x * px, y * px, 0, x * px, y * px, px * 2.6); const c0 = dark === 'casino' ? 'rgba(255,190,120,.55)' : dark ? 'rgba(200,140,255,.45)' : 'rgba(255,246,230,.75)'; g.addColorStop(0, c0); g.addColorStop(1, 'rgba(255,246,230,0)'); lx.fillStyle = g; lx.fillRect(0, 0, cw, ch); }
+    for (const [x, y] of lamps) { const g = lx.createRadialGradient(x * px, y * px, 0, x * px, y * px, px * 2.6); const c0 = dark === 'casino' ? 'rgba(255,190,120,.55)' : dark ? 'rgba(200,140,255,.45)' : 'rgba(255,246,230,.75)'; g.addColorStop(0, c0); g.addColorStop(1, 'rgba(255,246,230,0)'); lx.fillStyle = g; const r = px * 2.6; lx.fillRect(x * px - r, y * px - r, r * 2, r * 2); } /* v381 등 빛 밖은 투명이라 등 둘레만 칠한다 (같은 그림) */
     if (!dark) for (const wx of this.rrWinX(rm, P, W)) { const g = lx.createLinearGradient(0, px, 0, px * 4.2); g.addColorStop(0, 'rgba(220,236,255,.65)'); g.addColorStop(1, 'rgba(220,236,255,0)'); lx.fillStyle = g; lx.beginPath(); lx.moveTo((wx.x - wx.w / 2) * px, px); lx.lineTo((wx.x + wx.w / 2) * px, px); lx.lineTo((wx.x + wx.w / 2 + 0.9) * px, px * 4.2); lx.lineTo((wx.x - wx.w / 2 + 0.6) * px, px * 4.2); lx.fill(); }
     const T = (c, srgb) => { const t = new THREE.CanvasTexture(c); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; }; // v363 바닥 그림은 rrFC가 직접 버린다 (_own 아님)
     const mt = new THREE.MeshStandardMaterial({ map: T(cc, true), normalMap: T(nc), roughnessMap: T(rc), aoMap: T(ac), aoMapIntensity: 1, lightMap: T(lc, true), lightMapIntensity: dark ? 1.6 : 1.25, roughness: 1, metalness: 0, envMapIntensity: dark ? 0.5 : 0.8 });
@@ -19197,7 +19201,7 @@ Object.assign(Room3D, {
      * 이제 ① 달리는 쪽으로 미리 (빠를수록 멀리) ② 가까운 것부터 ③ 한 장에 쓸 시간 안에서만 ④ 지나간 건물은 꼭짓점 한도까지 남겨 둔다 (되돌아와도 다시 안 지음)
      * ⑤ 저녁·사진 바뀜은 다 부수지 않고 하나씩 바꿔 끼운다 ⑥ 동네에 처음 들어가면 보이는 건물을 다 지을 때까지 '동네 불러오는 중' */
     const bg = typeof Bld3D !== 'undefined' ? Bld3D.rgen : 0, now = performance.now();
-    if (this.zbZ !== z || !this.zb.size) { if (this.zbZ !== z) { for (const [, e] of this.zb) this.zDrop(e); this.zb.clear(); } this.zbZ = z; if (!this.zWarm) { this.zWarm = 1; this.zWarm0 = 0; this.zWarmD = 0; } }
+    if (this.zbZ !== z || !this.zb.size) { if (this.zbZ !== z) { for (const [, e] of this.zb) this.zDrop(e); this.zb.clear(); } this.zbZ = z; if (!this.zWarm) { this.zWarm = 1; this.zWarm0 = 0; this.zWarmD = 0; this.zRw = 0; } }
     if (this.zEve !== State.evening || this.zbg !== bg) { for (const [, e] of this.zb) e.stale = 1; this.zEve = State.evening; this.zbg = bg; }
     const plOf = this.zpl && this.zplZ === z ? this.zpl : (this.zplZ = z, this.zpl = {}); if (!Object.keys(plOf).length) for (const pl of z.places) plOf[pl.building] = pl;
     const me = Game.driving ? Game.car : Game.player, cot = 1 / Math.tan(Z3_EL), F = [[me.x / TILE, me.y / TILE]]; // 가려지면 안 되는 사람: 나 · 편집숍 사장님 · 친구
@@ -19218,6 +19222,9 @@ Object.assign(Room3D, {
     const cap = Ride3D.mob() ? 1.2e6 : 3e6, d2 = id => { const b = z.buildings[id], dx = b.x + b.w / 2 - cx - ax * 0.5, dz = b.y + b.h / 2 - cz - ay * 0.5; return dx * dx + dz * dz; };
     if (vt > cap && far.length) { far.sort((a, b) => d2(b) - d2(a)); for (const id of far) { if (vt <= cap) break; const e = this.zb.get(id); vt -= e.nv || 0; this.zDrop(e); this.zb.delete(id); } }
     if (!need.length) { if (this.zWarm) this.zWarmEnd(); return; }
+    /* v381 사용자 '처음 시작할때, 사무실 나갔다 왔을때 … 한번에 건물이 있는게 아니라 점점 그려지던데': 실사 벽 사진·옥상 부품이 오기 전에 예전 모습으로 먼저 짓고, 다 받으면 전부 다시 지어서 (하나씩 바꿔 끼우며) 점점 그려졌다.
+     * 동네를 처음 지을 때는 사진·부품이 올 때까지 (길어야 10초) '동네 불러오는 중'으로 가려 두고, 받은 뒤 한 번에 짓는다 */
+    if (this.zWarm && typeof Bld3D !== 'undefined' && Bld3D.on() && !this.zOld && Bld3D.makeRealG && Bld3D.rst !== -1 && !(Bld3D.real() && Bld3D.KIT) && now - (this.zRw || (this.zRw = now)) < 10000) { this.zWarm0 = 0; this.zWarmShow(need.length, 0); return; }
     need.sort((a, b) => (this.zb.has(a) ? 1e6 : 0) + d2(a) - (this.zb.has(b) ? 1e6 : 0) - d2(b)); // 없는 것 먼저, 가까운 것 먼저
     const warm = (this.zWarm && now - this.zWarm0 < 12000) || (typeof irisDark === 'function' && irisDark()), budget = warm ? 60 : this.fe > 22 ? 3 : 6; if (this.zWarm && !this.zWarm0) this.zWarm0 = now;
     let made = 0, J = this.zJob; if (J && (J.z !== z || J.bg !== bg || J.eve !== State.evening || !need.includes(J.id))) J = this.zJob = null;
@@ -19237,7 +19244,7 @@ Object.assign(Room3D, {
     if (this.zWarm) { if (!(now - this.zWarm0 < 12000)) this.zWarmEnd(); else this.zWarmShow(need.length - made, made); } /* v376 warm은 화면이 가려졌을 때도 켜지니 '불러오는 중' 판단은 시간으로만 */
   },
   zJobRun(J, until) { try { let r; do { r = J.g.next(); if (r.done) return r.value; } while (performance.now() < until); return null; } catch (er) { console.warn('bld3d', er); this.zJob = null; return this.zBld(J.z.buildings[J.id], J.pl); } },
-  zWarmShow(left, made) { this.zWarmD = (this.zWarmD || 0) + made; clearTimeout(this.zwT); this.zwT = setTimeout(() => this.zWarmEnd(), 600); /* 바깥을 안 그리면 (실내로 들어가면) 바로 걷는다 */ let el = document.getElementById('zLoad'); if (!el) { if (!document.getElementById('zLoadCss')) { const st = document.createElement('style'); st.id = 'zLoadCss'; st.textContent = '#zLoad{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(14,18,24,.78);pointer-events:auto}#zLoad .b{width:min(280px,80vw);text-align:center;color:#f2ead8;font:600 14px/1.4 "IBM Plex Sans KR",sans-serif}#zLoad b{display:block;font-size:17px;margin-bottom:10px}#zLoad i{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}#zLoad s{display:block;height:100%;width:0;background:#e8c34a;transition:width .15s}#zLoad small{display:block;margin-top:8px;opacity:.75}'; document.head.appendChild(st); } el = document.createElement('div'); el.id = 'zLoad'; el.innerHTML = '<div class="b"><b>동네 불러오는 중</b><i><s></s></i><small></small></div>'; document.body.appendChild(el); }
+  zWarmShow(left, made) { this.zWarmD = (this.zWarmD || 0) + made; clearTimeout(this.zwT); this.zwT = setTimeout(() => this.zWarmEnd(), 600); /* 바깥을 안 그리면 (실내로 들어가면) 바로 걷는다 */ let el = document.getElementById('zLoad'); if (!el) { if (!document.getElementById('zLoadCss')) { const st = document.createElement('style'); st.id = 'zLoadCss'; st.textContent = '#zLoad{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#0e1218;pointer-events:auto}#zLoad .b{width:min(280px,80vw);text-align:center;color:#f2ead8;font:600 14px/1.4 "IBM Plex Sans KR",sans-serif}#zLoad b{display:block;font-size:17px;margin-bottom:10px}#zLoad i{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}#zLoad s{display:block;height:100%;width:0;background:#e8c34a;transition:width .15s}#zLoad small{display:block;margin-top:8px;opacity:.75}'; document.head.appendChild(st); } el = document.createElement('div'); el.id = 'zLoad'; el.innerHTML = '<div class="b"><b>동네 불러오는 중</b><i><s></s></i><small></small></div>'; document.body.appendChild(el); }
     const done = this.zWarmD, all = done + left, pct = all ? Math.round(done / all * 100) : 100; el.querySelector('s').style.width = pct + '%'; el.querySelector('small').textContent = `건물 ${done} / ${all}`; },
   zWarmEnd() { this.zWarm = 0; this.zWarm0 = 0; this.zWarmD = 0; const el = document.getElementById('zLoad'); if (el) el.remove(); },
   /* v376 끊김: 나·친구가 건물 뒤로 가면 건물이 반투명이 되는데, 처음 그럴 때 반투명용 셰이더(재질 종류마다 하나, 처음 5개쯤)를 그 프레임에 만들었다.
@@ -19600,7 +19607,7 @@ const Ride3D = {
   /* v346 사용자 '배도 상어도 뒤에 물결 좀 더 신경 써 디테일': 실제 배 항적처럼 지나온 길에 물 띠를 남긴다.
    * 켈빈 V자 물결 (양 끝 하얀 물마루가 약 19.5°로 벌어짐) · 가운데 하얀 소용돌이 거품 · 그 사이 가로 물결 · 오래될수록 넓어지고 옅어짐.
    * 점은 월드 좌표로 쌓고, 띠는 탈것 뿌리 밑에 두되 뿌리 움직임을 빼서 (water() 와 같은 방식) 월드에 남긴다 */
-  WK: { N: 72, life: 4.2 },
+  WK: { N: 72, life: 3.5 }, /* v381 사용자 '물줄기 조금만 진짜 조금만 짧게': 4.2 → 3.5초 */
   wkMat() { if (this._wkm) return this._wkm; const { THREE } = T3;
     return this._wkm = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: 0 } },
       vertexShader: 'attribute vec3 q; varying vec3 vQ; void main(){ vQ = q; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',

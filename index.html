@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v387</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v388</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -3932,7 +3932,7 @@ const Rails = {
 const RIDE_WATER = new Set(['lifeboat', 'galleon']), RIDE_TANK = new Set(['tank', 'tank2', 'tank3', 'tank4']);
 function rideTrail(key, ride, x, y, a, spd) { if (RIDE_WATER.has(ride)) { const R = typeof RIDE3 !== 'undefined' && RIDE3[ride]; Wake.lay(key, x, y, a, spd, R ? Math.max(1, Math.min(2.6, R.L * (R.s3 || 1) / 30)) : 1); } else if (RIDE_TANK.has(ride)) Treads.lay(key, x, y, a, spd); }
 const Treads = {
-  LIFE: 8, FADE: 2, GAP: 3, MAX: 1400, pts: [], last: {},
+  LIFE: 4, FADE: 1.5, GAP: 3, MAX: 1400, pts: [], last: {}, /* v388 사용자 '탱크 저 자국 조금 짧게': 8초 → 4초 */
   lay(key, x, y, a, spd) { if (spd < 4) return; const now = performance.now() / 1000, L = this.last[key]; if (L && Math.hypot(x - L.x, y - L.y) < this.GAP) return;
     const brk = !L || Math.hypot(x - L.x, y - L.y) > 24 || now - L.t > 1; const p = { x, y, a, t: now, z: Game.zone && Game.zone.id, prev: brk ? null : L }; this.pts.push(p); this.last[key] = p;
     if (this.pts.length > this.MAX) for (const q of this.pts.splice(0, this.pts.length - this.MAX)) q.prev = null; },
@@ -6726,7 +6726,7 @@ const Net = {
     const out = [];
     for (const id in this.players) { const p = this.players[id]; if (p.gone || p.cx === undefined || p.z !== Game.zone.id || performance.now() - p.last > FEEL.parkedCarKeepSec * 1000) continue;
       if (p.dr) { if (Array.isArray(p.oc)) out.push({ cx: p.oc[0], cy: p.oc[1], ca: p.oc[2], car: p.car, name: p.name, _id: id }); continue; } // 남의 차를 모는 사람: 세워 둔 자기 차 (v138)
-      if (p.ln) continue; p._id = id; out.push(p); } // 빌려준 차는 모는 사람 차로 그려진다
+      if (p.ln) { const L = CarSwap.left; if (L && L.id === id && L.z === Game.zone.id && performance.now() < L.until) out.push(L); continue; } if (CarSwap.left && CarSwap.left.id === id) CarSwap.left = null; p._id = id; out.push(p); } /* 빌려준 차는 모는 사람 차로 그려진다 · v388 방금 세워 둔 친구 차는 주인이 받을 때까지 세운 자리 (CarSwap.left) */
     return out;
   },
   // 친구 차 속력: 위치 변화로 어림 (탈것 특징 '달릴 때/멈췄을 때'에 쓴다)
@@ -6774,7 +6774,7 @@ async function greetFriend(p) {
   if (Game.busy || Dialog.open) return; Game.busy = true;
   try {
     const pick = await Dialog.say([{ name: p.name, sprite: p.pal ? 'f:' + p.name : 'walker2', text: `${p.name} 님이 앞에 있다.${Donor.ok ? ' 용돈을 주면 큰절을 한다.' : ''}` }], [...(Donor.ok ? [{ label: '용돈 1,000원 주기', value: '__tip' }] : []), ...(!PetBattle.off && PetBattle.myPet() && PetBattle.hasPet(p) ? [{ label: '펫 배틀 신청', value: '__pb' }] : []), Friends.has(p.name) ? { label: '친구 끊기', value: '__unfr' } : { label: '친구 신청 (서로 위치 보기)', value: '__fr' }, { label: '그냥 지나가기', value: null }]); // 인사말은 뺐다 (플레이어끼리 상호작용은 용돈만, 사용자 2026-10-16)
-    if (pick === '__tip' && Donor.ok) Tip.give(p); // v294 후원한 기기만 (서버도 막는다) else if (pick === '__pb') setTimeout(() => PetBattle.ask(p), 60); /* 펫 고르기 창이 뜰 수 있어 인사 창이 닫힌 뒤 */ else if (pick === '__fr') Friends.ask(p); else if (pick === '__unfr') Friends.unfriend(p); else if (pick) Net.greet(p, pick);
+    if (pick === '__tip' && Donor.ok) Tip.give(p); /* v294 후원한 기기만 (서버도 막는다), v388 이 뒤 줄이 주석에 먹혀 펫 배틀·친구 신청이 안 됐다 */ else if (pick === '__pb') setTimeout(() => PetBattle.ask(p), 60); /* 펫 고르기 창이 뜰 수 있어 인사 창이 닫힌 뒤 */ else if (pick === '__fr') Friends.ask(p); else if (pick === '__unfr') Friends.unfriend(p); else if (pick) Net.greet(p, pick);
   } finally { Game.busy = false; }
 }
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -9187,7 +9187,7 @@ function draw() {
   drawMinimap(Game.t); SeoulMap.draw(1 / 60);
   document.body.classList.toggle('driving', Game.scene === 'zone' && Game.driving); document.body.classList.toggle('winOpen', !!Game.formOpen); // 창이 떠 있으면 채팅 피드는 최근 2줄만 (v149)
   if (document.body.classList.contains('touchOn')) {
-    const tg = Game.prompt.target; const act = tg && !Game.busy && !Dialog.open && tg.kind !== 'car' ? promptWord(tg) : '조사';
+    const tg = Game.prompt.target; const act = tg && !Game.busy && !Dialog.open ? promptWord(tg) : '조사'; /* v388 사용자 '조사 버튼 타기 버튼으로': 탈것 옆이면 큰 버튼도 '타기' (누르면 탄다) */
     const ta = $('tAct'); if (ta.textContent !== act) { ta.textContent = act; ta.classList.toggle('long', act.replace(/\s/g, '').length > 4); }
     const rid = typeof Ride !== 'undefined' && Ride.with, car = Game.driving || rid ? '내리기' : '타기', tc = $('tCar'); if (tc.textContent !== car) tc.textContent = car;
     const cv = Game.scene === 'zone' && (Game.driving || !!rid || !!Game.fOK); if (tc.hidden === cv) tc.hidden = !cv; // 아무것도 안 탔고 옆에 탈 것도 없으면 숨긴다 (사용자 2026-10-16 '겹친다 없애자')
@@ -9280,7 +9280,7 @@ const CarSwap = {
   alt: null,    // 지금 모는 남의 차 {kind:'friend', owner, name, skin} | {kind:'npc', col, len, wid, vk}
   lent: null,   // 내 차를 빌려 간 친구 {id, name, miss}
   pend: null, dumped: [], tgs: new WeakMap(), DUMP_MS: 60000,
-  reset() { this.own = this.alt = this.lent = this.pend = null; this.dumped = []; },
+  reset() { this.own = this.alt = this.lent = this.pend = this.left = null; this.dumped = []; },
   myCar() { return this.own || Game.car; },
   stolen() { return !!this.alt; }, // 남의 차(길가에서 뺏은 차 + 친구 차): 내비 없음 (사용자 2026-10-16 '차 뺏어 타면 네비게이션 없게' → '플레이어 차 뺏어 타면 내비 없애라고 했잖아')
   // 걸어 다닐 때 F로 탈 수 있는 남의 차 (가장 가까운 것)
@@ -9316,7 +9316,7 @@ const CarSwap = {
   // exitCar 끝에서 부른다: 남의 차는 그 자리에 두고 내 차로 돌아온다
   release() {
     if (!this.alt) return; const c = Game.car, alt = this.alt;
-    if (alt.kind === 'friend') { if (Net.on) Net.send({ t: 'cbor', k: 'back', to: alt.owner, x: Math.round(c.x), y: Math.round(c.y), a: Math.round(c.a * 100) / 100 }); Toast.show(`${alt.name}님 차를 여기 세워 뒀어요. 주인 화면에도 이 자리로 옮겨져요.`, 3200); }
+    if (alt.kind === 'friend') { if (Net.on) Net.send({ t: 'cbor', k: 'back', to: alt.owner, x: Math.round(c.x), y: Math.round(c.y), a: Math.round(c.a * 100) / 100 }); Toast.show(`${alt.name}님 차를 여기 세워 뒀어요. 주인 화면에도 이 자리로 옮겨져요.`, 3200); this.left = { id: alt.owner, _id: alt.owner, cx: Math.round(c.x), cy: Math.round(c.y), ca: c.a, car: alt.skin, name: alt.name, z: Game.zone.id, until: performance.now() + 15000 }; } /* v388 사용자 '남의차 주차하면 사라졌다가 생기고': 주인 게임이 '돌려받음'을 알릴 때까지 (그 사이 주인 위치엔 '빌려줌'이 붙어 안 그려졌다) 세운 자리에 그대로 그린다 */
     else this.dumped.push({ x: c.x, y: c.y, a: c.a, alt, z: Game.zone.id, until: performance.now() + this.DUMP_MS });
     Game.car = this.own; this.own = null; this.alt = null;
   },
@@ -19577,7 +19577,8 @@ Object.assign(Room3D, {
         if (water) { const Bt = Ride3D.BOAT[c.ride] || Ride3D.BOAT.lifeboat, f = Bt.p, v = mv ? c.spd / TILE : 0, da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제 배처럼: 큰 범선은 느리고 작게 흔들리고 돌면 바깥으로, 모터보트는 안으로 눕고 빨리 달리면 뱃머리가 든다 */
           H.hl = (H.hl || 0) + (Bt.h * Math.tanh(v * w * 0.15) - (H.hl || 0)) * Math.min(1, dt * 2.2 * f); H.bw = (H.bw || 0) + ((mv ? Bt.bow * Math.min(1, v / 6) : 0) - (H.bw || 0)) * Math.min(1, dt * 1.5 * f);
           lx += Math.sin(t * 1.7 * f + ph) * 0.05 * Bt.a + H.hl; lz += H.bw + Math.sin(t * 1.3 * f + ph) * 0.025 * Bt.a; H.root.position.y = 0.03 + Math.sin(t * 2.2 * f + ph) * 0.035 * Bt.a; }
-        H.root.rotation.set(lx, -c.a, lz, 'YXZ');
+        let ya = -c.a; const YS = RIDE3[c.ride].ys; if (YS) { const d0 = H.ya == null ? 0 : Math.atan2(Math.sin(ya - H.ya), Math.cos(ya - H.ya)), st = Math.abs(d0) > 2 ? d0 : d0 * Math.min(1, dt * YS); H.ya = H.ya == null ? ya : H.ya + st; const w = dt > 0 && Math.abs(d0) <= 2 ? -st / dt : 0, v = mv ? c.spd / TILE : 0, bw = Math.max(-0.4, Math.min(0.4, Math.atan(v * w * 0.035))); H.yb = (H.yb || 0) + (bw - (H.yb || 0)) * Math.min(1, dt * 3); ya = H.ya; lx += H.yb; } /* v388 사용자 '용은 달릴 때 덜덜': 손가락 방향(좌/우 켜고 끄기)이 바뀔 때마다 날개 끝까지 긴 용이 한 장마다 홱홱 돌아 떨려 보였다. 보이는 방향은 부드럽게 따라가고, 도는 쪽으로 몸을 눕힌다 (실제 큰 새·비행기처럼) */
+        H.root.rotation.set(lx, ya, lz, 'YXZ');
         const fl = RIDE3[c.ride].fly; if (fl) { H.fl = (H.fl || 0) + ((mv ? Math.min(1, c.spd / (TILE * 4)) : 0) - (H.fl || 0)) * Math.min(1, dt * 3); const th = fl * H.fl, hc = RIDE3[c.ride].y * RIDE3[c.ride].L / TILE + HERO_H * 0.55; /* v346 날개: 날면 실제 비행처럼 몸을 앞으로 눕힌다 (몸 가운데를 축으로, 빠를수록 더) */
           H.root.rotation.z -= th; H.root.position.x -= Math.cos(c.a) * hc * Math.sin(th); H.root.position.z -= Math.sin(c.a) * hc * Math.sin(th); H.root.position.y += hc * (1 - Math.cos(th)); }
         const BK = H.root.userData.brk; if (BK) { const v = Math.abs(c.spd) / TILE, ac = dt > 0 && H.bv != null ? (v - H.bv) / dt : 0; H.bv = v; const on = v < 0.3 || ac < -0.8 ? 1 : 0; H.bk = (H.bk || 0) + (on - (H.bk || 0)) * Math.min(1, dt * 10); for (const mt of BK) mt.emissiveIntensity = 0.15 + H.bk * 1.1; } /* 미등은 늘 살짝, 밟으면 밝게 */
@@ -19748,7 +19749,7 @@ const RIDE3 = {
   lambo: { sf: 1, brake: 'OuterRed', v: 2, L: 68, y: -0.025, /* v387 사용자 '람보르기니 머리 나왔잖아': 지붕(1.06)보다 머리가 높아 더 낮게 앉힌다 */ noLeg: 1, grip: [0.07, 0.035, 0.13, 0.05], seats: [[-0.02, -0.1], [-0.02, 0.1]] },
   jet: { sf: 1, L: 150, y: 0.105, noLeg: 1, grip: [0.31, 0.04, 0.135, 0.05], seats: [[0.25, 0], [0.19, 0]] }, // v337 조종석 안에 상체만 (사용자 '제트기도')
   wings: { sf: 1, L: 34, y: 0.35, stand: 1, fly: 1.2, flap: 1, hover: 4.2, off: [-0.12, 0.42], seats: [[0, 0]] },
-  dragon: { sf: 1, L: 120, y: 0.175, idle: 0.3, hover: 0.6, bone: 'spine_05', grip: [0.31, 0.025, 0.08, 0.7], leg: [0.5, 0.6], seats: [[0.21, 0], [0.13, 0], [0.06, 0]] }, // v337 날개 사이 등 (사용자 '용은또 뭐야'): 날갯짓하는 몸 뼈를 따라간다
+  dragon: { sf: 1, L: 120, y: 0.175, idle: 0.3, hover: 0.6, ys: 5, bone: 'spine_05', grip: [0.31, 0.025, 0.08, 0.7], leg: [0.5, 0.6], seats: [[0.21, 0], [0.13, 0], [0.06, 0]] }, // v337 날개 사이 등 (사용자 '용은또 뭐야'): 날갯짓하는 몸 뼈를 따라간다
   // v337 grip = [손 앞뒤, 두 손 간격의 반, 높이, 숙이기] (길이 배, 사용자 '잡고 타야지'), leg = [다리 벌림, 아래로] (배는 무릎 세우기 < 0), noLeg = 차 안 다리 숨기기, bone = 탄 사람이 따라갈 몸 뼈
 };
 const PIGGY_PAL = { hair: '#3a2a1a', skin: '#f0c8a0', shirt: '#2f9a5a', shirt2: '#257a48', pants: '#2b3a6e', shoe: '#15151c' }; // 2D 업어 주는 친구 색 그대로

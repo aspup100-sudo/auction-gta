@@ -16,11 +16,15 @@ import { handleDon } from './don.js';
 
 const VIP_NAMES = new Set(['에센티아', '부리코']); // v360 사용자 '부리코,에센티아 한테는 절하는거 열어놔': 이 이름은 후원 없이도 용돈(큰절)
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': '*' };
+/* v395 사용자 '다른사람이 카피 못하게': 브라우저가 보내는 Origin이 우리 게임 주소(또는 내 컴퓨터 시험)일 때만 받는다. 복사해 다른 주소에 올린 게임은 채널·방·의견함·기록 옮기기를 못 쓴다. Origin이 없는 요청(Ko-fi 웹훅, 서버 안 호출)은 그대로 */
+const OK_ORIGIN = /^https:\/\/aspup100-sudo\.github\.io$|^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+const okOrigin = req => { const o = req.headers.get('Origin'); return !o || OK_ORIGIN.test(o); };
 
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
+    if (!okOrigin(req)) return new Response('forbidden', { status: 403, headers: { 'content-type': 'text/plain; charset=utf-8' } });
     if (url.pathname === '/' || url.pathname === '/health') return new Response('auction-gta relay ok', { headers: { 'content-type': 'text/plain; charset=utf-8', ...CORS } });
     if (url.pathname.replace(/\/+$/, '') === '/push/alert') return new Response('not found', { status: 404, headers: CORS }); // 운영자 알림은 아래 신고 처리에서만
     if (url.pathname.startsWith('/push/')) return env.ROOMS.get(env.ROOMS.idFromName('push:hub')).fetch(req);

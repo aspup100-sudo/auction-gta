@@ -1675,7 +1675,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v392</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v393</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -26953,6 +26953,13 @@ const Instance = {
     const ok = await Net.world(code, name); if (!ok) wReset(); else refreshW();
   };
   $('wMake').onclick = () => { Sound.init(); const nm = $('wName').value.replace(/[<>&"'`\\]/g, '').trim(); if (!nm) { Toast.show('월드 이름을 먼저 적어 주세요.'); $('wName').focus(); return; } Sound.play('stamp'); const w = Worlds.make(nm, wCapN); $('wName').value = ''; enterWorld(w.code); };
+  /* v393 사용자 '월드이름 정하는거 이렇게떠' (아이폰 가로: 키보드가 화면을 거의 다 덮고 화면이 밀려서 칸도 안 보이고 아래 조이스틱이 드러났다):
+   * 가로 폰에서 제목 화면 글자 칸(이름·방 코드·월드 이름·직접 입력)은 칸에 커서를 넣지 않고 폰 기본 입력 창(prompt)으로 받는다 */
+  const askBox = el => { if (el.readOnly || el.disabled) return; const v = prompt(el.placeholder || '', el.value); if (v === null) return; let t = String(v).trim(); if (el.type === 'number') t = t.replace(/[^0-9]/g, ''); if (+el.maxLength > 0) t = t.slice(0, +el.maxLength); el.value = el.id === 'mpCode' ? t.toUpperCase() : t; el.dispatchEvent(new Event('input', { bubbles: true })); };
+  const lowBox = () => document.body.classList.contains('touchOn') && document.body.classList.contains('short'); /* 가로 폰: 키보드 위로 보이는 줄이 거의 없다 */
+  for (const el of document.querySelectorAll('#title input:not([type=checkbox]):not([type=radio])')) {
+    el.addEventListener('touchend', e => { if (!lowBox(el)) return; e.preventDefault(); askBox(el); });
+    el.addEventListener('focus', () => { if (!lowBox(el)) return; el.blur(); setTimeout(() => askBox(el), 0); }); }
   refreshW();
   // 처음으로: 고른 모드를 접고, 들어가 있던 친구 방·채널에서도 나온다 (사용자 2026-10-21 '여기선 어떻게 뒤로가')
   $('tBack').onclick = () => {

@@ -1675,7 +1675,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v393</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v394</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -22776,7 +22776,7 @@ const Snap3D = {
   },
   // v360 실사 탈것 칸 사진: 3d/th/ride/<키>.webp (assets: Snap3D.thumb 로 찍어 둔 것, 320×208). 오면 상점 다시 그리기
   bk: {},
-  baked(x, k, W, H, dir) { const id = (dir || 'ride') + '/' + k; let im = this.bk[id]; if (!im) { im = this.bk[id] = new Image(); im.onload = () => this.bmk(im); /* v376 버벅임: 사진을 칸에 그릴 때마다 그 자리에서 풀던 것(숍 칸 바꿀 때 0.1~0.2초 멈춤)을 미리 따로 풀어 둔 그림(ImageBitmap)으로. 숍을 닫으면 내린다 (release) */ im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/' + id + '.webp?v=1'); }
+  baked(x, k, W, H, dir) { const id = (dir || 'ride') + '/' + k; let im = this.bk[id]; if (!im) { im = this.bk[id] = new Image(); im.onload = () => this.bmk(im); /* v376 버벅임: 사진을 칸에 그릴 때마다 그 자리에서 풀던 것(숍 칸 바꿀 때 0.1~0.2초 멈춤)을 미리 따로 풀어 둔 그림(ImageBitmap)으로. 숍을 닫으면 내린다 (release) */ im.onerror = () => { im.bad = 1; }; im.src = Arena3J.url('th/' + id + '.webp?v=' + (dir === 'hat' || dir === 'outfit' ? 2 : 1)); /* v394 모자·옷 사진을 실사 모자가 다 온 뒤에 다시 찍었다 (전엔 모자 모델이 오기 전 옛 그림이 찍혀 있었다) */ }
     if (!im.complete || im.bad || !im.naturalWidth) return false; if (!im.bm) { this.bmk(im); return false; } x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(im.bm, 0, 0, W, H); x.restore(); return true; },
   bmk(im) { if (im.pend || im.bm || !im.complete || !im.naturalWidth) return; im.pend = 1; const go = bm => { im.pend = 0; im.bm = bm || im; if (typeof Shop !== 'undefined' && Shop.open_) Shop.soon(); }; if (window.createImageBitmap && window.fetch) fetch(im.src).then(r => r.blob()).then(b => createImageBitmap(b)).then(go, () => go(null)); else go(null); }, /* 파일(blob)에서 만들어야 그림 풀기가 따로 돈다 (img에서 만들면 화면 쪽에서 풀었다) */
   bmFree() { for (const k in this.bk) { const im = this.bk[k]; if (im.bm && im.bm !== im && im.bm.close) im.bm.close(); im.bm = null; } },

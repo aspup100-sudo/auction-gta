@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v388</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v389</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2758,7 +2758,7 @@ Object.assign(FEEL, {
   liveIdleSec: 20,
   liveGoneSec: 45, // 이만큼 위치 신호가 없으면 나간 사람으로 (목록에서 빠지고 '나갔어요') // 채널 접속자 목록: 이 시간 동안 위치 신호가 없으면 '자리 비움'
   parkedCarKeepSec: 60, // 다른 사람 차: 마지막 위치 신호 뒤 이만큼은 그 자리에 세워 둔 걸로 보인다
-  trafficSpacing: 400,    // NPC 차 1대당 도로 길이(px). 260 → 400 (사용자 2026-10-14: 차가 너무 많다)
+  trafficSpacing: 560,    // NPC 차 1대당 도로 길이(px). 260 → 400 (사용자 2026-10-14: 차가 너무 많다) → 560 (2026-10-27 '차 조금 줄이자', 약 30% 줄임)
   carStuckSec: 1.2,       // 페달을 밟는데 이만큼 안 움직이면 끼인 것으로 보고 빼낸다(초)
   camZoomAtMax: 0.75,     // 최고속일 때 줌 배수 (정지 1.0)
   repairMin: 10000, repairMax: 50000,
@@ -3982,9 +3982,9 @@ function collideTraffic(c, z) {
 }
 
 // 천사 날개 (v235 사용자 '천사는 날 수 있으니까 안 박는 걸로'): 건물·차·사람 위로 날아간다 (부딪힘·수리비·합의금·신호 과태료 없음, 지붕 위에 그린다)
-function carFlying() { return Game.driving && typeof Shop !== 'undefined' && !(typeof CarSwap !== 'undefined' && CarSwap.stolen()) && (Shop.myCar(true).ride === 'wings' || Shop.myCar(true).ride === 'dragon'); } /* v366 용도 건물 위로 날아 지붕에 앉는다 (사용자 '건물 위에 앉아있을수있게') */
+function carFlying() { return Game.driving && typeof Shop !== 'undefined' && !(typeof CarSwap !== 'undefined' && CarSwap.stolen()) && RIDE_FLY.has(Shop.myCar(true).ride); } const RIDE_FLY = new Set(['wings', 'dragon', 'jet']); /* v389 사용자 '제트기도 날개처럼 날게': 제트기도 건물 위로 난다 */ /* v366 용도 건물 위로 날아 지붕에 앉는다 (사용자 '건물 위에 앉아있을수있게') */
 /* 지붕에 앉혀 둔 날개·용은 땅에서도 탄다 (사용자 '이거 다시 어떻게타'): 건물 칸 위면 가장 가까운 길까지 거리만큼 손이 닿는 거리를 늘린다 */
-function carEnterReach() { const c = Game.car, z = Game.zone, d0 = FEEL.carEnterDist; if (!z || typeof Shop === 'undefined') return d0; const rd = Shop.myCar(true).ride; if (rd !== 'wings' && rd !== 'dragon') return d0;
+function carEnterReach() { const c = Game.car, z = Game.zone, d0 = FEEL.carEnterDist; if (!z || typeof Shop === 'undefined') return d0; const rd = Shop.myCar(true).ride; if (!RIDE_FLY.has(rd)) return d0;
   const k = Math.round(c.x) + ',' + Math.round(c.y) + ',' + rd; if (carEnterReach.k === k) return carEnterReach.v; const tx = Math.floor(c.x / TILE), ty = Math.floor(c.y / TILE); let v = d0;
   if (z.at(tx, ty) === T.BLD) { let best = 1e9; for (let dy = -14; dy <= 14; dy++) for (let dx = -14; dx <= 14; dx++) { if (z.at(tx + dx, ty + dy) === T.BLD) continue; const ex = Math.max((tx + dx) * TILE - c.x, 0, c.x - (tx + dx + 1) * TILE), ey = Math.max((ty + dy) * TILE - c.y, 0, c.y - (ty + dy + 1) * TILE), e = Math.hypot(ex, ey); if (e < best) best = e; } if (best < 1e9) v = d0 + best + TILE; } /* 내리면 길 칸 가운데에 서니 한 칸 더 */
   carEnterReach.k = k; carEnterReach.v = v; return v; }
@@ -4019,7 +4019,7 @@ function updateMyCar(dt, z, input) {
   c.vx = nfx * f1 - nfy * lat; c.vy = nfy * f1 + nfx * lat;
   c.speed = Math.hypot(c.vx, c.vy);
   const lateral = Math.abs(-c.vx * nfy + c.vy * nfx);
-  if (lateral > 40 && c.speed > 60) { const rr = c === Game.car && typeof Shop !== 'undefined' ? Shop.myCar(true).ride : null; if (rr === 'shark' || rr === 'wings' || rr === 'dragon' || RIDE_WATER.has(rr) || RIDE_TANK.has(rr)) { /* v317 배는 물줄기, 탱크는 궤도 자국만 */ /* 부캉이는 물줄기만 (Wake), 날개·용은 날아서 자국 없음 (v235 '용도 트랙 어색하다') */ } else { const  r1 = ['bike', 'scooter', 'moto', 'uni'].includes(rr), hoof = rr === 'horse' || rr === 'bull' || rr === 'wolf'; /* v234 사용자 '자전거는 트랙이 하나로', '말은 트랙 자국이 아니라 말발굽 자국': 바퀴 한 줄 탈것은 뒷바퀴 자국 한 줄, 말·황소는 발굽 자국 (띄엄띄엄 좌우) */ if (hoof) { const L = Skids[Skids.length - 1], hx = c.x - Math.cos(c.a) * 6, hy = c.y - Math.sin(c.a) * 6; if (!L || !L.h || Math.hypot(L.x - hx, L.y - hy) > 5) { const sd = L && L.h ? -L.h : 1; Skids.push({ x: hx - Math.sin(c.a) * 2.5 * sd, y: hy + Math.cos(c.a) * 2.5 * sd, a: c.a, h: sd, cl: rr === 'bull' ? 1 : rr === 'wolf' ? 2 : 0, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } } else for (const [px, py] of r1 ? [[c.x - Math.cos(c.a) * 7, c.y - Math.sin(c.a) * 7]] : carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } if (Skids.length > 1400) Skids.splice(0, Skids.length - 1400); if (Math.random() < 0.3) Sound.play('skid'); }
+  if (lateral > 40 && c.speed > 60) { const rr = c === Game.car && typeof Shop !== 'undefined' ? Shop.myCar(true).ride : null; if (rr === 'shark' || RIDE_FLY.has(rr) || RIDE_WATER.has(rr) || RIDE_TANK.has(rr)) { /* v317 배는 물줄기, 탱크는 궤도 자국만 */ /* 부캉이는 물줄기만 (Wake), 날개·용은 날아서 자국 없음 (v235 '용도 트랙 어색하다') */ } else { const  r1 = ['bike', 'scooter', 'moto', 'uni'].includes(rr), hoof = rr === 'horse' || rr === 'bull' || rr === 'wolf'; /* v234 사용자 '자전거는 트랙이 하나로', '말은 트랙 자국이 아니라 말발굽 자국': 바퀴 한 줄 탈것은 뒷바퀴 자국 한 줄, 말·황소는 발굽 자국 (띄엄띄엄 좌우) */ if (hoof) { const L = Skids[Skids.length - 1], hx = c.x - Math.cos(c.a) * 6, hy = c.y - Math.sin(c.a) * 6; if (!L || !L.h || Math.hypot(L.x - hx, L.y - hy) > 5) { const sd = L && L.h ? -L.h : 1; Skids.push({ x: hx - Math.sin(c.a) * 2.5 * sd, y: hy + Math.cos(c.a) * 2.5 * sd, a: c.a, h: sd, cl: rr === 'bull' ? 1 : rr === 'wolf' ? 2 : 0, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } } else for (const [px, py] of r1 ? [[c.x - Math.cos(c.a) * 7, c.y - Math.sin(c.a) * 7]] : carCorners(c).slice(2, 4)) Skids.push({ x: px, y: py, a: c.a, t: performance.now() / 1000, z: Game.zone && Game.zone.id }); } if (Skids.length > 1400) Skids.splice(0, Skids.length - 1400); if (Math.random() < 0.3) Sound.play('skid'); }
   // 이동 + 충돌
   c.hitCd -= dt; c.fineCd -= dt; c.unstickCd = (c.unstickCd || 0) - dt;
   const ox = c.x, oy = c.y;
@@ -9656,7 +9656,7 @@ const Mine = {
       { const n = mineFbm(x, y, 401, OCT); const k = 0.5 + (n - 0.5) * 1.0; T.ceil[i] = 0.2 * k; T.ceil[i + 1] = 0.18 * k; T.ceil[i + 2] = 0.16 * k; T.ceil[i + 3] = 0.06 + (mineHash(x, y, 409) < 0.006 ? 2 : 0); } // 천장 물방울 반짝
     }
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) T.gold[y * N + x] = mineFbm(x, y, 501, [8, 16, 32]) > 0.6 && mineHash(x, y, 503) < 0.6 ? 1 : 0;
-    const walk = (mask, n, len, seed) => { const r = k => mineHash(k, seed, 9); for (let s = 0; s < n; s++) { let x = N / 2 + (r(s) - 0.5) * N * 0.3, y = N / 2 + (r(s + 99) - 0.5) * N * 0.3, a = r(s + 7) * Math.PI * 2; for (let k = 0; k < len; k++) { a += (r(s * 131 + k) - 0.5) * 1.0; x += Math.cos(a) * 1.2; y += Math.sin(a) * 1.2; const xi = Math.round(x), yi = Math.round(y); if (xi < 1 || yi < 1 || xi >= N - 1 || yi >= N - 1) break; mask[yi * N + xi] = 1; if (r(s + k * 7) < 0.25) mask[yi * N + xi + 1] = 1; } } };
+    const walk = (mask, n, len, seed) => { const r = k => mineHash(k, seed, 9); for (let s = 0; s < n; s++) { let x = N / 2 + (r(s) - 0.5) * N * 0.3, y = N / 2 + (r(s + 99) - 0.5) * N * 0.3, a = r(s + 7) * Math.PI * 2; for (let k = 0; k < len * 2; k++) { a += (r(s * 131 + k) - 0.5) * 0.7; x += Math.cos(a) * 0.6; y += Math.sin(a) * 0.6; /* v389 금이 점점이 끊기지 않게 촘촘히 */ const xi = Math.round(x), yi = Math.round(y); if (xi < 1 || yi < 1 || xi >= N - 1 || yi >= N - 1) break; mask[yi * N + xi] = 1; if (r(s + k * 7) < 0.25) mask[yi * N + xi + 1] = 1; } } };
     walk(T.crack[0], 4, 40, 1); T.crack[1].set(T.crack[0]); walk(T.crack[1], 7, 60, 2);
     // 다른 광부 (32×48, 노란 안전모 · 헤드랜턴 · 분홍 수건 · 반사띠 작업복 · 장화, 사진 참고)
     const sp = (fr) => { const W = 32, H = 48, px = new Uint8ClampedArray(W * H * 4), em = new Uint8Array(W * H); const put = (x, y, w, h, c, e) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) { if (i < 0 || j < 0 || i >= W || j >= H) continue; const o = (j * W + i) * 4; px[o] = c[0]; px[o + 1] = c[1]; px[o + 2] = c[2]; px[o + 3] = 255; em[j * W + i] = e ? 1 : 0; } };
@@ -9906,6 +9906,18 @@ const Mine = {
     if (D.more ? D.got >= cap : D.got >= N) { this.ph = 'wait'; this.hold = false; setTimeout(() => { if (this.ph !== 'wait') return; this.ph = 'play'; if (D.more) this.finish(gold); else this.offer(gold); }, gold ? 2400 : 700); }
   },
   pop(text, cls) { const box = this.el.querySelector('.mnPops'); const b = document.createElement('b'); b.className = 'mnPop ' + (cls || ''); b.textContent = text; b.style.left = `${46 + Math.random() * 8}%`; box.appendChild(b); setTimeout(() => b.remove(), cls === 'gold' ? 2600 : 1150); },
+  /* v389 실사 돌 조각 그림 (한 번만 구움): 광산 벽 사진(바위·석탄)을 모난 덩어리로 오려 면마다 빛을 달리 → 입체 돌. 금은 노란 광석 */
+  chipSpr() { const g = this.G3, ims = g && g.ims; if (!ims || !ims.rock0c || !ims.rock0c.naturalWidth || !ims.coal0c || !ims.coal0c.naturalWidth) return null;
+    const N = 64, mk = (src, tint, gloss, seed) => { const cv = document.createElement('canvas'); cv.width = cv.height = N; const x = cv.getContext('2d'), R = q => mineHash(seed, q, 913), n = 6 + (R(1) * 4 | 0), P = [];
+      for (let i = 0; i < n; i++) { const a = i / n * 6.283 + (R(i + 3) - 0.5) * 0.7, m = N * (0.28 + R(i + 9) * 0.17); P.push([N / 2 + Math.cos(a) * m, N / 2 + Math.sin(a) * m * (0.7 + R(2) * 0.3)]); }
+      const cx0 = N / 2 + (R(5) - 0.5) * 6, cy0 = N / 2 + (R(6) - 0.5) * 6, sw = src.naturalWidth, sx = R(7) * (sw - 96), sy = R(8) * (src.naturalHeight - 96);
+      for (let i = 0; i < n; i++) { const A = P[i], B = P[(i + 1) % n], mx = (A[0] + B[0]) / 2 - cx0, my = (A[1] + B[1]) / 2 - cy0, l = Math.hypot(mx, my) || 1, b = 0.78 + 0.32 * ((-mx - my) / l * 0.7071); /* 왼쪽 위가 밝은 면 */
+        x.save(); x.beginPath(); x.moveTo(cx0, cy0); x.lineTo(A[0], A[1]); x.lineTo(B[0], B[1]); x.closePath(); x.clip(); x.drawImage(src, sx, sy, 96, 96, 0, 0, N, N); x.globalCompositeOperation = b > 1 ? 'screen' : 'multiply'; const v = b > 1 ? Math.min(255, (b - 1) * 255) | 0 : b * 255 | 0; x.fillStyle = b > 1 ? `rgb(${v},${v},${v})` : `rgb(${v},${v},${v})`; x.fillRect(0, 0, N, N); x.restore(); }
+      x.save(); x.beginPath(); P.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); x.closePath(); x.clip(); if (tint) { x.globalCompositeOperation = 'multiply'; x.fillStyle = tint; x.fillRect(0, 0, N, N); x.globalCompositeOperation = 'source-over'; }
+      const hg = x.createLinearGradient(0, 0, N, N); hg.addColorStop(0, `rgba(255,248,230,${gloss})`); hg.addColorStop(0.45, 'rgba(255,255,255,0)'); x.fillStyle = hg; x.fillRect(0, 0, N, N); x.restore();
+      x.lineJoin = 'round'; x.lineWidth = 1; x.strokeStyle = 'rgba(0,0,0,.3)'; x.beginPath(); P.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); x.closePath(); x.stroke(); return cv; };
+    const S = { rock: [], coal: [], gold: [] }; for (let i = 0; i < 8; i++) { S.rock.push(mk(i % 2 ? ims.rock1c || ims.rock0c : ims.rock0c, i % 3 ? null : 'rgb(200,180,160)', 0.18, i)); S.coal.push(mk(i % 2 ? ims.coal1c || ims.coal0c : ims.coal0c, null, 0.55, i + 20)); S.gold.push(mk(ims.rock0c, 'rgb(255,190,70)', 0.6, i + 40)); }
+    return (this.chipS = S); },
   chips(coal, gold) { // 튀는 돌·석탄 조각 (화면 좌표)
     const ip = this.tip || { x: this.W * 0.5, y: this.H * 0.48 };
     for (let i = 0; i < (gold ? 30 : 14); i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.6; this.parts.push({ x: ip.x, y: ip.y, vx: Math.cos(a) * (40 + Math.random() * 120), vy: Math.sin(a) * (40 + Math.random() * 110), g: 320, life: 0.5 + Math.random() * 0.5, t: 0, s: 1 + Math.floor(Math.random() * (coal ? 3 : 2.4)), c: gold && i % 2 ? [255, 214, 90] : coal && i % 3 ? [16, 16, 20] : [92 + Math.random() * 30, 82, 70], gl: coal || gold }); }
@@ -10131,8 +10143,13 @@ const Mine = {
     c.restore();
     // 튀는 돌 조각
     this.parts = this.parts.filter(p => p.t < p.life);
-    const RK = (this.ovK || 1) > 1; // v356 실사: 돌 조각은 모난 덩어리로 돌며 날고, 바닥에 튀고, 석탄은 반짝
+    let CS = this.chipS; const RK = (this.ovK || 1) > 1; // v356 실사: 돌 조각은 모난 덩어리로 돌며 날고, 바닥에 튀고, 석탄은 반짝
     for (const p of this.parts) { p.t += dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; const a = 1 - p.t / p.life;
+      if (RK && !p.em && (CS || (CS = this.chipSpr()))) { if (p.k == null) { p.k = Math.random() * 8 | 0; p.rot = Math.random() * 6.3; p.w = (Math.random() - 0.5) * 16; p.life += 0.5; p.sz = (p.s * 1.8 + 1.2) * (Math.random() < 0.4 ? 0.45 : 0.75 + Math.random() * 0.6); p.px = p.x; p.py = p.y; } /* v389 실사 돌 조각: 바위·석탄 사진을 깎은 모난 덩어리 (미리 구운 그림이라 렉 없음) */
+        if (p.y > this.H * 0.94 && p.vy > 0) { p.y = this.H * 0.94; p.vy *= -0.3; p.vx *= 0.55; p.w *= 0.5; } p.rot += p.w * dt;
+        const im = (p.c[0] < 40 ? CS.coal : p.c[0] > 200 ? CS.gold : CS.rock)[p.k], d = p.sz * (this.ovK || 1) * 0.3, fade = Math.min(1, (p.life - p.t) * 3), sp = Math.hypot(p.x - p.px, p.y - p.py);
+        if (sp > d * 0.6) { c.globalAlpha = fade * 0.22; c.save(); c.translate((p.x + p.px) / 2, (p.y + p.py) / 2); c.rotate(p.rot - p.w * dt * 0.5); c.drawImage(im, -d, -d, d * 2, d * 2); c.restore(); } /* 빨리 날 땐 살짝 끌린 자국 */
+        c.globalAlpha = fade; c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.drawImage(im, -d, -d, d * 2, d * 2); c.restore(); c.globalAlpha = 1; p.px = p.x; p.py = p.y; continue; }
       if (RK && !p.em) { if (!p.v) { p.v = []; const n = 5 + (Math.random() * 3 | 0); for (let i = 0; i < n; i++) p.v.push(i / n * 6.283 + Math.random() * 0.5, 0.6 + Math.random() * 0.5); p.rot = Math.random() * 6.3; p.w = (Math.random() - 0.5) * 18; p.life += 0.5; }
         if (p.y > this.H * 0.94 && p.vy > 0) { p.y = this.H * 0.94; p.vy *= -0.3; p.vx *= 0.55; p.w *= 0.5; } p.rot += p.w * dt;
         const r = p.s * 1.4 + 0.8, fade = Math.min(1, (p.life - p.t) * 3); c.save(); c.globalAlpha = fade; c.translate(p.x, p.y); c.rotate(p.rot); c.beginPath(); for (let i = 0; i < p.v.length; i += 2) { const q = p.v[i], m = p.v[i + 1] * r; i ? c.lineTo(Math.cos(q) * m, Math.sin(q) * m) : c.moveTo(Math.cos(q) * m, Math.sin(q) * m); } c.closePath();
@@ -10357,8 +10374,52 @@ const MineExit = {
     setTimeout(() => Sound.play('pick'), 250); setTimeout(() => Sound.play('step', 'wood'), 600); setTimeout(() => Sound.play('step', 'wood'), 950); setTimeout(() => Sound.play('step'), 1350);
   },
   clear() { this.rise = null; },
+  /* v389 사용자 '나오는 문도 실사화하고 렉 잡고': 3D 거리에선 진짜 구멍 — 안쪽 바위 벽이 보이는 갱 (땅 밖으로 보이는 데만 그린다), 나무 틀, 쇠 사다리, 깨진 아스팔트·흙더미, 노란 안전모.
+   * 모양·재질은 한 번만 만들어 출구마다 같이 쓴다 (그리는 수 적게) */
+  z3on() { return typeof Room3D !== 'undefined' && Room3D.zNow && !!this.z3ok; },
+  z3mk(R) { const { THREE } = T3, K = this.K3 = {}, L = new THREE.TextureLoader(), tx = (f, rx, ry, srgb) => { const t = L.load(Arena3J.url('mine/' + f + '?v=1')); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+    const dv = new THREE.Vector3(0, -Math.sin(Z3_EL), -Math.cos(Z3_EL)), cut = m => { m.onBeforeCompile = sh => { sh.uniforms.uDv = { value: dv }; /* 땅 밑 바위 벽은, 카메라에서 구멍(땅 높이)을 지나 보이는 곳만 남긴다 (직교 카메라라 방향이 늘 같다) */
+        sh.vertexShader = 'uniform vec3 uDv; varying vec2 vLq; varying float vWy;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  { vec4 wp = modelMatrix * vec4(transformed, 1.0); vec3 q = wp.xyz - uDv * (wp.y / uDv.y); vLq = (inverse(modelMatrix) * vec4(q, 1.0)).xz; vWy = wp.y; }');
+        sh.fragmentShader = 'varying vec2 vLq; varying float vWy;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+  if (vWy < -0.004 && length(vLq) > ${this.R3.toFixed(3)}) discard;`).replace('#include <dithering_fragment>', '#include <dithering_fragment>\n  { float dk = smoothstep(-1.1, 0.0, vWy); gl_FragColor.rgb *= 0.02 + 0.98 * dk * dk * dk; }'); }; m.customProgramCacheKey = () => 'mineExitCut'; return m; };
+    const R3 = this.R3, rock = cut(new THREE.MeshStandardMaterial({ map: tx('rock0_c.jpg', 3, 1, 1), normalMap: tx('rock0_n.jpg', 3, 1), roughness: 0.9, side: THREE.BackSide, color: new THREE.Color(1.8, 1.7, 1.6) }));
+    K.pit = new THREE.Mesh(new THREE.CylinderGeometry(R3 + 0.01, R3 * 0.92, 1.5, 28, 3, true).translate(0, -0.75, 0), rock);
+    const wood = new THREE.MeshStandardMaterial({ map: tx('wood_c.jpg', 2, 0.3, 1), normalMap: tx('wood_n.jpg', 2, 0.3), roughness: 0.85, color: new THREE.Color(5.2, 4.6, 4.0) }) /* 광산 사진은 등불용이라 어두워서, 햇빛 아래 거리에선 밝게 */, S = R3 + 0.12, bw = 0.2;
+    K.col = []; for (let i = 0; i < 4; i++) { const g = new THREE.BoxGeometry(2 * S + bw, 0.16, bw); g.translate(0, 0.08, S); g.rotateY(i * Math.PI / 2); K.col.push(g); } K.colG = this.mrg(K.col); /* 나무 틀 네 개를 한 덩어리로 (그리는 수 1) */ K.wood = wood;
+    const steel = new THREE.MeshStandardMaterial({ color: 0x8c8e90, metalness: 0.85, roughness: 0.38 }), lg = []; for (const sx of [-0.2, 0.2]) lg.push(new THREE.CylinderGeometry(0.025, 0.025, 1.9, 8).translate(sx, 0, 0)); for (let y = -0.85; y <= 0.9; y += 0.29) lg.push(new THREE.CylinderGeometry(0.018, 0.018, 0.4, 6).rotateZ(Math.PI / 2).translate(0, y, 0));
+    K.lad = [this.mrg(lg)]; K.steel = steel; /* 사다리 기둥·발판도 한 덩어리 (그리는 수 9 → 1) */
+    const asp = new THREE.MeshStandardMaterial({ color: 0x3a3a3c, roughness: 0.95 }); K.asp = asp;
+    K.chunk = new THREE.DodecahedronGeometry(0.07, 0);
+    { const N = 512, cv = document.createElement('canvas'); cv.width = cv.height = N; const x = cv.getContext('2d'), c0 = N / 2, sc = N / (2 * (R3 + 1.25)); let sd = 7; const rn = () => (sd = (sd * 16807) % 2147483647) / 2147483647; /* 파낸 흙이 구멍 둘레에 흩어진 그림 (가까울수록 두껍게) */
+      for (let i = 0; i < 2600; i++) { const a = rn() * 6.283, d = R3 + Math.pow(rn(), 1.8) * 1.15, px = c0 + Math.cos(a) * d * sc, py = c0 + Math.sin(a) * d * sc, rr = (1 + rn() * 3.5) * (1.25 - (d - R3)) * sc * 0.028, v = rn();
+        x.fillStyle = v < 0.12 ? `rgba(40,34,30,${0.7 + rn() * 0.3})` : (q => `rgba(${78 + q * 30 | 0},${66 + q * 22 | 0},${54 + q * 16 | 0},${0.55 + rn() * 0.45})`)(rn()); x.beginPath(); x.ellipse(px, py, rr * (1 + rn()), rr, rn() * 3, 0, 7); x.fill(); }
+      const g = x.createRadialGradient(c0, c0, R3 * sc * 0.98, c0, c0, (R3 + 0.35) * sc); g.addColorStop(0, 'rgba(58,44,30,.95)'); g.addColorStop(1, 'rgba(58,44,30,0)'); x.fillStyle = g; x.beginPath(); x.arc(c0, c0, (R3 + 0.35) * sc, 0, 7); x.arc(c0, c0, R3 * sc * 0.98, 0, 7, true); x.fill('evenodd'); x.globalCompositeOperation = 'destination-out'; x.beginPath(); x.arc(c0, c0, R3 * sc * 0.97, 0, 7); x.fill(); /* 구멍 안은 비운다 */
+      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; K.soil = new THREE.Mesh(new THREE.PlaneGeometry(2 * (R3 + 1.25), 2 * (R3 + 1.25)).rotateX(-Math.PI / 2).translate(0, 0.004, 0), new THREE.MeshStandardMaterial({ map: t, transparent: true, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 })); K.soil.receiveShadow = true; }
+    const yel = new THREE.MeshStandardMaterial({ color: 0xf2c418, roughness: 0.32 }), hg = [new THREE.SphereGeometry(0.11, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.CylinderGeometry(0.145, 0.15, 0.012, 20).translate(0.02, 0.004, 0), new THREE.BoxGeometry(0.2, 0.018, 0.03).translate(0, 0.09, 0)];
+    K.hat = new THREE.Group(); { const m = new THREE.Mesh(this.mrg(hg), yel); m.castShadow = true; K.hat.add(m); } /* 안전모 세 조각도 한 덩어리 */ const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.034, 0.04, 12).rotateZ(Math.PI / 2).translate(0.115, 0.06, 0), new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0xfff2c0, emissiveIntensity: 1.6, roughness: 0.3 })); K.hat.add(lamp);
+    return K; },
+  mrg(gs) { const { THREE } = T3, nn = gs.map(g => g.index ? g.toNonIndexed() : g), out = new THREE.BufferGeometry(); /* 같은 재질 조각들을 한 덩어리로 (그리는 수 줄이기) */
+    for (const k of ['position', 'normal', 'uv']) { const n = nn[0].getAttribute(k).itemSize, arr = new Float32Array(nn.reduce((s2, g) => s2 + g.getAttribute(k).array.length, 0)); let o = 0; for (const g of nn) { arr.set(g.getAttribute(k).array, o); o += g.getAttribute(k).array.length; } out.setAttribute(k, new THREE.BufferAttribute(arr, n)); } out.computeBoundingSphere(); return out; },
+  z3one(R, e) { const { THREE } = T3, K = this.K3, g = new THREE.Group(), r = n => ((Math.sin(e.s * 12.9 + n * 78.2) * 43758.5) % 1 + 1) % 1;
+    g.add(new THREE.Mesh(K.pit.geometry, K.pit.material));
+    if (K.colG) { const m = new THREE.Mesh(K.colG, K.wood); m.castShadow = m.receiveShadow = true; m.rotation.y = (r(1) - 0.5) * 0.3; g.add(m); } else for (const c of K.col) { const m = new THREE.Mesh(c, K.wood); m.castShadow = true; g.add(m); }
+    const lad = new THREE.Group(); for (const q of K.lad) lad.add(new THREE.Mesh(q, K.steel)); lad.position.set(0, 0, -0.35); lad.rotation.x = 0.25; /* 북쪽 벽에 기댄 사다리 (땅 밑 부분이 구멍 안으로만 보이게) */ lad.traverse(o => { if (o.isMesh) o.castShadow = true; }); g.add(lad);
+    const soil = new THREE.Mesh(K.soil.geometry, K.soil.material); soil.rotation.y = r(5) * 6.283; soil.receiveShadow = true; g.add(soil); /* 흙 흩어진 자국 (판 하나) */
+    const N = 16, ch = new THREE.InstancedMesh(K.chunk, K.asp, N), o = new THREE.Object3D(); /* 깨진 아스팔트 조각 */
+    for (let i = 0; i < N; i++) { const a = r(i + 3) * 6.283, d = this.R3 + 0.12 + Math.pow(r(i + 9), 1.5) * 1.0, sc = 0.5 + r(i + 17) * 1.2; o.position.set(Math.cos(a) * d, 0.012, Math.sin(a) * d); o.rotation.set(r(i) * 0.4, r(i + 1) * 6, r(i + 2) * 0.4); o.scale.set(sc * 1.5, sc * 0.35, sc); o.updateMatrix(); ch.setMatrixAt(i, o.matrix); }
+    ch.castShadow = true; ch.receiveShadow = true; g.add(ch);
+    const hat = K.hat.clone(); g.userData.hat = hat; R.S.add(hat); g.position.set(e.x / TILE, 0, e.y / TILE); return g; },
+  z3(R, now) { const zid = Game.zone && Game.zone.id; if (!R.S || !window.T3) return; this.R3 = this.R3 || 0.62; if (!this.K3) { try { this.z3mk(R); this.z3ok = 1; } catch (err) { console.warn('mine exit 3d', err); this.z3ok = 0; this.K3 = {}; return; } } if (!this.z3ok) return;
+    const M = this.z3m || (this.z3m = new Map()), end = (this.LIFE + this.FADE) * 1000;
+    for (const [e, g] of M) if (!this.list.includes(e) || e.z !== zid || R.S !== g.parent) { if (g.parent) g.parent.remove(g); if (g.userData.hat.parent) g.userData.hat.parent.remove(g.userData.hat); M.delete(e); }
+    for (const e of this.list) { if (e.z !== zid) continue; let g = M.get(e); if (!g) { g = this.z3one(R, e); R.S.add(g); M.set(e, g); }
+      const age = now - e.t, fade = Math.min(1, Math.max(0, (end - age) / (this.FADE * 1000))); g.scale.setScalar(0.35 + 0.65 * Math.min(1, age / 250)); g.position.y = (fade - 1) * 0.3; g.visible = fade > 0.02; /* 사라질 땐 땅으로 꺼지듯 */
+      const hat = g.userData.hat, R0 = this.rise && this.rise.e === e ? this.rise : null, k = R0 ? (now - R0.t0) / this.DUR : 9, p = Game.player, H = Room3D.headH() + 0.02;
+      if (k < 0.15) hat.visible = false; else if (k < 0.72) { const ee = Math.min(1, (k - 0.15) / 0.45); hat.visible = true; hat.position.set(p.x / TILE, H - (1 - ee) * 1.6, p.y / TILE); hat.rotation.set(0, Math.PI / 2, 0); }
+      else if (k < 0.9) { const f = (k - 0.72) / 0.18, sx = p.x / TILE, sz = p.y / TILE, tx = e.hx / TILE, tz = e.hy / TILE; hat.visible = true; hat.position.set(sx + (tx - sx) * f, H * (1 - f) + 0.06 * f + Math.sin(f * Math.PI) * 0.8, sz + (tz - sz) * f); hat.rotation.set(f * 9 * e.hd, f * 4, f * 6); }
+      else { hat.visible = g.visible; hat.position.set(e.hx / TILE, 0.075 + g.position.y, e.hy / TILE); hat.rotation.set(0.35 * e.hd, e.hr, 0.25); } } },
   draw(c, x0, y0, x1, y1) {
-    const zid = Game.zone && Game.zone.id; if (!zid) return; const now = performance.now(), end = (this.LIFE + this.FADE) * 1000;
+    const zid = Game.zone && Game.zone.id; if (!zid) return; if (this.z3on()) return this.dust3(c, x0, y0, x1, y1); /* v389 3D 거리: 구멍·사다리·안전모는 3D, 여기선 피어오르는 먼지만 */ const now = performance.now(), end = (this.LIFE + this.FADE) * 1000;
     if (this.list.length && now - this.list[0].t > end) this.list = this.list.filter(e => now - e.t < end || (this.rise && this.rise.e === e));
     for (const e of this.list) {
       if (e.z !== zid || e.x < x0 - 30 || e.x > x1 + 30 || e.y < y0 - 30 || e.y > y1 + 30) continue;
@@ -10381,6 +10442,8 @@ const MineExit = {
       c.restore();
     }
   },
+  dust3(c, x0, y0, x1, y1) { const now = performance.now(), zid = Game.zone.id; for (const e of this.list) { if (e.z !== zid) continue; const age = (now - e.t) / 1000; if (age >= 4) continue; const X = e.x, Y = e.y;
+      for (let i = 0; i < 6; i++) { const ph = (age * 0.7 + i / 6) % 1, al = (1 - ph) * Math.max(0, 1 - age / 4) * 0.4, R = 4 + ph * 9, cx = X + Math.sin(i * 2.3 + age) * 6, cy = Y - 6 - ph * 26, g = c.createRadialGradient(cx, cy, 0, cx, cy, R); g.addColorStop(0, `rgba(150,130,104,${al.toFixed(2)})`); g.addColorStop(1, 'rgba(150,130,104,0)'); c.fillStyle = g; c.fillRect(cx - R, cy - R, R * 2, R * 2); } } },
   // 광부 헬멧 (노란 안전모 + 앞 랜턴). ground: 바닥에 떨어져 뒹구는 모양
   helmet(c, x, y, rot, ground) {
     c.save(); c.translate(Math.round(x), Math.round(y)); c.rotate(rot || 0); const r = (a, b, w, h, col) => { c.fillStyle = col; c.fillRect(a, b, w, h); };
@@ -10394,9 +10457,9 @@ const MineExit = {
     const p = Game.player, E = R.e; p.vx = p.vy = 0; if (k < 0.15) return true;
     const e = Math.min(1, (k - 0.15) / 0.45), dy = Math.round((1 - (1 - Math.pow(1 - e, 2))) * 22), bob = e < 1 ? Math.round(Math.abs(Math.sin(e * 9)) * 1.5) : 0;
     c.save(); c.beginPath(); c.rect(p.x - 40, p.y - 80, 80, R.y - 1 - (p.y - 80) + (e >= 1 ? 30 : 0)); c.clip(); c.translate(0, dy - bob); fn();
-    if (k < 0.72) this.helmet(c, snapPx(c, p.x), snapPx(c, p.y) - 14 - (k > 0.64 ? Math.round((k - 0.64) / 0.08 * 2) : 0), 0); // 쓰고 올라온다 → 던지기 직전 살짝 들어 올림
+    if (k < 0.72 && !this.z3on()) this.helmet(c, snapPx(c, p.x), snapPx(c, p.y) - 14 - (k > 0.64 ? Math.round((k - 0.64) / 0.08 * 2) : 0), 0); // 쓰고 올라온다 → 던지기 직전 살짝 들어 올림
     c.restore();
-    if (k >= 0.72 && k < 0.9 && E) { const f = (k - 0.72) / 0.18, sx = p.x, sy = p.y - 16, hx = sx + (E.hx - sx) * f, hy = sy + (E.hy - sy) * f - Math.sin(f * Math.PI) * 14; this.helmet(c, hx, hy, E.hr * f * 2.5); // 휙
+    if (k >= 0.72 && k < 0.9 && E && !this.z3on()) { const f = (k - 0.72) / 0.18, sx = p.x, sy = p.y - 16, hx = sx + (E.hx - sx) * f, hy = sy + (E.hy - sy) * f - Math.sin(f * Math.PI) * 14; this.helmet(c, hx, hy, E.hr * f * 2.5); // 휙
       if (f < 0.5) { c.fillStyle = 'rgba(255,255,255,.75)'; for (let i = 0; i < 3; i++) c.fillRect(Math.round(hx - E.hd * (6 + i * 3)), Math.round(hy - 3 + i * 3), 3, 1); } }
     if (k >= 0.9 && k < 0.97 && E) { c.fillStyle = 'rgba(160,140,110,.6)'; for (let i = 0; i < 5; i++) c.fillRect(Math.round(E.hx - 6 + i * 3), Math.round(E.hy + 1 - ((k - 0.9) * 60 + i) % 3), 2, 1); } // 툭 떨어진 먼지
     return true;
@@ -10426,6 +10489,11 @@ vec4 mkS(vec2 uv) { vec2 q = uv * 128.0 - 0.5, f = fract(q); vec2 b = (floor(q) 
 float flick(vec3 id) { float s = h31(id + 7.0); return (sin(uT * (9.0 + s * 6.0) + s * 40.0) > 0.97 - (s < 0.2 ? 0.25 : 0.0) ? 0.55 : 1.0) * (0.92 + sin(uT * 3.0 + s * 9.0) * 0.05); }
 // v352 실사 광산: 바위 스캔·석탄·나무·흙 사진 (색 sRGB, 노멀 RG + 거칠기 B). 단계 줄임(lod)은 거리로 직접 (갈래 안에서도 안전)
 float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); float a = h31(vec3(i, 3.0)), b = h31(vec3(i + vec2(1, 0), 3.0)), c2 = h31(vec3(i + vec2(0, 1), 3.0)), d = h31(vec3(i + vec2(1, 1), 3.0)); return mix(mix(a, b, f.x), mix(c2, d, f.x), f.y); }
+// v389 실사 금: 사진 위에 이어진 가는 금 (128칸 그림의 계단 모양 대신). 많이 칠수록 길고 굵게, 가운데에서 퍼진다
+float crkF(vec2 uv, float st, float fw) { vec2 p = uv * (st < 1.5 ? 3.0 : 4.2) + vec2(vn(uv * 6.0) , vn(uv * 6.0 + 4.0)) * 0.35, ip = floor(p), fp = fract(p); float f1 = 9.0, f2 = 9.0; /* 모난 금 (보로노이 경계) */
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 g = vec2(float(i), float(j)), o = vec2(h31(vec3(ip + g, 5.0)), h31(vec3(ip + g, 9.0))), r = g + o - fp; float d = dot(r, r); if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d; }
+  float e = sqrt(f2) - sqrt(f1), w = (st < 1.5 ? 0.035 : 0.05) + fw * 3.0, m = (1.0 - smoothstep(w * 0.3, w, e)) * smoothstep(0.28, 0.42, vn(p * 1.4 + 17.0)), r = length(uv - 0.5) + (vn(uv * 9.0) - 0.5) * 0.12;
+  return m * (1.0 - smoothstep(st < 1.5 ? 0.2 : 0.32, st < 1.5 ? 0.3 : 0.46, r)); }
 // v353 동바리 (나무 기둥 둘 + 천장 보) · 전선: 곧은 갱도 칸 가운데에 진짜 입체로
 float bx(vec3 ro, vec3 rd, vec3 a, vec3 b, out vec3 n) { vec3 iv = 1.0 / vec3(abs(rd.x) < 1e-6 ? 1e-6 : rd.x, abs(rd.y) < 1e-6 ? 1e-6 : rd.y, abs(rd.z) < 1e-6 ? 1e-6 : rd.z), t0 = (a - ro) * iv, t1 = (b - ro) * iv, mn = min(t0, t1), mx = max(t0, t1);
   float tn = max(max(mn.x, mn.y), mn.z), tf = min(min(mx.x, mx.y), mx.z); if (tf < tn || tf < 0.0) return 1e9; n = tn == mn.x ? vec3(-sign(rd.x), 0.0, 0.0) : tn == mn.y ? vec3(0.0, -sign(rd.y), 0.0) : vec3(0.0, 0.0, -sign(rd.z)); return tn; }
@@ -10442,7 +10510,7 @@ void main() {
   vec3 q0 = vec3(uC.x - uO.x, uC.y - uO.y, 1.0 - uC.z / HW), d = vec3(rd.x, rd.y, -rd.z / HW);
   ivec3 c = ivec3(floor(q0)), pc = c; vec3 st = vec3(d.x < 0.0 ? -1.0 : 1.0, d.y < 0.0 ? -1.0 : 1.0, d.z < 0.0 ? -1.0 : 1.0);
   vec3 td = 1.0 / max(abs(d), vec3(1e-6)), tm = (st * (vec3(c) - q0) + st * 0.5 + 0.5) * td;
-  uint pv = cell(c), hv = 0u; float t = 0.0, tH = 80.0; int ax = -1, kind = 0, part = 0; vec3 gN = vec3(0.0); vec3 glow = vec3(0.0); float lfl = 1.0; vec2 puv = vec2(0.0);
+  uint pv = cell(c), hv = 0u; float t = 0.0, tH = 80.0; int ax = -1, kind = 0, part = 0; vec3 gN = vec3(0.0); vec3 glow = vec3(0.0); float lfl = 1.0; vec2 puv = vec2(0.0), pcen = vec2(0.0);
   for (int i = 0; i < 90; i++) {
     float te = min(tm.x, min(tm.y, tm.z));
     vec3 cw = vec3(vec2(c.xy) + uO, 0.0);
@@ -10465,11 +10533,16 @@ void main() {
     }
     if ((pv & 64u) != 0u) { // 승강기: 철망 발판 + 네 귀퉁이 노란 기둥 (내가 있는 높이)
       float tp = abs(rd.z) > 1e-5 ? (uPlat - uC.z) / rd.z : -1.0;
-      if (tp > t && tp < te) { vec2 f = fract(uC.xy + rd.xy * tp); float e = min(min(f.x, f.y), min(1.0 - f.x, 1.0 - f.y)); if (e < 0.07 || fract(f.x * 7.0) < 0.26 || fract(f.y * 7.0) < 0.26) { tH = tp; kind = 2; puv = f; break; } }
+      if (tp > t - 1e-4 && tp < te + 2e-3) { vec2 f = fract(uC.xy + rd.xy * tp); /* v389 발판 높이 = 칸 바닥 경계라 오차로 점점이 빠지던 것 (자글자글한 노란 점) */ float e = min(min(f.x, f.y), min(1.0 - f.x, 1.0 - f.y)); if (uReal > 0.5 || e < 0.07 || fract(f.x * 7.0) < 0.26 || fract(f.y * 7.0) < 0.26) { tH = tp; kind = 2; puv = f; break; } } /* v389 실사: 구멍 숭숭 철망 대신 줄무늬 철판 (멀리서 자글자글하던 것) */
       float best = te;
       for (int k = 0; k < 4; k++) { vec2 pc2 = cw.xy + vec2(k == 0 || k == 3 ? 0.07 : 0.93, k < 2 ? 0.07 : 0.93), oc = uC.xy - pc2; float a = dot(rd.xy, rd.xy), b2 = dot(oc, rd.xy), cc = dot(oc, oc) - 0.0012, hh = b2 * b2 - a * cc;
-        if (hh > 0.0 && a > 1e-6) { float tk = (-b2 - sqrt(hh)) / a; float zk = uC.z + rd.z * tk; if (tk > t && tk < best && zk > uPlat && zk < uPlat + 0.95) { best = tk; } } }
+        if (hh > 0.0 && a > 1e-6) { float tk = (-b2 - sqrt(hh)) / a; float zk = uC.z + rd.z * tk; if (tk > t && tk < best && zk > uPlat && zk < uPlat + 0.95) { best = tk; pcen = pc2; } } }
       if (best < te) { tH = best; kind = 5; break; }
+      if (uReal > 0.5) { vec3 n; float tb; int hit = 0; /* v389 실사 승강기: 벽 쪽 세 면에 철제 난간 (위·가운데 두 줄), 드나드는 쪽은 비운다 */
+        for (int sd = 0; sd < 4; sd++) { ivec3 nb = c + ivec3(sd == 0 ? 1 : sd == 1 ? -1 : 0, sd == 2 ? 1 : sd == 3 ? -1 : 0, 0); if ((cell(nb) & 1u) != 0u) continue;
+          for (int lv = 0; lv < 2; lv++) { float z0 = uPlat + (lv == 0 ? 0.86 : 0.45), z1 = z0 + 0.05; vec2 a0 = sd < 2 ? vec2(sd == 0 ? 0.9 : 0.06, 0.07) : vec2(0.07, sd == 2 ? 0.9 : 0.06), a1 = sd < 2 ? vec2(sd == 0 ? 0.94 : 0.1, 0.93) : vec2(0.93, sd == 2 ? 0.94 : 0.1);
+            tb = bx(uC, rd, vec3(cw.xy + a0, z0), vec3(cw.xy + a1, z1), n); if (tb > t - 1e-4 && tb < best) { best = tb; gN = n; hit = 1; } } }
+        if (hit == 1) { tH = best; kind = 7; break; } }
     }
     t = te; pc = c;
     if (tm.x < tm.y && tm.x < tm.z) { ax = 0; c.x += int(st.x); tm.x += td.x; } else if (tm.y < tm.z) { ax = 1; c.y += int(st.y); tm.y += td.y; } else { ax = 2; c.z += int(st.z); tm.z += td.z; }
@@ -10516,7 +10589,7 @@ void main() {
           float ra = min(abs(a - 0.33), abs(a - 0.67)); if (a2 > -1.0) ra = min(ra, min(abs(a2 - 0.33), abs(a2 - 0.67)));
           if (steel) { lay = -1.0; bool top = ra < 0.013; aL = top ? vec3(0.2, 0.195, 0.19) : vec3(0.05, 0.028, 0.016); ro = top ? 0.12 : 0.75; wet = 0.0; } else if (slp) { lay = 5.0; sc = 1.3; uv = ew ? vec2(P.y, P.x * 0.35) * sc : vec2(P.x, P.y * 0.35) * sc; wet *= 0.3; } }
       } else { N0 = vec3(0.0, 0.0, -1.0); T = vec3(1.0, 0.0, 0.0); Bv = vec3(0.0, 1.0, 0.0); lay = 1.0; sc = 0.55; uv = P.xy * sc + 0.37; }
-      if (face && uFace.w > 0.5) { vec4 m = mkS(f); crk = smoothstep(0.3, 0.7, uFace.w < 1.5 ? m.r : m.g); }
+      if (face && uFace.w > 0.5) crk = crkF(f, uFace.w, tH * 2.0 * uTan.x / uRes.x / max(abs(rd.z), 0.15));
     } else if (kind == 1) {
       float al = ax == 0 ? (rd.x > 0.0 ? -P.y : P.y) : (rd.y < 0.0 ? -P.x : P.x); N0 = ax == 0 ? vec3(-st.x, 0.0, 0.0) : vec3(0.0, -st.y, 0.0); T = ax == 0 ? vec3(0.0, rd.x > 0.0 ? -1.0 : 1.0, 0.0) : vec3(rd.y < 0.0 ? -1.0 : 1.0, 0.0, 0.0);
       float u = fract(ax == 0 ? P.y : P.x); if ((ax == 0 && rd.x > 0.0) || (ax == 1 && rd.y < 0.0)) u = 1.0 - u;
@@ -10524,17 +10597,27 @@ void main() {
       int vr = int(h31(vec3(vec2(c.xy) + uO, float(c.z * 4 + ax))) * 3.0); bool post = false;
       if (post) { lay = 5.0; sc = 1.4; uv = vec2(al * 1.4, -zl * 0.7); N0 = normalize(N0 + T * (u < 0.09 ? 1.0 - u / 0.045 : (u - 0.955) / 0.045) * 0.5); }
       else { float mw = smoothstep(0.35, 0.65, vn(vec2(al * 0.45, float(pc.z) * 7.0 + float(ax) * 3.0))); lay = coal ? 3.0 + float(vr & 1) : 0.0; lay2 = coal ? -1.0 : (mw > 0.5 ? 2.0 : 1.0); mix2 = coal ? 0.0 : abs(mw - 0.5) * 2.0; /* 칸마다 다른 사진이면 이음매가 보여서, 한 장(rock0)에 둘째 사진을 천천히 섞는다 */ sc = 0.55; uv = vec2(al, -zl - float(pc.z) * 0.37) * sc; wet = smoothstep(0.75, 0.95, 1.0 - zl / HW) * 0.35 + (coal ? 0.15 : 0.0) + smoothstep(0.68, 0.8, vn(vec2(al * 9.0, zl * 0.7 - float(pc.z) * 5.0))) * 0.55 * smoothstep(0.0, 0.6, zl / HW); } // 벽을 타고 흐르는 물기 줄
-      vec4 m = mk(vec2(u, v * HW)); if (face && uFace.w > 0.5) { vec4 ms = mkS(vec2(u, v * HW)); crk = smoothstep(0.3, 0.7, uFace.w < 1.5 ? ms.r : ms.g); }
-      if (lift && !post) { float r1 = abs(u - 0.38), r2 = abs(u - 0.62); if (r1 < 0.02 || r2 < 0.02 || (u > 0.36 && u < 0.64 && fract(P.z * 2.5) < 0.07)) { lay = -1.0; aL = vec3(0.03, 0.03, 0.032); ro = 0.4; } }
+      vec4 m = mk(vec2(u, v * HW)); if (face && uFace.w > 0.5) crk = crkF(vec2(u, v), uFace.w, tH * 2.0 * uTan.x / uRes.x / max(abs(dot(rd, N0)), 0.15));
+      if (lift && !post) { float r1 = abs(u - 0.38), r2 = abs(u - 0.62), rz = fract(P.z * 2.5); bool rl = r1 < 0.022 || r2 < 0.022, rg = u > 0.36 && u < 0.64 && rz < 0.07; /* v389 실사 사다리: 둥근 쇠 난간·발판 (빛이 결 따라 번들) */
+        if (rl || rg) { lay = -1.0; float wr = smoothstep(0.6, 0.72, vn(vec2(u * 30.0, P.z * 6.0))); aL = mix(vec3(0.07, 0.07, 0.075), vec3(0.09, 0.05, 0.028), wr); ro = mix(0.28, 0.8, wr);
+          if (rl) { float d = (r1 < r2 ? u - 0.38 : u - 0.62) / 0.022; N0 = normalize(N0 + T * d * 1.3); } else { float d = (rz - 0.035) / 0.035; N0 = normalize(N0 + Bv * d * 1.3); } } }
       if (face && uGold > 0.5 && m.b > 0.5) { lay = -1.0; aL = vec3(0.85, 0.52, 0.09); ro = 0.18; }
-    } else if (kind == 2) { N0 = vec3(0.0, 0.0, 1.0); }
+    } else if (kind == 2) { N0 = vec3(0.0, 0.0, 1.0); /* v389 실사 발판: 미끄럼 방지 줄무늬 철판 + 가장자리 노랑·검정 경고 칠 (멀리선 부드럽게 섞어서 자글거림 없이) */
+      vec2 f = puv; float fw = tH * 2.0 * uTan.x / uRes.x / max(abs(rd.z), 0.12), e = min(min(f.x, f.y), min(1.0 - f.x, 1.0 - f.y)), rs = vn(P.xy * 5.0 + 7.0) * 0.65 + vn(P.xy * 17.0) * 0.35;
+      vec2 q = vec2(f.x + f.y, f.x - f.y) * 9.0, g = fract(q) - 0.5; float bump = 1.0 - smoothstep(0.0, 0.35, abs(g.x) * 0.55 + abs(g.y) * 1.4), lo = 1.0 - smoothstep(0.03, 0.09, fw * 9.0); vec2 bg = vec2(g.x * 0.55, g.y * 1.4) * bump * lo * 4.5;
+      N0 = normalize(vec3((bg.x + bg.y) * 0.5, (bg.x - bg.y) * 0.5, 1.0)); aL = mix(vec3(0.05, 0.05, 0.055), vec3(0.09, 0.05, 0.025), smoothstep(0.55, 0.8, rs)) * (0.55 + 0.45 * vn(P.xy * 2.3 + 1.7)) * (1.0 + bump * lo * 0.35); /* 석탄가루 때 · 튀어나온 무늬는 닳아 밝게 */ ro = mix(0.32, 0.85, smoothstep(0.55, 0.8, rs)) + bump * lo * 0.08;
+      float ed = smoothstep(0.075 + fw, 0.075 - fw, e); if (ed > 0.0) { float sp = fract((f.x + f.y) * 3.0), aa = min(0.5, fw * 3.0), yl = smoothstep(0.5 - aa, 0.5 + aa, sp) * (1.0 - smoothstep(1.0 - aa, 1.0, sp)) + (1.0 - smoothstep(0.0, aa, sp)); float wr = smoothstep(0.62, 0.72, vn(P.xy * 9.0 + 3.0));
+        vec3 pa = mix(vec3(0.012, 0.011, 0.01), vec3(0.42, 0.26, 0.015), yl); aL = mix(aL, mix(pa, vec3(0.08, 0.05, 0.03), wr), ed); ro = mix(ro, mix(0.55, 0.8, wr), ed); N0 = normalize(mix(N0, vec3(0.0, 0.0, 1.0), ed)); } }
+    else if (kind == 5 || kind == 7) { N0 = kind == 5 ? normalize(vec3(P.xy - pcen, 0.0)) : gN; /* v389 실사 기둥·난간: 닳은 노란 칠 철재 + 녹 · 아래쪽 때 */
+      float ar = kind == 5 ? atan(N0.y, N0.x) : dot(P.xy, vec2(3.1, 2.7)), wr = smoothstep(0.74, 0.8, vn(vec2(ar * 5.0, P.z * 26.0) + pcen * 13.0) * 0.7 + vn(vec2(ar * 14.0, P.z * 70.0)) * 0.3), gr = smoothstep(uPlat + 0.35, uPlat, P.z) * 0.6;
+      aL = mix(vec3(0.42, 0.27, 0.02), vec3(0.07, 0.04, 0.022), wr) * (1.0 - gr); ro = mix(0.42, 0.85, max(wr, gr)); }
     else if (kind == 6) { N0 = gN; T = normalize(cross(N0, abs(N0.z) > 0.5 ? vec3(0.0, 1.0, 0.0) : vec3(0.0, 0.0, 1.0))); Bv = cross(N0, T);
       if (part == 3) { aL = vec3(0.012, 0.012, 0.013); ro = 0.3; } else { lay = 5.0; sc = 1.3; vec2 q = abs(N0.x) > 0.5 ? P.yz : abs(N0.y) > 0.5 ? P.xz : P.xy; if (part == 2) q = abs(N0.z) > 0.5 ? (abs(gN.x) > 0.5 ? P.xy : P.yx) : vec2(q.y, q.x); uv = vec2(q.x * 2.2, q.y * 0.6) * sc; wet = -0.01; } }
     vec3 N = N0;
     if (lay >= 0.0) { float cosT = max(abs(dot(rd, N0)), 0.15), lod = log2(max(tH * 2.0 * uTan.x / uRes.x * uTS * sc / cosT, 1e-4));
       vec4 A = textureLod(uRC, vec3(uv, lay), lod), Nm = textureLod(uRN, vec3(uv, lay), lod); if (lay2 >= 0.0) { vec2 uv2 = uv * 1.13 + vec2(0.31, 0.17); A = mix(A, textureLod(uRC, vec3(uv2, lay2), lod), mix2); Nm = mix(Nm, textureLod(uRN, vec3(uv2, lay2), lod), mix2); } vec2 xy = (Nm.rg * 2.0 - 1.0) * (1.0 - wet * 0.85);
       N = normalize(T * xy.x + Bv * xy.y + N0 * sqrt(max(0.05, 1.0 - dot(xy, xy)))); aL = A.rgb * mix(1.0, 0.55, max(wet, 0.0)) * (wet < 0.0 ? 0.72 : 1.0); wet = max(wet, 0.0); ro = mix(Nm.b, 0.06, wet); }
-    if (crk > 0.0) { aL *= 1.0 - crk * 0.9; ro = mix(ro, 1.0, crk); N = normalize(mix(N, N0, crk)); }
+    if (crk > 0.0) { aL *= 1.0 - crk * 0.94; ro = mix(ro, 1.0, crk); }
     vec3 dv = P - uC; float dd = length(dv); vec3 sa = normalize(uF + uR * uHo.x * uTan.x + uU * uHo.y * uTan.y); float an = acos(clamp(dot(dv / max(dd, 1e-4), sa), -1.0, 1.0));
     vec3 cr = shade(P, N, -rd, aL, ro, lvS, dd, exp(-pow(an / 0.36, 2.0)) + 0.18 * exp(-pow(an / 0.8, 2.0)));
     o = vec4(pow(1.0 - exp(-2.1 * cr), vec3(1.0 / 2.2)) + glow, 1.0); gl_FragDepth = clamp(tH / 40.0, 0.0, 0.999); return;
@@ -15054,6 +15137,11 @@ const PB_DEX = {
   parrot: { t: 'N', b: [65, 80, 60, 95], m: [['부리 쪼기', 'N', 70, 100], ['깃털 던지기', 'N', 60, 100], ['따라 하기', 'N', 0, 100, 'atk-'], ['급강하', 'N', 90, 85]] },
   gary: { t: 'W', b: [70, 60, 95, 40], m: [['끈적 박치기', 'W', 70, 100], ['야옹~', 'N', 0, 100, 'atk-'], ['껍데기 숨기', 'N', 0, 100, 'heal'], ['끈적이 뿌리기', 'W', 80, 90]] },
   croc: { t: 'W', b: [85, 95, 80, 45], m: [['악어 물기', 'N', 85, 95], ['꼬리 치기', 'W', 70, 100], ['죽음의 회전', 'W', 95, 80], ['악어의 눈물', 'N', 0, 100, 'atk-']] },
+  /* v389 실사 펫 (편집숍 닭·참새·멧돼지·랩터)도 배틀에 */
+  chicken: { t: 'N', b: [55, 60, 55, 80], m: [['부리 쪼기', 'N', 60, 100], ['푸드덕 날개', 'N', 55, 100], ['꼬끼오!', 'N', 0, 100, 'atk-'], ['달걀 굴리기', 'N', 65, 95]] },
+  sparrow: { t: 'N', b: [45, 55, 45, 105], m: [['콕콕 쪼기', 'N', 55, 100], ['깃털 던지기', 'N', 60, 100], ['짹짹 노래', 'N', 0, 100, 'acc-'], ['급강하', 'N', 85, 85]] },
+  boar: { t: 'R', b: [85, 85, 80, 70], m: [['엄니 들이받기', 'R', 80, 95], ['멧돼지 돌진', 'R', 90, 85], ['흙 파헤치기', 'R', 0, 100, 'acc-'], ['콧김 씩씩', 'N', 0, 100, 'atk+']] },
+  raptor: { t: 'R', b: [80, 100, 65, 100], m: [['갈고리 발톱', 'N', 80, 95], ['덮치기', 'R', 85, 90], ['물기', 'N', 65, 100], ['날카로운 울음', 'N', 0, 100, 'atk-']] },
   trex: { t: 'R', b: [95, 110, 90, 60], m: [['꼬리 휘두르기', 'R', 90, 90], ['공룡 물기', 'N', 85, 95], ['쿵쿵 발구르기', 'R', 60, 100], ['크앙!', 'N', 0, 100, 'atk-']] },
 };
 const PB_STAT = { atk: '공격', def: '방어', spd: '스피드', acc: '명중' };
@@ -15158,7 +15246,7 @@ const PetBattle = {
     c.restore(); Net.label(c, ['투닥투닥!', '퍽퍽!', '으르릉!'][Math.floor(now / 500) % 3], x, y - 22);
   },
   /* ---- 때리면 펫끼리 투닥투닥 ---- */
-  off: true, /* v345 사용자 '펫 배틀 일단 빼자' (2026-10-22): 트레이너·친구 신청·배틀 신청·넷 막음. '펫끼리 투닥거리는 건 나두자' → 투닥투닥 먼지구름은 그대로. false로 되돌리면 복구 */
+  off: false, /* v389 사용자 '펫 배틀 넣는데, 실사화 시켜서' → 다시 켬 (콜로세움·피구·축구, 스모는 뺌) · v345 사용자 '펫 배틀 일단 빼자' (2026-10-22): 트레이너·친구 신청·배틀 신청·넷 막음. '펫끼리 투닥거리는 건 나두자' → 투닥투닥 먼지구름은 그대로. false로 되돌리면 복구 */
   hasPet(p) { return !!(p && p.pal && PB_DEX[p.pal.pet]); },
   scuffle(p) { if (!this.myPet() || !this.hasPet(p) || Game.scene !== 'zone') return false; this.tuks = this.tuks.filter(x => x.name !== p.name); this.tuks.push({ name: p.name, t0: performance.now() }); Sound.play('pop'); return true; },
   // 내가 친구를 때렸다: 투닥투닥 보여 주고, 45초에 한 번 배틀 신청
@@ -15546,7 +15634,8 @@ const PetRT = {
     if (G.ph === 'play' && F.pv.ph === 'count') F.ex = 0.8; F.pv.ph = G.ph; },
   draw(c, W, H, B, G, t) {
     if (this[G.m] && this[G.m].full) return this[G.m].full(c, W, H, B, G, t); // 콜로세움: 1인칭 화면을 통째로 그린다
-    const V = this.view(W, H, B), F = this.fxOf(B); c.fillStyle = '#14161e'; c.fillRect(0, 0, W, H);
+    const V = this.view(W, H, B), F = this.fxOf(B); V.d3 = 0; if (G.m === 'dodge' && typeof Arena3J !== 'undefined' && Arena3J.on() && Arena3J.st !== 2) Arena3J.load(); if (G.m === 'dodge' && typeof Arena3J !== 'undefined' && Arena3J.d3ok()) { try { V.d3 = Arena3J.dodge3(c, V, W, H, B, G, t) ? 1 : 0; } catch (e) { console.warn('dodge3', e); Store.set('dodge3d', 0); } } /* v389 피구 실사 3D (뒤 그림판), 이 판엔 하트·이름표·불꽃만 */
+    if (V.d3) c.clearRect(0, 0, W, H); else { if (typeof Arena3J !== 'undefined') Arena3J.hide(); c.fillStyle = '#14161e'; c.fillRect(0, 0, W, H); }
     c.save(); if (F.sh > 0.3) c.translate(Math.round((Math.random() - 0.5) * F.sh * V.s * 0.6), Math.round((Math.random() - 0.5) * F.sh * V.s * 0.6));
     this[G.m].draw(c, V, G, B, t, W, H); c.restore();
     const vg = c.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.42, W / 2, H * 0.55, Math.hypot(W, H) * 0.62); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.5)'); c.fillStyle = vg; c.fillRect(0, 0, W, H);
@@ -15876,6 +15965,9 @@ const PetRT = {
     },
     draw(c, V, G, B, t, W, H) {
       const s = V.s, F = PetRT.fxOf(B), me = B.me, foe = me === 'a' ? 'b' : 'a', Y = V.Y, SX = V.SX;
+      if (V.d3) { for (const k of ['a', 'b']) { const P = B.S[k], x = G[k + 'x'], y = G[k + 'y'], ty = V.Y(y) - (Arena3J.dh(P.kind) * Math.cos(Arena3J.DC.th) / Arena3J.DC.u * 0.8 + 4) * s, hk = Math.max(1, s * 0.85); /* v389 3D 피구: 펫 머리 위에 하트·이름 */
+          if (k === me && G.ph === 'play') PetRT.ring(c, V, x, y, 1 - G[k + 'c'] / 1, 10); for (let i = 0; i < 3; i++) Pets.heart(c, V.X(x) + (i - 1) * 8 * hk, ty - 2 * s, i < G[k + 'l'] ? 1 : 0.3, hk); PetRT.nameTag(c, V, k === me ? '나' : B.foeName, V.X(x), ty - 9 * s, k === me); }
+        PetRT.fxDraw(c, V, B); return; }
       // 체육관 벽 + 관중석 + 점수판
       let g = c.createLinearGradient(0, 0, 0, Y(54)); g.addColorStop(0, '#2a3450'); g.addColorStop(1, '#3e4a68'); c.fillStyle = g; c.fillRect(0, 0, W, Y(54));
       for (let r = 0; r < 3; r++) { c.fillStyle = r % 2 ? '#56607e' : '#4c5672'; c.fillRect(0, Y(30 + r * 8), W, 5 * s); }
@@ -16347,7 +16439,7 @@ PB_ART.arena = ['#e8b070', '#5a2a18'];
 
 const PA_HS = 0.85; /* v232: 사용자 '배틀 콜로세움 플레이어 크기 조금 줄이자' → 사람 키 1.75 → 1.5 */
 const PA_R = 9, PA_WH = 7, PA_PR = 0.5, PA_PH = 3.4, PA_PIL = [[3.7, 3.7], [-3.7, 3.7], [3.7, -3.7], [-3.7, -3.7]];
-const PA_HM = { mouse: 0.45, beetle: 0.45, lizard: 0.4, mantis: 0.6, turtle: 0.55, penguin: 0.8, rabbit: 0.6, cat: 0.6, dog: 0.75, monkey: 0.95, panda: 1.2, tiger: 1.5, giraffe: 2.6, elephant: 1.9, trex: 2.4, dolphin: 1.0, snowman: 1.05, croc: 0.5, dora: 0.95, sponge: 1.0, gary: 0.55, parrot: 0.5, buddy: 1.65, kid: 1.15, gf: 1.6, bf: 1.7 };
+const PA_HM = { mouse: 0.45, beetle: 0.45, lizard: 0.4, mantis: 0.6, turtle: 0.55, penguin: 0.8, rabbit: 0.6, cat: 0.6, dog: 0.75, monkey: 0.95, panda: 1.2, tiger: 1.5, giraffe: 2.6, elephant: 1.9, trex: 2.4, dolphin: 1.0, snowman: 1.05, croc: 0.5, dora: 0.95, sponge: 1.0, gary: 0.55, parrot: 0.5, buddy: 1.65, kid: 1.15, gf: 1.6, bf: 1.7, chicken: 0.5, sparrow: 0.35, boar: 0.9, raptor: 1.1 };
 // [기본 공격, 특수기, 기본 이름, 특수 이름, 던지는 물건]
 const PA_PET = {
   mouse: ['claw', 'zap', '찌릿 할퀴기', '백만 볼트'], beetle: ['horn', 'dash', '뿔 들이받기', '장수 돌진'], mantis: ['claw', 'leap', '낫 베기', '사마귀 점프'],
@@ -16359,6 +16451,7 @@ const PA_PET = {
   dolphin: ['throw', 'leap', '물대포', '점프 다이빙', 'water'], trex: ['bite', 'roar', '공룡 물기', '크앙!'],
   dora: ['throw', 'volley', '공기포', '공기포 연발', 'air'], snowman: ['throw', 'heal', '눈덩이 던지기', '따뜻한 포옹', 'snow'], croc: ['bite', 'dash', '악어 물기', '죽음의 회전'],
   sponge: ['throw', 'volley', '게살버거 던지기', '비눗방울 연발', 'burger'], gary: ['bite', 'shell', '끈적 박치기', '껍데기 숨기'], parrot: ['throw', 'volley', '깃털 던지기', '깍깍 깃털 폭풍', 'feather'],
+  chicken: ['bite', 'leap', '부리 쪼기', '푸드덕 점프'], sparrow: ['throw', 'volley', '깃털 던지기', '짹짹 깃털 폭풍', 'feather'], boar: ['horn', 'dash', '엄니 들이받기', '멧돼지 돌진'], raptor: ['claw', 'leap', '갈고리 발톱', '덮치기'], /* v389 */
 };
 const PA_P = { bite: { rg: 1.5, arc: 1.2, dmg: 11, cd: 0.55, wu: 0.12 }, claw: { rg: 1.5, arc: 1.5, dmg: 8, cd: 0.38, wu: 0.08 }, horn: { rg: 1.7, arc: 1.1, dmg: 13, cd: 0.7, wu: 0.15, kb: 4 }, long: { rg: 2.5, arc: 1.1, dmg: 11, cd: 0.7, wu: 0.18, kb: 2 }, throw: { dmg: 8, cd: 0.6, spd: 11, pr: 1 } };
 const PA_PK = { bite: '가까이서 콱 물기', claw: '빠르게 슥슥 할퀴기', horn: '들이받아 밀쳐내기', long: '멀리까지 휘두르기', throw: '멀리서 던지기' };
@@ -16366,7 +16459,7 @@ const PA_S = { zap: [6, '앞의 상대에게 번개 (잠깐 기절)'], dash: [5,
 const PA_HUM = { sword: { atk: { rg: 1.9, arc: 1.5, dmg: 11, cd: 0.34, wu: 0.1 }, sp: { rg: 2.7, arc: 7, dmg: 22, cd: 4, wu: 0.3, kb: 6.5 }, n: ['베기', '회전 베기'],
     cb: [{ rg: 1.9, arc: 1.5, dmg: 11, cd: 0.34, wu: 0.1, lg: 2.6, at: 0.32 }, { rg: 1.9, arc: 1.7, dmg: 11, cd: 0.34, wu: 0.1, lg: 2.6, at: 0.32 }, { rg: 2.2, arc: 1.2, dmg: 20, cd: 0.7, wu: 0.16, lg: 4.6, kb: 5, at: 0.45 }] } /* v298 젤다처럼: 베기 3연타 (가로 → 대각선 → 내려찍기), 특수는 360도 회전 베기 */, fire: { atk: { dmg: 9, cd: 0.55, spd: 13, pr: 1 }, sp: { dmg: 18, cd: 4.5, spd: 10, pr: 1, big: 1, spl: 1.8 }, n: ['불덩이', '큰 불덩이'] } };
 const PA_ROLL = { t: 0.42, iv: 0.3, pf: 0.2, cd: 0.55, sp: 8.2 }; // v298 구르기: 0.42초, 처음 0.3초는 안 맞고, 맞기 직전(처음 0.2초)에 피하면 러시
-const PA_PAW = { mouse: '#c8beb4', beetle: '#3a2a1a', mantis: '#6ac04a', dog: '#c89058', cat: '#f0a050', lizard: '#6aa040', rabbit: '#f4f0ea', monkey: '#8a5a30', penguin: '#2a2a34', panda: '#222228', tiger: '#f08a20', giraffe: '#e8b860', elephant: '#9a9aa8', turtle: '#5a9a4a', dolphin: '#6a9ad0', trex: '#5a8a3a', snowman: '#f4f8ff', croc: '#4a8a3a', dora: '#f4f6f8', sponge: '#f4e04a', gary: '#9ecfd8', parrot: '#3cb04a' };
+const PA_PAW = { chicken: '#e8e0d0', sparrow: '#8a6a4a', boar: '#5a4636', raptor: '#6a7a4a', mouse: '#c8beb4', beetle: '#3a2a1a', mantis: '#6ac04a', dog: '#c89058', cat: '#f0a050', lizard: '#6aa040', rabbit: '#f4f0ea', monkey: '#8a5a30', penguin: '#2a2a34', panda: '#222228', tiger: '#f08a20', giraffe: '#e8b860', elephant: '#9a9aa8', turtle: '#5a9a4a', dolphin: '#6a9ad0', trex: '#5a8a3a', snowman: '#f4f8ff', croc: '#4a8a3a', dora: '#f4f6f8', sponge: '#f4e04a', gary: '#9ecfd8', parrot: '#3cb04a' };
 const paAng = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
 const paHash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return (h ^ (h >>> 16)) >>> 0; };
 // 부드러운 값 노이즈 (0~1) · 색 밝기 바꾸기
@@ -17582,7 +17675,7 @@ Object.assign(PetRT.arena, {
  * 나 + 내 펫 vs 상대 + 상대 펫. 나는 내가 조종하고 펫은 알아서 뛴다. 몸으로 밀어서 드리블, 클릭/J 차기 (보는 쪽으로),
  * 우클릭/K 강슛 (띄워서 세게, 5초마다), Space 점프 (뜬 공은 머리로). 먼저 3골이면 이기고, 시간이 끝나 비기면 연장 골든골.
  * 공 좌표: x·y = 가운데, z = 공 바닥 높이. 골대는 x = ±SC_GX (a팀은 +x 쪽 골대에 넣는다). 호스트가 공까지 다 계산한다. */
-PB_MODES.push('soccer');
+PB_MODES.push('soccer'); { const i = PB_MODES.indexOf('sumo'); if (i >= 0) PB_MODES.splice(i, 1); } /* v389 사용자 '스모는 빼자': 고르기에서만 뺀다 (게임 코드는 남김) */
 PB_MODE_KO.soccer = '⚽ 펫 축구';
 PB_MODE_HELP.soccer = ['WASD 이동 · 마우스로 보는 쪽이 차는 쪽 · 클릭/J 차기 · 우클릭/K 강슛 (띄워서 세게) · Space 점프 (뜬 공은 머리로) · V 시점. 먼저 3골 넣으면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 방향을 정해요. 차기·강슛·점프 버튼! 먼저 3골 넣으면 이겨요.'];
 PB_ACT_KO.soccer = '차기';
@@ -17897,6 +17990,8 @@ const Arena3J = {
     this.k2Init().then(() => { if (!this.k2) return jpg(); this.k2.load(this.url(p.replace(/\.(jpg|png)(\?|$)/, '.ktx2$2')), t => cb(t), undefined, jpg); }); },
   async boot() {
     const { GLTFLoader, MeshoptDecoder } = window.T3; await MeshoptDecoder.ready;
+    /* v389 사용자 '펫 배틀 실사화': 사람은 거리와 같은 실사 몸(Hero3D, 내 옷 그대로), 펫은 실사 펫(Pet3D). 만화 기사 모델(KayKit)은 실사 몸을 못 받을 때만 */
+    if (typeof Hero3D !== 'undefined' && !window.A3J_OLD) { Hero3D.load(); if (typeof Pet3D !== 'undefined') Pet3D.load(); for (let i = 0; i < 150 && Hero3D.st === 1; i++) await new Promise(r => setTimeout(r, 100)); if (Hero3D.ready()) { this.rh = 1; this.clips = {}; this.chars = {}; this.st = 2; return; } }
     const L = new GLTFLoader(); L.setMeshoptDecoder(MeshoptDecoder);
     const get = f => new Promise((ok, no) => L.load(this.url(f), ok, undefined, no)), names = ['Knight', 'Barbarian', 'Mage', 'Rogue_Hooded'];
     const [an, ...ch] = await Promise.all([get('anims2.glb?v=1'), ...names.map(n => get(n + '.glb?v=1'))]);
@@ -17937,9 +18032,9 @@ const Arena3J = {
   /* ---- 하늘: 위로 갈수록 파랗게 + 해 + 구름 ---- */
   sky() {
     const { THREE } = T3, sa = -2.2, sd = new THREE.Vector3(-Math.cos(sa), -Math.sin(sa), 0.6).normalize();
-    const m = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uT: { value: 0 }, uSd: { value: sd } },
+    const m = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uT: { value: 0 }, uSd: { value: sd }, uM: { value: null }, uK: { value: 0 }, uO: { value: 0.06 } },
       vertexShader: 'varying vec3 vD; void main() { vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: `varying vec3 vD; uniform float uT; uniform vec3 uSd;
+      fragmentShader: `varying vec3 vD; uniform float uT; uniform vec3 uSd; uniform sampler2D uM; uniform float uK, uO;
 float h31(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float vn3(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(mix(h31(i), h31(i + vec3(1, 0, 0)), f.x), mix(h31(i + vec3(0, 1, 0)), h31(i + vec3(1, 1, 0)), f.x), f.y), mix(mix(h31(i + vec3(0, 0, 1)), h31(i + vec3(1, 0, 1)), f.x), mix(h31(i + vec3(0, 1, 1)), h31(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
@@ -17948,7 +18043,9 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
   float n = vn3(d * vec3(3.0, 3.0, 6.0) + vec3(uT * 0.015, 0.0, 0.0)) * 0.65 + vn3(d * 9.0 + vec3(uT * 0.02, 0.0, 0.0)) * 0.35, cl = smoothstep(0.55, 0.6, n) * (1.0 - q * 0.6) * step(0.02, d.z);
   c = mix(c, vec3(1.0), cl * 0.92); c = mix(c, vec3(0.86, 0.9, 0.96), cl * smoothstep(0.6, 0.75, n) * 0.0 + cl * (1.0 - smoothstep(0.55, 0.7, n)) * 0.25);
   float s = max(0.0, dot(d, uSd)); c += vec3(1.0, 0.96, 0.86) * (step(0.9993, s) * 0.9 + pow(s, 12.0) * 0.25);
+  if (uK > 0.5) { float u = atan(d.y, d.x) / 6.2831853 + 0.5 - uO, v = clamp(asin(clamp(d.z, 0.0, 1.0)) / 1.5707963, 0.004, 0.996); c = texture2D(uM, vec2(fract(u), v)).rgb; }
   gl_FragColor = vec4(c, 1.0); }` });
+    /* v389 실사 하늘: Poly Haven kloofendal puresky 사진 (위 반쪽만) */ if (this.rh) this.tex('arena/sky.jpg?v=1', t => { if (!t) return; t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; m.uniforms.uM.value = t; m.uniforms.uK.value = 1; });
     this.skyM = m; const s = new THREE.Mesh(new THREE.SphereGeometry(120, 32, 16), m); s.renderOrder = -1; s.frustumCulled = false; this.W.add(s);
   },
   /* ---- 벽 + 계단식 관중석 + 관중 + 위 아치 벽 + 깃발 ---- */
@@ -17959,11 +18056,12 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
     // 아래 벽: 벽돌 + 빨간 띠 (안쪽 면)
     const brick = this.cvTex(512, 256, (x, w, h) => { const rows = 4, bh = h / rows; for (let rI = 0; rI < rows; rI++) for (let b = -1; b < 6; b++) { const bx = b * 100 + (rI % 2) * 50, n = Math.random() * 18 - 9; x.fillStyle = `rgb(${176 + n},${158 + n},${128 + n})`; x.fillRect(bx + 2, rI * bh + 2, 96, bh - 4); x.fillStyle = 'rgba(255,255,255,.06)'; x.fillRect(bx + 2, rI * bh + 2, 96, 6); }
       x.globalCompositeOperation = 'destination-over'; x.fillStyle = '#76684f'; x.fillRect(0, 0, w, h); }, [90, 1]);
-    cyl(R, 0, 1.3, this.toon({ map: brick, side: THREE.BackSide }));
+    const re = !!this.rh, C2 = 2 * Math.PI; /* v389 실사: 돌(트래버틴) 사진 재질 */
+    cyl(R, 0, 1.3, re ? this.pmat('trav', Math.round(R * C2 / 2.4), 0.55, { side: THREE.BackSide, color: 0xe8dcc8 }) : this.toon({ map: brick, side: THREE.BackSide }));
     cyl(R, 1.3, 1.44, this.toon({ color: 0xa8282a, side: THREE.BackSide })); cyl(R, 1.44, 1.5, this.toon({ color: 0xecc44c, side: THREE.BackSide }));
     cyl(R, 1.5, 1.7, this.toon({ color: 0xccbea2, side: THREE.BackSide })); ring(R, rr(0) - 0.25, 1.7, this.toon({ color: 0xd8c8a8 }));
     // 계단: 디딤 (앉는 곳) + 다음 줄로 올라가는 면
-    const stone = this.toon({ color: 0xc4b294 }), riser = this.toon({ color: 0x8a7a64, side: THREE.BackSide });
+    const stone = re ? this.pmat('trav', 7, 7, { color: 0xeee2cc }) : this.toon({ color: 0xc4b294 }), riser = re ? this.pmat('trav', 30, 0.2, { side: THREE.BackSide, color: 0xa8987e }) : this.toon({ color: 0x8a7a64, side: THREE.BackSide });
     for (let i = 0; i < ROWS; i++) { ring(rr(i) - 0.25, rr(i) + 0.25, rz(i), stone); if (i < ROWS - 1) cyl(rr(i) + 0.25, rz(i), rz(i + 1), riser); }
     // 위 벽 (아치) + 빨간 지붕 띠
     const top = rz(ROWS - 1), RT = rr(ROWS - 1) + 0.25;
@@ -17980,6 +18078,7 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
       q.position.set(x, y, top + 4.35); q.updateMatrix(); flags.setMatrixAt(n, q.matrix); flags.setColorAt(n, new THREE.Color(cols[n % 4])); }
     W.add(flags); W.add(pole);
     // 관중: 몸 · 머리 · 머리카락 · (일어서면) 팔 — 인스턴스 하나씩, 꼭짓점 셰이더로 일어섰다 앉았다
+    if (re && Hero3D.ready()) { try { return this.crowd3(ROWS, rr, rz); } catch (e) { console.warn('crowd3', e); } }
     const P = []; for (let i = 0; i < ROWS; i++) { const r = rr(i), n = Math.floor(2 * Math.PI * r / 0.44); for (let s = 0; s < n; s++) { const a = (s + (i % 2) * 0.5) / n * Math.PI * 2, arc = a * r, h = this.h2(s, i); if (h < 0.12 || (arc % 7) < 0.6) continue; P.push({ a, r, z: rz(i), h, s, i }); } }
     const N = P.length, shirt = [0xd63a32, 0x3868d6, 0xeec440, 0x54a656, 0xececE4, 0xa456ba, 0xee8838, 0x3a3c4a, 0x28aabe, 0xfa78a0], skin = [0xf4cca8, 0xdeac80, 0xfadcbe, 0xb07a54], hair = [0x281c16, 0x18161a, 0x462c1a, 0x966030, 0xceb074];
     const ph = new Float32Array(N); P.forEach((p, k) => { ph[k] = p.h; });
@@ -17996,35 +18095,109 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
       const sh = shirt[Math.floor(this.h2(p.s * 1.7, p.i + 3.1) * 10) % 10], sk = skin[Math.floor(this.h2(p.s + 7.3, p.i * 2.1) * 4) % 4];
       body.setColorAt(k, C.set(sh)); arm2.setColorAt(k, C.set(sh)); head.setColorAt(k, C.set(sk)); hr.setColorAt(k, C.set(hair[Math.floor(this.h2(p.s * 0.37, p.i + 9.7) * 5) % 5])); });
   },
+  crowd3(ROWS, rr, rz) {
+    const { THREE } = T3, tex = this.crowdBake(), P = []; for (let i = 0; i < ROWS; i++) { const r = rr(i), n = Math.floor(2 * Math.PI * r / 0.5); for (let s = 0; s < n; s++) { const a = (s + (i % 2) * 0.5 + (this.h2(s, i + 0.5) - 0.5) * 0.3) / n * Math.PI * 2, arc = a * r, h = this.h2(s, i); if (h < 0.14 || (arc % 7) < 0.6) continue; P.push({ a, r, z: rz(i), h, s, i }); } }
+    const N = P.length, g = new THREE.PlaneGeometry(0.9, 1.8); g.translate(0, 0.9, 0); g.rotateX(Math.PI / 2); const ph = new Float32Array(N), vv = new Float32Array(N); P.forEach((p, k) => { ph[k] = p.h; vv[k] = Math.floor(this.h2(p.s * 1.7, p.i + 3.1) * 16) % 16; });
+    g.setAttribute('aPh', new THREE.InstancedBufferAttribute(ph, 1)); g.setAttribute('aV', new THREE.InstancedBufferAttribute(vv, 1));
+    const cu = this.cu = { value: 0 }, cc = this.cc = { value: new THREE.Vector3(0, 0, 0) }, m = new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, color: 0xd8d8d8 });
+    m.onBeforeCompile = sh => { sh.uniforms.uT = cu; sh.uniforms.uCC = cc; sh.vertexShader = 'uniform float uT; uniform vec3 uCC; attribute float aPh, aV;\n' + sh.vertexShader.replace('#include <uv_vertex>', `#include <uv_vertex>
+  float up = step(0.62, sin(uT * (3.0 + floor(aPh * 4.0)) * 0.6 + aPh * 60.0)), cell = aV + up * 16.0; vMapUv = (vMapUv + vec2(mod(cell, 8.0), floor(cell / 8.0))) / vec2(8.0, 4.0);`).replace('#include <begin_vertex>', `#include <begin_vertex>
+  vec3 ip = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz; transformed *= smoothstep(2.6, 4.0, distance(ip, uCC)); /* 카메라 바로 앞 관중은 숨긴다 */
+  { float rc = length(uCC.xy), al = dot(normalize(ip.xy + 1e-4), normalize(uCC.xy + 1e-4)); transformed *= 1.0 - step(${(rr(0) - 0.3).toFixed(2)}, rc) * smoothstep(0.6, 0.78, al) * step(length(ip.xy), rc + 1.2); } /* 3인칭 카메라가 관중석 위로 나가면, 카메라 앞쪽 관중은 숨긴다 (뒤통수 판이 화면을 덮지 않게) */
+  transformed.z += up * (0.42 + 0.05 * sin(uT * 9.0 + aPh * 7.0));`); };
+    const im = new THREE.InstancedMesh(g, m, N), q = new THREE.Object3D(); im.frustumCulled = false;
+    P.forEach((p, k) => { q.position.set(Math.cos(p.a) * (p.r + 0.08), Math.sin(p.a) * (p.r + 0.08), p.z - 0.42); q.rotation.set(0, 0, p.a - Math.PI / 2); const sc = 0.92 + this.h2(p.s, p.i * 1.3) * 0.16; q.scale.set(sc, 1, sc); q.updateMatrix(); im.setMatrixAt(k, q.matrix); });
+    this.W.add(im); this.crowdM = im;
+  },
+  /* v389 실사 축구공: 하얀 가죽에 검은 오각형 12개 (정이십면체 꼭짓점 쪽), 조각 경계는 살짝 어둡게 */
+  ballGeo(g0) { const { THREE } = T3; g0.computeBoundingSphere(); const bs = g0.boundingSphere, rad = bs.radius, g = new THREE.IcosahedronGeometry(rad, 6).toNonIndexed(); g.translate(bs.center.x, bs.center.y, bs.center.z);
+    const ico = new THREE.IcosahedronGeometry(1, 0), iv = [], P = ico.getAttribute('position'); for (let i = 0; i < P.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(P, i).normalize(); if (!iv.some(u => u.distanceTo(v) < 1e-3)) iv.push(v); }
+    const pos = g.getAttribute('position'), col = new Float32Array(pos.count * 3), c = new THREE.Vector3(), a = new THREE.Vector3();
+    for (let f = 0; f < pos.count; f += 3) { c.set(0, 0, 0); for (let j = 0; j < 3; j++) c.add(a.fromBufferAttribute(pos, f + j).sub(bs.center)); c.normalize(); let best = -1, sec = -1; for (const u of iv) { const d = c.dot(u); if (d > best) { sec = best; best = d; } else if (d > sec) sec = d; }
+      const blk = best > 0.955, seam = !blk && (Math.abs(best - 0.955) < 0.005 || best - sec < 0.012), v = blk ? 0.05 : seam ? 0.55 : 0.92; for (let j = 0; j < 3; j++) col.set([v, v, v * 0.97], (f + j) * 3); }
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3)); const nr = g.getAttribute('normal'); for (let i = 0; i < pos.count; i++) { a.fromBufferAttribute(pos, i).sub(bs.center).normalize(); nr.setXYZ(i, a.x, a.y, a.z); } g0.dispose(); return g; },
+  /* ---- v389 피구도 실사 3D: 콜로세움 모래 위 코트, 비스듬히 위에서 내려다보는 직교 카메라 (2D 화면 좌표와 1:1로 맞아서 하트·이름표·불꽃은 그대로 2D) ---- */
+  DC: { u: 0.045, th: 0.87, hw: 6.75, hd: 0 },
+  dh(k) { return Math.min(2.4, Math.max(1.0, (PA_HM[k] || 0.8) * 2.6)); }, /* 피구 펫 키 (화면에서 잘 보이게 조금 크게) */
+  d3ok() { return this.on() && this.st === 2 && !!this.rh && Store.get('dodge3d', 1) !== 0; },
+  dodge3(c, V, W, H, B, G, t) {
+    this.init(); const { THREE } = T3, D = this.DC, u = D.u, sn = Math.sin(D.th), cs = Math.cos(D.th); D.hd = 66 * u / sn; this.mode({ dodge: 1, pil: [] });
+    const now = performance.now(), dt = Math.min(0.1, ((now - (this.dT || now)) / 1000) || 0.016); this.dT = now;
+    const r = this.r, sc = Math.min(1, Math.sqrt(2.2e6 / (W * H))), w = Math.round(W * sc), h = Math.round(H * sc); if (this.cv.width !== w || this.cv.height !== h) r.setSize(w, h, false);
+    const top = $('pbCv'), cv = this.cv; if (top && cv.parentNode !== top.parentNode) { cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; top.parentNode.insertBefore(cv, top); } cv.style.display = '';
+    for (const U of this.U) if (U) U.root.visible = false; if (this.ball) this.ball.visible = false;
+    const k = V.s / u, gx = sx => ((sx - V.ox) / V.s - 160) * u, gy = y2 => (y2 - 110) * u / sn, O = this.ocam || (this.ocam = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 220));
+    O.left = -W / (2 * k); O.right = W / (2 * k); O.top = H / (2 * k); O.bottom = -H / (2 * k); O.updateProjectionMatrix();
+    const tx = gx(W / 2), ty = (((H / 2 - V.oy) / V.s) - 110) * u / sn, Dd = 60; O.position.set(tx, -(ty + Dd * cs), Dd * sn); O.up.set(0, 0, 1); O.lookAt(tx, -ty, 0);
+    this.cc.value.set(tx, ty + Dd * cs, Dd * sn); this.skyM.uniforms.uT.value = t % 1000; this.cu.value = t % 1000; this.fu.value = t % 1000;
+    const DU = this.DU || (this.DU = {});
+    for (const kk of ['a', 'b']) { const P = B.S[kk], key = P.kind + (Pet3D.has(P.kind) ? 1 : 0) + (Pet3D.real && Pet3D.real(P.kind) ? 1 : 0); let Hh = DU[kk]; if (!Hh || Hh.key !== key) { if (Hh) this.W.remove(Hh.root); Hh = DU[kk] = this.mkPet3(P.kind, this.dh(P.kind)) || this.mkPet3('dog', this.dh('dog')); Hh.key = key; this.W.add(Hh.root); }
+      Hh.root.visible = true; const x = gx(V.X(G[kk + 'x'])), y = gy(G[kk + 'y']), o = kk === 'a' ? 'b' : 'a', ox = gx(V.X(G[o + 'x'])), sp = Hh.px != null ? Math.hypot(x - Hh.px, y - Hh.py) / Math.max(dt, 1e-3) : 0; Hh.px = x; Hh.py = y; Hh.sp = (Hh.sp || 0) * 0.8 + sp * 0.2;
+      const an = Hh.sp > 0.25 && Hh.vx != null ? Math.atan2(y - Hh.vy, x - Hh.vx) : ox > x ? 0 : Math.PI; Hh.vx = x; Hh.vy = y; Hh.an = Hh.an == null ? an : Hh.an + Math.atan2(Math.sin(an - Hh.an), Math.cos(an - Hh.an)) * Math.min(1, dt * 10);
+      const hit = G[kk + 'i'] > 0, dead = G[kk + 'l'] <= 0; Hh.root.position.set(x + (hit ? Math.sin(t * 50) * 0.04 : 0), y, 0); Hh.root.rotation.set(dead ? Math.PI / 2 : 0, 0, Hh.an, 'ZXY');
+      if (Hh.mats) this.tint3(Hh, { hp: 1, fl: hit && Math.floor(t * 14) % 2 ? 0.16 : 0 }, t);
+      if (Hh.pet3) { try { Pet3D.pose(Hh.pr, Hh.sp > 0.3 && !dead, Hh.sp, t, dt, { idle: G.ph === 'done' ? 1 : 0 }); } catch (e) { } } else if (Hh.hero) { this.anim(Hh, { hp: dead ? 0 : 1, mv: Math.min(1, Hh.sp / 2), wp: 'kick', at: 0, vx: 0, vy: 0, an: 0 }, G, dt); Hh.mixer.update(dt); } }
+    const BL = this.dB || (this.dB = []), bs = G.balls || [], bg = this.dBG || (this.dBG = new THREE.SphereGeometry(0.17, 20, 14)), mats = this.dBM || (this.dBM = [new THREE.MeshStandardMaterial({ color: 0xffc830, roughness: 0.45 }), new THREE.MeshStandardMaterial({ color: 0xe0402a, roughness: 0.45 })]);
+    for (let i = 0; i < Math.max(bs.length, BL.length); i++) { const b = bs[i]; let m = BL[i]; if (!b) { if (m) m.visible = false; continue; } if (!m) { m = BL[i] = new THREE.Mesh(bg, mats[0]); m.castShadow = true; this.W.add(m); }
+      m.visible = true; m.material = mats[b.o === B.me ? 0 : 1]; m.position.set(gx(V.X(b.x)), gy(b.y + 7), 7 * u / cs); m.rotation.set(t * 9, t * 7, 0); }
+    const fg = this.scene.fog; this.scene.fog = null; r.render(this.scene, O); this.scene.fog = fg; return true; /* 직교 카메라는 멀리 있어서 안개를 빼고 그린다 */
+  },
+  d3off() { if (this.DU) for (const kk in this.DU) { const Hh = this.DU[kk]; if (Hh) this.W.remove(Hh.root); } this.DU = null; if (this.dB) for (const m of this.dB) this.W.remove(m); this.dB = null; },
   h2(a, b) { const x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return x - Math.floor(x); },
+  /* v389 실사 재질: 사진 색 · 울퉁불퉁(노멀) · 거칠기 (3d/arena/<이름>_c/_n/_r). 같은 사진은 한 번만 받아 반복 횟수만 다르게 */
+  pmat(nm, rx, ry, o = {}) { const { THREE } = T3, m = new THREE.MeshStandardMaterial(Object.assign({ color: 0xffffff, roughness: 1, metalness: 0 }, o)), tx = this.ptx || (this.ptx = {});
+    for (const [k, sl] of [['c', 'map'], ['n', 'normalMap'], ['r', 'roughnessMap']]) { const f = nm + '_' + k, set = t => { if (!t) return; const c = t.clone(); c.wrapS = c.wrapT = THREE.RepeatWrapping; c.repeat.set(rx, ry); c.anisotropy = 4; if (k === 'c') c.colorSpace = THREE.SRGBColorSpace; c.needsUpdate = true; m[sl] = c; if (k === 'n') m.normalScale.set(o.ns || 1, o.ns || 1); m.needsUpdate = true; };
+      const e = tx[f]; if (e && e.t) set(e.t); else if (e) e.q.push(set); else { const q = [set]; tx[f] = { q }; this.tex('arena/' + f + '.jpg?v=1', t => { if (t && k === 'c') t.colorSpace = THREE.SRGBColorSpace; tx[f].t = t; q.forEach(fn => fn(t)); }); } }
+    return m; },
+  /* v389 실사 관중: 거리 사람(실사 몸) 16명을 앉은 모습·일어나 환호하는 모습으로 한 장에 구워, 관중석엔 판 한 장씩만 (렉 없이 수백 명) */
+  crowdBake() {
+    const { THREE } = T3, r = this.r, CW = 128, CH = 256, NV = 16, rt = new THREE.WebGLRenderTarget(CW * 8, CH * 4, { type: THREE.HalfFloatType }); rt.texture.generateMipmaps = true; rt.texture.minFilter = THREE.LinearMipmapLinearFilter;
+    const S = new THREE.Scene(), hl = new THREE.HemisphereLight(0xdfeaff, 0x8a7a62, 1.6), dl = new THREE.DirectionalLight(0xfff0dc, 2.6); dl.position.set(1.5, 4, 5); S.add(hl); S.add(dl);
+    const cam = new THREE.OrthographicCamera(-0.45, 0.45, 1.8, 0, 0.1, 20); cam.position.set(0, 0, 6); cam.lookAt(0, 0, 0);
+    const hair = ['#2a1c14', '#141214', '#4a2e1c', '#8a5a30', '#c8a86e', '#5a5a5a'], skin = ['#f2c8a4', '#e0b08a', '#f8dcc0', '#b47c56', '#8a5a3a'], top = ['#c8322e', '#2e5cc8', '#e8c040', '#3e8e4e', '#ece8e0', '#8a4aa8', '#e8803a', '#2a2c38', '#2aa0b4', '#f070a0', '#7a6a58', '#1e4a8a'], bot = ['#2a2e3e', '#3a3a3a', '#5a6a8a', '#c8b89a', '#1a1a1a', '#6a4a3a'];
+    const pick = (a, i, k) => a[Math.floor(this.h2(i * 3.1 + k, k * 7.7) * a.length) % a.length], rc = r.getRenderTarget(), cc = new THREE.Color(); r.getClearColor(cc); const ca = r.getClearAlpha();
+    r.setRenderTarget(rt); r.setClearColor(0x000000, 0); r.clear(); rt.scissorTest = true;
+    for (let i = 0; i < NV; i++) { const sh = pick(top, i, 1), P = { hair: pick(hair, i, 2), skin: pick(skin, i, 3), shirt: sh, shirt2: sh, pants: pick(bot, i, 4), shoe: '#222', longHair: this.h2(i, 5.5) < 0.45 }; let H;
+      try { const z = Room3D.zNow; Room3D.zNow = false; try { H = Hero3D.make(P); } finally { Room3D.zNow = z; } } catch (e) { continue; }
+      H.root.children.forEach(o => { if (o.geometry === Room3D.shGeo) o.visible = false; }); H.root.rotation.y = -Math.PI / 2 + (this.h2(i, 9.1) - 0.5) * 0.5; S.add(H.root);
+      for (let up = 0; up < 2; up++) { Hero3D.play(H, up ? 'Dance_Loop' : 'Sitting_Idle_Loop', 0); H.mix.update(0.01); H.mix.update(this.h2(i, up + 2.2) * 2); H.root.position.y = up ? 0.02 : 0.42; H.root.updateMatrixWorld(true);
+        const c = i + up * NV, x = (c % 8) * CW, y = Math.floor(c / 8) * CH; rt.viewport.set(x, y, CW, CH); rt.scissor.set(x, y, CW, CH); r.setRenderTarget(rt); r.render(S, cam); }
+      S.remove(H.root); H.mix.stopAllAction(); }
+    rt.scissorTest = false; rt.viewport.set(0, 0, CW * 8, CH * 4); r.setRenderTarget(rc); r.setClearColor(cc, ca); this.crowdRT = rt; return rt.texture; },
   /* ---- 경기마다: 바닥 (콜로세움 모래 / 축구장 선) · 기둥 · 골대 ---- */
   mode(A) {
-    const key = (A.soc ? 's' : 'a') + JSON.stringify(A.pil); if (this.mk === key) return; this.mk = key;
+    const key = (A.soc ? 's' : A.dodge ? 'd' : 'a') + JSON.stringify(A.pil); if (this.mk === key) return; this.mk = key;
     const { THREE } = T3; if (this.MG) { this.W.remove(this.MG); this.MG.traverse(o => { if (o.geometry) o.geometry.dispose(); }); } const MG = this.MG = new THREE.Group(); this.W.add(MG);
-    const R = PA_R, soc = !!A.soc, S = 2048, sand = this.cvTex(S, S, (x) => { const k = S / (2 * R), X = gx => (gx + R) * k, Y = gy => (R - gy) * k; // 게임 좌표 → 그림 (위 = +y)
+    const R = PA_R, soc = !!A.soc, re = !!this.rh, S = 2048, sand = this.cvTex(S, S, (x) => { const k = S / (2 * R), X = gx => (gx + R) * k, Y = gy => (R - gy) * k; // 게임 좌표 → 그림 (위 = +y)
+      if (re) { if (soc) for (let n = -9; n < 9; n++) { x.fillStyle = n % 2 ? 'rgba(255,255,220,.10)' : 'rgba(0,30,0,.10)'; x.fillRect(X(n), 0, k, S); } } else { /* v389 실사: 바닥 색·결은 사진 재질, 이 그림엔 선·줄무늬·가장자리 그늘만 */
       x.fillStyle = soc ? '#6a9a3a' : '#cba872'; x.fillRect(0, 0, S, S);
       if (soc) for (let n = -9; n < 9; n++) { x.fillStyle = n % 2 ? 'rgba(255,255,200,.06)' : 'rgba(0,40,0,.06)'; x.fillRect(X(n), 0, k, S); } // 잔디 깎은 줄무늬
       for (let n = 0; n < 26000; n++) { const v = Math.random(); x.fillStyle = soc ? (v < 0.5 ? `rgba(30,70,10,${0.06 + v * 0.12})` : `rgba(220,240,140,${(v - 0.5) * 0.16})`) : v < 0.5 ? `rgba(120,90,50,${0.05 + v * 0.1})` : `rgba(255,240,200,${(v - 0.5) * 0.18})`; const s = 1 + Math.random() * 3; x.fillRect(Math.random() * S, Math.random() * S, s, s); }
       for (let n = 0; n < 60; n++) { const g = x.createRadialGradient(0, 0, 0, 0, 0, 1), cx = Math.random() * S, cy = Math.random() * S, rr = 40 + Math.random() * 160; g.addColorStop(0, soc ? `rgba(${Math.random() < 0.5 ? '40,80,20' : '170,210,90'},.14)` : `rgba(${Math.random() < 0.5 ? '150,110,60' : '250,230,190'},.12)`); g.addColorStop(1, 'rgba(0,0,0,0)'); x.save(); x.translate(cx, cy); x.scale(rr, rr); x.fillStyle = g; x.fillRect(-1, -1, 2, 2); x.restore(); }
-      x.lineCap = 'round';
-      if (!soc) { x.strokeStyle = 'rgba(110,90,60,.45)'; x.lineWidth = 0.08 * k; for (const r of [8.4, 3.0, 1.2]) { x.beginPath(); x.arc(X(0), Y(0), r * k, 0, 7); x.stroke(); } x.fillStyle = 'rgba(255,230,180,.15)'; x.beginPath(); x.arc(X(0), Y(0), 1.2 * k, 0, 7); x.fill(); }
+      } x.lineCap = 'round';
+      if (A.dodge) { const D = this.DC, cx0 = X(-D.hw), cy0 = Y(D.hd), cw = 2 * D.hw * k, ch = 2 * D.hd * k; x.fillStyle = 'rgba(47,127,224,.09)'; x.fillRect(cx0, cy0, cw / 2, ch); x.fillStyle = 'rgba(224,72,58,.09)'; x.fillRect(cx0 + cw / 2, cy0, cw / 2, ch); /* v389 피구 코트: 왼쪽 파랑(나) · 오른쪽 빨강 */
+        x.strokeStyle = 'rgba(250,248,240,.92)'; x.lineWidth = 0.08 * k; x.strokeRect(cx0, cy0, cw, ch); x.beginPath(); x.moveTo(X(0), cy0); x.lineTo(X(0), cy0 + ch); x.stroke(); x.beginPath(); x.arc(X(0), Y(0), 0.85 * k, 0, 7); x.stroke(); }
+      else if (!soc) { x.strokeStyle = 'rgba(110,90,60,.45)'; x.lineWidth = 0.08 * k; for (const r of [8.4, 3.0, 1.2]) { x.beginPath(); x.arc(X(0), Y(0), r * k, 0, 7); x.stroke(); } x.fillStyle = 'rgba(255,230,180,.15)'; x.beginPath(); x.arc(X(0), Y(0), 1.2 * k, 0, 7); x.fill(); }
       else { for (const s of [-1, 1]) { x.fillStyle = s < 0 ? 'rgba(150,185,240,.35)' : 'rgba(240,165,150,.35)'; x.fillRect(X(s < 0 ? -8 : 5.8), Y(2.9), 2.2 * k, 5.8 * k); }
         x.strokeStyle = 'rgba(250,248,235,.9)'; x.lineWidth = 0.1 * k; x.beginPath(); x.moveTo(X(0), Y(-R)); x.lineTo(X(0), Y(R)); x.stroke(); x.beginPath(); x.arc(X(0), Y(0), 1.6 * k, 0, 7); x.stroke(); x.beginPath(); x.arc(X(0), Y(0), 8.85 * k, 0, 7); x.stroke();
         for (const s of [-1, 1]) { x.strokeRect(X(s < 0 ? -8 : 5.8), Y(2.9), 2.2 * k, 5.8 * k); x.beginPath(); x.moveTo(X(s * 8), Y(-1.85)); x.lineTo(X(s * 8), Y(1.85)); x.stroke(); } }
-      const g = x.createRadialGradient(X(0), Y(0), 8.2 * k, X(0), Y(0), R * k); g.addColorStop(0, 'rgba(60,40,20,0)'); g.addColorStop(1, 'rgba(60,40,20,.3)'); x.fillStyle = g; x.fillRect(0, 0, S, S); });
-    const fl = new THREE.Mesh(new THREE.CircleGeometry(R + 0.02, 128), this.toon({ map: sand })); fl.receiveShadow = true; MG.add(fl); this.floorT = sand;
+      const g = x.createRadialGradient(X(0), Y(0), 8.2 * k, X(0), Y(0), R * k); g.addColorStop(0, 'rgba(60,40,20,0)'); g.addColorStop(1, re ? 'rgba(60,40,20,.16)' : 'rgba(60,40,20,.3)'); x.fillStyle = g; x.fillRect(0, 0, S, S); });
+    if (re) { const fg = new THREE.CircleGeometry(R + 0.02, 128), fl = new THREE.Mesh(fg, soc ? this.pmat('grass', 9, 9, { color: new THREE.Color(1.15, 1.2, 1.05), ns: 0.8 }) : this.pmat('sand', 8, 8, { color: new THREE.Color(1.75, 1.62, 1.5) })); fl.receiveShadow = true; MG.add(fl);
+      const ov = new THREE.Mesh(fg, new THREE.MeshStandardMaterial({ map: sand, transparent: true, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 })); ov.position.z = 0.002; ov.receiveShadow = true; MG.add(ov); }
+    else { const fl = new THREE.Mesh(new THREE.CircleGeometry(R + 0.02, 128), this.toon({ map: sand })); fl.receiveShadow = true; MG.add(fl); } this.floorT = sand;
     // 기둥: 받침 · 몸통 · 머리 (돌려 깎기)
     if (A.pil && A.pil.length) { const pts = [[0, 0], [0.64, 0], [0.64, 0.26], [0.56, 0.32], [0.5, 0.42], [0.47, PA_PH - 0.5], [0.52, PA_PH - 0.38], [0.6, PA_PH - 0.3], [0.66, PA_PH - 0.18], [0.66, PA_PH], [0, PA_PH]].map(([r, h]) => new THREE.Vector2(r, h));
-      const pg = new THREE.LatheGeometry(pts, 28); pg.rotateX(Math.PI / 2); const pm = this.toon({ color: 0xe6d6b6 });
+      const pg = new THREE.LatheGeometry(pts, 28); pg.rotateX(Math.PI / 2); const pm = re ? this.pmat('trav', 2, 3, { color: 0xf0e6d4 }) : this.toon({ color: 0xe6d6b6 });
       this.pms = []; for (const [x, y] of A.pil) { const mt = pm.clone(), m = new THREE.Mesh(pg, mt); m.position.set(x, y, 0); m.castShadow = m.receiveShadow = true; MG.add(m); this.pms.push({ mt, x, y, o: 1 }); } } else this.pms = [];
     this.grass(MG, A);
     // 축구 골대 (예전 정점 그대로) + 공
     if (soc && A.socGeo) { const G0 = A.socGeo(), vm = this.toon({ vertexColors: true }); for (const k of ['gb', 'ga']) { const m = new THREE.Mesh(this.geo(G0[k]), vm); if (k === 'ga') m.rotation.z = Math.PI; m.castShadow = true; MG.add(m); }
-      const b = this.ball = new THREE.Mesh(this.geo(G0.ball), this.toon({ vertexColors: true })); b.castShadow = true; b.matrixAutoUpdate = false; this.addOl(b, this.olMat(0.012)); MG.add(b); } else this.ball = null;
+      const b = this.ball = new THREE.Mesh(re ? this.ballGeo(this.geo(G0.ball)) : this.geo(G0.ball), re ? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0 }) : this.toon({ vertexColors: true })); b.castShadow = true; b.matrixAutoUpdate = false; this.addOl(b, this.olMat(0.012)); MG.add(b); } else this.ball = null;
   },
   /* ---- 사람 모델 하나: 뼈대 복제 + 만화 재질 + 외곽선 + 동작 ---- */
   /* ---- 풀: 벽 밑 둘레 + 기둥 둘레 (축구는 경기장 전체 짧은 풀). 바람에 흔들리고, 캐릭터가 지나가면 옆으로 눕는다 ---- */
   grass(MG, A) {
+    if (this.rh) { this.gu = this.gu || { value: 0 }; this.gp = this.gp || { value: [0, 1, 2, 3, 4, 5].map(() => new T3.THREE.Vector3(99, 99, 0.1)) }; return; } /* v389 실사: 만화 풀잎 수천 개 빼기 (바닥이 사진 재질, 렉도 줄어든다) */
     const { THREE } = T3, soc = !!A.soc, P = [], rnd = Math.random, put = (x, y, h) => P.push([x, y, h, rnd() * 6.28, rnd()]);
     if (soc) { for (let n = 0; n < 14000; n++) { const r = Math.sqrt(rnd()) * 8.9, a = rnd() * 6.28, x = Math.cos(a) * r, y = Math.sin(a) * r; if (Math.abs(x) > 7.9 && Math.abs(y) < 2.2) continue; put(x, y, 0.1 + rnd() * 0.08); } }
     else { for (let n = 0; n < 7000; n++) { const r = 7.7 + Math.pow(rnd(), 0.6) * 1.28, a = rnd() * 6.28; put(Math.cos(a) * r, Math.sin(a) * r, 0.16 + rnd() * 0.26 * (r - 7.4) / 1.6); }
@@ -18080,9 +18253,14 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
     for (let i = 0; i < P.count; i++) { const a = M.get(k(i)), l = Math.hypot(a[0], a[1], a[2]) || 1, f = 0.75; /* 완전히 동그랗진 않게 원래 법선을 조금 남긴다 */ const x = N.getX(i) * (1 - f) + a[0] / l * f, y = N.getY(i) * (1 - f) + a[1] / l * f, z = N.getZ(i) * (1 - f) + a[2] / l * f, m = Math.hypot(x, y, z) || 1; N.setXYZ(i, x / m, y / m, z / m); }
     N.needsUpdate = true;
   },
-  act(H, n) { const c = this.clips[n]; if (!c) return null; return H.acts[n] || (H.acts[n] = H.mixer.clipAction(c)); },
+  act(H, n) { const c = this.clip(H, n); if (!c) return null; return H.acts[n] || (H.acts[n] = H.mixer.clipAction(c)); },
+  /* v389 실사 몸 동작 이름 (Quaternius 동작 모음): 만화 기사 동작 이름 → 실사 몸 동작 */
+  HN: { Death_A: 'Death01', Dodge_Forward: 'Roll', Dodge_Backward: 'Roll', Dodge_Left: 'Roll', Dodge_Right: 'Roll', Unarmed_Melee_Attack_Kick: 'Melee_Hook', Spellcast_Shoot: 'Spell_Simple_Shoot', '2H_Melee_Attack_Spin': 'Sword_Heavy_Combo',
+    '1H_Melee_Attack_Slice_Horizontal': 'Sword_Regular_A', '1H_Melee_Attack_Slice_Diagonal': 'Sword_Regular_B', '1H_Melee_Attack_Chop': 'Sword_Regular_C', Hit_A: 'Hit_Chest', Hit_B: 'Hit_Head', Cheer: 'Dance_Loop', Jump_Idle: 'Jump_Loop', Jump_Land: 'Jump_Land',
+    Running_A: 'Jog_Fwd_Loop', Walking_A: 'Walk_Loop', Walking_Backwards: 'Walk_Loop', Running_Strafe_Right: 'Jog_Fwd_Loop', Running_Strafe_Left: 'Jog_Fwd_Loop', Unarmed_Idle: 'Idle_Loop', Idle: 'Sword_Idle' },
+  clip(H, n) { return H.hero ? H.B.clips[this.HN[n] || n] : this.clips[n]; },
   play(H, n, once, ts = 1, fade = 0.15) {
-    const a = this.act(H, n); if (!a) return; a.timeScale = ts; if (H.cur === n) return;
+    const a = this.act(H, n); if (!a) return; if (H.hero && n === 'Walking_Backwards') ts = -ts; a.timeScale = ts; if (H.cur === n) return;
     const p = H.cur && H.acts[H.cur]; a.reset(); a.setLoop(once ? T3.THREE.LoopOnce : T3.THREE.LoopRepeat, Infinity); a.clampWhenFinished = !!once; a.enabled = true; a.setEffectiveWeight(1);
     if (p) { a.play(); p.crossFadeTo(a, fade, false); } else a.play(); H.cur = n;
   },
@@ -18097,8 +18275,8 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
     H.lat = v.at || 0; H.atT = Math.max(0, H.atT - dt);
     if ((v.fl || 0) > H.lfl + 0.01 && v.hp > 0 && H.atT <= 0 && !(H.rlT > 0)) { H.hitT = 0.32; H.hb = !H.hb; H.cur = null; } H.lfl = v.fl || 0; H.hitT = Math.max(0, H.hitT - dt);
     if (v.hp <= 0) return this.play(H, 'Death_A', true, 1.3, 0.1);
-    if (H.rlT > 0) { const c = this.clips[H.roll]; return this.play(H, H.roll, true, c ? c.duration / 0.46 : 1.4, 0.05); }
-    if (H.atT > 0) { const c = this.clips[H.atk]; return this.play(H, H.atk, true, c ? c.duration / (H.atD || 0.6) : 1, 0.05); }
+    if (H.rlT > 0) { const c = this.clip(H, H.roll); return this.play(H, H.roll, true, c ? c.duration / 0.46 : 1.4, 0.05); }
+    if (H.atT > 0) { const c = this.clip(H, H.atk); return this.play(H, H.atk, true, c ? c.duration / (H.atD || 0.6) : 1, 0.05); }
     if (H.hitT > 0) return this.play(H, H.hb ? 'Hit_B' : 'Hit_A', true, 1.6, 0.06);
     if (G.ph === 'done') return this.play(H, 'Cheer', false, 1);
     if (air) return this.play(H, 'Jump_Idle', false, 1, 0.1);
@@ -18107,7 +18285,7 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
     if (mv) { const ts = Math.max(0.6, Math.min(1.7, sp / 4.2));
       if (vf > 0.55) return sp < 1.9 ? this.play(H, 'Walking_A', false, Math.max(0.7, sp / 1.3), 0.2) : this.play(H, 'Running_A', false, ts, 0.2); /* v298 살짝 밀면 걷고 끝까지 밀면 달린다 */ if (vf < -0.55) return this.play(H, 'Walking_Backwards', false, ts * 1.4);
       return this.play(H, vs > 0 ? 'Running_Strafe_Right' : 'Running_Strafe_Left', false, ts); }
-    this.play(H, kick ? 'Unarmed_Idle' : 'Idle', false, 1, 0.25);
+    this.play(H, kick || (H.hero && fire) ? 'Unarmed_Idle' : 'Idle', false, 1, 0.25);
   },
   /* ---- 펫 한 장면: 예전 도트 입체 정점 → three 도형 (같은 그림은 기억) ---- */
   petEnt(A, v, mv, t) {
@@ -18119,6 +18297,40 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
     return e;
   },
   mkPet() { const { THREE } = T3, root = new THREE.Group(), mat = this.toon({ alphaTest: 0.2, side: THREE.DoubleSide, transparent: false }), mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat), ol = this.olMat(0.02); mesh.castShadow = true; mesh.frustumCulled = false; root.add(mesh); const o = this.addOl(mesh, ol); return { root, mesh, mat, ol, olm: o, pet: 1 }; },
+  /* ---- v389 실사: 사람 = 거리와 같은 실사 몸 (옷·머리 그대로), 펫 = 실사 펫 모델 ---- */
+  palOf(B, tm) { try { if (tm === B.me) return Profile.pal(Profile.get()); const p = B.mode === 'net' && B.foe && Net.players[B.foe]; if (p && p.pal) return Profile.pal(p.pal); const w = B.w; return (w && (w.pal || Sprites.PAL[w.sprite])) || Sprites.PAL.walker1 || Sprites.PAL.player; } catch (e) { return Sprites.PAL.walker1 || Sprites.PAL.player; } },
+  // 실사 모델(위 = +y, 앞 = +x)을 경기장 좌표(위 = +z, y 뒤집힌 세상)에 세우는 묶음
+  wrapY(obj) { const { THREE } = T3, root = new THREE.Group(), un = new THREE.Group(), o2 = new THREE.Group(); un.scale.set(1, -1, 1); o2.rotation.x = Math.PI / 2; root.add(un); un.add(o2); o2.add(obj); return root; },
+  own(o, H) { const ms = H.mats = []; o.traverse(m => { if (!m.isMesh) return; if (m.geometry === Room3D.shGeo) { m.visible = false; return; } m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false;
+    if (m.material && !Array.isArray(m.material) && m.material.emissive) { m.material = m.material.clone(); ms.push(m.material); } }); }, // 맞으면 번쩍·재가 되는 색은 이 몸만 (같은 종류 펫이 같이 번쩍이지 않게)
+  mkHero(P, wp, h) {
+    const { THREE } = T3, R = Hero3D.make(P); R.inner.scale.setScalar(R.B.s * h / HERO_H); R.root.rotation.set(0, 0, 0);
+    const H = { root: this.wrapY(R.root), hr: R, hero: 1, B: R.B, model: R.model, mixer: R.mix, acts: {}, cur: null, lat: 0, atT: 0, hitT: 0, lfl: 0 }; this.own(R.root, H);
+    const hand = R.model.getObjectByName('hand_r'); if (hand) { if (wp === 'sword') hand.add(H.sw = this.sword()); else if (wp === 'fire') { const f = H.fire = this.fireBall(); hand.add(f); } }
+    H.head = R.model.getObjectByName('head'); return H;
+  },
+  // 진짜 칼: 강철 날 (가운데 홈·끝은 뾰족) · 놋쇠 가드 · 가죽 손잡이 · 둥근 머리. 손 뼈에 쥔다
+  sword() {
+    const { THREE } = T3; if (!this.swG) { const L = 0.78, w = 0.045, t = 0.008, sh = new THREE.Shape(); sh.moveTo(-w, 0); sh.lineTo(-w * 0.86, L * 0.86); sh.lineTo(0, L); sh.lineTo(w * 0.86, L * 0.86); sh.lineTo(w, 0); sh.lineTo(-w, 0);
+        const bl = new THREE.ExtrudeGeometry(sh, { depth: t, bevelEnabled: true, bevelThickness: t * 0.9, bevelSize: w * 0.45, bevelSegments: 2, curveSegments: 1 }); bl.translate(0, 0, -t / 2); bl.computeVertexNormals();
+        this.swG = { bl, gd: new THREE.BoxGeometry(0.2, 0.026, 0.04), gp: new THREE.CylinderGeometry(0.017, 0.019, 0.15, 12), pm: new THREE.SphereGeometry(0.027, 12, 8),
+          sm: new THREE.MeshStandardMaterial({ color: 0xdfe4ea, metalness: 1, roughness: 0.22 }), bm: new THREE.MeshStandardMaterial({ color: 0xb08a3e, metalness: 1, roughness: 0.35 }), lm: new THREE.MeshStandardMaterial({ color: 0x3a2416, metalness: 0, roughness: 0.8 }) }; }
+    const G = this.swG, g = new THREE.Group(), a = new THREE.Group(); g.add(a);
+    const mk = (geo, m, y) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.castShadow = true; a.add(o); return o; };
+    mk(G.bl, G.sm, 0.03); mk(G.gd, G.bm, 0.02); mk(G.gp, G.lm, -0.06); mk(G.pm, G.bm, -0.14);
+    const S = this.SW || [0.09, 0.035, 0.02, 0, 0, -1.45, 1]; g.position.set(S[0], S[1], S[2]); g.rotation.set(S[3], S[4], S[5]); g.scale.setScalar(S[6]); return g;
+  },
+  fireBall() { const { THREE } = T3, f = new THREE.Group(), a = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 10), new THREE.MeshBasicMaterial({ color: 0xff9a28, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false })), b = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), new THREE.MeshBasicMaterial({ color: 0xfff0a0 }));
+    f.add(a); f.add(b); const pl = new THREE.PointLight(0xff8a30, 2.5, 3.5); f.add(pl); f.userData.a = a; const S = this.FB || [0.1, 0.12, 0, 1]; f.position.set(S[0], S[1], S[2]); f.scale.setScalar(S[3]); return f; },
+  mkPet3(k, h) {
+    const ppl = typeof PET_PEOPLE !== 'undefined' && PET_PEOPLE[k]; if (ppl) { const H = this.mkHero(Object.assign({}, Sprites.PAL.walker1 || {}, ppl), 'kick', h); H.ppl = 1; return H; } // 사람 펫 (친구·여자친구·남자친구)
+    if (typeof Pet3D === 'undefined' || !Pet3D.has(k)) return null; const R = Pet3D.make(k, h); R.root.rotation.set(0, 0, 0);
+    const H = { root: this.wrapY(R.root), pr: R, pet3: 1, real: !!R.real }; this.own(R.root, H); return H;
+  },
+  tint3(H, v, t) { if (!H.mats) return; let dark = 0, er = 0, eg = 0, eb = 0;
+    if (v.hp <= 0 && v.ash) dark = Math.min(1, v.ash / 0.6) * 0.9; else if (v.fl > 0) er = eg = eb = Math.min(0.5, v.fl * 3); else if (v.sh > 0) { const a = 0.25 + Math.sin(t * 10) * 0.08; eg = 0.5 * a; eb = 0.08 * a; er = 0.08 * a; } else if (v.st > 0) { er = 0.3; eg = 0.26; eb = 0.04; }
+    const key = dark * 1e6 + er * 1e4 + eg * 100 + eb; if (H.tk === key) return; H.tk = key;
+    for (const m of H.mats) { if (!m.userData.c0) m.userData.c0 = m.color.clone(); m.color.copy(m.userData.c0).multiplyScalar(1 - dark); m.emissive.setRGB(er, eg, eb); } },
   // 상태 색: 재 (까맣게) · 맞음 (하얗게 번쩍) · 보호막 (초록) · 기절 (노랑)
   tint(H, v, t) {
     const m = H.mat; let dark = 0, er = 0, eg = 0, eb = 0;
@@ -18127,7 +18339,7 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
   },
   /* ---- 매 프레임 ---- */
   draw(A, R, G, B, ci, cam, t, dt) {
-    this.init(); this.mode(A); const { THREE } = T3, r = this.r, fp = !!cam.fp;
+    this.init(); if (this.DU) this.d3off(); this.mode(A); const { THREE } = T3, r = this.r, fp = !!cam.fp;
     R.fe = R.fe ? R.fe * 0.95 + dt * 1000 * 0.05 : 16; R.fn = (R.fn | 0) + 1; if (R.fn > 45) { R.fn = 0; if (R.fe > 22 && this.fx && this.fx.renderTarget1.samples > 0) { for (const rt of [this.fx.renderTarget1, this.fx.renderTarget2]) { rt.samples = 0; rt.dispose(); } } /* v298 느린 폰은 계단 없애기(MSAA)부터 끈다 */ else if (R.fe > 22) R.gq = Math.max(0.45, (R.gq || 1) * 0.85); else if (R.fe < 15 && (R.gq || 1) < 1) R.gq = Math.min(1, R.gq * 1.08); }
     const sc = Math.min(1, Math.sqrt(2.2e6 / (cam.iw * cam.ih))) * (R.gq || 1), w = Math.round(cam.iw * sc), h = Math.round(cam.ih * sc);
     if (this.cv.width !== w || this.cv.height !== h) r.setSize(w, h, false);
@@ -18143,11 +18355,20 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
     // 캐릭터 (v298 내 칼이 맞으면 아주 잠깐 멈칫: 타격감)
     const adt = R.hst > 0 ? dt * 0.08 : dt; R.hst = Math.max(0, (R.hst || 0) - dt);
     for (let i = 0; i < G.u.length; i++) {
-      const v = G.u[i], hum = v.k === 'hum', nm = hum ? A3J_CH[v.wp === 'fire' ? 'fire' : v.wp === 'kick' ? 'kick' : 'sword'][v.tm === 'b' ? 1 : 0] : '', key = hum ? nm + '|' + v.wp + v.tm : 'p';
-      let H = this.U[i]; if (!H || H.key !== key) { if (H) this.W.remove(H.root); H = this.U[i] = hum ? this.mkHum(nm, v.wp, v.tm) : this.mkPet(); H.key = key; this.W.add(H.root); }
-      const hide = (fp && i === ci) || (v.hp <= 0 && v.ash && v.ash > 1.6); H.root.visible = !hide; if (hide) { if (hum) H.mixer.update(dt); continue; }
+      const v = G.u[i], RH = this.rh && Hero3D.ready(), p3 = !(v.k === 'hum') && RH && (typeof PET_PEOPLE !== 'undefined' && PET_PEOPLE[v.k] || typeof Pet3D !== 'undefined' && Pet3D.has(v.k)), hum = v.k === 'hum' || (p3 && typeof PET_PEOPLE !== 'undefined' && !!PET_PEOPLE[v.k]),
+        nm = v.k === 'hum' && !RH ? A3J_CH[v.wp === 'fire' ? 'fire' : v.wp === 'kick' ? 'kick' : 'sword'][v.tm === 'b' ? 1 : 0] : '', key = v.k === 'hum' ? (RH ? 'r|' + v.wp + v.tm + JSON.stringify(this.palOf(B, v.tm)).length : nm + '|' + v.wp + v.tm) : p3 ? 'r|' + v.k + (Pet3D.real && Pet3D.real(v.k) ? 1 : 0) : 'p';
+      let H = this.U[i]; if (!H || H.key !== key) { if (H) this.W.remove(H.root); H = this.U[i] = v.k === 'hum' ? (RH ? this.mkHero(this.palOf(B, v.tm), v.wp, v.h) : this.mkHum(nm, v.wp, v.tm)) : (p3 && this.mkPet3(v.k, v.h)) || this.mkPet(); H.key = key; this.W.add(H.root); }
+      const me1 = fp && i === ci, hide = me1 || (v.hp <= 0 && v.ash && v.ash > 1.6); H.root.visible = !hide; if (hide) { if (H.mixer) H.mixer.update(dt); continue; }
       const dist = Math.hypot(v.x - cam.px, v.y - cam.py, (v.z || 0) + 0.8 - cam.z), sink = v.hp <= 0 && v.ash ? Math.max(0, (v.ash - 0.8) / 0.8) : 0;
-      this.tint(H, v, t);
+      if (H.mats) this.tint3(H, v, t); else this.tint(H, v, t);
+      if (H.pet3) { const mv = v.hp > 0 && v.mv > 0.15, sp = Math.hypot(v.vx || 0, v.vy || 0), fall = v.hp <= 0 && !v.ash ? Math.min(1, v.dead / 0.3) : 0, ldq = v.hp > 0 ? Math.sin(Math.min(1, (v.ld || 0) / 0.22) * Math.PI) : 0;
+        const aq = v.at > 0 && v.hp > 0 ? Math.sin(Math.min(1, (H.atq = (v.at > (H.la || 0) + 0.02 ? 0 : (H.atq || 0) + dt)) / 0.25) * Math.PI) : 0; H.la = v.at || 0; /* 공격: 앞으로 홱 덤볐다 돌아온다 */
+        H.root.position.set(v.x + Math.cos(v.an) * aq * 0.25 * v.h, v.y + Math.sin(v.an) * aq * 0.25 * v.h, (v.z || 0) - sink * v.h); H.root.rotation.set(fall * Math.PI / 2, 0, v.an, 'ZXY'); H.root.scale.set(1 + ldq * 0.08, 1 + ldq * 0.08, 1 - ldq * 0.12);
+        try { Pet3D.pose(H.pr, mv, sp, t, dt, { idle: G.ph === 'done' ? 1 : 0 }); } catch (e) { } continue; }
+      if (hum && H.hero) { H.root.position.set(v.x, v.y, (v.z || 0) - sink * 1.6); const sp = Math.hypot(v.vx || 0, v.vy || 0), vf = sp > 0.05 ? ((v.vx || 0) * Math.cos(v.an) + (v.vy || 0) * Math.sin(v.an)) / sp : 1, vs = sp > 0.05 ? ((v.vx || 0) * -Math.sin(v.an) + (v.vy || 0) * Math.cos(v.an)) / sp : 0;
+        const sw = v.hp > 0 && v.mv > 0.15 && Math.abs(vf) < 0.55 && !(H.atT > 0) && !me1 ? Math.atan2(vs, Math.max(0, vf)) * 0.9 : 0; H.sy = (H.sy || 0) + (sw - (H.sy || 0)) * Math.min(1, dt * 8); /* 옆으로 달리면 몸을 그쪽으로 (실사 동작엔 옆걸음이 없다) */
+        H.root.rotation.set(0, 0, v.an + H.sy); if (H.ppl) { const P2 = Object.assign({}, v, { wp: 'kick' }); this.anim(H, P2, G, dt); } else this.anim(H, v, G, dt); H.mixer.update(adt);
+        if (H.fire) { const s2 = (1 + Math.sin(t * 14) * 0.15 + (v.at > 0 ? 0.35 : 0)) * (this.FB ? this.FB[3] : 1); H.fire.scale.setScalar(s2); H.fire.visible = v.hp > 0; } continue; }
       if (hum) { H.root.position.set(v.x, v.y, (v.z || 0) - sink * 1.6); H.root.rotation.set(0, 0, v.an); this.anim(H, v, G, dt); H.mixer.update(adt); this.trail(H, dt); H.ol.userData.w.value = Math.max(0.012, Math.min(0.04, dist * 0.005));
         if (H.fire) { const s = 1 + Math.sin(t * 14) * 0.15 + (v.at > 0 ? 0.35 : 0); H.fire.scale.setScalar(s); H.fire.visible = v.hp > 0; } }
       else { const mv = v.hp > 0 && v.mv > 0.15, e = this.petEnt(A, v, mv, t); if (!e) { H.root.visible = false; continue; }
@@ -19538,7 +19759,7 @@ Object.assign(Room3D, {
     oc.position.set(cx, Math.sin(Z3_EL) * D, cz + Math.cos(Z3_EL) * D); oc.lookAt(cx, 0, cz); oc.updateMatrixWorld(); this.cc = oc;
     const sun = this.zsun, R2 = Math.max(vw, vh / this.zSq()) * 0.62 + 6; sun.position.set(cx - 9, 22, cz + 14); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
     const sc = sun.shadow.camera; if (this.shFit()) this.zShFit(oc, sun, sc); else if (sc.right !== R2 || sc.left !== -R2 || sc.top !== R2) { sc.left = -R2; sc.right = R2; sc.top = R2; sc.bottom = -R2; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
-        if (!this.zsg) this.zSignals(z); this.zSigTick(t); this.zBusSign(performance.now() / 1000);
+        if (!this.zsg) this.zSignals(z); this.zSigTick(t); this.zBusSign(performance.now() / 1000); if (typeof MineExit !== 'undefined') MineExit.z3(this, performance.now()); /* v389 광산 출구 3D */
         if (PBR.done && !this.zti) this.zTrees(z); if (PBR.done && (!this.zp && (!this.zpWait || Props3D.ver !== this.zpVer))) this.zProps(z); // v331 거리 소품 (받으면 한 번에 세운다)
         if (PBR.done && typeof Bld3D !== 'undefined' && Bld3D.zPoles) Bld3D.zPoles(this, z); // v349 전봇대·전선 (bldreal.js, 구역마다 한 번)
         if (Car3D.ready() && Car3D.real && !this.carWarm && this.r) { this.carWarm = 1; try { /* v371 끊김: 실사 길거리 차(아이오닉·타이어…) 재질을 처음 보일 때 만들면 멈춘다 → 받자마자 미리 (탈것 warmUp과 같은 방법) */
@@ -19577,7 +19798,7 @@ Object.assign(Room3D, {
         if (water) { const Bt = Ride3D.BOAT[c.ride] || Ride3D.BOAT.lifeboat, f = Bt.p, v = mv ? c.spd / TILE : 0, da = H.pa == null ? 0 : Math.atan2(Math.sin(c.a - H.pa), Math.cos(c.a - H.pa)), w = dt > 0 ? da / dt : 0; H.pa = c.a; /* v346 실제 배처럼: 큰 범선은 느리고 작게 흔들리고 돌면 바깥으로, 모터보트는 안으로 눕고 빨리 달리면 뱃머리가 든다 */
           H.hl = (H.hl || 0) + (Bt.h * Math.tanh(v * w * 0.15) - (H.hl || 0)) * Math.min(1, dt * 2.2 * f); H.bw = (H.bw || 0) + ((mv ? Bt.bow * Math.min(1, v / 6) : 0) - (H.bw || 0)) * Math.min(1, dt * 1.5 * f);
           lx += Math.sin(t * 1.7 * f + ph) * 0.05 * Bt.a + H.hl; lz += H.bw + Math.sin(t * 1.3 * f + ph) * 0.025 * Bt.a; H.root.position.y = 0.03 + Math.sin(t * 2.2 * f + ph) * 0.035 * Bt.a; }
-        let ya = -c.a; const YS = RIDE3[c.ride].ys; if (YS) { const d0 = H.ya == null ? 0 : Math.atan2(Math.sin(ya - H.ya), Math.cos(ya - H.ya)), st = Math.abs(d0) > 2 ? d0 : d0 * Math.min(1, dt * YS); H.ya = H.ya == null ? ya : H.ya + st; const w = dt > 0 && Math.abs(d0) <= 2 ? -st / dt : 0, v = mv ? c.spd / TILE : 0, bw = Math.max(-0.4, Math.min(0.4, Math.atan(v * w * 0.035))); H.yb = (H.yb || 0) + (bw - (H.yb || 0)) * Math.min(1, dt * 3); ya = H.ya; lx += H.yb; } /* v388 사용자 '용은 달릴 때 덜덜': 손가락 방향(좌/우 켜고 끄기)이 바뀔 때마다 날개 끝까지 긴 용이 한 장마다 홱홱 돌아 떨려 보였다. 보이는 방향은 부드럽게 따라가고, 도는 쪽으로 몸을 눕힌다 (실제 큰 새·비행기처럼) */
+        let ya = -c.a; const YS = RIDE3[c.ride].ys; if (YS) { const d0 = H.ya == null ? 0 : Math.atan2(Math.sin(ya - H.ya), Math.cos(ya - H.ya)), st = Math.abs(d0) > 2 ? d0 : d0 * Math.min(1, dt * YS); H.ya = H.ya == null ? ya : H.ya + st; const w = dt > 0 && Math.abs(d0) <= 2 ? -st / dt : 0, v = mv ? c.spd / TILE : 0, bw = Math.max(-0.4, Math.min(0.4, Math.atan(v * w * 0.035))); H.yb = (H.yb || 0) + (bw - (H.yb || 0)) * Math.min(1, dt * 3); ya = H.ya; lx += H.yb; } const CL = RIDE3[c.ride].climb; if (CL && hv) { const hh = Math.max(H.hv, H.hr), vz = dt > 0 && H.ph0 != null ? (hh - H.ph0) / dt : 0; H.ph0 = hh; H.cp = (H.cp || 0) + (Math.max(-0.3, Math.min(0.3, vz * CL)) - (H.cp || 0)) * Math.min(1, dt * 3); lz += H.cp; } /* v388 사용자 '용은 달릴 때 덜덜': 손가락 방향(좌/우 켜고 끄기)이 바뀔 때마다 날개 끝까지 긴 용이 한 장마다 홱홱 돌아 떨려 보였다. 보이는 방향은 부드럽게 따라가고, 도는 쪽으로 몸을 눕힌다 (실제 큰 새·비행기처럼) */
         H.root.rotation.set(lx, ya, lz, 'YXZ');
         const fl = RIDE3[c.ride].fly; if (fl) { H.fl = (H.fl || 0) + ((mv ? Math.min(1, c.spd / (TILE * 4)) : 0) - (H.fl || 0)) * Math.min(1, dt * 3); const th = fl * H.fl, hc = RIDE3[c.ride].y * RIDE3[c.ride].L / TILE + HERO_H * 0.55; /* v346 날개: 날면 실제 비행처럼 몸을 앞으로 눕힌다 (몸 가운데를 축으로, 빠를수록 더) */
           H.root.rotation.z -= th; H.root.position.x -= Math.cos(c.a) * hc * Math.sin(th); H.root.position.z -= Math.sin(c.a) * hc * Math.sin(th); H.root.position.y += hc * (1 - Math.cos(th)); }
@@ -19747,7 +19968,7 @@ const RIDE3 = {
   ferrari: { sf: 1, brake: 'taillight', v: 2, L: 70, y: 0.015, noLeg: 1, grip: [0.05, 0.035, 0.13, 0.05], seats: [[-0.04, -0.1], [-0.04, 0.1]] },
   train: { sf: 1, v: 2, L: 160, y: 0.03, stand: 1, rods: [['Cube002_0', 'Cube000_0', 'Cube004_0'], ['Cube021_0', 'Cube022_0', 'Cube020_0']], seats: [[-0.08, 0], [-0.34, -0.03], [-0.34, 0.03], [-0.4, -0.03], [-0.4, 0.03], [-0.28, 0], [-0.22, 0], [-0.16, 0]] },
   lambo: { sf: 1, brake: 'OuterRed', v: 2, L: 68, y: -0.025, /* v387 사용자 '람보르기니 머리 나왔잖아': 지붕(1.06)보다 머리가 높아 더 낮게 앉힌다 */ noLeg: 1, grip: [0.07, 0.035, 0.13, 0.05], seats: [[-0.02, -0.1], [-0.02, 0.1]] },
-  jet: { sf: 1, L: 150, y: 0.105, noLeg: 1, grip: [0.31, 0.04, 0.135, 0.05], seats: [[0.25, 0], [0.19, 0]] }, // v337 조종석 안에 상체만 (사용자 '제트기도')
+  jet: { sf: 1, L: 150, y: 0.105, noLeg: 1, hover: 4.8, ys: 4, climb: 0.12, /* v389 날개처럼 건물 위로 (뜰 때 코를 들고 내려앉을 때 숙인다) */ grip: [0.31, 0.04, 0.135, 0.05], seats: [[0.25, 0], [0.19, 0]] }, // v337 조종석 안에 상체만 (사용자 '제트기도')
   wings: { sf: 1, L: 34, y: 0.35, stand: 1, fly: 1.2, flap: 1, hover: 4.2, off: [-0.12, 0.42], seats: [[0, 0]] },
   dragon: { sf: 1, L: 120, y: 0.175, idle: 0.3, hover: 0.6, ys: 5, bone: 'spine_05', grip: [0.31, 0.025, 0.08, 0.7], leg: [0.5, 0.6], seats: [[0.21, 0], [0.13, 0], [0.06, 0]] }, // v337 날개 사이 등 (사용자 '용은또 뭐야'): 날갯짓하는 몸 뼈를 따라간다
   // v337 grip = [손 앞뒤, 두 손 간격의 반, 높이, 숙이기] (길이 배, 사용자 '잡고 타야지'), leg = [다리 벌림, 아래로] (배는 무릎 세우기 < 0), noLeg = 차 안 다리 숨기기, bone = 탄 사람이 따라갈 몸 뼈

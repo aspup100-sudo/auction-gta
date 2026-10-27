@@ -632,7 +632,7 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 .mnPop { position:absolute; top:40%; transform:translate(-50%,0); font-weight:800; font-size:20px; color:#ffe7a8; text-shadow:0 2px 0 #3a2000, 0 0 10px rgba(255,180,60,.6); animation:mnPop 1.1s ease-out forwards; white-space:nowrap; }
 .mnPop.coal { color:#fff; font-size:23px; } .mnPop.gold { font-size:38px; color:#ffd84a; animation-duration:2.6s; text-shadow:0 3px 0 #5a3500, 0 0 24px rgba(255,200,60,.9); }
 @keyframes mnPop { 0% { opacity:0; transform:translate(-50%,8px) scale(.8) } 15% { opacity:1; transform:translate(-50%,0) scale(1.08) } 100% { opacity:0; transform:translate(-50%,-64px) scale(1) } }
-.mnJoy { position:absolute; left:calc(max(18px, env(safe-area-inset-left)) + 48px); bottom:max(18px, env(safe-area-inset-bottom)); width:136px; height:136px; border-radius:50%; background:radial-gradient(circle, rgba(18,13,8,.35) 0%, rgba(18,13,8,.66) 70%); border:2px solid rgba(240,180,74,.35); box-shadow:0 6px 20px rgba(0,0,0,.5), inset 0 0 18px rgba(0,0,0,.6); touch-action:none; cursor:pointer; }
+.mnJoy { position:absolute; left:16px; bottom:16px; width:136px; height:136px; border-radius:50%; background:radial-gradient(circle, rgba(18,13,8,.35) 0%, rgba(18,13,8,.66) 70%); border:2px solid rgba(240,180,74,.35); box-shadow:0 6px 20px rgba(0,0,0,.5), inset 0 0 18px rgba(0,0,0,.6); touch-action:none; cursor:pointer; }
 .mnJoy span { position:absolute; font-size:13px; color:rgba(240,220,180,.5); pointer-events:none; } .mjU { top:7px; left:50%; transform:translateX(-50%); } .mjD { bottom:7px; left:50%; transform:translateX(-50%); } .mjL { left:9px; top:50%; transform:translateY(-50%); } .mjR { right:9px; top:50%; transform:translateY(-50%); }
 .mjKnob { position:absolute; left:50%; top:50%; width:58px; height:58px; margin:-29px 0 0 -29px; border-radius:50%; background:radial-gradient(circle at 40% 34%, #6a5536, #33281a 70%); border:2px solid rgba(240,180,74,.55); box-shadow:0 4px 10px rgba(0,0,0,.6); pointer-events:none; transition:transform .12s ease-out; }
 .mnJoy.on .mjKnob { transition:none; background:radial-gradient(circle at 40% 34%, #8a6c40, #44331d 70%); } .mnJoy.on { border-color:rgba(240,180,74,.6); }
@@ -650,7 +650,7 @@ i.hj { font-style:normal; display:inline-block; font-size:11px; font-weight:700;
 .mnCard .mcT { width:100%; border-collapse:collapse; margin:4px 0 12px; font-size:14px; } .mnCard .mcT td { padding:5px 4px; border-bottom:1px solid rgba(240,180,74,.15); } .mnCard .mcT td:last-child { text-align:right; color:#fff; font-weight:700; } .mnCard .mcT .sum td { color:#ffd27a; font-size:16px; border-bottom:0; }
 .short .mnDebt { min-width:190px; padding:6px 10px 5px; } .short .mnDebt h4 { font-size:11.5px; margin-bottom:2px; } .short .mnDebt .nums b { font-size:12.5px; } .short .mnDebt small { font-size:9.5px; }
 .short #mnMap { width:84px; height:84px; } .short .mnSub { bottom:96px; font-size:13px; max-width:56vw; }
-.short .mnJoy { left:calc(max(14px, env(safe-area-inset-left)) + 40px); width:112px; height:112px; } .short .mjKnob { width:48px; height:48px; margin:-24px 0 0 -24px; }
+.short .mnJoy { left:calc(env(safe-area-inset-left, 0px) + 14px); bottom:14px; width:112px; height:112px; } /* v390 길거리 조이스틱과 같은 자리 (가운데가 겹치게, 사용자 2026-10-27) */ .short .mjKnob { width:48px; height:48px; margin:-24px 0 0 -24px; }
 .short .mnDig { width:92px; height:92px; } .short .mnDig i { font-size:26px; } .short .mnDig b { font-size:14px; } .short .mnDig small { display:none; }
 .short .mnCard .mcIn { padding:14px 18px 12px; } .short .mnCard h3 { font-size:18px; margin:4px 0 6px; } .short .mnCard p { font-size:12.5px; margin-bottom:6px; } .short .mnCard .mcT { font-size:12.5px; margin-bottom:6px; } .short .mnCard .mcT td { padding:3px 4px; }
 /* v354 광산 버튼 다듬기 (사용자 '버튼들도 쫌 다듬자'): 실사 갱도에 맞춘 무광 쇠 버튼 + 호박색 테두리 + 선 아이콘. 위 옛 규칙을 덮어쓴다 */
@@ -1003,7 +1003,7 @@ i.dia { display:inline-block; width:30px; height:17px; vertical-align:middle; cl
 .pbEdit { position:absolute; left:auto; right:max(14px, var(--sr)); top:78px; bottom:auto; /* v291 사용자 '키 조정할 수 있는 것도 오른쪽 위로' */ width:34px; height:34px; border-radius:50%; border:2px solid rgba(255,255,255,.75); background:rgba(20,24,34,.55); color:#fff; font:700 17px/1 var(--ui); pointer-events:auto; touch-action:none; padding:0; } .short .pbEdit { top:70px; width:30px; height:30px; font-size:15px; }
 .pbEditBar { display:none; position:absolute; left:50%; top:10px; transform:translateX(-50%); z-index:6; gap:8px; align-items:center; background:rgba(10,12,18,.88); color:#fff; padding:6px 8px 6px 12px; border-radius:10px; pointer-events:auto; font:700 13px var(--ui); white-space:nowrap; } .pbEditBar button { font:700 13px var(--ui); padding:5px 12px; border-radius:8px; border:1px solid #fff6; background:#2a3142; color:#fff; } .pbEditBar #pbEditDone { background:#d8b45a; color:#1a1408; border-color:#d8b45a; }
 .pbPad.pbEditing .pbEditBar { display:flex; } .pbPad.pbEditing .pbEdit { display:none; } .pbPad.pbEditing #pbStick, .pbPad.pbEditing #pbHop, .pbPad.pbEditing #pbJmp, .pbPad.pbEditing #pbAct, .pbPad.pbEditing #pbView, .pbPad.pbEditing #pbRoll { outline:2px dashed #ffd84a; outline-offset:3px; cursor:move; } .pbPad .dragging { opacity:.8; }
-.short .pbStick { width:80px; height:80px; left:8px; bottom:8px; } .short .pbB1 { width:70px; height:70px; font-size:13px; } .short .pbB2 { width:56px; height:56px; } .short .pbB3 { width:50px; height:50px; } .short .pbB4 { width:46px; height:46px; font-size:11px; margin-bottom:52px; } .short .pbBtns { right:8px; bottom:8px; }
+.short .pbStick { width:80px; height:80px; left:calc(env(safe-area-inset-left, 0px) + 22px); bottom:20px; } /* v390 길거리 조이스틱 자리 */ .short .pbB1 { width:70px; height:70px; font-size:13px; } .short .pbB2 { width:56px; height:56px; } .short .pbB3 { width:50px; height:50px; } .short .pbB4 { width:46px; height:46px; font-size:11px; margin-bottom:52px; } .short .pbBtns { right:8px; bottom:8px; }
 #pbAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color: #e9ecdf; background: radial-gradient(120% 90% at 0% 0%, #2f3626 0%, #151a10 55%, #0e110b 100%); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 #frAsk { position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); z-index:80; min-width:260px; max-width:min(380px, 92vw); display:flex; flex-direction:column; gap:4px; text-align:center; padding:12px 16px 12px; font-family:var(--ui); color: #e9ecdf; background: radial-gradient(120% 90% at 0% 0%, #2f3626 0%, #151a10 55%, #0e110b 100%); border:2px dashed #a8701a; border-radius:12px; box-shadow:0 0 0 4px #f0d890, 0 10px 28px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
 #pbAsk.in { opacity:1; pointer-events:auto; transform:translate(-50%, 0); } #pbAsk .tk { font-style:normal; font:800 11px var(--ui); letter-spacing:3px; color: #ffc56a; } #pbAsk b { font-size:15px; } #pbAsk span { font-size:12px; color: #ffc56a; } #pbAsk .sm { font-size:11px; opacity:.8; } #pbAsk div { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:6px; } #pbAsk .btn:not(.gold) { background: #232a1a; color: #e9ecdf; border-color: #454b33; } .short #pbAsk { bottom:10px; }
@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v389</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v390</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -2760,7 +2760,7 @@ Object.assign(FEEL, {
   parkedCarKeepSec: 60, // 다른 사람 차: 마지막 위치 신호 뒤 이만큼은 그 자리에 세워 둔 걸로 보인다
   trafficSpacing: 560,    // NPC 차 1대당 도로 길이(px). 260 → 400 (사용자 2026-10-14: 차가 너무 많다) → 560 (2026-10-27 '차 조금 줄이자', 약 30% 줄임)
   carStuckSec: 1.2,       // 페달을 밟는데 이만큼 안 움직이면 끼인 것으로 보고 빼낸다(초)
-  camZoomAtMax: 0.75,     // 최고속일 때 줌 배수 (정지 1.0)
+  camZoomAtMax: 0.85,     // 최고속일 때 줌 배수 (정지 1.0). 0.75 → 0.85 (2026-10-27 사용자 카드 '조금만 멀어지게': 달릴 때 보이는 넓이 1.8배 → 1.4배, 컴퓨터 렉)
   repairMin: 10000, repairMax: 50000,
   fineSignal: 60000,      // 신호위반 과태료(연출)
   fineSpeed: 40000,       // 보행자 근처 과속
@@ -4200,20 +4200,25 @@ function updateTraffic(dt, z) {
       }
     }
     // 앞차 / 내 차
-    let waiting = false, stuckAhead = false;
+    let waiting = false, stuckAhead = false, backOff = false;
     if (lead && lead.gap < car.len + 30) { target = Math.min(target, Math.max(0, (lead.gap - car.len - 8) * 3)); if (lead.o.v < 5) stuckAhead = true; }
     if ((car.waitT || 0) > FEEL.npcYieldWait && r.stops.some(st => inBox(st.c, me))) car.uj = 2.5; car.uj = Math.max(0, (car.uj || 0) - dt); const unjam = car.uj > 0; /* v382 교차로 안에서 서로 막혀 4초 넘으면 옆길 차는 무시하고 빠져나감 */
     const cA = Math.cos(me.a), sA = Math.sin(me.a); /* v376 차마다 다른 차 전부와 견줄 때 내 방향 cos·sin을 한 번만 (값 같음) */
     Game.traffic.forEach((o, oi) => {
-      if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane) || (unjam && o.road !== r)) return;
+      if (o === car || (o.road === r && o.dirn === car.dirn && o.lane === car.lane)) return; /* 2026-10-27 사용자 '겹쳐지는것': 빠져나갈 때도 코앞 차 위로는 지나가지 않는다 (예전엔 옆길 차를 아예 안 봐서 버스끼리 겹쳤다) */
       // 다른 도로·차선의 차가 바로 앞에 있으면(교차로) 멈춰서 양보. 서로 마주 서서 영영 막히면 잠시 뒤 천천히 지나가되, 코앞의 차 위로는 올라타지 않는다
-      const q = P[oi]; const dx = q.x - me.x, dy = q.y - me.y; if (Math.abs(dx) + Math.abs(dy) > 90) return;
+      const q = P[oi]; const dx = q.x - me.x, dy = q.y - me.y, R = car.len / 2 + o.len / 2 + 30; if (dx * dx + dy * dy > R * R) return; /* 2026-10-27 겹침: 예전엔 |dx|+|dy| > 90이면 안 봐서 비스듬한 길·버스(길이 104) 앞차를 못 보고 겹쳐 지나갔다 */
       const fwd = dx * cA + dy * sA, side = Math.abs(-dx * sA + dy * cA);
       // 상대 차가 비스듬히(교차로) 있으면 길이가 옆으로 삐져나오므로, 상대의 앞·옆 폭을 내 축으로 투영해서 본다
       const ca = Math.abs(Math.cos(q.a - me.a)), sa = Math.abs(Math.sin(q.a - me.a)); const oAhead = ca * o.len / 2 + sa * o.wid / 2, oSide = ca * o.wid / 2 + sa * o.len / 2;
-      if (fwd > 0 && fwd < car.len / 2 + oAhead + 3 && side < car.wid / 2 + oSide + 1) { target = 0; waiting = true; return; } // 코앞: 무조건 정지
-      if (fwd > 0 && fwd < car.len / 2 + oAhead + 14 && side < car.wid / 2 + oSide + 2) { if ((car.waitT || 0) < FEEL.npcYieldWait) { target = 0; waiting = true; } else target = Math.min(target, 35); }
+      if (Math.abs(fwd) < car.len / 2 + oAhead && side < car.wid / 2 + oSide && -dx * Math.cos(q.a) - dy * Math.sin(q.a) > fwd) return; /* 2026-10-27 겹침: 이미 겹쳐 있으면 더 앞으로 나간 차가 먼저 빠져나간다 (둘 다 서서 겹친 채 굳지 않게) */
+      const bd = Math.max(0, car.v) * Math.max(0, car.v) / 600; /* 2026-10-27 겹침: 서는 데 걸리는 거리(감속 300)만큼 미리 */
+      if (fwd > 0 && fwd < car.len / 2 + oAhead + 3 + bd && side < car.wid / 2 + oSide + 1) { target = 0; waiting = true; if (unjam && o.road !== r && oi < ci) backOff = true; return; } // 코앞: 무조건 정지 (서로 막혔으면 번호 큰 차가 조금 물러나 길을 터 준다)
+      if (unjam && o.road !== r) return;
+      const sd = -dx * sA + dy * cA, vl = Math.max(0, o.v) * (-Math.cos(q.a) * sA + Math.sin(q.a) * cA), cl = ci > oi && sd * vl < 0 ? Math.abs(vl) * 0.5 : 0; /* 2026-10-27 겹침: 옆길 차가 내 길로 들어오는 중이면 (0.5초 뒤 자리까지) 미리 양보. 서로 양보해 멈추지 않게 번호 큰 차만 */
+      if (fwd > 0 && fwd < car.len / 2 + oAhead + 14 + bd && side < car.wid / 2 + oSide + 2 + cl) { if ((car.waitT || 0) < FEEL.npcYieldWait) { target = 0; waiting = true; } else target = Math.min(target, 35); }
     });
+    if (backOff && !Game.traffic.some(o => o !== car && o.road === r && o.dirn === car.dirn && o.lane === car.lane && (car.s - o.s) * car.dirn > 0 && (car.s - o.s) * car.dirn < car.len / 2 + o.len / 2 + 6)) target = -18; /* 뒤에 차가 없을 때만 천천히 후진 */
     car.waitT = waiting ? (car.waitT || 0) + dt : 0;
     let blockedByMe = false;
     if (Game.car) { const c = Game.car; const dx = c.x - me.x, dy = c.y - me.y; const fwd = dx * Math.cos(me.a) + dy * Math.sin(me.a), side = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a)); if (fwd > 0 && fwd < 50 && side < 12) { target = 0; blockedByMe = true; } }
@@ -15634,7 +15639,7 @@ const PetRT = {
     if (G.ph === 'play' && F.pv.ph === 'count') F.ex = 0.8; F.pv.ph = G.ph; },
   draw(c, W, H, B, G, t) {
     if (this[G.m] && this[G.m].full) return this[G.m].full(c, W, H, B, G, t); // 콜로세움: 1인칭 화면을 통째로 그린다
-    const V = this.view(W, H, B), F = this.fxOf(B); V.d3 = 0; if (G.m === 'dodge' && typeof Arena3J !== 'undefined' && Arena3J.on() && Arena3J.st !== 2) Arena3J.load(); if (G.m === 'dodge' && typeof Arena3J !== 'undefined' && Arena3J.d3ok()) { try { V.d3 = Arena3J.dodge3(c, V, W, H, B, G, t) ? 1 : 0; } catch (e) { console.warn('dodge3', e); Store.set('dodge3d', 0); } } /* v389 피구 실사 3D (뒤 그림판), 이 판엔 하트·이름표·불꽃만 */
+    const V = this.view(W, H, B), F = this.fxOf(B); V.d3 = 0; const m3 = G.m === 'dodge' || G.m === 'sumo'; if (m3 && typeof Arena3J !== 'undefined' && Arena3J.on() && Arena3J.st !== 2) Arena3J.load(); if (m3 && typeof Arena3J !== 'undefined' && Arena3J.d3ok(G.m)) { try { V.d3 = Arena3J[G.m + '3'](c, V, W, H, B, G, t) ? 1 : 0; } catch (e) { console.warn(G.m + '3', e); Store.set(G.m === 'sumo' ? 'sumo3d' : 'dodge3d', 0); } } /* v390 스모도 3D */ /* v389 피구 실사 3D (뒤 그림판), 이 판엔 하트·이름표·불꽃만 */
     if (V.d3) c.clearRect(0, 0, W, H); else { if (typeof Arena3J !== 'undefined') Arena3J.hide(); c.fillStyle = '#14161e'; c.fillRect(0, 0, W, H); }
     c.save(); if (F.sh > 0.3) c.translate(Math.round((Math.random() - 0.5) * F.sh * V.s * 0.6), Math.round((Math.random() - 0.5) * F.sh * V.s * 0.6));
     this[G.m].draw(c, V, G, B, t, W, H); c.restore();
@@ -15708,6 +15713,14 @@ const PetRT = {
       return null;
     },
     timeUp(G) { return Math.hypot(G.ax - G.cx, G.ay - G.cy) < Math.hypot(G.bx - G.cx, G.by - G.cy) ? 'a' : 'b'; },
+    draw3(c, V0, G, B, t) { /* v390 스모 3D: 도효·펫은 Arena3J가 그리고, 여기선 돌진 고리·이름표·! 표시·불꽃만 (판 위 높이에 맞춘 화면 좌표) */
+      const V = Arena3J.v3(V0, G), s = V.s, R = G.R, D = Arena3J.DC;
+      for (const k of ['a', 'b']) { const P = B.S[k], x = G[k + 'x'], y = G[k + 'y'], d = Math.hypot(x - G.cx, y - G.cy), out = d > R && G.ph === 'done', rad = PetRT.sumo.rad(G['s' + k]), ty = V.Y(y) - (Arena3J.dh(P.kind) * Math.cos(D.th) / D.u * 0.8 + 4) * s;
+        if (k === B.me && G.ph === 'play') PetRT.ring(c, V, x, y, 1 - G[k + 'cd'] / 1.5, rad * 1.05);
+        if (!out) PetRT.nameTag(c, V, k === B.me ? '나' : B.foeName, V.X(x), ty, k === B.me);
+        if (d > R - 9 && G.ph === 'play') PetRT.tag(c, '!', V.X(x) + 10 * s, ty - 4 * s, '#ff5a4a', 9 * s); }
+      PetRT.fxDraw(c, V, B);
+    },
     ai(G, k, dt, A) {
       const o = k === 'a' ? 'b' : 'a', mx = G[k + 'x'], my = G[k + 'y'], ox = G[o + 'x'], oy = G[o + 'y'], dc = Math.hypot(mx - G.cx, my - G.cy);
       let x, y; if (dc > G.R * 0.62) { x = G.cx - mx; y = G.cy - my; } else { x = ox - mx + (G.cx - ox) * -0.25; y = oy - my + (G.cy - oy) * -0.25; } // 상대를 바깥쪽으로 미는 방향
@@ -15727,6 +15740,7 @@ const PetRT = {
         if (d > G.R - 9 && G.ph === 'play' && Math.random() < dt * 5) PetRT.sweat(B, x + (Math.random() - 0.5) * 8, y - 18); }
     },
     draw(c, V, G, B, t, W, H) {
+      if (V.d3) return this.draw3(c, V, G, B, t);
       const s = V.s, F = PetRT.fxOf(B), SX = V.SX, Y = V.Y, cx = G.cx, cy = G.cy, R = G.R;
       let g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#24160e'); g.addColorStop(0.45, '#3c2616'); g.addColorStop(1, '#1a100a'); c.fillStyle = g; c.fillRect(0, 0, W, H);
       // 뒤 벽: 나무 기둥 + 깃발
@@ -16432,7 +16446,7 @@ const PetVote = {
 PB_MODES.push('arena');
 PB_MODES.splice(0, PB_MODES.length, 'arena', 'dodge', 'sumo'); // v188 (사용자 2026-10-17 '지금 배틀 콜로세움, 피구 빼고 다 없애자' → '아 펫 스모는 나두자'): 다른 게임 코드는 남겨 두고 고르기에서만 뺀다
 PB_MODE_KO.arena = '🏟️ 콜로세움';
-PB_MODE_HELP.arena = ['WASD 이동 · Space 점프 · Shift 구르기 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 (칼은 이어 누르면 3연타) · 우클릭/K 특수기 · V 1인칭/3인칭 · [ ] 마우스 감도. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 구르기·점프·특수·공격 버튼 (공격을 이어 누르면 3연타, 공격이 오는 순간 구르면 러시!), 시점 버튼으로 1인칭/3인칭! 상대 팀 둘 다 쓰러뜨리면 이겨요.']; /* v231: Space = 점프 (사용자 '점프로 할 수 있게') */
+PB_MODE_HELP.arena = ['WASD 이동 · Space 점프 · Shift 구르기 · 화면 클릭하면 마우스로 둘러보기 (←/→도 돼요) · 클릭/J 공격 (칼은 이어 누르면 3연타) · 우클릭/K 특수기 · [ ] 마우스 감도. 상대 팀 둘 다 쓰러뜨리면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 둘러봐요. 구르기·점프·특수·공격 버튼 (공격을 이어 누르면 3연타, 공격이 오는 순간 구르면 러시!)! 상대 팀 둘 다 쓰러뜨리면 이겨요.']; /* v231: Space = 점프 (사용자 '점프로 할 수 있게') */
 PB_ACT_KO.arena = '공격';
 PB_APT.arena = ['펫 + 내 실력', b => b[0] * 0.3 + b[1] * 0.45 + b[3] * 0.25];
 PB_ART.arena = ['#e8b070', '#5a2a18'];
@@ -16526,7 +16540,7 @@ PetRT.arena = {
     const hn = { a: B.me === 'a' ? this.myName() : String(B.foeName || '상대'), b: B.me === 'b' ? this.myName() : String(B.foeName || '상대') };
     const u = []; for (const tm of ['a', 'b']) for (const pet of [0, 1]) u.push(this.mk(B, tm, pet, A[tm].wp, hn[tm]));
     if (typeof Arena3J !== 'undefined') Arena3J.load(); // v295: 새 3D 그림은 판이 시작될 때부터 받아 둔다
-    this.aiS = []; this.R = null; B.ya = B.me === 'a' ? 0 : Math.PI; this.look = { dx: 0, dy: 0 }; this.fp = !!Store.get('arenaFP2', true); /* v221: 사용자 '콜로세움 1인칭으로' → 처음엔 1인칭 (새 키라 예전 설정도 1인칭부터) */ B.pi = 0; this.mb = {}; this.hold = {};
+    this.aiS = []; this.R = null; B.ya = B.me === 'a' ? 0 : Math.PI; this.look = { dx: 0, dy: 0 }; this.fp = false; /* v390 사용자 '콜로세움 1인칭 없애자, 젤다처럼 3인칭으로 싸우게' → 늘 3인칭 (v221 1인칭 설정은 안 쓴다) */ B.pi = 0; this.mb = {}; this.hold = {};
     const hum = { [B.me]: true, [foe]: B.mode === 'net' };
     return { u, ctl: { a: A.a.ctl, b: A.b.ctl }, hum, pr: [], ev: [], eid: 0, kf: [], pid: 0 };
   },
@@ -16658,7 +16672,7 @@ PetRT.arena = {
     const T = PetRT.tp, L = B.loc, K = Keys, k = (...n) => n.some(x => K[x]) ? 1 : 0, now = performance.now(), dt = L.rt ? Math.min(0.05, (now - L.rt) / 1000) : 0; L.rt = now;
     const f = k('w', 'ㅈ', 'ArrowUp') - k('s', 'ㄴ', 'ArrowDown'), sx = k('d', 'ㅇ') - k('a', 'ㅁ');
     B.ya += (k('ArrowRight') - k('ArrowLeft')) * 2.6 * dt + this.look.dx; this.look.dx = 0; B.ya = paAng(B.ya, 0);
-    const vk = k('v', 'ㅍ'); if (vk && !L.pv) { this.fp = !this.fp; Store.set(this.fpKey, this.fp); Sound.play('click'); } L.pv = vk; // v192: V = 1인칭/3인칭
+    this.fp = false; /* v390 V 시점 바꾸기 없앰: 콜로세움은 3인칭만 */
     B.pi = Math.max(-1.3, Math.min(1.3, (B.pi || 0) + (k('PageUp') - k('PageDown')) * 1.6 * dt - (this.look.dy || 0))); this.look.dy = 0; // v191: 위아래 보기 (보기만, 싸움엔 영향 없음)
     let x = sx + T.x, y = -f + T.y; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
     const ha = !!(k('j', 'ㅓ') || this.mb[0] || this.hold.a), hs = !!(k('k', 'ㅏ') || this.mb[2] || this.hold.s), hh = !!(k(' ') || this.hold.h), hr = !!(k('Shift', 'l', 'ㅣ') || this.hold.r); /* v298 Shift/L = 구르기 */ /* v231: Space = 점프, 공격은 클릭/J */
@@ -16677,6 +16691,8 @@ PetRT.arena = {
     for (const v of cand) { const dx = v.x - U.x, dy = v.y - U.y, dd = Math.hypot(dx, dy), off = Math.abs(paAng(Math.atan2(dy, dx), L.fa)); if (dd > rg || off > 2) continue; const sc = dd + off * 1.5; if (sc < bd) { bd = sc; best = Math.atan2(dy, dx); } }
     if (best != null) L.fa = best;
   },
+  lockOn(G, U, B) { const L = B.loc || {}, fa = L.fa != null ? L.fa : (U.an != null ? U.an : B.ya), rg = U.k === 'hum' && U.wp === 'fire' ? 11 : 4.5; let best = null, bd = 1e9; /* face()와 같은 고르기 (그래서 표시된 적을 친다) */
+    for (const v of G.u) { if (v.tm === U.tm || v.hp <= 0) continue; const dx = v.x - U.x, dy = v.y - U.y, dd = Math.hypot(dx, dy), off = Math.abs(paAng(Math.atan2(dy, dx), fa)); if (dd > rg || off > 2) continue; const sc = dd + off * 1.5; if (sc < bd) { bd = sc; best = v; } } return best; },
   // 받은 쪽: 호스트 상태를 따라가고, 내 캐릭터는 내 입력으로 미리 움직인다
   guest(B, dt) {
     const S = B.G, D = B.D, a = Math.min(1, dt * 14); if (!S.u || S.u.length !== 4) return;
@@ -16695,7 +16711,7 @@ PetRT.arena = {
     if (B.fresh) { D.pr = (S.pr || []).map(p => Object.assign({}, p)); B.fresh = false; } else for (const p of D.pr || []) { p.x += p.vx * dt; p.y += p.vy * dt; }
   },
   /* ---- 폰 버튼 + 마우스 ---- */
-  pad() { return `<div class="pbPad m-arena"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns"><button class="pbB4" id="pbRoll">구르기</button><button class="pbB3" id="pbHop">점프</button><button class="pbB2" id="pbJmp">특수</button><button class="pbB1" id="pbAct">공격</button></div><button class="pbView" id="pbView">시점</button></div>`; },
+  pad() { return `<div class="pbPad m-arena"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns"><button class="pbB4" id="pbRoll">구르기</button><button class="pbB3" id="pbHop">점프</button><button class="pbB2" id="pbJmp">특수</button><button class="pbB1" id="pbAct">공격</button></div></div>`; },
   bind() {
     const cv = $('pbCv'); if (!cv) return; const me = this;
     for (const [id, key] of [['pbAct', 'a'], ['pbJmp', 's'], ['pbHop', 'h'], ['pbRoll', 'r']]) { const b = $(id); if (!b) continue; b.onpointerdown = e => { e.preventDefault(); me.hold[key] = true; b.classList.add('dn'); }; b.onpointerup = b.onpointercancel = b.onpointerleave = () => { me.hold[key] = false; b.classList.remove('dn'); }; }
@@ -17085,7 +17101,9 @@ PetRT.arena = {
       if (n.c) { c.font = F(sz * 0.45, 900); c.strokeText('CRIT!', X, Y - sz * 0.85); c.fillStyle = '#ffd84a'; c.fillText('CRIT!', X, Y - sz * 0.85); } c.globalAlpha = 1; }
     R.nums = R.nums.filter(n => n.t < 0.85);
     // 조준점 + 맞힘 표시
-    let cx = W / 2, cy = cam.hz * cam.k; if (cam.gl && cam.fp === false) { const fa = U.an != null ? U.an : B.ya, q = this.p3(cam, U.x + Math.cos(fa) * 2.6, U.y + Math.sin(fa) * 2.6, U.k === 'hum' ? 1.0 : U.h * 0.6); if (q.w > 0.1) { cx = q.sx * cam.k; cy = q.sy * cam.k; } } /* 3인칭: 캐릭터 앞쪽에 */ c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy, fs * 0.75, 0, 7); c.stroke(); c.fillStyle = '#fff'; c.fillRect(cx - 1.5, cy - 1.5, 3, 3);
+    let cx = W / 2, cy = cam.hz * cam.k; if (cam.gl && cam.fp === false) { const fa = U.an != null ? U.an : B.ya, q = this.p3(cam, U.x + Math.cos(fa) * 2.6, U.y + Math.sin(fa) * 2.6, U.k === 'hum' ? 1.0 : U.h * 0.6); if (q.w > 0.1) { cx = q.sx * cam.k; cy = q.sy * cam.k; } } /* 3인칭: 캐릭터 앞쪽에 */ const lk = cam.gl && cam.fp === false && !this.soc && U.hp > 0 ? this.lockOn(G, U, B) : null; /* v390 젤다식 주목: 칼(불) 닿는 거리 안 가장 가까운 적 머리 위에 노란 표시, 공격하면 그쪽으로 돈다 */
+    if (lk) { const q = this.p3(cam, lk.x, lk.y, (lk.z || 0) + (lk.k === 'hum' ? 2.45 * PA_HS : lk.h * 1.3 + 0.7)); if (q.w > 0.1) { const X = q.sx * cam.k, Y = q.sy * cam.k - Math.abs(Math.sin(t * 5)) * fs * 0.25, a = fs * 0.55; c.lineWidth = 3; c.strokeStyle = 'rgba(40,24,0,.75)'; c.fillStyle = R.hm > 0 ? '#ff7a3a' : '#ffd84a'; c.beginPath(); c.moveTo(X - a, Y - a * 1.1); c.lineTo(X + a, Y - a * 1.1); c.lineTo(X, Y); c.closePath(); c.stroke(); c.fill(); } }
+    if (!lk) { c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy, fs * 0.75, 0, 7); c.stroke(); c.fillStyle = '#fff'; c.fillRect(cx - 1.5, cy - 1.5, 3, 3); }
     if (R.hm > 0 || R.hk > 0) { const kill = R.hk > 0; R.hk = Math.max(0, R.hk - dt); const a = fs * 0.5, b = fs * 1.15; c.strokeStyle = kill ? '#ff3a2a' : '#fff'; c.lineWidth = 3; c.beginPath(); for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { c.moveTo(cx + sx * a, cy + sy * a); c.lineTo(cx + sx * b, cy + sy * b); } c.stroke(); }
     // 위: 팀 칸 + 시간
     const tb = fs * 0.5, pr = fs * 1.15, me = B.me, foe = me === 'a' ? 'b' : 'a';
@@ -17675,9 +17693,9 @@ Object.assign(PetRT.arena, {
  * 나 + 내 펫 vs 상대 + 상대 펫. 나는 내가 조종하고 펫은 알아서 뛴다. 몸으로 밀어서 드리블, 클릭/J 차기 (보는 쪽으로),
  * 우클릭/K 강슛 (띄워서 세게, 5초마다), Space 점프 (뜬 공은 머리로). 먼저 3골이면 이기고, 시간이 끝나 비기면 연장 골든골.
  * 공 좌표: x·y = 가운데, z = 공 바닥 높이. 골대는 x = ±SC_GX (a팀은 +x 쪽 골대에 넣는다). 호스트가 공까지 다 계산한다. */
-PB_MODES.push('soccer'); { const i = PB_MODES.indexOf('sumo'); if (i >= 0) PB_MODES.splice(i, 1); } /* v389 사용자 '스모는 빼자': 고르기에서만 뺀다 (게임 코드는 남김) */
+PB_MODES.push('soccer'); /* v390 사용자 '스모도 3d로' → 스모 다시 넣음 (v389에선 뺐다) */
 PB_MODE_KO.soccer = '⚽ 펫 축구';
-PB_MODE_HELP.soccer = ['WASD 이동 · 마우스로 보는 쪽이 차는 쪽 · 클릭/J 차기 · 우클릭/K 강슛 (띄워서 세게) · Space 점프 (뜬 공은 머리로) · V 시점. 먼저 3골 넣으면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 방향을 정해요. 차기·강슛·점프 버튼! 먼저 3골 넣으면 이겨요.'];
+PB_MODE_HELP.soccer = ['WASD 이동 · 마우스로 보는 쪽이 차는 쪽 · 클릭/J 차기 · 우클릭/K 강슛 (띄워서 세게) · Space 점프 (뜬 공은 머리로) · 먼저 3골 넣으면 이겨요!', '왼쪽 조이스틱으로 움직이고 화면을 끌어서 방향을 정해요. 차기·강슛·점프 버튼! 먼저 3골 넣으면 이겨요.'];
 PB_ACT_KO.soccer = '차기';
 PB_APT.soccer = ['빠르기·힘', b => b[3] * 0.6 + b[1] * 0.4];
 PB_ART.soccer = ['#7ad070', '#1e4a2a'];
@@ -17692,7 +17710,7 @@ PetRT.soccer = Object.assign(Object.create(PetRT.arena), {
   init(B) {
     const foe = B.me === 'a' ? 'b' : 'a', hn = { a: B.me === 'a' ? this.myName() : String(B.foeName || '상대'), b: B.me === 'b' ? this.myName() : String(B.foeName || '상대') };
     const u = []; for (const tm of ['a', 'b']) for (const pet of [0, 1]) { const o = PetRT.arena.mk.call(this, B, tm, pet, 'sword', hn[tm]); if (!pet) o.wp = 'kick'; o.scm = 5; o.kw = 0; o.kq = 0; u.push(o); }
-    this.aiS = []; this.R = null; this.gbl = null; B.ya = B.me === 'a' ? 0 : Math.PI; B.pi = 0.1; this.look = { dx: 0, dy: 0 }; this.fp = !!Store.get('socFP', false); /* 축구는 처음엔 3인칭 (공이 발밑에 보여야 해서) */ this.mb = {}; this.hold = {};
+    this.aiS = []; this.R = null; this.gbl = null; B.ya = B.me === 'a' ? 0 : Math.PI; B.pi = 0.1; this.look = { dx: 0, dy: 0 }; this.fp = false; /* v390 콜로세움은 3인칭만 */ /* 축구는 처음엔 3인칭 (공이 발밑에 보여야 해서) */ this.mb = {}; this.hold = {};
     const G = { u, ctl: { a: 0, b: 0 }, hum: { [B.me]: true, [foe]: B.mode === 'net' }, pr: [], ev: [], eid: 0, kf: [], pid: 0, bl: { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0 }, sc: { a: 0, b: 0 }, gp: 0, lt: -1, tc: { a: 0, b: 0 }, ot: 0, fin: '' };
     this.kickoff(G); return G;
   },
@@ -17815,7 +17833,7 @@ PetRT.soccer = Object.assign(Object.create(PetRT.arena), {
     p.x += p.vx * dt; p.y += p.vy * dt; if (p.z > 0 || p.vz > 0) { p.vz -= 13 * dt; p.z += p.vz * dt; if (p.z < 0) { p.z = 0; p.vz = 0; } }
     D.bl = p;
   },
-  pad() { return `<div class="pbPad m-arena"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns"><button class="pbB3" id="pbHop">점프</button><button class="pbB2" id="pbJmp">강슛</button><button class="pbB1" id="pbAct">차기</button></div><button class="pbView" id="pbView">시점</button></div>`; },
+  pad() { return `<div class="pbPad m-arena"><div class="pbStick" id="pbStick"><i id="pbNub"></i></div><div class="pbBtns"><button class="pbB3" id="pbHop">점프</button><button class="pbB2" id="pbJmp">강슛</button><button class="pbB1" id="pbAct">차기</button></div></div>`; },
   hands() {}, // 1인칭이어도 손은 안 그린다 (발로 차는 게임)
   shd(G) { const b = G.bl; return G.u.concat(b ? [{ x: b.x, y: b.y, r: SC_BR * 0.95, z: b.z, hp: 1 }] : []); }, // 바닥 그림자: 넷 + 공
   /* ---- 그리기: 캐릭터 다음에 골대 둘 + 공 ---- */
@@ -18012,7 +18030,7 @@ const Arena3J = {
     // v296 젤다처럼: 명암 경계가 살짝 부드러운 2단 (그림자 쪽은 하늘빛이 비쳐 푸르스름)
     const gv = [70, 72, 78, 120, 205, 238, 250, 255], gd = new Uint8Array(gv.flatMap(v => [v, v, v, 255])), gm = this.grad = new THREE.DataTexture(gd, gv.length, 1, THREE.RGBAFormat); gm.minFilter = gm.magFilter = THREE.LinearFilter; gm.needsUpdate = true;
     const hemi = new THREE.HemisphereLight(0xb4d0ff, 0x8a9468, 1.45); hemi.position.set(0, 0, 1); W.add(hemi);
-    const sun = this.sun = new THREE.DirectionalLight(0xffe9cc, 2.2), sa = -2.2; sun.position.set(-Math.cos(sa) * 16, -Math.sin(sa) * 16, 14); sun.target.position.set(0, 0, 0); W.add(sun); W.add(sun.target);
+    const sun = this.sun = new THREE.DirectionalLight(0xffe9cc, 2.2), sa = -2.2; sun.position.set(-Math.cos(sa) * 16, -Math.sin(sa) * 16, 14); sun.target.position.set(0, 0, 0); W.add(sun); W.add(sun.target); const fill = this.fill = new THREE.DirectionalLight(0xfff2e2, 0); W.add(fill); W.add(fill.target); /* v390 3인칭: 카메라 쪽에서 비추는 보조 빛 (해를 마주 봐도 캐릭터가 까맣게 안 보이게, 그림자 없음) */
     sun.castShadow = true; const sc = sun.shadow.camera; sc.left = -11; sc.right = 11; sc.top = 11; sc.bottom = -11; sc.near = 1; sc.far = 50; const mob = matchMedia && matchMedia('(pointer: coarse)').matches; sun.shadow.mapSize.set(mob ? 1024 : 2048, mob ? 1024 : 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
     this.sky(); this.stands(); this.U = []; this.pc = new Map();
     // 빛 번짐 (밝은 하늘·불덩이가 은은하게 번진다)
@@ -18119,29 +18137,46 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
   /* ---- v389 피구도 실사 3D: 콜로세움 모래 위 코트, 비스듬히 위에서 내려다보는 직교 카메라 (2D 화면 좌표와 1:1로 맞아서 하트·이름표·불꽃은 그대로 2D) ---- */
   DC: { u: 0.045, th: 0.87, hw: 6.75, hd: 0 },
   dh(k) { return Math.min(2.4, Math.max(1.0, (PA_HM[k] || 0.8) * 2.6)); }, /* 피구 펫 키 (화면에서 잘 보이게 조금 크게) */
-  d3ok() { return this.on() && this.st === 2 && !!this.rh && Store.get('dodge3d', 1) !== 0; },
-  dodge3(c, V, W, H, B, G, t) {
-    this.init(); const { THREE } = T3, D = this.DC, u = D.u, sn = Math.sin(D.th), cs = Math.cos(D.th); D.hd = 66 * u / sn; this.mode({ dodge: 1, pil: [] });
+  d3ok(m) { return this.on() && this.st === 2 && !!this.rh && Store.get(m === 'sumo' ? 'sumo3d' : 'dodge3d', 1) !== 0; },
+  dodge3(c, V, W, H, B, G, t) { return this.play3('dodge', c, V, W, H, B, G, t); },
+  sumo3(c, V, W, H, B, G, t) { return this.play3('sumo', c, V, W, H, B, G, t); },
+  SU: { hP: 0.5 }, /* v390 스모 도효 높이 (m) */
+  v3(V, G) { const D = this.DC, sn = Math.sin(D.th), up = this.SU.hP * Math.cos(D.th) * V.s / D.u, y0 = V.Y(G.cy); return Object.assign({}, V, { Y: y => y0 + (y - G.cy) * V.s * sn - up }); }, /* 스모 3D 위에 2D(이름표·고리·불꽃)를 맞춰 그리는 화면 좌표 */
+  /* 피구·스모 공통: 비스듬히 위 직교 카메라. 피구는 화면 y를 그대로 (깊이 /sin), 스모는 판이 진짜 동그랗게 보이도록 게임 y = 땅 y (화면에선 sin만큼 눌림, 2D 덧그림은 PetRT.v3로 맞춘다) */
+  play3(m, c, V, W, H, B, G, t) {
+    this.init(); const { THREE } = T3, D = this.DC, u = D.u, sn = Math.sin(D.th), cs = Math.cos(D.th), su = m === 'sumo', cy0 = su ? G.cy : 110, yk = su ? u : u / sn, hP = su ? this.SU.hP : 0; D.hd = 66 * u / sn; this.mode(su ? { sumo: 1, pil: [], R: G.R * u } : { dodge: 1, pil: [] });
     const now = performance.now(), dt = Math.min(0.1, ((now - (this.dT || now)) / 1000) || 0.016); this.dT = now;
     const r = this.r, sc = Math.min(1, Math.sqrt(2.2e6 / (W * H))), w = Math.round(W * sc), h = Math.round(H * sc); if (this.cv.width !== w || this.cv.height !== h) r.setSize(w, h, false);
     const top = $('pbCv'), cv = this.cv; if (top && cv.parentNode !== top.parentNode) { cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; top.parentNode.insertBefore(cv, top); } cv.style.display = '';
     for (const U of this.U) if (U) U.root.visible = false; if (this.ball) this.ball.visible = false;
-    const k = V.s / u, gx = sx => ((sx - V.ox) / V.s - 160) * u, gy = y2 => (y2 - 110) * u / sn, O = this.ocam || (this.ocam = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 220));
+    const k = V.s / u, gx = sx => ((sx - V.ox) / V.s - 160) * u, gy = y2 => (y2 - cy0) * yk, O = this.ocam || (this.ocam = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 220));
     O.left = -W / (2 * k); O.right = W / (2 * k); O.top = H / (2 * k); O.bottom = -H / (2 * k); O.updateProjectionMatrix();
-    const tx = gx(W / 2), ty = (((H / 2 - V.oy) / V.s) - 110) * u / sn, Dd = 60; O.position.set(tx, -(ty + Dd * cs), Dd * sn); O.up.set(0, 0, 1); O.lookAt(tx, -ty, 0);
+    const tx = gx(W / 2), ty = (H / 2 - V.Y(cy0)) * u / (V.s * sn), Dd = 60; O.position.set(tx, -(ty + Dd * cs), Dd * sn); O.up.set(0, 0, 1); O.lookAt(tx, -ty, 0);
     this.cc.value.set(tx, ty + Dd * cs, Dd * sn); this.skyM.uniforms.uT.value = t % 1000; this.cu.value = t % 1000; this.fu.value = t % 1000;
     const DU = this.DU || (this.DU = {});
     for (const kk of ['a', 'b']) { const P = B.S[kk], key = P.kind + (Pet3D.has(P.kind) ? 1 : 0) + (Pet3D.real && Pet3D.real(P.kind) ? 1 : 0); let Hh = DU[kk]; if (!Hh || Hh.key !== key) { if (Hh) this.W.remove(Hh.root); Hh = DU[kk] = this.mkPet3(P.kind, this.dh(P.kind)) || this.mkPet3('dog', this.dh('dog')); Hh.key = key; this.W.add(Hh.root); }
       Hh.root.visible = true; const x = gx(V.X(G[kk + 'x'])), y = gy(G[kk + 'y']), o = kk === 'a' ? 'b' : 'a', ox = gx(V.X(G[o + 'x'])), sp = Hh.px != null ? Math.hypot(x - Hh.px, y - Hh.py) / Math.max(dt, 1e-3) : 0; Hh.px = x; Hh.py = y; Hh.sp = (Hh.sp || 0) * 0.8 + sp * 0.2;
       const an = Hh.sp > 0.25 && Hh.vx != null ? Math.atan2(y - Hh.vy, x - Hh.vx) : ox > x ? 0 : Math.PI; Hh.vx = x; Hh.vy = y; Hh.an = Hh.an == null ? an : Hh.an + Math.atan2(Math.sin(an - Hh.an), Math.cos(an - Hh.an)) * Math.min(1, dt * 10);
-      const hit = G[kk + 'i'] > 0, dead = G[kk + 'l'] <= 0; Hh.root.position.set(x + (hit ? Math.sin(t * 50) * 0.04 : 0), y, 0); Hh.root.rotation.set(dead ? Math.PI / 2 : 0, 0, Hh.an, 'ZXY');
+      let hit = G[kk + 'i'] > 0, dead = G[kk + 'l'] <= 0, z = 0, rx = dead ? Math.PI / 2 : 0;
+      if (su) { const dc = Math.hypot(G[kk + 'x'] - G.cx, G[kk + 'y'] - G.cy), out = dc > G.R && G.ph === 'done', edge = dc > G.R - 9 && G.ph === 'play'; hit = false; dead = false; z = out ? 0.02 : hP; rx = out ? 0.5 : G[kk + 'dt'] > 0 ? 0.22 : 0; if (edge) rx += Math.sin(t * 22) * 0.1; if (out) Hh.fall = Math.min(1, (Hh.fall || 0) + dt * 3); else Hh.fall = 0; if (out) z = hP * (1 - Hh.fall) + 0.02; } /* 스모: 판 위에 서고, 돌진하면 앞으로 숙이고, 가장자리에선 휘청, 밀려나면 판 밖으로 떨어진다 */
+      Hh.root.position.set(x + (hit ? Math.sin(t * 50) * 0.04 : 0), y, z); Hh.root.rotation.set(rx, 0, Hh.an, 'ZXY');
       if (Hh.mats) this.tint3(Hh, { hp: 1, fl: hit && Math.floor(t * 14) % 2 ? 0.16 : 0 }, t);
       if (Hh.pet3) { try { Pet3D.pose(Hh.pr, Hh.sp > 0.3 && !dead, Hh.sp, t, dt, { idle: G.ph === 'done' ? 1 : 0 }); } catch (e) { } } else if (Hh.hero) { this.anim(Hh, { hp: dead ? 0 : 1, mv: Math.min(1, Hh.sp / 2), wp: 'kick', at: 0, vx: 0, vy: 0, an: 0 }, G, dt); Hh.mixer.update(dt); } }
-    const BL = this.dB || (this.dB = []), bs = G.balls || [], bg = this.dBG || (this.dBG = new THREE.SphereGeometry(0.17, 20, 14)), mats = this.dBM || (this.dBM = [new THREE.MeshStandardMaterial({ color: 0xffc830, roughness: 0.45 }), new THREE.MeshStandardMaterial({ color: 0xe0402a, roughness: 0.45 })]);
+    const BL = this.dB || (this.dB = []), bs = (!su && G.balls) || [], bg = this.dBG || (this.dBG = new THREE.SphereGeometry(0.17, 20, 14)), mats = this.dBM || (this.dBM = [new THREE.MeshStandardMaterial({ color: 0xffc830, roughness: 0.45 }), new THREE.MeshStandardMaterial({ color: 0xe0402a, roughness: 0.45 })]);
     for (let i = 0; i < Math.max(bs.length, BL.length); i++) { const b = bs[i]; let m = BL[i]; if (!b) { if (m) m.visible = false; continue; } if (!m) { m = BL[i] = new THREE.Mesh(bg, mats[0]); m.castShadow = true; this.W.add(m); }
       m.visible = true; m.material = mats[b.o === B.me ? 0 : 1]; m.position.set(gx(V.X(b.x)), gy(b.y + 7), 7 * u / cs); m.rotation.set(t * 9, t * 7, 0); }
+    if (su && this.tawM) { const dg = ['a', 'b'].some(q => Math.hypot(G[q + 'x'] - G.cx, G[q + 'y'] - G.cy) > G.R - 9) && G.ph === 'play'; this.tawM.emissive.setRGB(dg ? 0.35 + Math.sin(t * 14) * 0.2 : 0, dg ? 0.18 : 0, 0); } /* 밀려나기 직전엔 짚 고리가 깜빡 */
     const fg = this.scene.fog; this.scene.fog = null; r.render(this.scene, O); this.scene.fog = fg; return true; /* 직교 카메라는 멀리 있어서 안개를 빼고 그린다 */
   },
+  /* v390 스모 도효: 흙을 다져 쌓은 네모 단 (옆면은 비스듬히) + 위 고운 모래 + 짚 고리(타와라) + 가운데 흰 선 두 줄 */
+  dohyo(MG, R) { const { THREE } = T3, hP = this.SU.hP, S = R + 0.75;
+    const clay = this.pmat('sand', 3, 3, { color: new THREE.Color(1.05, 0.74, 0.5) }), top = this.pmat('sand', 3, 3, { color: new THREE.Color(2.15, 1.85, 1.4) });
+    const g0 = new THREE.CylinderGeometry(S * Math.SQRT2, (S + 0.45) * Math.SQRT2, hP, 4, 1, true); g0.rotateY(Math.PI / 4); g0.rotateX(Math.PI / 2); g0.translate(0, 0, hP / 2); const side = new THREE.Mesh(g0, clay); side.castShadow = side.receiveShadow = true; MG.add(side);
+    const tg = new THREE.PlaneGeometry(2 * S, 2 * S); tg.translate(0, 0, hP); const tp = new THREE.Mesh(tg, top); tp.receiveShadow = true; MG.add(tp);
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 32; const x = cv.getContext('2d'); for (let i = 0; i < 512; i++) { const v = 150 + Math.random() * 70 | 0; x.fillStyle = `rgb(${v},${v * 0.82 | 0},${v * 0.45 | 0})`; x.fillRect(i, 0, 1, 32); } for (let i = 0; i < 16; i++) { x.fillStyle = 'rgba(60,40,10,.55)'; x.fillRect(i * 32, 0, 2, 32); } /* 짚 결 + 가마니 이음매 */
+    const tt = new THREE.CanvasTexture(cv); tt.colorSpace = THREE.SRGBColorSpace; tt.wrapS = THREE.RepeatWrapping; tt.repeat.set(3, 1); tt.anisotropy = 4;
+    const taw = this.tawM = new THREE.MeshStandardMaterial({ map: tt, roughness: 0.92, color: 0xffffff }), rg = new THREE.TorusGeometry(R, 0.085, 8, 120); rg.translate(0, 0, hP + 0.04); const ring = new THREE.Mesh(rg, taw); ring.castShadow = true; MG.add(ring);
+    const wl = new THREE.MeshStandardMaterial({ color: 0xf4f1ea, roughness: 0.7 }), lg = new THREE.BoxGeometry(0.06, 0.5, 0.008); for (const sx of [-0.34, 0.34]) { const l = new THREE.Mesh(lg, wl); l.position.set(sx, 0, hP + 0.004); MG.add(l); } },
   d3off() { if (this.DU) for (const kk in this.DU) { const Hh = this.DU[kk]; if (Hh) this.W.remove(Hh.root); } this.DU = null; if (this.dB) for (const m of this.dB) this.W.remove(m); this.dB = null; },
   h2(a, b) { const x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return x - Math.floor(x); },
   /* v389 실사 재질: 사진 색 · 울퉁불퉁(노멀) · 거칠기 (3d/arena/<이름>_c/_n/_r). 같은 사진은 한 번만 받아 반복 횟수만 다르게 */
@@ -18166,7 +18201,7 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
     rt.scissorTest = false; rt.viewport.set(0, 0, CW * 8, CH * 4); r.setRenderTarget(rc); r.setClearColor(cc, ca); this.crowdRT = rt; return rt.texture; },
   /* ---- 경기마다: 바닥 (콜로세움 모래 / 축구장 선) · 기둥 · 골대 ---- */
   mode(A) {
-    const key = (A.soc ? 's' : A.dodge ? 'd' : 'a') + JSON.stringify(A.pil); if (this.mk === key) return; this.mk = key;
+    const key = (A.soc ? 's' : A.dodge ? 'd' : A.sumo ? 'u' : 'a') + JSON.stringify(A.pil); if (this.mk === key) return; this.mk = key;
     const { THREE } = T3; if (this.MG) { this.W.remove(this.MG); this.MG.traverse(o => { if (o.geometry) o.geometry.dispose(); }); } const MG = this.MG = new THREE.Group(); this.W.add(MG);
     const R = PA_R, soc = !!A.soc, re = !!this.rh, S = 2048, sand = this.cvTex(S, S, (x) => { const k = S / (2 * R), X = gx => (gx + R) * k, Y = gy => (R - gy) * k; // 게임 좌표 → 그림 (위 = +y)
       if (re) { if (soc) for (let n = -9; n < 9; n++) { x.fillStyle = n % 2 ? 'rgba(255,255,220,.10)' : 'rgba(0,30,0,.10)'; x.fillRect(X(n), 0, k, S); } } else { /* v389 실사: 바닥 색·결은 사진 재질, 이 그림엔 선·줄무늬·가장자리 그늘만 */
@@ -18177,7 +18212,7 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
       } x.lineCap = 'round';
       if (A.dodge) { const D = this.DC, cx0 = X(-D.hw), cy0 = Y(D.hd), cw = 2 * D.hw * k, ch = 2 * D.hd * k; x.fillStyle = 'rgba(47,127,224,.09)'; x.fillRect(cx0, cy0, cw / 2, ch); x.fillStyle = 'rgba(224,72,58,.09)'; x.fillRect(cx0 + cw / 2, cy0, cw / 2, ch); /* v389 피구 코트: 왼쪽 파랑(나) · 오른쪽 빨강 */
         x.strokeStyle = 'rgba(250,248,240,.92)'; x.lineWidth = 0.08 * k; x.strokeRect(cx0, cy0, cw, ch); x.beginPath(); x.moveTo(X(0), cy0); x.lineTo(X(0), cy0 + ch); x.stroke(); x.beginPath(); x.arc(X(0), Y(0), 0.85 * k, 0, 7); x.stroke(); }
-      else if (!soc) { x.strokeStyle = 'rgba(110,90,60,.45)'; x.lineWidth = 0.08 * k; for (const r of [8.4, 3.0, 1.2]) { x.beginPath(); x.arc(X(0), Y(0), r * k, 0, 7); x.stroke(); } x.fillStyle = 'rgba(255,230,180,.15)'; x.beginPath(); x.arc(X(0), Y(0), 1.2 * k, 0, 7); x.fill(); }
+      else if (A.sumo) { } /* 스모: 바닥엔 선 없이 도효만 */ else if (!soc) { x.strokeStyle = 'rgba(110,90,60,.45)'; x.lineWidth = 0.08 * k; for (const r of [8.4, 3.0, 1.2]) { x.beginPath(); x.arc(X(0), Y(0), r * k, 0, 7); x.stroke(); } x.fillStyle = 'rgba(255,230,180,.15)'; x.beginPath(); x.arc(X(0), Y(0), 1.2 * k, 0, 7); x.fill(); }
       else { for (const s of [-1, 1]) { x.fillStyle = s < 0 ? 'rgba(150,185,240,.35)' : 'rgba(240,165,150,.35)'; x.fillRect(X(s < 0 ? -8 : 5.8), Y(2.9), 2.2 * k, 5.8 * k); }
         x.strokeStyle = 'rgba(250,248,235,.9)'; x.lineWidth = 0.1 * k; x.beginPath(); x.moveTo(X(0), Y(-R)); x.lineTo(X(0), Y(R)); x.stroke(); x.beginPath(); x.arc(X(0), Y(0), 1.6 * k, 0, 7); x.stroke(); x.beginPath(); x.arc(X(0), Y(0), 8.85 * k, 0, 7); x.stroke();
         for (const s of [-1, 1]) { x.strokeRect(X(s < 0 ? -8 : 5.8), Y(2.9), 2.2 * k, 5.8 * k); x.beginPath(); x.moveTo(X(s * 8), Y(-1.85)); x.lineTo(X(s * 8), Y(1.85)); x.stroke(); } }
@@ -18190,6 +18225,7 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
       const pg = new THREE.LatheGeometry(pts, 28); pg.rotateX(Math.PI / 2); const pm = re ? this.pmat('trav', 2, 3, { color: 0xf0e6d4 }) : this.toon({ color: 0xe6d6b6 });
       this.pms = []; for (const [x, y] of A.pil) { const mt = pm.clone(), m = new THREE.Mesh(pg, mt); m.position.set(x, y, 0); m.castShadow = m.receiveShadow = true; MG.add(m); this.pms.push({ mt, x, y, o: 1 }); } } else this.pms = [];
     this.grass(MG, A);
+    if (A.sumo && re) this.dohyo(MG, A.R);
     // 축구 골대 (예전 정점 그대로) + 공
     if (soc && A.socGeo) { const G0 = A.socGeo(), vm = this.toon({ vertexColors: true }); for (const k of ['gb', 'ga']) { const m = new THREE.Mesh(this.geo(G0[k]), vm); if (k === 'ga') m.rotation.z = Math.PI; m.castShadow = true; MG.add(m); }
       const b = this.ball = new THREE.Mesh(re ? this.ballGeo(this.geo(G0.ball)) : this.geo(G0.ball), re ? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0 }) : this.toon({ vertexColors: true })); b.castShadow = true; b.matrixAutoUpdate = false; this.addOl(b, this.olMat(0.012)); MG.add(b); } else this.ball = null;
@@ -18340,14 +18376,16 @@ void main() { vec3 d = normalize(vD); float e = clamp(d.z, 0.0, 1.0), q = smooth
   /* ---- 매 프레임 ---- */
   draw(A, R, G, B, ci, cam, t, dt) {
     this.init(); if (this.DU) this.d3off(); this.mode(A); const { THREE } = T3, r = this.r, fp = !!cam.fp;
-    R.fe = R.fe ? R.fe * 0.95 + dt * 1000 * 0.05 : 16; R.fn = (R.fn | 0) + 1; if (R.fn > 45) { R.fn = 0; if (R.fe > 22 && this.fx && this.fx.renderTarget1.samples > 0) { for (const rt of [this.fx.renderTarget1, this.fx.renderTarget2]) { rt.samples = 0; rt.dispose(); } } /* v298 느린 폰은 계단 없애기(MSAA)부터 끈다 */ else if (R.fe > 22) R.gq = Math.max(0.45, (R.gq || 1) * 0.85); else if (R.fe < 15 && (R.gq || 1) < 1) R.gq = Math.min(1, R.gq * 1.08); }
+    const pl = !!(G && G.ph === 'play'), nw = performance.now(), cool = !pl || nw - (R.gT || 0) > 8000; /* v390 싸우는 중 멈칫 없애기: 화질 맞추기(화면 크기·MSAA 바꾸면 그림판을 새로 만들어 한 장이 1초 가까이 멈춘다)는 준비 시간에 끝내고, 싸우는 중엔 8초에 한 번 내리기만 (다시 올리다 내렸다 반복 X) */
+    R.fe = R.fe ? R.fe * 0.95 + dt * 1000 * 0.05 : 16; R.fn = (R.fn | 0) + 1; if (R.fn > 45 && cool) { R.fn = 0; if (R.fe > 22 && this.fx && this.fx.renderTarget1.samples > 0) { R.gT = nw; for (const rt of [this.fx.renderTarget1, this.fx.renderTarget2]) { rt.samples = 0; rt.dispose(); } } /* v298 느린 폰은 계단 없애기(MSAA)부터 끈다 */ else if (R.fe > 22) { R.gq = Math.max(0.45, (R.gq || 1) * 0.85); R.gT = nw; } else if (!pl && R.fe < 15 && (R.gq || 1) < 1) R.gq = Math.min(1, R.gq * 1.08); }
     const sc = Math.min(1, Math.sqrt(2.2e6 / (cam.iw * cam.ih))) * (R.gq || 1), w = Math.round(cam.iw * sc), h = Math.round(cam.ih * sc);
-    if (this.cv.width !== w || this.cv.height !== h) r.setSize(w, h, false);
+    if ((this.cv.width !== w || this.cv.height !== h) && (!pl || !R.sz0 || (w * h < this.cv.width * this.cv.height * 0.96 && nw - (R.gS || 0) > 8000) || Math.abs(w / h - this.cv.width / this.cv.height) > 0.03)) { r.setSize(w, h, false); R.gS = nw; R.sz0 = 1; } /* 싸우는 중엔 줄이기만, 8초에 한 번 (비율이 바뀌면 바로) */
     const top = $('pbCv'), cv = this.cv; if (top && cv.parentNode !== top.parentNode) { cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; top.parentNode.insertBefore(cv, top); }
     cv.style.display = ''; const old = A.G3 && A.G3.cv; if (old) old.style.display = 'none';
     // 카메라 (게임 카메라와 똑같이 → 2D로 그리는 불꽃·이름표가 맞는다)
     const C = this.cam; C.fov = 2 * Math.atan(cam.tanV) * 180 / Math.PI; C.aspect = cam.tanH / cam.tanV; C.updateProjectionMatrix();
     C.position.set(cam.px, -cam.py, cam.z); C.up.set(cam.U[0], -cam.U[1], cam.U[2]); C.lookAt(cam.px + cam.F[0], -(cam.py + cam.F[1]), cam.z + cam.F[2]);
+    { const F = this.fill, u0 = G.u && G.u[ci]; if (F && u0) { F.intensity = this.rh && !fp ? 1.1 : 0; F.position.set(cam.px, cam.py, cam.z + 3); F.target.position.set(u0.x, u0.y, 0.8); } }
     this.cc.value.set(cam.px, cam.py, cam.z); this.skyM.uniforms.uT.value = t % 1000; this.cu.value = t % 1000; this.fu.value = t % 1000;
     // v298 나와 카메라 사이의 기둥은 반투명하게 (기둥에 붙어 있어도 내가 보인다)
     { const me = G.u[ci]; for (const P of this.pms || []) { let tg = 1; if (me && !fp) { const x0 = cam.px, y0 = cam.py, dx = me.x - x0, dy = me.y - y0, L = dx * dx + dy * dy || 1, q = Math.max(0, Math.min(1, ((P.x - x0) * dx + (P.y - y0) * dy) / L)); if (q < 0.97 && Math.hypot(x0 + dx * q - P.x, y0 + dy * q - P.y) < PA_PR + 0.3) tg = 0.28; }
@@ -18910,6 +18948,9 @@ const Room3D = {
         let want = H.ang; if (q.ang != null) want = q.ang; else if (d > 0.004 && d < 2) want = Math.atan2(-dz, dx); else if ((Math.cos(H.ang) < -0.2 ? -1 : Math.cos(H.ang) > 0.2 ? 1 : 0) !== q.face && !q.moving) want = q.face < 0 ? Math.PI : 0;
         let da = want - H.ang; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2; H.ang += da * Math.min(1, dt * 10);
         H.root.position.set(X, q.lift, Z); H.root.rotation.y = H.ang; H.root.scale.setScalar(q.big || 1); H.sh.visible = q.lift < 0.05;
+        /* 컴퓨터 렉 (2026-10-27): 화면 밖 펫(쥐 한 마리 = 뼈·조각 380개)도 장면마다 자세·뼈를 계산했다. 화면 밖이면 숨기고 자세는 건너뛴다 (다시 들어오면 그 자리 자세로) */
+        if (this.zNow && (q.big || 1) < 1.6 && H.wok && !this.inCam(X, Z)) { if (!H.offP) { H.offP = 1; H.root.visible = false; H.root.matrixWorldAutoUpdate = false; } return; }
+        if (H.offP) { H.offP = 0; H.root.visible = true; H.root.matrixWorldAutoUpdate = true; }
         Pet3D.pose(H, q.moving || d > 0.004, H.sp, now / 1000, dt, Object.assign({ idle: q.idle, wall: typeof q.pose === 'number' ? q.pose : null, ride: q.pose === 'ride' }, q.pose && typeof q.pose === 'object' ? q.pose : null)); if (!H.wok) { H.wok = this.warmA(H, sig); H.root.visible = H.wok; } /* 자세 뒤에: 쥐는 첫 자세에서 자르기 재질로 바뀐다 */ return; }
       if (!q.e) return; const key = slot('e', q); let H = this.A.get(key); if (!H || !H.pet || H.model) { if (H) this.S.remove(H.root); H = this.mkPet(); this.S.add(H.root); this.A.set(key, H); } H.seen = this.fr; H._sig = 'e';
       H.mesh.geometry = H.ol.geometry = q.e.geo; if (H.mat.map !== q.e.tex) { const first = !H.mat.map; H.mat.map = q.e.tex; if (first) H.mat.needsUpdate = true; }
@@ -18922,6 +18963,9 @@ const Room3D = {
     if (typeof Hit3D !== 'undefined') Hit3D.flush(this, now / 1000); // v367 때리기 실사 효과
     if (typeof FxW3D !== 'undefined') FxW3D.flush(this, now / 1000); // v371 몸 둘레 이펙트 실사
     for (const [k, H] of this.A) if (H.seen !== this.fr) { this.drop(H); this.A.delete(k); }
+    /* 컴퓨터 렉 (2026-10-27 '움직일때 렉'): 화면 밖 행인은 몸(뼈 88개)을 숨겨도 three가 장면마다 뼈 위치를 다 계산했다 (3,400개 중 1,500개). 숨긴 동안은 몸 계산을 건너뛰고 뿌리·그림자만 직접 맞춘다 */
+    for (const [, H] of this.A) { const R = H.root; if (!R || !H.hero || !H.inner) continue; const off = !!H.off && !H.inner.visible; if (R.matrixWorldAutoUpdate === off) R.matrixWorldAutoUpdate = !off;
+      if (off) { R.updateMatrix(); if (R.parent === this.S) R.matrixWorld.copy(R.matrix); else R.matrixWorld.multiplyMatrices(R.parent.matrixWorld, R.matrix); for (const c of R.children) if (c !== H.inner) c.updateMatrixWorld(true); } }
     this.r.render(this.S, this.cc || this.cam); this.gpuSweep();
   },
   // 게임 좌표(픽셀) + 높이(칸) → 화면 CSS 픽셀
@@ -19498,7 +19542,7 @@ Object.assign(Room3D, {
     if (!this.gcv) { const g = this.gcv = document.createElement('canvas'); g.id = 'zground'; g.style.cssText = 'position:fixed;left:0;top:0;display:none;pointer-events:none;'; this.cv.parentNode.insertBefore(g, this.cv); this.gctx = g.getContext('2d'); }
     if (!this.ocam) this.ocam = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.5, 300);
     this.room = z; this.zp = 0; this.zpWait = 0; this.ztree = null; this.zti = 0; this.zsg = null; this.zpsl = null; this.zsp = null; this.zbus = null; this.A = new Map(); this.zb = new Map(); this.zw = []; this.zc = []; this.zid = 0; this.zEve = State.evening;
-    const S = this.S = new THREE.Scene(); S.background = null;
+    const S = this.S = new THREE.Scene(); S.background = null; S.matrixAutoUpdate = false; /* 2026-10-27 컴퓨터 렉: 장면 자체는 안 움직인다. 켜 두면 장면마다 모든 물체(3,400개)를 강제로 다시 계산했다 → 움직인 것과 그 아래만 */
     S.add(new THREE.HemisphereLight(0xfff4e6, 0x6a7080, 1.35));
     const sun = this.zsun = new THREE.DirectionalLight(0xfff0d8, 1.9); S.add(sun); S.add(sun.target); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
     // 그림자만 받는 땅 (색은 아래 2D 땅 그림이 보인다)
@@ -19604,7 +19648,7 @@ Object.assign(Room3D, {
   zmDrop(cs) { if (cs.on) this.zmShow(cs, false); if (cs.mesh) { this.S.remove(cs.mesh); cs.mesh.children.forEach(o => o.geometry.dispose()); cs.mesh = null; } cs.job = null; },
   zmClear() { if (this.zm) for (const [, cs] of this.zm) this.zmDrop(cs); this.zm = new Map(); },
   zMerge(z) { if (!this.zmOn() || typeof Bld3D === 'undefined') { if (this.zm && this.zm.size) this.zmClear(); return; }
-    if (this.zmZ !== z || !this.zm) { this.zmClear(); this.zmZ = z; } const cells = this.zmCell(z), seen = new Set(), t0 = performance.now(), hold = this.zPend > 0 || this.zSpd > 5; let spent = 0; /* v382 새 건물을 지어야 하거나 빨리 달리는 중이면 묶기는 쉰다 (곧 지나갈 칸을 묶느라 짓기가 밀려 끊겼다) */
+    if (this.zmZ !== z || !this.zm) { this.zmClear(); this.zmZ = z; } const cells = this.zmCell(z), seen = new Set(), t0 = performance.now(), hold = false; /* 2026-10-27 컴퓨터 렉 2판: 걷는 속도(5.75칸/초)도 '빠름'으로 쳐서 걸을 때도 묶기를 쉬었다 → 건물 그리기 108번이 묶지 못한 채로. 한 장 2ms 안에서 늘 묶는다 (짓기는 따로 시간을 쓴다) */ let spent = 0; /* v382 새 건물을 지어야 하거나 빨리 달리는 중이면 묶기는 쉰다 (곧 지나갈 칸을 묶느라 짓기가 밀려 끊겼다) */
     for (const [, e] of this.zb) { const b = z.buildings[e.id != null ? e.id : -1]; if (b) seen.add(b._ck); }
     for (const [k, cs] of this.zm) if (!seen.has(k)) { this.zmDrop(cs); this.zm.delete(k); }
     for (const k of seen) { const ids = cells.get(k); if (!ids) continue; let cs = this.zm.get(k); if (!cs) this.zm.set(k, cs = { sig: [], mesh: null, on: false, since: t0, job: null });
@@ -19689,7 +19733,8 @@ Object.assign(Room3D, {
     for (const [key, [k, sc]] of Object.entries(this.ZP)) { const cells = new Map(); for (const q of P[key]) { const c = Math.floor(q[0] / 32) + ',' + Math.floor(q[1] / 32); if (!cells.has(c)) cells.set(c, []); cells.get(c).push(q); } // 32칸 묶음마다 따로 → 화면 밖 묶음은 안 그린다
       for (const L of cells.values()) for (const part of Props3D.M[k]) { const im = new THREE.InstancedMesh(part.geo, part.mat, L.length);
         L.forEach(([x, y, r], i) => { Sc.setScalar(F * sc); M.compose(V.set(x, key === 'hole' ? 0.004 : 0, y), Q.setFromAxisAngle(up, r), Sc); M.multiply(part.M); im.setMatrixAt(i, M); });
-        im.castShadow = key !== 'hole'; im.receiveShadow = true; im.computeBoundingSphere(); this.S.add(im); } } },
+        im.castShadow = key !== 'hole'; im.receiveShadow = true; this.zBat(im, 'p' + part.geo.uuid + part.mat.uuid + im.castShadow); } }
+    this.zBatDone(); },
   /* ---- v331 가로수: Poly Haven 올리브 나무 스캔 2종 × 3방향을 이 카메라 각도(Z3_EL)로 미리 찍은 사진판 (3d/real/trees.png, assets3d/trees_imp.js) ----
    * 카메라가 돌지 않는 직교 카메라라 카메라를 보는 판 한 장이 3D 나무와 똑같이 보인다. 나무 하나에 삼각형 둘 (원본 스캔은 나무 하나에 150만 개). */
   TIMP: { w: [7.51, 8.73, 8.73, 5.66, 6.78, 6.78], u: [0.496, 0.519, 0.485, 0.491, 0.387, 0.621], v: [0.233, 0.288, 0.292, 0.381, 0.262, 0.271] },
@@ -19701,7 +19746,8 @@ Object.assign(Room3D, {
     for (const [c, L] of cells) { const v = +c.split(':')[0], col = v % 3, row = Math.floor(v / 3), g = new THREE.PlaneGeometry(1, 1), uv = g.attributes.uv;
       for (let i = 0; i < uv.count; i++) uv.setXY(i, (col + uv.getX(i)) / 3, 1 - (row + 1 - uv.getY(i)) / 2);
       g.translate(0.5 - T.u[v], 0.5 - T.v[v], 0); g.rotateX(-Z3_EL); const im = new THREE.InstancedMesh(g, mat, L.length), sz = T.w[v] * F * (v < 3 ? 0.8 : 0.95);
-      L.forEach(([x, y, k], i) => { Sc.setScalar(sz * k); M.compose(V.set(x, 0, y), Q, Sc); im.setMatrixAt(i, M); }); im.castShadow = true; im.computeBoundingSphere(); this.S.add(im); }
+      L.forEach(([x, y, k], i) => { Sc.setScalar(sz * k); M.compose(V.set(x, 0, y), Q, Sc); im.setMatrixAt(i, M); }); im.castShadow = true; this.zBat(im, 't' + v, true); }
+    this.zBatDone();
     if (this.ztree) for (const m of this.ztree) m.visible = false; },
   /* ---- v332 신호등 3D (사용자 '2D인거 전부 3D로 바꿔'): 아연 도금 기둥 + 팔 + 가로형 3구 신호기 (한국식: 왼쪽부터 빨강·노랑·초록). 등 색은 signalState 그대로 ----
    * 자리는 예전 바닥 점(drawSignals)과 같다. 부품마다 InstancedMesh 하나, 불빛은 칸마다 색만 바꾼다. 1 m = 0.8/1.13칸 (가로등과 같은 비율) */
@@ -19714,9 +19760,9 @@ Object.assign(Room3D, {
       [new THREE.CylinderGeometry(0.07 * m, 0.09 * m, 1, 10).rotateZ(Math.PI / 2).translate(0.5, 5.35 * m, 0), steel, 'arm'], [new THREE.BoxGeometry(1.32 * m, 0.42 * m, 0.34 * m).translate(0, 5.0 * m, 0), black, 'head'], [new THREE.BoxGeometry(1.5 * m, 0.56 * m, 0.03 * m).translate(0, 5.0 * m, 0.19 * m), black, 'head']];
     const M = new THREE.Matrix4(), A = new THREE.Matrix4(), V = new THREE.Vector3(), Q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), one = new THREE.Vector3(1, 1, 1), base = q => M.compose(V.set(q.x, 0, q.y), Q.setFromAxisAngle(up, q.yaw), one);
     const head = q => base(q).multiply(A.makeTranslation((q.arm - 0.9) * m, 0, 0));
-    for (const [g, mt, k] of parts) { const im = new THREE.InstancedMesh(g, mt, L.length); L.forEach((q, i) => { if (k === 'arm') { base(q).multiply(A.makeScale(q.arm * m, 1, 1)); } else if (k === 'head') head(q); else base(q); im.setMatrixAt(i, M); }); im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); this.S.add(im); }
+    for (const [g, mt, k] of parts) { const im = new THREE.InstancedMesh(g, mt, L.length); L.forEach((q, i) => { if (k === 'arm') { base(q).multiply(A.makeScale(q.arm * m, 1, 1)); } else if (k === 'head') head(q); else base(q); im.setMatrixAt(i, M); }); im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); this.zStat(im); }
     this.zsl = [-0.4, 0, 0.4].map((ox, j) => { const g = new THREE.CircleGeometry(0.13 * m, 16).rotateY(Math.PI).translate(ox * m * (j === 0 ? -1 : j === 2 ? -1 : 1), 5.0 * m, -0.172 * m), im = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ toneMapped: false }), L.length);
-      L.forEach((q, i) => { head(q); im.setMatrixAt(i, M); im.setColorAt(i, new THREE.Color(0, 0, 0)); }); im.computeBoundingSphere(); this.S.add(im); return im; });
+      L.forEach((q, i) => { head(q); im.setMatrixAt(i, M); im.setColorAt(i, new THREE.Color(0, 0, 0)); }); im.computeBoundingSphere(); this.zStat(im); return im; });
     // v357 보행 신호기 (서울 횡단보도 끝마다): 기둥 + 검은 함 + 위 빨간 선 사람 / 아래 초록 걷는 사람. 건너는 길 차 신호가 빨강일 때 초록
     const LP = []; for (const cr of z.crossings) for (const [road, d, half, oh] of [[cr.a, cr.da, cr.halfA, cr.halfB], [cr.b, cr.db, cr.halfB, cr.halfA]]) for (const sd of [-1, 1]) for (const e of [-1, 1]) {
       const nx = -d[1], ny = d[0], x = cr.x + d[0] * ((oh + 1.5) * sd + 1.1 * sd) + nx * (half + 0.75) * e, y = cr.y + d[1] * ((oh + 1.5) * sd + 1.1 * sd) + ny * (half + 0.75) * e, v = z.at(Math.floor(x), Math.floor(y));
@@ -19727,11 +19773,26 @@ Object.assign(Room3D, {
         else { g.beginPath(); g.moveTo(32, 22); g.lineTo(32, 40); g.stroke(); g.lineWidth = 6; g.beginPath(); g.moveTo(29, 40); g.lineTo(28, 59); g.moveTo(35, 40); g.lineTo(36, 59); g.moveTo(26, 25); g.lineTo(24, 42); g.moveTo(38, 25); g.lineTo(40, 42); g.stroke(); }
         const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
       const pp = [[new THREE.CylinderGeometry(0.06 * m, 0.075 * m, 3.1 * m, 10).translate(0, 1.55 * m, 0), steel], [new THREE.BoxGeometry(0.42 * m, 0.86 * m, 0.24 * m).translate(0, 2.75 * m, 0.16 * m), black], [new THREE.BoxGeometry(0.5 * m, 0.04 * m, 0.34 * m).translate(0, 3.2 * m, 0.18 * m), black]];
-      for (const [g, mt] of pp) { const im = new THREE.InstancedMesh(g, mt, LP.length); LP.forEach((q, i) => { pm(q); im.setMatrixAt(i, M); }); im.castShadow = true; im.computeBoundingSphere(); this.S.add(im); }
+      for (const [g, mt] of pp) { const im = new THREE.InstancedMesh(g, mt, LP.length); LP.forEach((q, i) => { pm(q); im.setMatrixAt(i, M); }); im.castShadow = true; im.computeBoundingSphere(); this.zStat(im); }
       this.zpsl = [false, true].map((walk, j) => { const g = new THREE.PlaneGeometry(0.34 * m, 0.34 * m).translate(0, (j ? 2.55 : 2.95) * m, 0.285 * m), im = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ map: tex(walk), alphaTest: 0.35, toneMapped: false }), LP.length);
-        LP.forEach((q, i) => { pm(q); im.setMatrixAt(i, M); im.setColorAt(i, new THREE.Color(0, 0, 0)); }); im.computeBoundingSphere(); this.S.add(im); return im; }); }
+        LP.forEach((q, i) => { pm(q); im.setMatrixAt(i, M); im.setColorAt(i, new THREE.Color(0, 0, 0)); }); im.computeBoundingSphere(); this.zStat(im); return im; }); }
     this.zsp = LP;
     this.zsg = L; this.zsgT = -1; },
+  zStat(o) { o.matrixAutoUpdate = false; o.updateMatrix(); o.updateMatrixWorld(true); this.S.add(o); }, /* 2026-10-27 컴퓨터 렉: 길거리 소품·가로수·신호등은 안 움직이니 장면마다 위치를 다시 계산하지 않는다 */
+  /* 2026-10-27 컴퓨터 렉 3판: 거리 소품·가로수를 32칸 칸마다 부품별로 따로 세워서 (484개) 화면에 보이는 칸 수 × 부품 수만큼 그리고 그림자도 또 그렸다 (한 장 45~90번).
+   * 이제 부품마다 하나로 모으고, 장면마다 화면이나 그림자 판에 걸치는 것만 골라 그린다 (고르는 기준은 three가 하던 것과 같은 테두리 구 · 같은 모습). Store pbatch=0이면 예전대로 */
+  zBatOn() { if (this._zbOn === undefined) this._zbOn = !!Store.get('pbatch', 1); return this._zbOn; },
+  zBat(im, key, own) { if (!this.zBatOn()) { if (!im.boundingSphere) im.computeBoundingSphere(); this.zStat(im); return; } const B = this.S.userData.zbat || (this.S.userData.zbat = new Map()); let b = B.get(key); if (!b) B.set(key, b = { L: [], own }); b.L.push(im); },
+  zBatDone() { const B = this.S.userData.zbat; if (!B) return; const { THREE } = T3, sp = new THREE.Sphere(), M = new THREE.Matrix4();
+    for (const [, b] of B) { if (b.mesh) continue; const im0 = b.L[0], g = im0.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); let n = 0; for (const im of b.L) n += im.count;
+      const A = b.A = new Float32Array(n * 16), C = b.C = new Float32Array(n * 4); let i = 0;
+      for (const im of b.L) { for (let j = 0; j < im.count; j++, i++) { im.getMatrixAt(j, M); M.toArray(A, i * 16); sp.copy(g.boundingSphere).applyMatrix4(M); C[i * 4] = sp.center.x; C[i * 4 + 1] = sp.center.y; C[i * 4 + 2] = sp.center.z; C[i * 4 + 3] = sp.radius; } if (b.own && im.geometry !== g) im.geometry.dispose(); im.dispose(); }
+      const mesh = b.mesh = new THREE.InstancedMesh(g, im0.material, n); mesh.castShadow = im0.castShadow; mesh.receiveShadow = im0.receiveShadow; mesh.frustumCulled = false; mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); mesh.count = 0; b.I = new Int32Array(n); b.c = -1; b.L = null; this.zStat(mesh); } },
+  zBatCull(oc, sun) { const B = this.S && this.S.userData.zbat; if (!B) return; const { THREE } = T3, F1 = this.bF1 || (this.bF1 = new THREE.Frustum()), m = this.bM || (this.bM = new THREE.Matrix4()), sp = this.bS || (this.bS = new THREE.Sphere());
+    F1.setFromProjectionMatrix(m.multiplyMatrices(oc.projectionMatrix, oc.matrixWorldInverse)); sun.updateMatrixWorld(); sun.shadow.updateMatrices(sun); const F2 = sun.shadow.getFrustum();
+    for (const [, b] of B) { const ms = b.mesh; if (!ms) continue; const C = b.C, I = b.I, n = I.length, cast = ms.castShadow; let c = 0, same = true;
+      for (let i = 0; i < n; i++) { sp.center.set(C[i * 4], C[i * 4 + 1], C[i * 4 + 2]); sp.radius = C[i * 4 + 3]; if (F1.intersectsSphere(sp) || (cast && F2.intersectsSphere(sp))) { if (I[c] !== i) { I[c] = i; same = false; } c++; } }
+      if (same && c === b.c) continue; b.c = c; const A = b.A, out = ms.instanceMatrix.array; for (let k = 0; k < c; k++) { const o = I[k] * 16; for (let q = 0; q < 16; q++) out[k * 16 + q] = A[o + q]; } ms.count = c; ms.visible = c > 0; ms.instanceMatrix.needsUpdate = true; } },
   zSigTick(t) { const L = this.zsg; if (!L || t - this.zsgT < 0.15) return; this.zsgT = t; const { THREE } = T3, C = this.zsgC || (this.zsgC = { r: [new THREE.Color(2.2, 0.25, 0.15), new THREE.Color(0.16, 0.03, 0.03)], y: [new THREE.Color(2.2, 1.5, 0.2), new THREE.Color(0.16, 0.12, 0.03)], g: [new THREE.Color(0.25, 2.2, 0.8), new THREE.Color(0.03, 0.14, 0.06)] });
     L.forEach((q, i) => { const st = signalState(q.cr, q.road, t); ['r', 'y', 'g'].forEach((k, j) => this.zsl[j].setColorAt(i, C[k][st === k ? 0 : 1])); }); for (const im of this.zsl) im.instanceColor.needsUpdate = true;
     if (this.zpsl) { const P = this.zsgP || (this.zsgP = { r: [new THREE.Color(2.0, 0.22, 0.12), new THREE.Color(0.14, 0.03, 0.03)], g: [new THREE.Color(0.2, 2.0, 0.9), new THREE.Color(0.03, 0.12, 0.06)] }); // v357 보행 신호 (초록 끝 무렵엔 깜빡)
@@ -19758,7 +19819,7 @@ Object.assign(Room3D, {
     oc.left = -vw / 2; oc.right = vw / 2; oc.top = vh / 2; oc.bottom = -vh / 2; oc.updateProjectionMatrix();
     oc.position.set(cx, Math.sin(Z3_EL) * D, cz + Math.cos(Z3_EL) * D); oc.lookAt(cx, 0, cz); oc.updateMatrixWorld(); this.cc = oc;
     const sun = this.zsun, R2 = Math.max(vw, vh / this.zSq()) * 0.62 + 6; sun.position.set(cx - 9, 22, cz + 14); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
-    const sc = sun.shadow.camera; if (this.shFit()) this.zShFit(oc, sun, sc); else if (sc.right !== R2 || sc.left !== -R2 || sc.top !== R2) { sc.left = -R2; sc.right = R2; sc.top = R2; sc.bottom = -R2; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); }
+    const sc = sun.shadow.camera; if (this.shFit()) this.zShFit(oc, sun, sc); else if (sc.right !== R2 || sc.left !== -R2 || sc.top !== R2) { sc.left = -R2; sc.right = R2; sc.top = R2; sc.bottom = -R2; sc.near = 1; sc.far = 90; sc.updateProjectionMatrix(); } this.zBatCull(oc, sun);
         if (!this.zsg) this.zSignals(z); this.zSigTick(t); this.zBusSign(performance.now() / 1000); if (typeof MineExit !== 'undefined') MineExit.z3(this, performance.now()); /* v389 광산 출구 3D */
         if (PBR.done && !this.zti) this.zTrees(z); if (PBR.done && (!this.zp && (!this.zpWait || Props3D.ver !== this.zpVer))) this.zProps(z); // v331 거리 소품 (받으면 한 번에 세운다)
         if (PBR.done && typeof Bld3D !== 'undefined' && Bld3D.zPoles) Bld3D.zPoles(this, z); // v349 전봇대·전선 (bldreal.js, 구역마다 한 번)

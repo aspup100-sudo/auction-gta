@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v386</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v387</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -19745,7 +19745,7 @@ const RIDE3 = {
   shark: { sf: 1, L: 64, y: 0.33, idle: 0.4, bone: 'Spine_01', grip: [0.12, 0.03, 0.37, 0.3], leg: [0.5, 1], seats: [[-0.03, 0], [-0.2, 0]] },
   ferrari: { sf: 1, brake: 'taillight', v: 2, L: 70, y: 0.015, noLeg: 1, grip: [0.05, 0.035, 0.13, 0.05], seats: [[-0.04, -0.1], [-0.04, 0.1]] },
   train: { sf: 1, v: 2, L: 160, y: 0.03, stand: 1, rods: [['Cube002_0', 'Cube000_0', 'Cube004_0'], ['Cube021_0', 'Cube022_0', 'Cube020_0']], seats: [[-0.08, 0], [-0.34, -0.03], [-0.34, 0.03], [-0.4, -0.03], [-0.4, 0.03], [-0.28, 0], [-0.22, 0], [-0.16, 0]] },
-  lambo: { sf: 1, brake: 'OuterRed', v: 2, L: 68, y: 0.015, noLeg: 1, grip: [0.07, 0.035, 0.13, 0.05], seats: [[-0.02, -0.1], [-0.02, 0.1]] },
+  lambo: { sf: 1, brake: 'OuterRed', v: 2, L: 68, y: -0.025, /* v387 사용자 '람보르기니 머리 나왔잖아': 지붕(1.06)보다 머리가 높아 더 낮게 앉힌다 */ noLeg: 1, grip: [0.07, 0.035, 0.13, 0.05], seats: [[-0.02, -0.1], [-0.02, 0.1]] },
   jet: { sf: 1, L: 150, y: 0.105, noLeg: 1, grip: [0.31, 0.04, 0.135, 0.05], seats: [[0.25, 0], [0.19, 0]] }, // v337 조종석 안에 상체만 (사용자 '제트기도')
   wings: { sf: 1, L: 34, y: 0.35, stand: 1, fly: 1.2, flap: 1, hover: 4.2, off: [-0.12, 0.42], seats: [[0, 0]] },
   dragon: { sf: 1, L: 120, y: 0.175, idle: 0.3, hover: 0.6, bone: 'spine_05', grip: [0.31, 0.025, 0.08, 0.7], leg: [0.5, 0.6], seats: [[0.21, 0], [0.13, 0], [0.06, 0]] }, // v337 날개 사이 등 (사용자 '용은또 뭐야'): 날갯짓하는 몸 뼈를 따라간다
@@ -20036,12 +20036,16 @@ void main(){ vec2 p = (vP + vec2(uO, 0.0)) / uL * 3.2; float w = fb(p * vec2(1.0
       for (let i = 0; i < 56; i++) { const m = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, opacity: 0 }), sp = new THREE.Sprite(m); sp.visible = false; sp.renderOrder = 4; g.add(sp); P.push({ sp, l: 0 }); }
       U.sfx = { P, acc: 0, ch: 0 }; }
     const S = U.sfx, dt = Math.max(0, Math.min(0.1, t - (S.lt == null ? t : S.lt))); S.lt = t; const v = Math.abs(spd || 0) / TILE, mv = v > 0.3;
+    /* v387 사용자 '방향 바꾸면 먼지도 그냥 일직선으로 따라오던데 현실성이 없어': 먼지·연기는 탈것에 붙어 같이 돌지 않고 땅(세상)에 남는다.
+     * 나올 때 탈것 기준 자리·속도를 세상 좌표로 바꿔 두고(q.p, q.w), 매 장면 세상에서 움직인 뒤 탈것 안 좌표로 되돌려 놓는다 */
+    const V3 = THREE.Vector3, im = S.im || (S.im = new THREE.Matrix4()), sg = (spd || 0) < 0 ? -1 : 1; let wm = false; const W = () => { if (!wm) { g.updateWorldMatrix(true, false); im.copy(g.matrixWorld).invert(); wm = true; } };
     if (F.dust) S.acc += mv && v > (F.min || 0) ? dt * (3 + v * 1.4) * (F.n || 1) : 0; else { S.ch += dt * (mv ? 1.6 + v * 0.4 : 1.1); if (S.ch >= 1) { S.ch -= 1; S.acc += mv ? 4 : 2; } S.acc += dt * (mv ? 3 : 1.2); } // 칙 — 한 번에 몇 덩이 + 늘 조금씩 피어오름 (흙먼지: 달릴 때만, 빠를수록 많이)
     for (const q of S.P) { const sp = q.sp;
       if (q.l <= 0 && S.acc >= 1) { S.acc--; q.L = q.l = (mv ? 1.6 : 2.6) + Math.random() * 0.8; q.x = F.x * Lw + (Math.random() - 0.5) * Lw * 0.01; q.y = F.h * Lw; q.z = F.z * Lw + (Math.random() - 0.5) * Lw * 0.01; q.sp.material.rotation = Math.random() * 6.28; q.vy = Lw * (mv ? 0.09 : 0.06) * (0.8 + Math.random() * 0.4); q.vx = -v * 0.85; q.vz = (Math.random() - 0.5) * Lw * 0.035; q.s0 = Lw * 0.045; q.gy = Math.random() < 0.35; q.sp.material.color.setScalar(q.gy ? 0.42 : 0.78);
         if (F.dust) { const sd = Math.random() < 0.5 ? -1 : 1; q.L = q.l = 0.9 + Math.random() * 0.7; q.z = sd * F.z * Lw; q.y = F.gnd ? 0.02 - g.position.y : F.h * Lw; /* gnd: 떠 있는 용도 먼지는 땅에서 */ q.vy = Lw * 0.035 * (0.6 + Math.random() * 0.8); q.vz = sd * Lw * (0.02 + Math.random() * 0.05); q.vx = -v * (0.6 + Math.random() * 0.3); q.s0 = Lw * 0.06; q.gy = 0; q.sp.material.color.setRGB(0.56, 0.45, 0.31); } /* v346 전차 흙먼지 (궤도 뒤 양쪽에서 낮게 퍼짐) */
+        W(); q.p = (q.p || new V3()).set(q.x, q.y, q.z).applyMatrix4(g.matrixWorld); q.w = (q.w || new V3()).set(q.x + q.vx + sg * v, q.y + q.vy, q.z + q.vz).applyMatrix4(g.matrixWorld).sub(q.p); /* 탈것이 가던 속도까지 더한 세상 속도 */
         sp.visible = true; }
-      if (q.l > 0) { q.l -= dt; const a = 1 - q.l / q.L; q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt; q.vy *= 1 - dt * 0.6; q.vx *= 1 - dt * 0.5; sp.position.set(q.x, q.y, q.z); sp.scale.setScalar(q.s0 * (1 + a * 7)); sp.material.opacity = Math.min(1, a * 5) * (1 - a) * (1 - a * 0.4) * (q.gy ? 0.75 : 0.65); if (q.l <= 0) sp.visible = false; } } },
+      if (q.l > 0) { q.l -= dt; const a = 1 - q.l / q.L; W(); q.p.addScaledVector(q.w, dt); q.w.x *= 1 - dt * 0.9; q.w.z *= 1 - dt * 0.9; q.w.y *= 1 - dt * 0.6; sp.position.copy(q.p).applyMatrix4(im); sp.scale.setScalar(q.s0 * (1 + a * 7)); sp.material.opacity = Math.min(1, a * 5) * (1 - a) * (1 - a * 0.4) * (q.gy ? 0.75 : 0.65); if (q.l <= 0) sp.visible = false; } } },
   // v321 노 젓기 · 돛 돌리기 (탄 사람 동작과 같은 박자: Ride3D.ph)
   ph(t) { return t * Math.PI * 2 * 0.85; },
   gait(spd) { const s = spd / TILE; return s < 1.8 ? 'Walk_Loop' : s < 3.8 ? 'Jog_Fwd_Loop' : 'Sprint_Loop'; }, // v322 미는 사람 · 업어 주는 친구 걸음

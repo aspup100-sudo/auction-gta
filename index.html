@@ -1662,7 +1662,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v382</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v383</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>
@@ -8871,6 +8871,9 @@ function worldToScreen() {
 function camSnap(c) { return Game.scene === 'zone' ? c : Math.round(c); }
 function camSnapX() { return camSnap(Cam.x); }
 function camSnapY() { return camSnap(Cam.y); }
+/* v383 사용자 '이거 상호작용 개 떨려' (숍 안 '나가기' 표시): 실내 3D에선 내 머리 위치를 3D에서 화면으로 옮긴 기준(Room3D.anchor)에 그리는데, 표시 자리를 월드 정수로 반올림해서
+ * 걸을 때마다 0~0.5칸(폰에선 몇 픽셀) 앞뒤로 튀었다. 머리 기준이 걸려 있으면 반올림하지 않는다 (meX) */
+function meX(v) { return Game.scene === 'room' && Room3D.ancMe === Room3D.fr ? v : snapPx(ctx, v); }
 // 바깥(zone) 메인 화면에서 그릴 땐 기기 픽셀에 맞춘다 (픽셀 아트 크기는 그대로, 위치만 더 촘촘히). 다른 캔버스·실내는 예전처럼 월드 정수
 function snapPx(c, v) { if (c !== ctx || Game.scene !== 'zone') return Math.round(v); const S = DPR * Cam.zoom; return Math.round(v * S) / S; }
 function roadPoint(r, s) {
@@ -9055,8 +9058,8 @@ function drawRoom3D(t) {
   if (r.place.kind === 'bank' && State.ticket && State.ticket.called) { const n = r.npcs.find(n => n.talk); if (n) { Room3D.anchor(ctx, n.x, n.y, Room3D.headH(), 15); const bob = Math.sin(t * 5) * 2; ctx.fillStyle = '#ffd84a'; ctx.beginPath(); ctx.moveTo(n.x - 5, n.y - 26 + bob); ctx.lineTo(n.x + 5, n.y - 26 + bob); ctx.lineTo(n.x, n.y - 19 + bob); ctx.fill(); } }
   const g = typeof Tutorial !== 'undefined' && Tutorial.roomGoal && Tutorial.roomGoal(r); if (g) { Room3D.anchor(ctx, g.x, g.y, 1.2, 0); drawRoomGoal(ctx, t); }
   if (typeof Verdict !== 'undefined' && Verdict.bb) Verdict.draw(ctx, true); // v350 개찰 말풍선
-  Room3D.anchor(ctx, p.x, p.y, Room3D.headH(), 15); Titles.drawMine(ctx, p); // 여기서부터 내 머리 기준 (말풍선·E 표시도 이 기준으로 그려진다)
-  if (Game.excl > 0) { const s = Sprites.emote('excl'); ctx.drawImage(s, Math.round(p.x - 4), Math.round(p.y - 30 - (0.9 - Game.excl) * 6), 8, 8); }
+  Room3D.anchor(ctx, p.x, p.y, Room3D.headH(), 15); Room3D.ancMe = Room3D.fr; Titles.drawMine(ctx, p); // 여기서부터 내 머리 기준 (말풍선·E 표시도 이 기준으로 그려진다)
+  if (Game.excl > 0) { const s = Sprites.emote('excl'); ctx.drawImage(s, p.x - 4, p.y - 30 - (0.9 - Game.excl) * 6, 8, 8); }
 }
 function drawRoom(t) {
   const r = Game.room, tilt = !r.home; drawInterior(ctx, r, t); // v298 사용자 '실내 C 따뜻한 매장': 건물 실내는 세운 뒷벽 + 가구도 사람과 y 정렬 + 앞벽은 맨 나중 (roomtilt.js)
@@ -9097,7 +9100,7 @@ function drawGameTags(r, at) {
 // 잔금 납부·명도 완료: 열쇠가 머리 위에서 반짝
 function drawKeyIcon(t) {
   const p = Game.player, k = Game.keyIcon, a = Math.min(1, k / 0.4);
-  ctx.save(); ctx.globalAlpha = a; ctx.translate(snapPx(ctx, p.x), snapPx(ctx, p.y - 30 - (2 - k) * 4 + Math.sin(t * 6) * 1.5));
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(meX(p.x), meX(p.y - 30 - (2 - k) * 4 + Math.sin(t * 6) * 1.5));
   ctx.fillStyle = '#ffd84a'; ctx.strokeStyle = '#5a4210'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(-4, 0, 3.5, 0, 7); ctx.fill(); ctx.stroke();
   ctx.fillRect(-1, -1, 9, 2); ctx.fillRect(5, 1, 1.5, 3); ctx.fillRect(7.5, 1, 1.5, 2);
@@ -9131,7 +9134,7 @@ function drawPrompt(t) {
   const hd = Room3D.zNow && !Game.driving; if (hd) { ctx.save(); Room3D.anchor(ctx, p.x, p.y, Room3D.headH(), 15); } // v348 사용자 'E가 사람을 가리네': 3D 거리에서도 실내처럼 머리 위 기준
   const fl = Math.sin(Game.prompt.t * Math.PI * 2 / FEEL.promptFloatPeriod) * 1.5;
   const ps = tg.kind === 'walker' ? (FEEL.promptScaleWalker || 1) : (FEEL.promptScale || 1); // 행인 '말 걸기'는 작게 (사용자: 너무 크다)
-  ctx.save(); ctx.translate(snapPx(ctx, p.x), snapPx(ctx, p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
+  ctx.save(); ctx.translate(hd ? p.x : meX(p.x), hd ? p.y - 24 - lift + fl - (ps - 1) * 7 : meX(p.y - 24 - lift + fl - (ps - 1) * 7)); ctx.scale(sc * ps, sc * ps);
   ctx.fillStyle = '#efe6d2'; ctx.strokeStyle = '#14161c'; ctx.lineWidth = 1;
   ctx.font = touch ? 'bold 7px "IBM Plex Sans KR", sans-serif' : 'bold 8px sans-serif'; const bw = touch ? Math.max(12, Math.ceil(ctx.measureText(word).width) + 8) : 12;
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-bw / 2, -6, bw, 11, 2) : ctx.rect(-bw / 2, -6, bw, 11); ctx.fill(); ctx.stroke();
@@ -13048,8 +13051,11 @@ const Pets = {
     let s = this.st[key]; const dt = s ? Math.min(0.1, Math.max(0, t - s.t)) : 0, cf = PET_FOLLOW[kind] || {}, near = cf.near || 16, vk = (cf.v || 1) * (kind === 'penguin' ? 1 - 0.12 * PET_FAT.of(key) : 1); /* 뚱뚱한 펭귄은 느릿느릿 */
     if (!s || Math.hypot(ox - s.x, oy - s.y) > 160) s = this.st[key] = { x: ox - 14, y: oy + 2, face: 1, moving: false, t };
     s.t = t; const dx = ox - s.x, dy = (oy + 2) - s.y, d = Math.hypot(dx, dy);
-    const go = cf.far ? (s.chase ? d > near : d > cf.far) : d > near; // 고양이: 딴청 부리다 멀어지면 그제야 뛰어온다
-    if (go) { s.chase = true; const v = Math.min(170 * vk, (40 + (d - near) * 5) * vk) * dt; s.x += dx / d * v; s.y += dy / d * v; s.moving = true; s.still = t; if (Math.abs(dx) > 2) s.face = dx > 0 ? 1 : -1; }
+    /* v383 사용자 '고양이 돌아다니면 뒤늦게 움직인다 이거 고쳐 다른펫도': 예전엔 주인과 16px(고양이는 46px, 딴청) 넘게 멀어져야 출발하고, 처음엔 느리게(40px/s) 걸어서
+     * 내가 걸으면 한참 뒤에 따라왔다. 이제 주인이 움직이기 시작하면 바로 같이 출발하고, 주인 빠르기에 맞춰 따라온다 (거리가 벌어지면 더 빨리) */
+    const os = s.ox == null || dt <= 0 ? 0 : Math.min(400, Math.hypot(ox - s.ox, oy - s.oy) / dt); s.ox = ox; s.oy = oy; s.osp = (s.osp || 0) + (os - (s.osp || 0)) * Math.min(1, dt * 12);
+    const go = d > near || (s.osp > 12 && d > near * 0.5);
+    if (go) { s.chase = true; const v = Math.min(260 * vk, Math.max(s.osp * (d > near ? 1.08 : 0.95), 40 + Math.max(0, d - near) * 7) * vk) * dt; const m = Math.min(v, d); s.x += dx / d * m; s.y += dy / d * m; s.moving = true; s.still = t; if (Math.abs(dx) > 2) s.face = dx > 0 ? 1 : -1; }
     else { s.chase = false; s.moving = false; if (s.still == null) s.still = t; }
     s.idle = t - s.still; // 가만히 있은 시간 (5초 넘으면 펫마다 하는 짓이 있다)
     return s;

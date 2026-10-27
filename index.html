@@ -59,6 +59,7 @@ body.rot { position:fixed; top:0; left:0; width:100vh; height:100vw; transform:r
 #title #tutRow { display:none; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center; background:rgba(255,255,255,.06); border:1px solid var(--gold); border-radius:10px; padding:8px 14px; max-width:560px; font-size:14px; cursor:pointer; } #title.modeSolo #tutRow { display:flex; } #tutRow input { width:18px; height:18px; accent-color:var(--gold); } #tutRow small { flex-basis:100%; text-align:center; opacity:.8; font-size:12px; }
 #title.modeSolo #capLabel, #title.modeRoom #capLabel { display:block; } #title.modeSolo #caps, #title.modeRoom #caps { display:flex; } #title.modeSolo #capRow, #title.modeRoom #capRow, #title.modeCh.chOn #capRow { display:flex; } #title.modeRoom #nameBox, #title.modeCh #nameBox { display:flex; }
 #title.chOn #capLabel, #title.chOn #caps, #title.chOn #capInput { display:none; } #title.wOn #capLabel, #title.wOn #caps, #title.wOn #capInput, #title.wOn #mpBox > .row:first-child, #title.wOn .wRow { display:none; } /* v390 친구 월드: 자본은 월드 코드에 정해져 있다 */
+#title.modeRoom:not(.roomOn) #capLabel, #title.modeRoom:not(.roomOn) #caps, #title.modeRoom:not(.roomOn) #capRow { display:none; } /* v392 사용자 '시작자본 왜 고르는게 두개야': 친구와 같이 화면에선 방을 만든 뒤에만 아래 시작 자본 (월드는 월드 칸의 1~5억) */
 #title .wRow { display:flex; gap:6px; flex-wrap:wrap; align-items:center; justify-content:center; } #title .wRow input { width:120px; } #title .wCaps { display:inline-flex; gap:3px; } #title .wCap { padding:6px 8px; min-width:0; opacity:.6; } #title .wCap.sel { opacity:1; outline:2px solid var(--gold); }
 #wList { display:flex; flex-direction:column; gap:6px; margin-top:8px; } #wList .wGo { display:flex; justify-content:space-between; align-items:center; gap:8px; text-align:left; width:100%; } #wList .wGo small { opacity:.7; font-weight:400; } #wList .wGo.sel { outline:2px solid var(--gold); } #title.wOn #wList .wGo:not(.sel) { display:none; } #title.chOn .mp .ch:not(.sel) { opacity:.35; } #title.chOn .mp .ch.sel { cursor:pointer; } #title.chOn .mp .ch.sel::after { content:'다시 누르면 나가기'; font-size:10px; opacity:.7; } #title .mp .or { opacity:.6; } #title .mp #mpCode { width:120px; text-transform:uppercase; letter-spacing:2px; }
 #title .mp #mpStatus { margin-top:8px; min-height:1.2em; color:#fff; } #title .mp #mpStatus code { font-size:20px; letter-spacing:4px; color:var(--gold); background:#0d0f14; padding:2px 8px; border-radius:6px; }
@@ -1592,7 +1593,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
     <div class="row"><button class="btn" id="mpCreate">방 만들기</button><span class="or">또는</span><input id="mpCode" placeholder="방 코드 6자리" maxlength="6" autocapitalize="characters"><button class="btn" id="mpJoin">코드로 들어가기</button></div>
     <div id="mpStatus"></div>
     <div class="mpHint">방장이 자본을 고르고 시작하면 친구도 같은 주로 같이 시작해요. 인터넷이 필요해요(폰 데이터도 됨).</div>
-    <div class="chHead">🌍 친구 월드 <small>마인크래프트처럼 저장돼요 · 친구는 월드 코드로 들어와요</small></div>
+    <div class="chHead">🌍 친구 월드 <small>친구는 월드 코드로 들어와요</small></div>
     <div class="wHelp">친구 월드에선 🤝 같이 사기 · 🔎 조사 나눠 하기 · 💰 돈 빌려주기 · 🎯 월드 목표를 할 수 있어요. 게임 안에서 🤝 친구 버튼을 누르면 자세히 나와요.</div>
     <div class="row wRow"><input id="wName" maxlength="12" placeholder="월드 이름"><span class="wCaps" id="wCaps"><button class="btn wCap sel" data-c="1">1억</button><button class="btn wCap" data-c="2">2억</button><button class="btn wCap" data-c="3">3억</button><button class="btn wCap" data-c="4">4억</button><button class="btn wCap" data-c="5">5억</button></span><button class="btn gold" id="wMake">월드 만들기</button></div>
     <div id="wList"></div>
@@ -1674,7 +1675,7 @@ html body #notebook .chk { color:#33240f; } html body #notebook input[type=check
   <div id="nbBody"></div>
 </div>
 <div id="menu" class="panel mf">
-  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v391</small></h2>
+  <h2>설정 <small id="appVer" style="font-size:11px;opacity:.5;font-weight:400">v392</small></h2>
   <div id="mpInfo" class="mpInfo" hidden></div>
   <label>소리 끄기 <input type="checkbox" id="setMute"></label>
   <label>효과음 <input type="range" id="setSfx" min="0" max="1" step="0.1"></label>

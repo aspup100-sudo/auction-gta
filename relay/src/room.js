@@ -8,6 +8,10 @@ export const SEEN_KEEP_MS = 30 * 86400e3;    // 순위표: 30일 동안 안 들�
 export const SEEN_MAX = 300;
 // 이미 기록을 지운 이름 (v178 전에 지워서 순위표에 남은 것): 서버가 처음 읽을 때 한 번 뺀다
 const PURGE = [];
+/* v401 사용자 2026-10-29 '그 닉네임 노무현 지워': 실존 인물 이름은 순위표에서 지우고 새로 못 쓰게 한다 (띄어쓰기·기호를 빼고 비교, 들어오면 '손님'으로 바꾼다) */
+const BAN_NAMES = ['노무현'];
+export const bannedName = n => { const k = String(n || '').replace(/[\s\p{P}\p{S}0-9_]/gu, '').toLowerCase(); return !!k && BAN_NAMES.some(b => k.includes(b)); };
+export const safeName = n => bannedName(n) ? '손님' : n;
 export const CROWD = 20, CROWD_GAP_MS = 3600e3; // v267 (사용자 2026-10-21 '사람 20명 넘어서 버벅거리면 알려줘'): 한 방에 20명이 넘으면 운영자 폰에 알림, 방마다 한 시간에 한 번
 export const TICK_MS = 10000;                // 심장박동·순위표 공유 간격
 export const MINE_MAX = 12000, MINE_LIM = 250; // 석탄 땅굴 (v168): 채널마다 굴 하나. 판 칸('x,y')과 마지막 막장 [x,y,방향]을 들고 있다가 새로 온 광부에게 준다
@@ -21,7 +25,7 @@ export class RoomLogic {
   async load() {
     if (this.loaded) return this.loaded;
     this.loaded = (async () => {
-      this.book = (await this.storage.get('book')) || {}; this.seen = (await this.storage.get('seen')) || {}; this.tomb = (await this.storage.get('tomb')) || {}; for (const nm of PURGE) if (this.seen[nm]) { delete this.seen[nm]; this.tomb[nm] = this.now(); this.dirty = true; } this.hostId = (await this.storage.get('hostId')) || null;
+      this.book = (await this.storage.get('book')) || {}; this.seen = (await this.storage.get('seen')) || {}; this.tomb = (await this.storage.get('tomb')) || {}; for (const nm of [...PURGE, ...Object.keys(this.seen).filter(bannedName)]) if (this.seen[nm]) { delete this.seen[nm]; this.tomb[nm] = this.now(); this.dirty = true; } this.hostId = (await this.storage.get('hostId')) || null;
       const mn = await this.storage.get('mine'); this.mcells = new Set(mn && typeof mn.c === 'string' && mn.c ? mn.c.split(';') : []); this.mlast = mn && Array.isArray(mn.l) ? mn.l : null;
     })();
     return this.loaded;

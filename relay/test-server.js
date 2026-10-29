@@ -2,7 +2,7 @@
 // 실행: npm install && node test-server.js [포트=8787]  → 게임에서 FEEL.relayUrl = 'http://127.0.0.1:8787'
 import { WebSocketServer } from 'ws';
 import http from 'node:http';
-import { RoomLogic, TICK_MS } from './src/room.js';
+import { RoomLogic, TICK_MS, safeName } from './src/room.js';
 import { handlePush } from './src/push.js';
 import { handleFb } from './src/fb.js';
 import { handleSv } from './src/sv.js';
@@ -41,7 +41,7 @@ wss.on('connection', async (ws, req) => {
   const url = new URL(req.url, 'http://x'); const m = url.pathname.match(/^\/(ch|room)\/([A-Za-z0-9_-]{1,16})\/?$/); if (!m) return ws.close(1008, 'bad path');
   const kind = m[1], key = kind === 'ch' ? String(Number(m[2]) || 0) : m[2].toUpperCase();
   const id = (url.searchParams.get('id') || '').slice(0, 24) || 'g' + Math.random().toString(36).slice(2, 8);
-  const name = (url.searchParams.get('name') || '').trim().slice(0, 20) || '플레이어';
+  const name = safeName((url.searchParams.get('name') || '').trim().slice(0, 20) || '플레이어'); /* v401 금지 이름 */
   const r = roomFor(kind, key);
   const s = { ws, id, name, send: d => { if (ws.readyState === 1) ws.send(d); }, close: () => ws.close(1000, 'replaced') };
   r.socks.add(s); await r.logic.join(s);

@@ -8,7 +8,7 @@
  *       POST /kofi · /don/me · /don/list → Ko-fi 후원 확인 (src/don.js). 후원자가 아니면 플레이어끼리 용돈(tip)은 서버가 버린다
  * 채널·방마다 Durable Object 하나가 떠서 그 방의 사람들을 잇는다. WebSocket 절전(hibernation) API라 아무도 말을 안 하면 비용이 거의 없다.
  */
-import { RoomLogic, TICK_MS } from './room.js';
+import { RoomLogic, TICK_MS, safeName } from './room.js';
 import { handlePush } from './push.js';
 import { handleFb } from './fb.js';
 import { handleSv } from './sv.js';
@@ -73,7 +73,7 @@ export class ChannelRoom {
     const m = url.pathname.match(/^\/(ch|room)\/([A-Za-z0-9_-]{1,16})\/?$/); if (!m) return new Response('not found', { status: 404 });
     const kind = m[1], key = kind === 'ch' ? String(Number(m[2]) || 0) : m[2].toUpperCase();
     const id = (url.searchParams.get('id') || '').slice(0, 24) || 'g' + Math.random().toString(36).slice(2, 8);
-    const name = (url.searchParams.get('name') || '').trim().slice(0, 20) || '플레이어';
+    const name = safeName((url.searchParams.get('name') || '').trim().slice(0, 20) || '플레이어'); /* v401 금지 이름 */
     const logic = this.ensure(kind, key); await logic.load();
     const pair = new WebSocketPair(); const [client, server] = Object.values(pair);
     const ds = (url.searchParams.get('ds') || '').slice(0, 64), don = VIP_NAMES.has(name) || (ds ? await this.donor(ds) : false); // v294 후원자만 용돈
